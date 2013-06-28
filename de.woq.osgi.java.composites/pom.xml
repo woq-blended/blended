@@ -21,42 +21,15 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>de.woq.osgi.java</groupId>
+    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../de.woq.osgi.java.parent</relativePath>
+  </parent>
+
   <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.reactor</artifactId>
+  <artifactId>de.woq.osgi.java.composites</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
-
-  <distributionManagement>
-    <repository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-release-local</url>
-    </repository>
-    <snapshotRepository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
-
-  <profiles>
-
-    <profile>
-      <id>parent</id>
-      <modules>
-        <module>de.woq.osgi.java.parent</module>
-        <module>de.woq.osgi.java.assembly</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>build</id>
-      <modules>
-        <module>de.woq.osgi.java.launcher</module>
-        <module>de.woq.osgi.java.composites</module>
-        <module>de.woq.osgi.java.assembly</module>
-      </modules>
-    </profile>
-
-  </profiles>
 
 </project>
-

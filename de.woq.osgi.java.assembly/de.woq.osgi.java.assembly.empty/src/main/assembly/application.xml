@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<assembly>
+  <id>bin</id>
+  <formats>
+    <format>zip</format>
+    <format>dir</format>
+  </formats>
+
+  <fileSets>
+
+    <fileSet>
+      <directory>target/dependencies</directory>
+      <outputDirectory>/lib</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/defaults/config</directory>
+      <outputDirectory>/config</outputDirectory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/defaults/scripts</directory>
+      <outputDirectory>/bin</outputDirectory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
+  </fileSets>
+</assembly>

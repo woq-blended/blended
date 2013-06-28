@@ -21,42 +21,25 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>de.woq.osgi.java</groupId>
+    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../de.woq.osgi.java.parent</relativePath>
+  </parent>
+
   <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.reactor</artifactId>
+  <artifactId>de.woq.osgi.java.launcher</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
 
-  <distributionManagement>
-    <repository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-release-local</url>
-    </repository>
-    <snapshotRepository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
+  <dependencies>
 
-  <profiles>
+    <dependency>
+      <groupId>org.ops4j.pax.runner</groupId>
+      <artifactId>pax-runner</artifactId>
+      <version>${pax-runner.version}</version>
+    </dependency>
 
-    <profile>
-      <id>parent</id>
-      <modules>
-        <module>de.woq.osgi.java.parent</module>
-        <module>de.woq.osgi.java.assembly</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>build</id>
-      <modules>
-        <module>de.woq.osgi.java.launcher</module>
-        <module>de.woq.osgi.java.composites</module>
-        <module>de.woq.osgi.java.assembly</module>
-      </modules>
-    </profile>
-
-  </profiles>
+  </dependencies>
 
 </project>
-
