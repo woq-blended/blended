@@ -56,6 +56,7 @@
       <modules>
         <module>de.woq.osgi.java.assembly.defaults</module>
         <module>de.woq.osgi.java.assembly.empty</module>
+        <module>de.woq.osgi.java.assembly.common</module>
       </modules>
     </profile>
 
