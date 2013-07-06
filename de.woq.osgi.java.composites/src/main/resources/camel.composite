@@ -16,5 +16,5 @@ scan-bundle:mvn:org.apache.camel/camel-core/${camel.version}@15
 scan-bundle:mvn:org.apache.camel/camel-jms/${camel.version}@15
 scan-bundle:mvn:org.apache.camel/camel-http/${camel.version}@15
 scan-bundle:mvn:org.apache.camel/camel-servlet/${camel.version}@15
-scan-bundle:mvn:org.apache.camel/camel-blueprint/${camel.version}@15
+#scan-bundle:mvn:org.apache.camel/camel-blueprint/${camel.version}@15
 

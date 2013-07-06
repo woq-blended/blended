@@ -25,6 +25,8 @@ scan-bundle:mvn:org.slf4j/slf4j-log4j12/${slf4j.version}@nostart@2
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-api/${pax-logging.version}@5
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-service/${pax-logging.version}@5
 
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/1.0-SNAPSHOT@8
+
 scan-bundle:mvn:org.ops4j.pax.url/pax-url-wrap/${pax-url-mvn.version}@10
 scan-bundle:mvn:org.ops4j.pax.url/pax-url-mvn/${pax-url-wrap.version}@10
 
@@ -38,4 +40,4 @@ scan-composite:classpath:camel.composite
 scan-composite:classpath:jersey.composite
 scan-composite:classpath:active-mq.composite
 
-scan-bundle:mvn:org.apache.velocity/velocity/${velocity.version}@15
+#scan-bundle:mvn:org.apache.velocity/velocity/${velocity.version}@15

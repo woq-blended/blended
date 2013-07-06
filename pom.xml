@@ -51,6 +51,7 @@
       <id>build</id>
       <modules>
         <module>de.woq.osgi.java.launcher</module>
+        <module>de.woq.osgi.java.configurator</module>
         <module>de.woq.osgi.java.composites</module>
         <module>de.woq.osgi.java.assembly</module>
       </modules>
