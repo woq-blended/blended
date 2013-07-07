@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons-collections.version}@10
-scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/0.4.0@10
-scan-bundle:mvn:commons-lang/commons-lang/${commons-lang.version}@10
-scan-bundle:mvn:commons-pool/commons-pool/1.6@10
-scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.codec/1.6.0@10
-scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/3.1.0@10
+scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}@10
+scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}@10
+scan-bundle:mvn:commons-lang/commons-lang/${commons.lang.version}@10
+scan-bundle:mvn:commons-pool/commons-pool/${commons.pool.version}@10
+scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.codec/${commons.codec.version}@10
+scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/${commons.httpclient.version}@10

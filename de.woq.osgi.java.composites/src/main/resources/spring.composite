@@ -31,6 +31,6 @@ scan-bundle:mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.tree/3.1.0@
 scan-bundle:mvn:org.apache.xbean/xbean-bundleutils/${xbean.version}@10
 scan-bundle:mvn:org.apache.xbean/xbean-finder/${xbean.version}@10
 scan-bundle:mvn:org.apache.xbean/xbean-spring/${xbean.version}@10
-scan-bundle:mvn:org.apache.xbean/xbean-blueprint/${xbean.version}@10
+scan-bundle:mvn:org.apache.xbean/xbean-blueprint/${xbean.version}@30
 
-scan-bundle:mvn:org.apache.xmlbeans/com.springsource.org.apache.xmlbeans/2.4.0@10
+scan-bundle:mvn:org.apache.xmlbeans/com.springsource.org.apache.xmlbeans/2.4.0@30
