@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.mgmt_core;
+package de.woq.osgi.java.startcompletion;
 
-import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
-public interface OSGIManagementService {
+public interface StartCompletionService
+{
+  void complete(String token);
 
-  public Collection<BundleInfo> listBundles();
-  public BundleInfo getInfo(final long bundleId);
+  void waitForTokens(String id, long time, TimeUnit unit, String... tokens);
 }

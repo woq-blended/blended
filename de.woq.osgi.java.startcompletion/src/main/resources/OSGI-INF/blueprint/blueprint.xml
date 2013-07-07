@@ -17,18 +17,8 @@
   -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
-  <reference-list
-    interface="de.woq.osgi.java.jaxrs.JAXRSResource"
-    availability="optional"
-    member-type="service-reference">
-
-    <reference-listener bind-method="bind" unbind-method="unbind">
-      <bean class="de.woq.osgi.java.jaxrs.internal.JAXRSExtender">
-        <property name="httpService">
-          <reference interface="org.osgi.service.http.HttpService" timeout="1000" />
-        </property>
-      </bean>
-    </reference-listener>
-  </reference-list>
+  <service interface="de.woq.osgi.java.startcompletion.StartCompletionService">
+    <bean class="de.woq.osgi.java.startcompletion.internal.StartCompletionServiceImpl" />
+  </service>
 
 </blueprint>
