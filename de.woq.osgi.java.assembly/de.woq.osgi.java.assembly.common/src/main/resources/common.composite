@@ -15,3 +15,4 @@
 #
 
 scan-composite:classpath:woq-common.composite
+scan-composite:classpath:debug.composite

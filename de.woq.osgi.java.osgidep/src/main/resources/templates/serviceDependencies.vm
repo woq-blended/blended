@@ -1,0 +1,40 @@
+digraph osgi {
+
+#foreach( $id in $bundleDetails.keySet() )
+  #set ( $bundle = $bundleDetails.get($id) )
+  #set ( $color = "white" )
+  #set ( $bgcolor = "black" )
+
+  $id [ shape=none, margin=0, label=<
+<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+  <tr>
+    <td ROWSPAN="2" bgcolor="$bgcolor"><font point-size="24" color="$color">$id</font></td>
+    <td>$bundle.bundle.symbolicName</td>
+  </tr>
+  <tr>
+    <td>$bundle.bundle.version</td>
+  </tr>
+  <tr>
+    <td bgcolor="lightgrey">Defines</td>
+    <td bgcolor="lightgrey">Used in</td>
+  </tr>
+  #foreach ( $service in $bundle.serviceReferences )
+    #set ( $interfaces = $service.getProperty("objectClass") )
+    <tr>
+      <td>#foreach( $interface in $interfaces )$interface#if ( $foreach.hasNext )<br/>#end#end</td>
+      <td>#foreach ( $usingBundle in $bundle.getUsingBundles($service) )$usingBundle.bundleId#if ( $foreach.hasNext )
+        ,#end#end</td>
+    </tr>
+  #end
+</table>
+>
+]
+#end
+
+#foreach( $id in $bundleDetails.keySet() )
+  #set ( $bundle = $bundleDetails.get($id) )
+  #foreach ( $usingBundle in $bundle.usingBundles )
+    $usingBundle.bundleId -> $id
+  #end
+#end
+}
