@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+
+  <reference-list
+    interface="de.woq.osgi.java.jaxrs.JAXRSResource"
+    availability="optional"
+    member-type="service-reference">
+
+    <reference-listener bind-method="bind" unbind-method="unbind">
+      <bean class="de.woq.osgi.java.jaxrs.internal.JAXRSExtender">
+        <property name="httpService">
+          <reference interface="org.osgi.service.http.HttpService" timeout="1000" />
+        </property>
+      </bean>
+    </reference-listener>
+  </reference-list>
+
+</blueprint>

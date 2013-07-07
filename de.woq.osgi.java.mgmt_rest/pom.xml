@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.woq.osgi.java</groupId>
+    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../de.woq.osgi.java.parent</relativePath>
+  </parent>
+
+
+  <groupId>de.woq.osgi.java</groupId>
+  <artifactId>de.woq.osgi.java.mgmt_rest</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <bundle.namespace>${project.artifactId}</bundle.namespace>
+    <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.jaxrs</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
+      <version>1.0-SNAPSHOT</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.sun.jersey</groupId>
+      <artifactId>jersey-json</artifactId>
+      <version>${jersey.version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
+

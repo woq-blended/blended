@@ -53,6 +53,9 @@
         <module>de.woq.osgi.java.launcher</module>
         <module>de.woq.osgi.java.configurator</module>
         <module>de.woq.osgi.java.composites</module>
+        <module>de.woq.osgi.java.mgmt_core</module>
+        <module>de.woq.osgi.java.jaxrs</module>
+        <module>de.woq.osgi.java.mgmt_rest</module>
         <module>de.woq.osgi.java.assembly</module>
       </modules>
     </profile>

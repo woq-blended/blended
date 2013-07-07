@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+
+  <service interface="de.woq.osgi.java.jaxrs.JAXRSResource" >
+    <service-properties>
+      <entry key="servlet-name" value="osgiManagement" />
+    </service-properties>
+
+    <bean class="de.woq.osgi.java.mgmt_rest.internal.OsgiManagementResource">
+      <property name="osgiManagementService">
+        <reference interface="de.woq.osgi.java.mgmt_core.OSGIManagementService" timeout="1000" />
+      </property>
+    </bean>
+  </service>
+
+</blueprint>
