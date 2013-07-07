@@ -1,0 +1,11 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package:\
+  org.apache.activemq.broker,\
+  org.apache.activemq.store.journal,\
+  org.apache.activemq.store,\
+  *

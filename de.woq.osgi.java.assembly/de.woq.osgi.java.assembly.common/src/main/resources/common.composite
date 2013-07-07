@@ -16,3 +16,6 @@
 
 scan-composite:classpath:woq-common.composite
 scan-composite:classpath:debug.composite
+
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.brokerstarter/1.0-SNAPSHOT@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/1.0-SNAPSHOT@50
