@@ -69,7 +69,6 @@
     <spring.version>3.1.2.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
     <velocity.version>1.7</velocity.version>
-    <wb.management.version>3.3</wb.management.version>
     <xbean.version>3.13</xbean.version>
   </properties>
 
