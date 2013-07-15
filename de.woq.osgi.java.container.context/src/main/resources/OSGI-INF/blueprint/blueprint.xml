@@ -19,7 +19,7 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
   <bean
-    id="identifier" class="de.woq.osgi.java.container.id.internal.ContainerIdentifierServiceImpl"
+    id="identifier" class="de.woq.osgi.java.container.context.internal.ContainerIdentifierServiceImpl"
     init-method="init" destroy-method="destroy" scope="singleton">
 
     <argument index="0" ref="blueprintBundleContext" />

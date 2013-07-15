@@ -1,4 +1,4 @@
-package de.woq.osgi.java.container.id;
+package de.woq.osgi.java.container.context;
 
 import java.util.Properties;
 

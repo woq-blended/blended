@@ -1,4 +1,4 @@
-package de.woq.osgi.java.container.id.internal;
+package de.woq.osgi.java.container.context.internal;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import java.util.Properties;
 import java.util.UUID;
 
-import de.woq.osgi.java.container.id.ContainerIdentifierService;
+import de.woq.osgi.java.container.context.ContainerIdentifierService;
 import de.woq.osgi.java.util.ManagedServiceSupport;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;

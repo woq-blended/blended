@@ -52,8 +52,7 @@ public class ConfigUpdater extends TimerTask
     this.bundleContext = context;
   }
 
-  private File getConfigDir()
-  {
+  private File getConfigDir()  {
     Logger log = getLogger();
 
     if (configDir == null)
