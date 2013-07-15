@@ -5,7 +5,9 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Properties;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.woq.osgi.java.container.context.ContainerContext;
 import de.woq.osgi.java.container.id.ContainerIdentifierService;
 import de.woq.osgi.java.util.ManagedServiceSupport;
 import org.osgi.framework.BundleContext;
@@ -22,13 +24,21 @@ public class ContainerIdentifierServiceImpl
   private final static String PROP_UUID = "UUID";
   private final static String PROP_PROPERTY = "property.";
 
+  private final ContainerContext containerContext;
+
   private String uuid = null;
   private Properties properties = new Properties();
 
+  private AtomicBoolean initialized = new AtomicBoolean(false);
+
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerIdentifierServiceImpl.class);
 
-  public ContainerIdentifierServiceImpl(final BundleContext context) {
-    super(context);
+  public ContainerIdentifierServiceImpl(final BundleContext bundleContext, final ContainerContext containerContext) {
+    super(bundleContext);
+    this.containerContext = containerContext;
+
+    updateIdentifier(containerContext.readConfig(getServicePid()), true);
+    initialized.set(true);
   }
 
   @Override
@@ -37,10 +47,18 @@ public class ContainerIdentifierServiceImpl
   }
 
   @Override
-  protected ServiceRegistration registerService(Dictionary<String, ?> properties) {
+  protected ServiceRegistration registerService(Dictionary<String, ?> incomingProperties) {
     if (getServiceRegistration() == null) {
 
-      updateIdentifier(properties);
+      Properties incoming = new Properties();
+      for(Enumeration<String> keys = incomingProperties.keys(); keys.hasMoreElements();) {
+        String key = keys.nextElement();
+        incoming.setProperty(key, incomingProperties.get(key).toString());
+      }
+
+      if (initialized.get()) {
+        updateIdentifier(incoming, false);
+      }
 
       String[] classes = new String[] {
         ContainerIdentifierService.class.getName()
@@ -69,33 +87,60 @@ public class ContainerIdentifierServiceImpl
     return properties;
   }
 
-  synchronized void updateIdentifier(Dictionary<String, ?> incoming_props) {
+  synchronized private void updateIdentifier(Properties incoming_props, boolean initialize) {
 
-    Object incoming_uid = properties.get(PROP_UUID);
+    if (initialize != initialized.get()) {
 
-    // UUID id not set externally
-    if (incoming_uid == null) {
-      if (uuid == null) {
-        uuid = UUID.randomUUID().toString();
+      Object incoming_uid = incoming_props.get(PROP_UUID);
+
+      // UUID id not set externally
+      if (incoming_uid == null) {
+        if (uuid == null) {
+          uuid = UUID.randomUUID().toString();
+        }
+      } else {
+        LOGGER.info("Incoming UUID = " + incoming_uid.toString());
+        // external uuid set
+        if (uuid == null) {
+          uuid = incoming_uid.toString();
+        } else if (!incoming_uid.toString().equals(uuid)) {
+          LOGGER.error("External uuid configuration does not match container's uuid. Settings ignored ...");
+          return;
+        }
       }
+
       LOGGER.info("Container identifier is [" + uuid + "]");
-    } else {
-      if (!incoming_uid.toString().equals(uuid)) {
-        LOGGER.error("External uuid configuration does not match container's uuid. Settings ignored ...");
-        return;
+
+
+      Properties backup_props = properties;
+      properties = new Properties();
+
+      int exists = 0;
+
+      properties.clear();
+
+      for(String key: incoming_props.stringPropertyNames()) {
+        String value = incoming_props.getProperty(key);
+
+        if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
+          String realKey = key.substring(PROP_PROPERTY.length());
+          properties.setProperty(realKey, value);
+
+          if (backup_props.get(realKey) != null && backup_props.getProperty(realKey).equals(value)) {
+            exists++;
+          }
+          LOGGER.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
+        }
       }
-    }
 
-    properties.clear();
+      if (exists != properties.size()) {
+        Properties toStore = new Properties();
+        for(String key: properties.stringPropertyNames()) {
+          toStore.setProperty(PROP_PROPERTY + key, properties.getProperty(key));
+        }
+        toStore.setProperty(PROP_UUID, getUUID());
 
-    for(Enumeration<String> keys = incoming_props.keys(); keys.hasMoreElements();) {
-      String key = keys.nextElement();
-      Object value = incoming_props.get(key);
-
-      if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
-        String realKey = key.substring(PROP_PROPERTY.length());
-        properties.setProperty(realKey, value.toString());
-        LOGGER.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
+        containerContext.writeConfig(SERVICE_PID, toStore);
       }
     }
   }
