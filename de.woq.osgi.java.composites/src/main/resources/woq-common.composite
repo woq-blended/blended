@@ -26,6 +26,7 @@ scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-api/${pax-logging.version}@5
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-service/${pax-logging.version}@5
 
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.util/1.0-SNAPSHOT@8
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/1.0-SNAPSHOT@8
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/1.0-SNAPSHOT@8
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/1.0-SNAPSHOT@8
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/1.0-SNAPSHOT@10
