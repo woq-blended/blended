@@ -38,6 +38,7 @@ public class ConfigUpdater extends TimerTask
 
   private final static String LOG_CONFIG_ID = "org.ops4j.pax.logging";
   private final static String PROP_FILE_EXT = ".cfg";
+  private final static String PROP_WOQ_HOME = "woq.home";
   private final static String LOG_PREFIX = "log4j.";
 
   private final BundleContext bundleContext;
@@ -57,7 +58,7 @@ public class ConfigUpdater extends TimerTask
 
     if (configDir == null)
     {
-      String dir = System.getProperty("sib.home");
+      String dir = System.getProperty(PROP_WOQ_HOME);
       if (dir != null)
       {
         dir = dir + "/config";
@@ -67,7 +68,7 @@ public class ConfigUpdater extends TimerTask
         dir = System.getProperty("user.dir");
       }
 
-      log.info("SIB Activator using directory [" + dir + "]");
+      log.info("WOQ Activator using directory [" + dir + "]");
 
       configDir = new File(dir);
       if (!configDir.exists()) {

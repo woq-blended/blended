@@ -49,10 +49,10 @@ public class Main implements ContainerConstants {
       params.add("--vmOptions=" + jvmOptions);
     }
 
-    String sibHome = getPlatformProperties().getProperty(PROP_SIB_HOME);
-    if (sibHome != null)
+    String woqHome = getPlatformProperties().getProperty(PROP_WOQ_HOME);
+    if (woqHome != null)
     {
-      params.add("--classpath=" + sibHome + "/config");
+      params.add("--classpath=" + woqHome + "/config");
     }
 
     params.add("--dir=" + getContainerName());
@@ -135,11 +135,11 @@ public class Main implements ContainerConstants {
       }
     }
 
-    String sibHome = getPlatformProperties().getProperty(PROP_SIB_HOME);
+    String sibHome = getPlatformProperties().getProperty(PROP_WOQ_HOME);
     if (sibHome != null)
     {
       optionString.append("-D");
-      optionString.append(PROP_SIB_HOME);
+      optionString.append(PROP_WOQ_HOME);
       optionString.append("=");
       optionString.append(sibHome);
       optionString.append(" ");

@@ -53,5 +53,5 @@ public interface ContainerConstants {
 
   String PARAM_SYSPROP = "jvm.property.";
 
-  String PROP_SIB_HOME = PARAM_SYSPROP + "sib.home";
+  String PROP_WOQ_HOME = PARAM_SYSPROP + "woq.home";
 }

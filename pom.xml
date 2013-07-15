@@ -54,6 +54,7 @@
         <module>de.woq.osgi.java.launcher</module>
         <module>de.woq.osgi.java.configurator</module>
         <module>de.woq.osgi.java.composites</module>
+        <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.osgidep</module>
         <module>de.woq.osgi.java.util</module>
         <module>de.woq.osgi.java.startcompletion</module>

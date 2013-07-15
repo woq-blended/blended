@@ -62,9 +62,9 @@ do
   APPCP=$APPCP:${jar}
 done
 
-echo "SIB Home directory is [${WOQ_HOME}]."
+echo "WOQ Home directory is [${WOQ_HOME}]."
 ${JAVA} -version
 
-${JAVA} -classpath $APPCP de.woq.osgi.java.container.Main -jvm.property.sib.home ${WOQ_HOME} $1
+${JAVA} -classpath $APPCP de.woq.osgi.java.container.Main -jvm.property.woq.home ${WOQ_HOME} $1
 
 exit $?
