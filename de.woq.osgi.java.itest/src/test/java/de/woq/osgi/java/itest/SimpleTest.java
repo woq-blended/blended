@@ -15,6 +15,8 @@
 
 package de.woq.osgi.java.itest;
 
+import javax.inject.Inject;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,6 +24,8 @@ import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,9 +37,13 @@ public class SimpleTest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
 
+  @Inject
+  private BundleContext context;
+
   @Configuration
   public Option[] config() {
     return options(
+      mavenBundle().groupId("net.sourceforge.cglib").artifactId("com.springsource.net.sf.cglib").version("2.2.0").startLevel(2),
       junitBundles()
     );
   }
@@ -43,6 +51,10 @@ public class SimpleTest {
   @Test
   public void simpleTest() {
     LOGGER.info("Hello from my Test!");
-    Assert.assertTrue(true);
+    Assert.assertNotNull(context);
+
+    for(Bundle b: context.getBundles()) {
+      LOGGER.info(String.format("Installed bundle [%d] : [%s]", b.getBundleId(), b.getSymbolicName()));
+    }
   }
 }

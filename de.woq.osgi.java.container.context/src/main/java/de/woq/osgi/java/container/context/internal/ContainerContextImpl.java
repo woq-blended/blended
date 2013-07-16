@@ -20,6 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.Properties;
 
 import de.woq.osgi.java.container.context.ContainerContext;
@@ -33,6 +34,20 @@ public class ContainerContextImpl implements ContainerContext {
   private final static String CONFIG_DIR = "config";
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
+
+  @Override
+  public String getContainerHostname() {
+
+    String result = "UNKNOWN";
+
+    try {
+      InetAddress localMachine = java.net.InetAddress.getLocalHost();
+      result = localMachine.getCanonicalHostName();
+    } catch (java.net.UnknownHostException uhe) {
+      // ignore
+    }
+    return result;
+  }
 
   @Override
   public String getContainerDirectory() {

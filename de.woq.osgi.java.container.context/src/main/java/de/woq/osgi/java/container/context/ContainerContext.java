@@ -21,6 +21,7 @@ public interface ContainerContext {
 
   public String getContainerDirectory();
   public String getContainerConfigDirectory();
+  public String getContainerHostname();
 
   public Properties readConfig(final String configId);
   public void writeConfig(final String configId, final Properties props);

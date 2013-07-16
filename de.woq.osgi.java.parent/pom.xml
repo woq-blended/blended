@@ -54,6 +54,7 @@
     <jackson.version>1.9.12</jackson.version>
     <junit.version>4.10</junit.version>
     <log4j.version>1.2.15</log4j.version>
+    <mockito.version>1.9.5</mockito.version>
     <osgi.core.version>4.3.0</osgi.core.version>
     <osgi.enterprise.version>4.2.0</osgi.enterprise.version>
     <pax-exam.version>3.1.0</pax-exam.version>
