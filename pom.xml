@@ -68,6 +68,13 @@
       </modules>
     </profile>
 
+    <profile>
+      <id>itest</id>
+      <modules>
+        <module>de.woq.osgi.java.itest</module>
+      </modules>
+    </profile>
+
   </profiles>
 
 </project>
