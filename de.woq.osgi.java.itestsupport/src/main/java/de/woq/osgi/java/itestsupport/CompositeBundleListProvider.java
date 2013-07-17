@@ -21,7 +21,6 @@ public class CompositeBundleListProvider implements BundleListProvider {
   private final static String TOKEN_BUNDLE    = "scan-bundle:";
 
   private final static String[] IGNORE_PATTERNS = new String [] {
-    "mvn:org.slf4j(.)*"
   };
 
   public CompositeBundleListProvider(final String...composites) {
