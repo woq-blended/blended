@@ -27,6 +27,7 @@
 
   <properties>
     <java.version>1.7</java.version>
+    <equinox.version>3.8.1.v20120830-144521</equinox.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -50,6 +51,7 @@
     <cglib.version>2.2.0</cglib.version>
     <felix.cm.version>1.6.0</felix.cm.version>
     <felix.event.version>1.3.2</felix.event.version>
+    <felix.framework.version>4.2.1</felix.framework.version>
     <jersey.version>1.17.1</jersey.version>
     <jackson.version>1.9.12</jackson.version>
     <junit.version>4.10</junit.version>
@@ -59,15 +61,14 @@
     <osgi.enterprise.version>4.2.0</osgi.enterprise.version>
     <pax-exam.version>3.1.0</pax-exam.version>
     <pax-logging.version>1.6.4</pax-logging.version>
-    <pax-url-aether.version>1.3.5</pax-url-aether.version>
-    <pax-url-mvn.version>1.3.5</pax-url-mvn.version>
-    <pax-url-wrap.version>1.3.5</pax-url-wrap.version>
+    <pax-url.version>1.3.6</pax-url.version>
     <pax-web.version>3.0.1</pax-web.version>
     <pax-runner.version>1.8.5</pax-runner.version>
     <scala.version>2.10.0</scala.version>
     <slf4j.version>1.7.2</slf4j.version>
     <spring.version>3.1.2.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
+    <tinybundles.version>1.0.0</tinybundles.version>
     <velocity.version>1.7</velocity.version>
     <xbean.version>3.13</xbean.version>
   </properties>
@@ -194,6 +195,9 @@
             <forkMode>always</forkMode>
             <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
             <argLine>-Xmx1024m</argLine>
+            <systemProperties>
+              <java.protocol.handler.pkgs>de.woq.osgi.java.itestsupport.handler</java.protocol.handler.pkgs>
+            </systemProperties>
           </configuration>
 
           <executions>

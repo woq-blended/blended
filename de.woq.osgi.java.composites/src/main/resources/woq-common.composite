@@ -19,8 +19,7 @@ scan-bundle:mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.versi
 
 scan-bundle:mvn:org.apache.log4j/com.springsource.org.apache.log4j/${log4j.version}@2
 scan-bundle:mvn:org.slf4j/slf4j-api/${slf4j.version}@2
-scan-bundle:mvn:org.slf4j/slf4j-log4j12/${slf4j.version}@nostart@2
-#@
+scan-bundle:mvn:org.slf4j/slf4j-log4j12/${slf4j.version}@2@nostart
 
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-api/${pax-logging.version}@5
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-service/${pax-logging.version}@5
@@ -32,8 +31,8 @@ scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/1.0-SNAPSHOT@8
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/1.0-SNAPSHOT@10
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/1.0-SNAPSHOT@10
 
-scan-bundle:mvn:org.ops4j.pax.url/pax-url-wrap/${pax-url-mvn.version}@10
-scan-bundle:mvn:org.ops4j.pax.url/pax-url-mvn/${pax-url-wrap.version}@10
+scan-bundle:mvn:org.ops4j.pax.url/pax-url-wrap/${pax-url.version}@10
+scan-bundle:mvn:org.ops4j.pax.url/pax-url-mvn/${pax-url.version}@10
 
 scan-bundle:mvn:org.apache.velocity/velocity/${velocity.version}@15
 

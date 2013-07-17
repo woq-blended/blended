@@ -17,13 +17,18 @@ package de.woq.osgi.java.itest;
 
 import javax.inject.Inject;
 
+import de.woq.osgi.java.itestsupport.CompositeBundleListProvider;
+import de.woq.osgi.java.itestsupport.SimpleBundleListProvider;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.junit.PaxExamServer;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -31,8 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import static org.ops4j.pax.exam.CoreOptions.*;
 
-@RunWith(PaxExam.class)
-@ExamReactorStrategy
 public class SimpleTest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
@@ -40,11 +43,18 @@ public class SimpleTest {
   @Inject
   private BundleContext context;
 
+  @Rule
+  public PaxExamServer exam = new PaxExamServer();
+
   @Configuration
-  public Option[] config() {
+  public Option[] config() throws Exception {
     return options(
-      mavenBundle().groupId("net.sourceforge.cglib").artifactId("com.springsource.net.sf.cglib").version("2.2.0").startLevel(2),
-      junitBundles()
+//      new CompositeBundleListProvider(
+//        "classpath:woq-common.composite"
+//      ).getBundles(),
+      junitBundles(),
+//      systemProperty("xx").value("xx"),
+      frameworkStartLevel(100)
     );
   }
 
