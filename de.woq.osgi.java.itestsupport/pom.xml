@@ -71,12 +71,6 @@
 
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-remote</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-container-native</artifactId>
       <version>${pax-exam.version}</version>
     </dependency>

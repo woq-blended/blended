@@ -18,28 +18,28 @@ package de.woq.osgi.java.itest;
 import javax.inject.Inject;
 
 import de.woq.osgi.java.itestsupport.CompositeBundleListProvider;
-import org.junit.Assert;
-import org.junit.Rule;
+import junit.framework.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExamServer;
-import org.osgi.framework.Bundle;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
+import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.ops4j.pax.exam.CoreOptions.*;
 
+@RunWith(PaxExam.class)
+@ExamReactorStrategy(PerMethod.class)
 public class SimpleTest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
 
   @Inject
   private BundleContext context;
-
-  @Rule
-  public PaxExamServer exam = new PaxExamServer();
 
   @Configuration
   public Option[] config() throws Exception {
@@ -59,9 +59,5 @@ public class SimpleTest {
     LOGGER.info("Hello from my Test!");
 
     Assert.assertNotNull(context);
-
-    for(Bundle b: context.getBundles()) {
-      LOGGER.info(String.format("Installed bundle [%d] : [%s]", b.getBundleId(), b.getSymbolicName()));
-    }
   }
 }
