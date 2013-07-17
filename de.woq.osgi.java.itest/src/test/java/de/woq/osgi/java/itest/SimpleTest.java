@@ -19,11 +19,13 @@ import javax.inject.Inject;
 
 import de.woq.osgi.java.itestsupport.CompositeBundleListProvider;
 import junit.framework.Assert;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.junit.PaxExamServer;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.osgi.framework.BundleContext;
@@ -40,6 +42,9 @@ public class SimpleTest {
 
   @Inject
   private BundleContext context;
+
+//  @Rule
+//  public PaxExamServer exam = new PaxExamServer();
 
   @Configuration
   public Option[] config() throws Exception {
