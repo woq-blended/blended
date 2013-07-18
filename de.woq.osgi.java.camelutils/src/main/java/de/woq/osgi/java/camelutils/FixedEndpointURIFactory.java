@@ -1,15 +1,17 @@
 package de.woq.osgi.java.camelutils;
 
+import org.apache.camel.Exchange;
+
 public final class FixedEndpointURIFactory implements EndpointURIFactory {
 
-  private final String endpointUri;
+  private final String[] endpointUris;
 
-  public FixedEndpointURIFactory(String endpointUri) {
-    this.endpointUri = endpointUri;
+  public FixedEndpointURIFactory(String...endpointUris) {
+    this.endpointUris = endpointUris;
   }
 
   @Override
-  public String createEndpointUri() {
-    return endpointUri;
+  public String[] createEndpointUris(final Exchange exchange) throws Exception {
+    return endpointUris;
   }
 }
