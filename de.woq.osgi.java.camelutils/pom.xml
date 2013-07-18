@@ -28,7 +28,7 @@
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.camelhttp</artifactId>
+  <artifactId>de.woq.osgi.java.camelutils</artifactId>
   <packaging>bundle</packaging>
 
   <properties>

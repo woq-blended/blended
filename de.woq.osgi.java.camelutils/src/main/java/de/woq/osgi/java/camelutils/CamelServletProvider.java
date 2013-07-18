@@ -13,7 +13,7 @@
  *  limitations under the License.
  */
 
-package de.woq.osgi.java.camelhttp;
+package de.woq.osgi.java.camelutils;
 
 import org.apache.camel.component.http.CamelServlet;
 
