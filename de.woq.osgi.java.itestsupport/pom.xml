@@ -28,6 +28,12 @@
   </parent>
 
   <artifactId>de.woq.osgi.java.itestsupport</artifactId>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <bundle.namespace>${project.artifactId}</bundle.namespace>
+    <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
+  </properties>
 
   <dependencies>
 
@@ -158,6 +164,15 @@
     </dependency>
 
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
 

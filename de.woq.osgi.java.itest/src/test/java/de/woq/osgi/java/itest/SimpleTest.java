@@ -15,54 +15,32 @@
 
 package de.woq.osgi.java.itest;
 
-import javax.inject.Inject;
-
-import de.woq.osgi.java.itestsupport.CompositeBundleListProvider;
+import de.woq.osgi.java.itestsupport.AbstractWOQContainerTest;
 import junit.framework.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.junit.PaxExamServer;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerMethod;
-import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.ops4j.pax.exam.CoreOptions.*;
-
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
-public class SimpleTest {
+public class SimpleTest extends AbstractWOQContainerTest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
 
-  @Inject
-  private BundleContext context;
-
-//  @Rule
-//  public PaxExamServer exam = new PaxExamServer();
-
   @Configuration
   public Option[] config() throws Exception {
-    return options(
-      new CompositeBundleListProvider(
-        "classpath:junit.composite",
-        "classpath:woq-common.composite"
-      ).getBundles(),
-      systemProperty("config.updateInterval").value("1000"),
-      systemProperty("woq.home").value("target/test-classes"),
-      frameworkStartLevel(100)
-    );
+    return containerConfiguration();
   }
 
   @Test
   public void simpleTest() {
     LOGGER.info("Hello from my Test!");
-
-    Assert.assertNotNull(context);
+    Assert.assertNotNull(getBundleContext());
   }
 }
