@@ -1,10 +1,9 @@
 package de.woq.osgi.java.itestsupport;
 
 import java.io.BufferedReader;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +19,8 @@ public class CompositeFileReader {
 
     List<String> result = new ArrayList<String>();
 
-    InputStream is = openComposite(compositeLocation);
-
-    if (is == null) {
-      throw new Exception("Unable to read [" + compositeLocation + "]");
-    }
+    byte[] content = FileReader.readFile(compositeLocation);
+    InputStream is = new ByteArrayInputStream(content);
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
@@ -49,40 +45,4 @@ public class CompositeFileReader {
 
     return result.toArray(new String[] {});
   }
-
-  private static InputStream openComposite(final String compositeLocation) {
-
-    InputStream is = null;
-
-    try {
-      LOGGER.info("Trying to read file [" + compositeLocation + "]");
-      is = new FileInputStream(compositeLocation);
-    } catch (Exception e) {
-      LOGGER.info("File [" + compositeLocation + "] not accessible.");
-    }
-
-    if (is == null) {
-      try {
-        LOGGER.info("Trying to read URL [" + compositeLocation + "]");
-        URL url = new URL(compositeLocation);
-        is = url.openStream();
-      } catch (Exception e) {
-        LOGGER.info("URL [" + compositeLocation + "] not accessible.");
-      }
-    }
-
-    if (is == null) {
-      try {
-        LOGGER.info("Trying to read Resource [" + compositeLocation + "]");
-        is = CompositeFileReader.class.getResourceAsStream(compositeLocation);
-      } catch (Exception e) {
-        LOGGER.info("URL [" + compositeLocation + "] not accessible.");
-      }
-    }
-
-    return is;
-  }
-
-
-
 }

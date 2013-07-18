@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<content>
+  <entry type="1">
+    <textMessage>
+      <headerProperty type="java.lang.String" value="testString" name="String1"/>
+      <headerProperty type="java.lang.String" value="testString" name="String2"/>
+      <headerProperty type="java.lang.Integer" value="0" name="Number1"/>
+      <headerProperty type="java.lang.Boolean" value="true" name="Boolean1"/>
+      <text>SGFsbG8gQW5kcmVhcw==</text>
+    </textMessage>
+  </entry>
+</content>
