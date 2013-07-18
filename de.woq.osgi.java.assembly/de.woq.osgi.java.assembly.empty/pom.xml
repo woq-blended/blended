@@ -25,9 +25,7 @@
     <relativePath>../de.woq.osgi.java.assembly.parent</relativePath>
   </parent>
 
-  <groupId>de.woq.osgi.java.assembly</groupId>
   <artifactId>de.woq.osgi.java.assembly.empty</artifactId>
-  <version>1.0-SNAPSHOT</version>
 
   <properties>
     <woq.profile.name>empty</woq.profile.name>

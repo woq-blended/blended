@@ -1,28 +1,28 @@
-scan-bundle:wrap:mvn:junit/junit/4.11@2
+scan-bundle:wrap:mvn:junit/junit/${junit.version}@2
 
-scan-bundle:mvn:org.ops4j.pax.exam/pax-exam/3.1.0@2
-scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-inject/3.1.0@2
-scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-extender-service/3.1.0@2
+scan-bundle:mvn:org.ops4j.pax.exam/pax-exam/${pax-exam.version}@2
+scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-inject/${pax-exam.version}@2
+scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-extender-service/${pax-exam.version}@2
+scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-invoker-junit/${pax-exam.version}@2
 
-scan-bundle:mvn:org.ops4j.base/ops4j-base-lang/1.4.0@2
-scan-bundle:mvn:org.ops4j.base/ops4j-base-store/1.4.0@2
-scan-bundle:mvn:org.ops4j.base/ops4j-base-util-property/1.4.0@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-lang/${ops4j-base.version}@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-store/${ops4j-base.version}@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-util-property/${ops4j-base.version}@2
 
-scan-bundle:mvn:org.ops4j.pax.tipi/org.ops4j.pax.tipi.hamcrest.core/1.3.0.1@2
+scan-bundle:mvn:org.ops4j.pax.tipi/org.ops4j.pax.tipi.hamcrest.core/${hamcrest.version}@2
 
-scan-bundle:mvn:org.ops4j.base/ops4j-base/1.4.0@2
-scan-bundle:mvn:org.ops4j.base/ops4j-base-io/1.4.0@2
-scan-bundle:mvn:org.ops4j.base/ops4j-base-spi/1.4.0@2
-scan-bundle:mvn:org.ops4j.base/ops4j-base-monitors/1.4.0@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base/${ops4j-base.version}@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-io/${ops4j-base.version}@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-spi/${ops4j-base.version}@2
+scan-bundle:mvn:org.ops4j.base/ops4j-base-monitors/${ops4j-base.version}@2
 
-scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-core/1.7.0@2
-scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-tracker/1.7.0@2
-scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-lifecycle/1.7.0@2
-scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-extender/1.7.0@2
-scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-framework/1.7.0@2
+scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-core/${pax-swissbox.version}@2
+scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-tracker/${pax-swissbox.version}@2
+scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-lifecycle/${pax-swissbox.version}@2
+scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-extender/${pax-swissbox.version}@2
+scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-framework/${pax-swissbox.version}@2
 
 scan-bundle:wrap:mvn:javax.inject/javax.inject/1$Bundle-Version=1.0&Export-Package=*;version="1.0"@5
 
-scan-bundle:mvn:org.ops4j.pax.exam/pax-exam-invoker-junit/3.1.0@2
 
 

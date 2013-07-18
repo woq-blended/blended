@@ -28,10 +28,7 @@
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-
-  <groupId>de.woq.osgi.java</groupId>
   <artifactId>de.woq.osgi.java.mgmt_rest</artifactId>
-  <version>1.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <properties>
@@ -44,13 +41,13 @@
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.jaxrs</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
-      <version>1.0-SNAPSHOT</version>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -71,4 +68,3 @@
   </build>
 
 </project>
-
