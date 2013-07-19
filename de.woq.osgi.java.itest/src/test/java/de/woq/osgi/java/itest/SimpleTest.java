@@ -16,7 +16,7 @@
 package de.woq.osgi.java.itest;
 
 import de.woq.osgi.java.itestsupport.AbstractWOQContainerTest;
-import junit.framework.Assert;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
