@@ -123,6 +123,8 @@ public class ContainerContextImpl implements ContainerContext {
         os.close();
       } catch (Exception e) {}
     }
+
+    LOGGER.info("Exported configuration [{}]", getConfigFile(configId));
   }
 
   private String getConfigFile(final String configId) {

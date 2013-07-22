@@ -65,9 +65,12 @@ public class ContainerIdentifierServiceImpl
   protected ServiceRegistration registerService(Dictionary<String, ?> incomingProperties) {
 
     Properties incoming = new Properties();
-    for(Enumeration<String> keys = incomingProperties.keys(); keys.hasMoreElements();) {
-      String key = keys.nextElement();
-      incoming.setProperty(key, incomingProperties.get(key).toString());
+
+    if (incomingProperties != null) {
+      for(Enumeration<String> keys = incomingProperties.keys(); keys.hasMoreElements();) {
+        String key = keys.nextElement();
+        incoming.setProperty(key, incomingProperties.get(key).toString());
+      }
     }
 
     if (initialized.get()) {
