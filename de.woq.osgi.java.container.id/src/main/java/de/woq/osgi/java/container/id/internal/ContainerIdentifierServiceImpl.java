@@ -63,33 +63,29 @@ public class ContainerIdentifierServiceImpl
 
   @Override
   protected ServiceRegistration registerService(Dictionary<String, ?> incomingProperties) {
-    if (getServiceRegistration() == null) {
 
-      Properties incoming = new Properties();
-      for(Enumeration<String> keys = incomingProperties.keys(); keys.hasMoreElements();) {
-        String key = keys.nextElement();
-        incoming.setProperty(key, incomingProperties.get(key).toString());
-      }
-
-      if (initialized.get()) {
-        updateIdentifier(incoming, false);
-      }
-
-      String[] classes = new String[] {
-        ContainerIdentifierService.class.getName()
-      };
-
-      Dictionary<String, Object> svcProps = new Hashtable<String, Object>();
-
-      svcProps.put(PROP_UUID, getUUID());
-      for(String key: getProperties().stringPropertyNames()) {
-        svcProps.put(key, getProperties().getProperty(key));
-      }
-
-      setServiceRegistration(getBundleContext().registerService(classes, this, svcProps));
+    Properties incoming = new Properties();
+    for(Enumeration<String> keys = incomingProperties.keys(); keys.hasMoreElements();) {
+      String key = keys.nextElement();
+      incoming.setProperty(key, incomingProperties.get(key).toString());
     }
 
-    return getServiceRegistration();
+    if (initialized.get()) {
+      updateIdentifier(incoming, false);
+    }
+
+    String[] classes = new String[] {
+      ContainerIdentifierService.class.getName()
+    };
+
+    Dictionary<String, Object> svcProps = new Hashtable<String, Object>();
+
+    svcProps.put(PROP_UUID, getUUID());
+    for(String key: getProperties().stringPropertyNames()) {
+      svcProps.put(key, getProperties().getProperty(key));
+    }
+
+    return getBundleContext().registerService(classes, this, svcProps);
   }
 
   @Override
