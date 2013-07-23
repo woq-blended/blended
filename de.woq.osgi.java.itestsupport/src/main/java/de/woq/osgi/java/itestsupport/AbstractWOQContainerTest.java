@@ -16,7 +16,6 @@
 package de.woq.osgi.java.itestsupport;
 
 import javax.inject.Inject;
-
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;

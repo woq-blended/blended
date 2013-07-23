@@ -32,6 +32,12 @@
   <dependencies>
 
     <dependency>
+      <groupId>de.woq.osgi.java.assembly</groupId>
+      <artifactId>de.woq.osgi.java.assembly.defaults</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.itestsupport</artifactId>
       <version>${project.version}</version>
@@ -39,9 +45,10 @@
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java.assembly</groupId>
-      <artifactId>de.woq.osgi.java.assembly.defaults</artifactId>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.container.id</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

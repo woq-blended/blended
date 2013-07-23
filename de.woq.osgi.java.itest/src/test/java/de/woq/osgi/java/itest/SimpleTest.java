@@ -15,6 +15,7 @@
 
 package de.woq.osgi.java.itest;
 
+import de.woq.osgi.java.container.id.ContainerIdentifierService;
 import de.woq.osgi.java.itestsupport.AbstractWOQContainerTest;
 import org.junit.Assert;
 import org.junit.Test;
@@ -27,11 +28,16 @@ import org.ops4j.pax.exam.spi.reactors.PerMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerMethod.class)
 public class SimpleTest extends AbstractWOQContainerTest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
+
+  @Inject
+  ContainerIdentifierService idService;
 
   @Configuration
   public Option[] config() throws Exception {
@@ -39,8 +45,9 @@ public class SimpleTest extends AbstractWOQContainerTest {
   }
 
   @Test
-  public void simpleTest() {
-    LOGGER.info("Hello from my Test!");
-    Assert.assertNotNull(getBundleContext());
+  public void containerIDTest() {
+    Assert.assertNotNull(idService);
+    LOGGER.info("Started container [{}]", idService.getUUID());
   }
+
 }
