@@ -33,13 +33,6 @@
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.container.id</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.itestsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
