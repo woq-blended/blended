@@ -44,6 +44,12 @@
     </dependency>
 
     <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.testsupport</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.eclipse.tycho</groupId>
       <artifactId>org.eclipse.osgi</artifactId>
       <version>${equinox.version}</version>
@@ -53,6 +59,30 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jms</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-http</artifactId>
+      <version>${camel.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+      <version>1.1.1</version>
     </dependency>
 
     <dependency>
@@ -115,7 +145,6 @@
       <version>${pax-url.version}</version>
     </dependency>
 
-
     <dependency>
       <groupId>org.ops4j.pax.swissbox</groupId>
       <artifactId>pax-swissbox-tracker</artifactId>
@@ -156,12 +185,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.composites</artifactId>
-      <version>${project.version}</version>
     </dependency>
 
   </dependencies>

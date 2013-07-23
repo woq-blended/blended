@@ -24,4 +24,5 @@ scan-bundle:mvn:org.ops4j.pax.swissbox/pax-swissbox-framework/${pax-swissbox.ver
 
 scan-bundle:wrap:mvn:javax.inject/javax.inject/1$Bundle-Version=1.0&Export-Package=*;version="1.0"@5
 
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.testsupport/${project.version}@2
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.itestsupport/${project.version}@2

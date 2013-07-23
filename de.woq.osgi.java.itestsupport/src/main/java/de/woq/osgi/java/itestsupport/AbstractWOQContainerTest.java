@@ -18,15 +18,11 @@ package de.woq.osgi.java.itestsupport;
 import javax.inject.Inject;
 import org.ops4j.pax.exam.Option;
 import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
 import static org.ops4j.pax.exam.CoreOptions.options;
 import static org.ops4j.pax.exam.CoreOptions.systemProperty;
 
 public class AbstractWOQContainerTest {
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(AbstractWOQContainerTest.class);
 
   @Inject
   protected BundleContext bundleContext;
