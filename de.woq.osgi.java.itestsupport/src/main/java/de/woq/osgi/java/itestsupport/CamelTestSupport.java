@@ -21,7 +21,7 @@ public class CamelTestSupport {
   private final static Logger LOGGER = LoggerFactory.getLogger(CamelTestSupport.class);
 
 
-  public synchronized void init() {
+  public synchronized void init() throws Exception {
 
     if (context == null) {
       context = new DefaultCamelContext();
@@ -30,7 +30,7 @@ public class CamelTestSupport {
     }
   }
 
-  public void sendTestMessage(final String message, final String uri) {
+  public void sendTestMessage(final String message, final String uri) throws Exception {
 
     Message msg = null;
 
@@ -65,7 +65,7 @@ public class CamelTestSupport {
     return result;
   }
 
-  public synchronized CamelContext getContext() {
+  public synchronized CamelContext getContext() throws Exception {
     if (context == null) {
       init();
     }
