@@ -19,13 +19,9 @@ import de.woq.osgi.java.itestsupport.AbstractWOQITest;
 import de.woq.osgi.java.itestsupport.WithComposite;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@WithComposite
+@WithComposite(delay = 0l)
 public class SimpleTest extends AbstractWOQITest {
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
 
   @Test
   public void containerIDTest() {
