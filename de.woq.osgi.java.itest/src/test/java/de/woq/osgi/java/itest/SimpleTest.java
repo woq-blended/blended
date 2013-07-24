@@ -15,40 +15,17 @@
 
 package de.woq.osgi.java.itest;
 
-import de.woq.osgi.java.itestsupport.CompositeBundleListProvider;
+import de.woq.osgi.java.itestsupport.AbstractWOQITest;
+import de.woq.osgi.java.itestsupport.WithComposite;
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
-import org.ops4j.pax.exam.Configuration;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.junit.PaxExamServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
-
-public class SimpleTest {
+@WithComposite
+public class SimpleTest extends AbstractWOQITest {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(SimpleTest.class);
-
-  @Rule
-  public PaxExamServer exam = new PaxExamServer();
-
-  @Configuration
-  public Option[] config() throws Exception {
-
-    return options(
-      new CompositeBundleListProvider(
-        "classpath:woq-common.composite"
-      ).getBundles(),
-      systemProperty("config.updateInterval").value("1000"),
-      systemProperty("woq.home").value("target/test-classes"),
-      frameworkStartLevel(100)
-    );
-  }
 
   @Test
   public void containerIDTest() {
