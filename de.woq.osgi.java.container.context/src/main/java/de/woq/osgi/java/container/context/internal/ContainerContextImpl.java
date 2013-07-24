@@ -32,6 +32,7 @@ public class ContainerContextImpl implements ContainerContext {
   private final static String PROP_WOQ_HOME = "woq.home";
 
   private final static String CONFIG_DIR = "config";
+  private final static String UI_DIR = "ui";
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
 
@@ -72,6 +73,11 @@ public class ContainerContextImpl implements ContainerContext {
     }
 
     return configDir.getAbsolutePath();
+  }
+
+  @Override
+  public String getContainerUIDirectory() {
+    return getContainerDirectory() + "/" + UI_DIR;
   }
 
   @Override

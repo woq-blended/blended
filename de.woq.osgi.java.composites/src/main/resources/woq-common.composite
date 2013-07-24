@@ -26,3 +26,4 @@ scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/1.0-SNAPSHOT@50
 
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/1.0-SNAPSHOT@50
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_rest/1.0-SNAPSHOT@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.webui/1.0-SNAPSHOT@50

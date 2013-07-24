@@ -64,6 +64,9 @@
         <module>de.woq.osgi.java.camelutils</module>
         <module>de.woq.osgi.java.activemq.brokerstarter</module>
         <module>de.woq.osgi.java.activemq.defaultbroker</module>
+
+        <module>de.woq.osgi.java.webui</module>
+
         <module>de.woq.osgi.java.assembly</module>
 
         <module>de.woq.osgi.java.testsupport</module>
