@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html data-ng-app="bundleApp">
+<head>
+  <title>Bundle Manager</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/bootstrap-responsive.min.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div ng-controller="BundleController">
+      <ul>
+        <li ng-repeat="bundle in bundles">{{ bundle.bundleId }} - {{ bundle.symbolicName }}</li>
+      </ul>
+    </div>
+
+    <!-- Vendor Libs: jQuery only used for Bootstrap functionality -->
+    <script src="lib/angular.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
+
+    <!-- UI Libs -->
+    <script src="lib/bootstrap.min.js"></script>
+
+    <!-- App libs -->
+    <script src="app/app.js"></script>
+</body>
+</html>
