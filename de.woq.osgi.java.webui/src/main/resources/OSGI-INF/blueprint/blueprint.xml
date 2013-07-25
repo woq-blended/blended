@@ -17,19 +17,20 @@
 
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
-  <bean id="webui" class="de.woq.osgi.java.webui.internal.WebUIServlet" >
+  <bean id="webui" class="de.woq.osgi.java.webui.internal.WebUIServlet" />
+
+  <bean id="initializer" class="de.woq.osgi.java.webui.internal.WebUIInitializer" init-method="init" destroy-method="destroy" >
+    <argument index="0" value="/ui" />
+
+    <property name="httpService">
+      <reference interface="org.osgi.service.http.HttpService" timeout="1000" />
+    </property>
+
+    <property name="servlet" ref="webui" />
 
     <property name="containerContext">
       <reference interface="de.woq.osgi.java.container.context.ContainerContext" timeout="1000" />
     </property>
-
-  </bean>
-
-  <bean id="initializer" class="de.woq.osgi.java.webui.internal.WebUIInitializer" init-method="init" destroy-method="destroy" >
-    <property name="httpService">
-      <reference interface="org.osgi.service.http.HttpService" timeout="1000" />
-    </property>
-    <property name="servlet" ref="webui" />
   </bean>
 
 </blueprint>

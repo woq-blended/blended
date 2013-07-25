@@ -16,11 +16,5 @@ public class WebUIServlet extends HttpServlet {
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
   }
 
-  public ContainerContext getContainerContext() {
-    return containerContext;
-  }
 
-  public void setContainerContext(ContainerContext containerContext) {
-    this.containerContext = containerContext;
-  }
 }
