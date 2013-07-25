@@ -66,6 +66,7 @@
         <module>de.woq.osgi.java.activemq.defaultbroker</module>
 
         <module>de.woq.osgi.java.webui</module>
+        <module>de.woq.osgi.java.webui.osgiconsole</module>
 
         <module>de.woq.osgi.java.assembly</module>
 
