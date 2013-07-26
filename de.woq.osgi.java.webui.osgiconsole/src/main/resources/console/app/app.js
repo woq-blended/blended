@@ -1,25 +1,15 @@
-﻿var bundleApp = angular.module('bundleApp', []);
+﻿'use strict';
 
-bundleApp.controller('BundleController', function($scope, bundleFactory) {
+var bundleApp = angular.module('bundleApp', ['bundleService'])
 
-  init();
+  .config(['$routeProvider', function($routeProvider) {
 
-  function init() {
-    $scope.bundles = bundleFactory.getBundles();
-  }
-});
+    $routeProvider
+      .when('/bundles', {
+        templateUrl: 'views/bundles.html',
+        controller: 'bundleController'
+      })
+      .otherwise( { redirectTo: '/bundles' } );
+  }]
+);
 
-bundleApp.factory('bundleFactory', function() {
-
-  var factory = {};
-
-  var bundles = [
-    { bundleId: 0, symbolicName: 'SystemBundle' }
-  ];
-
-  factory.getBundles = function() {
-    return bundles;
-  };
-
-  return factory;
-});
