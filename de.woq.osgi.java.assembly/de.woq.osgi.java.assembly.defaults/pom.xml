@@ -27,6 +27,5 @@
 
   <groupId>de.woq.osgi.java.assembly</groupId>
   <artifactId>de.woq.osgi.java.assembly.defaults</artifactId>
-  <version>${project.version}</version>
 
 </project>
