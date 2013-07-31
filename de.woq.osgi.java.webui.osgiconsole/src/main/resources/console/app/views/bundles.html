@@ -1,6 +1,13 @@
 <div>
   <h2>Bundles</h2>
-  <ul>
-    <li ng-repeat="bundle in bundles">{{ bundle.bundleId }} - {{ bundle.symbolicName }}</li>
-  </ul>
+  <table border=1>
+    <tr>
+      <th>BundleId</th>
+      <th>Symbolic Name</th>
+    </tr>
+    <tr ng-repeat="bundle in bundles">
+      <td>{{ bundle.bundleId }}</td>
+      <td>{{ bundle.symbolicName }}</td>
+    </tr>
+  </table>
 </div>

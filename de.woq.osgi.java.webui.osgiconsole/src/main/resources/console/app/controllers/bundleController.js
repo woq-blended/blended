@@ -1,4 +1,6 @@
 bundleApp.controller('bundleController', function($scope, Bundles) {
 
-  $scope.bundles = Bundles.listBundles();
+  Bundles.async().then(function(data) {
+    $scope.bundles = data.bundleInfo;
+  });
 });
