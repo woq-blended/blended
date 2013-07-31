@@ -37,6 +37,12 @@
     </snapshotRepository>
   </distributionManagement>
 
+  <scm>
+    <connection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</developerConnection>
+    <url>https://github.com/atooni/de.woq.osgi.java</url>
+  </scm>
+
   <profiles>
 
     <profile>
