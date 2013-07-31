@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.woq.osgi.java.assembly</groupId>
     <artifactId>de.woq.osgi.java.assembly.parent</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0-alpha-1</version>
     <relativePath>../de.woq.osgi.java.assembly.parent</relativePath>
   </parent>
 

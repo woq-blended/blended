@@ -22,8 +22,8 @@ scan-composite:classpath:camel.composite
 scan-composite:classpath:jersey.composite
 scan-composite:classpath:active-mq.composite
 
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/1.0-SNAPSHOT@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${project.version}@50
 
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/1.0-SNAPSHOT@50
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_rest/1.0-SNAPSHOT@50
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.webui/1.0-SNAPSHOT@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/${project.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_rest/${project.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.webui/${project.version}@50

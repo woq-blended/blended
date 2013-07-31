@@ -24,12 +24,12 @@ scan-bundle:mvn:org.slf4j/slf4j-log4j12/${slf4j.version}@2@nostart
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-api/${pax-logging.version}@5
 scan-bundle:mvn:org.ops4j.pax.logging/pax-logging-service/${pax-logging.version}@5
 
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.util/1.0-SNAPSHOT@8
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/1.0-SNAPSHOT@8
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/1.0-SNAPSHOT@8
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/1.0-SNAPSHOT@8
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/1.0-SNAPSHOT@10
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/1.0-SNAPSHOT@10
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.util/${project.version}@8
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${project.version}@8
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${project.version}@8
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${project.version}@8
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${project.version}@10
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/${project.version}@10
 
 scan-bundle:mvn:org.ops4j.pax.url/pax-url-wrap/${pax-url.version}@10
 scan-bundle:mvn:org.ops4j.pax.url/pax-url-mvn/${pax-url.version}@10
