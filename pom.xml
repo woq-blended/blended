@@ -23,7 +23,7 @@
 
   <groupId>de.woq.osgi.java</groupId>
   <artifactId>de.woq.osgi.java.reactor</artifactId>
-  <version>1.0-alpha-1</version>
+  <version>1.0-alpha-2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <distributionManagement>
