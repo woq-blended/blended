@@ -21,6 +21,7 @@ scan-composite:classpath:pax-web.composite
 scan-composite:classpath:camel.composite
 scan-composite:classpath:jersey.composite
 scan-composite:classpath:active-mq.composite
+scan-composite:classpath:hawtio.composite
 
 scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${project.version}@50
 
