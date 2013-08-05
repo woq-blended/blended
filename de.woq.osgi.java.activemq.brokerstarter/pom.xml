@@ -54,7 +54,7 @@
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.startcompletion</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
   </dependencies>

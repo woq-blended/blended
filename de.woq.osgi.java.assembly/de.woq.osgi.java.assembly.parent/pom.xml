@@ -45,21 +45,21 @@
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.launcher</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
     <!-- The composites for pax-runner -->
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.composites</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
     <!-- The default config files -->
     <dependency>
       <groupId>de.woq.osgi.java.assembly</groupId>
       <artifactId>de.woq.osgi.java.assembly.defaults</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
   </dependencies>

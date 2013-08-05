@@ -37,13 +37,13 @@
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.composites</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.testsupport</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
     <dependency>

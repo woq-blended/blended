@@ -23,8 +23,8 @@ scan-composite:classpath:jersey.composite
 scan-composite:classpath:active-mq.composite
 scan-composite:classpath:hawtio.composite
 
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${project.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}@50
 
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/${project.version}@50
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_rest/${project.version}@50
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.webui/${project.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/${woq.container.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_rest/${woq.container.version}@50
+scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.webui/${woq.container.version}@50

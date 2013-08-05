@@ -22,9 +22,9 @@
 
   <version>1.0-alpha-2-SNAPSHOT</version>
 
-
-
   <properties>
+    <woq.container.version>1.0-alpha-2-SNAPSHOT</woq.container.version>
+
     <java.version>1.7</java.version>
     <equinox.version>3.8.1.v20120830-144521</equinox.version>
 
@@ -218,6 +218,19 @@
     </pluginManagement>
 
   </build>
+
+  <repositories>
+    <repository>
+      <id>WOQ</id>
+      <url>http://ci.wayofquality.de:8085/artifactory/complete</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <profiles>
     <profile>
