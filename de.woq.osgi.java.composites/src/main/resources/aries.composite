@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-scan-bundle:mvn:org.apache.aries/org.apache.aries.util/${aries.util.version}@25
+scan-bundle:mvn:org.apache.aries/org.apache.aries.util/${aries.util.version}@8
 scan-bundle:mvn:org.apache.aries.blueprint/org.apache.aries.blueprint/${aries.blueprint.version}@25
 scan-bundle:mvn:org.apache.aries.proxy/org.apache.aries.proxy/${aries.proxy.version}@25
 
-#scan-bundle:mvn:org.apache.aries.jmx/org.apache.aries.jmx/${aries.jmx.version}@10
+scan-bundle:mvn:org.apache.aries.jmx/org.apache.aries.jmx/${aries.jmx.version}@10
 #scan-bundle:mvn:org.apache.aries.jmx/org.apache.aries.jmx.whiteboard/1.0.0@10
 #scan-bundle:mvn:org.apache.aries.jmx/org.apache.aries.jmx.blueprint/${aries.jmx.version}@10
 #scan-bundle:mvn:org.apache.aries.jmx/org.apache.aries.jmx.blueprint.api/${aries.blueprint.version}@10
