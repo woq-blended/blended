@@ -20,10 +20,10 @@
   <artifactId>de.woq.osgi.java.parent</artifactId>
   <packaging>pom</packaging>
 
-  <version>1.0-alpha-4</version>
+  <version>1.0-alpha-5-SNAPSHOT</version>
 
   <properties>
-    <woq.container.version>1.0-alpha-4</woq.container.version>
+    <woq.container.version>1.0-alpha-5-SNAPSHOT</woq.container.version>
 
     <java.version>1.7</java.version>
     <equinox.version>3.8.1.v20120830-144521</equinox.version>
