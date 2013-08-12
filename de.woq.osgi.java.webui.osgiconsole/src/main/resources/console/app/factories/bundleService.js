@@ -14,27 +14,6 @@ angular.module('bundleService', []).
         return promise;
       }
     }
-
-    var bundles = [];
-
-    init();
-
-    function init() {
-
-      $http({method: 'GET', url: 'http://localhost:8080/osgiManagement/bundles'})
-        .success(function(data, status) {
-          bundles = data;
-        })
-        .error(function(data, status) {
-          alert(status)
-        });
-    }
-
-    return {
-      listBundles: function() {
-        return bundles;
-      }
-    };
   }
 );
 
