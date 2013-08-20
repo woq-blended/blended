@@ -1,18 +1,21 @@
 package de.woq.osgi.java.itestsupport;
 
 import de.woq.osgi.java.testsupport.XMLMessageFactory;
-import org.apache.camel.*;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
+import org.apache.camel.Message;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockComponent;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultExchange;
 import org.apache.camel.impl.DefaultMessage;
-import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Properties;
 
 public class CamelTestSupport {
 
@@ -30,8 +33,7 @@ public class CamelTestSupport {
     }
   }
 
-  public void sendTestMessage(final String message, final String uri) throws Exception {
-
+  public void sendTestMessage(final String message, final Properties properties, final String uri) throws Exception {
     Message msg = null;
 
     try {
@@ -41,6 +43,13 @@ public class CamelTestSupport {
       LOGGER.info("Using text as msg body: [{}]", message);
       msg = new DefaultMessage();
       msg.setBody(message);
+
+      if (properties != null) {
+        for(String key: properties.stringPropertyNames() ) {
+          LOGGER.info("Setting property [{}] = [{}]", key, properties.getProperty(key));
+          msg.setHeader(key, properties.getProperty(key));
+        }
+      }
     }
 
     Exchange exchange = new DefaultExchange(getContext(), ExchangePattern.InOnly);
@@ -49,6 +58,26 @@ public class CamelTestSupport {
     ProducerTemplate producer = getContext().createProducerTemplate();
     producer.send(uri, exchange);
     LOGGER.info("Sent test message to [{}]", uri);
+  }
+
+  public void sendTestMessage(final String message, final String properties, final String uri) throws Exception {
+
+    Properties props = new Properties();
+
+    if (properties != null) {
+      for(String pair : properties.split(";")) {
+        String[] keyValue = pair.split("=");
+        if (keyValue.length == 2) {
+          props.put(keyValue[0].trim(), keyValue[1].trim());
+        }
+      }
+    }
+
+    sendTestMessage(message, props, uri);
+  }
+
+  public void sendTestMessage(final String message, final String uri) throws Exception {
+    sendTestMessage(message, "", uri);
   }
 
   public MockEndpoint wireMock(final String mockName, final String uri) throws Exception {
