@@ -24,8 +24,10 @@ import org.junit.Test;
 public class SimpleTest extends AbstractWOQITest {
 
   @Test
-  public void containerIDTest() {
+  public void containerIDTest() throws Exception {
+    getContainer().start();
     Assert.assertTrue(true);
+    getContainer().stop();
   }
 
 }

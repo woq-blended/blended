@@ -1,23 +1,17 @@
 package de.woq.osgi.java.itestsupport;
 
-import org.junit.After;
-import org.junit.Before;
-
 public abstract class AbstractWOQITest {
 
   private static WOQTestContainer container;
 
-  @Before
-  public void startServer() throws Exception {
+  synchronized protected WOQTestContainer getContainer() throws Exception {
+
     WithComposite compositeSpec = getCompositeSpec();
 
-    container = new WOQTestContainer(compositeSpec.location(), compositeSpec.delay());
-    container.start();
-  }
-
-  @After
-  public void stopContainer() throws Exception {
-    container.stop();
+    if (container == null) {
+      container = new WOQTestContainer(compositeSpec.location(), compositeSpec.delay());
+    }
+    return container;
   }
 
   protected WithComposite getCompositeSpec() throws Exception {
