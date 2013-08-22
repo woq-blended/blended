@@ -3,6 +3,7 @@ package de.woq.osgi.java.itestsupport;
 import org.ops4j.pax.exam.ExamSystem;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.TestContainer;
+import org.ops4j.pax.exam.spi.DefaultExamSystem;
 import org.ops4j.pax.exam.spi.PaxExamRuntime;
 
 import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
@@ -24,7 +25,7 @@ public class WOQTestContainer {
   public synchronized void start() throws Exception {
 
     if (container == null) {
-      final ExamSystem examSystem = PaxExamRuntime.createServerSystem(containerConfiguration());
+      final ExamSystem examSystem = DefaultExamSystem.create(containerConfiguration());
       container = PaxExamRuntime.createContainer(examSystem);
       container.start();
       if (delay > 0) {
