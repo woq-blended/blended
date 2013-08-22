@@ -49,7 +49,7 @@ public class WOQTestContainer {
       new CompositeBundleListProvider(composite).getBundles(),
       systemProperty("config.updateInterval").value("1000"),
       systemProperty("woq.home").value("target/test-classes"),
-      frameworkStartLevel(100)
+      systemProperty("osgi.startLevel").value("100")
     );
   }
 }
