@@ -44,7 +44,9 @@
     <commons.codec.version>1.6.0</commons.codec.version>
     <commons.collections.version>3.2.1</commons.collections.version>
     <commons.discovery.version>0.4.0</commons.discovery.version>
+    <commons.exec.version>1.1</commons.exec.version>
     <commons.httpclient.version>3.1.0</commons.httpclient.version>
+    <commons.io.version>1.4.0</commons.io.version>
     <commons.lang.version>2.6</commons.lang.version>
     <commons.pool.version>1.6</commons.pool.version>
     <cglib.version>2.2.0</cglib.version>

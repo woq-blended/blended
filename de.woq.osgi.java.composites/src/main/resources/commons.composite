@@ -16,5 +16,7 @@ scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.collectio
 scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}@10
 scan-bundle:mvn:commons-lang/commons-lang/${commons.lang.version}@10
 scan-bundle:mvn:commons-pool/commons-pool/${commons.pool.version}@10
+scan-bundle:mvn:org.apache.commons/commons-exec/${commons.exec.version}@10
+scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.io/${commons.io.version}@10
 scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.codec/${commons.codec.version}@10
 scan-bundle:mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/${commons.httpclient.version}@10
