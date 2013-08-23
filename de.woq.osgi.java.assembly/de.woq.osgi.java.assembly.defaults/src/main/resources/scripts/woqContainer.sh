@@ -65,6 +65,6 @@ done
 echo "WOQ Home directory is [${WOQ_HOME}]."
 ${JAVA} -version
 
-${JAVA} -classpath $APPCP de.woq.osgi.java.container.Main -jvm.property.woq.home ${WOQ_HOME} $1
+${JAVA} -classpath $APPCP de.woq.osgi.java.container.WOQContainer -jvm.property.woq.home ${WOQ_HOME} $1
 
 exit $?

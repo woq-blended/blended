@@ -24,4 +24,11 @@
     interface="de.woq.osgi.java.container.context.ContainerContext"
     ref="context" />
 
+  <bean id="shutdownBean" class="de.woq.osgi.java.container.context.internal.ContainerShutdown" init-method="init">
+    <property name="bundleContext" ref="blueprintBundleContext" />
+    <property name="mBeanServer">
+      <reference interface="javax.management.MBeanServer" timeout="1000" />
+    </property>
+  </bean>
+
 </blueprint>

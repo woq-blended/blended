@@ -36,6 +36,12 @@
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.launcher</artifactId>
+      <version>${woq.container.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.composites</artifactId>
       <version>${woq.container.version}</version>
     </dependency>
@@ -91,12 +97,6 @@
     <dependency>
       <groupId>org.ops4j.pax.exam</groupId>
       <artifactId>pax-exam-spi</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-container-native</artifactId>
       <version>${pax-exam.version}</version>
     </dependency>
 
@@ -176,6 +176,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kohsuke.metainf-services</groupId>
+      <artifactId>metainf-services</artifactId>
+      <version>1.5</version>
     </dependency>
 
   </dependencies>

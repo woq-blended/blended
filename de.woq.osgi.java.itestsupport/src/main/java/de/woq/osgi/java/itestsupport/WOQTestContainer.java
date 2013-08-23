@@ -1,55 +1,59 @@
 package de.woq.osgi.java.itestsupport;
 
-import org.ops4j.pax.exam.ExamSystem;
-import org.ops4j.pax.exam.Option;
+import de.woq.osgi.java.container.ContainerConstants;
+import de.woq.osgi.java.container.WOQContainer;
+import org.ops4j.pax.exam.TestAddress;
 import org.ops4j.pax.exam.TestContainer;
-import org.ops4j.pax.exam.spi.DefaultExamSystem;
-import org.ops4j.pax.exam.spi.PaxExamRuntime;
 
-import static org.ops4j.pax.exam.CoreOptions.frameworkStartLevel;
-import static org.ops4j.pax.exam.CoreOptions.options;
-import static org.ops4j.pax.exam.CoreOptions.systemProperty;
+import java.io.InputStream;
+import java.util.Properties;
 
-public class WOQTestContainer {
+public class WOQTestContainer implements TestContainer {
 
-  private final String composite;
-  private final long   delay;
+  private final String profile;
+  private final long delay;
 
-  private TestContainer container = null;
-
-  public WOQTestContainer(String composite, long delay) {
-    this.composite = composite;
+  public WOQTestContainer(final String profile, long delay) {
+    this.profile = profile;
     this.delay = delay;
   }
 
-  public synchronized void start() throws Exception {
+  @Override
+  public TestContainer start() {
 
-    if (container == null) {
-      final ExamSystem examSystem = DefaultExamSystem.create(containerConfiguration());
-      container = PaxExamRuntime.createContainer(examSystem);
-      container.start();
-      if (delay > 0) {
-        Thread.sleep(delay);
-      }
+    Properties props = new Properties();
+    props.put(ContainerConstants.PARAM_SYSPROP + ContainerConstants.PROP_WOQ_HOME, "target/test-classes");
+    props.put("config.updateInterval", "1000");
+    props.put(ContainerConstants.PROP_LOG_LEVEL, "Debug");
+
+    WOQContainer container = new WOQContainer(props, profile);
+    container.launch();
+
+    try {
+      Thread.sleep(delay);
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
     }
+
+    return this;
   }
 
-  public synchronized void stop() throws Exception {
-    if (container != null) {
-      if (delay > 0) {
-        Thread.sleep(delay);
-      }
-      container.stop();
-      container = null;
-    }
+  @Override
+  public TestContainer stop() {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
-  protected Option[] containerConfiguration() throws Exception {
-    return options(
-      new CompositeBundleListProvider(composite).getBundles(),
-      systemProperty("config.updateInterval").value("1000"),
-      systemProperty("woq.home").value("target/test-classes"),
-      systemProperty("osgi.startLevel").value("100")
-    );
+  @Override
+  public long install(InputStream stream) {
+    return -1;
+  }
+
+  @Override
+  public long install(String location, InputStream stream) {
+    return -1;
+  }
+
+  @Override
+  public void call(TestAddress address) {
   }
 }

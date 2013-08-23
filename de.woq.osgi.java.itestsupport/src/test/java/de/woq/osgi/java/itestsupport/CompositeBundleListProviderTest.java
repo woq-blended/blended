@@ -1,11 +1,13 @@
 package de.woq.osgi.java.itestsupport;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CompositeBundleListProviderTest {
 
   @Test
+  @Ignore
   public void readEntriesTest() {
 
     try {

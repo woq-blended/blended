@@ -15,19 +15,33 @@
 
 package de.woq.osgi.java.itest;
 
-import de.woq.osgi.java.itestsupport.AbstractWOQITest;
-import de.woq.osgi.java.itestsupport.WithComposite;
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-@WithComposite(delay = 0l)
-public class SimpleTest extends AbstractWOQITest {
+public class SimpleTest {
+
+  private static ContainerRunner runner = null;
+
+  @BeforeClass
+  public static void startContainer() throws Exception {
+    runner = new ContainerRunner("common");
+    runner.start();
+  }
+
+  @AfterClass
+  public static void stopContainer() throws Exception {
+    runner.stop();
+    runner.waitForStop();
+  }
 
   @Test
   public void containerIDTest() throws Exception {
-    getContainer().start();
+    // Spend some time
+
+    Thread.sleep(10000);
     Assert.assertTrue(true);
-    getContainer().stop();
   }
 
 }

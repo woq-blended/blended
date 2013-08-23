@@ -28,7 +28,7 @@ public interface ContainerConstants {
 
   String PROP_PLATFORM_STARTLEVEL = "platform.startLevel";
 
-  String DEFAULT_PLATFORM_STARTLEVEL = "6";
+  String DEFAULT_PLATFORM_STARTLEVEL = "100";
 
   String PROP_LOG_LEVEL = "log.level";
 
