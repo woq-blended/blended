@@ -16,13 +16,28 @@
 
 package de.woq.osgi.java.itestsupport;
 
+import de.woq.osgi.java.itestsupport.condition.MBeanMatcher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.management.BadAttributeValueExpException;
+import javax.management.BadBinaryOpValueExpException;
+import javax.management.BadStringOperationException;
+import javax.management.InvalidApplicationException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
+import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ContainerConnector {
@@ -35,6 +50,8 @@ public class ContainerConnector {
   private final JMXServiceURL serviceUrl;
   private JMXConnector jmxConnector = null;
 
+  private final static Logger LOGGER = LoggerFactory.getLogger(ContainerConnector.class);
+
   public ContainerConnector(String jmxHost, int port) throws Exception {
     this.jmxHost = jmxHost;
     this.jmxPort = port;
@@ -42,7 +59,7 @@ public class ContainerConnector {
     serviceUrl = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
   }
 
-  public synchronized void connect() {
+  public synchronized JMXConnector connect() {
     if (!connected.getAndSet(true)) {
       try {
         jmxConnector = JMXConnectorFactory.connect(serviceUrl);
@@ -51,6 +68,7 @@ public class ContainerConnector {
         connected.set(false);
       }
     }
+    return jmxConnector;
   }
 
   public synchronized void disconnect() {
@@ -61,6 +79,26 @@ public class ContainerConnector {
         connected.set(true);
       }
     }
+  }
+
+  public Map<ObjectName, MBeanInfo> getMBeanInfo(final MBeanMatcher matcher) throws Exception {
+
+    Map<ObjectName, MBeanInfo> result = new HashMap<>();
+
+    connect();
+
+    Set<ObjectName> objectNames = jmxConnector.getMBeanServerConnection().queryNames(null, null);
+
+    for(ObjectName name: objectNames) {
+      MBeanInfo info = jmxConnector.getMBeanServerConnection().getMBeanInfo(name);
+
+      if (info != null && matcher.matchesMBean(name, info)) {
+        LOGGER.info("Found MBean [{}]", name.toString());
+        result.put(name, info);
+      }
+    }
+
+    return result;
   }
 
   public MBeanInfo getMBeanInfo(final String objectName) throws Exception {

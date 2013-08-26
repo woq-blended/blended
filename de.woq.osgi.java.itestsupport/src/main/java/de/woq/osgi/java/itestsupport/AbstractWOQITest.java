@@ -57,7 +57,7 @@ public abstract class AbstractWOQITest {
     List<Condition> result = new ArrayList<>();
 
     result.add(new ConditionCanConnect("localhost", runner.findJMXPort()));
-    result.add(new ConditionMBeanExists(runner, ContainerRunner.OBJ_NAME_SHUTDOWN));
+    result.add(new ConditionMBeanExists(runner, "de.woq.osgi.java", "de.woq.osgi.java.container.context.internal.ContainerShutdown"));
 
     return result;
   }
