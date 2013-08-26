@@ -84,6 +84,7 @@
       <id>itest</id>
       <modules>
         <module>de.woq.osgi.java.itestsupport</module>
+        <module>de.woq.osgi.java.itest.parent</module>
         <module>de.woq.osgi.java.itest</module>
       </modules>
     </profile>

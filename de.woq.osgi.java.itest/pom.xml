@@ -19,7 +19,7 @@
 
   <parent>
     <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <artifactId>de.woq.osgi.java.itest.parent</artifactId>
     <version>1.0-alpha-5-SNAPSHOT</version>
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
@@ -30,69 +30,8 @@
     <containerGroupId>de.woq.osgi.java.assembly</containerGroupId>
     <containerArtifactId>de.woq.osgi.java.assembly.common</containerArtifactId>
     <containerVersion>${woq.container.version}</containerVersion>
+    <conttainerProfile>common</conttainerProfile>
   </properties>
 
-  <dependencies>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.itestsupport</artifactId>
-      <version>${woq.container.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-exec</artifactId>
-      <version>${commons.exec.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>${containerGroupId}</groupId>
-      <artifactId>${containerArtifactId}</artifactId>
-      <version>${containerVersion}</version>
-      <classifier>bin</classifier>
-      <type>zip</type>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-
-  <build>
-    <plugins>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-clean-plugin</artifactId>
-        <configuration>
-          <followSymLinks>false</followSymLinks>
-          <filesets>
-            <fileset>
-              <directory>${basedir}/common</directory>
-            </fileset>
-          </filesets>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>ExtractJars</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeScope>test</includeScope>
-              <outputDirectory>${project.build.directory}/container</outputDirectory>
-              <includeArtifactIds>${containerArtifactId}</includeArtifactIds>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
 </project>
 

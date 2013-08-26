@@ -1,25 +1,25 @@
 package de.woq.osgi.java.itestsupport;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+
 public abstract class AbstractWOQITest {
 
-  private static WOQTestContainer container;
+  private static ContainerRunner runner = null;
 
-  synchronized protected WOQTestContainer getContainer() throws Exception {
-
-    WithComposite compositeSpec = getCompositeSpec();
-
-    if (container == null) {
-      container = new WOQTestContainer(compositeSpec.location(), compositeSpec.delay());
-    }
-    return container;
+  @BeforeClass
+  public static void startContainer() throws Exception {
+    runner = new ContainerRunner("common");
+    runner.start();
   }
 
-  protected WithComposite getCompositeSpec() throws Exception {
+  @AfterClass
+  public static void stopContainer() throws Exception {
+    runner.stop();
+    runner.waitForStop();
+  }
 
-    WithComposite compositeSpec = getClass().getAnnotation(WithComposite.class);
-    if (compositeSpec == null) {
-      throw new Exception("No Annotation 'WithComposite' set on class [{" + getClass().getName() + "}].");
-    }
-    return compositeSpec;
+  protected ContainerRunner getContainerRunner() {
+    return runner;
   }
 }

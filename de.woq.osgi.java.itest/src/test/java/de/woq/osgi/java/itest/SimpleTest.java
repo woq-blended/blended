@@ -15,31 +15,15 @@
 
 package de.woq.osgi.java.itest;
 
-import org.junit.AfterClass;
+import de.woq.osgi.java.itestsupport.AbstractWOQITest;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class SimpleTest {
-
-  private static ContainerRunner runner = null;
-
-  @BeforeClass
-  public static void startContainer() throws Exception {
-    runner = new ContainerRunner("common");
-    runner.start();
-  }
-
-  @AfterClass
-  public static void stopContainer() throws Exception {
-    runner.stop();
-    runner.waitForStop();
-  }
+public class SimpleTest extends AbstractWOQITest {
 
   @Test
   public void containerIDTest() throws Exception {
     // Spend some time
-
     Thread.sleep(10000);
     Assert.assertTrue(true);
   }

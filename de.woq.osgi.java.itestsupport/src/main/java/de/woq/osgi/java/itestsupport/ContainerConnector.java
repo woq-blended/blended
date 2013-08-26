@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itest;
+package de.woq.osgi.java.itestsupport;
 
 import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;

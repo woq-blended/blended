@@ -36,12 +36,6 @@
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.launcher</artifactId>
-      <version>${woq.container.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.composites</artifactId>
       <version>${woq.container.version}</version>
     </dependency>
@@ -53,15 +47,15 @@
     </dependency>
 
     <dependency>
-      <groupId>org.eclipse.tycho</groupId>
-      <artifactId>org.eclipse.osgi</artifactId>
-      <version>${equinox.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-exec</artifactId>
+      <version>${commons.exec.version}</version>
     </dependency>
 
     <dependency>
@@ -83,90 +77,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-junit4</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-spi</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.exam</groupId>
-      <artifactId>pax-exam-link-mvn</artifactId>
-      <version>${pax-exam.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.url</groupId>
-      <artifactId>pax-url-classpath</artifactId>
-      <version>${pax-url.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.url</groupId>
-      <artifactId>pax-url-link</artifactId>
-      <version>${pax-url.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.url</groupId>
-      <artifactId>pax-url-mvn</artifactId>
-      <version>${pax-url.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.url</groupId>
-      <artifactId>pax-url-aether</artifactId>
-      <version>${pax-url.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.url</groupId>
-      <artifactId>pax-url-wrap</artifactId>
-      <version>${pax-url.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.swissbox</groupId>
-      <artifactId>pax-swissbox-tracker</artifactId>
-      <version>${pax-swissbox.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>13.0.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.inject</groupId>
-      <artifactId>javax.inject</artifactId>
-      <version>1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.base</groupId>
-      <artifactId>ops4j-base</artifactId>
-      <version>${ops4j-base.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.ops4j.pax.tinybundles</groupId>
-      <artifactId>tinybundles</artifactId>
-      <version>${tinybundles.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
@@ -176,12 +86,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kohsuke.metainf-services</groupId>
-      <artifactId>metainf-services</artifactId>
-      <version>1.5</version>
     </dependency>
 
   </dependencies>
