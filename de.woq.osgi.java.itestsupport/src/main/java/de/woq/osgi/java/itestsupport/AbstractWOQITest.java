@@ -1,25 +1,35 @@
 package de.woq.osgi.java.itestsupport;
 
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 
 public abstract class AbstractWOQITest {
 
   private static ContainerRunner runner = null;
 
-  @BeforeClass
-  public static void startContainer() throws Exception {
-    runner = new ContainerRunner("common");
-    runner.start();
+  @Before
+  synchronized public void startContainer() throws Exception {
+
+    if (runner == null) {
+      runner = new ContainerRunner(getProfileName());
+      runner.start();
+    }
   }
 
   @AfterClass
-  public static void stopContainer() throws Exception {
-    runner.stop();
-    runner.waitForStop();
+  synchronized public static void stopContainer() throws Exception {
+    if (runner != null) {
+      runner.stop();
+      runner.waitForStop();
+    }
   }
 
   protected ContainerRunner getContainerRunner() {
     return runner;
   }
+
+  private  String getProfileName() throws Exception {
+    return ProfileResolver.resolveProfile(getClass()).name();
+  }
+
 }

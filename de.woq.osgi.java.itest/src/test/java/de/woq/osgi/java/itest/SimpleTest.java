@@ -16,9 +16,11 @@
 package de.woq.osgi.java.itest;
 
 import de.woq.osgi.java.itestsupport.AbstractWOQITest;
+import de.woq.osgi.java.itestsupport.ContainerProfile;
 import org.junit.Assert;
 import org.junit.Test;
 
+@ContainerProfile(name = "common")
 public class SimpleTest extends AbstractWOQITest {
 
   @Test
