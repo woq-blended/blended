@@ -83,6 +83,7 @@ public class ConditionMBeanExists implements Condition {
         return false;
       }
 
+
       if(properties != null) {
         for(String prop: properties) {
           if (!objectName.toString().contains(prop)) {
