@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.osgi.java.itestsupport.condition;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+/**
+ * Created with IntelliJ IDEA.
+ * User: andreas
+ * Date: 8/26/13
+ * Time: 12:02 PM
+ * To change this template use File | Settings | File Templates.
+ */
+public interface Condition {
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ContainerProfile {
-
-  String name() default "common";
-  int timeout() default 30;
+  public boolean satisfied();
 }

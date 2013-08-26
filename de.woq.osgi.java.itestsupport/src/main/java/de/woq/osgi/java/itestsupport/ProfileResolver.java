@@ -22,10 +22,14 @@ class ProfileResolver {
 
   protected static ContainerProfile resolveProfile(final Class<?> clazz) throws Exception {
 
-    ContainerProfile result = clazz.getAnnotation(ContainerProfile.class);
-    if (result == null) {
-      throw new Exception("No Annotation 'ContainerProfile' set on class [{" + clazz.getName() + "}].");
+    ContainerProfile result = null;
+    Class<?> currentClass = clazz;
+
+    while(result == null && currentClass != null) {
+      result = currentClass.getAnnotation(ContainerProfile.class);
+      currentClass = currentClass.getSuperclass();
     }
+
     return  result;
   }
 }

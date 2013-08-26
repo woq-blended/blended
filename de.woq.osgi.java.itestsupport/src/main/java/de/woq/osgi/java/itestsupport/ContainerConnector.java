@@ -32,19 +32,20 @@ public class ContainerConnector {
 
   private AtomicBoolean connected = new AtomicBoolean(false);
 
+  private final JMXServiceURL serviceUrl;
   private JMXConnector jmxConnector = null;
 
   public ContainerConnector(String jmxHost, int port) throws Exception {
     this.jmxHost = jmxHost;
     this.jmxPort = port;
 
-    JMXServiceURL url = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
-    jmxConnector = JMXConnectorFactory.connect(url);
+    serviceUrl = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://" + jmxHost + ":" + jmxPort + "/jmxrmi");
   }
 
   public synchronized void connect() {
     if (!connected.getAndSet(true)) {
       try {
+        jmxConnector = JMXConnectorFactory.connect(serviceUrl);
         jmxConnector.connect();
       } catch (Exception e) {
         connected.set(false);
@@ -117,18 +118,8 @@ public class ContainerConnector {
     return result;
   }
 
-  public static void main(String[] args) {
-
-    try {
-      ContainerConnector connector = new ContainerConnector("localhost", 9990);
-      MBeanInfo info = connector.getMBeanInfo("de.woq.osgi.java:type=ShutdownBean");
-      MBeanOperationInfo[] operations = info.getOperations();
-      System.out.println(operations.length);
-
-      connector.invoke("de.woq.osgi.java:type=ShutdownBean", "shutdown");
-      connector.disconnect();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  @Override
+  public String toString() {
+    return "ContainerConnector[" + jmxHost + "," + jmxPort + "]";
   }
 }

@@ -1,7 +1,14 @@
 package de.woq.osgi.java.itestsupport;
 
+import de.woq.osgi.java.itestsupport.condition.Condition;
+import de.woq.osgi.java.itestsupport.condition.ConditionCanConnect;
+import de.woq.osgi.java.itestsupport.condition.ConditionMBeanExists;
+import de.woq.osgi.java.itestsupport.condition.ConditionWaiter;
 import org.junit.AfterClass;
 import org.junit.Before;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class AbstractWOQITest {
 
@@ -11,9 +18,22 @@ public abstract class AbstractWOQITest {
   synchronized public void startContainer() throws Exception {
 
     if (runner == null) {
-      runner = new ContainerRunner(getProfileName());
+      final ContainerProfile profile = getContainerProfile();
+
+      runner = new ContainerRunner(profile.name());
       runner.start();
+
+      ConditionWaiter.waitOnCondition(
+        profile.timeout() * 1000l,
+        1000l,
+        startConditions(runner).toArray(new Condition[]{})
+      );
     }
+  }
+
+  @Before
+  public void waitForConditions() {
+
   }
 
   @AfterClass
@@ -28,8 +48,18 @@ public abstract class AbstractWOQITest {
     return runner;
   }
 
-  private  String getProfileName() throws Exception {
-    return ProfileResolver.resolveProfile(getClass()).name();
+  private  ContainerProfile getContainerProfile() throws Exception {
+    return ProfileResolver.resolveProfile(getClass());
+  }
+
+  protected List<Condition> startConditions(final ContainerRunner runner) {
+
+    List<Condition> result = new ArrayList<>();
+
+    result.add(new ConditionCanConnect("localhost", runner.findJMXPort()));
+    result.add(new ConditionMBeanExists(runner, ContainerRunner.OBJ_NAME_SHUTDOWN));
+
+    return result;
   }
 
 }

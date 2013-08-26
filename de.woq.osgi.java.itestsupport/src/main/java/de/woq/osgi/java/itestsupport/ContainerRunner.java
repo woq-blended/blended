@@ -16,6 +16,9 @@
 
 package de.woq.osgi.java.itestsupport;
 
+import de.woq.osgi.java.itestsupport.condition.ConditionCanConnect;
+import de.woq.osgi.java.itestsupport.condition.ConditionMBeanExists;
+import de.woq.osgi.java.itestsupport.condition.ConditionWaiter;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
@@ -31,6 +34,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ContainerRunner {
+
+  public final static String OBJ_NAME_SHUTDOWN = "de.woq.osgi.java:type=ShutdownBean";
 
   private final String profile;
   private final CountDownLatch latch = new CountDownLatch(1);
@@ -93,13 +98,18 @@ public class ContainerRunner {
     }
   }
 
-  private synchronized ContainerConnector getConnector() throws Exception {
+  public synchronized ContainerConnector getConnector() {
     if (connector == null) {
-      connector = new ContainerConnector("localhost", findJMXPort());
+      try {
+        connector = new ContainerConnector("localhost", findJMXPort());
+      } catch (Exception e) {
+        // ignore
+      }
     }
     return connector;
   }
-  private String findContainerDirectory() throws Exception {
+
+  public String findContainerDirectory() throws Exception {
     File dir = new File("./target/container");
 
     if (!dir.exists()) {
@@ -115,7 +125,7 @@ public class ContainerRunner {
     return new File(dir, subDirs[0]).getAbsolutePath();
   }
 
-  private int findJMXPort() {
+  public int findJMXPort() {
     Properties props = new Properties();
 
     try {

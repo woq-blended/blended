@@ -25,8 +25,6 @@ public class SimpleTest extends AbstractWOQITest {
 
   @Test
   public void containerIDTest() throws Exception {
-    // Spend some time
-    Thread.sleep(10000);
     Assert.assertTrue(true);
   }
 
