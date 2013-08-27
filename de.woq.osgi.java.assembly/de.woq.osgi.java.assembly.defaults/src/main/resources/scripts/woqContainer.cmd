@@ -1,7 +1,12 @@
-set CURRENTDIR=%~dp0
-set WOQ_HOME=%CURRENTDIR:~0,-1%
+@echo off
+setlocal enableDelayedExpansion
 
-set JAVA_EXE=javaw
+set SCRIPTDIR=%~dp0
+cd %SCRIPTDIR%
+cd .. 
+set WOQ_HOME=%CD%
+
+set JAVA_EXE=java
 
 if exist "%WOQ_HOME%\jre\" (
  set JAVA="%WOQ_HOME%\jre\bin\%JAVA_EXE%"
@@ -10,11 +15,12 @@ if exist "%WOQ_HOME%\jre\" (
  ) ELSE (set JAVA="%JAVA_EXE%"
  )
 
-set WHITEBOARD_JARS=%WHITEBOARD_HOME%\system\de\yconx\whiteboard\de.yconx.whiteboard.launcher\${de.yconx.whiteboard.launcher.version}\de.yconx.whiteboard.launcher-${de.yconx.whiteboard.launcher.version}.jar
-set WHITEBOARD_JARS="%WHITEBOARD_JARS%;%WHITEBOARD_HOME%\system\de\yconx\whiteboard\de.yconx.whiteboard.core.feature\${de.yconx.whiteboard.core.feature.version}\de.yconx.whiteboard.core.feature-${de.yconx.whiteboard.core.feature.version}.jar"
+for /F %%x in ('dir /B/D %WOQ_HOME%\lib') do (
+  call %WOQ_HOME%\bin\appendcp.cmd %WOQ_HOME%\lib\%%x
+)
+call %WOQ_HOME%\bin\appendcp.cmd %WOQ_HOME%\config
 
-set WB_CLASSPATH=%EQUINOX_JAR%;%WHITEBOARD_JARS%;%LAF_JAR%
-set WB_FEATURE=net/fireboard/net.fireboard.spi.featurelauncher/${net.fireboard.spi.featurelauncher.version}/net.fireboard.spi.featurelauncher-${net.fireboard.spi.featurelauncher.version}.jar
-set WB_THEMES=net/fireboard/net.fireboard.ui.spi.themes/${net.fireboard.ui.spi.themes.version}/net.fireboard.ui.spi.themes-${net.fireboard.ui.spi.themes.version}.jar
+echo WOQ container directory is [%WOQ_HOME%]
 
-start "WOQContainer" /D"%WOQ_HOME%" %JAVA%  -Dwhiteboard.home="%WHITEBOARD_HOME%" -classpath %WB_CLASSPATH% de.yconx.whiteboard.launcher.Whiteboard
+%JAVA_EXE% -version 
+%JAVA% -classpath %APPCP% de.woq.osgi.java.container.WOQContainer -jvm.property.woq.home %WOQ_HOME% %1

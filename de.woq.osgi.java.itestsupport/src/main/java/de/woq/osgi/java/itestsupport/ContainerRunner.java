@@ -153,7 +153,7 @@ public class ContainerRunner {
     String result = System.getProperty(PROP_CONTAINER_CMD, DEFAULT_CONTAINER_CMD);
 
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-      result += ".bat";
+      result += ".cmd";
     } else {
       result += ".sh";
     }
