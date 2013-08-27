@@ -23,11 +23,12 @@ import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
 import org.apache.commons.exec.PumpStreamHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,6 +45,8 @@ public class ContainerRunner {
 
   private final static String PROP_CONTAINER_CMD    = "woq.container.command";
   private final static String DEFAULT_CONTAINER_CMD = "woqContainer";
+
+  private final static Logger LOGGER = LoggerFactory.getLogger(ContainerRunner.class);
 
   private ContainerConnector connector = null;
 
@@ -157,6 +160,8 @@ public class ContainerRunner {
     } else {
       result += ".sh";
     }
+
+    LOGGER.info("Using Container start command [{}].", result);
 
     return result;
   }
