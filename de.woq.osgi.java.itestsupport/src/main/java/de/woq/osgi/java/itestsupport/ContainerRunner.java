@@ -68,7 +68,14 @@ public class ContainerRunner {
       @Override
       public void run() {
         try {
-          CommandLine cl = new CommandLine(findContainerDirectory() + "/bin/" + getContainerCommand()).addArguments(profile);
+
+          String command = getContainerCommand();
+          String script  = findContainerDirectory() + "/bin/" + command;
+
+          LOGGER.info("Using Container start command [{}] with profile [{}].", command, profile);
+          LOGGER.info("Start script is [{}].", script);
+
+          CommandLine cl = new CommandLine(script).addArguments(profile);
           executor.execute(cl, new ExecuteResultHandler() {
             @Override
             public void onProcessComplete(int exitValue) {
@@ -160,8 +167,6 @@ public class ContainerRunner {
     } else {
       result += ".sh";
     }
-
-    LOGGER.info("Using Container start command [{}].", result);
 
     return result;
   }
