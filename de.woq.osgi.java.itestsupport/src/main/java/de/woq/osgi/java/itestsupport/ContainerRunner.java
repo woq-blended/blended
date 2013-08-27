@@ -16,9 +16,6 @@
 
 package de.woq.osgi.java.itestsupport;
 
-import de.woq.osgi.java.itestsupport.condition.ConditionCanConnect;
-import de.woq.osgi.java.itestsupport.condition.ConditionMBeanExists;
-import de.woq.osgi.java.itestsupport.condition.ConditionWaiter;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteException;
@@ -43,6 +40,9 @@ public class ContainerRunner {
   private final Executor executor;
   private final ExecuteWatchdog watchdog;
 
+  private final static String PROP_CONTAINER_CMD    = "woq.container.command";
+  private final static String DEFAULT_CONTAINER_CMD = "woqContainer";
+
   private ContainerConnector connector = null;
 
   public ContainerRunner(String profile) {
@@ -62,7 +62,7 @@ public class ContainerRunner {
       @Override
       public void run() {
         try {
-          CommandLine cl = new CommandLine(findContainerDirectory() + "/bin/woqContainer.sh").addArguments(profile);
+          CommandLine cl = new CommandLine(findContainerDirectory() + "/bin/" + getContainerCommand()).addArguments(profile);
           executor.execute(cl, new ExecuteResultHandler() {
             @Override
             public void onProcessComplete(int exitValue) {
@@ -143,5 +143,18 @@ public class ContainerRunner {
     String sPort = props.getProperty("jvm.property.com.sun.management.jmxremote.port", "1099");
 
     return Integer.parseInt(sPort);
+  }
+
+  private String getContainerCommand() {
+
+    String result = System.getProperty(PROP_CONTAINER_CMD, DEFAULT_CONTAINER_CMD);
+
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+      result += ".bat";
+    } else {
+      result += ".sh";
+    }
+
+    return result;
   }
 }
