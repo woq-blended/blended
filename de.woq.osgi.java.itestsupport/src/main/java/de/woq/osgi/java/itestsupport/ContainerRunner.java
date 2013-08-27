@@ -22,10 +22,12 @@ import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteResultHandler;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
+import org.apache.commons.exec.PumpStreamHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,10 +47,11 @@ public class ContainerRunner {
 
   private ContainerConnector connector = null;
 
-  public ContainerRunner(String profile) {
+  public ContainerRunner(String profile) throws Exception {
     this.profile = profile;
 
     executor = new DefaultExecutor();
+    executor.setStreamHandler(new PumpStreamHandler(new ContainerOutputStream(), System.err));
     watchdog = new ExecuteWatchdog(-1);
 
     executor.setWatchdog(watchdog);
