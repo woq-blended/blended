@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.parent</artifactId>
-    <version>1.0-alpha-5-SNAPSHOT</version>
+    <version>1.0-alpha-5</version>
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
@@ -34,26 +34,6 @@
     <containerVersion>${woq.container.version}</containerVersion>
     <containerProfile>common</containerProfile>
   </properties>
-
-  <dependencies>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.itestsupport</artifactId>
-      <version>${woq.container.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>${containerGroupId}</groupId>
-      <artifactId>${containerArtifactId}</artifactId>
-      <version>${containerVersion}</version>
-      <classifier>bin</classifier>
-      <type>zip</type>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
 
   <build>
     <plugins>
