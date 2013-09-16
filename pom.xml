@@ -62,7 +62,6 @@
         <module>de.woq.osgi.java.composites</module>
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
-        <module>de.woq.osgi.java.osgidep</module>
         <module>de.woq.osgi.java.util</module>
         <module>de.woq.osgi.java.startcompletion</module>
         <module>de.woq.osgi.java.mgmt_core</module>
