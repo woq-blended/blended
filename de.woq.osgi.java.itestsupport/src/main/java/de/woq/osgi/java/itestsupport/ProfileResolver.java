@@ -23,6 +23,7 @@ class ProfileResolver {
   protected static ContainerProfile resolveProfile(final Class<?> clazz) throws Exception {
 
     ContainerProfile result = null;
+
     Class<?> currentClass = clazz;
 
     while(result == null && currentClass != null) {
