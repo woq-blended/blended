@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.itest.parent</artifactId>
-    <version>1.0-beta-1-SNAPSHOT</version>
+    <version>1.0-beta-1</version>
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
