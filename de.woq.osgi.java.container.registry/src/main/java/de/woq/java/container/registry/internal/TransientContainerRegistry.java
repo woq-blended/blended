@@ -16,5 +16,33 @@
 
 package de.woq.java.container.registry.internal;
 
-public class TransientContainerRegistry {
+import de.woq.java.container.registry.ContainerInfo;
+import de.woq.java.container.registry.ContainerRegistry;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class TransientContainerRegistry implements ContainerRegistry {
+
+  private final Map<String, ContainerInfo> containerMap = new HashMap<String, ContainerInfo>();
+
+  @Override
+  public List<ContainerInfo> getRegisteredContainers() {
+
+    List<ContainerInfo> result = new ArrayList<ContainerInfo>();
+    result.addAll(containerMap.values());
+    return result;
+  }
+
+  @Override
+  public ContainerInfo removeContainer(String id) {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
+  @Override
+  public void addOrReplaceContainer(ContainerInfo container) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
 }
