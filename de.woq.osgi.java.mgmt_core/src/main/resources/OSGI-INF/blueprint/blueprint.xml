@@ -21,10 +21,4 @@
   <bean id="mbeanServer" factory-ref="factory" factory-method="getServer"/>
   <service ref="mbeanServer" interface="javax.management.MBeanServer"/>
 
-  <service interface="de.woq.osgi.java.mgmt_core.OSGIManagementService" >
-    <bean class="de.woq.osgi.java.mgmt_core.internal.OSGIManagementServiceImpl">
-      <argument index="0" ref="blueprintBundleContext" />
-    </bean>
-  </service>
-
 </blueprint>

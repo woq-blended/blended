@@ -1,2 +1,0 @@
-scan-composite:classpath:web-console.composite
-scan-bundle:mvn:de.woq.osgi.java/de.woq.osgi.java.osgidep/${woq.container.version}@60
