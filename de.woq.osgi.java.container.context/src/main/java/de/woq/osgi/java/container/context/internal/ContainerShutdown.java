@@ -45,7 +45,7 @@ public class ContainerShutdown implements ContainerShutdownMBean {
 
       if (bundles[i].getState() == Bundle.ACTIVE) {
 
-        LOGGER.info("Stopping bundle [" + b.getBundleId() + ":" + b.getSymbolicName() + "]");
+        LOGGER.debug("Stopping bundle [" + b.getBundleId() + ":" + b.getSymbolicName() + "]");
 
         Thread t = new Thread(new Runnable() {
           @Override
@@ -72,14 +72,14 @@ public class ContainerShutdown implements ContainerShutdownMBean {
       }
     }
 
-    LOGGER.info("Terminating container JVM...");
+    LOGGER.debug("Terminating container JVM...");
 
     new Timer(true).schedule(new TimerTask() {
       @Override
       public void run() {
         System.exit(0);
       }
-    }, 3000l);
+    }, 1000l);
 
   }
 

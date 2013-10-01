@@ -17,14 +17,13 @@
 package de.woq.java.container.registry.internal;
 
 import de.woq.java.container.registry.ContainerInfo;
-import de.woq.java.container.registry.ContainerRegistry;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TransientContainerRegistry implements ContainerRegistry {
+public class TransientContainerRegistry implements ContainerRegistryMBean {
 
   private final Map<String, ContainerInfo> containerMap = new HashMap<String, ContainerInfo>();
 
@@ -37,12 +36,12 @@ public class TransientContainerRegistry implements ContainerRegistry {
   }
 
   @Override
-  public ContainerInfo removeContainer(String id) {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+  public ContainerInfo removeContainer(final String id) {
+    return containerMap.remove(id);
   }
 
   @Override
-  public void addOrReplaceContainer(ContainerInfo container) {
-    //To change body of implemented methods use File | Settings | File Templates.
+  public void addOrReplaceContainer(final ContainerInfo container) {
+    containerMap.put(container.getContainerId(), container);
   }
 }
