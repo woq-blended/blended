@@ -15,6 +15,8 @@
 
 package de.woq.osgi.java.container;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -58,6 +60,20 @@ public class WOQContainer implements ContainerConstants {
       params.add("--vmOptions=" + jvmOptions);
     }
 
+    if (getProxyHost() != null) {
+
+      if (getProxyUser() != null && getProxyPassword() != null) {
+        Authenticator.setDefault(new Authenticator() {
+          @Override
+          protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(getProxyUser(), getProxyPassword().toCharArray());
+          }
+        });
+      }
+      System.setProperty("http.proxyHost", getProxyHost());
+      System.setProperty("http.proxyPort", "" + getProxyPort());
+    }
+
     String woqHome = properties.getProperty(PROP_WOQ_HOME);
     if (woqHome != null) {
       params.add("--classpath=" + woqHome + "/config");
@@ -72,6 +88,28 @@ public class WOQContainer implements ContainerConstants {
 
   protected String getContainerName() {
     return containerName;
+  }
+
+  protected String getProxyHost() {
+    return properties.getProperty(PROP_PROXY_HOST);
+  }
+
+  protected int getProxyPort() {
+    int result = 8080;
+    try {
+      result = Integer.parseInt(properties.getProperty(PROP_PROXY_PORT, "8080"));
+    } catch(Exception e) {
+      // ignore
+    }
+    return result;
+  }
+
+  protected String getProxyUser() {
+    return properties.getProperty(PROP_PROXY_USER);
+  }
+
+  protected String getProxyPassword() {
+    return properties.getProperty(PROP_PROXY_PASSWORD);
   }
 
   protected String getPlatformVendor() {

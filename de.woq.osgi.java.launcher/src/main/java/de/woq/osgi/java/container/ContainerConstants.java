@@ -30,6 +30,16 @@ public interface ContainerConstants {
 
   String DEFAULT_PLATFORM_STARTLEVEL = "100";
 
+  String PROP_PROXY_HOST = "proxy.host";
+
+  String PROP_PROXY_PORT = "proxy.port";
+
+  String DEFAULT_PROXY_PORT = "8080";
+
+  String PROP_PROXY_USER = "proxy.user";
+
+  String PROP_PROXY_PASSWORD = "proxy.password";
+
   String PROP_LOG_LEVEL = "log.level";
 
   String DEFAULT_LOG_LEVEL = "info";
