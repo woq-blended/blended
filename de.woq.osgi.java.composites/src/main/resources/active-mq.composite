@@ -14,7 +14,7 @@
 
 scan-bundle:mvn:org.jasypt/com.springsource.org.jasypt.encryption/1.5.0@12
 scan-bundle:mvn:org.apache.activemq/kahadb/${activemq.version}@12
-scan-bundle:mvn:org.apache.activemq/activemq-core/${activemq.version}@15
+scan-bundle:mvn:org.apache.activemq/activemq-broker/${activemq.version}@15
 scan-bundle:mvn:org.apache.activemq/activemq-ra/${activemq.version}@15
 scan-bundle:mvn:org.apache.activemq/activemq-console/${activemq.version}@15
 scan-bundle:mvn:org.apache.activemq/activemq-pool/${activemq.version}@15

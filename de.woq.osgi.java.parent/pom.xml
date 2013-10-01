@@ -27,6 +27,7 @@
 
     <java.version>1.7</java.version>
     <equinox.version>3.8.1.v20120830-144521</equinox.version>
+    <equinox.console.version>1.0.0.v20120522</equinox.console.version>
 
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
@@ -34,13 +35,13 @@
     <compiler-plugin.version>2.5.1</compiler-plugin.version>
 
     <!-- library versions -->
-    <activemq.version>5.7.0</activemq.version>
+    <activemq.version>5.8.0</activemq.version>
     <aries.proxy.version>1.0.1</aries.proxy.version>
     <aries.blueprint.version>1.1.0</aries.blueprint.version>
     <aries.jmx.version>1.1.1</aries.jmx.version>
     <aries.util.version>1.1.0</aries.util.version>
     <akka.version>2.1.2</akka.version>
-    <camel.version>2.11.0</camel.version>
+    <camel.version>2.12.1</camel.version>
     <commons.codec.version>1.6.0</commons.codec.version>
     <commons.collections.version>3.2.1</commons.collections.version>
     <commons.discovery.version>0.4.0</commons.discovery.version>
@@ -71,7 +72,7 @@
     <pax-runner.version>1.8.5</pax-runner.version>
     <scala.version>2.10.0</scala.version>
     <slf4j.version>1.7.2</slf4j.version>
-    <spring.version>3.1.2.RELEASE</spring.version>
+    <spring.version>3.2.4.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
     <tinybundles.version>1.0.0</tinybundles.version>
     <velocity.version>1.7</velocity.version>

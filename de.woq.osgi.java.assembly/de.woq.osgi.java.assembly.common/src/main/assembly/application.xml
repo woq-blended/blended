@@ -49,15 +49,5 @@
       <directoryMode>0755</directoryMode>
     </fileSet>
 
-    <fileSet>
-      <directory>target/ui</directory>
-      <outputDirectory>/ui</outputDirectory>
-      <fileMode>0644</fileMode>
-      <directoryMode>0755</directoryMode>
-      <excludes>
-        <exclude>META-INF/**</exclude>
-      </excludes>
-    </fileSet>
-
   </fileSets>
 </assembly>

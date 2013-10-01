@@ -82,7 +82,6 @@
                 <includeScope>compile</includeScope>
                 <outputDirectory>${project.build.directory}/dependencies</outputDirectory>
                 <excludeArtifactIds>de.woq.osgi.java.assembly.defaults</excludeArtifactIds>
-                <excludeGroupIds>de.woq.osgi.java.ui</excludeGroupIds>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>
             </execution>
@@ -103,25 +102,6 @@
                 <includeScope>compile</includeScope>
                 <outputDirectory>${project.build.directory}/defaults</outputDirectory>
                 <includeArtifactIds>de.woq.osgi.java.assembly.defaults</includeArtifactIds>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-
-        <!-- Unzip all web ui modules -->
-        <plugin>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>ExtractUI</id>
-              <phase>process-resources</phase>
-              <goals>
-                <goal>unpack-dependencies</goal>
-              </goals>
-              <configuration>
-                <includeScope>compile</includeScope>
-                <outputDirectory>${project.build.directory}/ui</outputDirectory>
-                <includeGroupIds>de.woq.osgi.java.ui</includeGroupIds>
               </configuration>
             </execution>
           </executions>

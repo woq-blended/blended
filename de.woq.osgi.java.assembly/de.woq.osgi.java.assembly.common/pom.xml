@@ -31,16 +31,6 @@
     <woq.profile.name>common</woq.profile.name>
   </properties>
 
-  <dependencies>
-
-    <dependency>
-      <groupId>de.woq.osgi.java.ui</groupId>
-      <artifactId>de.woq.osgi.java.webui.osgiconsole</artifactId>
-      <version>${woq.container.version}</version>
-    </dependency>
-
-  </dependencies>
-
   <build>
     <plugins>
 
