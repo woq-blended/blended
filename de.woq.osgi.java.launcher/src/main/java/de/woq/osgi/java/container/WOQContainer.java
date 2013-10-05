@@ -15,6 +15,7 @@
 
 package de.woq.osgi.java.container;
 
+import java.io.File;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.ArrayList;
@@ -51,6 +52,7 @@ public class WOQContainer implements ContainerConstants {
     params.add("--platform=" + getPlatformVendor());
     params.add("--version=" + getPlatformVersion());
     params.add("--startLevel=" + getPlatformStartLevel());
+    params.add("--bootDelegation=com.sun.*");
 
     params.add("--log=" + getPlatformLogLevel());
 
@@ -74,10 +76,7 @@ public class WOQContainer implements ContainerConstants {
       System.setProperty("http.proxyPort", "" + getProxyPort());
     }
 
-    String woqHome = properties.getProperty(PROP_WOQ_HOME);
-    if (woqHome != null) {
-      params.add("--classpath=" + woqHome + "/config");
-    }
+    params.add("--classpath=" + getConfigDir());
 
     params.add("--dir=" + getContainerName());
 
@@ -102,6 +101,14 @@ public class WOQContainer implements ContainerConstants {
       // ignore
     }
     return result;
+  }
+
+  protected String getContainerHome() {
+    return properties.getProperty(PROP_WOQ_HOME);
+  }
+
+  protected String getConfigDir() {
+    return getContainerHome() + "/config";
   }
 
   protected String getProxyUser() {
@@ -185,6 +192,17 @@ public class WOQContainer implements ContainerConstants {
       optionString.append(",address=");
       optionString.append(debugPort);
       optionString.append(" ");
+    }
+
+    File jettyCfg = new File(getConfigDir(), "/jetty.xml");
+    if (jettyCfg.exists() && jettyCfg.isFile() && jettyCfg.canRead()) {
+      optionString.append("-Dorg.ops4j.pax.web.config.file=");
+      optionString.append(getConfigDir());
+      optionString.append("/jetty.xml ");
+
+      optionString.append("-Djava.security.auth.login.config=");
+      optionString.append(getConfigDir());
+      optionString.append("/jaas.config ");
     }
 
     return optionString.length() > 0 ? optionString.toString() : null;
