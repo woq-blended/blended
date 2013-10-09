@@ -75,6 +75,10 @@
         <module>de.woq.osgi.java.assembly</module>
 
         <module>de.woq.osgi.java.testsupport</module>
+
+        <module>de.woq.osgi.java.karaf</module>
+        <module>de.woq.osgi.java.karaf.branding</module>
+        <module>de.woq.osgi.java.karaf.central</module>
       </modules>
     </profile>
 
