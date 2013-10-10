@@ -65,6 +65,7 @@
     <ops4j-base.version>1.4.0</ops4j-base.version>
     <osgi.core.version>4.3.0</osgi.core.version>
     <osgi.enterprise.version>4.2.0</osgi.enterprise.version>
+    <osweb.asm.version>3.1.0</osweb.asm.version>
     <pax-exam.version>3.2.0</pax-exam.version>
     <pax-logging.version>1.6.4</pax-logging.version>
     <pax-swissbox.version>1.7.0</pax-swissbox.version>
@@ -73,11 +74,12 @@
     <pax-runner.version>1.8.5</pax-runner.version>
     <scala.version>2.10.0</scala.version>
     <slf4j.version>1.7.2</slf4j.version>
-    <spring.version>3.1.2.RELEASE</spring.version>
+    <spring.version>3.2.4.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
     <tinybundles.version>1.0.0</tinybundles.version>
     <velocity.version>1.7</velocity.version>
     <xbean.version>3.13</xbean.version>
+    <xmlbeans.version>2.4.0</xmlbeans.version>
   </properties>
 
   <ciManagement>

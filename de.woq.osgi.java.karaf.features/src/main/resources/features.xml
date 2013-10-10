@@ -19,7 +19,6 @@
 <features name="woq-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
 
   <feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" resolver="(obr)">
-
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}</bundle>
     <bundle start-level="10">mvn:commons-lang/commons-lang/${commons.lang.version}</bundle>
@@ -28,7 +27,60 @@
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.io/${commons.io.version}</bundle>
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.codec/${commons.codec.version}</bundle>
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/${commons.httpclient.version}</bundle>
+  </feature>
 
+  <feature name="woq-specs" description="WoQ - Specs feature" version="${project.version}" resolver="(obr)" >
+    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
+    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
+    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
+  </feature>
+
+  <feature name="woq-spring" description="WoQ - Spring feature" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-specs</feature>
+
+    <bundle dependency="true" start-level="8">mvn:org.aopalliance/com.springsource.org.aopalliance/1.0.0</bundle>
+    <bundle dependency="true" start-level="2">mvn:net.sourceforge.cglib/com.springsource.net.sf.cglib/${cglib.version}</bundle>
+
+    <bundle start-level="15">mvn:org.springframework/org.springframework.core/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.expression/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.beans/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.aop/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.context/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.context.support/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.jms/${spring.version}</bundle>
+    <bundle start-level="15">mvn:org.springframework/org.springframework.transaction/${spring.version}</bundle>
+  </feature>
+
+  <feature name="woq-osweb-asm" description="WoQ - ObjectWeb ASM feature" version="${project.version}" resolver="(obr)" >
+    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm/${osweb.asm.version}</bundle>
+    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.commons/${osweb.asm.version}</bundle>
+    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.tree/${osweb.asm.version}</bundle>
+  </feature>
+
+  <feature name="woq-xbean" description="WoQ - XBean feature" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-spring</feature>
+    <bundle start-level="10">mvn:org.apache.xbean/xbean-bundleutils/${xbean.version}</bundle>
+    <bundle start-level="10">mvn:org.apache.xbean/xbean-finder/${xbean.version}</bundle>
+    <bundle start-level="10">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
+    <bundle start-level="30">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
+    <bundle start-level="30">mvn:org.apache.xmlbeans/com.springsource.org.apache.xmlbeans/${xmlbeans.version}</bundle>
+  </feature>
+
+  <feature name="woq-pax-web" description="WoQ - Pax Web feature" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-xbean</feature>
+    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-jetty-bundle/${pax-web.version}</bundle>
+    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-spi/${pax-web.version}</bundle>
+    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-api/${pax-web.version}</bundle>
+    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-jsp/${pax-web.version}</bundle>
+    <bundle start-level="15">mvn:org.ops4j.pax.web/pax-web-extender-whiteboard/${pax-web.version}</bundle>
+    <bundle start-level="15">mvn:org.ops4j.pax.web/pax-web-extender-war/${pax-web.version}</bundle>
+  </feature>
+
+  <feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
+    <feature version="${project.version}">woq-commons</feature>
+    <feature version="${project.version}">woq-specs</feature>
+    <feature version="${project.version}">woq-pax-web</feature>
   </feature>
 
 </features>
