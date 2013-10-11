@@ -18,7 +18,12 @@
 -->
 <features name="woq-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
 
-  <feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" resolver="(obr)">
+  <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
+  <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
+  <repository>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</repository>
+  <repository>mvn:org.fusesource.fabric/fuse-fabric/7.3.0.redhat-SNAPSHOT/xml/features</repository>
+
+  <!--feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" resolver="(obr)">
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}</bundle>
     <bundle start-level="10">mvn:commons-lang/commons-lang/${commons.lang.version}</bundle>
@@ -38,22 +43,6 @@
     <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
   </feature>
 
-  <feature name="woq-spring" description="WoQ - Spring feature" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">woq-specs</feature>
-
-    <bundle dependency="true" start-level="8">mvn:org.aopalliance/com.springsource.org.aopalliance/1.0.0</bundle>
-    <bundle dependency="true" start-level="2">mvn:net.sourceforge.cglib/com.springsource.net.sf.cglib/${cglib.version}</bundle>
-
-    <bundle start-level="15">mvn:org.springframework/org.springframework.core/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.expression/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.beans/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.aop/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.context/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.context.support/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.jms/${spring.version}</bundle>
-    <bundle start-level="15">mvn:org.springframework/org.springframework.transaction/${spring.version}</bundle>
-  </feature>
-
   <feature name="woq-objectweb-asm" description="WoQ - ObjectWeb ASM feature" version="${project.version}" resolver="(obr)" >
     <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm/${osweb.asm.version}</bundle>
     <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.commons/${osweb.asm.version}</bundle>
@@ -69,16 +58,6 @@
     <bundle start-level="30">mvn:org.apache.xmlbeans/com.springsource.org.apache.xmlbeans/${xmlbeans.version}</bundle>
   </feature>
 
-  <feature name="woq-pax-web" description="WoQ - Pax Web feature" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">woq-xbean</feature>
-    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-jetty-bundle/${pax-web.version}</bundle>
-    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-spi/${pax-web.version}</bundle>
-    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-api/${pax-web.version}</bundle>
-    <bundle start-level="10">mvn:org.ops4j.pax.web/pax-web-jsp/${pax-web.version}</bundle>
-    <bundle start-level="15">mvn:org.ops4j.pax.web/pax-web-extender-whiteboard/${pax-web.version}</bundle>
-    <bundle start-level="15">mvn:org.ops4j.pax.web/pax-web-extender-war/${pax-web.version}</bundle>
-  </feature>
-
   <feature name="woq-jackson" description="WoQ - Jackson" version="${project.version}" resolver="(obr)">
     <bundle start-level="10">mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
     <bundle start-level="10">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
@@ -92,37 +71,18 @@
     <bundle start-level="40">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
     <bundle start-level="40">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
     <bundle start-level="40">mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
-  </feature>
+  </feature -->
 
   <feature name="woq-activemq" description="WoQ - Active MQ" version="${project.version}" resolver="(obr)">
-    <!-- All bundles needed by the broker -->
-    <bundle>mvn:org.apache.activemq/activemq-osgi/${activemq.version}</bundle>
-    <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_5</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/1.9.0</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_5</bundle>
-    <bundle dependency="true">mvn:joda-time/joda-time/1.6.2</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/1.3_3</bundle>
-    <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/1.0.0</bundle>
-    <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/1.0.0</bundle>
-    <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
-  </feature>
-
-  <feature name="woq-activemq-blueprint" version="${project.version}" resolver="(obr)" start-level="50">
-    <feature version="${project.version}">woq-activemq</feature>
-    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/1.9.0</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
-    <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
+    <feature version="${activemq.version}">activemq-blueprint</feature>
   </feature>
 
   <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
-    <bundle start-level="40">mvn:org.apache.camel/camel-core/${camel.version}</bundle>
-    <bundle start-level="40">mvn:org.apache.camel/camel-jms/${camel.version}</bundle>
-    <bundle start-level="40">mvn:org.apache.camel/camel-http/${camel.version}</bundle>
-    <bundle start-level="40">mvn:org.apache.camel/camel-servlet/${camel.version}</bundle>
-    <bundle start-level="40">mvn:org.apache.camel/camel-blueprint/${camel.version}</bundle>
-    <bundle start-level="40">mvn:org.apache.camel/camel-exec/${camel.version}</bundle>
+    <feature version="${camel.version}">camel</feature>
+    <feature version="${camel.version}">camel-jms</feature>
+    <feature version="${camel.version}">camel-http</feature>
+    <feature version="${camel.version}">camel-servlet</feature>
+    <feature version="${camel.version}">camel-exec</feature>
     <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
   </feature>
 
@@ -136,7 +96,7 @@
     <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${woq.container.version}</bundle>
+    <!--bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${woq.container.version}</bundle-->
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/${woq.container.version}</bundle>
@@ -149,6 +109,7 @@
   </feature>
 
   <feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
+    <feature version="${project.version}">woq-base</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${project.version}">woq-specs</feature>
     <feature version="${project.version}">woq-pax-web</feature>
@@ -158,7 +119,6 @@
     <feature version="${project.version}">woq-camel</feature>
     <feature version="${project.version}">woq-activemq-blueprint</feature>
     <feature version="${project.version}">woq-hawtio</feature>
-    <feature version="${project.version}">woq-base</feature>
   </feature>
 
 </features>
