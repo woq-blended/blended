@@ -123,12 +123,29 @@
     <bundle start-level="40">mvn:org.apache.camel/camel-servlet/${camel.version}</bundle>
     <bundle start-level="40">mvn:org.apache.camel/camel-blueprint/${camel.version}</bundle>
     <bundle start-level="40">mvn:org.apache.camel/camel-exec/${camel.version}</bundle>
+    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
   </feature>
 
   <feature name="woq-hawtio" description="WoQ - Hawtio" version="${project.version}" resolver="(obr)" >
     <bundle start-level="40">mvn:io.hawt/hawtio-osgi-jmx/${hawtio.version}</bundle>
     <bundle start-level="40">mvn:io.hawt/hawtio-json-schema-mbean/${hawtio.version}</bundle>
     <bundle start-level="40">mvn:io.hawt/hawtio-web/${hawtio.version}/war</bundle>
+  </feature>
+
+  <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
+    <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/${woq.container.version}</bundle>
+  </feature>
+
+  <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
+    <feature version="${project.version}">woq-activemq-blueprint</feature>
+    <bundle start-level="50" dependency="true">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.brokerstarter/${project.version}</bundle>
+    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/${project.version}</bundle>
   </feature>
 
   <feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
@@ -141,6 +158,7 @@
     <feature version="${project.version}">woq-camel</feature>
     <feature version="${project.version}">woq-activemq-blueprint</feature>
     <feature version="${project.version}">woq-hawtio</feature>
+    <feature version="${project.version}">woq-base</feature>
   </feature>
 
 </features>
