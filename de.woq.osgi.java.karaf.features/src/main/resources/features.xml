@@ -22,6 +22,7 @@
   <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
   <repository>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</repository>
   <repository>mvn:org.fusesource.fabric/fuse-fabric/7.3.0.redhat-SNAPSHOT/xml/features</repository>
+  <repository>mvn:io.hawt/hawtio-karaf/${hawtio.version}/xml/features</repository>
 
   <!--feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" resolver="(obr)">
     <bundle start-level="10">mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
@@ -71,11 +72,11 @@
     <bundle start-level="40">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
     <bundle start-level="40">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
     <bundle start-level="40">mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
-  </feature -->
+  </feature>
 
   <feature name="woq-activemq" description="WoQ - Active MQ" version="${project.version}" resolver="(obr)">
     <feature version="${activemq.version}">activemq-blueprint</feature>
-  </feature>
+  </feature -->
 
   <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
     <feature version="${camel.version}">camel</feature>
@@ -86,11 +87,11 @@
     <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
   </feature>
 
-  <feature name="woq-hawtio" description="WoQ - Hawtio" version="${project.version}" resolver="(obr)" >
+  <!--feature name="woq-hawtio" description="WoQ - Hawtio" version="${project.version}" resolver="(obr)" >
     <bundle start-level="40">mvn:io.hawt/hawtio-osgi-jmx/${hawtio.version}</bundle>
     <bundle start-level="40">mvn:io.hawt/hawtio-json-schema-mbean/${hawtio.version}</bundle>
     <bundle start-level="40">mvn:io.hawt/hawtio-web/${hawtio.version}/war</bundle>
-  </feature>
+  </feature-->
 
   <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
     <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
@@ -103,12 +104,13 @@
   </feature>
 
   <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
-    <feature version="${project.version}">woq-activemq-blueprint</feature>
+    <feature version="${activemq.version}">activemq-blueprint</feature>
+    <feature version="${project.version}">woq-base</feature>
     <bundle start-level="50" dependency="true">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.brokerstarter/${project.version}</bundle>
     <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/${project.version}</bundle>
   </feature>
 
-  <feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
+  <!--feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
     <feature version="${project.version}">woq-base</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${project.version}">woq-specs</feature>
@@ -119,6 +121,6 @@
     <feature version="${project.version}">woq-camel</feature>
     <feature version="${project.version}">woq-activemq-blueprint</feature>
     <feature version="${project.version}">woq-hawtio</feature>
-  </feature>
+  </feature-->
 
 </features>
