@@ -14,7 +14,7 @@
 
 scan-bundle:mvn:org.aopalliance/com.springsource.org.aopalliance/1.0.0@8
 
-scan-bundle:mvn:org.springframework/spring-aop/${spring.version}@10
+#scan-bundle:mvn:org.springframework/spring-aop/${spring.version}@10
 scan-bundle:mvn:org.springframework/spring-asm/${spring.version}@10
 scan-bundle:mvn:org.springframework/spring-beans/${spring.version}@10
 scan-bundle:mvn:org.springframework/spring-context/${spring.version}@10
