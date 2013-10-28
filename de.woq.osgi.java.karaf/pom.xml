@@ -30,7 +30,7 @@
   </parent>
 
   <artifactId>de.woq.osgi.java.karaf</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <properties>
     <woq.config>de.woq.osgi.java.karaf.central</woq.config>
@@ -105,6 +105,25 @@
 
         </executions>
       </plugin>
+
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>CreateProduct</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/assembly/application.xml</descriptor>
+              </descriptors>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
