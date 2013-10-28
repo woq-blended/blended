@@ -33,7 +33,11 @@ fi
 
 if [[ ! -e ${JAVA} ]]; then
   if [[ ! -z `echo ${OSTYPE} | grep "darwin"` ]]; then
-    JAVA=/System/Library/Frameworks/JavaVM.framework/Home/bin/java
+    if [[ -e /usr/libexec/java_home ]]; then
+      JAVA=`/usr/libexec/java_home`
+    else
+      JAVA=/System/Library/Frameworks/JavaVM.framework/Home/bin/java
+    fi  
   fi  
 fi
 
@@ -48,7 +52,9 @@ if [[ ! -e ${JAVA} ]]; then
   echo ""
   echo " 3 - A JVM that is loacated in the JRE directory of the Whiteboard installation [${WHITEBOARD_HOME}/jre]"
   echo ""
-  echo " 4 - On OS X in [/System/Library/Frameworks/JavaVM.framework/Home/bin]"
+  echo " 4 - A JVM that is located with /usr/libexec/java_home" 
+  echo ""
+  echo " 5 - On OS X in [/System/Library/Frameworks/JavaVM.framework/Home/bin]"
   echo ""
   echo "Please make a valid Java Virtual machine available in one of these locations."
   echo ""
