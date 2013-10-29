@@ -20,7 +20,7 @@
   <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
   <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
   <repository>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</repository>
-  <repository>mvn:org.fusesource.fabric/fuse-fabric/${fabric.version}/xml/features</repository>
+  <!--repository>mvn:org.fusesource.fabric/fuse-fabric/${fabric.version}/xml/features</repository-->
   <repository>mvn:io.hawt/hawtio-karaf/${hawtio.version}/xml/features</repository>
 
   <feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" start-level="10" resolver="(obr)">
@@ -74,23 +74,28 @@
     <bundle start-level="40">mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
   </feature -->
 
-  <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
-    <feature version="${camel.version}">camel</feature>
-    <feature version="${camel.version}">camel-jms</feature>
-    <feature version="${camel.version}">camel-http</feature>
-    <feature version="${camel.version}">camel-servlet</feature>
-    <feature version="${camel.version}">camel-exec</feature>
-    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
-  </feature>
-
   <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-commons</feature>
     <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
+    <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
     <!--bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${woq.container.version}</bundle-->
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/${woq.container.version}</bundle>
+  </feature>
+
+  <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-base</feature>
+
+    <feature version="${camel.version}">camel</feature>
+    <feature version="${camel.version}">camel-jms</feature>
+    <feature version="${camel.version}">camel-http</feature>
+    <feature version="${camel.version}">camel-servlet</feature>
+    <feature version="${camel.version}">camel-exec</feature>
+
+    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
   </feature>
 
   <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">

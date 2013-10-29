@@ -62,6 +62,7 @@
     <cglib.version>2.2.0</cglib.version>
     <felix.cm.version>1.6.0</felix.cm.version>
     <felix.event.version>1.3.2</felix.event.version>
+    <felix.fileinstall.version>3.2.6</felix.fileinstall.version>
     <felix.framework.version>4.2.1</felix.framework.version>
     <guava.version>14.0</guava.version>
     <hamcrest.version>1.3.0.1</hamcrest.version>
