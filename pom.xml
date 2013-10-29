@@ -49,6 +49,7 @@
       <id>parent</id>
       <modules>
         <module>de.woq.osgi.java.parent</module>
+        <module>de.woq.osgi.java.karaf.parent</module>
         <module>de.woq.osgi.java.itest.parent</module>
         <module>de.woq.osgi.java.assembly</module>
       </modules>

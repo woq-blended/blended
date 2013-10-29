@@ -24,9 +24,9 @@
 
   <parent>
     <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
     <version>1.0-beta-2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
+    <relativePath>../de.woq.osgi.java.karaf.parent</relativePath>
   </parent>
 
   <artifactId>de.woq.osgi.java.karaf</artifactId>
@@ -36,95 +36,5 @@
     <woq.config>de.woq.osgi.java.karaf.central</woq.config>
     <woq.branding>de.woq.osgi.java.karaf.branding</woq.branding>
   </properties>
-
-  <dependencies>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>${woq.config}</artifactId>
-      <version>${woq.container.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>${woq.branding}</artifactId>
-      <version>${woq.container.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.karaf</groupId>
-      <artifactId>apache-karaf</artifactId>
-      <version>${karaf.version}</version>
-      <type>tar.gz</type>
-    </dependency>
-
-  </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-
-          <execution>
-            <id>extract-karaf</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeTypes>tar.gz</includeTypes>
-              <outputDirectory>${project.build.directory}</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>extract-config</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>${woq.config}</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/apache-karaf-${karaf.version}</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>extract-branding</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>${woq.branding}</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/apache-karaf-${karaf.version}/lib</outputDirectory>
-              <useRepositoryLayout>false</useRepositoryLayout>
-            </configuration>
-          </execution>
-
-        </executions>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>CreateProduct</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                <descriptor>src/main/assembly/application.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
-  </build>
 
 </project>
