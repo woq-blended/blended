@@ -45,12 +45,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
 
     <dependency>
-      <groupId>${woq.config.groupId}</groupId>
-      <artifactId>${woq.config.artifactId}</artifactId>
-      <version>${woq.config.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>${woq.branding.groupId}</groupId>
       <artifactId>${woq.branding.artifactId}</artifactId>
       <version>${woq.branding.version}</version>
@@ -80,18 +74,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
             <configuration>
               <includeTypes>tar.gz</includeTypes>
               <outputDirectory>${project.build.directory}</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>extract-config</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>${woq.config.artifactId}</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/apache-karaf-${karaf.version}</outputDirectory>
             </configuration>
           </execution>
 

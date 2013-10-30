@@ -18,10 +18,16 @@
   <id>bin</id>
 
   <formats>
-    <format>zip</format>
+    <format>dir</format>
+    <format>tar.gz</format>
   </formats>
 
   <fileSets>
+
+    <fileSet>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
 
     <fileSet>
       <directory>target/apache-karaf-${karaf.version}</directory>

@@ -24,10 +24,16 @@
 
   <parent>
     <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
     <version>1.0-beta-2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
+    <relativePath>../de.woq.osgi.java.karaf.parent</relativePath>
   </parent>
+
+  <properties>
+    <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
+    <woq.branding.artifactId>de.woq.osgi.java.karaf.branding</woq.branding.artifactId>
+    <woq.branding.version>${project.version}</woq.branding.version>
+  </properties>
 
   <artifactId>de.woq.osgi.java.karaf.central</artifactId>
 
