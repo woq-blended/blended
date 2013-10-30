@@ -57,6 +57,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
       <type>tar.gz</type>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.karaf</groupId>
+      <artifactId>apache-karaf</artifactId>
+      <version>${karaf.version}</version>
+      <type>zip</type>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -66,14 +73,26 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <executions>
 
           <execution>
-            <id>extract-karaf</id>
+            <id>extract-karaf-linux</id>
             <phase>process-resources</phase>
             <goals>
               <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
               <includeTypes>tar.gz</includeTypes>
-              <outputDirectory>${project.build.directory}</outputDirectory>
+              <outputDirectory>${project.build.directory}/linux</outputDirectory>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>extract-karaf-windows</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeTypes>zip</includeTypes>
+              <outputDirectory>${project.build.directory}/windows</outputDirectory>
             </configuration>
           </execution>
 
@@ -85,7 +104,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
             </goals>
             <configuration>
               <includeArtifactIds>${woq.branding.artifactId}</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/apache-karaf-${karaf.version}/lib</outputDirectory>
+              <outputDirectory>${project.build.directory}/branding</outputDirectory>
               <useRepositoryLayout>false</useRepositoryLayout>
             </configuration>
           </execution>
@@ -104,7 +123,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
             </goals>
             <configuration>
               <descriptors>
-                <descriptor>src/main/assembly/application.xml</descriptor>
+                <descriptor>src/main/assembly/linux.xml</descriptor>
+                <descriptor>src/main/assembly/windows.xml</descriptor>
               </descriptors>
             </configuration>
           </execution>

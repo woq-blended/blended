@@ -24,7 +24,17 @@
   <fileSets>
 
     <fileSet>
-      <directory>target/apache-karaf-${karaf.version}</directory>
+      <directory>target/classes</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/branding</directory>
+      <outputDirectory>/lib</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/windows/apache-karaf-${karaf.version}</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
 

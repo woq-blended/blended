@@ -18,8 +18,7 @@
   <id>bin</id>
 
   <formats>
-    <format>dir</format>
-    <format>tar.gz</format>
+    <format>zip</format>
   </formats>
 
   <fileSets>
@@ -30,7 +29,12 @@
     </fileSet>
 
     <fileSet>
-      <directory>target/apache-karaf-${karaf.version}</directory>
+      <directory>target/branding</directory>
+      <outputDirectory>/lib</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/windows/apache-karaf-${karaf.version}</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
 
