@@ -36,44 +36,6 @@
     <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/1.8.3_2</bundle>
   </feature>
 
-  <!--feature name="woq-specs" description="WoQ - Specs feature" version="${project.version}" resolver="(obr)" >
-    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
-    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
-    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
-    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
-    <bundle start-level="10">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
-  </feature>
-
-  <feature name="woq-objectweb-asm" description="WoQ - ObjectWeb ASM feature" version="${project.version}" resolver="(obr)" >
-    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm/${osweb.asm.version}</bundle>
-    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.commons/${osweb.asm.version}</bundle>
-    <bundle start-level="10">mvn:org.objectweb.asm/com.springsource.org.objectweb.asm.tree/${osweb.asm.version}</bundle>
-  </feature>
-
-  <feature name="woq-xbean" description="WoQ - XBean feature" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">woq-spring</feature>
-    <bundle start-level="10">mvn:org.apache.xbean/xbean-bundleutils/${xbean.version}</bundle>
-    <bundle start-level="10">mvn:org.apache.xbean/xbean-finder/${xbean.version}</bundle>
-    <bundle start-level="10">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
-    <bundle start-level="30">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
-    <bundle start-level="30">mvn:org.apache.xmlbeans/com.springsource.org.apache.xmlbeans/${xmlbeans.version}</bundle>
-  </feature>
-
-  <feature name="woq-jackson" description="WoQ - Jackson" version="${project.version}" resolver="(obr)">
-    <bundle start-level="10">mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
-    <bundle start-level="10">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
-    <bundle start-level="10">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
-    <bundle start-level="10">mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
-  </feature>
-
-  <feature name="woq-jersey" description="WoQ - Jersey feature" version="${project.version}" resolver="(obr)" >
-    <bundle start-level="40">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
-    <bundle start-level="40">mvn:com.sun.jersey/jersey-json/${jersey.version}</bundle>
-    <bundle start-level="40">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
-    <bundle start-level="40">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
-    <bundle start-level="40">mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
-  </feature -->
-
   <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
     <feature version="${project.version}">woq-commons</feature>
     <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
@@ -105,50 +67,52 @@
     <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/${project.version}</bundle>
   </feature>
 
-  <!--feature name="woq-standard" description="WoQ - Common base for all WoQ containers" version="${project.version}" resolver="(obr)" >
-    <feature version="${project.version}">woq-base</feature>
-    <feature version="${project.version}">woq-commons</feature>
-    <feature version="${project.version}">woq-specs</feature>
-    <feature version="${project.version}">woq-pax-web</feature>
-    <feature version="${project.version}">woq-jackson</feature>
-    <feature version="${project.version}">woq-jersey</feature>
-    <feature version="${project.version}">woq-objectweb-asm</feature>
-    <feature version="${project.version}">woq-camel</feature>
-    <feature version="${project.version}">woq-activemq-blueprint</feature>
-    <feature version="${project.version}">woq-hawtio</feature>
-  </feature-->
+  <!-- Active MQ 5.9.0 Feature Fix : Obsolete with upcoming fix ( see https://issues.apache.org/jira/browse/AMQ-4833 ) -->
 
-  <!--feature name="woq-fabric-core" version="${project.version}" start-level="50" resolver="(obr)">
-
-    <feature version="${project.version}">woq-commons</feature>
-    <feature version="${activemq.version}">activemq</feature>
-
-    <bundle>mvn:org.ops4j.base/ops4j-base-net/${ops4j-base.version}</bundle>
-    <bundle>mvn:org.ops4j.base/ops4j-base-lang/${ops4j-base.version}</bundle>
-    <bundle>mvn:org.ops4j.base/ops4j-base-monitors/${ops4j-base.version}</bundle>
-    <bundle>mvn:org.ops4j.base/ops4j-base-util-property/${ops4j-base.version}</bundle>
-    <bundle>mvn:org.ops4j.pax.swissbox/pax-swissbox-optional-jcl/1.6.0</bundle>
-    <bundle>mvn:org.ops4j.pax.swissbox/pax-swissbox-property/1.6.0</bundle>
-
-    <bundle>mvn:com.google.guava/guava/${guava.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-zookeeper/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-groups/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-git/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-git-server/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.insight/insight-log/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-api/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-core/${fabric.version}</bundle>
-
-    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jsch/${jsch.version}</bundle>
-
-    <bundle>mvn:org.jledit/core/${jledit.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-boot-commands/${fabric.version}</bundle>
+  <!-- Bundles needed if only client will be deployed in the container -->
+  <feature name="woq-activemq-client" description="ActiveMQ client libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
+    <feature version="[3.1,4)">spring</feature>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jms_1.1_spec/1.1.1</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-management_1.1_spec/1.0.1</bundle>
+    <bundle dependency="true">mvn:org.jvnet.jaxb2_commons/jaxb2-basics-runtime/0.6.4</bundle>
+    <bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jaxb-impl/2.2.1.1_2</bundle>
+    <bundle dependency='true'>wrap:mvn:org.apache.zookeeper/zookeeper/3.4.5$Import-Package=*;resolution:=optional&amp;Export-Package=org.apache.zookeeper*;-noimport:=true&amp;overwrite=merge</bundle>
+    <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
+    <bundle dependency="false">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
+    <bundle>mvn:org.apache.activemq/activemq-osgi/${activemq.version}</bundle>
   </feature>
 
-  <feature name="woq-fabric" version="${project.version}" start-level="50" resolver="(obr)">
-    <feature version="${project.version}">woq-fabric-core</feature>
+  <!-- All bundles needed by the broker -->
+  <feature name="woq-activemq" description="ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
+    <feature>jetty</feature>
+    <feature version="${project.version}">woq-commons</feature>
+    <feature version="${activemq.version}">woq-activemq-client</feature>
+    <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_5</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/1.9.0</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_5</bundle>
+    <bundle dependency="true">mvn:joda-time/joda-time/1.6.2</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/1.3_3</bundle>
+    <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/1.0.0</bundle>
+    <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
+    <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries.blueprint.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
+    <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
+    <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+    <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
+    <bundle dependency='true'>wrap:mvn:org.scala-lang/scala-library/${scala.version}</bundle>
+  </feature>
 
-    <bundle>mvn:org.fusesource.fabric/fabric-maven-proxy/${fabric.version}</bundle>
-    <bundle>mvn:org.fusesource.fabric/fabric-configadmin/${fabric.version}</bundle>
-  </feature-->
+  <feature name="woq-activemq-blueprint" version="${activemq.version}" resolver="(obr)" start-level="50">
+    <feature version="${activemq.version}">woq-activemq</feature>
+    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/1.9.0</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
+    <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
+    <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
+  </feature>
+
 </features>
