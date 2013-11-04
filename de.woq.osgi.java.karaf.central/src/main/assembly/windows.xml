@@ -34,6 +34,11 @@
     </fileSet>
 
     <fileSet>
+      <directory>target/offline</directory>
+      <outputDirectory>/repository</outputDirectory>
+    </fileSet>
+
+    <fileSet>
       <directory>target/windows/apache-karaf-${karaf.version}</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>

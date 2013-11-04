@@ -40,6 +40,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
     <woq.branding.artifactId>de.woq.osgi.java.karaf.branding</woq.branding.artifactId>
     <woq.branding.version>${woq.container.version}</woq.branding.version>
+
+    <woq.offline.groupId>${project.groupId}</woq.offline.groupId>
+    <woq.offline.artifactId>de.woq.osgi.java.karaf.offline</woq.offline.artifactId>
+    <woq.offline.version>${project.version}</woq.offline.version>
   </properties>
 
   <dependencies>
@@ -51,10 +55,23 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
+      <groupId>${woq.offline.groupId}</groupId>
+      <artifactId>${woq.offline.artifactId}</artifactId>
+      <version>${woq.offline.version}</version>
+      <type>pom</type>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.karaf</groupId>
       <artifactId>apache-karaf</artifactId>
       <version>${karaf.version}</version>
       <type>tar.gz</type>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
@@ -62,6 +79,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
       <artifactId>apache-karaf</artifactId>
       <version>${karaf.version}</version>
       <type>zip</type>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
   </dependencies>
@@ -79,6 +102,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
               <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
+              <includeArtifactIds>apache-karaf</includeArtifactIds>
               <includeTypes>tar.gz</includeTypes>
               <outputDirectory>${project.build.directory}/linux</outputDirectory>
             </configuration>
@@ -91,6 +115,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
               <goal>unpack-dependencies</goal>
             </goals>
             <configuration>
+              <includeArtifactIds>apache-karaf</includeArtifactIds>
               <includeTypes>zip</includeTypes>
               <outputDirectory>${project.build.directory}/windows</outputDirectory>
             </configuration>
@@ -106,6 +131,19 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
               <includeArtifactIds>${woq.branding.artifactId}</includeArtifactIds>
               <outputDirectory>${project.build.directory}/branding</outputDirectory>
               <useRepositoryLayout>false</useRepositoryLayout>
+            </configuration>
+          </execution>
+
+          <execution>
+            <id>offline-dependencies</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <excludeArtifactIds>apache-karaf</excludeArtifactIds>
+              <outputDirectory>${project.build.directory}/offline</outputDirectory>
+              <useRepositoryLayout>true</useRepositoryLayout>
             </configuration>
           </execution>
 

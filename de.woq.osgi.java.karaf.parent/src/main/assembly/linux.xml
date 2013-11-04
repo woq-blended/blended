@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ Copyright 2013, WoQ - Way of Quality UG(mbH)
   ~
@@ -31,6 +32,11 @@
     <fileSet>
       <directory>target/branding</directory>
       <outputDirectory>/lib</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/offline</directory>
+      <outputDirectory>/repository</outputDirectory>
     </fileSet>
 
     <fileSet>
