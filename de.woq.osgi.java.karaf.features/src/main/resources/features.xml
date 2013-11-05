@@ -61,7 +61,7 @@
   </feature>
 
   <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
-    <feature version="${activemq.version}">activemq-blueprint</feature>
+    <feature version="${activemq.version}">woq-activemq-blueprint</feature>
     <feature version="${project.version}">woq-base</feature>
     <bundle start-level="50" dependency="true">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.brokerstarter/${project.version}</bundle>
     <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/${project.version}</bundle>
@@ -91,9 +91,9 @@
     <feature version="${activemq.version}">woq-activemq-client</feature>
     <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
     <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/1.7_5</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/1.9.0_1</bundle>
-    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/1.9.0</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/${velocity.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jasypt/${jasypt.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.stax-api-1.0/${stax.api.version}</bundle>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xpp3/1.1.4c_5</bundle>
     <bundle dependency="true">mvn:joda-time/joda-time/1.6.2</bundle>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/1.3_3</bundle>

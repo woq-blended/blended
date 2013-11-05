@@ -38,6 +38,5 @@ public class ActiveMQBrokerStarter {
   public void init() {
     broker.waitUntilStarted();
     completionService.complete(completionToken);
-    // completionService.complete("activemq.broker");
   }
 }
