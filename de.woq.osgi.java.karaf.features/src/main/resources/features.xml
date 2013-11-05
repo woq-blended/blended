@@ -33,7 +33,7 @@
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.io/${commons.io.version}</bundle>
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.codec/${commons.codec.version}</bundle>
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/${commons.httpclient.version}</bundle>
-    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/1.8.3_2</bundle>
+    <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/${commons.beanutils.version}</bundle>
   </feature>
 
   <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
