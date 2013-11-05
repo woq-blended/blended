@@ -43,7 +43,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <woq.offline.groupId>${project.groupId}</woq.offline.groupId>
     <woq.offline.artifactId>de.woq.osgi.java.karaf.offline</woq.offline.artifactId>
-    <woq.offline.version>${project.version}</woq.offline.version>
+    <woq.offline.version>${woq.container.version}</woq.offline.version>
   </properties>
 
   <dependencies>
