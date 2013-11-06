@@ -99,7 +99,7 @@
     <slf4j.version>1.7.2</slf4j.version>
     <spring.version>3.2.4.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
-    <stax.api.version>1.9.0</stax.api.version>
+    <stax.api.version>2.2.0</stax.api.version>
     <tinybundles.version>1.0.0</tinybundles.version>
     <velocity.version>1.7_5</velocity.version>
     <xbean.version>3.14</xbean.version>

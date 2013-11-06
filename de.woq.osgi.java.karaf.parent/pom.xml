@@ -141,7 +141,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <excludeArtifactIds>apache-karaf,jre</excludeArtifactIds>
+              <excludeTypes>tar.gz,zip</excludeTypes>
               <outputDirectory>${project.build.directory}/offline</outputDirectory>
               <useRepositoryLayout>true</useRepositoryLayout>
             </configuration>

@@ -33,10 +33,6 @@
   <artifactId>de.woq.osgi.java.karaf.offline</artifactId>
   <packaging>pom</packaging>
 
-  <profiles>
-    <profile>
-      <id>build</id>
-
       <dependencies>
         <!--
           WOQ prepackaged bundles for the offline repository
@@ -74,8 +70,22 @@
 
         <dependency>
           <groupId>${project.groupId}</groupId>
+          <artifactId>de.woq.osgi.java.camelutils</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>${project.groupId}</groupId>
           <artifactId>de.woq.osgi.java.activemq.defaultbroker</artifactId>
           <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>${project.groupId}</groupId>
+          <artifactId>de.woq.osgi.java.karaf.features</artifactId>
+          <version>${project.version}</version>
+          <classifier>features</classifier>
+          <type>xml</type>
         </dependency>
 
         <!--
@@ -117,6 +127,12 @@
           <groupId>org.apache.activemq</groupId>
           <artifactId>activemq-karaf</artifactId>
           <version>${activemq.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.activemq</groupId>
+          <artifactId>activemq-karaf</artifactId>
+          <version>${activemq.version}</version>
           <classifier>features</classifier>
           <type>xml</type>
         </dependency>
@@ -125,6 +141,18 @@
           <groupId>org.apache.servicemix.specs</groupId>
           <artifactId>org.apache.servicemix.specs.stax-api-1.0</artifactId>
           <version>${stax.api.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.codehaus.woodstox</groupId>
+          <artifactId>stax2-api</artifactId>
+          <version>3.1.1</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.codehaus.woodstox</groupId>
+          <artifactId>woodstox-core-asl</artifactId>
+          <version>4.2.0</version>
         </dependency>
 
         <dependency>
@@ -155,6 +183,18 @@
           <groupId>org.apache.geronimo.specs</groupId>
           <artifactId>geronimo-j2ee-connector_1.5_spec</artifactId>
           <version>2.0.0</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-jta_1.1_spec</artifactId>
+          <version>1.1.1</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.geronimo.specs</groupId>
+          <artifactId>geronimo-annotation_1.0_spec</artifactId>
+          <version>1.1.1</version>
         </dependency>
 
         <dependency>
@@ -274,6 +314,12 @@
           <version>2.2.1.1_2</version>
         </dependency>
 
+        <dependency>
+          <groupId>org.apache.servicemix.specs</groupId>
+          <artifactId>org.apache.servicemix.specs.jaxb-api-2.2</artifactId>
+          <version>2.2.0</version>
+        </dependency>
+
         <!--
           Camel prepackaged bundles for the offline repository
         -->
@@ -281,6 +327,12 @@
         <dependency>
           <groupId>org.apache.camel</groupId>
           <artifactId>camel-core</artifactId>
+          <version>${camel.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-blueprint</artifactId>
           <version>${camel.version}</version>
         </dependency>
 
@@ -312,14 +364,6 @@
           <groupId>org.apache.camel.karaf</groupId>
           <artifactId>camel-karaf-commands</artifactId>
           <version>${camel.version}</version>
-        </dependency>
-
-        <dependency>
-          <groupId>org.apache.camel.karaf</groupId>
-          <artifactId>apache-camel</artifactId>
-          <version>${camel.version}</version>
-          <classifier>features</classifier>
-          <type>xml</type>
         </dependency>
 
         <dependency>
@@ -377,6 +421,12 @@
           <artifactId>hawtio-karaf-terminal</artifactId>
           <version>${hawtio.version}</version>
           <type>war</type>
+        </dependency>
+
+        <dependency>
+          <groupId>jline</groupId>
+          <artifactId>jline</artifactId>
+          <version>2.11</version>
         </dependency>
 
         <!--
@@ -603,9 +653,33 @@
           <version>3.1_7</version>
         </dependency>
 
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>com.springsource.org.apache.commons.httpclient</artifactId>
+          <version>3.1.0</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>com.springsource.org.apache.commons.collections</artifactId>
+          <version>${commons.collections.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>com.springsource.org.apache.commons.discovery</artifactId>
+          <version>0.4.0</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>com.springsource.org.apache.commons.io</artifactId>
+          <version>1.4.0</version>
+        </dependency>
+
         <!--
-          Other prepackaged bundles
-          -->
+           Other prepackaged bundles
+           -->
         <dependency>
           <groupId>org.apache.servicemix.bundles</groupId>
           <artifactId>org.apache.servicemix.bundles.commons-beanutils</artifactId>
@@ -625,7 +699,5 @@
         </dependency>
 
       </dependencies>
-    </profile>
-  </profiles>
 
 </project>
