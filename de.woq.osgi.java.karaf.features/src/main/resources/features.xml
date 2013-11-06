@@ -45,6 +45,7 @@
     <!--bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.configurator/${woq.container.version}</bundle-->
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.startcompletion/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
   </feature>
 
   <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
