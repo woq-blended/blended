@@ -64,6 +64,12 @@
 
         <dependency>
           <groupId>${project.groupId}</groupId>
+          <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>${project.groupId}</groupId>
           <artifactId>de.woq.osgi.java.activemq.brokerstarter</artifactId>
           <version>${project.version}</version>
         </dependency>
