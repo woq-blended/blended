@@ -23,7 +23,7 @@
 
   <groupId>de.woq.osgi.java</groupId>
   <artifactId>de.woq.osgi.java.reactor</artifactId>
-  <version>1.0-beta-2-SNAPSHOT</version>
+  <version>1.0-beta-2</version>
   <packaging>pom</packaging>
 
   <distributionManagement>
@@ -52,6 +52,8 @@
         <module>de.woq.osgi.java.karaf.parent</module>
         <module>de.woq.osgi.java.itest.parent</module>
         <module>de.woq.osgi.java.assembly</module>
+        <module>de.woq.osgi.java.karaf.branding</module>
+        <module>de.woq.osgi.java.karaf.offline</module>
       </modules>
     </profile>
 
