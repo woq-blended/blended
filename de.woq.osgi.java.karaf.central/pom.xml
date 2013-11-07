@@ -41,4 +41,25 @@
 
   <artifactId>de.woq.osgi.java.karaf.central</artifactId>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>features-maven-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>mvn:${project.groupId}/${project.groupId}.karaf.features/${project.version}/xml/features</descriptor>
+          </descriptors>
+          <features>
+            <feature>war</feature>
+            <feature>woq-camel</feature>
+            <feature>woq-activemq-broker</feature>
+            <feature>hawtio</feature>
+          </features>
+          <repository>target/repository</repository>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>

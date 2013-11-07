@@ -43,5 +43,10 @@
       <outputDirectory>/</outputDirectory>
     </fileSet>
 
+    <fileSet>
+      <directory>target/repository</directory>
+      <outputDirectory>/system</outputDirectory>
+    </fileSet>
+
   </fileSets>
 </assembly>
