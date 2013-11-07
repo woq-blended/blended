@@ -51,18 +51,14 @@
         <module>de.woq.osgi.java.parent</module>
         <module>de.woq.osgi.java.karaf.parent</module>
         <module>de.woq.osgi.java.itest.parent</module>
-        <module>de.woq.osgi.java.assembly</module>
         <module>de.woq.osgi.java.karaf.branding</module>
-        <module>de.woq.osgi.java.karaf.offline</module>
       </modules>
     </profile>
 
     <profile>
       <id>build</id>
       <modules>
-        <module>de.woq.osgi.java.launcher</module>
         <module>de.woq.osgi.java.configurator</module>
-        <module>de.woq.osgi.java.composites</module>
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>
@@ -74,15 +70,11 @@
         <module>de.woq.osgi.java.activemq.brokerstarter</module>
         <module>de.woq.osgi.java.activemq.defaultbroker</module>
 
-        <module>de.woq.osgi.java.assembly</module>
-
         <module>de.woq.osgi.java.testsupport</module>
 
         <module>de.woq.osgi.java.karaf.features</module>
         <module>de.woq.osgi.java.karaf.branding</module>
         <module>de.woq.osgi.java.karaf.central</module>
-
-        <module>de.woq.osgi.java.karaf.offline</module>
       </modules>
     </profile>
 
