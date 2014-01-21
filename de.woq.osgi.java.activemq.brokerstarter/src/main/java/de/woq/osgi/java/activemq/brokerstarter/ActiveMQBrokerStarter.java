@@ -17,12 +17,16 @@ package de.woq.osgi.java.activemq.brokerstarter;
 
 import de.woq.osgi.java.startcompletion.StartCompletionService;
 import org.apache.activemq.broker.BrokerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActiveMQBrokerStarter {
 
   private final BrokerService broker;
   private final StartCompletionService completionService;
   private final String completionToken;
+
+  private final static Logger LOGGER = LoggerFactory.getLogger(ActiveMQBrokerStarter.class);
 
   public ActiveMQBrokerStarter(
     final BrokerService broker,
@@ -36,7 +40,9 @@ public class ActiveMQBrokerStarter {
   }
 
   public void init() {
+    LOGGER.info("Broker [" + broker.getBrokerName() + "] starting up.");
     broker.waitUntilStarted();
+    LOGGER.info("Broker [" + broker.getBrokerName() + "] has started.");
     completionService.complete(completionToken);
   }
 }

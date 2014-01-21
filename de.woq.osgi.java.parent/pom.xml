@@ -43,7 +43,7 @@
     <camel.version>2.12.1</camel.version>
     <karaf.version>2.3.3</karaf.version>
     <fabric.version>7.3.0.redhat-137</fabric.version>
-    <hawtio.version>1.2-SNAPSHOT</hawtio.version>
+    <hawtio.version>1.2.2</hawtio.version>
 
     <activeio.version>3.1.4</activeio.version>
     <aries.proxy.version>1.0.1</aries.proxy.version>

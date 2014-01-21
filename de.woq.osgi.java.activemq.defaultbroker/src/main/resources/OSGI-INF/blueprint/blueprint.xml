@@ -20,14 +20,20 @@
            xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="
+    http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
     http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
     http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
 ">
 
-  <cm:property-placeholder id="cm.properties" persistent-id="de.woq.osgi.java.defaultbroker">
+  <cm:property-placeholder persistent-id="de.woq.osgi.java.defaultbroker">
     <cm:default-properties>
 
-      <cm:property name="broker.port"          value="61616" />
+      <cm:property name="broker.port"        value="61616" />
+      <!--
+        TODO: Investigate why only the first property works
+      <cm:property name="broker.memory"      value="50mb" />
+      <cm:property name="broker.disk"        value="250mb" />
+      <cm:property name="broker.sendTimeout" value="10000" /> -->
 
     </cm:default-properties>
   </cm:property-placeholder>
@@ -37,7 +43,7 @@
     init-method="init">
 
     <argument index="0">
-      <amq:broker brokerName="sib" useJmx="true" persistent="true">
+      <amq:broker brokerName="sib" useJmx="true" persistent="true" advisorySupport="false">
 
         <amq:managementContext>
           <amq:managementContext createConnector="false" />
@@ -51,6 +57,20 @@
           <amq:transportConnector name="openWire" uri="tcp://0.0.0.0:${broker.port}" />
         </amq:transportConnectors>
 
+        <amq:systemUsage>
+          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="10000">
+            <amq:memoryUsage>
+              <amq:memoryUsage limit="50mb" />
+            </amq:memoryUsage>
+            <amq:storeUsage>
+              <amq:storeUsage limit="250mb" />
+            </amq:storeUsage>
+            <amq:tempUsage>
+              <amq:tempUsage limit="250mb" />
+            </amq:tempUsage>
+          </amq:systemUsage>
+        </amq:systemUsage>
+
       </amq:broker>
     </argument>
 
@@ -61,9 +81,12 @@
     <argument index="2" value="activemq.broker" />
   </bean>
 
-
-  <bean id="connectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
-    <property name="brokerURL" value="tcp://localhost:${broker.port}" />
+  <bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
+    <argument index="0">
+      <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL" value="tcp://localhost:${broker.port}" />
+      </bean>
+    </argument>
   </bean>
 
   <service interface="javax.jms.ConnectionFactory" ref="connectionFactory">

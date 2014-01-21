@@ -50,7 +50,6 @@
       <modules>
         <module>de.woq.osgi.java.parent</module>
         <module>de.woq.osgi.java.karaf.parent</module>
-        <module>de.woq.osgi.java.itest.parent</module>
         <module>de.woq.osgi.java.karaf.branding</module>
       </modules>
     </profile>
@@ -75,14 +74,8 @@
         <module>de.woq.osgi.java.karaf.features</module>
         <module>de.woq.osgi.java.karaf.branding</module>
         <module>de.woq.osgi.java.karaf.central</module>
-      </modules>
-    </profile>
 
-    <profile>
-      <id>itest</id>
-      <modules>
         <module>de.woq.osgi.java.itestsupport</module>
-        <module>de.woq.osgi.java.itest.parent</module>
       </modules>
     </profile>
 

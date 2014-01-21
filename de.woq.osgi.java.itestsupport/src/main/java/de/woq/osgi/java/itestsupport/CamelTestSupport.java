@@ -52,12 +52,18 @@ public class CamelTestSupport {
       }
     }
 
-    Exchange exchange = new DefaultExchange(getContext(), ExchangePattern.InOnly);
-    exchange.setIn(msg);
+    final Exchange sent = new DefaultExchange(getContext(), ExchangePattern.InOnly);
+    sent.setIn(msg);
 
-    ProducerTemplate producer = getContext().createProducerTemplate();
-    producer.send(uri, exchange);
-    LOGGER.info("Sent test message to [{}]", uri);
+    final ProducerTemplate producer = getContext().createProducerTemplate();
+    final Exchange response = producer.send(uri, sent);
+
+    if (response.getException() != null) {
+      LOGGER.info("Message not sent to [{}]", uri);
+      throw response.getException();
+    } else {
+      LOGGER.info("Sent test message to [{}]", uri);
+    }
   }
 
   public void sendTestMessage(final String message, final String properties, final String uri) throws Exception {

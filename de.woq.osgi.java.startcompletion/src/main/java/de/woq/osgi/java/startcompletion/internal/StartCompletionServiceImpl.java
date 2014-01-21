@@ -26,8 +26,7 @@ import de.woq.osgi.java.startcompletion.StartCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class StartCompletionServiceImpl implements StartCompletionService
-{
+public class StartCompletionServiceImpl implements StartCompletionService {
 
   private static final Logger LOG = LoggerFactory.getLogger(StartCompletionServiceImpl.class);
 
@@ -37,22 +36,17 @@ public class StartCompletionServiceImpl implements StartCompletionService
   private Object semaphore = new Object();
 
   @Override
-  public void complete(String token)
-  {
-    synchronized (semaphore)
-    {
+  public void complete(String token) {
+    synchronized (semaphore) {
       LOG.info("Completing token [" + token + "]");
-      if (completedTokens.contains(token))
-      {
+      if (completedTokens.contains(token)) {
         return;
       }
 
-      for (Iterator<CompletionLatch> it = latches.iterator(); it.hasNext(); )
-      {
+      for (Iterator<CompletionLatch> it = latches.iterator(); it.hasNext(); ) {
         CompletionLatch latch = it.next();
 
-        if (latch.complete(token))
-        {
+        if (latch.complete(token)) {
           it.remove();
         }
       }
@@ -61,31 +55,25 @@ public class StartCompletionServiceImpl implements StartCompletionService
   }
 
   @Override
-  public void waitForTokens(String id, long time, TimeUnit unit, String... tokens)
-  {
+  public void waitForTokens(String id, long time, TimeUnit unit, String... tokens) {
     LOG.info("Initialising wait [" + id + "]");
 
     List<String> pendingTokens = new ArrayList<String>();
     CompletionLatch latch;
 
-    synchronized (semaphore)
-    {
-      if (tokens == null || tokens.length == 0)
-      {
+    synchronized (semaphore) {
+      if (tokens == null || tokens.length == 0) {
         return;
       }
 
-      for (String token : tokens)
-      {
-        if (!completedTokens.contains(token))
-        {
+      for (String token : tokens) {
+        if (!completedTokens.contains(token)) {
           pendingTokens.add(token);
         }
       }
 
       LOG.debug("Tokens to be completed: " + pendingTokens);
-      if (pendingTokens.isEmpty())
-      {
+      if (pendingTokens.isEmpty()) {
         LOG.info("Finished Wait [" + id + "]");
         return;
       }
@@ -94,55 +82,42 @@ public class StartCompletionServiceImpl implements StartCompletionService
       latches.add(latch);
     }
 
-    try
-    {
+    try {
       latch.await(time, unit);
-    }
-    catch (InterruptedException ie)
-    {
+    } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
-    }
-    finally
-    {
-      if (!latch.isCompleted())
-      {
+    } finally {
+      if (!latch.isCompleted()) {
         LOG.warn("Wait for latch [" + id + "] timed out.");
       }
       LOG.debug("Finished Wait [" + id + "], remaining tokens: " + latch.tokens);
-      synchronized (semaphore)
-      {
+      synchronized (semaphore) {
         latches.remove(latch);
       }
     }
   }
 
-  private static class CompletionLatch
-  {
+  private static class CompletionLatch {
     private final CountDownLatch latch = new CountDownLatch(1);
     private final String id;
     private final List<String> tokens;
     private AtomicBoolean completed = new AtomicBoolean(false);
 
-    CompletionLatch(String id, List<String> tokens)
-    {
+    CompletionLatch(String id, List<String> tokens) {
       this.id = id;
       this.tokens = tokens;
     }
 
-    void await(long time, TimeUnit unit) throws InterruptedException
-    {
+    void await(long time, TimeUnit unit) throws InterruptedException {
       latch.await(time, unit);
     }
 
-    boolean complete(String token)
-    {
+    boolean complete(String token) {
       LOG.debug(String.format("Received token [%s] for [%s], remaining tokens [%s].", token, id, tokens.toString()));
 
-      if (tokens.contains(token))
-      {
+      if (tokens.contains(token)) {
         tokens.remove(token);
-        if (tokens.isEmpty())
-        {
+        if (tokens.isEmpty()) {
           LOG.debug("Token list [" + id + "] done. Notifying thread.");
           latch.countDown();
         }
@@ -152,8 +127,7 @@ public class StartCompletionServiceImpl implements StartCompletionService
       return completed.get();
     }
 
-    public boolean isCompleted()
-    {
+    public boolean isCompleted() {
       return completed.get();
     }
   }
