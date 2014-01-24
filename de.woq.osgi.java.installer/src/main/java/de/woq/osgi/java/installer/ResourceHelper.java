@@ -107,8 +107,8 @@ public final class ResourceHelper {
               line = reader.readLine();
               if (line != null) {
                 line = filter(line, props);
+                out.println(line);
               }
-              out.println(line);
             }
           } finally {
             safeClose(out);
