@@ -35,13 +35,27 @@
     </fileSet>
 
     <fileSet>
-      <directory>target/offline</directory>
-      <outputDirectory>/repository</outputDirectory>
+      <directory>target/linux/apache-karaf-${karaf.version}</directory>
+      <outputDirectory>/</outputDirectory>
     </fileSet>
 
     <fileSet>
-      <directory>target/linux/apache-karaf-${karaf.version}</directory>
-      <outputDirectory>/</outputDirectory>
+      <directory>target/repository</directory>
+      <outputDirectory>/system</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/java/linux/jre</directory>
+      <outputDirectory>/jre</outputDirectory>
+      <fileMode>755</fileMode>
+      <directoryMode>755</directoryMode>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/installer</directory>
+      <outputDirectory>/installer</outputDirectory>
+      <fileMode>755</fileMode>
+      <directoryMode>755</directoryMode>
     </fileSet>
 
   </fileSets>

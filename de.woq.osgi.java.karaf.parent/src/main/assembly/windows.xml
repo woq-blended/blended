@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <!--
   ~ Copyright 2013, WoQ - Way of Quality UG(mbH)
   ~
@@ -35,13 +34,23 @@
     </fileSet>
 
     <fileSet>
-      <directory>target/offline</directory>
-      <outputDirectory>/repository</outputDirectory>
+      <directory>target/windows/apache-karaf-${karaf.version}</directory>
+      <outputDirectory>/</outputDirectory>
     </fileSet>
 
     <fileSet>
-      <directory>target/windows/apache-karaf-${karaf.version}</directory>
-      <outputDirectory>/</outputDirectory>
+      <directory>target/repository</directory>
+      <outputDirectory>/system</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/java/windows/jre</directory>
+      <outputDirectory>/jre</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/installer</directory>
+      <outputDirectory>/installer</outputDirectory>
     </fileSet>
 
   </fileSets>

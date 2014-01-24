@@ -16,7 +16,6 @@
 
 package de.woq.osgi.java.installer;
 
-import org.apache.karaf.shell.wrapper.InstallCommand;
 import org.apache.karaf.shell.wrapper.PumpStreamHandler;
 
 import java.io.BufferedReader;
@@ -27,16 +26,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
-/**
- * Created by andreas on 23/01/14.
- */
 public final class ResourceHelper {
+
+  private final static String RESOURCE_ROOT = "/org/apache/karaf/shell/wrapper/";
 
   private ResourceHelper() {
   }
@@ -89,7 +86,7 @@ public final class ResourceHelper {
   public static void copyResourceTo(final File outFile, final String resource, final boolean text) throws Exception {
     if (!outFile.exists()) {
       System.out.println("Creating file: " + outFile.getPath());
-      InputStream is = InstallCommand.class.getResourceAsStream(resource);
+      InputStream is = ResourceHelper.class.getResourceAsStream(RESOURCE_ROOT + resource);
       try {
         if (text) {
           // Read it line at a time so that we can use the platform line ending when we write it out.
@@ -127,7 +124,8 @@ public final class ResourceHelper {
   public static void copyFilteredResourceTo(final File outFile, final String resource, final Map<String, String> props) throws Exception {
     if (!outFile.exists()) {
       System.out.println("Creating file: " + outFile.getPath());
-      final InputStream is = InstallCommand.class.getResourceAsStream(resource);
+      InputStream is = ResourceHelper.class.getResourceAsStream(RESOURCE_ROOT + resource);
+
       final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
       try {

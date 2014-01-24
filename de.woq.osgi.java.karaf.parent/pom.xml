@@ -72,6 +72,65 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
       </exclusions>
     </dependency>
 
+    <!-- Dependencies for the offline installer -->
+    <dependency>
+      <groupId>org.apache.karaf.shell</groupId>
+      <artifactId>org.apache.karaf.shell.wrapper</artifactId>
+      <version>${karaf.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.util</artifactId>
+      <version>${woq.container.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.installer</artifactId>
+      <version>${woq.container.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.installer</artifactId>
+      <version>${woq.container.version}</version>
+      <type>linux</type>
+      <classifier>scripts</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.installer</artifactId>
+      <version>${woq.container.version}</version>
+      <type>windows</type>
+      <classifier>scripts</classifier>
+      <exclusions>
+        <exclusion>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -93,76 +152,138 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
             </execution>
           </executions>
         </plugin>
+
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+
+            <execution>
+              <id>extract-karaf-linux</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>unpack-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>apache-karaf</includeArtifactIds>
+                <includeTypes>tar.gz</includeTypes>
+                <outputDirectory>${project.build.directory}/linux</outputDirectory>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>extract-karaf-windows</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>unpack-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>apache-karaf</includeArtifactIds>
+                <includeTypes>zip</includeTypes>
+                <outputDirectory>${project.build.directory}/windows</outputDirectory>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>extract-installer</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>de.woq.osgi.java.installer,de.woq.osgi.java.util,org.apache.karaf.shell.wrapper</includeArtifactIds>
+                <outputDirectory>${project.build.directory}/installer</outputDirectory>
+                <useRepositoryLayout>false</useRepositoryLayout>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>extract-branding</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>${woq.branding.artifactId}</includeArtifactIds>
+                <outputDirectory>${project.build.directory}/branding</outputDirectory>
+                <useRepositoryLayout>false</useRepositoryLayout>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>extract-descriptors</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>copy-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>de.woq.osgi.java.karaf.parent</includeArtifactIds>
+                <outputDirectory>${project.build.directory}/descriptors</outputDirectory>
+                <useRepositoryLayout>false</useRepositoryLayout>
+              </configuration>
+            </execution>
+
+          </executions>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>CreateProduct</id>
+              <phase>package</phase>
+              <goals>
+                <goal>single</goal>
+              </goals>
+              <configuration>
+                <descriptors>
+                  <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux</descriptor>
+                  <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows</descriptor>
+                </descriptors>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
       </plugins>
     </pluginManagement>
 
-    <plugins>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <executions>
-
-          <execution>
-            <id>extract-karaf-linux</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>apache-karaf</includeArtifactIds>
-              <includeTypes>tar.gz</includeTypes>
-              <outputDirectory>${project.build.directory}/linux</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>extract-karaf-windows</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>unpack-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>apache-karaf</includeArtifactIds>
-              <includeTypes>zip</includeTypes>
-              <outputDirectory>${project.build.directory}/windows</outputDirectory>
-            </configuration>
-          </execution>
-
-          <execution>
-            <id>extract-branding</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <includeArtifactIds>${woq.branding.artifactId}</includeArtifactIds>
-              <outputDirectory>${project.build.directory}/branding</outputDirectory>
-              <useRepositoryLayout>false</useRepositoryLayout>
-            </configuration>
-          </execution>
-
-        </executions>
-      </plugin>
-
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>CreateProduct</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                <descriptor>src/main/assembly/linux.xml</descriptor>
-                <descriptor>src/main/assembly/windows.xml</descriptor>
-              </descriptors>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-    </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>woq</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>src/main/assembly/linux.xml</file>
+                      <type>linux</type>
+                      <classifier>assembly</classifier>
+                    </artifact>
+                    <artifact>
+                      <file>src/main/assembly/windows.xml</file>
+                      <type>windows</type>
+                      <classifier>assembly</classifier>
+                    </artifact>
+                  </artifacts>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
