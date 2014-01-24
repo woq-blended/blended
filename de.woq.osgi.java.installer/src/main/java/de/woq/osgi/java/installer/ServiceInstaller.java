@@ -23,6 +23,9 @@ import java.util.Map;
 
 public final class ServiceInstaller {
 
+  public final static String KARAF_ROOT = "/org/apache/karaf/shell/wrapper/";
+  public final static String WOQ_ROOT = "/" + ServiceInstaller.class.getPackage().getName().replaceAll("\\.", "/");
+
   private String name = "karaf";
   private String displayName;
   private String description = "";
@@ -126,7 +129,7 @@ public final class ServiceInstaller {
 
       // Install the wrapper jar to the lib directory..
       ResourceHelper.mkdir(lib);
-      ResourceHelper.copyResourceTo(new File(lib, "karaf-wrapper.jar"), "all/karaf-wrapper.jar", false);
+      ResourceHelper.copyResourceTo(new File(lib, "karaf-wrapper.jar"), "all/karaf-wrapper.jar");
       ResourceHelper.mkdir(etc);
 
       ResourceHelper.createJar(new File(lib, "karaf-wrapper-main.jar"), "org/apache/karaf/shell/wrapper/Main.class");

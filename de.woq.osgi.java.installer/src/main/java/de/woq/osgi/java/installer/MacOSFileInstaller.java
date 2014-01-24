@@ -18,6 +18,8 @@ package de.woq.osgi.java.installer;
 
 import java.io.File;
 
+import static de.woq.osgi.java.installer.ServiceInstaller.KARAF_ROOT;
+
 public class MacOSFileInstaller implements FileInstaller {
 
   @Override
@@ -30,15 +32,15 @@ public class MacOSFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
 
     File file = new File(bin, installer.getName() + "-wrapper");
-    ResourceHelper.copyResourceTo(file, "macosx/karaf-wrapper", false);
+    ResourceHelper.copyResourceTo(file, KARAF_ROOT + "macosx/karaf-wrapper");
     ResourceHelper.chmod(file, "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     ResourceHelper.mkdir(lib);
-    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.jnilib"), "macosx/libwrapper.jnilib", false);
+    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.jnilib"), "macosx/libwrapper.jnilib");
   }
 }

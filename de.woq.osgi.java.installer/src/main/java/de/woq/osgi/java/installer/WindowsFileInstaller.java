@@ -18,6 +18,9 @@ package de.woq.osgi.java.installer;
 
 import java.io.File;
 
+import static de.woq.osgi.java.installer.ServiceInstaller.WOQ_ROOT;
+
+
 public class WindowsFileInstaller implements FileInstaller {
 
   @Override
@@ -29,25 +32,19 @@ public class WindowsFileInstaller implements FileInstaller {
 
     final String arch = System.getProperty("os.arch");
 
+    ResourceHelper.mkdir(bin);
+    ResourceHelper.mkdir(lib);
+
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), WOQ_ROOT + "/windows/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+
     if (arch.equalsIgnoreCase("amd64") || arch.equalsIgnoreCase("x86_64")) {
-      ResourceHelper.mkdir(bin);
-
-      ResourceHelper.copyResourceTo(new File(bin, installer.getName() + "-wrapper.exe"), "windows64/karaf-wrapper.exe", false);
-
-      ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "windows64/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
-      ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "windows64/karaf-service.bat", installer.getDefaultWrapperProperties());
-
-      ResourceHelper.mkdir(lib);
-      ResourceHelper.copyResourceTo(new File(lib, "wrapper.dll"), "windows64/wrapper.dll", false);
+      ResourceHelper.copyResourceTo(new File(bin, installer.getName() + "-wrapper.exe"), "windows64/karaf-wrapper.exe");
+      ResourceHelper.copyResourceTo(installer.getServiceFile(), "windows64/karaf-service.bat", installer.getDefaultWrapperProperties());
+      ResourceHelper.copyResourceTo(new File(lib, "wrapper.dll"), "windows64/wrapper.dll");
     } else {
-      ResourceHelper.mkdir(bin);
-
-      ResourceHelper.copyResourceTo(new File(bin, installer.getName() + "-wrapper.exe"), "windows/karaf-wrapper.exe", false);
-      ResourceHelper.copyFilteredResourceTo(installer.getWrapperConf(), "windows/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
-      ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "windows/karaf-service.bat", installer.getDefaultWrapperProperties());
-
-      ResourceHelper.mkdir(lib);
-      ResourceHelper.copyResourceTo(new File(lib, "wrapper.dll"), "windows/wrapper.dll", false);
+      ResourceHelper.copyResourceTo(new File(bin, installer.getName() + "-wrapper.exe"), "windows/karaf-wrapper.exe");
+      ResourceHelper.copyResourceTo(installer.getServiceFile(), "windows/karaf-service.bat", installer.getDefaultWrapperProperties());
+      ResourceHelper.copyResourceTo(new File(lib, "wrapper.dll"), "windows/wrapper.dll");
     }
   }
 }

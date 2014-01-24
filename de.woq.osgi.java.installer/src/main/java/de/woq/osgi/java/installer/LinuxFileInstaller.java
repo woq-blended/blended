@@ -18,6 +18,8 @@ package de.woq.osgi.java.installer;
 
 import java.io.File;
 
+import static de.woq.osgi.java.installer.ServiceInstaller.WOQ_ROOT;
+
 public class LinuxFileInstaller implements FileInstaller {
 
   @Override
@@ -33,17 +35,17 @@ public class LinuxFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
     ResourceHelper.mkdir(lib);
 
-    ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), WOQ_ROOT + "/unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     if (arch.equalsIgnoreCase("amd64") || arch.equalsIgnoreCase("x86_64")) {
-      ResourceHelper.copyResourceTo(file, "linux64/karaf-wrapper", false);
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux64/libwrapper.so", false);
+      ResourceHelper.copyResourceTo(file, "linux64/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux64/libwrapper.so");
     } else {
-      ResourceHelper.copyResourceTo(file, "linux/karaf-wrapper", false);
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux/libwrapper.so", false);
+      ResourceHelper.copyResourceTo(file, "linux/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux/libwrapper.so");
     }
 
     ResourceHelper.chmod(file, "a+x");

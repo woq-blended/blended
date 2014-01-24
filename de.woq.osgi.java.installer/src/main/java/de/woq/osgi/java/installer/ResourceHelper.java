@@ -27,13 +27,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
 public final class ResourceHelper {
-
-  private final static String RESOURCE_ROOT = "/org/apache/karaf/shell/wrapper/";
 
   private ResourceHelper() {
   }
@@ -83,19 +80,34 @@ public final class ResourceHelper {
     return status;
   }
 
-  public static void copyResourceTo(final File outFile, final String resource, final boolean text) throws Exception {
+  public static void copyResourceTo(final File outFile, final String resource) throws Exception {
+    copyResourceTo(outFile, resource, false, null);
+  }
+
+  public static void copyResourceTo(final File outFile, final String resource, final Map<String, String> props) throws Exception {
+    copyResourceTo(outFile, resource, true, props);
+  }
+
+  public static void copyResourceTo(final File outFile, final String resource, final boolean text, final Map<String, String> props) throws Exception {
     if (!outFile.exists()) {
+
       System.out.println("Creating file: " + outFile.getPath());
-      InputStream is = ResourceHelper.class.getResourceAsStream(RESOURCE_ROOT + resource);
+
+      final String location = (resource.startsWith("/") ? resource : ServiceInstaller.KARAF_ROOT + resource);
+      final InputStream is = ResourceHelper.class.getResourceAsStream(location);
+      final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+
       try {
         if (text) {
           // Read it line at a time so that we can use the platform line ending when we write it out.
           PrintStream out = new PrintStream(new FileOutputStream(outFile));
           try {
-            Scanner scanner = new Scanner(is);
-            while (scanner.hasNextLine()) {
-              String line = scanner.nextLine();
-              System.out.println("writing: " + line);
+            String line = "";
+            while (line != null) {
+              line = reader.readLine();
+              if (line != null) {
+                line = filter(line, props);
+              }
               out.println(line);
             }
           } finally {
@@ -121,46 +133,18 @@ public final class ResourceHelper {
     }
   }
 
-  public static void copyFilteredResourceTo(final File outFile, final String resource, final Map<String, String> props) throws Exception {
-    if (!outFile.exists()) {
-      System.out.println("Creating file: " + outFile.getPath());
-      InputStream is = ResourceHelper.class.getResourceAsStream(RESOURCE_ROOT + resource);
-
-      final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-      try {
-        // Read it line at a time so that we can use the platform line ending when we write it out.
-        final PrintStream out = new PrintStream(new FileOutputStream(outFile));
-        try {
-          String line = "";
-          while (line != null) {
-            line = reader.readLine();
-            if (line != null) {
-              line = filter(line, props);
-              out.println(line);
-            }
-          }
-        } finally {
-          safeClose(out);
-        }
-      } finally {
-        safeClose(is);
-      }
-    } else {
-      System.out.println("File already exists. Move it out of the way if you wish to recreate it: " + outFile.getPath());
-    }
-  }
-
   private static String filter(final String line, final Map<String, String> props) {
 
     String result = line;
 
-    for (Map.Entry<String, String> i : props.entrySet()) {
-      int p1 = line.indexOf(i.getKey());
-      if (p1 >= 0) {
-        String l1 = line.substring(0, p1);
-        String l2 = line.substring(p1 + i.getKey().length());
-        result = l1 + i.getValue() + l2;
+    if (props != null) {
+      for (Map.Entry<String, String> i : props.entrySet()) {
+        int p1 = line.indexOf(i.getKey());
+        if (p1 >= 0) {
+          String l1 = line.substring(0, p1);
+          String l2 = line.substring(p1 + i.getKey().length());
+          result = l1 + i.getValue() + l2;
+        }
       }
     }
     return result;

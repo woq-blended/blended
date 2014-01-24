@@ -30,15 +30,15 @@ public class AIXFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
 
     final File file = new File(bin, installer.getName() + "-wrapper");
-    ResourceHelper.copyResourceTo(file, "aix/ppc64/karaf-wrapper", false);
+    ResourceHelper.copyResourceTo(file, "aix/ppc64/karaf-wrapper");
     ResourceHelper.chmod(file, "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     ResourceHelper.mkdir(lib);
-    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.a"), "aix/ppc64/libwrapper.a", false);
+    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.a"), "aix/ppc64/libwrapper.a");
   }
 }

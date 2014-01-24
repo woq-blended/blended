@@ -33,20 +33,20 @@ public class SolarisFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
     ResourceHelper.mkdir(lib);
 
-    ResourceHelper.copyFilteredResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
-    ResourceHelper.copyFilteredResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     if (arch.equalsIgnoreCase("sparc")) {
-      ResourceHelper.copyResourceTo(file, "solaris/sparc64/karaf-wrapper", false);
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc64/libwrapper.so", false);
+      ResourceHelper.copyResourceTo(file, "solaris/sparc64/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc64/libwrapper.so");
     } else if (arch.equalsIgnoreCase("x86")) {
-      ResourceHelper.copyResourceTo(file, "solaris/x86/karaf-wrapper", false);
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/x86/libwrapper.so", false);
+      ResourceHelper.copyResourceTo(file, "solaris/x86/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/x86/libwrapper.so");
     } else {
-      ResourceHelper.copyResourceTo(file, "solaris/sparc32/karaf-wrapper", false);
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc32/libwrapper.so", false);
+      ResourceHelper.copyResourceTo(file, "solaris/sparc32/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc32/libwrapper.so");
     }
 
     ResourceHelper.chmod(file, "a+x");
