@@ -156,7 +156,7 @@ public final class ServiceInstaller {
 
   public Map<String,String> getDefaultWrapperProperties() {
     HashMap<String, String> props = new HashMap<String, String>();
-    props.put("${java.home}", System.getenv("JAVA_HOME"));
+    props.put("${karaf.java.home}", System.getenv("KARAF_JAVA_HOME"));
     props.put("${karaf.home}", getKarafHome());
     props.put("${karaf.base}", getKarafBase());
     props.put("${karaf.data}", getKarafData());
