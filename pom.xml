@@ -57,6 +57,8 @@
     <profile>
       <id>build</id>
       <modules>
+        <module>de.woq.osgi.java.installer</module>
+
         <module>de.woq.osgi.java.configurator</module>
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
