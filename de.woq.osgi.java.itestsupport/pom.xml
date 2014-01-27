@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.parent</artifactId>
-    <version>1.0-beta-3-SNAPSHOT</version>
+    <version>1.0-beta-3</version>
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
@@ -33,12 +33,6 @@
   </properties>
 
   <dependencies>
-
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.composites</artifactId>
-      <version>${woq.container.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
