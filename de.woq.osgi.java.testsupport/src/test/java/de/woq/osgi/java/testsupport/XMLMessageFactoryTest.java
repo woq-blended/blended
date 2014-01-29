@@ -6,7 +6,7 @@ import org.junit.Test;
 
 public class XMLMessageFactoryTest {
 
-  private final static String FILE = "/sampleTestmessage.xml";
+  private final static String FILE = "sampleTestmessage.xml";
 
   @Test
   public void createMessageTest() throws Exception{
