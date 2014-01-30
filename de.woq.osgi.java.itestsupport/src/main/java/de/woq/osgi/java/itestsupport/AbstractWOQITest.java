@@ -4,8 +4,7 @@ import de.woq.osgi.java.itestsupport.condition.Condition;
 import de.woq.osgi.java.itestsupport.condition.ConditionCanConnect;
 import de.woq.osgi.java.itestsupport.condition.ConditionMBeanExists;
 import de.woq.osgi.java.itestsupport.condition.ConditionWaiter;
-import de.woq.osgi.java.testsupport.FileReader;
-import de.woq.osgi.java.testsupport.XMLMessageFactory;
+import de.woq.osgi.java.util.FileReader;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -26,7 +25,7 @@ public abstract class AbstractWOQITest {
   private final static String PROP_HOST         = "woq.container.host";
   private final static String PROP_JMX_PORT     = "woq.container.jmxport";
   private final static String PROP_FILE         = "woq.container.properties";
-  private final static String DEFAULT_PROP_FILE = "/itest.properties";
+  private final static String DEFAULT_PROP_FILE = "itest.properties";
 
   private final static Properties testProperties = new Properties();
 

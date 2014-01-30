@@ -37,7 +37,7 @@
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.util</artifactId>
-      <version>${project.version}</version>
+      <version>${woq.container.version}</version>
     </dependency>
 
     <dependency>

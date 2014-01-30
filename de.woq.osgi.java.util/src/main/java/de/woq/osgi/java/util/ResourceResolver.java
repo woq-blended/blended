@@ -16,10 +16,10 @@
 
 package de.woq.osgi.java.util;
 
-import com.sun.corba.se.spi.activation._LocatorImplBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
@@ -62,6 +62,11 @@ public class ResourceResolver {
       } catch (Exception e) {
         LOGGER.info("URL [" + location + "] not accessible.");
       }
+    }
+
+    if (is == null) {
+      LOGGER.info("Using [" + location + "] as input stream");
+      is = new ByteArrayInputStream(location.getBytes());
     }
 
     return is;
