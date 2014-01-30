@@ -40,7 +40,7 @@
     <!-- library versions -->
 
     <activemq.version>5.9.0</activemq.version>
-    <camel.version>2.12.1</camel.version>
+    <camel.version>2.12.2</camel.version>
     <karaf.version>2.3.3</karaf.version>
     <fabric.version>7.3.0.redhat-137</fabric.version>
     <hawtio.version>1.2.2</hawtio.version>
