@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 
 <!--
   ~ Copyright 2013, WoQ - Way of Quality UG(mbH)
@@ -16,34 +16,22 @@
   -->
 
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-           xmlns:amq="http://activemq.apache.org/schema/core"
            xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
-           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="
-    http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
-    http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd
-    http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
-">
+>
 
-  <cm:property-placeholder persistent-id="de.woq.osgi.java.defaultbroker">
+  <cm:property-placeholder persistent-id="de.woq.osgi.java.activemq.defaultbroker">
     <cm:default-properties>
-
-      <cm:property name="broker.port"        value="61616" />
-      <!--
-        TODO: Investigate why only the first property works
-      <cm:property name="broker.memory"      value="50mb" />
-      <cm:property name="broker.disk"        value="250mb" />
-      <cm:property name="broker.sendTimeout" value="10000" /> -->
-
+      <cm:property name="brokerPort"        value="61616" />
     </cm:default-properties>
   </cm:property-placeholder>
+
 
   <bean id="startCompleter"
     class="de.woq.osgi.java.activemq.brokerstarter.ActiveMQBrokerStarter"
     init-method="init">
 
     <argument index="0">
-      <amq:broker brokerName="sib" useJmx="true" persistent="true" advisorySupport="false">
+      <amq:broker xmlns:amq="http://activemq.apache.org/schema/core" brokerName="sib" useJmx="true" persistent="true" advisorySupport="false">
 
         <amq:managementContext>
           <amq:managementContext createConnector="false" />
@@ -54,7 +42,7 @@
         </amq:persistenceAdapter>
 
         <amq:transportConnectors>
-          <amq:transportConnector name="openWire" uri="tcp://0.0.0.0:${broker.port}" />
+          <amq:transportConnector name="openWire" uri="tcp://0.0.0.0:${brokerPort}" />
         </amq:transportConnectors>
 
         <amq:systemUsage>
@@ -84,7 +72,7 @@
   <bean id="connectionFactory" class="org.springframework.jms.connection.CachingConnectionFactory">
     <argument index="0">
       <bean class="org.apache.activemq.ActiveMQConnectionFactory">
-        <property name="brokerURL" value="tcp://localhost:${broker.port}" />
+        <property name="brokerURL" value="vm://sib" />
       </bean>
     </argument>
   </bean>

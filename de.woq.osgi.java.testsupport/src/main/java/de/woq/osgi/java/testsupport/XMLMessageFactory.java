@@ -50,12 +50,6 @@ public class XMLMessageFactory implements MessageFactory {
       DocumentBuilder dBuilder = dbf.newDocumentBuilder();
       Document doc = dBuilder.parse(is);
       return doc;
-    } catch (Exception e) {
-      if (LOGGER.isDebugEnabled()) {
-        e.printStackTrace();
-      }
-      LOGGER.error(e.getMessage());
-      throw e;
     } finally {
       if (is != null) {
         try {
