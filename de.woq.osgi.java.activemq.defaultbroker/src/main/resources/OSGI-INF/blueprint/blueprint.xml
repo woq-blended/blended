@@ -21,7 +21,7 @@
 
   <cm:property-placeholder persistent-id="de.woq.osgi.java.activemq.defaultbroker">
     <cm:default-properties>
-      <cm:property name="brokerPort"        value="61616" />
+      <cm:property name="brokerPort" value="61616" />
     </cm:default-properties>
   </cm:property-placeholder>
 
