@@ -1,6 +1,7 @@
 package de.woq.osgi.java.itestsupport;
 
 import de.woq.osgi.java.testsupport.XMLMessageFactory;
+import de.woq.osgi.java.util.FileReader;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
@@ -34,22 +35,18 @@ public class CamelTestSupport {
   }
 
   public void sendTestMessage(final String message, final Properties properties, final String uri) throws Exception {
-    Message msg = null;
 
-    try {
-      LOGGER.info("Trying to create message with Message factory [{}]", message);
-      msg = new XMLMessageFactory(message).createMessage();
-    } catch (Exception e) {
+    Message msg = createMessageFromXML(message);
+
+    if (msg == null) {
+      msg = createMessageFromFile(message, properties);
+    }
+
+    if (msg == null) {
       LOGGER.info("Using text as msg body: [{}]", message);
       msg = new DefaultMessage();
       msg.setBody(message);
-
-      if (properties != null) {
-        for(String key: properties.stringPropertyNames() ) {
-          LOGGER.info("Setting property [{}] = [{}]", key, properties.getProperty(key));
-          msg.setHeader(key, properties.getProperty(key));
-        }
-      }
+      addMessageProperties(msg, properties);
     }
 
     final Exchange sent = new DefaultExchange(getContext(), ExchangePattern.InOnly);
@@ -63,6 +60,44 @@ public class CamelTestSupport {
       throw response.getException();
     } else {
       LOGGER.info("Sent test message to [{}]", uri);
+    }
+  }
+
+  private Message createMessageFromFile(final String message, final Properties props) {
+
+    Message result = null;
+
+    try {
+      final byte[] content = FileReader.readFile(message);
+      result = new DefaultMessage();
+      result.setBody(content);
+      addMessageProperties(result, props);
+    } catch (Exception e) {
+      // ignore
+    }
+
+    return result;
+  }
+
+  private Message createMessageFromXML(final String message) {
+
+    Message result = null;
+
+    try {
+      result = new XMLMessageFactory(message).createMessage();
+    } catch (Exception e) {
+      // ignore
+    }
+
+    return result;
+  }
+
+  private void addMessageProperties(final Message msg, final Properties props) {
+    if (msg != null && props != null) {
+      for(String key: props.stringPropertyNames() ) {
+        LOGGER.info("Setting property [{}] = [{}]", key, props.getProperty(key));
+        msg.setHeader(key, props.getProperty(key));
+      }
     }
   }
 
@@ -106,5 +141,4 @@ public class CamelTestSupport {
     }
     return context;
   }
-
 }
