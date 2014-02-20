@@ -22,6 +22,7 @@
   <cm:property-placeholder persistent-id="de.woq.osgi.java.activemq.defaultbroker">
     <cm:default-properties>
       <cm:property name="brokerPort" value="61616" />
+      <cm:property name="sendTimeout" value="10000" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -46,15 +47,15 @@
         </amq:transportConnectors>
 
         <amq:systemUsage>
-          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="10000">
+          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="${sendTimeout}">
             <amq:memoryUsage>
-              <amq:memoryUsage limit="50mb" />
+              <amq:memoryUsage limit="52428800" />
             </amq:memoryUsage>
             <amq:storeUsage>
-              <amq:storeUsage limit="250mb" />
+              <amq:storeUsage limit="262144000" />
             </amq:storeUsage>
             <amq:tempUsage>
-              <amq:tempUsage limit="250mb" />
+              <amq:tempUsage limit="262144000" />
             </amq:tempUsage>
           </amq:systemUsage>
         </amq:systemUsage>
