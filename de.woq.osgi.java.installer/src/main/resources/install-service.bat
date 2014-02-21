@@ -8,7 +8,7 @@ cd %SCRIPT_HOME%\..
 
 pushd
 set KARAF_HOME=%cd%
-set JAVA_HOME=%KARAF_HOME%\jre
+set KARAF_JAVA_HOME=%KARAF_HOME%\jre
 popd
 
 set CLASSPATH=
@@ -17,4 +17,4 @@ for %%f in (%SCRIPT_HOME%\*.jar) do (
   set CLASSPATH=!CLASSPATH!;%%f
 )
 
-%JAVA_HOME%\bin\java -cp %CLASSPATH% -DKARAF_JAVA_HOME=%JAVA_HOME% de.woq.osgi.java.installer.ServiceInstaller -b %KARAF_HOME% -n %SERVICE_NAME%
+%JAVA_HOME%\bin\java -cp %CLASSPATH% -DKARAF_JAVA_HOME=%KARAF_JAVA_HOME% de.woq.osgi.java.installer.ServiceInstaller -b %KARAF_HOME% -n %SERVICE_NAME%
