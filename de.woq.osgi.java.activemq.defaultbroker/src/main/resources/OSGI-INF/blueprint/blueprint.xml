@@ -47,7 +47,7 @@
         </amq:transportConnectors>
 
         <amq:systemUsage>
-          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="${sendTimeout}">
+          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="10000">
             <amq:memoryUsage>
               <amq:memoryUsage limit="52428800" />
             </amq:memoryUsage>
