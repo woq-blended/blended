@@ -19,6 +19,7 @@ package de.woq.osgi.java.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -40,7 +41,7 @@ public class ResourceResolver {
 
     try {
       LOGGER.info("Trying to read file [" + location + "]");
-      is = new FileInputStream(location);
+      is = new BufferedInputStream(new FileInputStream(location));
     } catch (Exception e) {
       LOGGER.info("File [" + location + "] not accessible.");
     }
@@ -50,6 +51,16 @@ public class ResourceResolver {
         LOGGER.info("Trying to read URL [" + location + "]");
         URL url = new URL(location);
         is = url.openStream();
+      } catch (Exception e) {
+        LOGGER.info("URL [" + location + "] not accessible.");
+      }
+    }
+
+    if (is == null) {
+      try {
+        LOGGER.info("Trying to read Resource [" + location + "]");
+        final String path = ResourceResolver.class.getResource(location).getPath();
+        is = new FileInputStream(path);
       } catch (Exception e) {
         LOGGER.info("URL [" + location + "] not accessible.");
       }

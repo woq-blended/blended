@@ -31,12 +31,13 @@ public final class StreamCopySupport {
 
     final byte[] buf = new byte[BUF_SIZE];
 
-    int count;
+    int count = 0;
 
-    while ((count = in.read(buf, 0, BUF_SIZE)) >= 0) {
-      out.write(buf, 0, count);
-    }
-
-    out.flush();
+    do {
+      count = in.read(buf, 0, buf.length);
+      if (count > 0) {
+        out.write(buf, 0, count);
+      }
+    } while (count >= 0);
   }
 }

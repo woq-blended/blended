@@ -71,6 +71,7 @@ public class CamelTestSupport {
       final byte[] content = FileReader.readFile(message);
       result = new DefaultMessage();
       result.setBody(content);
+      LOGGER.info("Body length is [" + content.length + "]");
       addMessageProperties(result, props);
     } catch (Exception e) {
       // ignore
