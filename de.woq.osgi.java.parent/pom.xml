@@ -46,6 +46,7 @@
     <hawtio.version>1.2.2</hawtio.version>
 
     <activeio.version>3.1.4</activeio.version>
+    <akka-varsion>1.3.1</akka-varsion>
     <aries.proxy.version>1.0.1</aries.proxy.version>
     <aries.blueprint.version>1.1.0</aries.blueprint.version>
     <aries.jmx.version>1.1.1</aries.jmx.version>
@@ -95,7 +96,7 @@
     <pax-url.version>1.3.6</pax-url.version>
     <pax-web.version>1.1.14</pax-web.version>
     <pax-runner.version>1.8.5</pax-runner.version>
-    <scala.version>2.9.2</scala.version>
+    <scala.version>2.10.3</scala.version>
     <slf4j.version>1.7.2</slf4j.version>
     <spring.version>3.2.4.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
