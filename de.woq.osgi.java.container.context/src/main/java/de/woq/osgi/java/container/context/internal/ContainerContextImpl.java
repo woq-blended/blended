@@ -15,6 +15,10 @@
 
 package de.woq.osgi.java.container.context.internal;
 
+import de.woq.osgi.java.container.context.ContainerContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -23,15 +27,11 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.util.Properties;
 
-import de.woq.osgi.java.container.context.ContainerContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public class ContainerContextImpl implements ContainerContext {
 
   private final static String PROP_WOQ_HOME = "woq.home";
 
-  private final static String CONFIG_DIR = "config";
+  private final static String CONFIG_DIR = "etc";
   private final static String UI_DIR = "ui";
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
