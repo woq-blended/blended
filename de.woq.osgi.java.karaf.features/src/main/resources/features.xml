@@ -115,8 +115,8 @@
   </feature>
 
   <feature name="woq-scala" version="${scala.version}" resolver="(obr)" start-level="10" >
-    <bundle>mvn:org.scala-lang:scala-library:${scala.version}</bundle>
-    <bundle>mvn>:org.scala-lang:scala-reflect:${scala.version}</bundle>
+    <bundle>mvn:org.scala-lang/scala-library/${scala.version}</bundle>
+    <bundle>mvn:org.scala-lang/scala-reflect/${scala.version}</bundle>
   </feature>
 
 </features>
