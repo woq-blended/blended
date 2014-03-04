@@ -119,7 +119,7 @@ public abstract class AbstractWOQITest {
     if (!isExternal()) {
       result = runner.findJMXPort();
     } else {
-      String p = System.getProperty(PROP_JMX_PORT, "1099");
+      String p = System.getProperty(PROP_JMX_PORT, "11099");
       try {
         result = Integer.parseInt(p);
       } catch (NumberFormatException e) {
