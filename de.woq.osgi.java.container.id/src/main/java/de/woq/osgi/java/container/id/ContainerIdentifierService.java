@@ -15,6 +15,8 @@
 
 package de.woq.osgi.java.container.id;
 
+import de.woq.osgi.java.container.context.ContainerContext;
+
 import java.util.Properties;
 
 /**
@@ -27,6 +29,7 @@ import java.util.Properties;
 public interface ContainerIdentifierService {
 
   public String getUUID();
-
   public Properties getProperties();
+
+  public ContainerContext getContainerContext();
 }

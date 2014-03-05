@@ -15,13 +15,6 @@
 
 package de.woq.osgi.java.container.id.internal;
 
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.Properties;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import de.woq.osgi.java.container.context.ContainerContext;
 import de.woq.osgi.java.container.id.ContainerIdentifierService;
 import de.woq.osgi.java.util.ManagedServiceSupport;
@@ -29,6 +22,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ContainerIdentifierServiceImpl
   extends ManagedServiceSupport
@@ -59,6 +59,11 @@ public class ContainerIdentifierServiceImpl
   @Override
   protected String getServicePid() {
     return SERVICE_PID;
+  }
+
+  @Override
+  public ContainerContext getContainerContext() {
+    return containerContext;
   }
 
   @Override
