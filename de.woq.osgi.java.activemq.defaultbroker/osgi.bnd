@@ -2,7 +2,7 @@ Bundle-Version:\
   ${project.version}
 
 Bundle-SymbolicName:\
-  ${bundle.symbolicName}; singleton:=true
+  ${bundle.symbolicName};singleton:=true;blueprint.aries.xml-validation:=false
 
 Import-Package:\
   org.apache.activemq.broker,\

@@ -16,23 +16,32 @@
   -->
 
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
->
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0">
 
   <cm:property-placeholder persistent-id="de.woq.osgi.java.activemq.defaultbroker">
     <cm:default-properties>
       <cm:property name="brokerPort" value="61616" />
       <cm:property name="sendTimeout" value="10000" />
+      <cm:property name="memoryUsage" value="50m" />
+      <cm:property name="storeUsage" value="250m" />
+      <cm:property name="subscriberTimeout" value="3600000" />
+      <cm:property name="subscriberTimeoutCheck" value="3600000" />
     </cm:default-properties>
   </cm:property-placeholder>
-
 
   <bean id="startCompleter"
     class="de.woq.osgi.java.activemq.brokerstarter.ActiveMQBrokerStarter"
     init-method="init">
 
     <argument index="0">
-      <amq:broker xmlns:amq="http://activemq.apache.org/schema/core" brokerName="sib" useJmx="true" persistent="true" advisorySupport="false">
+      <amq:broker
+        xmlns:amq="http://activemq.apache.org/schema/core"
+        brokerName="sib"
+        useJmx="true"
+        persistent="true"
+        offlineDurableSubscriberTimeout="1209600000"
+        offlineDurableSubscriberTaskSchedule="86400000"
+        advisorySupport="false">
 
         <amq:managementContext>
           <amq:managementContext createConnector="false" />
@@ -49,13 +58,13 @@
         <amq:systemUsage>
           <amq:systemUsage sendFailIfNoSpaceAfterTimeout="10000">
             <amq:memoryUsage>
-              <amq:memoryUsage limit="52428800" />
+              <amq:memoryUsage limit="50m" />
             </amq:memoryUsage>
             <amq:storeUsage>
-              <amq:storeUsage limit="262144000" />
+              <amq:storeUsage limit="250m" />
             </amq:storeUsage>
             <amq:tempUsage>
-              <amq:tempUsage limit="262144000" />
+              <amq:tempUsage limit="250m" />
             </amq:tempUsage>
           </amq:systemUsage>
         </amq:systemUsage>
