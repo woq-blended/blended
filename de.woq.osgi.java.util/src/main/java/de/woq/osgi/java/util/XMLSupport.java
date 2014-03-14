@@ -39,7 +39,7 @@ public class XMLSupport {
     DOC_BUILDER_FACTORY.setNamespaceAware(true);
   }
 
-  public XMLSupport(String location) {
+  public XMLSupport(final String location) {
     this(location, XMLSupport.class.getClassLoader());
   }
 
