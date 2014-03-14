@@ -10,12 +10,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>${package}</groupId>
-    <artifactId>${package}.karaf.parent</artifactId>
-    <version>${version}</version>
+    <groupId>${targetGroupId}</groupId>
+    <artifactId>${targetGroupId}.karaf.parent</artifactId>
+    <version>${targetVersion}</version>
+    <relativePath>../${targetGroupId}.karaf.parent</relativePath>
   </parent>
 
-  <artifactId>${package}.karaf.sample</artifactId>
+  <artifactId>${targetGroupId}.karaf.sample</artifactId>
 
   <dependencies>
     <dependency>
@@ -51,7 +52,7 @@
             <descriptor>mvn:${symbol_dollar}{project.groupId}/${symbol_dollar}{project.groupId}.karaf.features/${symbol_dollar}{project.version}/xml/features</descriptor>
           </descriptors>
           <features>
-            <feature>woq-akka</feature>
+            <feature>${targetFeature}</feature>
           </features>
           <repository>target/repository</repository>
         </configuration>

@@ -88,37 +88,14 @@
       </includes>
     </fileSet>
 
-
-
-
-
-
-
-
-
-    <fileSet filtered="true" encoding="UTF-8" packaged="true">
-      <directory>de.woq.osgi.akka.karaf.sample/src</directory>
-      <includes>
-        <include>**/*.xml</include>
-        <include>**/*.properties</include>
-      </includes>
-    </fileSet>
+    <!-- A sample container ready to start -->
 
     <fileSet filtered="true" encoding="UTF-8" packaged="false">
-      <directory>de.woq.osgi.akka.karaf.sample</directory>
+      <directory>__targetGroupId__.karaf.sample</directory>
       <includes>
-        <include>**/*.xml</include>
+        <include>**/*</include>
       </includes>
     </fileSet>
 
-
-    <fileSet encoding="UTF-8">
-      <directory>de.woq.osgi.akka.karaf.sample/src</directory>
-      <includes>
-        <include>**/*.</include>
-        <include>**/*.bat</include>
-        <include>**/*.cfg</include>
-      </includes>
-    </fileSet>
   </fileSets>
 </archetype-descriptor>

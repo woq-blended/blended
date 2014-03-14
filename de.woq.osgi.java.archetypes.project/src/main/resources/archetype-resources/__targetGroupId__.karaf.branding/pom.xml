@@ -13,6 +13,7 @@
     <groupId>${targetGroupId}</groupId>
     <artifactId>${targetGroupId}.parent</artifactId>
     <version>${targetVersion}</version>
+    <relativePath>../${targetGroupId}.parent</relativePath>
   </parent>
 
   <artifactId>${targetGroupId}.karaf.branding</artifactId>

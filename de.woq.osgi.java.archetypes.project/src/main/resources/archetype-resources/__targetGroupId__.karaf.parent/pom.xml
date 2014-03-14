@@ -32,7 +32,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </parent>
 
   <groupId>${targetGroupId}</groupId>
-  <artifactId>${targetGroupId}.parent</artifactId>
+  <artifactId>${targetGroupId}.karaf.parent</artifactId>
   <version>${targetVersion}</version>
   <packaging>pom</packaging>
 
@@ -62,17 +62,17 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>${symbol_dollar}{parent.groupId}</groupId>
-      <artifactId>${symbol_dollar}{parent.artifactId}</artifactId>
-      <version>${symbol_dollar}{parent.version}</version>
+      <groupId>${groupId}</groupId>
+      <artifactId>${groupId}.karaf.parent</artifactId>
+      <version>${version}</version>
       <classifier>assembly</classifier>
       <type>linux</type>
     </dependency>
 
     <dependency>
-      <groupId>${symbol_dollar}{parent.groupId}</groupId>
-      <artifactId>${symbol_dollar}{parent.artifactId}</artifactId>
-      <version>${symbol_dollar}{parent.version}</version>
+      <groupId>${groupId}</groupId>
+      <artifactId>${groupId}.karaf.parent</artifactId>
+      <version>${version}</version>
       <classifier>assembly</classifier>
       <type>windows</type>
     </dependency>
