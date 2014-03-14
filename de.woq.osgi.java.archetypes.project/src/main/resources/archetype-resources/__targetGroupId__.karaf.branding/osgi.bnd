@@ -1,5 +1,7 @@
+#set( $symbol_dollar = '$' )
+
 Bundle-Version:\
-  ${project.version}
+  ${symbol_dollar}{project.version}
 
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true

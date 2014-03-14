@@ -10,12 +10,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>${package}</groupId>
-    <artifactId>${package}.parent</artifactId>
-    <version>${version}</version>
+    <groupId>${targetGroupId}</groupId>
+    <artifactId>${targetGroupId}.parent</artifactId>
+    <version>${targetVersion}</version>
   </parent>
 
-  <artifactId>${package}.karaf.features</artifactId>
+  <artifactId>${targetGroupId}.karaf.features</artifactId>
 
   <build>
     <plugins>

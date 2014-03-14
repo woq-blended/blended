@@ -17,6 +17,13 @@
     xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
+  <requiredProperties>
+    <requiredProperty key="targetGroupId" />
+    <requiredProperty key="targetArtifactId" />
+    <requiredProperty key="targetVersion" />
+    <requiredProperty key="targetFeature" />
+  </requiredProperties>
+
   <fileSets>
 
     <!-- The root project files -->
@@ -61,7 +68,6 @@
       <directory>__targetGroupId__.karaf.branding</directory>
       <includes>
         <include>**/*.properties</include>
-        <include>**/*.bnd</include>
       </includes>
     </fileSet>
 
@@ -69,9 +75,18 @@
       <directory>__targetGroupId__.karaf.branding</directory>
       <includes>
         <include>pom.xml</include>
+        <include>osgi.bnd</include>
       </includes>
     </fileSet>
 
+    <!-- The feature definitions to be filled in by the project-->
+
+    <fileSet filtered="true" encoding="UTF-8">
+      <directory>__targetGroupId__.karaf.features</directory>
+      <includes>
+        <include>**/*.xml</include>
+      </includes>
+    </fileSet>
 
 
 
@@ -97,18 +112,6 @@
     </fileSet>
 
 
-    <fileSet filtered="true" encoding="UTF-8">
-      <directory>de.woq.osgi.akka.karaf.features</directory>
-      <includes>
-        <include>**/*.xml</include>
-      </includes>
-    </fileSet>
-    <fileSet filtered="true" encoding="UTF-8">
-      <directory>de.woq.osgi.akka.karaf.features/src</directory>
-      <includes>
-        <include>**/*.xml</include>
-      </includes>
-    </fileSet>
     <fileSet encoding="UTF-8">
       <directory>de.woq.osgi.akka.karaf.sample/src</directory>
       <includes>
