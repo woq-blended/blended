@@ -1,0 +1,181 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2013, WoQ - Way of Quality UG(mbH)
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~  distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  -->
+
+<project
+xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>${groupId}</groupId>
+    <artifactId>${groupId}.karaf.parent</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <groupId>${targetGroupId}</groupId>
+  <artifactId>${targetGroupId}.parent</artifactId>
+  <version>${targetVersion}</version>
+  <packaging>pom</packaging>
+
+  <properties>
+    <container.java.version>1.7.45</container.java.version>
+    <woq.branding.groupId>${targetGroupId}</woq.branding.groupId>
+    <woq.branding.artifactId>${targetGroupId}.karaf.branding</woq.branding.artifactId>
+    <woq.branding.version>${symbol_dollar}{project.version}</woq.branding.version>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>com.oracle</groupId>
+      <artifactId>jre</artifactId>
+      <version>${symbol_dollar}{container.java.version}</version>
+      <classifier>x32</classifier>
+      <type>zip</type>
+    </dependency>
+
+    <dependency>
+      <groupId>com.oracle</groupId>
+      <artifactId>jre</artifactId>
+      <version>${symbol_dollar}{container.java.version}</version>
+      <classifier>i586</classifier>
+      <type>tar.gz</type>
+    </dependency>
+
+    <dependency>
+      <groupId>${symbol_dollar}{parent.groupId}</groupId>
+      <artifactId>${symbol_dollar}{parent.artifactId}</artifactId>
+      <version>${symbol_dollar}{parent.version}</version>
+      <classifier>assembly</classifier>
+      <type>linux</type>
+    </dependency>
+
+    <dependency>
+      <groupId>${symbol_dollar}{parent.groupId}</groupId>
+      <artifactId>${symbol_dollar}{parent.artifactId}</artifactId>
+      <version>${symbol_dollar}{parent.version}</version>
+      <classifier>assembly</classifier>
+      <type>windows</type>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <executions>
+
+            <execution>
+              <id>extract-java-linux</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>unpack-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>jre</includeArtifactIds>
+                <includeTypes>tar.gz</includeTypes>
+                <outputDirectory>${symbol_dollar}{project.build.directory}/java/linux</outputDirectory>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>extract-java-windows</id>
+              <phase>process-resources</phase>
+              <goals>
+                <goal>unpack-dependencies</goal>
+              </goals>
+              <configuration>
+                <includeArtifactIds>jre</includeArtifactIds>
+                <includeTypes>zip</includeTypes>
+                <outputDirectory>${symbol_dollar}{project.build.directory}/java/windows</outputDirectory>
+              </configuration>
+            </execution>
+
+          </executions>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>copy-linux-jre</id>
+              <!-- here the phase you need -->
+              <phase>compile</phase>
+              <goals>
+                <goal>run</goal>
+              </goals>
+              <configuration>
+                <customTaskPrefix>mvn</customTaskPrefix>
+                <target>
+                  <move todir="${symbol_dollar}{project.build.directory}/java/linux/jre" includeemptydirs="true">
+                    <fileset dir="${symbol_dollar}{project.build.directory}/java/linux" />
+                    <chainedmapper>
+                      <regexpmapper from="(jre[^/]+/)(.*)" to="${symbol_escape}2" />
+                    </chainedmapper>
+                  </move>
+                </target>
+              </configuration>
+            </execution>
+
+            <execution>
+              <id>copy-windows-jre</id>
+              <!-- here the phase you need -->
+              <phase>compile</phase>
+              <goals>
+                <goal>run</goal>
+              </goals>
+              <configuration>
+                <customTaskPrefix>mvn</customTaskPrefix>
+                <target>
+                  <move todir="${symbol_dollar}{project.build.directory}/java/windows/jre" includeemptydirs="true">
+                    <fileset dir="${symbol_dollar}{project.build.directory}/java/windows" />
+                    <chainedmapper>
+                      <regexpmapper from="(jre[^/]+/)(.*)" to="${symbol_escape}2" />
+                    </chainedmapper>
+                  </move>
+                </target>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>WoQ</id>
+      <url>http://ci.wayofquality.de:8085/artifactory/complete</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+</project>
+

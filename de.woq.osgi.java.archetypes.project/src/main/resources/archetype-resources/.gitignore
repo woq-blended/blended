@@ -1,0 +1,8 @@
+.svn
+target
+.idea
+*.iml
+.project
+.settings
+.classpath
+KahaDB/

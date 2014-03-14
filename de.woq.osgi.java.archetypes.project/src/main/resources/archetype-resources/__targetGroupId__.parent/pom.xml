@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>${groupId}</groupId>
+    <artifactId>${groupId}.parent</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <groupId>${targetGroupId}</groupId>
+  <artifactId>${targetGroupId}.parent</artifactId>
+  <version>${targetVersion}</version>
+  <packaging>pom</packaging>
+
+  <repositories>
+    <repository>
+      <id>WoQ</id>
+      <url>http://ci.wayofquality.de:8085/artifactory/complete</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>FUSEStaging</id>
+      <url>http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>SpringBundles</id>
+      <url>http://repository.springsource.com/maven/bundles/release</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>SpringExternalBundles</id>
+      <url>http://repository.springsource.com/maven/bundles/external</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+  </repositories>
+
+</project>
+
+

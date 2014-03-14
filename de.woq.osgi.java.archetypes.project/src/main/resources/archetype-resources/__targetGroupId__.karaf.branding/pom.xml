@@ -1,0 +1,36 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>${groupId}</groupId>
+    <artifactId>${${groupId}}.parent</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <artifactId>${groupId}.karaf.branding</artifactId>
+  <packaging>bundle</packaging>
+
+  <properties>
+    <bundle.namespace>${symbol_dollar}{project.artifactId}</bundle.namespace>
+    <bundle.symbolicName>${symbol_dollar}{project.artifactId}</bundle.symbolicName>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
+

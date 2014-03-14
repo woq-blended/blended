@@ -1,0 +1,62 @@
+#set( $symbol_pound = '#' )
+#set( $symbol_dollar = '$' )
+#set( $symbol_escape = '\' )
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>${package}</groupId>
+    <artifactId>${package}.karaf.parent</artifactId>
+    <version>${version}</version>
+  </parent>
+
+  <artifactId>${package}.karaf.sample</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>${symbol_dollar}{project.groupId}</groupId>
+      <artifactId>${symbol_dollar}{project.groupId}.karaf.features</artifactId>
+      <version>${symbol_dollar}{project.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>features-maven-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>mvn:${symbol_dollar}{project.groupId}/${symbol_dollar}{project.groupId}.karaf.features/${symbol_dollar}{project.version}/xml/features</descriptor>
+          </descriptors>
+          <features>
+            <feature>woq-akka</feature>
+          </features>
+          <repository>target/repository</repository>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>
