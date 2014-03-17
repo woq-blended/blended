@@ -83,9 +83,15 @@
     <bundle>mvn:org.apache.activemq/activemq-osgi/${activemq.version}</bundle>
   </feature>
 
+  <feature name="woq-scala" version="${scala.version}" resolver="(obr)" start-level="10" >
+    <bundle>mvn:org.scala-lang/scala-library/${scala.version}.${scala.micro.version}</bundle>
+    <bundle>mvn:org.scala-lang/scala-reflect/${scala.version}.${scala.micro.version}</bundle>
+  </feature>
+
   <!-- All bundles needed by the broker -->
   <feature name="woq-activemq" description="ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
     <feature>jetty</feature>
+    <feature version="${project.version}">woq-scala</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${activemq.version}">woq-activemq-client</feature>
     <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
@@ -103,7 +109,6 @@
     <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
     <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
     <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
-    <bundle dependency='true'>wrap:mvn:org.scala-lang/scala-library/${scala.version}</bundle>
   </feature>
 
   <feature name="woq-activemq-blueprint" version="${activemq.version}" resolver="(obr)" start-level="50">
@@ -114,9 +119,27 @@
     <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
   </feature>
 
-  <feature name="woq-scala" version="${scala.version}" resolver="(obr)" start-level="10" >
-    <bundle>mvn:org.scala-lang/scala-library/${scala.version}</bundle>
-    <bundle>mvn:org.scala-lang/scala-reflect/${scala.version}</bundle>
+  <feature name="woq-akka" description="The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
+    <feature version="${scala.version}">woq-scala</feature>
+    <bundle dependency="true">mvn:com.typesafe/config/${typesafe.config.version}</bundle>
+    <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>
+    <bundle dependency="true">mvn:com.typesafe.akka/akka-slf4j_${scala.version}/${akka.version}</bundle>
+    <bundle>mvn:com.typesafe.akka/akka-osgi_${scala.version}/${akka.version}</bundle>
+  </feature>
+
+  <feature name="woq-akka-cluster" description="Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
+    <feature version="${akka.version}">woq-akka</feature>
+    <bundle dependency="true">wrap:mvn:org.uncommons.maths/uncommons-maths/${uncommons.maths.version}</bundle>
+    <bundle dependency="true">mvn:com.google.protobuf/protobuf-java/${protobuf.version}</bundle>
+    <bundle dependency="true">mvn:io.netty/netty/${netty.version}</bundle>
+    <bundle>mvn:com.typesafe.akka/akka-remote_${scala.version}/${akka.version}</bundle>
+    <bundle>mvn:com.typesafe.akka/akka-cluster_${scala.version}/${akka.version}</bundle>
+  </feature>
+
+  <feature name="woq-akka-camel" description="Bundles for Akka-Camel integration" version="${akka.version}" resolver="(obr)" start-level="20">
+    <feature version="${project.version}">woq-camel</feature>
+    <feature version="${akka.version}">woq-akka</feature>
+    <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
   </feature>
 
 </features>
