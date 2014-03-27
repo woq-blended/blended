@@ -21,7 +21,6 @@ public interface ContainerContext {
 
   public String getContainerDirectory();
   public String getContainerConfigDirectory();
-  public String getContainerUIDirectory();
   public String getContainerHostname();
 
   public Properties readConfig(final String configId);

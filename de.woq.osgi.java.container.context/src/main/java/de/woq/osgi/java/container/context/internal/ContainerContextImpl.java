@@ -30,9 +30,7 @@ import java.util.Properties;
 public class ContainerContextImpl implements ContainerContext {
 
   private final static String PROP_WOQ_HOME = "woq.home";
-
   private final static String CONFIG_DIR = "etc";
-  private final static String UI_DIR = "ui";
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
 
@@ -66,18 +64,12 @@ public class ContainerContextImpl implements ContainerContext {
       configDir = null;
     }
 
-    if (configDir != null && (!configDir.isDirectory() || !configDir.canRead()))
-    {
+    if (configDir != null && (!configDir.isDirectory() || !configDir.canRead())) {
       LOGGER.error("Directory [" + dir + "] is not readable.");
       configDir = null;
     }
 
     return configDir.getAbsolutePath();
-  }
-
-  @Override
-  public String getContainerUIDirectory() {
-    return getContainerDirectory() + "/" + UI_DIR;
   }
 
   @Override
@@ -116,17 +108,23 @@ public class ContainerContextImpl implements ContainerContext {
   }
 
   @Override
-  public void writeConfig(String configId, Properties props) {
+  public void writeConfig(final String configId, final Properties props) {
+
+    final String configFile = getConfigFile(configId);
+
+    LOGGER.debug("Wrting config for [" + configId + "] to [" + configFile + "].");
 
     OutputStream os = null;
     try {
-      os = new FileOutputStream(getConfigFile(configId));
+      os = new FileOutputStream(configFile);
       props.store(os, "");
     } catch (Exception e) {
       LOGGER.warn("Error writing config file.", e);
     } finally {
       try {
-        os.close();
+        if (os != null) {
+          os.close();
+        }
       } catch (Exception e) {}
     }
 

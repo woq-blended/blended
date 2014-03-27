@@ -120,6 +120,7 @@
   </feature>
 
   <feature name="woq-akka" description="The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
+    <feature version="${project.version}">woq-base</feature>
     <feature version="${scala.version}">woq-scala</feature>
     <bundle dependency="true">mvn:com.typesafe/config/${typesafe.config.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>

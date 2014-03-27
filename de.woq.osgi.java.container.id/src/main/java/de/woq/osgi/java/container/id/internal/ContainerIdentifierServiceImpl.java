@@ -108,6 +108,8 @@ public class ContainerIdentifierServiceImpl
 
   synchronized private void updateIdentifier(Properties incoming_props, boolean initialize) {
 
+    boolean requiresSave = false;
+
     if (initialize != initialized.get()) {
 
       Object incoming_uid = incoming_props.get(PROP_UUID);
@@ -116,6 +118,7 @@ public class ContainerIdentifierServiceImpl
       if (incoming_uid == null) {
         if (uuid == null) {
           uuid = UUID.randomUUID().toString();
+          requiresSave = true;
         }
       } else {
         LOGGER.info("Incoming UUID = " + incoming_uid.toString());
@@ -130,29 +133,26 @@ public class ContainerIdentifierServiceImpl
 
       LOGGER.info("Container identifier is [" + uuid + "]");
 
+      if (!requiresSave) {
+        final Properties backup_props = properties;
+        properties = new Properties();
 
-      Properties backup_props = properties;
-      properties = new Properties();
+        for(String key: incoming_props.stringPropertyNames()) {
+          String value = incoming_props.getProperty(key);
 
-      int exists = 0;
+          if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
+            String realKey = key.substring(PROP_PROPERTY.length());
+            properties.setProperty(realKey, value);
 
-      properties.clear();
-
-      for(String key: incoming_props.stringPropertyNames()) {
-        String value = incoming_props.getProperty(key);
-
-        if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
-          String realKey = key.substring(PROP_PROPERTY.length());
-          properties.setProperty(realKey, value);
-
-          if (backup_props.get(realKey) != null && backup_props.getProperty(realKey).equals(value)) {
-            exists++;
+            if (backup_props.get(realKey) != null && backup_props.getProperty(realKey).equals(value)) {
+              requiresSave = true;
+            }
+            LOGGER.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
           }
-          LOGGER.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
         }
       }
 
-      if (exists != properties.size()) {
+      if (requiresSave) {
         Properties toStore = new Properties();
         for(String key: properties.stringPropertyNames()) {
           toStore.setProperty(PROP_PROPERTY + key, properties.getProperty(key));
