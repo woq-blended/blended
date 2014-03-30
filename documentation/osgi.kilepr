@@ -18,10 +18,10 @@ QuickBuild=
 
 [item:main.tex]
 archive=true
-column=14
+column=36
 encoding=UTF-8
 highlight=LaTeX
-line=10
+line=3
 mode=LaTeX
 open=true
 order=0
@@ -37,5 +37,5 @@ open=false
 order=-1
 
 [view-settings,view=0,item:main.tex]
-CursorColumn=14
-CursorLine=10
+CursorColumn=36
+CursorLine=3
