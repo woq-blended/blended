@@ -91,7 +91,7 @@
   <!-- All bundles needed by the broker -->
   <feature name="woq-activemq" description="ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
     <feature>jetty</feature>
-    <feature version="${project.version}">woq-scala</feature>
+    <feature version="${scala.version}">woq-scala</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${activemq.version}">woq-activemq-client</feature>
     <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
