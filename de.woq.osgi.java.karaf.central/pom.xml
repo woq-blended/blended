@@ -25,7 +25,7 @@
   <parent>
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.3</version>
     <relativePath>../de.woq.osgi.java.karaf.parent</relativePath>
   </parent>
 
