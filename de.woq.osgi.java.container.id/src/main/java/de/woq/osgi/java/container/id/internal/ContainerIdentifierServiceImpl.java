@@ -153,12 +153,8 @@ public class ContainerIdentifierServiceImpl
       }
 
       if (requiresSave) {
-        Properties toStore = new Properties();
-        for(String key: properties.stringPropertyNames()) {
-          toStore.setProperty(PROP_PROPERTY + key, properties.getProperty(key));
-        }
+        final Properties toStore = containerContext.readConfig(SERVICE_PID);
         toStore.setProperty(PROP_UUID, getUUID());
-
         containerContext.writeConfig(SERVICE_PID, toStore);
       }
     }
