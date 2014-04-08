@@ -64,7 +64,6 @@
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>
         <module>de.woq.osgi.java.util</module>
-        <module>de.woq.osgi.java.startcompletion</module>
         <module>de.woq.osgi.java.mgmt_core</module>
         <module>de.woq.osgi.java.jaxrs</module>
         <module>de.woq.osgi.java.camelutils</module>
