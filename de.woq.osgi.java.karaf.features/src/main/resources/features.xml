@@ -61,8 +61,6 @@
   <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
     <feature version="${activemq.version}">woq-activemq-blueprint</feature>
     <feature version="${project.version}">woq-base</feature>
-    <bundle start-level="50" dependency="true">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.brokerstarter/${project.version}</bundle>
-    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.activemq.defaultbroker/${project.version}</bundle>
   </feature>
 
   <!-- Active MQ 5.9.0 Feature Fix : Obsolete with upcoming fix ( see https://issues.apache.org/jira/browse/AMQ-4833 ) -->
