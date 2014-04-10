@@ -59,7 +59,6 @@
       <modules>
         <module>de.woq.osgi.java.installer</module>
 
-        <module>de.woq.osgi.java.configurator</module>
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>

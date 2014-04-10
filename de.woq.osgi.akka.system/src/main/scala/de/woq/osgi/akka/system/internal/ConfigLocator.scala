@@ -21,31 +21,37 @@ package de.woq.osgi.akka.system.internal
 
 import akka.actor.{ActorLogging, Actor}
 import de.woq.osgi.akka.system.{ConfigLocatorResponse, ConfigLocatorRequest}
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ConfigException, ConfigFactory}
 import java.io.File
-import scala.concurrent.Future
 
 trait ConfigDirectoryProvider {
-  def getConfigDiectory : String
+  def configDirectory : String
 }
 
 trait KarafConfigDirectoryProvider extends ConfigDirectoryProvider {
-  override def getConfigDiectory = System.getProperty("karaf.home") + "/etc"
+  override def configDirectory = System.getProperty("karaf.home") + "/etc"
 }
 
 class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvider =>
 
   def receive: Actor.Receive = {
 
-    case ConfigLocatorRequest(id) =>
+    case ConfigLocatorRequest(id) => {
+      
+      val file = new File(configDirectory, s"$id.conf")
+
       val config =
-        try {
-          ConfigFactory.parseFile(new File(getConfigDiectory, id + ".conf"))
-        } catch {
-          case _ : Throwable => context.system.settings.config.getConfig(id)
-        }
+        if (file.exists && file.isFile && file.canRead)
+          ConfigFactory.parseFile(file)
+        else
+          try
+            context.system.settings.config.getConfig(id)
+          catch {
+            case me : ConfigException.Missing  => ConfigFactory.empty()
+          }
 
       sender ! ConfigLocatorResponse(id, config)
+    }
   }
 }
 

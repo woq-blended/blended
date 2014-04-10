@@ -85,9 +85,35 @@
     <bundle>mvn:org.scala-lang/scala-reflect/${scala.version}.${scala.micro.version}</bundle>
   </feature>
 
+  <feature name="woq-jaxrs" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature>jetty</feature>
+
+    <bundle>mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
+    <bundle>mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+    <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
+    <bundle>mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
+
+    <bundle>mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
+    <bundle>mvn:com.sun.jersey/jersey-json/${jersey.version}</bundle>
+    <bundle>mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
+    <bundle>mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
+    <bundle>mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
+
+    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
+
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/${project.version}</bundle>
+  </feature>
+
+  <feature name="woq-hawtio" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature version="${project.version}">woq-jaxrs</feature>
+    <feature version="${hawtio.version}">hawtio</feature>
+
+    <bundle>mvn:org.fusesource.insight/insight-log/${insight-log.version}</bundle>
+  </feature>
+
   <!-- All bundles needed by the broker -->
   <feature name="woq-activemq" description="ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
-    <feature>jetty</feature>
+    <feature version="${project.version}">woq-jaxrs</feature>
     <feature version="${scala.version}">woq-scala</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${activemq.version}">woq-activemq-client</feature>
@@ -103,9 +129,6 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
     <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries.blueprint.version}</bundle>
     <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
-    <bundle dependency="true">mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
-    <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
-    <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
   </feature>
 
   <feature name="woq-activemq-blueprint" version="${activemq.version}" resolver="(obr)" start-level="50">
