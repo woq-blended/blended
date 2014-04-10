@@ -127,7 +127,7 @@
 
   <feature name="woq-akka-cluster" description="Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
     <feature version="${akka.version}">woq-akka</feature>
-    <bundle dependency="true">mvn:org.uncommons.maths/uncommons-maths/${uncommons.maths.version}</bundle>
+    <bundle dependency="true">wrap:mvn:org.uncommons.maths/uncommons-maths/${uncommons.maths.version}</bundle>
     <bundle dependency="true">mvn:com.google.protobuf/protobuf-java/${protobuf.version}</bundle>
     <bundle dependency="true">mvn:io.netty/netty/${netty.version}</bundle>
     <bundle>mvn:com.typesafe.akka/akka-remote_${scala.version}/${akka.version}</bundle>

@@ -104,7 +104,7 @@
     <stax.api.version>2.2.0</stax.api.version>
     <tinybundles.version>1.0.0</tinybundles.version>
     <typesafe.config.version>1.2.0</typesafe.config.version>
-    <uncommons.maths.version>1.2.2a</uncommons.maths.version>
+    <uncommons.maths.version>1.2.2</uncommons.maths.version>
     <velocity.version>1.7_5</velocity.version>
     <xbean.version>3.14</xbean.version>
     <xmlbeans.version>2.4.0</xmlbeans.version>

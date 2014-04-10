@@ -74,6 +74,9 @@
         <module>de.woq.osgi.java.karaf.branding</module>
         <module>de.woq.osgi.java.karaf.central</module>
 
+        <module>de.woq.osgi.akka.modules</module>
+        <module>de.woq.osgi.akka.system</module>
+
         <module>de.woq.osgi.java.itestsupport</module>
 
         <module>de.woq.osgi.java.archetypes.project</module>
