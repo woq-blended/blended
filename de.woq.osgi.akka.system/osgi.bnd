@@ -1,0 +1,10 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator:\
+  de.woq.osgi.akka.system.internal.WoQActivator
+
+Import-Package: *
