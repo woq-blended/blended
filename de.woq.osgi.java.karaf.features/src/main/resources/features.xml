@@ -140,4 +140,9 @@
     <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
   </feature>
 
+  <feature name="woq-akka-system" version="${project.version}" start-level="60">
+    <feature version="${akka.version}">woq-akka-cluster</feature>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.system/${project.version}</bundle>
+  </feature>
+
 </features>
