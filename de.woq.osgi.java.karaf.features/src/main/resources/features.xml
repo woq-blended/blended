@@ -165,7 +165,9 @@
 
   <feature name="woq-akka-system" version="${project.version}" start-level="60">
     <feature version="${akka.version}">woq-akka-cluster</feature>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.modules/${project.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.system/${project.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.reporter/${project.version}</bundle>
   </feature>
 
 </features>

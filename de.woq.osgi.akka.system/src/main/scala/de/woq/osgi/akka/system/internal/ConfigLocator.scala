@@ -28,10 +28,6 @@ trait ConfigDirectoryProvider {
   def configDirectory : String
 }
 
-trait KarafConfigDirectoryProvider extends ConfigDirectoryProvider {
-  override def configDirectory = System.getProperty("karaf.home") + "/etc"
-}
-
 class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvider =>
 
   def receive: Actor.Receive = {
@@ -56,5 +52,7 @@ class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvi
 }
 
 object ConfigLocator {
-  def apply() = new ConfigLocator with KarafConfigDirectoryProvider
+  def apply(configDir : String) = new ConfigLocator with ConfigDirectoryProvider {
+    override def configDirectory = configDir
+  }
 }

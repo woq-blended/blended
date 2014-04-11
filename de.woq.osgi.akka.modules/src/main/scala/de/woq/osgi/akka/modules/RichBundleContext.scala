@@ -18,7 +18,7 @@ package de.woq.osgi.akka.modules
 
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
-private[modules] class RichBundleContext(context: BundleContext) {
+class RichBundleContext(context: BundleContext) {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 

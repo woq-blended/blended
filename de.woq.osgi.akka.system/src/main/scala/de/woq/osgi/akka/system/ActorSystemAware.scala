@@ -19,45 +19,39 @@
 
 package de.woq.osgi.akka.system
 
-import org.osgi.framework.{BundleActivator, BundleContext, ServiceReference}
+import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{Props, ActorRef, ActorSystem}
+import de.woq.osgi.akka.modules.RichBundleContext
 
 case class InitializeBundle(context: BundleContext)
 
-trait ActorSystemAware { this : BundleActivator =>
+trait BundleName {
+  def bundleSymbolicName : String
+}
 
-  var bundleContextRef : BundleContext = null
-  var systemServiceRef : ServiceReference[ActorSystem] = null
-  var actorSystemRef   : ActorSystem = null
-  var actorRef         : ActorRef = null;
+trait ActorSystemAware { this : BundleActivator with BundleName =>
 
-  def bundleContext : BundleContext = bundleContextRef
+  var bundleContextRef : RichBundleContext = null
+  var actorRef         : ActorRef = _
 
-  def actorSystem : ActorSystem = actorSystemRef
-
-  def bundleId : String
+  def bundleContext : RichBundleContext = bundleContextRef
+  def bundleActor : ActorRef = actorRef
 
   def prepareBundleActor() : Props
 
   final def start(context: BundleContext) {
     this.bundleContextRef = context
-    systemServiceRef = bundleContext.getServiceReference(classOf[ActorSystem])
 
-    if (systemServiceRef != null) {
-      actorSystemRef = bundleContext.getService[ActorSystem](systemServiceRef)
+    bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
+      actorRef = actorSystem.actorOf(prepareBundleActor(), bundleSymbolicName)
+      actorRef ! InitializeBundle(context)
     }
-
-    actorRef = actorSystem.actorOf(prepareBundleActor(), bundleId)
-    actorRef ! InitializeBundle(context)
   }
 
   final def stop(context: BundleContext) {
-    if (actorRef != null) {
-      actorSystem.stop(actorRef)
-    }
-
-    if (systemServiceRef != null) {
-      context.ungetService(systemServiceRef)
+    bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
+      actorSystem.stop(bundleActor)
     }
   }
+
 }

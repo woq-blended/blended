@@ -23,19 +23,42 @@ import akka.osgi.ActorSystemActivator
 import org.osgi.framework.BundleContext
 import akka.actor.{Props, ActorSystem}
 import akka.event.{LogSource, Logging}
+import de.woq.osgi.akka.system.WOQAkkaConstants._
+import de.woq.osgi.java.container.context.ContainerContext
+import de.woq.osgi.akka.modules.RichBundleContext
+import com.typesafe.config.{ConfigFactory, Config}
+import scala.concurrent.Await
+import java.io.File
+import scala.concurrent.duration._
 
 class WoQActivator extends ActorSystemActivator {
 
   def configure(context: BundleContext, system: ActorSystem) {
+    val richContext : RichBundleContext = context
     val log = Logging(system, this)
 
-    system.actorOf(Props(ConfigLocator()), "ConfigLocator")
+    richContext.findService(classOf[ContainerContext]).andApply { ctContext =>
+      system.actorOf(Props(ConfigLocator(ctContext.getContainerConfigDirectory)), configLocatorPath)
+    }
 
     registerService(context, system)
     log.info("ActorSystem [" + system.name + "] initialized." )
   }
 
   override def getActorSystemName(context: BundleContext): String = "WoQActorSystem"
+
+  override def getActorSystemConfiguration(context: BundleContext): Config = {
+    val richContext : RichBundleContext = context
+
+    val configDir = Await.result(
+      richContext.findService(classOf[ContainerContext]) andApply { ctContext =>
+        ctContext.getContainerConfigDirectory
+      }, 1.second
+    )
+
+    ConfigFactory.parseFile(new File(configDir.get, "application.conf"))
+  }
+
 }
 
 object WoQActivator {

@@ -17,7 +17,6 @@ package de.woq.osgi.java.mgmt_core.internal;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
-import java.util.List;
 
 public class MBeanServerFactory {
 

@@ -18,7 +18,7 @@ package de.woq.osgi.akka.modules
 
 import org.osgi.framework.ServiceReference
 
-private[modules] class RichServiceReference[I](serviceReference: ServiceReference[I]) {
+class RichServiceReference[I](serviceReference: ServiceReference[I]) {
 
   assert(serviceReference != null, "The ServiceReference must not be null!")
 

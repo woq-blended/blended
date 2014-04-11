@@ -75,6 +75,7 @@
 
         <module>de.woq.osgi.akka.modules</module>
         <module>de.woq.osgi.akka.system</module>
+        <module>de.woq.osgi.akka.mgmt.reporter</module>
 
         <module>de.woq.osgi.java.itestsupport</module>
 
