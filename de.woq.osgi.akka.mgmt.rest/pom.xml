@@ -29,7 +29,7 @@
   </parent>
 
   <artifactId>de.woq.osgi.akka.mgmt.rest</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>war</packaging>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
@@ -42,54 +42,63 @@
       <groupId>io.spray</groupId>
       <artifactId>spray-servlet</artifactId>
       <version>${spray.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>io.spray</groupId>
       <artifactId>spray-routing</artifactId>
       <version>${spray.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.akka.system</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.akka.modules</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}.${scala.micro.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>${osgi.core.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.compendium</artifactId>
       <version>${osgi.core.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -120,6 +129,39 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <instructions>
+            <manifestLocation>${project.build.outputDirectory}/META-INF</manifestLocation>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+          <webResources>
+            <resource>
+              <filtering>true</filtering>
+              <directory>src/main/resources</directory>
+              <includes>
+                <include>**/*.*</include>
+              </includes>
+            </resource>
+          </webResources>
+        </configuration>
       </plugin>
 
       <plugin>

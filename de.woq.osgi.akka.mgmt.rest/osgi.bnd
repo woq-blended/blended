@@ -4,4 +4,8 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Import-Package: \
+  spray.servlet,*
+
+Bundle-Classpath: \
+  .,WEB-INF/classes
