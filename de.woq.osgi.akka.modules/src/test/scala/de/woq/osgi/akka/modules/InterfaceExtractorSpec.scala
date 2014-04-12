@@ -67,6 +67,17 @@ class InterfaceExtractorSpec extends WordSpec with Matchers with AssertionsForJU
       extractor.interfaces should contain(classOf[TestInterface4])
     }
 
+    "resolve implicit typing correctly" in {
+
+      val service = new TestClass5 with TestInterface1
+      val extractor = new InterfaceExtractor(service.getClass)
+
+      extractor.interfaces should not be (null)
+      extractor.interfaces should have size (2)
+      extractor.interfaces should contain(classOf[TestInterface1])
+      extractor.interfaces should contain(classOf[TestInterface2])
+    }
+
   }
 
 }

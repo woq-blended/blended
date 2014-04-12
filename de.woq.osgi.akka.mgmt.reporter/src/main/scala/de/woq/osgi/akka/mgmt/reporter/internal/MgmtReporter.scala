@@ -38,7 +38,7 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
 
   implicit val executionContext = context.dispatcher
   implicit val timeout = Timeout(5.seconds)
-  val ticker : Cancellable = context.system.scheduler.schedule(1.second, 1.second, self, Tick)
+  val ticker : Cancellable = context.system.scheduler.schedule(5.seconds, 5.seconds, self, Tick)
 
   def initializing: Receive = {
     case InitializeBundle(bundleContext) => {
@@ -56,7 +56,6 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
     }
 
     case Some(info : ContainerInfo) => {
-      log info info.toString
     }
   }
 

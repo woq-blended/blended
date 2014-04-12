@@ -31,7 +31,7 @@ trait BundleName {
 
 trait ActorSystemAware { this : BundleActivator with BundleName =>
 
-  var bundleContextRef : RichBundleContext = null
+  var bundleContextRef : RichBundleContext = _
   var actorRef         : ActorRef = _
 
   def bundleContext : RichBundleContext = bundleContextRef
@@ -45,13 +45,20 @@ trait ActorSystemAware { this : BundleActivator with BundleName =>
     bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
       actorRef = actorSystem.actorOf(prepareBundleActor(), bundleSymbolicName)
       actorRef ! InitializeBundle(context)
+      postStartActor()
     }
   }
 
+  def postStartActor() {}
+
   final def stop(context: BundleContext) {
+
     bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
+      preStopActor()
       actorSystem.stop(bundleActor)
     }
   }
+
+  def preStopActor() {}
 
 }

@@ -21,17 +21,27 @@ package de.woq.osgi.akka.modules
 
 class InterfaceExtractor(clazz : Class[_]) {
 
-  val interfaces : Array[Class[_]] = {
-    lazy val allInterfaces = clazz.getInterfaces
-
-    def allInterfacesTR(interfaces: List[Class[_]], result: List[Class[_]]) : List[Class[_]] =
-      interfaces match {
-        case Nil => result
-        case _ => {
-          allInterfacesTR(interfaces flatMap ( x => x.getInterfaces ), interfaces ::: result)
-        }
+  private def allInterfacesTR(interfaces: List[Class[_]], result: List[Class[_]]) : List[Class[_]] =
+    interfaces match {
+      case Nil => result
+      case _ => {
+        allInterfacesTR(interfaces flatMap ( x => x.getInterfaces ), interfaces ::: result)
       }
+    }
 
-    if (allInterfaces.isEmpty) Array(clazz) else allInterfacesTR(allInterfaces.toList, List[Class[_]]()).toArray
+  private def interfacesForClass(clazz : Class[_]) : List[Class[_]] = {
+
+    if (clazz == classOf[Object])
+      Nil
+    else {
+      (interfacesForClass(clazz.getSuperclass) ::: allInterfacesTR(clazz.getInterfaces.toList, Nil)).distinct
+    }
+  }
+
+  val interfaces : Array[Class[_]] = {
+
+    val clazzes = interfacesForClass(clazz)
+
+    if (clazzes.isEmpty) Array(clazz) else clazzes.toArray
   }
 }

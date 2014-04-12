@@ -41,7 +41,7 @@ class RichBundleContext(context: BundleContext) {
 
     val serviceRegistration : ServiceRegistration[S] =
       (context.registerService(interfaces, service, if (properties.isEmpty) null else properties)).asInstanceOf[ServiceRegistration[S]]
-    logger info "Created service %s with interfaces %s and properties %s.".format(service, interfaces, properties)
+    logger info s"Created service $service with interfaces ${interfaces.mkString("[", ",", "]")} and properties $properties."
     serviceRegistration
   }
 
