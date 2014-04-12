@@ -172,11 +172,19 @@
 
   <feature name="woq-akka-spray" description="Bundles for the Spray support (REST)" version="${project.version}" resolver="(obr)" start-level="50">
     <feature version="${project.version}">woq-akka-system</feature>
+    <bundle>mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}/jar/woq</bundle>
+    <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
     <bundle>mvn:org.parboiled/parboiled-core/${parboiled.version}</bundle>
     <bundle>mvn:org.parboiled/parboiled-scala_${scala.version}/${parboiled.version}</bundle>
+    <bundle>mvn:com.chuusai/shapeless_${scala.version}.${scala.micro.version}/${shapeless.version}</bundle>
     <bundle>mvn:io.spray/spray-util/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-http/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-httpx/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-servlet/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-caching/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-io/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
+    <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
   </feature>
 
 </features>

@@ -16,18 +16,29 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
-import akka.actor.{ActorLogging, Actor}
-import de.woq.osgi.akka.system.BundleName
-import de.woq.osgi.java.mgmt_core.ContainerInfo
+import spray.routing.HttpService
+import akka.actor.Actor
+import spray.http.MediaTypes._
 
-object ManagementCollector {
-  def apply(name : String) = new ManagementCollector with BundleName {
-    override def bundleSymbolicName = name
-  }
+class ManagementCollector extends Actor with CollectorService {
+
+  def actorRefFactory = context
+
+  def receive = runRoute(collectorRoute)
+
 }
 
-class ManagementCollector extends Actor with ActorLogging { this : BundleName =>
-  override def receive : Receive = {
-    case info : ContainerInfo => log info s"$info"
+trait CollectorService extends HttpService {
+
+  val collectorRoute = path("") {
+    get {
+      respondWithMediaType(`text/html`) {
+        complete {
+          <html>
+            <body>Say hello to <i>spray routing</i> within OSGi.</body>
+          </html>
+        }
+      }
+    }
   }
 }

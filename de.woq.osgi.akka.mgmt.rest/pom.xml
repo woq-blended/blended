@@ -39,9 +39,15 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.jaxrs</artifactId>
-      <version>${project.version}</version>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-servlet</artifactId>
+      <version>${spray.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-routing</artifactId>
+      <version>${spray.version}</version>
     </dependency>
 
     <dependency>
