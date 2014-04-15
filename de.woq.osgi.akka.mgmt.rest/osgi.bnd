@@ -4,8 +4,16 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Activator: \
+  de.woq.osgi.akka.mgmt.rest.internal.CollectorActivator
+
 Import-Package: \
-  spray.servlet,*
+  spray.routing,\
+  spray.routing.directives,\
+  spray.servlet,\
+  shapeless,\
+  de.woq.osgi.spray.servlet,\
+  *
 
 Bundle-Classpath: \
   .,WEB-INF/classes

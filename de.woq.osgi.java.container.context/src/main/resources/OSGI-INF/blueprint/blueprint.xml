@@ -17,18 +17,19 @@
 
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
-  <bean
-    id="context" class="de.woq.osgi.java.container.context.internal.ContainerContextImpl" />
-
-  <service
-    interface="de.woq.osgi.java.container.context.ContainerContext"
-    ref="context" />
-
   <bean id="shutdownBean" class="de.woq.osgi.java.container.context.internal.ContainerShutdown" init-method="init">
     <property name="bundleContext" ref="blueprintBundleContext" />
     <property name="mBeanServer">
       <reference interface="javax.management.MBeanServer" timeout="1000" />
     </property>
   </bean>
+
+  <bean id="context" class="de.woq.osgi.java.container.context.internal.ContainerContextImpl" >
+    <property name="containerShutdown" ref="shutdownBean" />
+  </bean>
+
+  <service
+    interface="de.woq.osgi.java.container.context.ContainerContext"
+    ref="context" />
 
 </blueprint>

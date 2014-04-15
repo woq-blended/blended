@@ -34,6 +34,8 @@ public class ContainerContextImpl implements ContainerContext {
 
   private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
 
+  private ContainerShutdown containerShutdown = null;
+
   @Override
   public String getContainerHostname() {
 
@@ -129,6 +131,19 @@ public class ContainerContextImpl implements ContainerContext {
     }
 
     LOGGER.info("Exported configuration [{}]", configFile);
+  }
+
+  @Override
+  public void shutdown() {
+    getContainerShutdown().shutdown();
+  }
+
+  public ContainerShutdown getContainerShutdown() {
+    return containerShutdown;
+  }
+
+  public void setContainerShutdown(ContainerShutdown containerShutdown) {
+    this.containerShutdown = containerShutdown;
   }
 
   private String getConfigFile(final String configId) {

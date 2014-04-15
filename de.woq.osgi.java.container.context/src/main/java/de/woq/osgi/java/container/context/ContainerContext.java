@@ -25,4 +25,6 @@ public interface ContainerContext {
 
   public Properties readConfig(final String configId);
   public void writeConfig(final String configId, final Properties props);
+
+  public void shutdown();
 }

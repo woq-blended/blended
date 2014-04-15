@@ -20,6 +20,10 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
+  <listener>
+    <listener-class>de.woq.osgi.akka.mgmt.rest.internal.CollectorInitializer</listener-class>
+  </listener>
+
   <servlet>
     <display-name>woqMgmtCollector</display-name>
     <servlet-name>woqMgmtCollector</servlet-name>

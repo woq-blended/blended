@@ -29,7 +29,7 @@ trait BundleName {
   def bundleSymbolicName : String
 }
 
-trait ActorSystemAware { this : BundleActivator with BundleName =>
+trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
   var bundleContextRef : RichBundleContext = _
   var actorRef         : ActorRef = _

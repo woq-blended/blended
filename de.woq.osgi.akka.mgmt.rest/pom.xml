@@ -39,6 +39,12 @@
   <dependencies>
 
     <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.spray.servlet</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.spray</groupId>
       <artifactId>spray-servlet</artifactId>
       <version>${spray.version}</version>

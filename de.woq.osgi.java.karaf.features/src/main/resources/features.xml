@@ -176,7 +176,7 @@
     <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
     <bundle>mvn:org.parboiled/parboiled-core/${parboiled.version}</bundle>
     <bundle>mvn:org.parboiled/parboiled-scala_${scala.version}/${parboiled.version}</bundle>
-    <bundle>mvn:com.chuusai/shapeless_${scala.version}.${scala.micro.version}/${shapeless.version}</bundle>
+    <bundle>wrap:mvn:com.chuusai/shapeless_${scala.version}/${shapeless.version}</bundle>
     <bundle>mvn:io.spray/spray-util/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-http/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-httpx/${spray.version}</bundle>
@@ -185,6 +185,7 @@
     <bundle>mvn:io.spray/spray-io/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
   </feature>
 
 </features>

@@ -59,6 +59,7 @@
       <modules>
         <module>de.woq.osgi.java.installer</module>
 
+        <module>de.woq.osgi.activemq.brokerstarter</module>
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>
@@ -77,6 +78,7 @@
         <module>de.woq.osgi.akka.system</module>
         <module>de.woq.osgi.akka.mgmt.reporter</module>
         <module>de.woq.osgi.akka.mgmt.rest</module>
+        <module>de.woq.osgi.spray.servlet</module>
 
         <module>de.woq.osgi.java.itestsupport</module>
 

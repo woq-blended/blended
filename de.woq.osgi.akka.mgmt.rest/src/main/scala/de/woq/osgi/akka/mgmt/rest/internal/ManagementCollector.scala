@@ -19,13 +19,35 @@ package de.woq.osgi.akka.mgmt.rest.internal
 import spray.routing.HttpService
 import akka.actor.Actor
 import spray.http.MediaTypes._
+import de.woq.osgi.akka.system.{BundleName, ConfigLocatorResponse, ConfigLocatorRequest, InitializeBundle}
+import de.woq.osgi.akka.system.WOQAkkaConstants._
+import akka.util.Timeout
+import scala.concurrent.duration._
 
-class ManagementCollector extends Actor with CollectorService {
+object ManagementCollector {
+  def apply() = new ManagementCollector with BundleName {
+    override def bundleSymbolicName = CollectorBundleName.bundleName
+  }
+}
 
+class ManagementCollector extends Actor with CollectorService { this : BundleName =>
+
+  implicit val executionContext = context.dispatcher
+  implicit val timeout = Timeout(5.seconds)
   def actorRefFactory = context
 
-  def receive = runRoute(collectorRoute)
+  def initializing : Receive = {
+    case InitializeBundle(bundleContext) => {
+      context.system.actorSelection(s"/user/$configLocatorPath").resolveOne() map {
+        ref => ref ! ConfigLocatorRequest(bundleSymbolicName)
+      }
+    }
+    case ConfigLocatorResponse(bundleId, config) => {
+      context.become(runRoute(collectorRoute))
+    }
+  }
 
+  override def receive: Actor.Receive = initializing
 }
 
 trait CollectorService extends HttpService {

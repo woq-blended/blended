@@ -37,12 +37,10 @@ class WoQActivator extends ActorSystemActivator {
     val richContext : RichBundleContext = context
     val log = Logging(system, this)
 
-    richContext.findService(classOf[ContainerContext]).andApply { ctContext =>
-      system.actorOf(Props(ConfigLocator(ctContext.getContainerConfigDirectory)), configLocatorPath)
-    }
-
+    system.actorOf(Props(ConfigLocator(System.getProperty("karaf.home") + "/etc")), configLocatorPath)
     registerService(context, system)
     log.info("ActorSystem [" + system.name + "] initialized." )
+
   }
 
   override def getActorSystemName(context: BundleContext): String = "WoQActorSystem"
