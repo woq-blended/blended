@@ -25,6 +25,7 @@ import scala.concurrent.duration._
 import org.osgi.framework.BundleContext
 import de.woq.osgi.akka.modules._
 import scala.collection.JavaConversions._
+import akka.event.LoggingReceive
 
 object MgmtReporter {
   def apply(name : String) = new MgmtReporter with BundleName {
@@ -41,20 +42,20 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
 
   val ticker : Cancellable = context.system.scheduler.schedule(5.seconds, 5.seconds, self, Tick)
 
-  def initializing: Receive = {
+  def initializing = LoggingReceive {
     case InitializeBundle(bundleContext) => {
       log info "Initializing Management Reporter"
       context.become(working(bundleContext))
     }
   }
 
-  def working(implicit osgiContext: BundleContext) : Receive = {
+  def working(implicit osgiContext: BundleContext) = LoggingReceive {
 
     case Tick => {
       log info "Performing report"
       (osgiContext.findService(classOf[ContainerIdentifierService])) match {
-        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvcRef.properties.toMap) } match {
-          case info : ContainerInfo => self ! info
+        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) } match {
+          case Some(info) => self ! info
           case _ =>
         }
         case _ =>

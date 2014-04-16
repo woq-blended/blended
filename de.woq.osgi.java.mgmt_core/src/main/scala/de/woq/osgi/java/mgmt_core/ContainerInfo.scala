@@ -21,5 +21,5 @@ import javax.xml.bind.annotation.XmlRootElement
 @XmlRootElement
 case class ContainerInfo (
   containerId : String,
-  properties : Map[String, Any]
+  properties : Map[String, String]
 )

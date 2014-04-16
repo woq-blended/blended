@@ -17,10 +17,13 @@
 package de.woq.osgi.akka.modules
 
 import org.osgi.framework.{ServiceReference, BundleContext, ServiceRegistration}
+import org.slf4j.LoggerFactory
 
 class RichBundleContext(context: BundleContext) {
 
   assert(context != null, "The BundleContext must not be null!")
+
+  val logger = LoggerFactory.getLogger(getClass)
 
   /**
    * Creates a service, i.e. registers one with the OSGi service registry.

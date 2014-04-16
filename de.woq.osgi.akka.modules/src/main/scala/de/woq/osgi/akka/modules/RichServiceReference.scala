@@ -17,8 +17,11 @@
 package de.woq.osgi.akka.modules
 
 import org.osgi.framework.{BundleContext, ServiceReference}
+import org.slf4j.LoggerFactory
 
 class RichServiceReference[I](serviceReference: ServiceReference[I]) {
+
+  val logger = LoggerFactory.getLogger(getClass)
 
   assert(serviceReference != null, "The ServiceReference must not be null!")
 
@@ -30,12 +33,12 @@ class RichServiceReference[I](serviceReference: ServiceReference[I]) {
     try {
       context getService serviceReference match {
         case null => {
-          logger debug "Could not get service for ServiceReference %s!".format(serviceReference)
+          logger debug s"Could not get service for ServiceReference [${serviceReference.toString}}]%s!"
           None
         }
         case service => {
           val result = Some(f(service.asInstanceOf[I]))
-          logger debug "Invoked service for  ServiceReference %s!".format(serviceReference)
+          logger debug s"Invocation of ServiceReference [${serviceReference.toString}] yields [${result}]"
           result
         }
       }

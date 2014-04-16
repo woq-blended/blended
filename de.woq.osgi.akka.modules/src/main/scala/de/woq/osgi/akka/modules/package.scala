@@ -79,8 +79,6 @@ package object modules {
     new PresentBuilder(attr)
   }
 
-  private[modules] val logger = LoggerFactory.getLogger(getClass())
-
   private[modules] implicit def scalaMapToJavaDictionary[K, V](map: Map[K, V]) = {
     import scala.collection.JavaConversions._
     if (map == null) null: Dictionary[K, V]
