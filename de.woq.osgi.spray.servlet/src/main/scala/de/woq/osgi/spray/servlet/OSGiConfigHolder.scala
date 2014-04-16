@@ -18,6 +18,7 @@ package de.woq.osgi.spray.servlet
 
 import akka.actor.{ActorRef, ActorSystem}
 import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
+import de.woq.osgi.akka.modules._
 
 object OSGiConfigHolder {
 
@@ -40,9 +41,12 @@ object OSGiConfigHolder {
 trait OSGISprayServletActivator extends ActorSystemAware with BundleName {
 
   override def postStartActor() {
-    bundleContext.findService(classOf[ActorSystem]) andApply { sys =>
-      OSGiConfigHolder.setActorSystem(sys)
-      OSGiConfigHolder.setActorRef(bundleActor)
+    (bundleContext.findService(classOf[ActorSystem])) match {
+      case Some(svcRef) => svcRef invokeService { actorSystem =>
+        OSGiConfigHolder.setActorSystem(actorSystem)
+        OSGiConfigHolder.setActorRef(bundleActor)
+      }
+      case _ =>
     }
   }
 }

@@ -19,12 +19,12 @@ package de.woq.osgi.akka.mgmt.reporter.internal
 import akka.actor.{Cancellable, ActorLogging, Actor}
 import de.woq.osgi.akka.system.{InitializeBundle, BundleName}
 import akka.util.Timeout
-import de.woq.osgi.akka.modules.RichBundleContext
 import de.woq.osgi.java.container.id.ContainerIdentifierService
 import de.woq.osgi.java.mgmt_core.ContainerInfo
-import scala.collection.JavaConversions._
 import scala.concurrent.duration._
-import akka.pattern.pipe
+import org.osgi.framework.BundleContext
+import de.woq.osgi.akka.modules._
+import scala.collection.JavaConversions._
 
 object MgmtReporter {
   def apply(name : String) = new MgmtReporter with BundleName {
@@ -38,6 +38,7 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
 
   implicit val executionContext = context.dispatcher
   implicit val timeout = Timeout(5.seconds)
+
   val ticker : Cancellable = context.system.scheduler.schedule(5.seconds, 5.seconds, self, Tick)
 
   def initializing: Receive = {
@@ -46,17 +47,17 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
     }
   }
 
-  def working(context: RichBundleContext) : Receive = {
+  def working(implicit osgiContext: BundleContext) : Receive = {
 
-    case Tick => {
-      (context.findService(classOf[ContainerIdentifierService]) andApply {
-        idSvc =>
-          new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap)
-      }).pipeTo(self)
-    }
+    case Tick => (osgiContext.findService(classOf[ContainerIdentifierService])) match {
+        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) } match {
+          case info : ContainerInfo => self ! info
+          case _ =>
+        }
+        case _ =>
+      }
 
-    case Some(info : ContainerInfo) => {
-    }
+    case info : ContainerInfo => log info s"$info"
   }
 
   def receive = initializing

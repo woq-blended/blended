@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.system.osgi
 
-object WOQAkkaConstants {
+import de.woq.osgi.akka.modules.RichServiceReference
 
-  val osgiFacadePath = "OSGI"
-  val configLocatorPath = "ConfigLocator"
-}
+case class GetService(
+  interface : Class[_ <: AnyRef],
+  filter: Option[String]
+)
+
+case class Service[I <: AnyRef](
+  service: RichServiceReference[I]
+)

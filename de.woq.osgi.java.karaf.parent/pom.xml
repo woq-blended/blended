@@ -237,12 +237,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
               <goals>
                 <goal>single</goal>
               </goals>
-              <configuration>
-                <descriptors>
-                  <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux</descriptor>
-                  <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows</descriptor>
-                </descriptors>
-              </configuration>
             </execution>
           </executions>
         </plugin>
@@ -275,8 +269,18 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                       <classifier>assembly</classifier>
                     </artifact>
                     <artifact>
+                      <file>src/main/assembly/linux-nojre.xml</file>
+                      <type>linux-nojre</type>
+                      <classifier>assembly</classifier>
+                    </artifact>
+                    <artifact>
                       <file>src/main/assembly/windows.xml</file>
                       <type>windows</type>
+                      <classifier>assembly</classifier>
+                    </artifact>
+                    <artifact>
+                      <file>src/main/assembly/windows-nojre.xml</file>
+                      <type>windows-nojre</type>
                       <classifier>assembly</classifier>
                     </artifact>
                   </artifacts>

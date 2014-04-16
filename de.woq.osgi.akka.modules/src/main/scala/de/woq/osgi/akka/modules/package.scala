@@ -79,18 +79,6 @@ package object modules {
     new PresentBuilder(attr)
   }
 
-//  /**
-//   * Returns the given or inferred type wrapped into a Some.
-//   */
-//  def interface[I](implicit manifest: Manifest[I]): Option[Class[I]] =
-//    Some(manifest.erasure.asInstanceOf[Class[I]])
-//
-//  /**
-//   * Returns the given or inferred type.
-//   */
-//  def withInterface[I](implicit manifest: Manifest[I]): Class[I] =
-//    manifest.erasure.asInstanceOf[Class[I]]
-
   private[modules] val logger = LoggerFactory.getLogger(getClass())
 
   private[modules] implicit def scalaMapToJavaDictionary[K, V](map: Map[K, V]) = {
@@ -109,32 +97,6 @@ package object modules {
         throw new UnsupportedOperationException("This Dictionary is read-only!")
       override def remove(o: Object) =
         throw new UnsupportedOperationException("This Dictionary is read-only!")
-    }
-  }
-
-  private[modules] def invokeService[I, T](
-    serviceReference: ServiceReference[I],
-    f: I => T,
-    context: BundleContext): Option[T] = {
-
-    assert(serviceReference != null, "The ServiceReference must not be null!")
-    assert(f != null, "The function to be applied to the service must not be null!")
-    assert(context != null, "The BundleContext must not be null!")
-
-    try {
-      context getService serviceReference match {
-        case null => {
-          logger debug "Could not get service for ServiceReference %s!".format(serviceReference)
-          None
-        }
-        case service => {
-          val result = Some(f(service.asInstanceOf[I]))
-          logger debug "Invoked service for  ServiceReference %s!".format(serviceReference)
-          result
-        }
-      }
-    } finally {
-      context ungetService serviceReference
     }
   }
 }

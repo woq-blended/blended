@@ -25,20 +25,25 @@ import akka.actor.{Props, ActorSystem}
 import akka.event.{LogSource, Logging}
 import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
-import de.woq.osgi.akka.modules.RichBundleContext
 import com.typesafe.config.{ConfigFactory, Config}
-import scala.concurrent.Await
 import java.io.File
-import scala.concurrent.duration._
+import de.woq.osgi.akka.system.osgi.internal.OSGIFacade
+import de.woq.osgi.akka.modules._
 
 class WoQActivator extends ActorSystemActivator {
 
-  def configure(context: BundleContext, system: ActorSystem) {
-    val richContext : RichBundleContext = context
+  def configure(osgiContext: BundleContext, system: ActorSystem) {
     val log = Logging(system, this)
 
-    system.actorOf(Props(ConfigLocator(System.getProperty("karaf.home") + "/etc")), configLocatorPath)
-    registerService(context, system)
+    log info "Creating Config Locator actor"
+    system.actorOf(Props(ConfigLocator(configDir(osgiContext))), configLocatorPath)
+
+    log info "Creating Akka OSGi Facade"
+    system.actorOf(Props[OSGIFacade], osgiFacadePath)
+
+    log info "Registering Actor System as Service."
+    registerService(osgiContext, system)
+
     log.info("ActorSystem [" + system.name + "] initialized." )
 
   }
@@ -46,15 +51,20 @@ class WoQActivator extends ActorSystemActivator {
   override def getActorSystemName(context: BundleContext): String = "WoQActorSystem"
 
   override def getActorSystemConfiguration(context: BundleContext): Config = {
-    val richContext : RichBundleContext = context
+    ConfigFactory.parseFile(new File(configDir(context), "application.conf"))
+  }
+  
+  private[WoQActivator] def configDir(implicit osgiContext : BundleContext) = {
 
-    val configDir = Await.result(
-      richContext.findService(classOf[ContainerContext]) andApply { ctContext =>
-        ctContext.getContainerConfigDirectory
-      }, 1.second
-    )
+    val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
 
-    ConfigFactory.parseFile(new File(configDir.get, "application.conf"))
+    (osgiContext findService(classOf[ContainerContext])) match {
+      case Some(svcRef) => svcRef invokeService { ctx => ctx.getContainerConfigDirectory } match {
+        case Some(s)  => s
+        case _ => defaultConfigDir
+      }
+      case _ => defaultConfigDir
+    }
   }
 
 }

@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.system.osgi.internal
 
-object WOQAkkaConstants {
+import akka.actor.{Actor, ActorLogging}
+import org.osgi.framework.BundleContext
 
-  val osgiFacadePath = "OSGI"
-  val configLocatorPath = "ConfigLocator"
+trait BundleContextProvider {
+  def bundleContext : BundleContext
+}
+
+object OSGIFacade {
+
+  def apply(osgiContext : BundleContext) = new OSGIFacade with BundleContextProvider {
+    override def bundleContext = osgiContext
+  }
+}
+
+class OSGIFacade extends Actor with ActorLogging { this : BundleContextProvider =>
+  override def receive = Actor.emptyBehavior
 }

@@ -16,11 +16,9 @@
  */
 package de.woq.osgi.akka.modules
 
-import org.osgi.framework.{BundleContext, ServiceRegistration}
+import org.osgi.framework.{ServiceReference, BundleContext, ServiceRegistration}
 
 class RichBundleContext(context: BundleContext) {
-
-  import scala.concurrent.ExecutionContext.Implicits.global
 
   assert(context != null, "The BundleContext must not be null!")
 
@@ -50,20 +48,15 @@ class RichBundleContext(context: BundleContext) {
    * @param interface The service interface for which a ServiceFinder is to be created; must not be null!
    * @return A ServiceFinder for the given service interface
    */
-  def findService[I <: AnyRef](interface: Class[I]): ServiceFinder[I] = {
+  def findService[I <: AnyRef](interface: Class[I]): Option[ServiceReference[I]] = {
     require(interface != null, "The service interface must not be null!")
-    new ServiceFinder(interface, context)
-  }
 
-  /**
-   * Starting point for finding all services with the given service interface.
-   * @param interface The service interface for which a ServicesFinder is to be created; must not be null!
-   * @return A ServiceFinders for the given service interface
-   */
-//  def findServices[I <: AnyRef](interface: Class[I]): ServicesFinder[I] = {
-//    require(interface != null, "The service interface must not be null!")
-//    new ServicesFinder(interface, context)
-//  }
+    logger debug s"Locating service for interface [${interface.getSimpleName}]."
+    (context getServiceReference interface) match {
+      case null => None
+      case svcRef : ServiceReference[I] => Some(svcRef)
+    }
+  }
 
   /**
    * Starting point for watching services with the given service interface.

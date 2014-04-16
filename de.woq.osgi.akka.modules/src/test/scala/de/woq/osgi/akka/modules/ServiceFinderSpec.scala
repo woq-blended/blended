@@ -27,65 +27,76 @@ import scala.concurrent.duration._
 
 class ServiceFinderSpec extends WordSpec with Matchers with MockitoSugar with AssertionsForJUnit {
 
-  "Calling ServiceFinder.andApply" should {
+  "Calling findService" should {
 
     val es = Executors.newFixedThreadPool(2)
     implicit val ec = ExecutionContext.fromExecutorService(es)
 
-    "throw an IllegalArgumentException given a null function go be applied to the service" in {
+    "throw an IllegalArgumentException when called with a null interafce" in {
       val context = mock[BundleContext]
-      val interface = classOf[TestInterface1]
+      val richContext : RichBundleContext = context
 
       intercept[IllegalArgumentException] {
-        new ServiceFinder(interface, context) andApply (null: (TestInterface1 => Any))
+        richContext.findService(null)
       }
     }
 
     "return None when there is no requested service reference available" in {
       val context = mock[BundleContext]
       val interface = classOf[TestInterface1]
+      val richContext : RichBundleContext = context
 
-      when(context.getServiceReference(interface.getName)) thenReturn (null)
+      when(context.getServiceReference(interface)) thenReturn (null)
 
-      // This creates a future executed in it's own thread
-      val serviceFinder = new ServiceFinder(interface, context) andApply(_.name)
+      val svcRef = richContext.findService(interface)
 
-      Await.result(serviceFinder, 1.seconds) should be (None)
+      svcRef should be (None)
     }
 
-    "return None when there is a requested service reference available but no service" in {
+    "return Some when we have a service reference exists" in {
       val context = mock[BundleContext]
       val interface = classOf[TestInterface1]
       val serviceReference : ServiceReference[TestInterface1] = mock[ServiceReference[TestInterface1]]
+      val richContext : RichBundleContext = context
 
-      when((context.getServiceReference(classOf[TestInterface1]))) thenReturn (serviceReference, Nil: _*)
-      when(context.getService(serviceReference)) thenReturn (null)
+      when(context.getServiceReference(interface)) thenReturn (serviceReference)
 
-      // This creates a future executed in it's own thread
-      val serviceFinder = new ServiceFinder(interface, context) andApply(_.name)
-
-      // YES, await is bad, but we are in test world here
-      Await.result(serviceFinder, 1.seconds) should be (None)
-
-      // Make sure that we have released the sevice reference after the invocation
-      verify(context).ungetService(serviceReference)
+      (richContext.findService(interface)) should be (Some(serviceReference))
     }
-
-    "return Some when there is a requested service reference with service available" in {
-      val context = mock[BundleContext]
-      val interface = classOf[TestInterface1]
-      val serviceReference : ServiceReference[TestInterface1] = mock[ServiceReference[TestInterface1]]
-      val service = mock[TestInterface1]
-
-      when((context.getServiceReference(classOf[TestInterface1]))) thenReturn (serviceReference, Nil: _*)
-      when(context.getService(serviceReference)) thenReturn (service)
-      when(service.name) thenReturn ("YES")
-
-      // This creates a future executed in it's own thread
-      val serviceFinder = new ServiceFinder(interface, context) andApply(_.name)
-
-      Await.result(serviceFinder, 1.seconds) should be (Some("YES"))
-      verify(context).ungetService(serviceReference)
-    }
+//
+//    "return None when there is a requested service reference available but no service" in {
+//      val context = mock[BundleContext]
+//      val interface = classOf[TestInterface1]
+//      val serviceReference : ServiceReference[TestInterface1] = mock[ServiceReference[TestInterface1]]
+//
+//      when((context.getServiceReference(classOf[TestInterface1]))) thenReturn (serviceReference, Nil: _*)
+//      when(context.getService(serviceReference)) thenReturn (null)
+//
+//      // This creates a future executed in it's own thread
+//      val serviceFinder = new ServiceFinder(interface, context) andApply(_.name)
+//
+//      // YES, await is bad, but we are in test world here
+//      Await.result(serviceFinder, 1.seconds) should be (None)
+//
+//      // Make sure that we have released the sevice reference after the invocation
+//      verify(context).ungetService(serviceReference)
+//    }
+//
+//    "return Some when there is a requested service reference with service available" in {
+//      val context = mock[BundleContext]
+//      val interface = classOf[TestInterface1]
+//      val serviceReference : ServiceReference[TestInterface1] = mock[ServiceReference[TestInterface1]]
+//      val service = mock[TestInterface1]
+//
+//      when((context.getServiceReference(classOf[TestInterface1]))) thenReturn (serviceReference, Nil: _*)
+//      when(context.getService(serviceReference)) thenReturn (service)
+//      when(service.name) thenReturn ("YES")
+//
+//      // This creates a future executed in it's own thread
+//      val serviceFinder = new ServiceFinder(interface, context) andApply(_.name)
+//
+//      Await.result(serviceFinder, 1.seconds) should be (Some("YES"))
+//      verify(context).ungetService(serviceReference)
+//    }
   }
 }

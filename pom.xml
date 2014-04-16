@@ -86,6 +86,14 @@
       </modules>
     </profile>
 
+    <profile>
+
+      <id>itest</id>
+      <modules>
+        <module>de.woq.osgi.akka.itest</module>
+      </modules>
+    </profile>
+
   </profiles>
 
 </project>

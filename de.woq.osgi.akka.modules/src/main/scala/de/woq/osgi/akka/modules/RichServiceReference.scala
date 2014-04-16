@@ -16,11 +16,33 @@
  */
 package de.woq.osgi.akka.modules
 
-import org.osgi.framework.ServiceReference
+import org.osgi.framework.{BundleContext, ServiceReference}
 
 class RichServiceReference[I](serviceReference: ServiceReference[I]) {
 
   assert(serviceReference != null, "The ServiceReference must not be null!")
+
+  def invokeService[T](f: I => T)(implicit context: BundleContext) : Option[T] = {
+
+    assert(f != null, "The function to be applied to the service must not be null!")
+    assert(context != null, "The BundleContext must not be null!")
+
+    try {
+      context getService serviceReference match {
+        case null => {
+          logger debug "Could not get service for ServiceReference %s!".format(serviceReference)
+          None
+        }
+        case service => {
+          val result = Some(f(service.asInstanceOf[I]))
+          logger debug "Invoked service for  ServiceReference %s!".format(serviceReference)
+          result
+        }
+      }
+    } finally {
+      context ungetService serviceReference
+    }
+  }
 
   /**
    * Gives access to service properties as Props (alias for Scala Map[String, Any]).

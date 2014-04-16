@@ -37,8 +37,47 @@
 
   <artifactId>de.woq.osgi.java.karaf.central</artifactId>
 
+  <dependencies>
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+      <version>${woq.container.version}</version>
+      <classifier>assembly</classifier>
+      <type>linux-nojre</type>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+      <version>${woq.container.version}</version>
+      <classifier>assembly</classifier>
+      <type>windows-nojre</type>
+    </dependency>
+  </dependencies>
+
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.karaf.tooling</groupId>
         <artifactId>features-maven-plugin</artifactId>

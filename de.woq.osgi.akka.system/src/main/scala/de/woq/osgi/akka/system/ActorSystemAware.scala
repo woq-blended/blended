@@ -21,7 +21,7 @@ package de.woq.osgi.akka.system
 
 import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{Props, ActorRef, ActorSystem}
-import de.woq.osgi.akka.modules.RichBundleContext
+import de.woq.osgi.akka.modules._
 
 case class InitializeBundle(context: BundleContext)
 
@@ -31,21 +31,26 @@ trait BundleName {
 
 trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
-  var bundleContextRef : RichBundleContext = _
+  var bundleContextRef : BundleContext = _
   var actorRef         : ActorRef = _
 
-  def bundleContext : RichBundleContext = bundleContextRef
+  def bundleContext = bundleContextRef
   def bundleActor : ActorRef = actorRef
-
   def prepareBundleActor() : Props
 
-  final def start(context: BundleContext) {
-    this.bundleContextRef = context
+  implicit val osgiCcontext = bundleContext
 
-    bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
-      actorRef = actorSystem.actorOf(prepareBundleActor(), bundleSymbolicName)
-      actorRef ! InitializeBundle(context)
-      postStartActor()
+  final def start(osgiBundleContext: BundleContext) {
+    this.bundleContextRef = osgiBundleContext
+
+    bundleContext.findService(classOf[ActorSystem]) match {
+      case Some(svcReference) => svcReference invokeService { actorSystem =>
+        actorRef = actorSystem.actorOf(prepareBundleActor(), bundleSymbolicName)
+        actorRef ! InitializeBundle(bundleContext)
+        postStartActor()
+      }
+      // TODO : handle this
+      case _ =>
     }
   }
 
@@ -53,9 +58,13 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
   final def stop(context: BundleContext) {
 
-    bundleContext.findService(classOf[ActorSystem]).andApply { actorSystem =>
-      preStopActor()
-      actorSystem.stop(bundleActor)
+    bundleContext.findService(classOf[ActorSystem]) match {
+      case Some(svcReference) => svcReference.invokeService { actorSystem =>
+        preStopActor()
+        actorSystem.stop(bundleActor)
+      }
+      // TODO : handle this
+      case _ =>
     }
   }
 
