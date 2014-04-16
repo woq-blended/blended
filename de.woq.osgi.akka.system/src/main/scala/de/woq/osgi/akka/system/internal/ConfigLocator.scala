@@ -30,7 +30,20 @@ trait ConfigDirectoryProvider {
 
 class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvider =>
 
-  def receive: Actor.Receive = {
+  case object Initialize
+
+  override def preStart() { self ! Initialize }
+
+  def receive = initializing
+
+  def initializing : Receive = {
+    case Initialize => {
+      log info s"Initializing ConfigLocator with directory [${configDirectory}]."
+      context.become(working)
+    }
+  }
+
+  def working: Actor.Receive = {
 
     case ConfigLocatorRequest(id) => {
       

@@ -7,4 +7,6 @@ Bundle-SymbolicName:\
 Bundle-Activator:\
   de.woq.osgi.akka.system.internal.WoQActivator
 
-Import-Package: *
+Import-Package: \
+  akka.event.slf4j,\
+  *

@@ -43,19 +43,23 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
 
   def initializing: Receive = {
     case InitializeBundle(bundleContext) => {
+      log info "Initializing Management Reporter"
       context.become(working(bundleContext))
     }
   }
 
   def working(implicit osgiContext: BundleContext) : Receive = {
 
-    case Tick => (osgiContext.findService(classOf[ContainerIdentifierService])) match {
-        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) } match {
+    case Tick => {
+      log info "Performing report"
+      (osgiContext.findService(classOf[ContainerIdentifierService])) match {
+        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvcRef.properties.toMap) } match {
           case info : ContainerInfo => self ! info
           case _ =>
         }
         case _ =>
       }
+    }
 
     case info : ContainerInfo => log info s"$info"
   }
