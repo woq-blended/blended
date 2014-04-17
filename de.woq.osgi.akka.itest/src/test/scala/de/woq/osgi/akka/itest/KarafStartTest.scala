@@ -20,11 +20,15 @@ import org.junit.runner.RunWith
 import org.ops4j.pax.exam.junit.PaxExam
 import org.scalatest.junit.{AssertionsForJUnit, JUnitSuite}
 import org.scalatest.Matchers
-import org.junit.Test
+import org.junit.{Before, Test}
 import org.ops4j.pax.exam.{Option => PaxOption, Configuration}
 import akka.actor.ActorSystem
 import javax.inject.Inject
 import org.ops4j.pax.exam.CoreOptions._
+import akka.testkit.TestProbe
+import akka.event.Logging.Info
+import de.woq.osgi.java.mgmt_core.ContainerInfo
+import org.slf4j.LoggerFactory
 
 @RunWith(classOf[PaxExam])
 class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
@@ -50,12 +54,24 @@ class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
   @Inject
   var system : ActorSystem = _
 
+  var testProbe : TestProbe = _
+
+  @Before
+  def setupTestkit() {
+    testProbe = new TestProbe(system)
+    system.eventStream.subscribe(testProbe.ref, classOf[Info])
+  }
+
   @Configuration
   def config : Array[PaxOption] = Array(testOptions.karafOptionsWithTestBundles())
 
   @Test
   def karafStartTest() {
     system should not be (null)
+
+    testProbe.fishForMessage() {
+      case Info(_, _, m) => m.toString.startsWith(classOf[ContainerInfo].getSimpleName)
+    }
   }
 
 }

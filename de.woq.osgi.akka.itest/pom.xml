@@ -35,6 +35,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.karaf.features</artifactId>
       <version>${project.version}</version>
       <classifier>features</classifier>
