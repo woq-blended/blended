@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, WoQ - Way of Quality UG(mbH)
+ * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import org.ops4j.pax.exam.CoreOptions._
 import akka.testkit.TestProbe
 import akka.event.Logging.Info
 import de.woq.osgi.java.mgmt_core.ContainerInfo
-import org.slf4j.LoggerFactory
 
 @RunWith(classOf[PaxExam])
 class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {

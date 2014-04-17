@@ -5,4 +5,7 @@ target
 felix-cache
 *.log
 de.woq.osgi.java.itest/common/
+*.log
+*.aux
+*.backup
 

@@ -1,17 +1,9 @@
-package de.woq.osgi.akka.modules
-
-import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.{Matchers, WordSpec}
-
 /*
- * Copyright 2014, WoQ - Way of Quality UG(mbH)
+ * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
  *
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -21,6 +13,11 @@ import org.scalatest.{Matchers, WordSpec}
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.woq.osgi.akka.modules
+
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.{Matchers, WordSpec}
 
 class InterfaceExtractorSpec extends WordSpec with Matchers with AssertionsForJUnit {
 

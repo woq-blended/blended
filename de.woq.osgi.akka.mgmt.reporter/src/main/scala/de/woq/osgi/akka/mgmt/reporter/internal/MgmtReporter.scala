@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, WoQ - Way of Quality UG(mbH)
+ * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,8 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
   implicit val executionContext = context.dispatcher
   implicit val timeout = Timeout(5.seconds)
 
-  val ticker : Cancellable = context.system.scheduler.schedule(100.milliseconds, 1.seconds, self, Tick)
+  val ticker : Cancellable = 
+    context.system.scheduler.schedule(100.milliseconds, 1.seconds, self, Tick)
 
   def initializing = LoggingReceive {
     case InitializeBundle(bundleContext) => {
@@ -54,7 +55,9 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
     case Tick => {
       log info "Performing report"
       (osgiContext.findService(classOf[ContainerIdentifierService])) match {
-        case Some(idSvcRef) => idSvcRef invokeService { idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) } match {
+        case Some(idSvcRef) => idSvcRef invokeService { 
+          idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) 
+        } match {
           case Some(info) => self ! info
           case _ =>
         }

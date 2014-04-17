@@ -1,7 +1,0 @@
-\documentclass[11pt,a4paper,draft,titlepage,oneside,twoside]{report}
-\author{Andreas Gies}
-\title{WoQ OSGi User's and Developer' guide}
-\begin{document}
-\maketitle
-My cool OSGi book 
-\end{document}

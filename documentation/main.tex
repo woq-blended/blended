@@ -1,4 +1,43 @@
-\documentclass[11pt,a4paper,draft,titlepage,oneside,twoside]{report}
+\documentclass[11pt,a4paper,titlepage,twoside]{report}
+\usepackage{listings}
+
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{blue}{rgb}{0,0,0.8}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{lightgrey}{rgb}{0.9,0.9,0.9}
+
+\lstdefinelanguage{Scala}%
+  {morekeywords={abstract,case,catch,class,def,% 
+   do,else,extends,false,final,finally,%
+   for,if,implicit,import,lazy,match,mixin,%
+   new,null,object,override,package,% 
+   private,protected,requires,return,sealed,% 
+   super,this,trait,true,try,% 
+   type,val,var,while,with,yield},%+
+   otherkeywords={=,=>,<-,<\%,<:,>:,\#,@},%
+   sensitive,%
+   morecomment=[l]//,%
+   morecomment=[n]{/*}{*/},%
+   morestring=[b]",%
+   morestring=[b]',%
+   morestring=[b]""",%
+  }[keywords,comments,strings]%
+
+\lstset{
+  language=Scala,
+  frame=tb, 
+  basicstyle={\tiny\ttfamily},
+  commentstyle=\color{dkgreen},
+  keywordstyle=\color{blue},
+  stringstyle=\color{mauve},
+  numbers=left, 
+  stepnumber=3, 
+  numberstyle=\tiny, 
+  numbersep=5pt,
+  backgroundcolor=\color{lightgrey}
+}
+
 \title{WoQ OSGi User's and Developer' guide}
 \author{Andreas Gies\\
   Way of Quality UG(haftungsbeschr\"{a}nkt)\\
@@ -9,4 +48,6 @@
 \renewcommand{\abstractname}{Executive Summary}
 \begin{abstract}
 \end{abstract}
+\input{buildsystem}
+\input{akka}
 \end{document}
