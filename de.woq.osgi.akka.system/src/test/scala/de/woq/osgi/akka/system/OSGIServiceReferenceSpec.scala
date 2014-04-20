@@ -16,9 +16,43 @@
 
 package de.woq.osgi.akka.system
 
-/**
- * Created by andreas on 20/04/14.
- */
-class OSGIServiceReferenceSpec {
+import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
+import akka.actor.{Props, ActorSystem}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.mock.MockitoSugar
+import de.woq.osgi.akka.system.osgi.internal.OSGIServiceReference
+import de.woq.osgi.akka.system.osgi.OSGIProtocol.{UngetServiceReference, ServiceResult, InvokeService}
+import org.slf4j.LoggerFactory
+import org.mockito.Mockito.verify
 
+class OSGIServiceReferenceSpec extends TestKit(ActorSystem("OSGIServiceRef"))
+  with WordSpecLike
+  with Matchers
+  with AssertionsForJUnit
+  with BeforeAndAfterAll
+  with ImplicitSender {
+
+  val log = LoggerFactory.getLogger(classOf[OSGIServiceReferenceSpec])
+
+  "OSGIServiceReference" should {
+
+    "allow to invoke the underlying Service" in new TestSetup with MockitoSugar {
+
+      val testActor = TestActorRef(Props(OSGIServiceReference(svcRef)))
+      testActor ! InvokeService { svc: TestInterface1 => svc.name }
+
+      expectMsgAllClassOf(classOf[ServiceResult[String]]) foreach { m=>
+        m.result should not be (None)
+        m.result.get should be ("Andreas")
+      }
+    }
+
+    "allow to unget the underlying service reference" in new TestSetup with MockitoSugar {
+      val testActor = TestActorRef(Props(OSGIServiceReference(svcRef)))
+      testActor ! UngetServiceReference
+
+      verify(osgiContext).ungetService(svcRef)
+    }
+  }
 }

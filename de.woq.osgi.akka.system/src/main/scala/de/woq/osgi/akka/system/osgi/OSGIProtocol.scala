@@ -20,6 +20,8 @@ import akka.actor.ActorRef
 
 object OSGIProtocol {
 
+  type InvocationType[I <: AnyRef, T <: AnyRef] = (I => T)
+
   // This encapsulates a request to retrieve a service reference from the Bundle Context
   case class GetService(interface : Class[_ <: AnyRef])
 

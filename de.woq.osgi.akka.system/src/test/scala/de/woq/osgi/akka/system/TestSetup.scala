@@ -16,7 +16,7 @@
 
 package de.woq.osgi.akka.system
 
-import org.osgi.framework.{ServiceReference, BundleContext}
+import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
 import de.woq.osgi.java.container.context.ContainerContext
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
@@ -29,11 +29,13 @@ trait TestSetup { this : MockitoSugar =>
   val svcRef = mock[ServiceReference[TestInterface1]]
   val ctContext = mock[ContainerContext]
   val ctContextRef = mock[ServiceReference[ContainerContext]]
+  val bundle = mock[Bundle]
 
   when(osgiContext.getServiceReference(classOf[ContainerContext])) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
   when(ctContext.getContainerConfigDirectory) thenReturn (getClass.getResource("/").getPath)
-
+  when(svcRef.getBundle) thenReturn (bundle)
+  when(bundle.getBundleContext) thenReturn (osgiContext)
   when(osgiContext.getServiceReference(classOf[TestInterface1])) thenReturn(svcRef)
   when(osgiContext.getService(svcRef)) thenReturn(service)
   when(service.name) thenReturn("Andreas")

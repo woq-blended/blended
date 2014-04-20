@@ -30,11 +30,15 @@ object OSGIServiceReference {
 class OSGIServiceReference[I <: AnyRef](serviceRef : ServiceReference[I])
   extends Actor with ActorLogging { this : BundleContextProvider =>
   override def receive = LoggingReceive {
-    case UngetServiceReference => bundleContext.ungetService(serviceRef)
+    case UngetServiceReference => {
+      log debug s"Ungetting Service Reference ${serviceRef.toString}"
+      bundleContext.ungetService(serviceRef)
+    }
 
-    case InvokeService(f) => sender ! (bundleContext.getService(serviceRef) match {
+    case InvokeService(f : InvocationType[I, _])=> sender ! ( bundleContext.getService(serviceRef) match {
       case null => ServiceResult(None)
-      case svc => ServiceResult(None)
+      case svc => ServiceResult(Some(f(svc)))
+
     })
   }
 }
