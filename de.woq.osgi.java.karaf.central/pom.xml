@@ -63,8 +63,8 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
-            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
+            <descriptor>${project.build.outputDirectory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.outputDirectory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
           </descriptors>
         </configuration>
       </plugin>
