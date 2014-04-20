@@ -14,21 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi
+package de.woq.osgi.akka.system
 
-import akka.actor.ActorRef
+/**
+ * Created by andreas on 20/04/14.
+ */
+class OSGIServiceReferenceSpec {
 
-object OSGIProtocol {
-
-  // This encapsulates a request to retrieve a service reference from the Bundle Context
-  case class GetService(interface : Class[_ <: AnyRef])
-
-  // This encapsulates a OSGI Reference wrapped in an Actor
-  case class Service(service: ActorRef)
-
-  case class InvokeService[I <: AnyRef,T <: AnyRef](f : I => T)
-
-  case class ServiceResult[T <: AnyRef](result : Option[T])
-
-  case object UngetServiceReference
 }

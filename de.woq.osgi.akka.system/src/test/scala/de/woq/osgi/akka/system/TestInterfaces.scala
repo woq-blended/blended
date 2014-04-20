@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi
+package de.woq.osgi.akka.system
 
-import akka.actor.ActorRef
+class TestClass1
 
-object OSGIProtocol {
+class TestClass2 extends TestInterface2
 
-  // This encapsulates a request to retrieve a service reference from the Bundle Context
-  case class GetService(interface : Class[_ <: AnyRef])
+class TestClass3 extends TestInterface2 with TestInterface3
 
-  // This encapsulates a OSGI Reference wrapped in an Actor
-  case class Service(service: ActorRef)
+class TestClass4 extends TestInterface4
 
-  case class InvokeService[I <: AnyRef,T <: AnyRef](f : I => T)
+trait TestInterface1 {
+  def name = getClass.getName
+}
 
-  case class ServiceResult[T <: AnyRef](result : Option[T])
+trait TestInterface2
+trait TestInterface3
+trait TestInterface4 extends TestInterface4a
+trait TestInterface4a extends TestInterface4b
+trait TestInterface4b extends TestInterface4c
+trait TestInterface4c
 
-  case object UngetServiceReference
+class TestClass5 extends TestInterface2 { this: TestInterface1 =>
 }

@@ -16,16 +16,17 @@
 
 package de.woq.osgi.akka.system.internal
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{Stash, ActorLogging, Actor}
 import de.woq.osgi.akka.system.{ConfigLocatorResponse, ConfigLocatorRequest}
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import java.io.File
+import akka.event.LoggingReceive
 
 trait ConfigDirectoryProvider {
   def configDirectory : String
 }
 
-class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvider =>
+class ConfigLocator extends Actor with ActorLogging with Stash { this: ConfigDirectoryProvider =>
 
   case object Initialize
 
@@ -33,14 +34,16 @@ class ConfigLocator extends Actor with ActorLogging { this: ConfigDirectoryProvi
 
   def receive = initializing
 
-  def initializing : Receive = {
+  def initializing : Receive = LoggingReceive {
     case Initialize => {
       log info s"Initializing ConfigLocator with directory [${configDirectory}]."
+      unstashAll()
       context.become(working)
     }
+    case _ => stash()
   }
 
-  def working: Actor.Receive = {
+  def working: Actor.Receive = LoggingReceive {
 
     case ConfigLocatorRequest(id) => {
       

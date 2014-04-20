@@ -32,11 +32,8 @@ class WoQActivator extends ActorSystemActivator {
   def configure(osgiContext: BundleContext, system: ActorSystem) {
     val log = Logging(system, this)
 
-    log info "Creating Config Locator actor"
-    system.actorOf(Props(ConfigLocator(configDir(osgiContext))), configLocatorPath)
-
     log info "Creating Akka OSGi Facade"
-    system.actorOf(Props[OSGIFacade], osgiFacadePath)
+    system.actorOf(Props(OSGIFacade(osgiContext)), osgiFacadePath)
 
     log info "Registering Actor System as Service."
     registerService(osgiContext, system)

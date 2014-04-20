@@ -14,21 +14,26 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi
+package de.woq.osgi.java.testsupport
 
-import akka.actor.ActorRef
+import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.ActorSystem
+import java.util.concurrent.atomic.AtomicInteger
 
-object OSGIProtocol {
+object TestActorSys {
+  val uniqueId = new AtomicInteger(0)
+}
 
-  // This encapsulates a request to retrieve a service reference from the Bundle Context
-  case class GetService(interface : Class[_ <: AnyRef])
+class TestActorSys(name : String)
+  extends TestKit(ActorSystem(name))
+  with ImplicitSender {
 
-  // This encapsulates a OSGI Reference wrapped in an Actor
-  case class Service(service: ActorRef)
+  def this() = this("TestSystem%05d".format(TestActorSys.uniqueId.incrementAndGet()))
 
-  case class InvokeService[I <: AnyRef,T <: AnyRef](f : I => T)
+  def shutdown() { system.shutdown() }
 
-  case class ServiceResult[T <: AnyRef](result : Option[T])
-
-  case object UngetServiceReference
+  def apply(block : Unit) {
+    try block
+    finally shutdown()
+  }
 }

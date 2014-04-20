@@ -40,26 +40,27 @@ class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFacto
   with BeforeAndAfterAll
   with ImplicitSender {
 
+  trait TestSetup {
+    def locator = TestActorRef[TestConfigLocator]
+  }
+
   "ConfigLocator" should {
 
-    "respond with a config object read from a file" in {
-      val locator = TestActorRef[TestConfigLocator]
+    "respond with a config object read from a file" in new TestSetup {
       locator ! ConfigLocatorRequest("foo")
       expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
         m.config.getString("bar") should be ("YES")
       }
     }
 
-    "fall back to the actor system config if no file is found" in {
-      val locator = TestActorRef[TestConfigLocator]
+    "fall back to the actor system config if no file is found" in new TestSetup {
       locator ! ConfigLocatorRequest("bar")
       expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
         m.config.getString("bar") should be ("NO")
       }
     }
 
-    "respond with an empty config object if no file is found and the actor sys doesn't contain the config" in {
-      val locator = TestActorRef[TestConfigLocator]
+    "respond with an empty config object if no file is found and the actor sys doesn't contain the config" in new TestSetup {
       locator ! ConfigLocatorRequest("nonsense")
       expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
         m.config.entrySet should have size(0)
