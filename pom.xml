@@ -73,7 +73,6 @@
 
         <module>de.woq.osgi.java.karaf.features</module>
         <module>de.woq.osgi.java.karaf.branding</module>
-        <module>de.woq.osgi.java.karaf.central</module>
 
         <module>de.woq.osgi.akka.modules</module>
         <module>de.woq.osgi.akka.system</module>
@@ -88,10 +87,16 @@
     </profile>
 
     <profile>
-
       <id>itest</id>
       <modules>
         <module>de.woq.osgi.akka.itest</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>assembly</id>
+      <modules>
+        <module>de.woq.osgi.java.karaf.central</module>
       </modules>
     </profile>
 
