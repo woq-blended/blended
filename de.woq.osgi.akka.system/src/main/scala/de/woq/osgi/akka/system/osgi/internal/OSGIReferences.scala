@@ -16,11 +16,14 @@
 
 package de.woq.osgi.akka.system.osgi.internal
 
-import akka.actor.{Props, ActorLogging, Actor}
+import akka.actor._
 import de.woq.osgi.akka.system.osgi.OSGIProtocol
 import org.osgi.framework.BundleContext
 import de.woq.osgi.akka.modules._
 import akka.event.LoggingReceive
+import scala.Some
+import akka.actor.Props
+import akka.actor.SupervisorStrategy.Stop
 
 object OSGIReferences {
 
@@ -30,6 +33,11 @@ object OSGIReferences {
 }
 
 class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvider =>
+
+  override def supervisorStrategy = OneForOneStrategy() {
+    case _ => Stop
+  }
+
   override def receive = LoggingReceive {
     case OSGIFacade.CreateReference(clazz) => {
       bundleContext findService(clazz) match {

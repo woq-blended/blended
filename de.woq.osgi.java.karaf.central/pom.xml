@@ -87,10 +87,18 @@
             <descriptor>mvn:${project.groupId}/${project.groupId}.karaf.features/${project.version}/xml/features</descriptor>
           </descriptors>
           <features>
+            <feature>config</feature>
+            <feature>ssh</feature>
+            <feature>management</feature>
+            <feature>kar</feature>
+            <feature>scr</feature>
+            <feature>http</feature>
+            <feature>http-whiteboard</feature>
             <feature>war</feature>
             <feature>woq-camel</feature>
             <feature>woq-activemq-broker</feature>
             <feature>hawtio</feature>
+            <feature>woq-akka-system</feature>
           </features>
           <repository>target/repository</repository>
         </configuration>
