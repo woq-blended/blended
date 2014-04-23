@@ -8,4 +8,6 @@ de.woq.osgi.java.itest/common/
 *.log
 *.aux
 *.backup
+*~
+*.pdf
 
