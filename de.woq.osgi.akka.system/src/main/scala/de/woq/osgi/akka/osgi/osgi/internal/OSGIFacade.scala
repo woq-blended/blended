@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi.internal
+package de.woq.osgi.akka.osgi.osgi.internal
 
 import akka.actor.{ActorRef, Props, Actor, ActorLogging}
 import org.osgi.framework.{ServiceReference, BundleContext}
 import de.woq.osgi.akka.modules._
 import akka.util.Timeout
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.internal.ConfigLocator
-import de.woq.osgi.akka.system.WOQAkkaConstants._
-import de.woq.osgi.akka.system.osgi.OSGIProtocol.GetService
+import de.woq.osgi.akka.osgi.internal.ConfigLocator
+import de.woq.osgi.akka.osgi.WOQAkkaConstants._
+import de.woq.osgi.akka.osgi.osgi.OSGIProtocol.GetService
 import scala.Some
 import de.woq.osgi.java.container.context.ContainerContext
-import de.woq.osgi.akka.system.ConfigLocatorRequest
+import de.woq.osgi.akka.osgi.ConfigLocatorRequest
 import akka.event.LoggingReceive
 
 object OSGIFacade {
@@ -35,7 +35,7 @@ object OSGIFacade {
   case class CreateReference[I <: AnyRef](clazz : Class[I])
 
   def apply(osgiContext : BundleContext) = new OSGIFacade with BundleContextProvider {
-    override def bundleContext = osgiContext
+    override val bundleContext = osgiContext
   }
 
   val referencesPath = "References"
@@ -52,7 +52,7 @@ class OSGIFacade extends Actor with ActorLogging { this : BundleContextProvider 
   override def preStart() {
 
     log info "Creating Config Locator actor"
-    configLocator = context.actorOf(Props(ConfigLocator(configDir(bundleContext))), configLocatorPath)
+    configLocator = context.actorOf(Props(ConfigLocator(configDir)), configLocatorPath)
 
     log info "Creating OSGI References handler"
     references = context.actorOf(Props(OSGIReferences(bundleContext)), OSGIFacade.referencesPath)
@@ -63,11 +63,11 @@ class OSGIFacade extends Actor with ActorLogging { this : BundleContextProvider 
     case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
   }
 
-  private[OSGIFacade] def configDir(implicit osgiContext : BundleContext) = {
+  private[OSGIFacade] def configDir = {
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
 
-    (osgiContext findService(classOf[ContainerContext])) match {
+    (bundleContext findService(classOf[ContainerContext])) match {
       case Some(svcRef) => svcRef invokeService { ctx => ctx.getContainerConfigDirectory } match {
         case Some(s)  => s
         case _ => defaultConfigDir

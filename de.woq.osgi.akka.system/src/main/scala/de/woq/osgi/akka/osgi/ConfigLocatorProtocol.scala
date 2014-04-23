@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.osgi
 
-object WOQAkkaConstants {
+import com.typesafe.config.Config
 
-  val osgiFacadePath = "OSGI"
-  val configLocatorPath = "ConfigLocator"
-}
+case class ConfigLocatorRequest(
+  bundleId: String
+)
+
+case class ConfigLocatorResponse(
+  bundleId: String,
+  config: Config
+)

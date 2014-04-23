@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi.internal
+package de.woq.osgi.akka.osgi.osgi.internal
 
 import akka.actor._
-import de.woq.osgi.akka.system.osgi.OSGIProtocol
+import de.woq.osgi.akka.osgi.osgi.OSGIProtocol
 import org.osgi.framework.BundleContext
 import de.woq.osgi.akka.modules._
 import akka.event.LoggingReceive
@@ -28,7 +28,7 @@ import akka.actor.SupervisorStrategy.Stop
 object OSGIReferences {
 
   def apply(osgiContext : BundleContext) = new OSGIReferences with BundleContextProvider {
-    override def bundleContext = osgiContext
+    override val bundleContext = osgiContext
   }
 }
 

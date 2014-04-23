@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.osgi
 
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.actor.ActorSystem
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers}
 import org.scalatest.junit.AssertionsForJUnit
-import de.woq.osgi.akka.system.internal.{ConfigDirectoryProvider, ConfigLocator}
+import de.woq.osgi.akka.osgi.internal.{ConfigDirectoryProvider, ConfigLocator}
 import com.typesafe.config.ConfigFactory
 
 class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {

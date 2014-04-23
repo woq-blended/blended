@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.osgi
 
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
 import akka.actor.{Props, ActorSystem}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.system.osgi.internal.OSGIServiceReference
-import de.woq.osgi.akka.system.osgi.OSGIProtocol.{UngetServiceReference, ServiceResult, InvokeService}
+import de.woq.osgi.akka.osgi.osgi.internal.OSGIServiceReference
+import de.woq.osgi.akka.osgi.osgi.OSGIProtocol.{UngetServiceReference, ServiceResult, InvokeService}
 import org.slf4j.LoggerFactory
 import org.mockito.Mockito.verify
 

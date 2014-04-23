@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi.internal
+package de.woq.osgi.akka.osgi.osgi.internal
 
 import akka.actor.{ActorLogging, Actor}
 import org.osgi.framework.ServiceReference
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.osgi.OSGIProtocol._
+import de.woq.osgi.akka.osgi.osgi.OSGIProtocol._
 
 object OSGIServiceReference {
   def apply[I <: AnyRef](ref : ServiceReference[I]) = new OSGIServiceReference(ref) with BundleContextProvider {
-    override def bundleContext = ref.getBundle.getBundleContext
+    override val bundleContext = ref.getBundle.getBundleContext
   }
 }
 
@@ -33,12 +33,12 @@ class OSGIServiceReference[I <: AnyRef](serviceRef : ServiceReference[I])
     case UngetServiceReference => {
       log debug s"Ungetting Service Reference ${serviceRef.toString}"
       bundleContext.ungetService(serviceRef)
+      context.stop(self)
     }
 
     case InvokeService(f : InvocationType[I, _])=> sender ! ( bundleContext.getService(serviceRef) match {
       case null => ServiceResult(None)
       case svc => ServiceResult(Some(f(svc)))
-
     })
   }
 }

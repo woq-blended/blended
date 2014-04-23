@@ -16,7 +16,7 @@
 
 package de.woq.osgi.akka.mgmt.reporter.internal
 
-import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
+import de.woq.osgi.akka.osgi.{BundleName, ActorSystemAware}
 import org.osgi.framework.BundleActivator
 import akka.actor.Props
 

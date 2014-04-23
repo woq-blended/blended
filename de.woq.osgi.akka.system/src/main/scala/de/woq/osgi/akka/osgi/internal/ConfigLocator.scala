@@ -14,16 +14,22 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.internal
+package de.woq.osgi.akka.osgi.internal
 
 import akka.actor.{Stash, ActorLogging, Actor}
-import de.woq.osgi.akka.system.{ConfigLocatorResponse, ConfigLocatorRequest}
+import de.woq.osgi.akka.osgi.{ConfigLocatorResponse, ConfigLocatorRequest}
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import java.io.File
 import akka.event.LoggingReceive
 
 trait ConfigDirectoryProvider {
   def configDirectory : String
+}
+
+object ConfigLocator {
+  def apply(configDir : String) = new ConfigLocator with ConfigDirectoryProvider {
+    override def configDirectory = configDir
+  }
 }
 
 class ConfigLocator extends Actor with ActorLogging with Stash { this: ConfigDirectoryProvider =>
@@ -64,8 +70,4 @@ class ConfigLocator extends Actor with ActorLogging with Stash { this: ConfigDir
   }
 }
 
-object ConfigLocator {
-  def apply(configDir : String) = new ConfigLocator with ConfigDirectoryProvider {
-    override def configDirectory = configDir
-  }
-}
+

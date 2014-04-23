@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.akka.osgi
 
 import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{Props, ActorRef, ActorSystem}

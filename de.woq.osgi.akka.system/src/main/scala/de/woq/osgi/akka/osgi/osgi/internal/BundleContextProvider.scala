@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi.internal
+package de.woq.osgi.akka.osgi.osgi.internal
 
 import org.osgi.framework.BundleContext
 
 trait BundleContextProvider {
-  def bundleContext : BundleContext
+  implicit val bundleContext : BundleContext
 }

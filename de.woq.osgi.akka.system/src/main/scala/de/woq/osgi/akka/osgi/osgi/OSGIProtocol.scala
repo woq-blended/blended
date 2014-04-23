@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.osgi
+package de.woq.osgi.akka.osgi.osgi
 
 import akka.actor.ActorRef
+import org.osgi.framework.ServiceReference
 
 object OSGIProtocol {
 
@@ -28,9 +29,19 @@ object OSGIProtocol {
   // This encapsulates a OSGI Reference wrapped in an Actor
   case class Service(service: ActorRef)
 
+  // This is sent to a Service Reference in order to invloke the underlying service
   case class InvokeService[I <: AnyRef,T <: AnyRef](f : I => T)
 
+  // Response for the Service Invocation
   case class ServiceResult[T <: AnyRef](result : Option[T])
 
+  // Release
   case object UngetServiceReference
+
+  // Notifiactions from a ServiceTracker
+  case class TrackerAddingService[I <: AnyRef](svcRef : ServiceReference[I], service : I)
+  case class TrackerModifiedService[I <: AnyRef](svcRef : ServiceReference[I], service : I)
+  case class TrackerRemovedService[I <: AnyRef](svcRef : ServiceReference[I], service : I)
+
+  case object TrackerClose
 }
