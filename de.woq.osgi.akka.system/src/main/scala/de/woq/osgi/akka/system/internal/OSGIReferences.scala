@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.osgi.internal
+package de.woq.osgi.akka.system.internal
 
 import akka.actor._
-import de.woq.osgi.akka.osgi.osgi.OSGIProtocol
 import org.osgi.framework.BundleContext
 import de.woq.osgi.akka.modules._
 import akka.event.LoggingReceive
-import scala.Some
-import akka.actor.Props
 import akka.actor.SupervisorStrategy.Stop
+import de.woq.osgi.akka.system.OSGIProtocol
+import scala.Some
+import akka.actor.OneForOneStrategy
 
 object OSGIReferences {
 

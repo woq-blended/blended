@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.internal
+package de.woq.osgi.akka.system.internal
 
 import akka.actor.{Stash, ActorLogging, Actor}
-import de.woq.osgi.akka.osgi.{ConfigLocatorResponse, ConfigLocatorRequest}
+import de.woq.osgi.akka.system.{ConfigLocatorResponse, ConfigLocatorRequest}
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import java.io.File
 import akka.event.LoggingReceive

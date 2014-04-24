@@ -19,7 +19,7 @@ package de.woq.osgi.spray.servlet
 import javax.servlet.{ ServletContextListener, ServletContextEvent }
 import akka.util.Switch
 import spray.servlet.{ConnectorSettings, Initializer}
-import de.woq.osgi.akka.osgi.BundleName
+import de.woq.osgi.akka.system.BundleName
 import com.typesafe.config.ConfigFactory
 import java.io.File
 import spray.http.Uri

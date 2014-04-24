@@ -19,8 +19,8 @@ package de.woq.osgi.akka.mgmt.rest.internal
 import spray.routing.HttpService
 import akka.actor.Actor
 import spray.http.MediaTypes._
-import de.woq.osgi.akka.osgi.{BundleName, ConfigLocatorResponse, ConfigLocatorRequest, InitializeBundle}
-import de.woq.osgi.akka.osgi.WOQAkkaConstants._
+import de.woq.osgi.akka.system.{BundleName, ConfigLocatorResponse, ConfigLocatorRequest, InitializeBundle}
+import de.woq.osgi.akka.system.WOQAkkaConstants._
 import akka.util.Timeout
 import scala.concurrent.duration._
 

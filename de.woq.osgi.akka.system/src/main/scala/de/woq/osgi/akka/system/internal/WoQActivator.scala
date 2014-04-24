@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.internal
+package de.woq.osgi.akka.system.internal
 
 import akka.osgi.ActorSystemActivator
 import org.osgi.framework.BundleContext
 import akka.actor.{Props, ActorSystem}
 import akka.event.{LogSource, Logging}
-import de.woq.osgi.akka.osgi.WOQAkkaConstants._
+import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
 import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
-import de.woq.osgi.akka.osgi.osgi.internal.OSGIFacade
 import de.woq.osgi.akka.modules._
 
 class WoQActivator extends ActorSystemActivator {

@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi
+package de.woq.osgi.akka.system
 
 import akka.actor.Props
 import org.scalatest.{WordSpec, BeforeAndAfterAll, Matchers}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.osgi.osgi.OSGIProtocol
 import de.woq.osgi.java.testsupport.TestActorSys
-import de.woq.osgi.akka.osgi.osgi.internal.OSGIFacade
+import de.woq.osgi.akka.system.internal.OSGIFacade
 
 class OSGIFacadeSpec extends WordSpec
   with Matchers

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.osgi.internal
+package de.woq.osgi.akka.system.internal
 
 import akka.actor.{ActorLogging, Actor}
 import org.osgi.framework.ServiceReference
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.osgi.osgi.OSGIProtocol._
+import de.woq.osgi.akka.system.OSGIProtocol
+import OSGIProtocol._
 
 object OSGIServiceReference {
   def apply[I <: AnyRef](ref : ServiceReference[I]) = new OSGIServiceReference(ref) with BundleContextProvider {

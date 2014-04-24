@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.mgmt.reporter.internal
 
 import akka.actor.{Cancellable, ActorLogging, Actor}
-import de.woq.osgi.akka.osgi.{InitializeBundle, BundleName}
+import de.woq.osgi.akka.system.{InitializeBundle, BundleName}
 import akka.util.Timeout
 import de.woq.osgi.java.container.id.ContainerIdentifierService
 import de.woq.osgi.java.mgmt_core.ContainerInfo

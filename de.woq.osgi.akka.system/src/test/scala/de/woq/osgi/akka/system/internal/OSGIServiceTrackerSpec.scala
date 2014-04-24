@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.internal
+package de.woq.osgi.akka.system.internal
 
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
 import akka.actor.{Terminated, ActorRef, Props, ActorSystem}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.osgi.{TestInterface1, TestSetup}
-import de.woq.osgi.akka.osgi.osgi.internal.{BundleContextProvider, TrackerAdapter, OSGIServiceTracker}
+import de.woq.osgi.akka.system.{OSGIProtocol, TestInterface1, TestSetup}
 import akka.event.Logging.Info
 import org.osgi.framework.BundleContext
-import de.woq.osgi.akka.osgi.osgi.OSGIProtocol.{TrackerClose, TrackerRemovedService, TrackerModifiedService, TrackerAddingService}
+import OSGIProtocol.{TrackerClose, TrackerRemovedService, TrackerModifiedService, TrackerAddingService}
 import de.woq.osgi.java.testsupport.TestActorSys
 
 class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))

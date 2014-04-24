@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.osgi.internal
+package de.woq.osgi.akka.system.internal
 
-import akka.actor.{ActorRef, Props, Actor, ActorLogging}
-import org.osgi.framework.{ServiceReference, BundleContext}
+import akka.actor._
+import org.osgi.framework.BundleContext
 import de.woq.osgi.akka.modules._
 import akka.util.Timeout
 import scala.concurrent.duration._
-import de.woq.osgi.akka.osgi.internal.ConfigLocator
-import de.woq.osgi.akka.osgi.WOQAkkaConstants._
-import de.woq.osgi.akka.osgi.osgi.OSGIProtocol.GetService
-import scala.Some
+import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
-import de.woq.osgi.akka.osgi.ConfigLocatorRequest
 import akka.event.LoggingReceive
+import de.woq.osgi.akka.system.OSGIProtocol.GetService
+import de.woq.osgi.akka.system.ConfigLocatorRequest
+import scala.Some
+import akka.actor.Props
 
 object OSGIFacade {
 

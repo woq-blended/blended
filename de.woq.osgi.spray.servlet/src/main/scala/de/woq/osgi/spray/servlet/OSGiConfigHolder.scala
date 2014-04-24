@@ -17,7 +17,7 @@
 package de.woq.osgi.spray.servlet
 
 import akka.actor.{ActorRef, ActorSystem}
-import de.woq.osgi.akka.osgi.{BundleName, ActorSystemAware}
+import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
 import de.woq.osgi.akka.modules._
 
 object OSGiConfigHolder {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi
+package de.woq.osgi.akka.system
 
 import com.typesafe.config.Config
 

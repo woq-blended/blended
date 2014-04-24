@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi.osgi
+package de.woq.osgi.akka.system
 
 import akka.actor.ActorRef
 import org.osgi.framework.ServiceReference

@@ -10,3 +10,6 @@ Bundle-Activator:\
 Import-Package: \
   akka.event.slf4j,\
   *
+
+Private-Package:\
+  ${bundle.namespace}.internal.*

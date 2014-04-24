@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.osgi
+package de.woq.osgi.akka.system
 
 import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
 import de.woq.osgi.java.container.context.ContainerContext
