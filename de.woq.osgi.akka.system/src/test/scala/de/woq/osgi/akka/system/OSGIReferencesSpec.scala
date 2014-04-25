@@ -16,30 +16,30 @@
 
 package de.woq.osgi.akka.system
 
-import akka.actor.Props
-import org.scalatest.{WordSpec, BeforeAndAfterAll, Matchers}
-import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.java.testsupport.TestActorSys
-import de.woq.osgi.akka.system.internal.OSGIFacade
+import org.scalatest.mock.MockitoSugar
+import akka.actor.Props
+import de.woq.osgi.akka.system.internal.{OSGIReferences, OSGIFacade}
+import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.junit.AssertionsForJUnit
 
-class OSGIFacadeSpec extends WordSpec
+class OSGIReferencesSpec extends WordSpec
   with Matchers
-  with AssertionsForJUnit
-  with BeforeAndAfterAll {
+  with AssertionsForJUnit {
 
-  "OSGIFacade" should {
+  "Allow to retrieve a service reference" in new TestActorSys with TestSetup with MockitoSugar {
+  }
 
-    "handle config requests correctly" in new TestActorSys with TestSetup with MockitoSugar {
+  "return the dead letter Actor for service lookups when the service does not appear in a timely manner" in
+    new TestActorSys with TestSetup with MockitoSugar {
+
       apply {
         val facade = system.actorOf(Props(OSGIFacade()), "facade")
-        facade ! ConfigLocatorRequest("foo")
-        expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
-          m.config.getString("bar") should be ("YES")
+        facade ! OSGIProtocol.GetService(classOf[TestInterface2])
+        expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+          m.service should be (system.deadLetters)
         }
       }
     }
 
-
-  }
 }

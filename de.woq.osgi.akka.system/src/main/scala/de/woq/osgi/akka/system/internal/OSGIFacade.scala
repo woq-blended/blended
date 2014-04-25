@@ -34,14 +34,12 @@ object OSGIFacade {
   // An internal message that trigers the creation of an Actor for an OSGI Service Reference
   case class CreateReference[I <: AnyRef](clazz : Class[I])
 
-  def apply(osgiContext : BundleContext) = new OSGIFacade with BundleContextProvider {
-    override val bundleContext = osgiContext
-  }
+  def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()
 
   val referencesPath = "References"
 }
 
-class OSGIFacade extends Actor with ActorLogging { this : BundleContextProvider =>
+class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
 
   implicit val timeout = Timeout(1.second)
   implicit val ec = context.dispatcher
@@ -55,7 +53,7 @@ class OSGIFacade extends Actor with ActorLogging { this : BundleContextProvider 
     configLocator = context.actorOf(Props(ConfigLocator(configDir)), configLocatorPath)
 
     log info "Creating OSGI References handler"
-    references = context.actorOf(Props(OSGIReferences(bundleContext)), OSGIFacade.referencesPath)
+    references = context.actorOf(Props(OSGIReferences()(bundleContext)), OSGIFacade.referencesPath)
   }
 
   override def receive = LoggingReceive {

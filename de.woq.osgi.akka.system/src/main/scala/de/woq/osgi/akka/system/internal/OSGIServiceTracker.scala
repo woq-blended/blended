@@ -27,7 +27,7 @@ trait TrackerAdapterProvider[I <: AnyRef] {
   def trackerAdapter(observer: ActorRef)(implicit osgiContext : BundleContext) : TrackerAdapter[I]
 }
 
-trait TrackerAdapter[I <: AnyRef] extends ServiceTrackerCustomizer[I, I] { this : BundleContextProvider =>
+trait TrackerAdapter[I <: AnyRef] extends ServiceTrackerCustomizer[I, I] {
 
   val trackerObserver : ActorRef
 
@@ -40,7 +40,7 @@ trait TrackerAdapter[I <: AnyRef] extends ServiceTrackerCustomizer[I, I] { this 
   }
 
   override def addingService(svcRef: ServiceReference[I]) = {
-    val svc = bundleContext.getService(svcRef)
+    val svc = svcRef.getBundle.getBundleContext.getService(svcRef)
     trackerObserver ! TrackerAddingService(svcRef, svc)
     svc
   }
@@ -98,4 +98,5 @@ class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef) exte
   override def preStart() {
     self ! Initialize
   }
+
 }

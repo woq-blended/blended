@@ -24,7 +24,8 @@ import org.scalatest.mock.MockitoSugar
 
 trait TestSetup { this : MockitoSugar =>
 
-  val osgiContext = mock[BundleContext]
+  implicit val osgiContext = mock[BundleContext]
+
   val service = mock[TestInterface1]
   val svcRef = mock[ServiceReference[TestInterface1]]
   val ctContext = mock[ContainerContext]

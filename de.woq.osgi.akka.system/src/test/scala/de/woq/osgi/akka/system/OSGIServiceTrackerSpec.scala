@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.internal
+package de.woq.osgi.akka.system
 
 import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
 import akka.actor.{Terminated, ActorRef, Props, ActorSystem}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.system.{OSGIProtocol, TestInterface1, TestSetup}
 import akka.event.Logging.Info
 import org.osgi.framework.BundleContext
 import OSGIProtocol.{TrackerClose, TrackerRemovedService, TrackerModifiedService, TrackerAddingService}
 import de.woq.osgi.java.testsupport.TestActorSys
+import de.woq.osgi.akka.system.internal.{OSGIServiceTracker, BundleContextProvider, TrackerAdapter}
 
 class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
   with WordSpecLike
@@ -38,12 +38,9 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
 
   "OSGIServiceTracker" should {
 
-    implicit val bundleContext = osgiContext
-
-    def testTrackerAdapter[I <: AnyRef](observer: ActorRef)(implicit osgiContext : BundleContext) =
-      new TrackerAdapter[I] with BundleContextProvider {
+    def testTrackerAdapter[I <: AnyRef](observer: ActorRef) =
+      new TrackerAdapter[I] {
         override val trackerObserver: ActorRef = observer
-        override implicit val bundleContext: BundleContext = osgiContext
       }
 
     "allow to setup an OSGI Servicetracker" in new TestActorSys() {

@@ -32,7 +32,7 @@ class WoQActivator extends ActorSystemActivator {
     val log = Logging(system, this)
 
     log info "Creating Akka OSGi Facade"
-    system.actorOf(Props(OSGIFacade(osgiContext)), osgiFacadePath)
+    system.actorOf(Props(OSGIFacade()(osgiContext)), osgiFacadePath)
 
     log info "Registering Actor System as Service."
     registerService(osgiContext, system)

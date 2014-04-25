@@ -25,32 +25,36 @@ import de.woq.osgi.akka.system.OSGIProtocol
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.OSGIProtocol.{TrackerAddingService, TrackerClose}
+import de.woq.osgi.akka.system.OSGIProtocol.{TrackerClose, TrackerAddingService}
 
 object OSGIReferences {
 
-  def apply()(implicit osgiContext : BundleContext) = new OSGIReferences with BundleContextProvider {
+  def apply[I <: AnyRef](adapter : Option[TrackerAdapter[I]] = None)(implicit osgiContext : BundleContext) = new OSGIReferences with BundleContextProvider {
     override val bundleContext = osgiContext
   }
 }
 
 object OfflineServiceTracker {
 
-  def apply(references : ActorRef)(implicit osgiContext : BundleContext) = new OfflineServiceTracker(references) with BundleContextProvider {
-    override implicit val bundleContext = osgiContext
-  }
+  def apply[I <: AnyRef](references : ActorRef, adapter : Option[TrackerAdapter[I]] = None)(implicit osgiContext : BundleContext) =
+    new OfflineServiceTracker[I](references, adapter)
 
   case class ReferenceAdded[I <: AnyRef](referenceFor: ActorRef, svcRef: ServiceReference[I])
 }
 
-class OfflineServiceTracker(references: ActorRef) extends Actor with ActorLogging { this : BundleContextProvider =>
+class OfflineServiceTracker[I <: AnyRef](references: ActorRef, adapter: Option[TrackerAdapter[I]])(implicit osgiContext : BundleContext) extends Actor with ActorLogging {
 
   def initializing = LoggingReceive {
-    case OSGIFacade.CreateReference(clazz) => {
+    case OSGIFacade.CreateReference(clazz) if clazz.isInstanceOf[Class[I]] => {
 
       val requestor = sender
       implicit val executionContext = context.dispatcher
-      val tracker = context.actorOf(Props(OSGIServiceTracker(clazz, self)))
+      val tracker = adapter match {
+        case None => context.actorOf(Props(OSGIServiceTracker[I](clazz.asInstanceOf[Class[I]], self)))
+        case Some(trackerAdapter) => context.actorOf(Props(OSGIServiceTracker[I](clazz.asInstanceOf[Class[I]], self, trackerAdapter)))
+      }
+
+      context.watch(tracker)
 
       val timer = context.system.scheduler.scheduleOnce(1.second, self, "timeout")
       context.become(waiting(requestor, tracker, timer))
@@ -60,13 +64,14 @@ class OfflineServiceTracker(references: ActorRef) extends Actor with ActorLoggin
   def waiting(requestor: ActorRef, tracker: ActorRef, timer: Cancellable) = LoggingReceive {
     case "timeout" => {
       requestor ! OSGIProtocol.Service(context.system.deadLetters)
-      context.stop(self)
+      tracker ! TrackerClose
     }
     case TrackerAddingService(svcRef, svc) => {
       references ! OfflineServiceTracker.ReferenceAdded(references, svcRef)
       timer.cancel()
-      context.stop(self)
+      tracker ! TrackerClose
     }
+    case Terminated(tracker) => context.stop(self)
   }
 
   def receive = initializing
