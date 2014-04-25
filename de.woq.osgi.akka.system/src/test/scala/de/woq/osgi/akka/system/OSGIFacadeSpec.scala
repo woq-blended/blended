@@ -49,5 +49,15 @@ class OSGIFacadeSpec extends WordSpec
         }
       }
     }
+
+    "return the dead letter Actor for service lookups when the ervice does not exist in OSGI" in new TestActorSys with TestSetup with MockitoSugar {
+      apply {
+        val facade = system.actorOf(Props(OSGIFacade(osgiContext)), "facade")
+        facade ! OSGIProtocol.GetService(classOf[TestInterface2])
+        expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+          m.service should be (system.deadLetters)
+        }
+      }
+    }
   }
 }
