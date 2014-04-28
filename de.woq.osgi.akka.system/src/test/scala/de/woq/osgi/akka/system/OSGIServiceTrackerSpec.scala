@@ -22,10 +22,9 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
 import akka.event.Logging.Info
-import org.osgi.framework.BundleContext
 import OSGIProtocol.{TrackerClose, TrackerRemovedService, TrackerModifiedService, TrackerAddingService}
 import de.woq.osgi.java.testsupport.TestActorSys
-import de.woq.osgi.akka.system.internal.{OSGIServiceTracker, BundleContextProvider, TrackerAdapter}
+import de.woq.osgi.akka.system.internal.{OSGIServiceTracker, TrackerAdapter}
 
 class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
   with WordSpecLike

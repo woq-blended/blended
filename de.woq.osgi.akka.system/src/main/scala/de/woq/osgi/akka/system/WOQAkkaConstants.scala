@@ -18,7 +18,7 @@ package de.woq.osgi.akka.system
 
 object WOQAkkaConstants {
 
-  val referencesPath = "references"
+  val referencesPath = "References"
   val osgiFacadePath = "OSGI"
   val configLocatorPath = "ConfigLocator"
 }

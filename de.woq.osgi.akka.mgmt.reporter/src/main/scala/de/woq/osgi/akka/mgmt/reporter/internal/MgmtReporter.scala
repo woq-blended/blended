@@ -16,31 +16,32 @@
 
 package de.woq.osgi.akka.mgmt.reporter.internal
 
-import akka.actor.{Cancellable, ActorLogging, Actor}
-import de.woq.osgi.akka.system.{InitializeBundle, BundleName}
-import akka.util.Timeout
+import akka.actor.{ActorRef, Cancellable}
+import de.woq.osgi.akka.system.{OSGIProtocol, OSGIActor, InitializeBundle, BundleName}
 import de.woq.osgi.java.container.id.ContainerIdentifierService
 import de.woq.osgi.java.mgmt_core.ContainerInfo
-import scala.concurrent.duration._
 import org.osgi.framework.BundleContext
-import de.woq.osgi.akka.modules._
-import scala.collection.JavaConversions._
 import akka.event.LoggingReceive
+import akka.pattern.{ask, pipe}
+import scala.util.{Failure, Success}
+import scala.concurrent.duration._
+import de.woq.osgi.akka.system.OSGIProtocol.{ServiceResult, InvokeService}
+import de.woq.osgi.akka.system.internal.OSGIServiceReference
+import scala.collection.JavaConversions._
 
 object MgmtReporter {
-  def apply(name : String) = new MgmtReporter with BundleName {
+  def apply(name : String) = new MgmtReporter with OSGIActor with BundleName {
     override def bundleSymbolicName = name
   }
 }
 
-class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
+class MgmtReporter extends OSGIActor { this : BundleName =>
 
   case object Tick
 
   implicit val executionContext = context.dispatcher
-  implicit val timeout = Timeout(5.seconds)
 
-  val ticker : Cancellable = 
+  val ticker : Cancellable =
     context.system.scheduler.schedule(100.milliseconds, 1.seconds, self, Tick)
 
   def initializing = LoggingReceive {
@@ -54,18 +55,13 @@ class MgmtReporter extends Actor with ActorLogging { this : BundleName =>
 
     case Tick => {
       log debug "Performing report"
-      (osgiContext.findService(classOf[ContainerIdentifierService])) match {
-        case Some(idSvcRef) => idSvcRef invokeService { 
-          idSvc => new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap) 
-        } match {
-          case Some(info) => self ! info
-          case _ =>
-        }
-        case _ =>
-      }
+
+      invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
+        new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap)
+      } pipeTo(self)
     }
 
-    case info : ContainerInfo => log info s"$info"
+    case ServiceResult(Some(info))  => log info s"$info"
   }
 
   def receive = initializing

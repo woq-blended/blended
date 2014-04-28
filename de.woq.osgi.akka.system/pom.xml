@@ -57,6 +57,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-reflect</artifactId>
+      <version>${scala.version}.${scala.micro.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-osgi_${scala.version}</artifactId>
       <version>${akka.version}</version>

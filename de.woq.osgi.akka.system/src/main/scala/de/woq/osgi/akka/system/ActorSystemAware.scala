@@ -30,7 +30,9 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
   var bundleContextRef : BundleContext = _
   var actorRef         : ActorRef = _
+  var actorSystemRef   : ActorSystem = _
 
+  def actorSystem = actorSystemRef
   def bundleContext = bundleContextRef
   def bundleActor : ActorRef = actorRef
   def prepareBundleActor() : Props
@@ -41,8 +43,9 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
     implicit val bc = osgiBundleContext
 
     bundleContext.findService(classOf[ActorSystem]) match {
-      case Some(svcReference) => svcReference invokeService { actorSystem =>
-        actorRef = actorSystem.actorOf(prepareBundleActor(), bundleSymbolicName)
+      case Some(svcReference) => svcReference invokeService { system =>
+        actorSystemRef = actorSystem
+        actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
         actorRef ! InitializeBundle(bundleContext)
         postStartActor()
       }
@@ -57,14 +60,8 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
     implicit val bc = osgiBundleContext
 
-    bundleContext.findService(classOf[ActorSystem]) match {
-      case Some(svcReference) => svcReference invokeService { actorSystem =>
-        preStopActor()
-        actorSystem.stop(bundleActor)
-      }
-      // TODO : handle this
-      case _ =>
-    }
+    preStopActor()
+    actorSystem.stop(bundleActor)
   }
 
   def preStopActor() {}

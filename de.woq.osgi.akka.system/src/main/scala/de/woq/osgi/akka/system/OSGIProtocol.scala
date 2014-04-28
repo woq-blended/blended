@@ -27,7 +27,7 @@ object OSGIProtocol {
   case class CreateReference[I <: AnyRef](clazz : Class[I])
 
   // This encapsulates a request to retrieve a service reference from the Bundle Context
-  case class GetService(interface : Class[_ <: AnyRef])
+  case class GetService[I <: AnyRef](clazz : Class[I])
 
   // This encapsulates a OSGI Reference wrapped in an Actor
   case class Service(service: ActorRef)

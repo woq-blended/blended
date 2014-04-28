@@ -27,18 +27,20 @@ class OSGIReferencesSpec extends WordSpec
   with Matchers
   with AssertionsForJUnit {
 
-  "Allow to retrieve a service reference" in new TestActorSys with TestSetup with MockitoSugar {
+  "return a proper OSGIServiceRefence actor when the underlying service exists" in new TestActorSys with TestSetup with MockitoSugar {
+    val facade = system.actorOf(Props(OSGIFacade()), "facade")
+    facade ! OSGIProtocol.GetService(classOf[TestInterface1])
+    expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+      m.service should not be(system.deadLetters)
+    }
   }
 
   "return the dead letter Actor for service lookups when the service does not appear in a timely manner" in
     new TestActorSys with TestSetup with MockitoSugar {
-
-      apply {
-        val facade = system.actorOf(Props(OSGIFacade()), "facade")
-        facade ! OSGIProtocol.GetService(classOf[TestInterface2])
-        expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
-          m.service should be (system.deadLetters)
-        }
+      val facade = system.actorOf(Props(OSGIFacade()), "facade")
+      facade ! OSGIProtocol.GetService(classOf[TestInterface2])
+      expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+        m.service should be (system.deadLetters)
       }
     }
 

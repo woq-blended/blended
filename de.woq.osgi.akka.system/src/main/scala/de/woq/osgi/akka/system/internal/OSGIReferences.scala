@@ -86,6 +86,7 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
       bundleContext findService(clazz) match {
         case Some(ref) => {
           log info s"Creating Service reference actor..."
+          log info s"Responding to [${sender.toString()}"
           sender ! OSGIProtocol.Service(context.actorOf(Props(OSGIServiceReference(ref))))
         }
         case None => {
