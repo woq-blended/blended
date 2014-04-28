@@ -25,8 +25,11 @@ import akka.actor.Props
 import akka.event.LoggingReceive
 import akka.testkit.TestActorRef
 import org.osgi.framework.BundleContext
-import akka.pattern.pipe
+import akka.pattern.{ask,pipe}
 import de.woq.osgi.akka.system.OSGIProtocol.ServiceResult
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import akka.util.Timeout
 
 object OSGIActorDummy {
   def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy()
@@ -46,14 +49,16 @@ class OSGIActorSpec extends WordSpec
 
   "OSGIActor" should {
 
+    implicit val timeout = Timeout(1.second)
+
     "allow to invoke a service" in new TestActorSys with TestSetup with MockitoSugar {
       val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
 
       val probe = TestActorRef(Props(OSGIActorDummy()), "testActor")
 
-      probe !  "invoke"
-
-      expectMsg(ServiceResult(Some("Andreas")))
+      Await.result(probe ?  "invoke", 1.second) match {
+        case ServiceResult(Some(s)) => s should be("Andreas")
+      }
     }
   }
 
