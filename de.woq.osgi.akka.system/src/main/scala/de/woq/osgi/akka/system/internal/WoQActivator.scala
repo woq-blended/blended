@@ -37,8 +37,7 @@ class WoQActivator extends ActorSystemActivator {
     log info "Registering Actor System as Service."
     registerService(osgiContext, system)
 
-    log.info("ActorSystem [" + system.name + "] initialized." )
-
+    log info s"ActorSystem [${system.name}] initialized."
   }
 
   override def getActorSystemName(context: BundleContext): String = "WoQActorSystem"

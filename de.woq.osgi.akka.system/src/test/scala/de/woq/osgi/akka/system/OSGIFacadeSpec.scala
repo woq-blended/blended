@@ -25,8 +25,7 @@ import de.woq.osgi.akka.system.internal.OSGIFacade
 
 class OSGIFacadeSpec extends WordSpec
   with Matchers
-  with AssertionsForJUnit
-  with BeforeAndAfterAll {
+  with AssertionsForJUnit {
 
   "OSGIFacade" should {
 

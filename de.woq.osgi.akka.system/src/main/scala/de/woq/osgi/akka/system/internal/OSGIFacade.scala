@@ -25,18 +25,13 @@ import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
 import akka.event.LoggingReceive
 import de.woq.osgi.akka.system.OSGIProtocol.GetService
-import de.woq.osgi.akka.system.ConfigLocatorRequest
+import de.woq.osgi.akka.system.{OSGIProtocol, ConfigLocatorRequest}
 import scala.Some
 import akka.actor.Props
 
 object OSGIFacade {
 
-  // An internal message that trigers the creation of an Actor for an OSGI Service Reference
-  case class CreateReference[I <: AnyRef](clazz : Class[I])
-
   def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()
-
-  val referencesPath = "References"
 }
 
 class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
@@ -53,11 +48,11 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
     configLocator = context.actorOf(Props(ConfigLocator(configDir)), configLocatorPath)
 
     log info "Creating OSGI References handler"
-    references = context.actorOf(Props(OSGIReferences()(bundleContext)), OSGIFacade.referencesPath)
+    references = context.actorOf(Props(OSGIReferences()(bundleContext)), referencesPath)
   }
 
   override def receive = LoggingReceive {
-    case GetService(clazz) => references forward OSGIFacade.CreateReference(clazz)
+    case GetService(clazz) => references forward OSGIProtocol.CreateReference(clazz)
     case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
   }
 

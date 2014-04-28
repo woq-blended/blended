@@ -25,34 +25,31 @@ import de.woq.osgi.akka.system.OSGIProtocol
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.OSGIProtocol.{TrackerClose, TrackerAddingService}
+import de.woq.osgi.akka.system.OSGIProtocol._
 
 object OSGIReferences {
 
-  def apply[I <: AnyRef](adapter : Option[TrackerAdapter[I]] = None)(implicit osgiContext : BundleContext) = new OSGIReferences with BundleContextProvider {
+  def apply[I <: AnyRef]()(implicit osgiContext : BundleContext) = new OSGIReferences with BundleContextProvider {
     override val bundleContext = osgiContext
   }
 }
 
 object OfflineServiceTracker {
 
-  def apply[I <: AnyRef](references : ActorRef, adapter : Option[TrackerAdapter[I]] = None)(implicit osgiContext : BundleContext) =
-    new OfflineServiceTracker[I](references, adapter)
+  def apply[I <: AnyRef](references : ActorRef)(implicit osgiContext : BundleContext) =
+    new OfflineServiceTracker[I](references)
 
   case class ReferenceAdded[I <: AnyRef](referenceFor: ActorRef, svcRef: ServiceReference[I])
 }
 
-class OfflineServiceTracker[I <: AnyRef](references: ActorRef, adapter: Option[TrackerAdapter[I]])(implicit osgiContext : BundleContext) extends Actor with ActorLogging {
+class OfflineServiceTracker[I <: AnyRef](references: ActorRef)(implicit osgiContext : BundleContext) extends Actor with ActorLogging {
 
   def initializing = LoggingReceive {
-    case OSGIFacade.CreateReference(clazz) if clazz.isInstanceOf[Class[I]] => {
+    case OSGIProtocol.CreateReference(clazz) if clazz.isInstanceOf[Class[I]] => {
 
       val requestor = sender
       implicit val executionContext = context.dispatcher
-      val tracker = adapter match {
-        case None => context.actorOf(Props(OSGIServiceTracker[I](clazz.asInstanceOf[Class[I]], self)))
-        case Some(trackerAdapter) => context.actorOf(Props(OSGIServiceTracker[I](clazz.asInstanceOf[Class[I]], self, trackerAdapter)))
-      }
+      val tracker = context.actorOf(Props(OSGIServiceTracker[I](clazz.asInstanceOf[Class[I]], self)))
 
       context.watch(tracker)
 
@@ -67,7 +64,8 @@ class OfflineServiceTracker[I <: AnyRef](references: ActorRef, adapter: Option[T
       tracker ! TrackerClose
     }
     case TrackerAddingService(svcRef, svc) => {
-      references ! OfflineServiceTracker.ReferenceAdded(references, svcRef)
+      log info s"Sending to ${references.toString()}"
+      references ! OfflineServiceTracker.ReferenceAdded(requestor, svcRef)
       timer.cancel()
       tracker ! TrackerClose
     }
@@ -84,7 +82,7 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
   }
 
   override def receive = LoggingReceive {
-    case OSGIFacade.CreateReference(clazz) => {
+    case OSGIProtocol.CreateReference(clazz) => {
       bundleContext findService(clazz) match {
         case Some(ref) => {
           log info s"Creating Service reference actor..."
@@ -92,7 +90,7 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
         }
         case None => {
           log info "Service Reference not available, Creating a Tracker..."
-          context.actorOf(Props(OfflineServiceTracker(self))) forward OSGIFacade.CreateReference(clazz)
+          context.actorOf(Props(OfflineServiceTracker(self))) forward CreateReference(clazz)
         }
       }
     }

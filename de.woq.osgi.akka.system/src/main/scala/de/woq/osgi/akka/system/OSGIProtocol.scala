@@ -23,6 +23,9 @@ object OSGIProtocol {
 
   type InvocationType[I <: AnyRef, T <: AnyRef] = (I => T)
 
+  // Triger the creation of an Actor for an OSGI Service Reference
+  case class CreateReference[I <: AnyRef](clazz : Class[I])
+
   // This encapsulates a request to retrieve a service reference from the Bundle Context
   case class GetService(interface : Class[_ <: AnyRef])
 
