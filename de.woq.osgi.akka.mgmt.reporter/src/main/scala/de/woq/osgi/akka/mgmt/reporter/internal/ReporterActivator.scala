@@ -20,10 +20,12 @@ import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
 import org.osgi.framework.BundleActivator
 import akka.actor.Props
 
-class ReporterActivator extends ActorSystemAware with BundleActivator with BundleName {
-
+trait MgmtReporterBundleName extends BundleName {
   override def bundleSymbolicName = "de.woq.osgi.akka.mgmt.reporter"
+}
 
-  def prepareBundleActor(): Props = Props(MgmtReporter(bundleSymbolicName))
+class ReporterActivator extends ActorSystemAware with BundleActivator with MgmtReporterBundleName {
+
+  def prepareBundleActor(): Props = Props(MgmtReporter())
 
 }

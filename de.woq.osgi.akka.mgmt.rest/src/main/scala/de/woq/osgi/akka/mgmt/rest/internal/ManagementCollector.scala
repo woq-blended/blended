@@ -17,42 +17,38 @@
 package de.woq.osgi.akka.mgmt.rest.internal
 
 import spray.routing.HttpService
-import akka.actor.Actor
 import spray.http.MediaTypes._
-import de.woq.osgi.akka.system.{BundleName, ConfigLocatorResponse, ConfigLocatorRequest, InitializeBundle}
-import de.woq.osgi.akka.system.WOQAkkaConstants._
-import akka.util.Timeout
-import scala.concurrent.duration._
+import de.woq.osgi.akka.system._
+import de.woq.osgi.akka.system.ConfigLocatorResponse
+import de.woq.osgi.akka.system.ConfigLocatorRequest
+import de.woq.osgi.akka.system.InitializeBundle
+import akka.actor.{Actor, ActorLogging}
+import org.osgi.framework.BundleContext
+import akka.pattern._
 
 object ManagementCollector {
-  def apply() = new ManagementCollector with BundleName {
-    override def bundleSymbolicName = CollectorBundleName.bundleName
-  }
+  def apply()(implicit bundleContext: BundleContext) = new ManagementCollector with OSGIActor with CollectorBundleName
 }
 
-class ManagementCollector extends Actor with CollectorService { this : BundleName =>
+class ManagementCollector extends CollectorService with Actor with ActorLogging { this : OSGIActor with BundleName =>
 
-  implicit val executionContext = context.dispatcher
-  implicit val timeout = Timeout(5.seconds)
   def actorRefFactory = context
 
   def initializing : Receive = {
     case InitializeBundle(bundleContext) => {
-      context.system.actorSelection(s"/user/$configLocatorPath").resolveOne() map {
-        ref => ref ! ConfigLocatorRequest(bundleSymbolicName)
-      }
+      osgiFacade map { ref => ref ? ConfigLocatorRequest(bundleSymbolicName) } pipeTo(self)
     }
     case ConfigLocatorResponse(bundleId, config) => {
       context.become(runRoute(collectorRoute))
     }
   }
 
-  override def receive: Actor.Receive = initializing
+  override def receive = initializing
 }
 
 trait CollectorService extends HttpService {
 
-  val collectorRoute = path("") {
+  val collectorRoute = path("/") {
     get {
       respondWithMediaType(`text/html`) {
         complete {

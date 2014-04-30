@@ -20,6 +20,7 @@
   <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
   <repository>mvn:org.apache.karaf.assemblies.features/standard/${karaf.version}/xml/features</repository>
   <repository>mvn:io.hawt/hawtio-karaf/${hawtio.version}/xml/features</repository>
+  <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax-web.version}/xml/features</repository>
 
   <feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" start-level="10" resolver="(obr)">
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
@@ -85,7 +86,7 @@
   </feature>
 
   <feature name="woq-jaxrs" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
-    <feature>jetty</feature>
+    <feature version="${pax-web.version}">pax-http-whiteboard</feature>
 
     <bundle>mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
     <bundle>mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
@@ -105,7 +106,10 @@
 
   <feature name="woq-hawtio" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
     <feature version="${project.version}">woq-jaxrs</feature>
-    <feature version="${hawtio.version}">hawtio</feature>
+
+    <bundle>mvn:io.hawt/hawtio-json-schema-mbean/${hawtio.version}</bundle>
+    <bundle>mvn:io.hawt/hawtio-osgi-jmx/${hawtio.version}</bundle>
+    <bundle>mvn:io.hawt/hawtio-web/${hawtio.version}/war</bundle>
 
     <bundle>mvn:org.fusesource.insight/insight-log/${insight-log.version}</bundle>
   </feature>
@@ -171,6 +175,7 @@
 
   <feature name="woq-akka-spray" description="Bundles for the Spray support (REST)" version="${project.version}" resolver="(obr)" start-level="50">
     <feature version="${project.version}">woq-akka-system</feature>
+    <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
     <bundle>mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}/jar/woq</bundle>
     <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
     <bundle>mvn:org.parboiled/parboiled-core/${parboiled.version}</bundle>
@@ -185,6 +190,8 @@
     <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
+
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.rest/${project.version}/war</bundle>
   </feature>
 
 </features>

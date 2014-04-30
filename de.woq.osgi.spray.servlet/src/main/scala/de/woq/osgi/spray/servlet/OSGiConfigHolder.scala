@@ -40,15 +40,10 @@ object OSGiConfigHolder {
 
 trait OSGISprayServletActivator extends ActorSystemAware with BundleName {
 
-  override def postStartActor() {
+  override def postStartBundleActor() {
     implicit val bc = bundleContext
 
-    (bundleContext.findService(classOf[ActorSystem])) match {
-      case Some(svcRef) => svcRef invokeService { actorSystem =>
-        OSGiConfigHolder.setActorSystem(actorSystem)
-        OSGiConfigHolder.setActorRef(bundleActor)
-      }
-      case _ =>
-    }
+    OSGiConfigHolder.setActorSystem(actorSystem)
+    OSGiConfigHolder.setActorRef(bundleActor)
   }
 }

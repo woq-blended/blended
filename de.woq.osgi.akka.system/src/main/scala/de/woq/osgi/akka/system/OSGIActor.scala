@@ -24,7 +24,7 @@ import akka.pattern.ask
 import scala.concurrent.Future
 import de.woq.osgi.akka.system.OSGIProtocol.GetService
 
-trait OSGIActor extends Actor with ActorLogging {
+trait OSGIActor { this : Actor =>
 
   implicit val timeout = new Timeout(1.second)
   implicit val ec = context.dispatcher
