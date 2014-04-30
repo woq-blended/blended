@@ -8,8 +8,6 @@ Bundle-Activator: \
   de.woq.osgi.akka.mgmt.rest.internal.CollectorActivator
 
 Import-Package: \
-  javax.servlet;version="[2.6,4.0)",\
-  javax.servlet.http;version="[2.6,4.0)",\
   spray.routing,\
   spray.routing.directives,\
   spray.servlet,\
