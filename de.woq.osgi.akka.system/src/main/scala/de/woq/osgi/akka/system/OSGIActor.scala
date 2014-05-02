@@ -31,6 +31,11 @@ trait OSGIActor { this : Actor =>
 
   def osgiFacade = context.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
 
+  def getActorConfig(id: String) = for {
+      facade <- osgiFacade.mapTo[ActorRef]
+      config <- (facade ? ConfigLocatorRequest(id)).mapTo[ConfigLocatorResponse]
+    } yield config
+
   def getServiceRef[I <: AnyRef](clazz : Class[I]) = {
 
     for {

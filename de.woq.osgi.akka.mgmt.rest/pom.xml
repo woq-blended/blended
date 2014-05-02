@@ -167,6 +167,7 @@
               </includes>
             </resource>
           </webResources>
+          <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
         </configuration>
       </plugin>
 

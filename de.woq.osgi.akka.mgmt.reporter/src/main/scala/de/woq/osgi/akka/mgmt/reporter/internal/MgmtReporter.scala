@@ -42,7 +42,7 @@ class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with Bundl
   def initializing = LoggingReceive {
     case InitializeBundle(bundleContext) => {
       log info "Initializing Management Reporter"
-      ticker = Some(context.system.scheduler.schedule(100.milliseconds, 1.seconds, self, Tick))
+      ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
       context.become(working(bundleContext))
     }
   }

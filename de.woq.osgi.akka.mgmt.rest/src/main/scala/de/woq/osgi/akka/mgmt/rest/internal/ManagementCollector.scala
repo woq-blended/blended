@@ -20,11 +20,11 @@ import spray.routing.HttpService
 import spray.http.MediaTypes._
 import de.woq.osgi.akka.system._
 import de.woq.osgi.akka.system.ConfigLocatorResponse
-import de.woq.osgi.akka.system.ConfigLocatorRequest
 import de.woq.osgi.akka.system.InitializeBundle
 import akka.actor.{Actor, ActorLogging}
 import org.osgi.framework.BundleContext
 import akka.pattern._
+import akka.event.LoggingReceive
 
 object ManagementCollector {
   def apply()(implicit bundleContext: BundleContext) = new ManagementCollector with OSGIActor with CollectorBundleName
@@ -34,13 +34,11 @@ class ManagementCollector extends CollectorService with Actor with ActorLogging 
 
   def actorRefFactory = context
 
-  def initializing : Receive = {
-    case InitializeBundle(bundleContext) => {
-      osgiFacade map { ref => ref ? ConfigLocatorRequest(bundleSymbolicName) } pipeTo(self)
-    }
-    case ConfigLocatorResponse(bundleId, config) => {
-      context.become(runRoute(collectorRoute))
-    }
+  def initializing : Receive = LoggingReceive {
+
+    case InitializeBundle(bundleContext) => getActorConfig(bundleSymbolicName) pipeTo(self)
+
+    case ConfigLocatorResponse(bundleId, config) => context.become(runRoute(collectorRoute))
   }
 
   override def receive = initializing
