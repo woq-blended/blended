@@ -39,6 +39,5 @@ class OSGIFacadeSpec extends WordSpec
       }
     }
 
-
   }
 }

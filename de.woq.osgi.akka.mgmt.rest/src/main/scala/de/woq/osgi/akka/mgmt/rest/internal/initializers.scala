@@ -16,17 +16,14 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
-import de.woq.osgi.akka.system.BundleName
+import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
 import akka.actor.Props
-import de.woq.osgi.spray.servlet.{SprayOSGiInitializer, OSGISprayServletActivator}
 
 trait CollectorBundleName extends BundleName {
   def bundleSymbolicName = "de.woq.osgi.akka.mgmt.rest"
 }
 
-class CollectorActivator  extends OSGISprayServletActivator with CollectorBundleName {
+class CollectorActivator  extends ActorSystemAware with CollectorBundleName {
   override def prepareBundleActor() = Props(ManagementCollector())
 }
-
-class CollectorInitializer extends SprayOSGiInitializer with CollectorBundleName
 

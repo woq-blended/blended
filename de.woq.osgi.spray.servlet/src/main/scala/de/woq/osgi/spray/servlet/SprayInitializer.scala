@@ -16,44 +16,30 @@
 
 package de.woq.osgi.spray.servlet
 
-import javax.servlet.{ ServletContextListener, ServletContextEvent }
-import akka.util.Switch
-import spray.servlet.{ConnectorSettings, Initializer}
-import de.woq.osgi.akka.system.BundleName
-import com.typesafe.config.ConfigFactory
-import java.io.File
-import spray.http.Uri
+import akka.actor.{ActorSystem, ActorRef}
+import spray.servlet.{Servlet30ConnectorServlet, ConnectorSettings}
+import akka.spray.RefUtils
+import akka.event.Logging
 
-trait SprayOSGiInitializer extends ServletContextListener { this : BundleName =>
+trait SprayOSGIBridge {
+  def actorSystem : ActorSystem
+  def connectorSettings : ConnectorSettings
+  def routeActor : ActorRef
+}
 
-  private val booted = new Switch(false)
+class SprayOSGIServlet extends Servlet30ConnectorServlet { this : SprayOSGIBridge =>
 
-  def contextInitialized(ev: ServletContextEvent): Unit = {
-    booted switchOn {
-      val ctx = ev.getServletContext
-      ctx.log("Starting spray application ...")
-
-      require(OSGiConfigHolder.actorSystem != None)
-      require(OSGiConfigHolder.actorRef != None)
-
-      val config = ConfigFactory.parseFile(new File(System.getProperty("karaf.home") + "/etc", s"$bundleSymbolicName.conf"))
-
-      val settings0 = ConnectorSettings(config)
-      val settings =
-        if (settings0.rootPath == Uri.Path("AUTO")) {
-          ctx.log(s"Automatically setting spray.servlet.root-path to '${ctx.getContextPath}'")
-          settings0.copy(rootPath = Uri.Path(ctx.getContextPath))
-        } else settings0
-
-      ctx.setAttribute(Initializer.SettingsAttrName, settings)
-      ctx.setAttribute(Initializer.SystemAttrName, OSGiConfigHolder.actorSystem.get)
-      ctx.setAttribute(Initializer.ServiceActorAttrName, OSGiConfigHolder.actorRef.get)
-    }
-  }
-
-  def contextDestroyed(e: ServletContextEvent): Unit = {
-    booted switchOff {
-      e.getServletContext.log("Shutting down spray application ...")
-    }
+  override def init(): Unit = {
+    system = actorSystem
+    serviceActor = routeActor
+    settings = connectorSettings
+    require(system != null, "No ActorSystem configured")
+    require(serviceActor != null, "No ServiceActor configured")
+    require(settings != null, "No ConnectorSettings configured")
+    require(RefUtils.isLocal(serviceActor), "The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
+    timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
+    require(RefUtils.isLocal(timeoutHandler), "The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
+    log = Logging(system, this.getClass)
+    log.info("Initialized Servlet API 3.0 <=> Spray Connector")
   }
 }
