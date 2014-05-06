@@ -24,11 +24,10 @@ import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
 import akka.event.LoggingReceive
 import de.woq.osgi.akka.system.OSGIProtocol.{BundleActor, GetBundleActor, GetService}
-import de.woq.osgi.akka.system.{WOQAkkaConstants, OSGIProtocol, ConfigLocatorRequest}
+import de.woq.osgi.akka.system.{OSGIProtocol, ConfigLocatorRequest}
 import scala.Some
 import akka.actor.Props
 import de.woq.osgi.akka.modules._
-import scala.concurrent.Future
 
 object OSGIFacade {
   def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()
