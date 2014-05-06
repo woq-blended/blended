@@ -66,9 +66,11 @@ class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
 
   @Test
   def karafStartTest() {
+    import scala.concurrent.duration._
+
     system should not be (null)
 
-    testProbe.fishForMessage() {
+    testProbe.fishForMessage(1.minute) {
       case Info(_, _, m) => m.toString.startsWith(classOf[ContainerInfo].getSimpleName)
     }
   }
