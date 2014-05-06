@@ -16,7 +16,7 @@
 
 package de.woq.osgi.akka.mgmt.reporter.internal
 
-import akka.actor.{ActorRef, Cancellable}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import de.woq.osgi.akka.system.{OSGIProtocol, OSGIActor, InitializeBundle, BundleName}
 import de.woq.osgi.java.container.id.ContainerIdentifierService
 import de.woq.osgi.java.mgmt_core.ContainerInfo
@@ -30,23 +30,19 @@ import de.woq.osgi.akka.system.internal.OSGIServiceReference
 import scala.collection.JavaConversions._
 
 object MgmtReporter {
-  def apply(name : String) = new MgmtReporter with OSGIActor with BundleName {
-    override def bundleSymbolicName = name
-  }
+  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtReporterBundleName
 }
 
-class MgmtReporter extends OSGIActor { this : BundleName =>
+class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with BundleName =>
 
   case object Tick
 
-  implicit val executionContext = context.dispatcher
-
-  val ticker : Cancellable =
-    context.system.scheduler.schedule(100.milliseconds, 1.seconds, self, Tick)
+  private [MgmtReporter] var ticker : Option[Cancellable] = None
 
   def initializing = LoggingReceive {
     case InitializeBundle(bundleContext) => {
       log info "Initializing Management Reporter"
+      ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
       context.become(working(bundleContext))
     }
   }
@@ -67,7 +63,10 @@ class MgmtReporter extends OSGIActor { this : BundleName =>
   def receive = initializing
 
   override def postStop() {
-    ticker.cancel()
+    ticker match {
+      case Some(t) => t.cancel()
+      case _ =>
+    }
   }
 
 }

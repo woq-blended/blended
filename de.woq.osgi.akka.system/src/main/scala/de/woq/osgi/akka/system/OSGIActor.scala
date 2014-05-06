@@ -24,12 +24,17 @@ import akka.pattern.ask
 import scala.concurrent.Future
 import de.woq.osgi.akka.system.OSGIProtocol.GetService
 
-trait OSGIActor extends Actor with ActorLogging {
+trait OSGIActor { this : Actor =>
 
   implicit val timeout = new Timeout(1.second)
   implicit val ec = context.dispatcher
 
   def osgiFacade = context.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
+
+  def getActorConfig(id: String) = for {
+      facade <- osgiFacade.mapTo[ActorRef]
+      config <- (facade ? ConfigLocatorRequest(id)).mapTo[ConfigLocatorResponse]
+    } yield config
 
   def getServiceRef[I <: AnyRef](clazz : Class[I]) = {
 
@@ -37,7 +42,6 @@ trait OSGIActor extends Actor with ActorLogging {
       facade <- osgiFacade.mapTo[ActorRef]
       service <- (facade ? GetService(clazz)).mapTo[Service]
     } yield service
-
   }
 
   def invokeService[I <: AnyRef, T <: AnyRef](iface: Class[I])(f: InvocationType[I,T]) : Future[ServiceResult[Option[T]]] = {

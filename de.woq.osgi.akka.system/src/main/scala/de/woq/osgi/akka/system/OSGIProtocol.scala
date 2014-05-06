@@ -23,6 +23,10 @@ object OSGIProtocol {
 
   type InvocationType[I <: AnyRef, T <: AnyRef] = (I => T)
 
+  // look up a bundleActor by the bundle symbolicName 
+  case class GetBundleActor(bundleId : String)
+  case class BundleActor(bundleId : String, bundleActor : ActorRef)
+
   // Triger the creation of an Actor for an OSGI Service Reference
   case class CreateReference[I <: AnyRef](clazz : Class[I])
 

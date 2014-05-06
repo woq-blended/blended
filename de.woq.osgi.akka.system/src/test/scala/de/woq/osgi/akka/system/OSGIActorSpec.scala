@@ -21,7 +21,7 @@ import org.scalatest.junit.AssertionsForJUnit
 import de.woq.osgi.java.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.akka.system.internal.OSGIFacade
-import akka.actor.Props
+import akka.actor.{ActorLogging, Actor, Props}
 import akka.event.LoggingReceive
 import akka.testkit.TestActorRef
 import org.osgi.framework.BundleContext
@@ -32,10 +32,10 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 
 object OSGIActorDummy {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy()
+  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with OSGIActor
 }
 
-class OSGIActorDummy extends OSGIActor {
+class OSGIActorDummy extends Actor with ActorLogging { this : OSGIActor =>
   def receive = LoggingReceive {
     case "invoke" => {
       invokeService[TestInterface1, String](classOf[TestInterface1]) { svc => svc.name } pipeTo(sender)

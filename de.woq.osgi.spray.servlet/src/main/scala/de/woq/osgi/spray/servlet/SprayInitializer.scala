@@ -18,10 +18,8 @@ package de.woq.osgi.spray.servlet
 
 import javax.servlet.{ ServletContextListener, ServletContextEvent }
 import akka.util.Switch
-import spray.servlet.{ConnectorSettings, Initializer}
+import spray.servlet.Initializer
 import de.woq.osgi.akka.system.BundleName
-import com.typesafe.config.ConfigFactory
-import java.io.File
 import spray.http.Uri
 
 trait SprayOSGiInitializer extends ServletContextListener { this : BundleName =>
@@ -33,12 +31,8 @@ trait SprayOSGiInitializer extends ServletContextListener { this : BundleName =>
       val ctx = ev.getServletContext
       ctx.log("Starting spray application ...")
 
-      require(OSGiConfigHolder.actorSystem != None)
-      require(OSGiConfigHolder.actorRef != None)
+      val settings0 = OSGiConfigHolder.connectorSettings
 
-      val config = ConfigFactory.parseFile(new File(System.getProperty("karaf.home") + "/etc", s"$bundleSymbolicName.conf"))
-
-      val settings0 = ConnectorSettings(config)
       val settings =
         if (settings0.rootPath == Uri.Path("AUTO")) {
           ctx.log(s"Automatically setting spray.servlet.root-path to '${ctx.getContextPath}'")
@@ -46,8 +40,8 @@ trait SprayOSGiInitializer extends ServletContextListener { this : BundleName =>
         } else settings0
 
       ctx.setAttribute(Initializer.SettingsAttrName, settings)
-      ctx.setAttribute(Initializer.SystemAttrName, OSGiConfigHolder.actorSystem.get)
-      ctx.setAttribute(Initializer.ServiceActorAttrName, OSGiConfigHolder.actorRef.get)
+      ctx.setAttribute(Initializer.SystemAttrName, OSGiConfigHolder.actorSystem)
+      ctx.setAttribute(Initializer.ServiceActorAttrName, OSGiConfigHolder.actorRef)
     }
   }
 

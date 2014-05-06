@@ -19,6 +19,7 @@ package de.woq.osgi.akka.system
 import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{Props, ActorRef, ActorSystem}
 import de.woq.osgi.akka.modules._
+import org.slf4j.LoggerFactory
 
 case class InitializeBundle(context: BundleContext)
 
@@ -28,42 +29,48 @@ trait BundleName {
 
 trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
+  private [ActorSystemAware] val log = LoggerFactory.getLogger(classOf[ActorSystemAware])
+
   var bundleContextRef : BundleContext = _
   var actorRef         : ActorRef = _
   var actorSystemRef   : ActorSystem = _
 
-  def actorSystem = actorSystemRef
-  def bundleContext = bundleContextRef
-  def bundleActor : ActorRef = actorRef
+  def actorSystem   = actorSystemRef
+  implicit def bundleContext = bundleContextRef
+  def bundleActor   = actorRef
+
   def prepareBundleActor() : Props
 
   final def start(osgiBundleContext: BundleContext) {
     this.bundleContextRef = osgiBundleContext
 
-    implicit val bc = osgiBundleContext
+    log debug s"Starting Akka bundle [$bundleSymbolicName]."
 
     bundleContext.findService(classOf[ActorSystem]) match {
       case Some(svcReference) => svcReference invokeService { system =>
-        actorSystemRef = actorSystem
+        actorSystemRef = system
+
+        log debug s"Preparing bundle actor for [$bundleSymbolicName]."
+
         actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
         actorRef ! InitializeBundle(bundleContext)
-        postStartActor()
+        postStartBundleActor()
       }
       // TODO : handle this
       case _ =>
     }
   }
 
-  def postStartActor() {}
+  def postStartBundleActor() {}
 
   final def stop(osgiBundleContext: BundleContext) {
 
     implicit val bc = osgiBundleContext
 
-    preStopActor()
+    preStopBundleActor()
     actorSystem.stop(bundleActor)
   }
 
-  def preStopActor() {}
+  def preStopBundleActor() {}
 
 }

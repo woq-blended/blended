@@ -18,10 +18,11 @@ package de.woq.osgi.spray.servlet
 
 import akka.actor.{ActorRef, ActorSystem}
 import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
-import de.woq.osgi.akka.modules._
+import spray.servlet.ConnectorSettings
 
 object OSGiConfigHolder {
 
+  private var settings: Option[ConnectorSettings] = None
   private var system : Option[ActorSystem] = None
   private var actor : Option[ActorRef] = None
 
@@ -33,22 +34,30 @@ object OSGiConfigHolder {
     this.actor = Some(ref)
   }
 
+  def setConnectorSettings(settings: ConnectorSettings) {
+    this.settings = Some(settings)
+  }
 
-  def actorSystem = system
-  def actorRef = actor
+  def actorSystem = {
+    require(system != None)
+    system.get
+  }
+
+  def actorRef = {
+    require(actor != None)
+    actor.get
+  }
+
+  def connectorSettings = {
+    require(settings != None)
+    settings.get
+  }
 }
 
 trait OSGISprayServletActivator extends ActorSystemAware with BundleName {
 
-  override def postStartActor() {
-    implicit val bc = bundleContext
-
-    (bundleContext.findService(classOf[ActorSystem])) match {
-      case Some(svcRef) => svcRef invokeService { actorSystem =>
-        OSGiConfigHolder.setActorSystem(actorSystem)
-        OSGiConfigHolder.setActorRef(bundleActor)
-      }
-      case _ =>
-    }
+  override def postStartBundleActor() {
+    OSGiConfigHolder.setActorSystem(actorSystem)
+    OSGiConfigHolder.setActorRef(bundleActor)
   }
 }
