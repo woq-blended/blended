@@ -16,81 +16,70 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
-import spray.routing.{RoutingSettings, RejectionHandler, ExceptionHandler, HttpService}
+import spray.routing._
 import spray.http.MediaTypes._
 import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.{SprayOSGIBridge, SprayOSGIServlet}
-import com.typesafe.config.Config
-import javax.servlet.ServletContext
-import spray.servlet.ConnectorSettings
+import de.woq.osgi.spray.servlet.OSGiConfigHolder
+import spray.servlet.{WebBoot, ConnectorSettings}
 import akka.event.LoggingReceive
+import spray.util.LoggingContext
 import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
-import spray.util.LoggingContext
+import javax.servlet.ServletContext
 
 trait CollectorService extends HttpService {
 
-  val collectorRoute = path("/hello") {
-    get {
-      respondWithMediaType(`text/html`) {
-        complete {
-          <html>
-            <body>Say hello to <i>spray routing</i> within OSGi.</body>
-          </html>
+  val collectorRoute =
+    path("hello") {
+      get {
+        respondWithMediaType(`text/html`) {
+          complete {
+            <html>
+              <body>Say hello to <i>spray routing</i> within OSGi.</body>
+            </html>
+          }
         }
       }
     }
-  }
+}
+
+class ManagementCollectorBoot(servletContext : ServletContext) extends WebBoot {
+  override def serviceActor = OSGiConfigHolder.actorRef
+  override def system = OSGiConfigHolder.actorSystem
 }
 
 object ManagementCollector {
-  def apply()(implicit bundleContext: BundleContext) = new ManagementCollector with OSGIActor with CollectorBundleName
-
-  sealed trait State
-  case object Starting extends State
-  case object Initializing extends State
-  case object Serving extends State
-
-  sealed trait Data
-  case object Uninitialized extends Data
-  case class ConfigData(config: Option[Config], servletContext: Option[ServletContext]) extends Data
+  def apply()(implicit bundleContext: BundleContext) = new ManagementCollector() with OSGIActor with CollectorBundleName
 }
 
-class ManagementCollector extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName =>
+class ManagementCollector()(implicit bundleContext : BundleContext)
+  extends CollectorService
+  with Actor
+  with ActorLogging { this : OSGIActor with CollectorBundleName =>
+
   override implicit def actorRefFactory = context
 
   def receive = initializing
 
   def initializing = LoggingReceive {
     case InitializeBundle(_) => getActorConfig(bundleSymbolicName) pipeTo (self)
+
     case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
 
       implicit val servletSettings = ConnectorSettings(cfg)
+      OSGiConfigHolder.setConnectorSettings(ConnectorSettings(cfg))
+
       implicit val routingSettings = RoutingSettings(cfg)
       implicit val routeLogger = LoggingContext.fromAdapter(log)
       implicit val exceptionHandler = ExceptionHandler.default
       implicit val rejectionHandler = RejectionHandler.Default
 
-      val actorSys = context.system
-      val routingActor = self
-
-      val servlet = new SprayOSGIServlet with SprayOSGIBridge {
-        override def routeActor = routingActor
-        override def connectorSettings = servletSettings
-        override def actorSystem = actorSys
-      }
-
-      invokeService[org.osgi.service.http.HttpService, String](classOf[org.osgi.service.http.HttpService]){ svc =>
-        svc.registerServlet("/woq", servlet, null, null)
-        ""
-      } onSuccess {
-        case _ => context.become(LoggingReceive {
-          runRoute(collectorRoute)
-        })
-      }
+      context.become(LoggingReceive {
+        runRoute(collectorRoute)
+      })
     }
   }
 }

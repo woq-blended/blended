@@ -15,5 +15,11 @@ Import-Package: \
   de.woq.osgi.spray.servlet,\
   *
 
+Bundle-Classpath : .,WEB-INF/classes
+
+Webapp-Context: woq
+Web-ContextPath: /woq
+
+
 
 

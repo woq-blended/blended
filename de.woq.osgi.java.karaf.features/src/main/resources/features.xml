@@ -191,7 +191,7 @@
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
 
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.rest/${project.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.rest/${project.version}/war</bundle>
   </feature>
 
 </features>

@@ -16,30 +16,38 @@
 
 package de.woq.osgi.spray.servlet
 
-import akka.actor.{ActorSystem, ActorRef}
-import spray.servlet.{Servlet30ConnectorServlet, ConnectorSettings}
-import akka.spray.RefUtils
-import akka.event.Logging
+import javax.servlet.{ ServletContextListener, ServletContextEvent }
+import akka.util.Switch
+import spray.servlet.Initializer
+import de.woq.osgi.akka.system.BundleName
+import spray.http.Uri
 
-trait SprayOSGIBridge {
-  def actorSystem : ActorSystem
-  def connectorSettings : ConnectorSettings
-  def routeActor : ActorRef
-}
+trait SprayOSGiInitializer extends ServletContextListener { this : BundleName =>
 
-class SprayOSGIServlet extends Servlet30ConnectorServlet { this : SprayOSGIBridge =>
+  private val booted = new Switch(false)
 
-  override def init(): Unit = {
-    system = actorSystem
-    serviceActor = routeActor
-    settings = connectorSettings
-    require(system != null, "No ActorSystem configured")
-    require(serviceActor != null, "No ServiceActor configured")
-    require(settings != null, "No ConnectorSettings configured")
-    require(RefUtils.isLocal(serviceActor), "The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
-    timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
-    require(RefUtils.isLocal(timeoutHandler), "The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
-    log = Logging(system, this.getClass)
-    log.info("Initialized Servlet API 3.0 <=> Spray Connector")
+  def contextInitialized(ev: ServletContextEvent): Unit = {
+    booted switchOn {
+      val ctx = ev.getServletContext
+      ctx.log("Starting spray application ...")
+
+      val settings0 = OSGiConfigHolder.connectorSettings
+
+      val settings =
+        if (settings0.rootPath == Uri.Path("AUTO")) {
+          ctx.log(s"Automatically setting spray.servlet.root-path to '${ctx.getContextPath}'")
+          settings0.copy(rootPath = Uri.Path(ctx.getContextPath))
+        } else settings0
+
+      ctx.setAttribute(Initializer.SettingsAttrName, settings)
+      ctx.setAttribute(Initializer.SystemAttrName, OSGiConfigHolder.actorSystem)
+      ctx.setAttribute(Initializer.ServiceActorAttrName, OSGiConfigHolder.actorRef)
+    }
+  }
+
+  def contextDestroyed(e: ServletContextEvent): Unit = {
+    booted switchOff {
+      e.getServletContext.log("Shutting down spray application ...")
+    }
   }
 }

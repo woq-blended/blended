@@ -42,7 +42,6 @@ trait OSGIActor { this : Actor =>
       facade <- osgiFacade.mapTo[ActorRef]
       service <- (facade ? GetService(clazz)).mapTo[Service]
     } yield service
-
   }
 
   def invokeService[I <: AnyRef, T <: AnyRef](iface: Class[I])(f: InvocationType[I,T]) : Future[ServiceResult[Option[T]]] = {
