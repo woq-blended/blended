@@ -58,7 +58,7 @@ object ManagementCollector {
 class ManagementCollector()(implicit bundleContext : BundleContext)
   extends CollectorService
   with Actor
-  with ActorLogging { this : OSGIActor with CollectorBundleName =>
+  with ActorLogging { this : OSGIActor with BundleName =>
 
   override implicit def actorRefFactory = context
 

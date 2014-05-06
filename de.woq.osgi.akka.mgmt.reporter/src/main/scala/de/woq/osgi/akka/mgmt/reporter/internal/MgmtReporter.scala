@@ -68,5 +68,4 @@ class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with Bundl
       case _ =>
     }
   }
-
 }

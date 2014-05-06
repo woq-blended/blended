@@ -20,12 +20,12 @@ import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
 import org.osgi.framework.BundleActivator
 import akka.actor.Props
 
+// Simply expose the bundle's symbolic name so that it can be mixed in where required
 trait MgmtReporterBundleName extends BundleName {
   override def bundleSymbolicName = "de.woq.osgi.akka.mgmt.reporter"
 }
 
+// The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
 class ReporterActivator extends ActorSystemAware with BundleActivator with MgmtReporterBundleName {
-
   def prepareBundleActor(): Props = Props(MgmtReporter())
-
 }
