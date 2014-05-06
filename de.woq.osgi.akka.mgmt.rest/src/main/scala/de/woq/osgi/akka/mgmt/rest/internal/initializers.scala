@@ -25,7 +25,5 @@ trait CollectorBundleName extends BundleName {
 }
 
 class CollectorActivator extends OSGISprayServletActivator with CollectorBundleName {
-  override def prepareBundleActor() = Props(ManagementCollector())
+  override def prepareBundleActor() = Props(ManagementCollector("woq"))
 }
-
-class CollectorInitializer extends SprayOSGiInitializer with CollectorBundleName

@@ -22,13 +22,15 @@ import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.OSGiConfigHolder
+import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge, OSGiConfigHolder}
 import spray.servlet.{WebBoot, ConnectorSettings}
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
 import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
 import javax.servlet.ServletContext
+import de.woq.osgi.akka.modules._
+import spray.http.Uri.Path
 
 trait CollectorService extends HttpService {
 
@@ -52,13 +54,11 @@ class ManagementCollectorBoot(servletContext : ServletContext) extends WebBoot {
 }
 
 object ManagementCollector {
-  def apply()(implicit bundleContext: BundleContext) = new ManagementCollector() with OSGIActor with CollectorBundleName
+  def apply(contextPath: String)(implicit bundleContext: BundleContext) = new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName
 }
 
-class ManagementCollector()(implicit bundleContext : BundleContext)
-  extends CollectorService
-  with Actor
-  with ActorLogging { this : OSGIActor with BundleName =>
+class ManagementCollector(contextPath: String)(implicit bundleContext: BundleContext)
+  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName =>
 
   override implicit def actorRefFactory = context
 
@@ -66,21 +66,30 @@ class ManagementCollector()(implicit bundleContext : BundleContext)
 
   def initializing = LoggingReceive {
     case InitializeBundle(_) => getActorConfig(bundleSymbolicName) pipeTo (self)
-
     case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
 
-      implicit val servletSettings = ConnectorSettings(cfg)
-      OSGiConfigHolder.setConnectorSettings(ConnectorSettings(cfg))
-
+      implicit val servletSettings = ConnectorSettings(cfg).copy(rootPath = Path(s"/$contextPath"))
       implicit val routingSettings = RoutingSettings(cfg)
       implicit val routeLogger = LoggingContext.fromAdapter(log)
       implicit val exceptionHandler = ExceptionHandler.default
       implicit val rejectionHandler = RejectionHandler.Default
 
-      context.become(LoggingReceive {
-        runRoute(collectorRoute)
-      })
+      val actorSys = context.system
+      val routingActor = self
+
+      val servlet = new SprayOSGIServlet with SprayOSGIBridge {
+        override def routeActor = routingActor
+        override def connectorSettings = servletSettings
+        override def actorSystem = actorSys
+      }
+
+      bundleContext.createService(
+        servlet, Map(
+          "urlPatterns" -> "/",
+          "Webapp-Context" -> contextPath,
+          "Web-ContextPath" -> s"/$contextPath"
+        ))
+      context.become(LoggingReceive { runRoute(collectorRoute) })
     }
   }
 }
-
