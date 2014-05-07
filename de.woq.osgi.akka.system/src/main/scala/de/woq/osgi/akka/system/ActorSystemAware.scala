@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.system
 
 import org.osgi.framework.{BundleActivator, BundleContext}
-import akka.actor.{Props, ActorRef, ActorSystem}
+import akka.actor.{PoisonPill, Props, ActorRef, ActorSystem}
 import de.woq.osgi.akka.modules._
 import org.slf4j.LoggerFactory
 
@@ -33,9 +33,7 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
   var bundleContextRef : BundleContext = _
   var actorRef         : ActorRef = _
-  var actorSystemRef   : ActorSystem = _
 
-  def actorSystem   = actorSystemRef
   implicit def bundleContext = bundleContextRef
   def bundleActor   = actorRef
 
@@ -48,8 +46,6 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
     bundleContext.findService(classOf[ActorSystem]) match {
       case Some(svcReference) => svcReference invokeService { system =>
-        actorSystemRef = system
-
         log debug s"Preparing bundle actor for [$bundleSymbolicName]."
 
         actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
@@ -68,10 +64,14 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
     implicit val bc = osgiBundleContext
 
-    preStopBundleActor()
-    actorSystem.stop(bundleActor)
+    bundleActor match {
+      case a : ActorRef => {
+        preStopBundleActor()
+        bundleActor ! PoisonPill
+      }
+      case _ =>
+    }
   }
 
   def preStopBundleActor() {}
-
 }

@@ -35,16 +35,17 @@
     <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/${commons.beanutils.version}</bundle>
   </feature>
 
-  <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)">
+  <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)" start-level="20">
+    <feature version="${akka.version}">woq-akka</feature>
     <feature version="${project.version}">woq-commons</feature>
     <feature version="${karaf.version}">wrapper</feature>
-    <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
-    <bundle start-level="10">mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.registry/${woq.container.version}</bundle>
-    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
+    <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
+    <bundle start-level="30">mvn:de.woq.osgi.java/de.woq.osgi.java.container.registry/${woq.container.version}</bundle>
   </feature>
 
   <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
@@ -144,12 +145,13 @@
   </feature>
 
   <feature name="woq-akka" description="The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
-    <feature version="${project.version}">woq-base</feature>
     <feature version="${scala.version}">woq-scala</feature>
     <bundle dependency="true">mvn:com.typesafe/config/${typesafe.config.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-slf4j_${scala.version}/${akka.version}</bundle>
     <bundle>mvn:com.typesafe.akka/akka-osgi_${scala.version}/${akka.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.modules/${project.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.system/${project.version}</bundle>
   </feature>
 
   <feature name="woq-akka-cluster" description="Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
@@ -167,10 +169,8 @@
     <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
   </feature>
 
-  <feature name="woq-akka-system" version="${project.version}" start-level="60">
+  <feature name="woq-akka-system" version="${project.version}" start-level="30">
     <feature version="${akka.version}">woq-akka-cluster</feature>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.modules/${project.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.system/${project.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.reporter/${project.version}</bundle>
   </feature>
 
