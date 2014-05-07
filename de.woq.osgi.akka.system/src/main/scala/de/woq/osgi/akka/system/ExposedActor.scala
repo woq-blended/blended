@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.java.container.registry.internal;
+package de.woq.osgi.akka.system
 
-import de.woq.java.container.registry.ContainerRegistry;
+import akka.actor.ActorRef
 
-public interface ContainerRegistryMBean extends ContainerRegistry {
+trait ExposedActor {
+  def actor : ActorRef
 }

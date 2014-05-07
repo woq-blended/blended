@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package de.woq.java.container.registry;
+package de.woq.osgi.java.container.registry
 
-import java.util.Properties;
+import spray.json.DefaultJsonProtocol
 
-public interface ContainerInfo {
+case class ContainerInfo (
+  containerId : String,
+  properties : Map[String, String]
+)
 
-  public String getContainerId();
-
-  public Properties getContanerProperties();
-
+object ContainerInfoJson extends DefaultJsonProtocol {
+  implicit val infoFormat = jsonFormat2(ContainerInfo)
 }
+
+

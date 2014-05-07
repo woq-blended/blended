@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.java.container.registry.internal;
+package de.woq.osgi.java.container.registry
 
-public class ContainerRegistryTestHelper {
+object ContainerRegistryProtocol {
+
+  case class UpdateContainerInfo(info: ContainerInfo)
+
+  case class ContainerRegistryResponseOK(id: String)
 }

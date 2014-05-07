@@ -26,7 +26,6 @@
     <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-
   <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
   <packaging>bundle</packaging>
 
@@ -47,14 +46,10 @@
 
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.scala-tools</groupId>
-        <artifactId>maven-scala-plugin</artifactId>
       </plugin>
 
     </plugins>

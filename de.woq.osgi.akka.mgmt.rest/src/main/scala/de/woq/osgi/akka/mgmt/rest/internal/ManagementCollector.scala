@@ -23,27 +23,24 @@ import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
 import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
-import spray.servlet.{WebBoot, ConnectorSettings}
+import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
 import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
-import javax.servlet.ServletContext
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
+import spray.json._
+import DefaultJsonProtocol._
+import de.woq.osgi.java.container.registry.ContainerInfoJson._
+import de.woq.osgi.java.container.registry.ContainerInfo
 
 trait CollectorService extends HttpService {
 
   val collectorRoute =
-    path("hello") {
-      get {
-        respondWithMediaType(`text/html`) {
-          complete {
-            <html>
-              <body>Say hello to <i>spray routing</i> within OSGi.</body>
-            </html>
-          }
-        }
+    path("container") {
+      post {
+        complete("OK")
       }
     }
 }

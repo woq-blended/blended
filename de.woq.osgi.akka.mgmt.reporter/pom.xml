@@ -52,7 +52,7 @@
 
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
+      <artifactId>de.woq.osgi.java.container.registry</artifactId>
       <version>${project.version}</version>
     </dependency>
 

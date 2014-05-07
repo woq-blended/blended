@@ -16,13 +16,15 @@
 
 package de.woq.osgi.akka.system
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{ActorRef, Actor}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import de.woq.osgi.akka.system.OSGIProtocol._
 import akka.pattern.ask
 import scala.concurrent.Future
 import de.woq.osgi.akka.system.OSGIProtocol.GetService
+import org.osgi.framework.BundleContext
+import de.woq.osgi.akka.modules._
 
 trait OSGIActor { this : Actor =>
 
@@ -30,6 +32,14 @@ trait OSGIActor { this : Actor =>
   implicit val ec = context.dispatcher
 
   def osgiFacade = context.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
+
+  def registerActorService(id : String)(implicit bundleContext : BundleContext) {
+    val exposed = self
+    val actorService = new ExposedActor {
+      override def actor = exposed
+    }
+    bundleContext.createService(actorService, Map("bundle" -> id))
+  }
 
   def getActorConfig(id: String) = for {
       facade <- osgiFacade.mapTo[ActorRef]

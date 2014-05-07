@@ -27,7 +27,7 @@ import javax.inject.Inject
 import org.ops4j.pax.exam.CoreOptions._
 import akka.testkit.TestProbe
 import akka.event.Logging.Info
-import de.woq.osgi.java.mgmt_core.ContainerInfo
+import de.woq.osgi.java.container.registry.ContainerInfo
 
 @RunWith(classOf[PaxExam])
 class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {

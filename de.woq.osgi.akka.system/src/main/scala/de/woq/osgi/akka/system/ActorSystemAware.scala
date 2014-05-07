@@ -54,6 +54,7 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
         actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
         actorRef ! InitializeBundle(bundleContext)
+
         postStartBundleActor()
       }
       // TODO : handle this

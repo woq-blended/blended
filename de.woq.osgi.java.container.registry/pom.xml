@@ -38,6 +38,24 @@
   <dependencies>
 
     <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.akka.system</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-json_${scala.version}</artifactId>
+      <version>${spray-json.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
@@ -52,6 +70,33 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>${mockito.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.osgi.java</groupId>
+      <artifactId>de.woq.osgi.java.testsupport</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -60,6 +105,17 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+      </plugin>
+
     </plugins>
   </build>
 

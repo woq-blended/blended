@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.java.container.registry;
+package de.woq.osgi.java.container.registry.internal
 
-import java.util.List;
+import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
+import akka.actor.Props
 
-public interface ContainerRegistry {
+trait RegistryBundleName extends BundleName {
+  override def bundleSymbolicName = "de.woq.osgi.java.container.registry"
+}
 
-  public List<ContainerInfo> getRegisteredContainers();
-
-  public ContainerInfo removeContainer(final String id);
-
-  public void addOrReplaceContainer(final ContainerInfo container);
+class RegistryActivator extends ActorSystemAware with RegistryBundleName {
+  override def prepareBundleActor() = Props(ContainerRegistryImpl())
 }

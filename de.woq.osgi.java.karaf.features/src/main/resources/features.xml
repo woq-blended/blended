@@ -43,6 +43,7 @@
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
+    <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.container.registry/${woq.container.version}</bundle>
     <bundle start-level="10">mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
   </feature>
 
@@ -189,6 +190,7 @@
     <bundle>mvn:io.spray/spray-io/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-json_${scala.version}/${spray-json.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
   </feature>
 

@@ -21,7 +21,6 @@ import de.woq.osgi.java.container.context.ContainerContext
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 
-
 trait TestSetup { this : MockitoSugar =>
 
   implicit val osgiContext = mock[BundleContext]

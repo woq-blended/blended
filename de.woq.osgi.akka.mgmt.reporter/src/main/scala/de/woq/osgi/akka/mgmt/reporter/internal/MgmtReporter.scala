@@ -16,18 +16,19 @@
 
 package de.woq.osgi.akka.mgmt.reporter.internal
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
-import de.woq.osgi.akka.system.{OSGIProtocol, OSGIActor, InitializeBundle, BundleName}
+import akka.actor.{Actor, ActorLogging, Cancellable}
+import de.woq.osgi.akka.system.{OSGIActor, InitializeBundle, BundleName}
 import de.woq.osgi.java.container.id.ContainerIdentifierService
-import de.woq.osgi.java.mgmt_core.ContainerInfo
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
-import akka.pattern.{ask, pipe}
-import scala.util.{Failure, Success}
+import akka.pattern.pipe
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.OSGIProtocol.{ServiceResult, InvokeService}
-import de.woq.osgi.akka.system.internal.OSGIServiceReference
+import de.woq.osgi.akka.system.OSGIProtocol.ServiceResult
 import scala.collection.JavaConversions._
+import de.woq.osgi.java.container.registry.ContainerInfo
+import spray.json._
+import DefaultJsonProtocol._
+import de.woq.osgi.java.container.registry.ContainerInfoJson._
 
 object MgmtReporter {
   def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtReporterBundleName
@@ -50,6 +51,7 @@ class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with Bundl
   def working(implicit osgiContext: BundleContext) = LoggingReceive {
 
     case Tick => {
+
       log debug "Performing report"
 
       invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
@@ -57,7 +59,7 @@ class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with Bundl
       } pipeTo(self)
     }
 
-    case ServiceResult(Some(info))  => log info s"$info"
+    case ServiceResult(Some(info : ContainerInfo))  => log info s"${info.toJson.compactPrint}"
   }
 
   def receive = initializing
