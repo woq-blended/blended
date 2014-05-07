@@ -45,7 +45,6 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 
     "Register the bundle actor as a service" in new TestActorSys with RegistryBundleName {
       implicit val osgiContext = mock[BundleContext]
-      val richContext : RichBundleContext = osgiContext
 
       val registry = TestActorRef(Props(ContainerRegistryImpl()))
       registry ! InitializeBundle(osgiContext)
