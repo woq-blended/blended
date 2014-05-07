@@ -18,7 +18,6 @@ package de.woq.osgi.spray.helloworld.internal
 
 import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest
-import akka.event.Logging
 
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 
