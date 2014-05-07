@@ -22,7 +22,7 @@ import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge, OSGiConfigHolder}
+import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.servlet.{WebBoot, ConnectorSettings}
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
@@ -46,11 +46,6 @@ trait CollectorService extends HttpService {
         }
       }
     }
-}
-
-class ManagementCollectorBoot(servletContext : ServletContext) extends WebBoot {
-  override def serviceActor = OSGiConfigHolder.actorRef
-  override def system = OSGiConfigHolder.actorSystem
 }
 
 object ManagementCollector {

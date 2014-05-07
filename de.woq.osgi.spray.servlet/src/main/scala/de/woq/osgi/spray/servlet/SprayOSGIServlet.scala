@@ -40,6 +40,6 @@ class SprayOSGIServlet extends Servlet30ConnectorServlet { this : SprayOSGIBridg
     timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
     require(RefUtils.isLocal(timeoutHandler), "The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
     log = Logging(system, this.getClass)
-    log.info("Initialized Servlet API 3.0 <=> Spray Connector")
+    log.info("Initialized Servlet API 3.0 (OSGi) <=> Spray Connector")
   }
 }

@@ -16,14 +16,13 @@
 
 package de.woq.osgi.spray.helloworld.internal
 
-import de.woq.osgi.akka.system.BundleName
+import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
 import akka.actor.Props
-import de.woq.osgi.spray.servlet.OSGISprayServletActivator
 
 trait HelloBundleName extends BundleName {
   def bundleSymbolicName = "de.woq.osgi.spray.helloworld"
 }
 
-class HelloActivator extends OSGISprayServletActivator with HelloBundleName {
+class HelloActivator extends ActorSystemAware with HelloBundleName {
   override def prepareBundleActor() = Props(HelloRoute("woq"))
 }

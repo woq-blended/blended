@@ -22,16 +22,14 @@ import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge, OSGiConfigHolder}
-import spray.servlet.{WebBoot, ConnectorSettings}
+import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
+import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
 import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
-import javax.servlet.ServletContext
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
-import de.woq.osgi.spray.helloworld.internal.HelloBundleName
 
 trait HelloService extends HttpService {
 
@@ -46,11 +44,6 @@ trait HelloService extends HttpService {
       }
     }
   }
-}
-
-class HelloServiceBoot(servletContext : ServletContext) extends WebBoot {
-  override def serviceActor = OSGiConfigHolder.actorRef
-  override def system = OSGiConfigHolder.actorSystem
 }
 
 object HelloRoute {
