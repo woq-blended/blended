@@ -26,6 +26,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.parent</artifactId>
     <version>1.0.6-SNAPSHOT</version>
+    <relativePath>../../de.woq.osgi.java.parent</relativePath>
   </parent>
 
   <groupId>de.woq.osgi.java.samples</groupId>
