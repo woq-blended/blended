@@ -16,9 +16,11 @@
 
 package de.woq.osgi.java.container.registry
 
-object ContainerRegistryProtocol {
+import de.woq.osgi.akka.system.BundleName
 
-  case class UpdateContainerInfo(info: ContainerInfo)
-
-  case class ContainerRegistryResponseOK(id: String)
+/**
+ * Created by andreas on 07/05/14.
+ */
+trait RegistryBundleName extends BundleName {
+  override def bundleSymbolicName = "de.woq.osgi.java.container.registry"
 }

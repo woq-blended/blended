@@ -16,15 +16,14 @@
 
 package de.woq.osgi.java.container.registry
 
-import spray.json.DefaultJsonProtocol
+import spray.json._
+import DefaultJsonProtocol._
 
-case class ContainerInfo (
-  containerId : String,
-  properties : Map[String, String]
-)
+case class ContainerInfo (containerId : String, properties : Map[String, String])
+case class UpdateContainerInfo (info: ContainerInfo)
+case class ContainerRegistryResponseOK (id: String)
 
-object ContainerInfoJson extends DefaultJsonProtocol {
+object ContainerRegistryJson extends DefaultJsonProtocol {
   implicit val infoFormat = jsonFormat2(ContainerInfo)
+  implicit val responseFormat = jsonFormat1(ContainerRegistryResponseOK)
 }
-
-

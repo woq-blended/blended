@@ -1,4 +1,5 @@
-import de.woq.osgi.java.container.registry.ContainerInfo
+package de.woq.osgi.java.container.registry
+
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
 
@@ -23,7 +24,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
   val log = LoggerFactory.getLogger(classOf[ContainerInfoSpec])
 
   import spray.json._
-  import de.woq.osgi.java.container.registry.ContainerInfoJson._
+  import ContainerRegistryJson._
 
   "ContainerInfo" should {
 

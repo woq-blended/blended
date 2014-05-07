@@ -19,7 +19,7 @@ package de.woq.osgi.java.container.registry.internal
 import akka.actor.{ActorLogging, Actor}
 import de.woq.osgi.akka.system.{InitializeBundle, BundleName, OSGIActor}
 import org.osgi.framework.BundleContext
-import de.woq.osgi.java.container.registry.ContainerRegistryProtocol.{ContainerRegistryResponseOK, UpdateContainerInfo}
+import de.woq.osgi.java.container.registry.{RegistryBundleName, ContainerRegistryResponseOK, UpdateContainerInfo}
 
 object ContainerRegistryImpl {
   def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName

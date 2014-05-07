@@ -18,10 +18,7 @@ package de.woq.osgi.java.container.registry.internal
 
 import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
 import akka.actor.Props
-
-trait RegistryBundleName extends BundleName {
-  override def bundleSymbolicName = "de.woq.osgi.java.container.registry"
-}
+import de.woq.osgi.java.container.registry.RegistryBundleName
 
 class RegistryActivator extends ActorSystemAware with RegistryBundleName {
   override def prepareBundleActor() = Props(ContainerRegistryImpl())

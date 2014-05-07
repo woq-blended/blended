@@ -17,7 +17,6 @@
 package de.woq.osgi.akka.mgmt.rest.internal
 
 import spray.routing._
-import spray.http.MediaTypes._
 import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
@@ -30,27 +29,47 @@ import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
-import spray.json._
-import DefaultJsonProtocol._
-import de.woq.osgi.java.container.registry.ContainerInfoJson._
-import de.woq.osgi.java.container.registry.ContainerInfo
+import de.woq.osgi.java.container.registry.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
+import scala.concurrent.duration._
+import akka.util.Timeout
+import spray.httpx.SprayJsonSupport
 
-trait CollectorService extends HttpService {
+trait ContainerRegistryProvider {
+  def registry : ActorRef
+}
 
-  val collectorRoute =
+trait CollectorService extends HttpService { this : SprayJsonSupport with ContainerRegistryProvider =>
+
+  val collectorRoute = {
+
+    implicit val timeout = Timeout(1.second)
+    import scala.concurrent.ExecutionContext.Implicits.global
+    import de.woq.osgi.java.container.registry.ContainerRegistryJson._
+
     path("container") {
       post {
-        complete("OK")
+        handleWith { info : ContainerInfo => {
+          for { r <- (registry ? UpdateContainerInfo(info)).mapTo[ContainerRegistryResponseOK] } yield r
+        }}
       }
     }
+  }
 }
 
 object ManagementCollector {
-  def apply(contextPath: String)(implicit bundleContext: BundleContext) = new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName
+  def apply(contextPath: String, reg: ActorRef)(implicit bundleContext: BundleContext) =
+    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider {
+      override def registry = reg
+    }
+
+  def apply(contextPath: String, bundleId: String)(implicit bundleContext : BundleContext) =
+    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider {
+      override def registry = context.system.deadLetters
+    }
 }
 
 class ManagementCollector(contextPath: String)(implicit bundleContext: BundleContext)
-  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName =>
+  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider =>
 
   override implicit def actorRefFactory = context
 

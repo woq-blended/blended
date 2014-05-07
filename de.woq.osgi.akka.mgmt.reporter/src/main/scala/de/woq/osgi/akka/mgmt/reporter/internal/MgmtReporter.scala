@@ -27,8 +27,7 @@ import de.woq.osgi.akka.system.OSGIProtocol.ServiceResult
 import scala.collection.JavaConversions._
 import de.woq.osgi.java.container.registry.ContainerInfo
 import spray.json._
-import DefaultJsonProtocol._
-import de.woq.osgi.java.container.registry.ContainerInfoJson._
+import de.woq.osgi.java.container.registry.ContainerRegistryJson._
 
 object MgmtReporter {
   def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtReporterBundleName

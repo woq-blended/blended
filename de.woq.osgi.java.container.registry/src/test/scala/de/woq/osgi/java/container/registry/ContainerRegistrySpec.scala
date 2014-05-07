@@ -1,16 +1,15 @@
+package de.woq.osgi.java.container.registry
+
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import de.woq.osgi.akka.system.{ExposedActor, InitializeBundle}
-import de.woq.osgi.java.container.registry.ContainerInfo
-import de.woq.osgi.java.container.registry.internal.{RegistryBundleName, ContainerRegistryImpl}
+import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
 import de.woq.osgi.java.testsupport.TestActorSys
 import org.mockito.ArgumentCaptor
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import de.woq.osgi.java.container.registry.ContainerRegistryProtocol._
 import org.mockito.Mockito.verify
-import de.woq.osgi.akka.modules._
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
@@ -29,7 +28,6 @@ import de.woq.osgi.akka.modules._
  */
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
-
 
   "Container registry" should {
 
