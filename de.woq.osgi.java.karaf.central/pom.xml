@@ -98,7 +98,7 @@
             <feature>woq-camel</feature>
             <feature>woq-activemq-broker</feature>
             <feature>hawtio</feature>
-            <feature>woq-akka-spray</feature>
+            <feature>woq-samples</feature>
           </features>
           <repository>target/repository</repository>
         </configuration>

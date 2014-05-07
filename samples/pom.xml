@@ -23,7 +23,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.reactor</artifactId>
+  <artifactId>de.woq.osgi.java.samples.reactor</artifactId>
   <version>1.0.6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -47,58 +47,9 @@
   <profiles>
 
     <profile>
-      <id>parent</id>
-      <modules>
-        <module>de.woq.osgi.java.parent</module>
-        <module>de.woq.osgi.java.karaf.parent</module>
-        <module>de.woq.osgi.java.karaf.branding</module>
-      </modules>
-    </profile>
-
-    <profile>
       <id>build</id>
       <modules>
-        <module>de.woq.osgi.java.installer</module>
-
-        <module>de.woq.osgi.activemq.brokerstarter</module>
-        <module>de.woq.osgi.java.container.context</module>
-        <module>de.woq.osgi.java.container.id</module>
-        <module>de.woq.osgi.java.container.registry</module>
-        <module>de.woq.osgi.java.util</module>
-        <module>de.woq.osgi.java.mgmt_core</module>
-        <module>de.woq.osgi.java.jaxrs</module>
-        <module>de.woq.osgi.java.camelutils</module>
-
-        <module>de.woq.osgi.java.testsupport</module>
-
-        <module>de.woq.osgi.java.karaf.features</module>
-        <module>de.woq.osgi.java.karaf.branding</module>
-
-        <module>de.woq.osgi.akka.modules</module>
-        <module>de.woq.osgi.akka.system</module>
-        <module>de.woq.osgi.akka.mgmt.reporter</module>
-        <module>de.woq.osgi.akka.mgmt.rest</module>
-        <module>de.woq.osgi.spray.servlet</module>
-
-        <module>de.woq.osgi.java.itestsupport</module>
-
-        <module>de.woq.osgi.java.archetypes.project</module>
-
-        <module>samples</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>itest</id>
-      <modules>
-        <module>de.woq.osgi.akka.itest</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>assembly</id>
-      <modules>
-        <module>de.woq.osgi.java.karaf.central</module>
+        <module>de.woq.osgi.spray.helloworld</module>
       </modules>
     </profile>
 

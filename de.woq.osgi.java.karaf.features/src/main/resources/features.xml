@@ -190,8 +190,11 @@
     <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
+  </feature>
 
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.rest/${project.version}</bundle>
+  <feature name="woq-samples" description="Sample bundles" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">woq-akka-spray</feature>
+    <bundle>mvn:de.woq.osgi.java.samples/de.woq.osgi.spray.helloworld/${project.version}</bundle>
   </feature>
 
 </features>
