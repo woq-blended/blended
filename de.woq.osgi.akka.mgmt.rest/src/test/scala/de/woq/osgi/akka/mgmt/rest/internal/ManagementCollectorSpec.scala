@@ -18,12 +18,12 @@ package de.woq.osgi.akka.mgmt.rest.internal
 
 import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest
-import de.woq.osgi.java.container.registry.{ContainerRegistryResponseOK, ContainerInfo}
 import spray.httpx.SprayJsonSupport
 import akka.actor.Props
 import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
 import org.scalatest.mock.MockitoSugar
 import org.osgi.framework.BundleContext
+import de.woq.osgi.java.container.registry.protocol._
 
 class ManagementCollectorSpec
   extends WordSpec
@@ -34,12 +34,10 @@ class ManagementCollectorSpec
   with SprayJsonSupport
   with ContainerRegistryProvider {
 
-  import de.woq.osgi.java.container.registry.ContainerRegistryJson._
-
   "The Management collector" should {
 
     "handle a posted container info" in {
-      Post("/container", ContainerInfo("uuid", Map())) ~> collectorRoute ~> check {
+      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"))) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
     }

@@ -50,14 +50,13 @@
 
   <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
     <feature version="${project.version}">woq-base</feature>
-
     <feature version="${camel.version}">camel</feature>
     <feature version="${camel.version}">camel-jms</feature>
-    <feature version="${camel.version}">camel-http</feature>
-    <feature version="${camel.version}">camel-servlet</feature>
     <feature version="${camel.version}">camel-exec</feature>
-
-    <bundle start-level="50">mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
+    <bundle>mvn:org.apache.camel/camel-http/${camel.version}</bundle>
+    <bundle>mvn:org.apache.camel/camel-servlet/${camel.version}</bundle>
+    <bundle>mvn:org.apache.camel/camel-servletlistener/${camel.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
   </feature>
 
   <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
@@ -142,6 +141,8 @@
     <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
     <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
     <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.activemq.brokerstarter/${project.version}</bundle>
+
   </feature>
 
   <feature name="woq-akka" description="The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
@@ -171,7 +172,6 @@
 
   <feature name="woq-akka-system" version="${project.version}" start-level="30">
     <feature version="${akka.version}">woq-akka-cluster</feature>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.mgmt.reporter/${project.version}</bundle>
   </feature>
 
   <feature name="woq-akka-spray" description="Bundles for the Spray support (REST)" version="${project.version}" resolver="(obr)" start-level="50">

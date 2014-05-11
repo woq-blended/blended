@@ -33,14 +33,6 @@ trait OSGIActor { this : Actor =>
 
   def osgiFacade = context.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
 
-  def registerActorService(id : String)(implicit bundleContext : BundleContext) {
-    val exposed = self
-    val actorService = new ExposedActor {
-      override def actor = exposed
-    }
-    bundleContext.createService(actorService, Map("bundle" -> id))
-  }
-
   def getActorConfig(id: String) = for {
       facade <- osgiFacade.mapTo[ActorRef]
       config <- (facade ? ConfigLocatorRequest(id)).mapTo[ConfigLocatorResponse]

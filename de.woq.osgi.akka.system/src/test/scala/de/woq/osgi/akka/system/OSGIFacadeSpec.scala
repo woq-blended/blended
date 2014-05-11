@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.system
 
 import akka.actor.Props
-import org.scalatest.{WordSpec, BeforeAndAfterAll, Matchers}
+import org.scalatest.{WordSpec, Matchers}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.java.testsupport.TestActorSys

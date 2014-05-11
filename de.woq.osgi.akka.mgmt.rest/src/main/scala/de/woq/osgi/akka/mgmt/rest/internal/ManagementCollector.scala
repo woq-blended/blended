@@ -29,10 +29,10 @@ import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
-import de.woq.osgi.java.container.registry.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
 import scala.concurrent.duration._
 import akka.util.Timeout
 import spray.httpx.SprayJsonSupport
+import de.woq.osgi.java.container.registry.protocol._
 
 trait ContainerRegistryProvider {
   def registry : ActorRef
@@ -44,7 +44,6 @@ trait CollectorService extends HttpService { this : SprayJsonSupport with Contai
 
     implicit val timeout = Timeout(1.second)
     import scala.concurrent.ExecutionContext.Implicits.global
-    import de.woq.osgi.java.container.registry.ContainerRegistryJson._
 
     path("container") {
       post {
@@ -62,6 +61,7 @@ object ManagementCollector {
       override def registry = reg
     }
 
+  // TODO: get and track the container registry
   def apply(contextPath: String, bundleId: String)(implicit bundleContext : BundleContext) =
     new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider {
       override def registry = context.system.deadLetters

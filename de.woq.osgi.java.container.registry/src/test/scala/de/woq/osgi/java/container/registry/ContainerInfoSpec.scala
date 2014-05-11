@@ -2,6 +2,7 @@ package de.woq.osgi.java.container.registry
 
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
+import de.woq.osgi.java.container.registry.protocol._
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
@@ -24,7 +25,6 @@ class ContainerInfoSpec extends WordSpec with Matchers {
   val log = LoggerFactory.getLogger(classOf[ContainerInfoSpec])
 
   import spray.json._
-  import ContainerRegistryJson._
 
   "ContainerInfo" should {
 

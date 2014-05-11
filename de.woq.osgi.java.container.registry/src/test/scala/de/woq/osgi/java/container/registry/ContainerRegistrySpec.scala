@@ -2,7 +2,7 @@ package de.woq.osgi.java.container.registry
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.woq.osgi.akka.system.{ExposedActor, InitializeBundle}
+import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
 import de.woq.osgi.java.testsupport.TestActorSys
 import org.mockito.ArgumentCaptor
@@ -10,6 +10,7 @@ import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import org.mockito.Mockito.verify
+import de.woq.osgi.java.container.registry.protocol.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
@@ -39,29 +40,6 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
       registry ! UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas")))
 
       expectMsg(ContainerRegistryResponseOK("foo"))
-    }
-
-    "Register the bundle actor as a service" in new TestActorSys with RegistryBundleName {
-      implicit val osgiContext = mock[BundleContext]
-
-      val registry = TestActorRef(Props(ContainerRegistryImpl()))
-      registry ! InitializeBundle(osgiContext)
-
-      val ifaceCaptor = ArgumentCaptor.forClass(classOf[Array[String]])
-      val propertiesCaptor = ArgumentCaptor.forClass(classOf[java.util.Dictionary[String, Any]])
-      val svcCaptor = ArgumentCaptor.forClass(classOf[AnyRef])
-
-      verify(osgiContext).registerService(
-        ifaceCaptor.capture(),
-        svcCaptor.capture(),
-        propertiesCaptor.capture()
-      )
-
-      ifaceCaptor.getValue should be(Array(classOf[ExposedActor].getName))
-
-      propertiesCaptor.getValue.size should be (1)
-      propertiesCaptor.getValue get "bundle" should be (bundleSymbolicName)
-
     }
   }
 

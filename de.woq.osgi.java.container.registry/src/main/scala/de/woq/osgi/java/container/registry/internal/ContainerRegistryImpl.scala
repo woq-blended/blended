@@ -17,9 +17,10 @@
 package de.woq.osgi.java.container.registry.internal
 
 import akka.actor.{ActorLogging, Actor}
-import de.woq.osgi.akka.system.{InitializeBundle, BundleName, OSGIActor}
+import de.woq.osgi.akka.system.{BundleName, OSGIActor}
 import org.osgi.framework.BundleContext
-import de.woq.osgi.java.container.registry.{RegistryBundleName, ContainerRegistryResponseOK, UpdateContainerInfo}
+import de.woq.osgi.java.container.registry.RegistryBundleName
+import de.woq.osgi.java.container.registry.protocol._
 
 object ContainerRegistryImpl {
   def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName
@@ -28,12 +29,9 @@ object ContainerRegistryImpl {
 class ContainerRegistryImpl(implicit bundleContext : BundleContext) extends Actor with ActorLogging { this : OSGIActor with BundleName =>
 
   def receive = {
-    case InitializeBundle(_) => registerActorService(bundleSymbolicName)
-
     case UpdateContainerInfo(info) => {
       log info(s"${info.toString}")
       sender ! ContainerRegistryResponseOK(info.containerId)
     }
   }
-
 }

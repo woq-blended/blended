@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.osgi.java.container.registry.protocol
 
-import akka.actor.ActorRef
+case class ContainerInfo (containerId : String, properties : Map[String, String])
+case class UpdateContainerInfo (info: ContainerInfo)
+case class ContainerRegistryResponseOK (id: String)
 
-trait ExposedActor {
-  def actor : ActorRef
-}
+
