@@ -66,9 +66,9 @@ class ManagementCollector(contextPath: String)(implicit bundleContext: BundleCon
     ContainerRegistryResponseOK(info.containerId)
   }
 
-  def receive = eventSourceReceive orElse initializing
+  def receive = LoggingReceive { initializing orElse eventSourceReceive }
 
-  def initializing = LoggingReceive {
+  def initializing : Receive = {
     case InitializeBundle(_) => getActorConfig(bundleSymbolicName) pipeTo (self)
     case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
 
@@ -94,8 +94,8 @@ class ManagementCollector(contextPath: String)(implicit bundleContext: BundleCon
           "Web-ContextPath" -> s"/$contextPath"
         ))
 
-      context.become(LoggingReceive {
-        eventSourceReceive orElse runRoute(collectorRoute) }
+      context.become(
+        LoggingReceive { runRoute(collectorRoute) orElse eventSourceReceive}
       )
     }
   }

@@ -25,14 +25,18 @@ import akka.pattern.pipe
 import scala.concurrent.duration._
 import scala.collection.JavaConversions._
 import spray.json._
+import spray.httpx.SprayJsonSupport
 import de.woq.osgi.java.container.registry.protocol._
 import de.woq.osgi.akka.system.protocol._
+import scala.concurrent.Future
+import spray.client.pipelining._
+import spray.http.HttpRequest
 
 object MgmtReporter {
   def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtReporterBundleName
 }
 
-class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with BundleName =>
+class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this : OSGIActor with BundleName =>
 
   case object Tick
 
@@ -50,14 +54,22 @@ class MgmtReporter extends Actor with ActorLogging { this : OSGIActor with Bundl
 
     case Tick => {
 
-      log debug "Performing report"
-
       invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
         new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap)
       } pipeTo(self)
     }
 
-    case ServiceResult(Some(info : ContainerInfo))  => log info s"${info.toJson.compactPrint}"
+    case ServiceResult(Some(info : ContainerInfo))  => {
+      log info s"Performing report [${info.toString}]."
+
+      val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
+        sendReceive ~> unmarshal[ContainerRegistryResponseOK]
+      }
+
+      (pipeline{ Post("http://localhost:8181/woq/container", info) }).mapTo[ContainerRegistryResponseOK].pipeTo(self)
+    }
+
+    case response : ContainerRegistryResponseOK => log info(s"Reported [${response.id}] to management node")
   }
 
   def receive = initializing

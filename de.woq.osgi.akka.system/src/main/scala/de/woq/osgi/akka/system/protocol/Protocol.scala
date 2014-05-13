@@ -26,11 +26,10 @@ package de.woq.osgi.akka.system {
 
   package protocol {
 
-
-  // Kick off the BundleInitialization
+    // Kick off the BundleInitialization
     case class InitializeBundle(context: BundleContext)
 
-  // A bundle has been started via ActorSystemAware
+    // A bundle has been started via ActorSystemAware
     case class BundleActorStarted(bundleId: String)
     // This can be posted on the Event bus if the bund actor has finished initializing
     case class BundleActorInitialized(bundleId: String)

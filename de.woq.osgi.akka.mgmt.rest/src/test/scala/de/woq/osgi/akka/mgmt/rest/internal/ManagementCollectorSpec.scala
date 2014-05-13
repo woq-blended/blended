@@ -45,7 +45,6 @@ class ManagementCollectorSpec
 
   override implicit def actorRefFactory = system
 
-
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
     testLatch.countDown()
     ContainerRegistryResponseOK(info.containerId)

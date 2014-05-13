@@ -57,6 +57,12 @@
     </dependency>
 
     <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-client</artifactId>
+      <version>${spray.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>${osgi.core.version}</version>

@@ -56,12 +56,14 @@ trait OSGIEventSourceListener { this : Actor with ActorLogging with OSGIActor =>
   def setupListener(publisherBundleName : String) {
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
-    bundleActor(publisherBundleName) onSuccess {
-      case dlq if dlq == context.system.deadLetters => publisher = dlq
-      case actor : ActorRef => {
-        actor ! RegisterListener(self)
-        context.watch(actor)
-        publisher = actor
+    (for(actor <- bundleActor(publisherBundleName).mapTo[ActorRef]) yield actor) map  {
+      _ match {
+        case dlq if dlq == context.system.deadLetters => publisher = dlq
+        case actor : ActorRef => {
+          actor ! RegisterListener(self)
+          context.watch(actor)
+          publisher = actor
+        }
       }
     }
   }
