@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.system {
 
   import akka.actor.ActorRef
-  import org.osgi.framework.ServiceReference
+  import org.osgi.framework.{BundleContext, ServiceReference}
   import com.typesafe.config.Config
 
   package object protocol {
@@ -26,7 +26,11 @@ package de.woq.osgi.akka.system {
 
   package protocol {
 
-    // A bundle has been started via ActorSystemAware
+
+  // Kick off the BundleInitialization
+    case class InitializeBundle(context: BundleContext)
+
+  // A bundle has been started via ActorSystemAware
     case class BundleActorStarted(bundleId: String)
     // This can be posted on the Event bus if the bund actor has finished initializing
     case class BundleActorInitialized(bundleId: String)

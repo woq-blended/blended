@@ -20,9 +20,7 @@ import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{PoisonPill, Props, ActorRef, ActorSystem}
 import de.woq.osgi.akka.modules._
 import org.slf4j.LoggerFactory
-import de.woq.osgi.akka.system.protocol.BundleActorStarted
-
-case class InitializeBundle(context: BundleContext)
+import de.woq.osgi.akka.system.protocol._
 
 trait BundleName {
   def bundleSymbolicName : String

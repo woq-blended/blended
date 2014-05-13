@@ -46,7 +46,7 @@ class OSGIDummyListener extends Actor with ActorLogging with OSGIActor { this : 
   implicit val actorSys = context.system
   val latch = TestLatch(1)
 
-  def initializing : Receive = {
+  def working : Receive = {
     case InitializeBundle(_) => getActorConfig("listener") pipeTo(self)
     case ConfigLocatorResponse(bundleId, config) => {
       setupListener(config.getString("publisher"))
@@ -55,7 +55,7 @@ class OSGIDummyListener extends Actor with ActorLogging with OSGIActor { this : 
     case "Andreas" => latch.countDown()
   }
 
-  def receive = LoggingReceive { eventListenerReceive("publisher") orElse initializing }
+  def receive = LoggingReceive { eventListenerReceive("publisher") orElse working }
 }
 
 class OSGIEventSourceListenerSpec extends WordSpec with Matchers {

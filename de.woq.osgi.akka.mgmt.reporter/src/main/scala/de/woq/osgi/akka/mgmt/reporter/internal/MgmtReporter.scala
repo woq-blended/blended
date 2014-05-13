@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.mgmt.reporter.internal
 
 import akka.actor.{Actor, ActorLogging, Cancellable}
-import de.woq.osgi.akka.system.{OSGIActor, InitializeBundle, BundleName}
+import de.woq.osgi.akka.system.{OSGIActor, BundleName}
 import de.woq.osgi.java.container.id.ContainerIdentifierService
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive

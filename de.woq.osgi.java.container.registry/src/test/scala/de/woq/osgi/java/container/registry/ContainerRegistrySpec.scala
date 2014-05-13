@@ -2,15 +2,12 @@ package de.woq.osgi.java.container.registry
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
 import de.woq.osgi.java.testsupport.TestActorSys
-import org.mockito.ArgumentCaptor
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import org.mockito.Mockito.verify
-import de.woq.osgi.java.container.registry.protocol.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
+import de.woq.osgi.java.container.registry.protocol._
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)

@@ -25,7 +25,6 @@ import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
-import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
 import scala.concurrent.duration._
