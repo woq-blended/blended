@@ -28,7 +28,9 @@ trait OSGIActor { this : Actor =>
   implicit val timeout = new Timeout(1.second)
   implicit val ec = context.dispatcher
 
-  def osgiFacade = context.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
+  def bundleActor(bundleName : String) = context.actorSelection(s"/user/$bundleName").resolveOne()
+
+  def osgiFacade = bundleActor(WOQAkkaConstants.osgiFacadePath)
 
   def getActorConfig(id: String) = for {
       facade <- osgiFacade.mapTo[ActorRef]

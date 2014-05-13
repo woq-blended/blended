@@ -20,6 +20,7 @@ import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{PoisonPill, Props, ActorRef, ActorSystem}
 import de.woq.osgi.akka.modules._
 import org.slf4j.LoggerFactory
+import de.woq.osgi.akka.system.protocol.BundleActorStarted
 
 case class InitializeBundle(context: BundleContext)
 
@@ -51,6 +52,7 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
         actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
         actorRef ! InitializeBundle(bundleContext)
 
+        system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
         postStartBundleActor()
       }
       // TODO : handle this
@@ -58,7 +60,9 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
     }
   }
 
-  def postStartBundleActor() {}
+  def postStartBundleActor() {
+
+  }
 
   final def stop(osgiBundleContext: BundleContext) {
 

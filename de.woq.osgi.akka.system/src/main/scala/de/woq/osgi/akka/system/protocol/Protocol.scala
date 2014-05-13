@@ -15,15 +15,22 @@
  */
 
 package de.woq.osgi.akka.system {
-import akka.actor.ActorRef
-import org.osgi.framework.ServiceReference
-import com.typesafe.config.Config
+
+  import akka.actor.ActorRef
+  import org.osgi.framework.ServiceReference
+  import com.typesafe.config.Config
 
   package object protocol {
     type InvocationType[I <: AnyRef, T <: AnyRef] = (I => T)
   }
 
   package protocol {
+
+    // A bundle has been started via ActorSystemAware
+    case class BundleActorStarted(bundleId: String)
+    // This can be posted on the Event bus if the bund actor has finished initializing
+    case class BundleActorInitialized(bundleId: String)
+
     // look up a bundleActor by the bundle symbolicName
     case class GetBundleActor(bundleId : String)
     case class BundleActor(bundleId : String, bundleActor : ActorRef)
@@ -59,5 +66,12 @@ import com.typesafe.config.Config
     //
     case class ConfigLocatorRequest(bundleId: String)
     case class ConfigLocatorResponse(bundleId: String, config: Config)
+
+    //
+    // Protocol for the EvenSource trait
+    //
+    case class RegisterListener(listener: ActorRef)
+    case class DeregisterListener(listener: ActorRef)
+    case class SendEvent[T](event : T)
   }
 }

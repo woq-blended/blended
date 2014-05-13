@@ -12,10 +12,69 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Credits for the original idea goes to D.Wyatt in his book "Akka conncurrency"
  */
 
 package de.woq.osgi.akka.system
 
-class EventSource {
+import akka.actor.{ActorLogging, Terminated, ActorRef, Actor}
+import de.woq.osgi.akka.system.protocol._
+import akka.actor.Actor.Receive
 
+trait EventSource {
+  def sendEvent[T](event : T) : Unit
+  def eventSourceReceive : Receive
+}
+
+trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging =>
+
+  var listeners = Vector.empty[ActorRef]
+
+  def sendEvent[T](event : T) {
+    listeners foreach { _ ! event }
+  }
+
+  def eventSourceReceive = {
+    case RegisterListener(l) => {
+      context.watch(l)
+      listeners = listeners :+ l
+    }
+    case DeregisterListener(l) => {
+      listeners = listeners filter { _ != l }
+    }
+    case SendEvent(event) => sendEvent(event)
+    case Terminated(l) => self ! DeregisterListener(l)
+    case msg => log warning (msg.toString)
+  }
+}
+
+trait OSGIEventSourceListener { this : Actor with ActorLogging with OSGIActor =>
+
+  var publisher = context.system.deadLetters
+
+  def setupListener(publisherBundleName : String) {
+    context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
+
+    bundleActor(publisherBundleName) onSuccess {
+      case dlq if dlq == context.system.deadLetters => publisher = dlq
+      case actor : ActorRef => {
+        actor ! RegisterListener(self)
+        context.watch(actor)
+        publisher = actor
+      }
+    }
+  }
+
+  def cleanUp() {
+    context.system.eventStream.unsubscribe(self)
+  }
+
+  def eventListenerReceive(publisherBundleName: String) : Receive = {
+    case Terminated(p) if p == publisher => {
+      context.unwatch(p)
+      publisher = context.system.deadLetters
+    }
+    case BundleActorStarted(name) if name == publisherBundleName => setupListener(publisherBundleName)
+  }
 }

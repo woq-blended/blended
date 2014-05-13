@@ -19,11 +19,9 @@ package de.woq.osgi.akka.mgmt.rest.internal
 import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport
-import akka.actor.Props
-import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
 import org.scalatest.mock.MockitoSugar
-import org.osgi.framework.BundleContext
 import de.woq.osgi.java.container.registry.protocol._
+import akka.testkit.TestLatch
 
 class ManagementCollectorSpec
   extends WordSpec
@@ -31,8 +29,9 @@ class ManagementCollectorSpec
   with MockitoSugar
   with ScalatestRouteTest
   with CollectorService
-  with SprayJsonSupport
-  with ContainerRegistryProvider {
+  with SprayJsonSupport {
+
+  val testLatch = TestLatch(1)
 
   "The Management collector" should {
 
@@ -40,13 +39,15 @@ class ManagementCollectorSpec
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"))) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
+      testLatch.isOpen should be (true)
     }
   }
 
-  override def registry = {
-    implicit val bc = mock[BundleContext]
-    system.actorOf(Props(ContainerRegistryImpl()))
-  }
-
   override implicit def actorRefFactory = system
+
+
+  override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
+    testLatch.countDown()
+    ContainerRegistryResponseOK(info.containerId)
+  }
 }

@@ -35,46 +35,39 @@ import de.woq.osgi.java.container.registry.protocol._
 
 import de.woq.osgi.akka.system.protocol._
 
-trait ContainerRegistryProvider {
-  def registry : ActorRef
-}
+trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
-trait CollectorService extends HttpService { this : SprayJsonSupport with ContainerRegistryProvider =>
+  def processContainerInfo(info :ContainerInfo) : ContainerRegistryResponseOK
 
   val collectorRoute = {
 
     implicit val timeout = Timeout(1.second)
-    import scala.concurrent.ExecutionContext.Implicits.global
 
     path("container") {
       post {
-        handleWith { info : ContainerInfo => {
-          for { r <- (registry ? UpdateContainerInfo(info)).mapTo[ContainerRegistryResponseOK] } yield r
-        }}
+        handleWith { info : ContainerInfo => { processContainerInfo(info) } }
       }
     }
   }
 }
 
 object ManagementCollector {
-  def apply(contextPath: String, reg: ActorRef)(implicit bundleContext: BundleContext) =
-    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider {
-      override def registry = reg
-    }
 
-  // TODO: get and track the container registry
-  def apply(contextPath: String, bundleId: String)(implicit bundleContext : BundleContext) =
-    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider {
-      override def registry = context.system.deadLetters
-    }
+  def apply(contextPath: String)(implicit bundleContext: BundleContext) =
+    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource
 }
 
 class ManagementCollector(contextPath: String)(implicit bundleContext: BundleContext)
-  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName with SprayJsonSupport with ContainerRegistryProvider =>
+  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource =>
 
   override implicit def actorRefFactory = context
 
-  def receive = initializing
+  override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
+    sendEvent(UpdateContainerInfo(info))
+    ContainerRegistryResponseOK(info.containerId)
+  }
+
+  def receive = eventSourceReceive orElse initializing
 
   def initializing = LoggingReceive {
     case InitializeBundle(_) => getActorConfig(bundleSymbolicName) pipeTo (self)
@@ -101,7 +94,10 @@ class ManagementCollector(contextPath: String)(implicit bundleContext: BundleCon
           "Webapp-Context" -> contextPath,
           "Web-ContextPath" -> s"/$contextPath"
         ))
-      context.become(LoggingReceive { runRoute(collectorRoute) })
+
+      context.become(LoggingReceive {
+        eventSourceReceive orElse runRoute(collectorRoute) }
+      )
     }
   }
 }

@@ -26,5 +26,5 @@ trait CollectorBundleName extends BundleName {
 
 class CollectorActivator extends ActorSystemAware with CollectorBundleName {
   val registryBundleName = (new Object with RegistryBundleName).bundleSymbolicName
-  override def prepareBundleActor() = Props(ManagementCollector("woq", registryBundleName ))
+  override def prepareBundleActor() = Props(ManagementCollector("woq"))
 }
