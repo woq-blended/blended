@@ -21,11 +21,10 @@ import org.osgi.framework.{ServiceReference, BundleContext}
 import de.woq.osgi.akka.modules._
 import akka.event.LoggingReceive
 import akka.actor.SupervisorStrategy.Stop
-import de.woq.osgi.akka.system.OSGIProtocol
+import de.woq.osgi.akka.system.protocol._
 import scala.Some
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.OSGIProtocol._
 
 object OSGIReferences {
 
@@ -45,7 +44,7 @@ object OfflineServiceTracker {
 class OfflineServiceTracker[I <: AnyRef](references: ActorRef)(implicit osgiContext : BundleContext) extends Actor with ActorLogging {
 
   def initializing = LoggingReceive {
-    case OSGIProtocol.CreateReference(clazz) if clazz.isInstanceOf[Class[I]] => {
+    case CreateReference(clazz) if clazz.isInstanceOf[Class[I]] => {
 
       val requestor = sender
       implicit val executionContext = context.dispatcher
@@ -60,7 +59,7 @@ class OfflineServiceTracker[I <: AnyRef](references: ActorRef)(implicit osgiCont
 
   def waiting(requestor: ActorRef, tracker: ActorRef, timer: Cancellable) = LoggingReceive {
     case "timeout" => {
-      requestor ! OSGIProtocol.Service(context.system.deadLetters)
+      requestor ! Service(context.system.deadLetters)
       tracker ! TrackerClose
     }
     case TrackerAddingService(svcRef, svc) => {
@@ -82,12 +81,12 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
   }
 
   override def receive = LoggingReceive {
-    case OSGIProtocol.CreateReference(clazz) => {
+    case CreateReference(clazz) => {
       bundleContext findService(clazz) match {
         case Some(ref) => {
           log info s"Creating Service reference actor..."
           log info s"Responding to [${sender.toString()}"
-          sender ! OSGIProtocol.Service(context.actorOf(Props(OSGIServiceReference(ref))))
+          sender ! Service(context.actorOf(Props(OSGIServiceReference(ref))))
         }
         case None => {
           log info "Service Reference not available, Creating a Tracker..."
@@ -96,7 +95,7 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
       }
     }
     case OfflineServiceTracker.ReferenceAdded(referenceFor, svcRef) => {
-      referenceFor ! OSGIProtocol.Service(context.actorOf(Props(OSGIServiceReference(svcRef))))
+      referenceFor ! Service(context.actorOf(Props(OSGIServiceReference(svcRef))))
     }
   }
 }

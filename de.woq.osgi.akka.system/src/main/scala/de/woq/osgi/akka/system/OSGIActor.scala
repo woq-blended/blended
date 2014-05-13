@@ -19,12 +19,9 @@ package de.woq.osgi.akka.system
 import akka.actor.{ActorRef, Actor}
 import akka.util.Timeout
 import scala.concurrent.duration._
-import de.woq.osgi.akka.system.OSGIProtocol._
+import de.woq.osgi.akka.system.protocol._
 import akka.pattern.ask
 import scala.concurrent.Future
-import de.woq.osgi.akka.system.OSGIProtocol.GetService
-import org.osgi.framework.BundleContext
-import de.woq.osgi.akka.modules._
 
 trait OSGIActor { this : Actor =>
 

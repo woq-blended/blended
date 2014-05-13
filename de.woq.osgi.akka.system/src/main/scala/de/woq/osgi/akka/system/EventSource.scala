@@ -16,13 +16,6 @@
 
 package de.woq.osgi.akka.system
 
-import com.typesafe.config.Config
+class EventSource {
 
-case class ConfigLocatorRequest(
-  bundleId: String
-)
-
-case class ConfigLocatorResponse(
-  bundleId: String,
-  config: Config
-)
+}

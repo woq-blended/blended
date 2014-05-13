@@ -26,10 +26,11 @@ import akka.event.LoggingReceive
 import akka.testkit.TestActorRef
 import org.osgi.framework.BundleContext
 import akka.pattern.{ask,pipe}
-import de.woq.osgi.akka.system.OSGIProtocol.ServiceResult
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import akka.util.Timeout
+
+import protocol._
 
 object OSGIActorDummy {
   def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with OSGIActor

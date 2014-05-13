@@ -20,8 +20,7 @@ import akka.actor.{ActorRef, ActorLogging, Actor}
 import org.osgi.framework.{ServiceReference, BundleContext}
 import org.osgi.util.tracker.{ServiceTracker, ServiceTrackerCustomizer}
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.OSGIProtocol
-import OSGIProtocol.{TrackerClose, TrackerModifiedService, TrackerAddingService, TrackerRemovedService}
+import de.woq.osgi.akka.system.protocol._
 
 trait TrackerAdapterProvider[I <: AnyRef] {
   def trackerAdapter(observer: ActorRef)(implicit osgiContext : BundleContext) : TrackerAdapter[I]

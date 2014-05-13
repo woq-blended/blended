@@ -19,9 +19,11 @@ package de.woq.osgi.akka.system
 import de.woq.osgi.java.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import akka.actor.Props
-import de.woq.osgi.akka.system.internal.{OSGIReferences, OSGIFacade}
+import de.woq.osgi.akka.system.internal.OSGIFacade
 import org.scalatest.{Matchers, WordSpec}
 import org.scalatest.junit.AssertionsForJUnit
+
+import protocol._
 
 class OSGIReferencesSpec extends WordSpec
   with Matchers
@@ -31,16 +33,16 @@ class OSGIReferencesSpec extends WordSpec
 
   "return a proper OSGIServiceRefence actor when the underlying service exists" in new TestActorSys {
     val facade = system.actorOf(Props(OSGIFacade()), "facade")
-    facade ! OSGIProtocol.GetService(classOf[TestInterface1])
-    expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+    facade ! GetService(classOf[TestInterface1])
+    expectMsgAllClassOf(classOf[Service]) foreach { m =>
       m.service should not be(system.deadLetters)
     }
   }
 
   "return the dead letter Actor for service lookups when the service does not appear in a timely manner" in new TestActorSys {
       val facade = system.actorOf(Props(OSGIFacade()), "facade")
-      facade ! OSGIProtocol.GetService(classOf[TestInterface2])
-      expectMsgAllClassOf(classOf[OSGIProtocol.Service]) foreach { m =>
+      facade ! GetService(classOf[TestInterface2])
+      expectMsgAllClassOf(classOf[Service]) foreach { m =>
         m.service should be (system.deadLetters)
       }
     }

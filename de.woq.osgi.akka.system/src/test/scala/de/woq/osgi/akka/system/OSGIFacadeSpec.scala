@@ -23,6 +23,8 @@ import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.java.testsupport.TestActorSys
 import de.woq.osgi.akka.system.internal.OSGIFacade
 
+import protocol._
+
 class OSGIFacadeSpec extends WordSpec
   with Matchers
   with AssertionsForJUnit {

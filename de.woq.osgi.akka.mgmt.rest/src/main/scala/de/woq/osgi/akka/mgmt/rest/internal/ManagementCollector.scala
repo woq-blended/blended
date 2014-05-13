@@ -25,7 +25,6 @@ import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
-import de.woq.osgi.akka.system.ConfigLocatorResponse
 import de.woq.osgi.akka.system.InitializeBundle
 import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
@@ -33,6 +32,8 @@ import scala.concurrent.duration._
 import akka.util.Timeout
 import spray.httpx.SprayJsonSupport
 import de.woq.osgi.java.container.registry.protocol._
+
+import de.woq.osgi.akka.system.protocol._
 
 trait ContainerRegistryProvider {
   def registry : ActorRef

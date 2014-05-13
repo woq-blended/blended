@@ -21,10 +21,11 @@ import akka.actor.{Props, ActorSystem}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import OSGIProtocol.{UngetServiceReference, ServiceResult, InvokeService}
 import org.slf4j.LoggerFactory
 import org.mockito.Mockito.verify
 import de.woq.osgi.akka.system.internal.OSGIServiceReference
+
+import protocol._
 
 class OSGIServiceReferenceSpec extends TestKit(ActorSystem("OSGIServiceRef"))
   with WordSpecLike

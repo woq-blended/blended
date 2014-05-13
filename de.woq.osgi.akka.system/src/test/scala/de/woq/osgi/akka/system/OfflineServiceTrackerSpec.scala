@@ -23,7 +23,8 @@ import org.scalatest.mock.MockitoSugar
 import akka.testkit.TestProbe
 import de.woq.osgi.akka.system.internal.OfflineServiceTracker
 import akka.actor.Props
-import de.woq.osgi.akka.system.OSGIProtocol._
+
+import protocol._
 
 class OfflineServiceTrackerSpec extends WordSpec
   with Matchers
@@ -35,7 +36,7 @@ class OfflineServiceTrackerSpec extends WordSpec
       val references = TestProbe()
       val ost = system.actorOf(Props(OfflineServiceTracker[TestInterface1](references.ref)), "references")
       ost ! CreateReference(classOf[TestInterface1])
-      expectMsg(OSGIProtocol.Service(system.deadLetters))
+      expectMsg(Service(system.deadLetters))
     }
 
     "respond with the service actor if a service came online within a given time frame" in new TestActorSys with TestSetup with MockitoSugar {

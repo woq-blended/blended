@@ -23,8 +23,7 @@ import scala.concurrent.duration._
 import de.woq.osgi.akka.system.WOQAkkaConstants._
 import de.woq.osgi.java.container.context.ContainerContext
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.OSGIProtocol.{BundleActor, GetBundleActor, GetService}
-import de.woq.osgi.akka.system.{OSGIProtocol, ConfigLocatorRequest}
+import de.woq.osgi.akka.system.protocol._
 import scala.Some
 import akka.actor.Props
 import de.woq.osgi.akka.modules._
@@ -51,7 +50,7 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
   }
 
   override def receive = LoggingReceive {
-    case GetService(clazz) => references forward OSGIProtocol.CreateReference(clazz)
+    case GetService(clazz) => references forward CreateReference(clazz)
     case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
     case GetBundleActor(bundleId) =>
       (for (ref <- context.actorSelection(s"/user/$bundleId").resolveOne().mapTo[ActorRef]) yield ref) onSuccess {

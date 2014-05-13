@@ -23,6 +23,8 @@ import org.scalatest.junit.AssertionsForJUnit
 import de.woq.osgi.akka.system.internal.{ConfigDirectoryProvider, ConfigLocator}
 import com.typesafe.config.ConfigFactory
 
+import protocol._
+
 class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
   override def configDirectory: String = getClass.getResource("/").getPath
 }
