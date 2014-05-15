@@ -16,19 +16,22 @@
 
 package de.woq.osgi.akka.system
 
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ActorLogging, ActorRef, Actor}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import de.woq.osgi.akka.system.protocol._
 import akka.pattern.ask
 import scala.concurrent.Future
 
-trait OSGIActor { this : Actor =>
+trait OSGIActor { this : Actor with ActorLogging =>
 
   implicit val timeout = new Timeout(1.second)
   implicit val ec = context.dispatcher
 
-  def bundleActor(bundleName : String) = context.actorSelection(s"/user/$bundleName").resolveOne()
+  def bundleActor(bundleName : String) = {
+    log debug s"Trying to resolve bundle actor [$bundleName]"
+    context.actorSelection(s"/user/$bundleName").resolveOne()
+  }
 
   def osgiFacade = bundleActor(WOQAkkaConstants.osgiFacadePath)
 

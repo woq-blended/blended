@@ -190,6 +190,7 @@
     <bundle>mvn:io.spray/spray-io/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
+    <bundle>mvn:io.spray/spray-client/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-json_${scala.version}/${spray-json.version}</bundle>
     <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
   </feature>
