@@ -35,8 +35,11 @@
     </fileSet>
 
     <fileSet>
-      <directory>target/windows/apache-karaf-${karaf.version}</directory>
+      <directory>target/linux/apache-karaf-${karaf.version}</directory>
       <outputDirectory>/</outputDirectory>
+      <excludes>
+        <exclude>%regex[.*/xerces.*]</exclude>
+      </excludes>
     </fileSet>
 
     <fileSet>

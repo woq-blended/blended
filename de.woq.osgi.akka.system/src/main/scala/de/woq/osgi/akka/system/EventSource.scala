@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * Credits for the original idea goes to D.Wyatt in his book "Akka conncurrency"
+ * Credits for the original idea goes to D.Wyatt in his book "Akka concurrency"
  */
 
 package de.woq.osgi.akka.system

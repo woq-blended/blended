@@ -41,7 +41,6 @@ trait OSGIActor { this : Actor with ActorLogging =>
     } yield config
 
   def getServiceRef[I <: AnyRef](clazz : Class[I]) = {
-
     for {
       facade <- osgiFacade.mapTo[ActorRef]
       service <- (facade ? GetService(clazz)).mapTo[Service]

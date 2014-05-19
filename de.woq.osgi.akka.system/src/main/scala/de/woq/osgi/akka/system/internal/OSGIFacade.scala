@@ -21,12 +21,13 @@ import org.osgi.framework.BundleContext
 import akka.util.Timeout
 import scala.concurrent.duration._
 import de.woq.osgi.akka.system.WOQAkkaConstants._
-import de.woq.osgi.java.container.context.ContainerContext
 import akka.event.LoggingReceive
 import de.woq.osgi.akka.system.protocol._
 import scala.Some
 import akka.actor.Props
+import akka.pattern._
 import de.woq.osgi.akka.modules._
+import de.woq.osgi.java.container.context.ContainerContext
 
 object OSGIFacade {
   def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()
@@ -50,12 +51,13 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
   }
 
   override def receive = LoggingReceive {
+
     case GetService(clazz) => references forward CreateReference(clazz)
     case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
     case GetBundleActor(bundleId) =>
-      (for (ref <- context.actorSelection(s"/user/$bundleId").resolveOne().mapTo[ActorRef]) yield ref) onSuccess {
-        case bundleActor => sender ! BundleActor(bundleId, bundleActor)
-      }
+      (for {
+        ref <- context.actorSelection(s"/user/$bundleId").resolveOne().mapTo[ActorRef]
+      }  yield BundleActor(bundleId, ref)) pipeTo sender
   }
 
   private[OSGIFacade] def configDir = {
