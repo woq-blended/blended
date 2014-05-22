@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.protocol
+package de.woq.osgi.akka.persistence.internal
 
-import de.woq.osgi.akka.persistence.protocol.DataObject
+import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
+import akka.actor.Props
 
-case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId)
+trait PersistenceBundleName extends BundleName {
+  override def bundleSymbolicName = "de.woq.osgi.akka.persistence"
+}
 
-case class UpdateContainerInfo (info: ContainerInfo)
-case class ContainerRegistryResponseOK (id: String)
-
-
+class PersistenceActivator extends ActorSystemAware with PersistenceBundleName {
+  override def prepareBundleActor() = Props(PersistenceManager(new Neo4jBackend()))
+}

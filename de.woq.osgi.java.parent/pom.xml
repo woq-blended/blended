@@ -85,6 +85,7 @@
     <log4j.version>1.2.15</log4j.version>
     <mimepull.version>1.9.4</mimepull.version>
     <mockito.version>1.9.5</mockito.version>
+    <neo4j.version>2.0.3</neo4j.version>
     <netty.version>3.8.1.Final</netty.version>
     <ops4j-base.version>1.4.0</ops4j-base.version>
     <osgi.core.version>4.3.0</osgi.core.version>

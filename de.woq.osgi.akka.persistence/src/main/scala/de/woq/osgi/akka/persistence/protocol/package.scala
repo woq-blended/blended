@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.protocol
+package de.woq.osgi.akka.persistence {
 
-import de.woq.osgi.akka.persistence.protocol.DataObject
+  package object protocol {
 
-case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId)
+  }
 
-case class UpdateContainerInfo (info: ContainerInfo)
-case class ContainerRegistryResponseOK (id: String)
-
+  package protocol {
+    abstract class DataObject(uuid : String)
+  }
+}
 

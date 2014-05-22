@@ -24,10 +24,9 @@
     <groupId>de.woq.osgi.java</groupId>
     <artifactId>de.woq.osgi.java.parent</artifactId>
     <version>1.0.7-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.persistence</artifactId>
+  <artifactId>de.woq.osgi.java.neo4j</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -38,20 +37,30 @@
   <dependencies>
 
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j</artifactId>
+      <version>${neo4j.version}</version>
     </dependency>
 
   </dependencies>
 
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Embed-Dependency>*;scope=compile</Embed-Dependency>
+            <_exportcontents>org.neo4j.*;version=${neo4j.version};-split-package:=merge-first</_exportcontents>
+            <Embed-Transitive>true</Embed-Transitive>
+          </instructions>
+        </configuration>
       </plugin>
+
     </plugins>
   </build>
 
 </project>
+

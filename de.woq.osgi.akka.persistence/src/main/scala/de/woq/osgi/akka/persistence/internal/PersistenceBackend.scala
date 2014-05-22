@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.protocol
+package de.woq.osgi.akka.persistence.internal
 
 import de.woq.osgi.akka.persistence.protocol.DataObject
+import com.typesafe.config.Config
+import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 
-case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId)
-
-case class UpdateContainerInfo (info: ContainerInfo)
-case class ContainerRegistryResponseOK (id: String)
-
-
+trait PersistenceBackend {
+  def initBackend(baseDir: String, config: Config)(implicit log: LoggingAdapter) : Unit
+  def store(obj : DataObject)(implicit log: LoggingAdapter) : Int
+  def shutdownBackend()(implicit log: LoggingAdapter) : Unit
+}

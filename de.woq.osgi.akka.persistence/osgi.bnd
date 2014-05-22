@@ -1,0 +1,13 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: *
+
+Bundle-Activator: \
+  de.woq.osgi.akka.persistence.internal.PersistenceActivator
+
+Private-Package:\
+  ${bundle.namespace}.internal.*
