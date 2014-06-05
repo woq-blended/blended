@@ -3,6 +3,7 @@ package de.woq.osgi.java.container.registry
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
 import de.woq.osgi.java.container.registry.protocol._
+import de.woq.osgi.akka.persistence.protocol.{StringProperty, DataObject}
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
@@ -39,6 +40,18 @@ class ContainerInfoSpec extends WordSpec with Matchers {
       val info = json.convertTo[ContainerInfo]
 
       info should be(ContainerInfo("uuid", Map("fooo" -> "bar")))
+    }
+
+    "create the Persistence Properties correctly" in {
+
+      import DataObject._
+
+      val info = ContainerInfo("uuid", Map("fooo" -> "bar"))
+
+      val props = info.persistenceProperties
+      props.size should be (2)
+      props(PROP_UUID) should be (StringProperty("uuid"))
+      props("fooo") should be (StringProperty("bar"))
     }
   }
 }

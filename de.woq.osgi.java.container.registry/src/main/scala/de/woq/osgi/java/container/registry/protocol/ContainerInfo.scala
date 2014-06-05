@@ -16,9 +16,20 @@
 
 package de.woq.osgi.java.container.registry.protocol
 
-import de.woq.osgi.akka.persistence.protocol.DataObject
+import de.woq.osgi.akka.persistence.protocol._
+import scala.collection.mutable
 
-case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId)
+case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId) {
+  override def persistenceProperties: PersistenceProperties = {
+    var builder =
+      new mutable.MapBuilder[String, PersistenceProperty, mutable.Map[String, PersistenceProperty]](mutable.Map.empty)
+
+    builder ++= super.persistenceProperties
+    properties.foreach { case (k, v) => builder += (k -> StringProperty(v)) }
+
+    builder.result().toMap
+  }
+}
 
 case class UpdateContainerInfo (info: ContainerInfo)
 case class ContainerRegistryResponseOK (id: String)

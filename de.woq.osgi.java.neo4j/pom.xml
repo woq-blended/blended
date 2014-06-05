@@ -42,12 +42,6 @@
       <version>${neo4j.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.neo4j.app</groupId>
-      <artifactId>neo4j-server</artifactId>
-      <version>${neo4j.version}</version>
-    </dependency>
-
   </dependencies>
 
   <build>
