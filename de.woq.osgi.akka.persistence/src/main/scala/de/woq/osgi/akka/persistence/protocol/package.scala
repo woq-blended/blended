@@ -18,10 +18,39 @@ package de.woq.osgi.akka.persistence {
 
   package object protocol {
 
+    implicit def primitive2Property(v: Any) : PersistenceProperty = v match {
+      case b: Boolean  => BooleanProperty(b)
+      case b: Byte     => ByteProperty(b)
+      case s: Short    => ShortProperty(s)
+      case i: Int      => IntProperty(i)
+      case l: Long     => LongProperty(l)
+      case f: Float    => FloatProperty(f)
+      case d: Double   => DoubleProperty(d)
+      case c: Char     => CharProperty(c)
+      case s: String   => StringProperty(s)
+
+      case x :: xs     => list2Property(x :: xs)
+    }
+
+    private[protocol] def list2Property[T](l : List[T]) = ListProperty(l.map(primitive2Property(_)))
   }
 
   package protocol {
-    abstract class DataObject(uuid : String)
+
+    sealed class PersistenceProperty
+    sealed case class BooleanProperty(b: Boolean) extends PersistenceProperty
+    sealed case class ByteProperty(b: Byte) extends PersistenceProperty
+    sealed case class ShortProperty(s: Short) extends PersistenceProperty
+    sealed case class IntProperty(i: Int) extends PersistenceProperty
+    sealed case class LongProperty(l: Long) extends PersistenceProperty
+    sealed case class FloatProperty(f: Float) extends PersistenceProperty
+    sealed case class DoubleProperty(d: Double) extends PersistenceProperty
+    sealed case class CharProperty(c: Char) extends PersistenceProperty
+    sealed case class StringProperty(s: String) extends PersistenceProperty
+    sealed case class ListProperty[T <: PersistenceProperty](values: List[T]) extends PersistenceProperty
+
+    abstract class DataObject(uuid : String) {
+    }
   }
 }
 
