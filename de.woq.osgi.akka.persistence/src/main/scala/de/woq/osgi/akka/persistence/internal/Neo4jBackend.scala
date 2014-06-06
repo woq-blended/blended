@@ -16,12 +16,15 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import org.neo4j.graphdb.GraphDatabaseService
-import org.neo4j.graphdb.factory.GraphDatabaseFactory
+import org.neo4j.graphdb.{DynamicLabel, GraphDatabaseService}
+import org.neo4j.graphdb.factory.{GraphDatabaseSettings, GraphDatabaseFactory}
 import com.typesafe.config.Config
-import de.woq.osgi.akka.persistence.protocol.DataObject
-import akka.actor.ActorContext
+import de.woq.osgi.akka.persistence.protocol._
 import akka.event.LoggingAdapter
+import java.io.File
+import scala.collection.JavaConverters._
+import java.util.concurrent.TimeUnit
+import org.neo4j.cypher.ExecutionEngine
 
 class Neo4jBackend extends PersistenceBackend {
 
@@ -32,7 +35,7 @@ class Neo4jBackend extends PersistenceBackend {
   private[Neo4jBackend] def dbPath = dbConfig match {
     case Some(config) => {
       val dir = baseDir match {
-        case Some(s) => s
+        case Some(s) => new File(s).getAbsolutePath()
         case _ => ""
       }
       val path = config.getString("dbPath")
@@ -48,17 +51,35 @@ class Neo4jBackend extends PersistenceBackend {
     try {
       f(db)
       tx.success()
+    } finally {
+      tx.close()
     }
   }
 
   override def initBackend(dir: String, config: Config)(implicit log: LoggingAdapter) {
     dbServiceRef match {
       case Some(ref) => throw new Exception("Backend already initialized.")
-      case _ => dbServiceRef = {
+      case _ => {
         baseDir = Some(dir)
         dbConfig = Some(config)
         log.info(s"Initializing embedded Neo4j with path [$dbPath].")
-        Some(new GraphDatabaseFactory().newEmbeddedDatabase(s"$dbPath"))
+
+        implicit val db = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath)
+
+        withDb { db =>
+          db.schema()
+            .constraintFor(DynamicLabel.label(DataObject.LABEL))
+            .assertPropertyIsUnique(DataObject.PROP_UUID)
+            .create()
+        }
+
+        withDb { db =>
+          val indeces = db.schema().getIndexes().asScala.toList
+          log.info(indeces.toString)
+          db.schema().awaitIndexesOnline(30, TimeUnit.SECONDS)
+        }
+
+        dbServiceRef = Some(db)
       }
     }
   }
@@ -74,6 +95,29 @@ class Neo4jBackend extends PersistenceBackend {
     baseDir = None
   }
 
-  override def store (obj: DataObject) (implicit log: LoggingAdapter) = throw new UnsupportedOperationException ("Not yet ....")
+  override def store (obj: DataObject) (implicit log: LoggingAdapter) = {
+     dbServiceRef match {
+      case None => throw new Exception("Backend is not initialized properly")
+      case Some(db) => {
+        implicit val backend = db
+        withDb { db =>
+          val engine = new ExecutionEngine(db)
+          val query = createMergeQuery(obj)
+          val params = toQueryParams(obj.persistenceProperties)
+          log.info(query)
+          log.info(params.toString())
+          val resultIterator = engine.execute(query, params )
+          val result = resultIterator.next()
+          log.info(s"${result.toString}")
+        }
+        0
+      }
+    }
+  }
+
+  private def createMergeQuery(dataObject: DataObject) = {
+    val params = dataObject.persistenceProperties.keys.map { s : String => s"$s: {$s}" }
+    "MERGE (n: dataObject {" + params.mkString(",") + "}) RETURN n"
+  }
 
 }

@@ -34,7 +34,52 @@ package de.woq.osgi.akka.persistence {
       case x :: xs     => list2Property(x :: xs)
     }
 
+    private[protocol] def property2Primitive(p: PersistenceProperty) : Any = p match {
+      case BooleanProperty(b) => b
+      case ByteProperty(b)    => b
+      case ShortProperty(s)   => s
+      case IntProperty(i)     => i
+      case LongProperty(l)    => l
+      case FloatProperty(f)   => f
+      case DoubleProperty(d)  => d
+      case CharProperty(c)    => c
+      case StringProperty(s)  => s
+      case ListProperty(l)    => l.map(property2Primitive(_))
+    }
+
     private[protocol] def list2Property[T](l : List[T]) = ListProperty(l.map(primitive2Property(_)))
+
+    def toQueryParams(props: PersistenceProperties) : Map[String, Any] =
+      props.map { case (key: String, v: PersistenceProperty) => (key, property2Primitive(v)) }
+  }
+
+  package protocol {
+
+    sealed class PersistenceProperty
+    sealed case class BooleanProperty(b: Boolean) extends PersistenceProperty
+    sealed case class ByteProperty(b: Byte) extends PersistenceProperty
+    sealed case class ShortProperty(s: Short) extends PersistenceProperty
+    sealed case class IntProperty(i: Int) extends PersistenceProperty
+    sealed case class LongProperty(l: Long) extends PersistenceProperty
+    sealed case class FloatProperty(f: Float) extends PersistenceProperty
+    sealed case class DoubleProperty(d: Double) extends PersistenceProperty
+    sealed case class CharProperty(c: Char) extends PersistenceProperty
+    sealed case class StringProperty(s: String) extends PersistenceProperty
+    sealed case class ListProperty[T <: PersistenceProperty](values: List[T]) extends PersistenceProperty
+
+    object DataObject {
+      val LABEL = "dataObject"
+      val PROP_UUID = "uuid"
+    }
+
+    abstract class DataObject(uuid : String) {
+      import DataObject._
+
+      def persistenceProperties : PersistenceProperties = Map(PROP_UUID -> uuid)
+    }
+
+    // Store a DataObject within in the persistence layer
+    case class StoreObject(dataObject : DataObject)
   }
 }
 

@@ -16,13 +16,14 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import akka.actor.{ActorSystem, ActorLogging, Actor}
+import akka.actor.{Stash, ActorSystem, ActorLogging, Actor}
 import de.woq.osgi.akka.system.{BundleName, OSGIActor}
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
 import de.woq.osgi.akka.system.protocol.{ServiceResult, Service, ConfigLocatorResponse, InitializeBundle}
 import akka.pattern._
 import de.woq.osgi.java.container.context.ContainerContext
+import de.woq.osgi.akka.persistence.protocol.StoreObject
 
 trait PersistenceProvider {
   val backend : PersistenceBackend
@@ -37,7 +38,7 @@ object PersistenceManager {
 }
 
 class PersistenceManager()(implicit osgiContext : BundleContext)
-  extends Actor with ActorLogging { this : OSGIActor with BundleName with PersistenceProvider =>
+  extends Stash with Actor with ActorLogging { this : OSGIActor with BundleName with PersistenceProvider =>
 
   implicit val logging = log
 
@@ -52,11 +53,17 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
     }
     case (ConfigLocatorResponse(id, config), ServiceResult(Some(dir : String))) if id == bundleSymbolicName => {
       backend.initBackend(dir, config)
+      unstashAll()
       context.become(working)
     }
+    case _ => stash()
   }
 
-  def working = LoggingReceive { Actor.emptyBehavior }
+  def working = LoggingReceive {
+    case StoreObject(dataObject) => {
+      backend.store(dataObject)
+    }
+  }
 
   def receive = initializing
 

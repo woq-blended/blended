@@ -16,20 +16,40 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import com.typesafe.config.ConfigFactory
 import java.io.File
 import de.woq.osgi.java.testsupport.TestActorSys
 import akka.actor.ActorSystem
 import akka.event.Logging.Info
+import de.woq.osgi.java.container.registry.protocol.ContainerInfo
 
-class PersistenceManagerSpec extends WordSpec with Matchers with PersistenceBundleName {
+class PersistenceManagerSpec extends WordSpec with Matchers with PersistenceBundleName with BeforeAndAfterAll {
 
   "The PersistenceManager" should {
 
     val configPath = classOf[PersistenceManagerSpec].getResource("/").getPath
 
-    "Initialize correctly" in new TestActorSys {
+//    "Initialize correctly" in new TestActorSys {
+//
+//      implicit val logging = system.log
+//      val backend = new Neo4jBackend()
+//
+//      system.eventStream.subscribe(self,classOf[Info])
+//
+//      backend.initBackend(configPath, ConfigFactory.parseFile(new File(configPath, s"$bundleSymbolicName.conf") ))
+//      backend.shutdownBackend()
+//
+//      fishForMessage() {
+//        case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
+//      }
+//
+//      fishForMessage() {
+//        case Info(_, _, m : String) => m.startsWith("Shutting down embedded Neo4j for path")
+//      }
+//    }
+
+    "Store a data object correctly" in new TestActorSys {
 
       implicit val logging = system.log
       val backend = new Neo4jBackend()
@@ -37,6 +57,10 @@ class PersistenceManagerSpec extends WordSpec with Matchers with PersistenceBund
       system.eventStream.subscribe(self,classOf[Info])
 
       backend.initBackend(configPath, ConfigFactory.parseFile(new File(configPath, s"$bundleSymbolicName.conf") ))
+
+      val info = new ContainerInfo("uuid", Map("name" -> "Andreas"))
+      backend.store(info)
+
       backend.shutdownBackend()
 
       fishForMessage() {
