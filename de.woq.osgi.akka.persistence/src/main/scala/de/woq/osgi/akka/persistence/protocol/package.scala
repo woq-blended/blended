@@ -75,6 +75,7 @@ package de.woq.osgi.akka.persistence {
     abstract class DataObject(uuid : String) {
       import DataObject._
 
+      final def objectId = this.uuid
       def persistenceProperties : PersistenceProperties = Map(PROP_UUID -> uuid)
     }
 

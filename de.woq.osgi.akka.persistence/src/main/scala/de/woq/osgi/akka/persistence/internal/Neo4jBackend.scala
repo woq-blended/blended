@@ -67,10 +67,14 @@ class Neo4jBackend extends PersistenceBackend {
         implicit val db = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath)
 
         withDb { db =>
-          db.schema()
-            .constraintFor(DynamicLabel.label(DataObject.LABEL))
-            .assertPropertyIsUnique(DataObject.PROP_UUID)
-            .create()
+          val constraints = db.schema().getConstraints(DynamicLabel.label(DataObject.LABEL))
+
+          if (!constraints.iterator().hasNext) {
+            db.schema()
+              .constraintFor(DynamicLabel.label(DataObject.LABEL))
+              .assertPropertyIsUnique(DataObject.PROP_UUID)
+              .create()
+          }
         }
 
         withDb { db =>
@@ -116,8 +120,9 @@ class Neo4jBackend extends PersistenceBackend {
   }
 
   private def createMergeQuery(dataObject: DataObject) = {
-    val params = dataObject.persistenceProperties.keys.map { s : String => s"$s: {$s}" }
-    "MERGE (n: dataObject {" + params.mkString(",") + "}) RETURN n"
+
+    val params = (dataObject.persistenceProperties.keys.map { s : String => s"$s: {$s}" }).mkString(",")
+    s"""MERGE (n: dataObject { uuid: "${dataObject.objectId}" }) set n={$params} RETURN n"""
   }
 
 }

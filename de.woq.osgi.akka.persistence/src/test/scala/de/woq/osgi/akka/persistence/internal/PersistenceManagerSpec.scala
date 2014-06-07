@@ -58,7 +58,7 @@ class PersistenceManagerSpec extends WordSpec with Matchers with PersistenceBund
 
       backend.initBackend(configPath, ConfigFactory.parseFile(new File(configPath, s"$bundleSymbolicName.conf") ))
 
-      val info = new ContainerInfo("uuid", Map("name" -> "Andreas"))
+      val info = new ContainerInfo("uuid", Map("name" -> "Andreas Gies", "city" -> "Cadiz"))
       backend.store(info)
 
       backend.shutdownBackend()
