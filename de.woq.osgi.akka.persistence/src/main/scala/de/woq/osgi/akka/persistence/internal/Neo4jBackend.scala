@@ -78,8 +78,6 @@ class Neo4jBackend extends PersistenceBackend {
         }
 
         withDb { db =>
-          val indeces = db.schema().getIndexes().asScala.toList
-          log.info(indeces.toString)
           db.schema().awaitIndexesOnline(30, TimeUnit.SECONDS)
         }
 

@@ -61,7 +61,6 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
     }
     case (ConfigLocatorResponse(id, config), ServiceResult(Some(dir : String))) if id == bundleSymbolicName => {
       backend.initBackend(dir, config)
-      log.info(s"$requests")
       requests.reverse.foreach{ case (s, m) => self.tell(m, s) }
       context.become(working)
     }
