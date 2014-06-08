@@ -29,7 +29,7 @@ import de.woq.osgi.akka.modules._
 class WoQActivator extends ActorSystemActivator {
 
   def configure(osgiContext: BundleContext, system: ActorSystem) {
-    val log = Logging(system, this)
+    val log = system.log
 
     log info "Creating Akka OSGi Facade"
     system.actorOf(Props(OSGIFacade()(osgiContext)), osgiFacadePath)

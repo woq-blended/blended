@@ -17,11 +17,15 @@ package de.woq.osgi.akka.modules
 
 import org.mockito.ArgumentCaptor
 import org.osgi.framework.BundleContext
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{WordSpecLike, Matchers, WordSpec}
 import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito.verify
+import akka.event.LoggingAdapter
+import de.woq.osgi.java.testsupport.TestActorSys
 
-class RichBundleContextSpec extends WordSpec with MockitoSugar with Matchers {
+class RichBundleContextSpec extends TestActorSys() with WordSpecLike with MockitoSugar with Matchers {
+
+  implicit val logger = system.log
 
   "Calling RichBundleContext.createService" should {
 

@@ -16,9 +16,18 @@
 
 package de.woq.osgi.akka.persistence {
 
-  package object protocol {
+import spray.json._
+
+package object protocol {
 
     type PersistenceProperties = Map[String, PersistenceProperty]
+
+    implicit def jsValue2Property(v: JsValue) : PersistenceProperty = v match {
+      case JsBoolean(b)            => BooleanProperty(b)
+      case JsString(s)             => StringProperty(s)
+      case JsNumber(d: BigDecimal) => DoubleProperty(d.toDouble)
+      case JsArray(elements)   => ListProperty(elements.toList.map(jsValue2Property(_)))
+    }
 
     implicit def primitive2Property(v: Any) : PersistenceProperty = v match {
       case b: Boolean  => BooleanProperty(b)
@@ -81,6 +90,7 @@ package de.woq.osgi.akka.persistence {
 
     // Store a DataObject within in the persistence layer
     case class StoreObject(dataObject : DataObject)
+    case class ObjectStored(dataObject: DataObject)
   }
 }
 

@@ -18,17 +18,14 @@ package de.woq.osgi.akka.system
 
 import org.osgi.framework.{BundleActivator, BundleContext}
 import akka.actor.{PoisonPill, Props, ActorRef, ActorSystem}
-import de.woq.osgi.akka.modules._
-import org.slf4j.LoggerFactory
 import de.woq.osgi.akka.system.protocol._
+import de.woq.osgi.akka.modules._
 
 trait BundleName {
   def bundleSymbolicName : String
 }
 
 trait ActorSystemAware extends BundleActivator { this : BundleName =>
-
-  private [ActorSystemAware] val log = LoggerFactory.getLogger(classOf[ActorSystemAware])
 
   var bundleContextRef : BundleContext = _
   var actorRef         : ActorRef = _
@@ -41,11 +38,9 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
   final def start(osgiBundleContext: BundleContext) {
     this.bundleContextRef = osgiBundleContext
 
-    log debug s"Starting Akka bundle [$bundleSymbolicName]."
-
     bundleContext.findService(classOf[ActorSystem]) match {
       case Some(svcReference) => svcReference invokeService { system =>
-        log debug s"Preparing bundle actor for [$bundleSymbolicName]."
+        system.log debug s"Preparing bundle actor for [$bundleSymbolicName]."
 
         actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
         actorRef ! InitializeBundle(bundleContext)

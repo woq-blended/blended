@@ -76,6 +76,8 @@ class OfflineServiceTracker[I <: AnyRef](references: ActorRef)(implicit osgiCont
 
 class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvider =>
 
+  implicit val logger = context.system.log
+
   override def supervisorStrategy = OneForOneStrategy() {
     case _ => Stop
   }
@@ -84,12 +86,12 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
     case CreateReference(clazz) => {
       bundleContext findService(clazz) match {
         case Some(ref) => {
-          log info s"Creating Service reference actor..."
-          log info s"Responding to [${sender.toString()}"
+          logger info s"Creating Service reference actor..."
+          logger info s"Responding to [${sender.toString()}"
           sender ! Service(context.actorOf(Props(OSGIServiceReference(ref))))
         }
         case None => {
-          log info "Service Reference not available, Creating a Tracker..."
+          logger info "Service Reference not available, Creating a Tracker..."
           context.actorOf(Props(OfflineServiceTracker(self))) forward CreateReference(clazz)
         }
       }

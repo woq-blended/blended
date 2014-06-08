@@ -41,6 +41,13 @@
       <artifactId>de.woq.osgi.akka.system</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-json_${scala.version}</artifactId>
+      <version>${spray-json.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>de.woq.osgi.java</groupId>
       <artifactId>de.woq.osgi.java.neo4j</artifactId>
@@ -61,12 +68,6 @@
 
     <!-- Test dependencies -->
 
-    <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.container.registry</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>
@@ -86,6 +87,13 @@
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
       <scope>test</scope>
     </dependency>
 

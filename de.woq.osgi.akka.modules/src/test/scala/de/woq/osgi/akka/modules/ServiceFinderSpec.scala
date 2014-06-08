@@ -16,22 +16,24 @@
 package de.woq.osgi.akka.modules
 
 import org.osgi.framework.{ServiceReference, BundleContext}
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{WordSpecLike, Matchers}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.junit.AssertionsForJUnit
 import java.util.concurrent._
-import scala.concurrent.{Await, ExecutionContext}
-import org.mockito.Mockito.{when, verify}
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import org.mockito.Mockito.when
+import de.woq.osgi.java.testsupport.TestActorSys
 
-class ServiceFinderSpec extends WordSpec with Matchers with MockitoSugar with AssertionsForJUnit {
+class ServiceFinderSpec extends TestActorSys with WordSpecLike with Matchers with MockitoSugar with AssertionsForJUnit {
+
+  implicit val logger = system.log
 
   "Calling findService" should {
 
     val es = Executors.newFixedThreadPool(2)
     implicit val ec = ExecutionContext.fromExecutorService(es)
 
-    "throw an IllegalArgumentException when called with a null interafce" in {
+    "throw an IllegalArgumentException when called with a null interface" in {
       val context = mock[BundleContext]
       val richContext : RichBundleContext = context
 

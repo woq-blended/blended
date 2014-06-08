@@ -22,10 +22,11 @@ import akka.actor.{ActorSystem, ActorRef}
 import akka.util.Timeout
 import scala.concurrent.duration._
 import de.woq.osgi.akka.modules._
+import akka.event.LoggingAdapter
 
 package object system {
 
-  implicit def context2Facade(bundleContext: BundleContext) : Future[ActorRef] = {
+  implicit def context2Facade(bundleContext: BundleContext)(implicit log: LoggingAdapter) : Future[ActorRef] = {
 
     implicit val bc = bundleContext
     implicit val timeOut = Timeout(1.second)

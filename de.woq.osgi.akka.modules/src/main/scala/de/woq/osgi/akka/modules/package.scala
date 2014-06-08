@@ -18,6 +18,7 @@ package de.woq.osgi.akka
 import java.util.Dictionary
 import org.osgi.framework.{ BundleContext, ServiceReference }
 import org.slf4j.LoggerFactory
+import akka.event.LoggingAdapter
 
 /**
  * Some implicit conversions and other stuff essential for the ScalaModules DSL.

@@ -17,12 +17,11 @@ package de.woq.osgi.akka.modules
 
 import org.osgi.framework.{ServiceReference, BundleContext, ServiceRegistration}
 import org.slf4j.LoggerFactory
+import akka.event.{LoggingBus, Logging, LogSource, LoggingAdapter}
 
 class RichBundleContext(context: BundleContext) {
 
   assert(context != null, "The BundleContext must not be null!")
-
-  val logger = LoggerFactory.getLogger(getClass)
 
   /**
    * Creates a service, i.e. registers one with the OSGi service registry.
@@ -41,7 +40,6 @@ class RichBundleContext(context: BundleContext) {
 
     val serviceRegistration : ServiceRegistration[S] =
       (context.registerService(interfaces, service, if (properties.isEmpty) null else properties)).asInstanceOf[ServiceRegistration[S]]
-    logger info s"Created service $service with interfaces ${interfaces.mkString("[", ",", "]")} and properties $properties."
     serviceRegistration
   }
 
@@ -53,7 +51,6 @@ class RichBundleContext(context: BundleContext) {
   def findService[I <: AnyRef](interface: Class[I]): Option[ServiceReference[I]] = {
     require(interface != null, "The service interface must not be null!")
 
-    logger debug s"Locating service for interface [${interface.getSimpleName}]."
     (context getServiceReference interface) match {
       case null => None
       case svcRef : ServiceReference[I] => Some(svcRef)

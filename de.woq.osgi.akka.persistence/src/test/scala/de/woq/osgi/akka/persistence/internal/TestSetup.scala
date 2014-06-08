@@ -26,9 +26,13 @@ trait TestSetup { this : MockitoSugar =>
   implicit val osgiContext = mock[BundleContext]
   val ctContext = mock[ContainerContext]
   val ctContextRef = mock[ServiceReference[ContainerContext]]
+  val bundle = mock[Bundle]
 
+  when(ctContextRef.getBundle) thenReturn (bundle)
+  when(bundle.getBundleContext) thenReturn (osgiContext)
   when(osgiContext.getServiceReference(classOf[ContainerContext])) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
   when(ctContext.getContainerConfigDirectory) thenReturn (getClass.getResource("/").getPath)
+  when(ctContext.getContainerDirectory) thenReturn (getClass.getResource("/").getPath)
 
 }

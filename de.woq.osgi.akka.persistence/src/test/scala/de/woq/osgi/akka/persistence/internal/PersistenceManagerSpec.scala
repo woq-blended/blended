@@ -16,59 +16,62 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers, WordSpec}
 import com.typesafe.config.ConfigFactory
 import java.io.File
 import de.woq.osgi.java.testsupport.TestActorSys
-import akka.actor.ActorSystem
 import akka.event.Logging.Info
-import de.woq.osgi.java.container.registry.protocol.ContainerInfo
+import de.woq.osgi.akka.persistence.internal.person.Person
+import de.woq.osgi.akka.system.protocol.InitializeBundle
+import akka.actor.{ActorRef, Props, PoisonPill}
+import org.scalatest.mock.MockitoSugar
+import de.woq.osgi.akka.system.internal.OSGIFacade
+import de.woq.osgi.akka.system.WOQAkkaConstants
+import scala.concurrent.duration._
+import de.woq.osgi.akka.persistence.protocol.{ObjectStored, StoreObject}
 
-class PersistenceManagerSpec extends WordSpec with Matchers with PersistenceBundleName with BeforeAndAfterAll {
+class PersistenceManagerSpec
+  extends TestActorSys
+  with WordSpecLike
+  with Matchers
+  with PersistenceBundleName
+  with TestSetup
+  with MockitoSugar
+  with BeforeAndAfterAll {
+
+  var facade : ActorRef = _
+  var pMgr : ActorRef = _
+
+  override protected def beforeAll() {
+    facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+    pMgr = system.actorOf(Props(PersistenceManager(new Neo4jBackend())), bundleSymbolicName)
+
+    pMgr ! InitializeBundle(osgiContext)
+  }
+
+  override protected def afterAll() {
+    pMgr ! PoisonPill
+  }
 
   "The PersistenceManager" should {
 
-    val configPath = classOf[PersistenceManagerSpec].getResource("/").getPath
-
-//    "Initialize correctly" in new TestActorSys {
-//
-//      implicit val logging = system.log
-//      val backend = new Neo4jBackend()
-//
-//      system.eventStream.subscribe(self,classOf[Info])
-//
-//      backend.initBackend(configPath, ConfigFactory.parseFile(new File(configPath, s"$bundleSymbolicName.conf") ))
-//      backend.shutdownBackend()
-//
-//      fishForMessage() {
-//        case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
-//      }
-//
-//      fishForMessage() {
-//        case Info(_, _, m : String) => m.startsWith("Shutting down embedded Neo4j for path")
-//      }
-//    }
-
-    "Store a data object correctly" in new TestActorSys {
-
-      implicit val logging = system.log
-      val backend = new Neo4jBackend()
+    "Initialize correctly" in {
 
       system.eventStream.subscribe(self,classOf[Info])
-
-      backend.initBackend(configPath, ConfigFactory.parseFile(new File(configPath, s"$bundleSymbolicName.conf") ))
-
-      val info = new ContainerInfo("uuid", Map("name" -> "Andreas Gies", "city" -> "Cadiz"))
-      backend.store(info)
-
-      backend.shutdownBackend()
 
       fishForMessage() {
         case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
       }
 
+      system.eventStream.unsubscribe(self)
+    }
+
+    "Store a data object correctly" in {
+      val info = new Person(firstName = "Andreas", name = "Gies")
+      pMgr ! StoreObject(info)
+
       fishForMessage() {
-        case Info(_, _, m : String) => m.startsWith("Shutting down embedded Neo4j for path")
+        case ObjectStored(info) => true
       }
     }
   }

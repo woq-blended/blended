@@ -35,6 +35,7 @@ object OSGIFacade {
 
 class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
 
+  implicit val logger = context.system.log
   implicit val timeout = Timeout(1.second)
   implicit val ec = context.dispatcher
 
@@ -43,10 +44,10 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
 
   override def preStart() {
 
-    log info "Creating Config Locator actor"
+    logger info "Creating Config Locator actor"
     configLocator = context.actorOf(Props(ConfigLocator(configDir)), configLocatorPath)
 
-    log info "Creating OSGI References handler"
+    logger info "Creating OSGI References handler"
     references = context.actorOf(Props(OSGIReferences()(bundleContext)), referencesPath)
   }
 
