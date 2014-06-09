@@ -61,9 +61,8 @@ class PersistenceManagerSpec
 
       fishForMessage() {
         case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
+        case _ => false
       }
-
-      system.eventStream.unsubscribe(self)
     }
 
     "Store a data object correctly" in {
@@ -72,6 +71,7 @@ class PersistenceManagerSpec
 
       fishForMessage() {
         case ObjectStored(info) => true
+        case _ => false
       }
     }
   }
