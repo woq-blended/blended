@@ -20,16 +20,22 @@ import akka.actor._
 import de.woq.osgi.akka.system.{BundleName, OSGIActor}
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol.{ServiceResult, Service, ConfigLocatorResponse, InitializeBundle}
+import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
 import akka.pattern._
 import de.woq.osgi.java.container.context.ContainerContext
-import de.woq.osgi.akka.persistence.protocol.{ObjectStored, StoreObject}
-import de.woq.osgi.akka.persistence.protocol.StoreObject
+import de.woq.osgi.akka.persistence.protocol._
 import de.woq.osgi.akka.system.protocol.ServiceResult
 import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
 import de.woq.osgi.akka.system.protocol.InitializeBundle
-import de.woq.osgi.akka.persistence.protocol.ObjectStored
 import scala.Some
+import de.woq.osgi.akka.persistence.protocol.StoreObject
+import de.woq.osgi.akka.persistence.protocol.FindObjectByID
+import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
+import scala.Some
+import de.woq.osgi.akka.persistence.protocol.QueryResult
+import de.woq.osgi.akka.system.protocol.ServiceResult
+import de.woq.osgi.akka.system.protocol.InitializeBundle
+import de.woq.osgi.akka.persistence.protocol.CreateObjectFromProperties
 
 trait PersistenceProvider {
   val backend : PersistenceBackend
@@ -48,6 +54,7 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
 
   implicit val logging = context.system.log
 
+  private var factories : List[ActorRef] = List.empty
   private var requests : List[(ActorRef, Any)] = List.empty
 
   def initializing = LoggingReceive {
@@ -68,9 +75,29 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
   }
 
   def working = LoggingReceive {
+    case RegisterDataFactory(factory: ActorRef) => {
+      if (!factories.contains(factory)) {
+        factories = factory :: factories
+        context.watch(factory)
+      }
+    }
+    case Terminated(factory) => {
+      factories = factories.filter(_ != factory)
+    }
     case StoreObject(dataObject) => {
       backend.store(dataObject)
-      sender ! ObjectStored(dataObject)
+      sender ! QueryResult(List(dataObject))
+    }
+    case FindObjectByID(uuid, objectType) => {
+      val requestor = sender
+
+      backend.get(uuid, objectType) match {
+        case None => sender ! QueryResult(List.empty)
+        case Some(props) => {
+          log.debug(s"Asking [${factories.size}] factories to create the dataObject.")
+          factories.foreach { f => f.forward(CreateObjectFromProperties(props)) }
+        }
+      }
     }
   }
 

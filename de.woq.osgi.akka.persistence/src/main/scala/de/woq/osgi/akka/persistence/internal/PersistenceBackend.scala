@@ -16,7 +16,7 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import de.woq.osgi.akka.persistence.protocol.DataObject
+import de.woq.osgi.akka.persistence.protocol.{PersistenceProperties, DataObject}
 import com.typesafe.config.Config
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
@@ -24,6 +24,6 @@ import akka.event.LoggingAdapter
 trait PersistenceBackend {
   def initBackend(baseDir: String, config: Config)(implicit log: LoggingAdapter) : Unit
   def store(obj : DataObject)(implicit log: LoggingAdapter) : Long
-  //def get(uuid: String)(implicit log: LoggingAdapter) : DataObject
+  def get(uuid: String, objectType: String)(implicit log: LoggingAdapter) : Option[PersistenceProperties]
   def shutdownBackend()(implicit log: LoggingAdapter) : Unit
 }

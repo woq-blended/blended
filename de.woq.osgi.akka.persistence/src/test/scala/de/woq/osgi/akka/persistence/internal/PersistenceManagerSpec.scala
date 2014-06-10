@@ -16,19 +16,17 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers, WordSpec}
-import com.typesafe.config.ConfigFactory
-import java.io.File
+import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers}
 import de.woq.osgi.java.testsupport.TestActorSys
 import akka.event.Logging.Info
-import de.woq.osgi.akka.persistence.internal.person.Person
-import de.woq.osgi.akka.system.protocol.InitializeBundle
+import de.woq.osgi.akka.persistence.internal.person.{PersonCreator, Person}
+import de.woq.osgi.akka.system.protocol.{BundleActorStarted, InitializeBundle}
 import akka.actor.{ActorRef, Props, PoisonPill}
 import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.akka.system.internal.OSGIFacade
 import de.woq.osgi.akka.system.WOQAkkaConstants
 import scala.concurrent.duration._
-import de.woq.osgi.akka.persistence.protocol.{ObjectStored, StoreObject}
+import de.woq.osgi.akka.persistence.protocol.{FindObjectByID, QueryResult, StoreObject}
 
 class PersistenceManagerSpec
   extends TestActorSys
@@ -41,12 +39,15 @@ class PersistenceManagerSpec
 
   var facade : ActorRef = _
   var pMgr : ActorRef = _
+  var dataFactory : ActorRef = _
 
   override protected def beforeAll() {
     facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
     pMgr = system.actorOf(Props(PersistenceManager(new Neo4jBackend())), bundleSymbolicName)
-
     pMgr ! InitializeBundle(osgiContext)
+
+    dataFactory = system.actorOf(Props(new PersonCreator()), "personCreator")
+    dataFactory ! BundleActorStarted(bundleSymbolicName)
   }
 
   override protected def afterAll() {
@@ -70,8 +71,27 @@ class PersistenceManagerSpec
       pMgr ! StoreObject(info)
 
       fishForMessage(10.seconds) {
-        case ObjectStored(info) => true
+        case QueryResult(List(info)) => true
         case _ => false
+      }
+    }
+
+    "Retrieve a data object by its uuid" in {
+      val info = new Person(firstName = "Andreas", name = "Gies")
+      pMgr ! StoreObject(info)
+
+      fishForMessage(10.seconds) {
+        case QueryResult(List(info)) => true
+        case _ => false
+      }
+
+      pMgr ! FindObjectByID(info.objectId, info.persistenceType)
+
+      fishForMessage(10.seconds) {
+        case QueryResult(List(person)) => person == info
+        case _ => {
+          false
+        }
       }
     }
   }

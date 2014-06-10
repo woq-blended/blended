@@ -17,80 +17,140 @@
 package de.woq.osgi.akka.persistence {
 
 import spray.json._
+import akka.actor.{Terminated, ActorRef, Actor, ActorLogging}
+import akka.event.LoggingReceive
+import de.woq.osgi.akka.system.protocol.BundleActorStarted
+import de.woq.osgi.akka.persistence.internal.PersistenceBundleName
+import de.woq.osgi.akka.system.OSGIActor
 
-package object protocol {
+  package object protocol {
 
-    type PersistenceProperties = Map[String, PersistenceProperty]
+    // Persistence Properties consist of the type Marker and the key / value pair that make up the content of an object.
+    // This type is the in memory representation of a persistable object
+    type PersistenceProperties = (String, Map[String, PersistenceProperty[_]])
 
-    implicit def jsValue2Property(v: JsValue) : PersistenceProperty = v match {
-      case JsBoolean(b)            => BooleanProperty(b)
-      case JsString(s)             => StringProperty(s)
-      case JsNumber(d: BigDecimal) => DoubleProperty(d.toDouble)
-      case JsArray(elements)   => ListProperty(elements.toList.map(jsValue2Property(_)))
+    // The QueryHolder is the tuple consisting og the Query to be executed as a String and the parameters that will be
+    // used within the query as normal key / value pairs
+    type QueryHolder = (String, Option[Map[String, PersistenceProperty[_]]])
+
+    // helper function to turn jsValues as they are used within Spray into Persistence Properties
+    implicit def jsValue2Property(v: JsValue) : PersistenceProperty[_] = v match {
+      case JsBoolean(b)            => PersistenceProperty[Boolean](b)
+      case JsString(s)             => PersistenceProperty[String](s)
+      case JsNumber(d: BigDecimal) => PersistenceProperty[Double](d.toDouble)
     }
 
-    implicit def primitive2Property(v: Any) : PersistenceProperty = v match {
-      case b: Boolean  => BooleanProperty(b)
-      case b: Byte     => ByteProperty(b)
-      case s: Short    => ShortProperty(s)
-      case i: Int      => IntProperty(i)
-      case l: Long     => LongProperty(l)
-      case f: Float    => FloatProperty(f)
-      case d: Double   => DoubleProperty(d)
-      case c: Char     => CharProperty(c)
-      case s: String   => StringProperty(s)
+    implicit def bool2Property(b: Boolean)  = PersistenceProperty[Boolean](b)
+    implicit def byte2Property(b: Byte)     = PersistenceProperty[Byte](b)
+    implicit def short2Property(s: Short)   = PersistenceProperty[Short](s)
+    implicit def int2Property(i: Int)       = PersistenceProperty[Int](i)
+    implicit def long2Property(l: Long)     = PersistenceProperty[Long](l)
+    implicit def float2Property(f: Float)   = PersistenceProperty[Float](f)
+    implicit def double2Property(d: Double) = PersistenceProperty[Double](d)
+    implicit def char2Property(c: Char)     = PersistenceProperty[Char](c)
+    implicit def string2Property(s: String) = PersistenceProperty[String](s)
 
-      case x :: xs     => list2Property(x :: xs)
+    implicit def object2Property(obj: Any) : PersistenceProperty[_] = obj match {
+      case b: Boolean      => bool2Property(b)
+      case b: Byte         => byte2Property(b: Byte)
+      case s: Short        => short2Property(s)
+      case i: Int          => int2Property(i)
+      case l: Long         => long2Property(l)
+      case f: Float        => float2Property(f)
+      case d: Double       => double2Property(d)
+      case c: Char         => char2Property(c)
+      case s: String       => string2Property(s)
+      case o => throw new Exception(s"Unsupported property type [${o.getClass.getName}]")
     }
 
-    private[protocol] def property2Primitive(p: PersistenceProperty) : Any = p match {
-      case BooleanProperty(b) => b
-      case ByteProperty(b)    => b
-      case ShortProperty(s)   => s
-      case IntProperty(i)     => i
-      case LongProperty(l)    => l
-      case FloatProperty(f)   => f
-      case DoubleProperty(d)  => d
-      case CharProperty(c)    => c
-      case StringProperty(s)  => s
-      case ListProperty(l)    => l.map(property2Primitive(_))
-    }
-
-    private[protocol] def list2Property[T](l : List[T]) = ListProperty(l.map(primitive2Property(_)))
-
-    def toQueryParams(props: PersistenceProperties) : Map[String, Any] =
-      props.map { case (key: String, v: PersistenceProperty) => (key, property2Primitive(v)) }
+    // Helper function to turn persistence properties back into the primitive
+    implicit def property2Primitive[T](p: PersistenceProperty[T]) : T = p.value
   }
 
   package protocol {
 
-    sealed class PersistenceProperty
-    sealed case class BooleanProperty(b: Boolean) extends PersistenceProperty
-    sealed case class ByteProperty(b: Byte) extends PersistenceProperty
-    sealed case class ShortProperty(s: Short) extends PersistenceProperty
-    sealed case class IntProperty(i: Int) extends PersistenceProperty
-    sealed case class LongProperty(l: Long) extends PersistenceProperty
-    sealed case class FloatProperty(f: Float) extends PersistenceProperty
-    sealed case class DoubleProperty(d: Double) extends PersistenceProperty
-    sealed case class CharProperty(c: Char) extends PersistenceProperty
-    sealed case class StringProperty(s: String) extends PersistenceProperty
-    sealed case class ListProperty[T <: PersistenceProperty](values: List[T]) extends PersistenceProperty
+    sealed case class PersistenceProperty[T](v : T) {
+      require(
+        v.isInstanceOf[Boolean] || v.isInstanceOf[Byte] || v.isInstanceOf[Short] ||
+        v.isInstanceOf[Int]     || v.isInstanceOf[Long] || v.isInstanceOf[Float] ||
+        v.isInstanceOf[Double]  || v.isInstanceOf[Char] || v.isInstanceOf[String]
+      )
+      def value : T = v
+    }
 
     object DataObject {
-      val LABEL = "dataObject"
-      val PROP_UUID = "uuid"
+      val LABEL       = "dataObject"
+      val PROP_UUID   = "uuid"
+      val PREFIX_TYPE = "type"
     }
 
     abstract class DataObject(uuid : String) {
       import DataObject._
 
       final def objectId = this.uuid
-      def persistenceProperties : PersistenceProperties = Map(PROP_UUID -> uuid)
+      def persistenceProperties : PersistenceProperties = (persistenceType, Map(PROP_UUID -> uuid))
+      def persistenceType = getClass.getSimpleName
+    }
+
+    abstract class DataObjectFactory extends Actor with ActorLogging with PersistenceBundleName {
+      this : OSGIActor =>
+
+      def createObject(props: PersistenceProperties) : Option[DataObject]
+
+      override def preStart(): Unit = {
+        super.preStart()
+        context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
+      }
+
+      override def receive = registering
+
+      def registering = LoggingReceive {
+        case BundleActorStarted(name) if name == bundleSymbolicName => {
+          setupFactory()
+        }
+      }
+
+      def working = LoggingReceive {
+        case CreateObjectFromProperties(props) => {
+          createObject(props) match {
+            case Some(dataObject) => {
+              log.debug(s"Created data object [${dataObject.toString}].")
+              sender ! QueryResult(List(dataObject))
+            }
+            case _ =>
+          }
+        }
+        case Terminated(actor) => context.become(registering)
+      }
+
+      def setupFactory() {
+        context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
+
+        (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
+          _ match {
+            case actor : ActorRef => {
+              log.debug("Registering data factory with persistence manager")
+              actor ! RegisterDataFactory(self)
+              context.watch(actor)
+              context.become(working)
+            }
+            case dlq if dlq == context.system.deadLetters =>
+          }
+        }
+      }
     }
 
     // Store a DataObject within in the persistence layer
     case class StoreObject(dataObject : DataObject)
-    case class ObjectStored(dataObject: DataObject)
+    case class QueryResult(result: List[DataObject])
+
+    // Find an object by its unique Id and the objectType
+    case class FindObjectByID(uuid: String, objectType: String)
+
+    // The persistence manager will use delegates to create a properly typed DataObject from it's own persistence properties
+    case class RegisterDataFactory(factory: ActorRef)
+    case class CreateObjectFromProperties(props: PersistenceProperties)
+    case class ObjectCreated(dataObject: DataObject)
   }
 }
 

@@ -17,14 +17,15 @@
 package de.woq.osgi.akka.persistence.internal
 
 import org.neo4j.graphdb.{Node, DynamicLabel, GraphDatabaseService}
-import org.neo4j.graphdb.factory.{GraphDatabaseSettings, GraphDatabaseFactory}
+import org.neo4j.graphdb.factory.GraphDatabaseFactory
 import com.typesafe.config.Config
 import de.woq.osgi.akka.persistence.protocol._
 import akka.event.LoggingAdapter
 import java.io.File
-import scala.collection.JavaConverters._
 import java.util.concurrent.TimeUnit
 import org.neo4j.cypher.{ExecutionResult, ExecutionEngine}
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
 class Neo4jBackend extends PersistenceBackend {
 
@@ -44,23 +45,45 @@ class Neo4jBackend extends PersistenceBackend {
     case _ => ""
   }
 
-  private[Neo4jBackend] def withDb[T](f: GraphDatabaseService => T)(implicit db: GraphDatabaseService): T = {
+  private[Neo4jBackend] def withDb[T](f: GraphDatabaseService => T) : T = {
 
-    val tx = db.beginTx()
+    dbServiceRef match {
+      case None => throw new Exception("Persistence backend not initialized properly.")
+      case Some(db) => {
+        val tx = db.beginTx()
 
-    try {
-      val result = f(db)
-      tx.success()
-      result
-    } finally {
-      tx.close()
+        try {
+          val result = f(db)
+          tx.success()
+          result
+        } finally {
+          tx.close()
+        }
+      }
     }
   }
 
-  private[Neo4jBackend] def executeCypher(query : String, params: Map[String, Any])(implicit db: GraphDatabaseService) = {
+  private[Neo4jBackend] def executeCypher(queries: QueryHolder*)(implicit log: LoggingAdapter) = {
+
+    var result : Option[ExecutionResult] = None
+
     withDb[ExecutionResult] { db =>
       val engine = new ExecutionEngine(db)
-      engine.execute(query, params )
+      queries.foreach { qh =>
+        val query = qh._1
+        result = Some(qh._2 match {
+          case None => {
+            log.debug(s"Executing [$query]")
+            engine.execute(query)
+          }
+          case Some(params) => {
+            val realParams = params.mapValues(_.value)
+            log.debug(s"Executing [$query] with [${realParams.toString}]")
+            (engine.execute(query, realParams))
+          }
+        })
+      }
+      result.get
     }
   }
 
@@ -72,7 +95,7 @@ class Neo4jBackend extends PersistenceBackend {
         dbConfig = Some(config)
         log.info(s"Initializing embedded Neo4j with path [$dbPath].")
 
-        implicit val db = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath)
+        dbServiceRef = Some(new GraphDatabaseFactory().newEmbeddedDatabase(dbPath))
 
         withDb[Boolean] { db =>
           val constraints = db.schema().getConstraints(DynamicLabel.label(DataObject.LABEL))
@@ -91,7 +114,6 @@ class Neo4jBackend extends PersistenceBackend {
           true
         }
 
-        dbServiceRef = Some(db)
       }
     }
   }
@@ -107,25 +129,77 @@ class Neo4jBackend extends PersistenceBackend {
     baseDir = None
   }
 
-  override def store (obj: DataObject) (implicit log: LoggingAdapter) = {
-     dbServiceRef match {
-      case None => throw new Exception("Backend is not initialized properly")
-      case Some(db) => {
-        implicit val backend = db
-        withDb[Long] { db =>
-          val node = executeCypher(createMergeQuery(obj), toQueryParams(obj.persistenceProperties))
-            .next().values.toList.head.asInstanceOf[Node]
-          log.debug(s"Saved object with nodeId [${node.getId}] and objectId [${obj.objectId}].")
-          node.getId
+  override def store (obj: DataObject) (implicit log: LoggingAdapter) = withDb[Long] { db =>
+    val node = executeCypher(
+      (storeQuery(obj), Some(obj.persistenceProperties._2))
+    )
+    .next().values.toList.head.asInstanceOf[Node]
+    log.debug(s"Saved object with nodeId [${node.getId}] and objectId [${obj.objectId}].")
+    node.getId
+  }
+
+  override def get(uuid: String, objectType: String)(implicit log: LoggingAdapter): Option[PersistenceProperties] = withDb[Option[PersistenceProperties]] { db =>
+    val nodes = executeCypher(
+      (findByUuidQuery(uuid, objectType), None)
+    )
+
+    nodes.hasNext match {
+      case false => {
+        log.debug(s"No nodes in DB matching [$uuid].")
+        None
+      }
+      case true => {
+        val nodeList = nodes.next().toList
+        if (nodeList.size > 1) log.warning(s"Found [${nodeList.size}] nodes with uuid [$uuid].")
+        log.debug(s"Found [${nodeList.size}] nodes matching [$uuid].")
+        val node = nodeList.head._2.asInstanceOf[Node]
+
+        val objectType = getType(node) match {
+          case None => throw new Exception(s"Could not determine type for object [$uuid].")
+          case Some(s) => s
         }
+        Some((objectType, getProperties(node)))
       }
     }
   }
 
-  private def createMergeQuery(dataObject: DataObject) = {
+  private[Neo4jBackend] def storeQuery(dataObject: DataObject) = {
 
-    val params = (dataObject.persistenceProperties.keys.map { s : String => s"$s: {$s}" }).mkString(",")
-    s"""MERGE (n: dataObject { uuid: "${dataObject.objectId}" }) set n={$params} RETURN n"""
+    val params = (dataObject.persistenceProperties._2.keys.map { s : String => s"$s: {$s}" }).mkString(",")
+    s"""
+      MERGE (n: dataObject { uuid: "${dataObject.objectId}" })
+        set n={$params}
+        set n:${DataObject.PREFIX_TYPE}_${dataObject.persistenceProperties._1} RETURN n
+    """
   }
 
+  private[Neo4jBackend] def findByUuidQuery(uuid: String, objectType: String) = {
+    s"""
+      MATCH (n:dataObject:${DataObject.PREFIX_TYPE}_$objectType { uuid: "$uuid"}) RETURN n
+    """
+  }
+
+  private[Neo4jBackend] def getType(node: Node) : Option[String] = {
+    node.getLabels.asScala.toList.filter{
+      l => l.name().startsWith(DataObject.PREFIX_TYPE)
+    }.map{
+      l => l.name().substring(DataObject.PREFIX_TYPE.length + 1)
+    } match {
+      case Nil => None
+      case x :: xs => Some(x)
+    }
+  }
+
+  private[Neo4jBackend] def getProperties(node: Node) : Map[String, PersistenceProperty[_]] = {
+
+    var builder =
+      new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
+
+    node.getPropertyKeys.asScala.foreach { k =>
+      val v = node.getProperty(k)
+      builder += (k -> object2Property(v))
+    }
+
+    builder.result().toMap
+  }
 }

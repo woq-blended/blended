@@ -26,38 +26,38 @@ class PersistenceProtocolSpec extends WordSpec with Matchers {
 
     "implicitly convert primitives to PersistenceProperties" in {
 
-      val bool : PersistenceProperty = true
-      bool should be (BooleanProperty(true))
+      val bool : PersistenceProperty[Boolean] = true
+      bool should be (PersistenceProperty[Boolean](true))
 
-      val b : PersistenceProperty = 'c'.toByte
-      b should be (ByteProperty('c'.toByte))
+      val b : PersistenceProperty[Byte] = 'c'.toByte
+      b should be (PersistenceProperty[Byte]('c'.toByte))
 
-      val short : PersistenceProperty = 100.toShort
-      short should be (ShortProperty(100))
+      val short : PersistenceProperty[Short] = 100.toShort
+      short should be (PersistenceProperty[Short](100))
 
-      val int : PersistenceProperty = 100
-      int should be (IntProperty(100))
+      val int : PersistenceProperty[Int] = 100
+      int should be (PersistenceProperty[Int](100))
 
-      val long : PersistenceProperty = 100l
-      long should be (LongProperty(100l))
+      val long : PersistenceProperty[Long] = 100l
+      long should be (PersistenceProperty[Long](100l))
 
-      val float : PersistenceProperty = 2.0f
-      float should be (FloatProperty(2.0f))
+      val float : PersistenceProperty[Float] = 2.0f
+      float should be (PersistenceProperty[Float](2.0f))
 
-      val double : PersistenceProperty = 2.0
-      double should be (DoubleProperty(2.0))
+      val double : PersistenceProperty[Double] = 2.0
+      double should be (PersistenceProperty[Double](2.0))
 
-      val char : PersistenceProperty = 'c'
-      char should be (CharProperty('c'))
+      val char : PersistenceProperty[Char] = 'c'
+      char should be (PersistenceProperty[Char]('c'))
 
-      val string : PersistenceProperty = "Andreas"
-      string should be (StringProperty("Andreas"))
+      val string : PersistenceProperty[String] = "Andreas"
+      string should be (PersistenceProperty[String]("Andreas"))
+    }
 
-      val iList : PersistenceProperty = 1 :: 2 :: Nil
-      iList should be (ListProperty(List(IntProperty(1), IntProperty(2))))
-
-      val lList : PersistenceProperty = 1l :: 2l :: Nil
-      lList should be (ListProperty(List(LongProperty(1), LongProperty(2))))
+    "implicitly convert properties to primitives" in {
+      val string : PersistenceProperty[String] = "Andreas"
+      val string2 : String = string
+      string2 should be ("Andreas")
     }
 
   }

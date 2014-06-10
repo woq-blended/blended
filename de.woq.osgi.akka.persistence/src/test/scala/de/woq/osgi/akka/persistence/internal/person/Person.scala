@@ -17,24 +17,57 @@
 package de.woq.osgi.akka.persistence.internal.person
 
 import de.woq.osgi.akka.persistence.protocol._
-import de.woq.osgi.akka.persistence.internal.person._
 import java.util.UUID
 import scala.collection.mutable
+import akka.actor.{Actor, ActorLogging}
+import akka.event.LoggingReceive
+import de.woq.osgi.akka.system.OSGIActor
+import de.woq.osgi.akka.persistence.internal.PersistenceBundleName
 
-case class Person(id: String = UUID.randomUUID().toString, name: String, firstName: String) extends DataObject(id) {
+object PersonFactory {
+
+  import de.woq.osgi.akka.persistence.protocol._
+
+  def create(props : PersistenceProperties) = {
+
+    require(props._2.isDefinedAt("uuid"))
+    require(props._2.isDefinedAt("name"))
+    require(props._2.isDefinedAt("firstName"))
+
+    val uuid : String = props._2("uuid").asInstanceOf[PersistenceProperty[String]].value
+
+    new Person(
+      uuid      = props._2("uuid").value.asInstanceOf[String],
+      name      = props._2("name").value.asInstanceOf[String],
+      firstName = props._2("firstName").value.asInstanceOf[String]
+    )
+  }
+}
+
+case class Person(uuid: String = UUID.randomUUID().toString, name: String, firstName: String) extends DataObject(uuid) {
 
   import spray.json._
 
   override def persistenceProperties: PersistenceProperties = {
 
     var builder =
-      new mutable.MapBuilder[String, PersistenceProperty, mutable.Map[String, PersistenceProperty]](mutable.Map.empty)
+      new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
 
     val fields = this.toJson.asJsObject.fields
     fields.map { case (k: String, v: JsValue) =>
      (k, jsValue2Property(v))
-    } foreach { case (k: String, v: PersistenceProperty) => builder += (k -> v) }
+    } foreach { case (k: String, v: PersistenceProperty[_]) => builder += (k -> v) }
 
-    builder.result().toMap
+    (super.persistenceProperties._1, builder.result().toMap)
   }
 }
+
+class PersonCreator extends DataObjectFactory with PersistenceBundleName with OSGIActor {
+
+  override def createObject(props: PersistenceProperties): Option[DataObject] = props._1 match {
+    case "Person" => Some(PersonFactory.create(props))
+    case _ => None
+  }
+}
+
+
