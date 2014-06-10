@@ -22,12 +22,11 @@ import scala.collection.mutable
 case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId) {
   override def persistenceProperties: PersistenceProperties = {
     var builder =
-      new mutable.MapBuilder[String, PersistenceProperty, mutable.Map[String, PersistenceProperty]](mutable.Map.empty)
+      new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
 
-    builder ++= super.persistenceProperties
-    properties.foreach { case (k, v) => builder += (k -> StringProperty(v)) }
-
-    builder.result().toMap
+    builder += (DataObject.PROP_UUID -> objectId)
+    properties.foreach { case (k, v) => builder += (k -> PersistenceProperty[String](v)) }
+    (persistenceType, builder.result().toMap)
   }
 }
 
