@@ -59,7 +59,7 @@ class PersistenceManagerSpec
 
       system.eventStream.subscribe(self,classOf[Info])
 
-      fishForMessage() {
+      fishForMessage(10.seconds) {
         case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
         case _ => false
       }
@@ -69,7 +69,7 @@ class PersistenceManagerSpec
       val info = new Person(firstName = "Andreas", name = "Gies")
       pMgr ! StoreObject(info)
 
-      fishForMessage() {
+      fishForMessage(10.seconds) {
         case ObjectStored(info) => true
         case _ => false
       }

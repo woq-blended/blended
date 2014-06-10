@@ -16,7 +16,7 @@
 
 package de.woq.osgi.akka.persistence.internal
 
-import org.neo4j.graphdb.{DynamicLabel, GraphDatabaseService}
+import org.neo4j.graphdb.{Node, DynamicLabel, GraphDatabaseService}
 import org.neo4j.graphdb.factory.{GraphDatabaseSettings, GraphDatabaseFactory}
 import com.typesafe.config.Config
 import de.woq.osgi.akka.persistence.protocol._
@@ -24,7 +24,7 @@ import akka.event.LoggingAdapter
 import java.io.File
 import scala.collection.JavaConverters._
 import java.util.concurrent.TimeUnit
-import org.neo4j.cypher.ExecutionEngine
+import org.neo4j.cypher.{ExecutionResult, ExecutionEngine}
 
 class Neo4jBackend extends PersistenceBackend {
 
@@ -44,15 +44,23 @@ class Neo4jBackend extends PersistenceBackend {
     case _ => ""
   }
 
-  private[Neo4jBackend] def withDb(f: GraphDatabaseService => Unit)(implicit db: GraphDatabaseService): Unit = {
+  private[Neo4jBackend] def withDb[T](f: GraphDatabaseService => T)(implicit db: GraphDatabaseService): T = {
 
     val tx = db.beginTx()
 
     try {
-      f(db)
+      val result = f(db)
       tx.success()
+      result
     } finally {
       tx.close()
+    }
+  }
+
+  private[Neo4jBackend] def executeCypher(query : String, params: Map[String, Any])(implicit db: GraphDatabaseService) = {
+    withDb[ExecutionResult] { db =>
+      val engine = new ExecutionEngine(db)
+      engine.execute(query, params )
     }
   }
 
@@ -66,7 +74,7 @@ class Neo4jBackend extends PersistenceBackend {
 
         implicit val db = new GraphDatabaseFactory().newEmbeddedDatabase(dbPath)
 
-        withDb { db =>
+        withDb[Boolean] { db =>
           val constraints = db.schema().getConstraints(DynamicLabel.label(DataObject.LABEL))
 
           if (!constraints.iterator().hasNext) {
@@ -75,10 +83,12 @@ class Neo4jBackend extends PersistenceBackend {
               .assertPropertyIsUnique(DataObject.PROP_UUID)
               .create()
           }
+          true
         }
 
-        withDb { db =>
+        withDb[Boolean] { db =>
           db.schema().awaitIndexesOnline(30, TimeUnit.SECONDS)
+          true
         }
 
         dbServiceRef = Some(db)
@@ -102,17 +112,12 @@ class Neo4jBackend extends PersistenceBackend {
       case None => throw new Exception("Backend is not initialized properly")
       case Some(db) => {
         implicit val backend = db
-        withDb { db =>
-          val engine = new ExecutionEngine(db)
-          val query = createMergeQuery(obj)
-          val params = toQueryParams(obj.persistenceProperties)
-          log.info(query)
-          log.info(params.toString())
-          val resultIterator = engine.execute(query, params )
-          val result = resultIterator.next()
-          log.info(s"${result.toString}")
+        withDb[Long] { db =>
+          val node = executeCypher(createMergeQuery(obj), toQueryParams(obj.persistenceProperties))
+            .next().values.toList.head.asInstanceOf[Node]
+          log.debug(s"Saved object with nodeId [${node.getId}] and objectId [${obj.objectId}].")
+          node.getId
         }
-        0
       }
     }
   }
