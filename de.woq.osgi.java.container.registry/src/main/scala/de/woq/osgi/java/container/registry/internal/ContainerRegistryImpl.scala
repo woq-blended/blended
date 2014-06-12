@@ -16,21 +16,33 @@
 
 package de.woq.osgi.java.container.registry.internal
 
-import akka.actor.{ActorLogging, Actor}
+import akka.actor.{ActorRef, ActorLogging, Actor}
 import de.woq.osgi.akka.system.{BundleName, OSGIActor}
 import org.osgi.framework.BundleContext
 import de.woq.osgi.java.container.registry.RegistryBundleName
 import de.woq.osgi.java.container.registry.protocol._
+import de.woq.osgi.akka.persistence.protocol.StoreObject
 
 object ContainerRegistryImpl {
   def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName
 }
 
-class ContainerRegistryImpl(implicit bundleContext : BundleContext) extends Actor with ActorLogging { this : OSGIActor with BundleName =>
+class ContainerRegistryImpl(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
+  this : OSGIActor with BundleName =>
 
   def receive = {
     case UpdateContainerInfo(info) => {
-      log info(s"${info.toString}")
+      log debug(s"Received ${info.toString}")
+
+      (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
+        _ match {
+          case actor : ActorRef => {
+            log.debug("Storing Container Information")
+            actor ! StoreObject(info)
+          }
+          case dlq if dlq == context.system.deadLetters => log.debug("Persistence manager not available")
+        }
+      }
       sender ! ContainerRegistryResponseOK(info.containerId)
     }
   }

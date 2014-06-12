@@ -39,7 +39,12 @@ class Neo4jBackend extends PersistenceBackend {
         case Some(s) => new File(s).getAbsolutePath()
         case _ => ""
       }
-      val path = config.getString("dbPath")
+
+      val path = try
+        config.getString("dbPath")
+      catch {
+        case _ => "neo4j.db"
+      }
       s"$dir/$path"
     }
     case _ => ""

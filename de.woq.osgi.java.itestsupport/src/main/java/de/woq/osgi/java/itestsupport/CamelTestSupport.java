@@ -50,9 +50,22 @@ public class CamelTestSupport {
     }
   }
 
-  public void sendTestMessage(final String message, final Properties properties, final String uri) throws Exception {
+  public void sendTestMessage(
+    final String message, final Properties properties, final String uri
+  ) throws Exception {
+    sendTestMessage(message, properties, uri, true);
+  }
 
-    Message msg = createMessageFromXML(message);
+
+  public void sendTestMessage(
+    final String message, final Properties properties, final String uri, final boolean evaluteXML
+  ) throws Exception {
+
+    Message msg = null;
+
+    if (evaluteXML) {
+      msg = createMessageFromXML(message);
+    }
 
     if (msg == null) {
       msg = createMessageFromFile(message, properties);

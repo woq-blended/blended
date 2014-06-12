@@ -18,9 +18,6 @@ package de.woq.osgi.java.container.registry
 
 import de.woq.osgi.akka.system.BundleName
 
-/**
- * Created by andreas on 07/05/14.
- */
 trait RegistryBundleName extends BundleName {
   override def bundleSymbolicName = "de.woq.osgi.java.container.registry"
 }

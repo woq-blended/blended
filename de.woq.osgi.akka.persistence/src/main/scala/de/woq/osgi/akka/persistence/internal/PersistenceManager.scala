@@ -89,8 +89,6 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
       sender ! QueryResult(List(dataObject))
     }
     case FindObjectByID(uuid, objectType) => {
-      val requestor = sender
-
       backend.get(uuid, objectType) match {
         case None => sender ! QueryResult(List.empty)
         case Some(props) => {
