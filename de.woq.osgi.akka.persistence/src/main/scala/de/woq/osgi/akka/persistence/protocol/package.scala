@@ -40,6 +40,7 @@ import de.woq.osgi.akka.system.OSGIActor
       case JsNumber(d: BigDecimal) => PersistenceProperty[Double](d.toDouble)
     }
 
+    // These definitions are jsut there to restrict the portential property types to primitives
     implicit def bool2Property(b: Boolean)  = PersistenceProperty[Boolean](b)
     implicit def byte2Property(b: Byte)     = PersistenceProperty[Byte](b)
     implicit def short2Property(s: Short)   = PersistenceProperty[Short](s)
@@ -78,67 +79,31 @@ import de.woq.osgi.akka.system.OSGIActor
       def value : T = v
     }
 
+    // DataObjects are persistable via the persistence manager. Usually they support JSON marshalling / demarshalling
+    // as well, but that is only required if they are used within a REST interface.
     object DataObject {
       val LABEL       = "dataObject"
       val PROP_UUID   = "uuid"
       val PREFIX_TYPE = "type"
     }
 
+    // A data object is uniquely identified gy its unique id. This id is a technial id and used within ther persistence
+    // layer as a unique index. To leverage the persistence manager, a data object must know how create the
+    // PersistenceProperties from its internal data. This can usually done by a simple tranformation of the JSONObject.
     abstract class DataObject(uuid : String) {
       import DataObject._
 
+      // The object unique id
       final def objectId = this.uuid
+
+      // Create the PersistenceProperties from the object content. This consists of the type tag and a map of the actual
+      // properties. The type tag is used to determine which data object factory is capable of creating a properly
+      // typed object from a given PersistenceProperties instance.
       def persistenceProperties : PersistenceProperties = (persistenceType, Map(PROP_UUID -> uuid))
       def persistenceType = getClass.getSimpleName
     }
 
-    abstract class DataObjectFactory extends Actor with ActorLogging with PersistenceBundleName {
-      this : OSGIActor =>
 
-      def createObject(props: PersistenceProperties) : Option[DataObject]
-
-      override def preStart(): Unit = {
-        super.preStart()
-        context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
-      }
-
-      override def receive = registering
-
-      def registering = LoggingReceive {
-        case BundleActorStarted(name) if name == bundleSymbolicName => {
-          setupFactory()
-        }
-      }
-
-      def working = LoggingReceive {
-        case CreateObjectFromProperties(props) => {
-          createObject(props) match {
-            case Some(dataObject) => {
-              log.debug(s"Created data object [${dataObject.toString}].")
-              sender ! QueryResult(List(dataObject))
-            }
-            case _ =>
-          }
-        }
-        case Terminated(actor) => context.become(registering)
-      }
-
-      def setupFactory() {
-        context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
-
-        (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
-          _ match {
-            case actor : ActorRef => {
-              log.debug("Registering data factory with persistence manager")
-              actor ! RegisterDataFactory(self)
-              context.watch(actor)
-              context.become(working)
-            }
-            case dlq if dlq == context.system.deadLetters =>
-          }
-        }
-      }
-    }
 
     // Store a DataObject within in the persistence layer
     case class StoreObject(dataObject : DataObject)

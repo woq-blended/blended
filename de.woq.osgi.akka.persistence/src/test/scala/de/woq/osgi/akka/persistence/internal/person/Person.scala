@@ -34,8 +34,6 @@ object PersonFactory {
     require(props._2.isDefinedAt("name"))
     require(props._2.isDefinedAt("firstName"))
 
-    val uuid : String = props._2("uuid").asInstanceOf[PersistenceProperty[String]].value
-
     new Person(
       uuid      = props._2("uuid").value.asInstanceOf[String],
       name      = props._2("name").value.asInstanceOf[String],
@@ -62,7 +60,7 @@ case class Person(uuid: String = UUID.randomUUID().toString, name: String, first
   }
 }
 
-class PersonCreator extends DataObjectFactory with PersistenceBundleName with OSGIActor {
+class PersonCreator extends DataObjectFactory {
 
   override def createObject(props: PersistenceProperties): Option[DataObject] = props._1 match {
     case "Person" => Some(PersonFactory.create(props))

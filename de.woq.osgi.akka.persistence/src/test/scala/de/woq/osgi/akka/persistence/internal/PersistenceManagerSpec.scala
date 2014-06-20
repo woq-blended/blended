@@ -19,14 +19,19 @@ package de.woq.osgi.akka.persistence.internal
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers}
 import de.woq.osgi.java.testsupport.TestActorSys
 import akka.event.Logging.Info
-import de.woq.osgi.akka.persistence.internal.person.{PersonCreator, Person}
+import de.woq.osgi.akka.persistence.internal.person.{PersonFactory, PersonCreator, Person}
 import de.woq.osgi.akka.system.protocol.{BundleActorStarted, InitializeBundle}
 import akka.actor.{ActorRef, Props, PoisonPill}
 import org.scalatest.mock.MockitoSugar
 import de.woq.osgi.akka.system.internal.OSGIFacade
-import de.woq.osgi.akka.system.WOQAkkaConstants
+import de.woq.osgi.akka.system.{OSGIActor, WOQAkkaConstants}
 import scala.concurrent.duration._
-import de.woq.osgi.akka.persistence.protocol.{FindObjectByID, QueryResult, StoreObject}
+import de.woq.osgi.akka.persistence.protocol._
+import de.woq.osgi.akka.persistence.protocol.QueryResult
+import de.woq.osgi.akka.persistence.protocol.StoreObject
+import de.woq.osgi.akka.persistence.protocol.FindObjectByID
+import de.woq.osgi.akka.system.protocol.InitializeBundle
+import de.woq.osgi.akka.system.protocol.BundleActorStarted
 
 class PersistenceManagerSpec
   extends TestActorSys
@@ -39,15 +44,15 @@ class PersistenceManagerSpec
 
   var facade : ActorRef = _
   var pMgr : ActorRef = _
-  var dataFactory : ActorRef = _
+  var dataCreator : ActorRef = _
 
   override protected def beforeAll() {
     facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
     pMgr = system.actorOf(Props(PersistenceManager(new Neo4jBackend())), bundleSymbolicName)
     pMgr ! InitializeBundle(osgiContext)
 
-    dataFactory = system.actorOf(Props(new PersonCreator()), "personCreator")
-    dataFactory ! BundleActorStarted(bundleSymbolicName)
+    dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor))
+    dataCreator ! BundleActorStarted(bundleSymbolicName)
   }
 
   override protected def afterAll() {
