@@ -75,7 +75,7 @@
         <module>blended-karaf-branding</module>
 
         <module>blended-modules</module>
-        <module>de.woq.osgi.akka.system</module>
+        <module>blended-akka</module>
         <module>de.woq.osgi.akka.mgmt.reporter</module>
         <module>de.woq.osgi.akka.mgmt.rest</module>
         <module>de.woq.osgi.spray.servlet</module>
