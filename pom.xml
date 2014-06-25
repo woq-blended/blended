@@ -80,7 +80,7 @@
         <module>de.woq.osgi.akka.mgmt.rest</module>
         <module>de.woq.osgi.spray.servlet</module>
 
-        <module>de.woq.osgi.java.neo4j</module>
+        <module>blended-neo4j-api</module>
         <module>de.woq.osgi.akka.persistence</module>
 
         <module>blended-itestsupport</module>

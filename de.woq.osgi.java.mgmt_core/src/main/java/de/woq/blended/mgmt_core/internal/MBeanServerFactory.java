@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.mgmt_core.internal;
+package de.woq.blended.mgmt_core.internal;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;
