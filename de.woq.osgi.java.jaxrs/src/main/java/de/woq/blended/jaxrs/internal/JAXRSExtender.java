@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.jaxrs.internal;
+package de.woq.blended.jaxrs.internal;
+
+import com.sun.jersey.api.core.DefaultResourceConfig;
+import com.sun.jersey.spi.container.servlet.ServletContainer;
+import de.woq.blended.jaxrs.JAXRSResource;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
+import org.osgi.service.blueprint.container.ServiceUnavailableException;
+import org.osgi.service.http.HttpService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.Servlet;
 import javax.ws.rs.core.Application;
@@ -22,16 +32,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
-import de.woq.osgi.java.jaxrs.JAXRSResource;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.ServiceReference;
-import org.osgi.service.blueprint.container.ServiceUnavailableException;
-import org.osgi.service.http.HttpService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JAXRSExtender {
 

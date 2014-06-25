@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.jaxrs;
+package de.woq.blended.jaxrs;
 
 public interface JAXRSResource {
 }

@@ -20,13 +20,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.jaxrs</artifactId>
+  <artifactId>de.woq.blended.jaxrs</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
