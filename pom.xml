@@ -66,7 +66,7 @@
         <module>de.woq.osgi.java.container.registry</module>
         <module>blended-util</module>
         <module>blended-jmx</module>
-        <module>de.woq.osgi.java.jaxrs</module>
+        <module>blended-jaxrs</module>
         <module>de.woq.osgi.java.camelutils</module>
 
         <module>blended-testsupport</module>
