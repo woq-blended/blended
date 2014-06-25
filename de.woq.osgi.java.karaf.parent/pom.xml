@@ -24,18 +24,18 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
+    <relativePath>../de.woq.blended.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+  <artifactId>de.woq.blended.karaf.parent</artifactId>
   <packaging>pom</packaging>
 
   <properties>
     <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>de.woq.osgi.java.karaf.branding</woq.branding.artifactId>
+    <woq.branding.artifactId>de.woq.blended.karaf.branding</woq.branding.artifactId>
     <woq.branding.version>${woq.container.version}</woq.branding.version>
   </properties>
 

@@ -22,8 +22,8 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.reactor</artifactId>
+  <groupId>de.woq.blended</groupId>
+  <artifactId>de.woq.blended.reactor</artifactId>
   <version>1.0.7-M2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -49,9 +49,9 @@
     <profile>
       <id>parent</id>
       <modules>
-        <module>de.woq.osgi.java.parent</module>
+        <module>blended-parent</module>
         <module>de.woq.osgi.java.karaf.parent</module>
-        <module>de.woq.osgi.java.karaf.branding</module>
+        <module>blended-karaf-branding</module>
       </modules>
     </profile>
 
