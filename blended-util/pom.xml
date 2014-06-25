@@ -24,7 +24,6 @@
     <groupId>de.woq.blended</groupId>
     <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
   </parent>
 
   <artifactId>de.woq.blended.util</artifactId>
