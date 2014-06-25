@@ -64,7 +64,7 @@
         <module>de.woq.osgi.java.container.context</module>
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>
-        <module>de.woq.osgi.java.util</module>
+        <module>blended-util</module>
         <module>de.woq.osgi.java.mgmt_core</module>
         <module>de.woq.osgi.java.jaxrs</module>
         <module>de.woq.osgi.java.camelutils</module>
@@ -72,7 +72,7 @@
         <module>de.woq.osgi.java.testsupport</module>
 
         <module>de.woq.osgi.java.karaf.features</module>
-        <module>de.woq.osgi.java.karaf.branding</module>
+        <module>blended-karaf-branding</module>
 
         <module>de.woq.osgi.akka.modules</module>
         <module>de.woq.osgi.akka.system</module>
