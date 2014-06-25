@@ -61,7 +61,7 @@
         <module>de.woq.osgi.java.installer</module>
 
         <module>blended-activemq-brokerstarter</module>
-        <module>de.woq.osgi.java.container.context</module>
+        <module>blended-container-context</module>
         <module>de.woq.osgi.java.container.id</module>
         <module>de.woq.osgi.java.container.registry</module>
         <module>blended-util</module>
