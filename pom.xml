@@ -83,7 +83,7 @@
         <module>de.woq.osgi.java.neo4j</module>
         <module>de.woq.osgi.akka.persistence</module>
 
-        <module>de.woq.osgi.java.itestsupport</module>
+        <module>blended-itestsupport</module>
 
         <module>de.woq.osgi.java.archetypes.project</module>
 
