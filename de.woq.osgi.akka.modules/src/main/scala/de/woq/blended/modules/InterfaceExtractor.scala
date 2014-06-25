@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
 class InterfaceExtractor(clazz : Class[_]) {
 

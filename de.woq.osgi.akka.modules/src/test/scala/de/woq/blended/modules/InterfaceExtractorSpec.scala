@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.{Matchers, WordSpec}

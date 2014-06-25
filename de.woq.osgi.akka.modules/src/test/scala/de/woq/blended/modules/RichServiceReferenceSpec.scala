@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
-import org.osgi.framework.ServiceReference
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito.when
+import org.osgi.framework.ServiceReference
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class RichServiceReferenceSpec extends WordSpec with MockitoSugar with Matchers {
 

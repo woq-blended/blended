@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
-import org.osgi.framework.{ServiceReference, BundleContext}
-import org.scalatest.{WordSpec, Matchers}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import java.util.concurrent.Executors
-import scala.concurrent.{Await, Future, ExecutionContext}
-import org.mockito.Mockito.{when, verify}
-import scala.collection.JavaConversions._
-import scala.util.{Success, Failure}
+import org.scalatest.{Matchers, WordSpec}
 
 class ServicesFinderSpec extends WordSpec with Matchers with MockitoSugar with AssertionsForJUnit {
 

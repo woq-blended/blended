@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
+import de.woq.blended.testsupport.TestActorSys
 import org.mockito.ArgumentCaptor
-import org.osgi.framework.BundleContext
-import org.scalatest.{WordSpecLike, Matchers, WordSpec}
-import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito.verify
-import akka.event.LoggingAdapter
-import de.woq.osgi.java.testsupport.TestActorSys
+import org.osgi.framework.BundleContext
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpecLike}
 
 class RichBundleContextSpec extends TestActorSys() with WordSpecLike with MockitoSugar with Matchers {
 

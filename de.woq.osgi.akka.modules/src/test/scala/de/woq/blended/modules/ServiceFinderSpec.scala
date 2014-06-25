@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
-import org.osgi.framework.{ServiceReference, BundleContext}
-import org.scalatest.{WordSpecLike, Matchers}
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.junit.AssertionsForJUnit
 import java.util.concurrent._
-import scala.concurrent.ExecutionContext
+
+import de.woq.blended.testsupport.TestActorSys
 import org.mockito.Mockito.when
-import de.woq.osgi.java.testsupport.TestActorSys
+import org.osgi.framework.{BundleContext, ServiceReference}
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpecLike}
+
+import scala.concurrent.ExecutionContext
 
 class ServiceFinderSpec extends TestActorSys with WordSpecLike with Matchers with MockitoSugar with AssertionsForJUnit {
 

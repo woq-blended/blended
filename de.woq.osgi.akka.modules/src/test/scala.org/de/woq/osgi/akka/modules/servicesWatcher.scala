@@ -15,6 +15,7 @@
  */
 package de.woq.osgi.akka.modules
 
+import de.woq.blended.modules.Filter
 import org.osgi.framework.{ BundleContext, ServiceReference }
 import org.osgi.framework.Constants._
 import org.osgi.util.tracker.ServiceTracker

@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.junit.{JUnitSuite, AssertionsForJUnit}
-import org.junit.Test
+import org.scalatest.{Matchers, WordSpec}
 
 class FilterSpec extends WordSpec with Matchers with AssertionsForJUnit {
 

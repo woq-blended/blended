@@ -16,6 +16,7 @@
 package de.woq.osgi.akka.modules
 
 import java.util.Dictionary
+import de.woq.blended.modules.{RichServiceReference, RichBundleContext, PresentBuilder, SimpleOpBuilder}
 import org.osgi.framework.{ BundleContext, ServiceReference }
 import scala.collection.Map
 import scala.collection.immutable.{ Map => IMap }

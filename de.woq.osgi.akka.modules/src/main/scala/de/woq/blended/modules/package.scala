@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka
+package de.woq.blended
 
 import java.util.Dictionary
-import org.osgi.framework.{ BundleContext, ServiceReference }
-import org.slf4j.LoggerFactory
-import akka.event.LoggingAdapter
+
+import org.osgi.framework.{BundleContext, ServiceReference}
 
 /**
  * Some implicit conversions and other stuff essential for the ScalaModules DSL.

@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.modules
 
-import org.osgi.framework.{ServiceReference, BundleContext, ServiceRegistration}
-import org.slf4j.LoggerFactory
-import akka.event.{LoggingBus, Logging, LogSource, LoggingAdapter}
+import org.osgi.framework.{BundleContext, ServiceReference, ServiceRegistration}
 
 class RichBundleContext(context: BundleContext) {
 
