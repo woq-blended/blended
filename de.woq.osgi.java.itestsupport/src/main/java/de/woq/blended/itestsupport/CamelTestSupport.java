@@ -16,8 +16,8 @@
 
 package de.woq.blended.itestsupport;
 
-import de.woq.osgi.java.testsupport.XMLMessageFactory;
-import de.woq.osgi.java.util.FileReader;
+import de.woq.blended.testsupport.XMLMessageFactory;
+import de.woq.blended.util.FileReader;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
