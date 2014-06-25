@@ -81,7 +81,7 @@
         <module>de.woq.osgi.spray.servlet</module>
 
         <module>blended-neo4j-api</module>
-        <module>de.woq.osgi.akka.persistence</module>
+        <module>blended-persistence</module>
 
         <module>blended-itestsupport</module>
 
