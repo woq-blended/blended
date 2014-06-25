@@ -58,7 +58,7 @@
     <profile>
       <id>build</id>
       <modules>
-        <module>de.woq.osgi.java.installer</module>
+        <module>blended-karaf-installer</module>
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>
