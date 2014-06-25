@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.util;
+package de.woq.blended.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 
 public class FileReader {
 

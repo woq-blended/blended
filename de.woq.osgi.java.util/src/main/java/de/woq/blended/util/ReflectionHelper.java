@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.util;
+package de.woq.blended.util;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
