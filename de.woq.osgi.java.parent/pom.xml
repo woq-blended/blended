@@ -20,8 +20,8 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.parent</artifactId>
+  <groupId>de.woq.blended</groupId>
+  <artifactId>de.woq.blended.parent</artifactId>
   <packaging>pom</packaging>
 
   <version>1.0.7-M2-SNAPSHOT</version>
