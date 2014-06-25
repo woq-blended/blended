@@ -87,8 +87,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.util</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.util</artifactId>
       <version>${woq.container.version}</version>
       <exclusions>
         <exclusion>
@@ -220,7 +220,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <goal>copy-dependencies</goal>
               </goals>
               <configuration>
-                <includeArtifactIds>de.woq.osgi.java.karaf.parent</includeArtifactIds>
+                <includeArtifactIds>de.woq.blended.karaf.parent</includeArtifactIds>
                 <outputDirectory>${project.build.directory}/descriptors</outputDirectory>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>
