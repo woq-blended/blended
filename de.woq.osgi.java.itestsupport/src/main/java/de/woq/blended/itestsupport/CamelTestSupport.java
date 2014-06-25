@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.blended.itestsupport;
 
 import de.woq.osgi.java.testsupport.XMLMessageFactory;
 import de.woq.osgi.java.util.FileReader;

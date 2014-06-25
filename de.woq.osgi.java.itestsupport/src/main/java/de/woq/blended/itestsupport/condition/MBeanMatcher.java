@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport.condition;
+package de.woq.blended.itestsupport.condition;
 
-import de.woq.osgi.java.itestsupport.ContainerRunner;
+import javax.management.MBeanInfo;
+import javax.management.ObjectName;
 
-public class ConditionCamelContextExists extends ConditionMBeanExists {
+public interface MBeanMatcher {
 
-  public ConditionCamelContextExists(final ContainerRunner runner, final String contextName) {
-    super(runner, "org.apache.camel", "org.apache.camel.management.mbean.ManagedCamelContext",  "name=\"" + contextName + "\"");
-  }
+  public boolean matchesMBean(final ObjectName objectName, final MBeanInfo info);
 }

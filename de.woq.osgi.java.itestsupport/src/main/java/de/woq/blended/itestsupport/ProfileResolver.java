@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport.condition;
+package de.woq.blended.itestsupport;
 
-import javax.management.MBeanInfo;
-import javax.management.ObjectName;
+class ProfileResolver {
 
-public interface MBeanMatcher {
+  private ProfileResolver() {}
 
-  public boolean matchesMBean(final ObjectName objectName, final MBeanInfo info);
+  protected static ContainerProfile resolveProfile(final Class<?> clazz) throws Exception {
+
+    ContainerProfile result = null;
+
+    Class<?> currentClass = clazz;
+
+    while(result == null && currentClass != null) {
+      result = currentClass.getAnnotation(ContainerProfile.class);
+      currentClass = currentClass.getSuperclass();
+    }
+
+    return  result;
+  }
 }

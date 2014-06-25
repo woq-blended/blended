@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport.condition;
+package de.woq.blended.itestsupport.condition;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

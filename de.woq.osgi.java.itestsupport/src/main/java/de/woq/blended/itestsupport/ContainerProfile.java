@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.blended.itestsupport;
 
-class ProfileResolver {
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-  private ProfileResolver() {}
+@Retention(RetentionPolicy.RUNTIME)
+public @interface ContainerProfile {
 
-  protected static ContainerProfile resolveProfile(final Class<?> clazz) throws Exception {
-
-    ContainerProfile result = null;
-
-    Class<?> currentClass = clazz;
-
-    while(result == null && currentClass != null) {
-      result = currentClass.getAnnotation(ContainerProfile.class);
-      currentClass = currentClass.getSuperclass();
-    }
-
-    return  result;
-  }
+  String name() default "common";
+  int timeout() default 30;
 }

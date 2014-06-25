@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.blended.itestsupport;
 
-import de.woq.osgi.java.itestsupport.condition.Condition;
-import de.woq.osgi.java.itestsupport.condition.ConditionCanConnect;
-import de.woq.osgi.java.itestsupport.condition.ConditionMBeanExists;
-import de.woq.osgi.java.itestsupport.condition.ConditionWaiter;
-import de.woq.osgi.java.util.FileReader;
+import de.woq.blended.itestsupport.condition.Condition;
+import de.woq.blended.itestsupport.condition.ConditionCanConnect;
+import de.woq.blended.itestsupport.condition.ConditionMBeanExists;
+import de.woq.blended.itestsupport.condition.ConditionWaiter;
+import de.woq.blended.util.FileReader;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;

@@ -14,14 +14,34 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.blended.itestsupport.condition;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import java.net.Socket;
 
-@Retention(RetentionPolicy.RUNTIME)
-public @interface ContainerProfile {
+public class ConditionCanConnect implements Condition {
 
-  String name() default "common";
-  int timeout() default 30;
+  final private String host;
+  final private int port;
+
+  public ConditionCanConnect(final String host, final int port) {
+    this.host = host;
+    this.port = port;
+  }
+
+  @Override
+  public boolean satisfied() {
+
+    try {
+      Socket socket = new Socket(host, port);
+      socket.close();
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[" + host + "," + port + "]";
+  }
 }

@@ -14,34 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport.condition;
+package de.woq.blended.itestsupport.condition;
 
-import java.net.Socket;
+import de.woq.blended.itestsupport.ContainerRunner;
 
-public class ConditionCanConnect implements Condition {
+public class ConditionCamelContextExists extends ConditionMBeanExists {
 
-  final private String host;
-  final private int port;
-
-  public ConditionCanConnect(final String host, final int port) {
-    this.host = host;
-    this.port = port;
-  }
-
-  @Override
-  public boolean satisfied() {
-
-    try {
-      Socket socket = new Socket(host, port);
-      socket.close();
-      return true;
-    } catch (Exception e) {
-      return false;
-    }
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "[" + host + "," + port + "]";
+  public ConditionCamelContextExists(final ContainerRunner runner, final String contextName) {
+    super(runner, "org.apache.camel", "org.apache.camel.management.mbean.ManagedCamelContext",  "name=\"" + contextName + "\"");
   }
 }

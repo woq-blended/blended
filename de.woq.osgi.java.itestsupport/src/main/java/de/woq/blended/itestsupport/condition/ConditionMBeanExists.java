@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport.condition;
+package de.woq.blended.itestsupport.condition;
 
-import de.woq.osgi.java.itestsupport.ContainerConnector;
-import de.woq.osgi.java.itestsupport.ContainerRunner;
+import de.woq.blended.itestsupport.ContainerConnector;
+import de.woq.blended.itestsupport.ContainerRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

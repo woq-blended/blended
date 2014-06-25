@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.itestsupport;
+package de.woq.blended.itestsupport;
 
-import de.woq.osgi.java.itestsupport.condition.MBeanMatcher;
+import de.woq.blended.itestsupport.condition.MBeanMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.BadAttributeValueExpException;
-import javax.management.BadBinaryOpValueExpException;
-import javax.management.BadStringOperationException;
-import javax.management.InvalidApplicationException;
 import javax.management.MBeanInfo;
 import javax.management.MBeanOperationInfo;
 import javax.management.MBeanParameterInfo;
-import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import javax.management.QueryExp;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
