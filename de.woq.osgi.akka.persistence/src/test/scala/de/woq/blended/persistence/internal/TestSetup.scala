@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
+import de.woq.blended.container.context.ContainerContext
 import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
-import de.woq.osgi.java.container.context.ContainerContext
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 

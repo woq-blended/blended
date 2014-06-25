@@ -28,7 +28,7 @@
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.akka.system</artifactId>
+  <artifactId>de.woq.blended.akka</artifactId>
   <packaging>bundle</packaging>
 
   <properties>

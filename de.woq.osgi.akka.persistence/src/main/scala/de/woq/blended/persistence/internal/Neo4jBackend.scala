@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
 import org.neo4j.graphdb.{Node, DynamicLabel, GraphDatabaseService}
 import org.neo4j.graphdb.factory.GraphDatabaseFactory
 import com.typesafe.config.Config
-import de.woq.osgi.akka.persistence.protocol._
+import de.woq.blended.persistence.protocol._
 import akka.event.LoggingAdapter
 import java.io.File
 import java.util.concurrent.TimeUnit

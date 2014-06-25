@@ -7,7 +7,7 @@ Bundle-SymbolicName:\
 Import-Package: *
 
 Bundle-Activator: \
-  de.woq.osgi.akka.persistence.internal.PersistenceActivator
+  de.woq.blended.persistence.internal.PersistenceActivator
 
 Private-Package:\
   ${bundle.namespace}.internal.*

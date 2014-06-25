@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
 import org.scalatest.{Matchers, WordSpec}
 
 class PersistenceProtocolSpec extends WordSpec with Matchers {
 
-  import de.woq.osgi.akka.persistence.protocol._
+  import de.woq.blended.persistence.protocol._
 
   "The Persistence protocol" should {
 

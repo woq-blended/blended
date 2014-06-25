@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal.person
+package de.woq.blended.persistence.internal.person
 
-import de.woq.osgi.akka.persistence.protocol._
+import de.woq.blended.persistence.protocol._
 import java.util.UUID
 import scala.collection.mutable
-import akka.actor.{Actor, ActorLogging}
-import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.OSGIActor
-import de.woq.osgi.akka.persistence.internal.PersistenceBundleName
 
 object PersonFactory {
 
-  import de.woq.osgi.akka.persistence.protocol._
+  import de.woq.blended.persistence.protocol._
 
   def create(props : PersistenceProperties) = {
 

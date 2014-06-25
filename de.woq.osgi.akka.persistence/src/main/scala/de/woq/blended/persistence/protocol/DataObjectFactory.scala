@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.protocol
+package de.woq.blended.persistence.protocol
 
 import akka.actor.{ActorRef, Terminated, ActorLogging, Actor}
-import de.woq.osgi.akka.persistence.internal.PersistenceBundleName
-import de.woq.osgi.akka.system.OSGIActor
-import de.woq.osgi.akka.system.protocol.BundleActorStarted
+import de.woq.blended.persistence.internal.PersistenceBundleName
+import de.woq.blended.akka.OSGIActor
+import de.woq.blended.akka.protocol._
 import akka.event.LoggingReceive
 
 trait DataObjectFactory {

@@ -21,12 +21,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.osgi.akka.persistence</artifactId>
+  <artifactId>de.woq.blended.persistence</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -37,8 +37,8 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.akka.system</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.akka</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -49,8 +49,8 @@
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.neo4j</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.neo4j.api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -77,8 +77,8 @@
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.testsupport</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.testsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
-import de.woq.osgi.akka.persistence.protocol.{PersistenceProperties, DataObject}
+import de.woq.blended.persistence.protocol.{PersistenceProperties, DataObject}
 import com.typesafe.config.Config
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter

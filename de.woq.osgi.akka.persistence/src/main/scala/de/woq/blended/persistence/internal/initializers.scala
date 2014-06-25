@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
-import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
+import de.woq.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
 
 trait PersistenceBundleName extends BundleName {
-  override def bundleSymbolicName = "de.woq.osgi.akka.persistence"
+  override def bundleSymbolicName = "de.woq.blended.persistence"
 }
 
 class PersistenceActivator extends ActorSystemAware with PersistenceBundleName {

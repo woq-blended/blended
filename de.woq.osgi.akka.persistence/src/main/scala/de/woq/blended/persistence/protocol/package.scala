@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence {
+package de.woq.blended.persistence {
 
+import akka.actor.ActorRef
 import spray.json._
-import akka.actor.{Terminated, ActorRef, Actor, ActorLogging}
-import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol.BundleActorStarted
-import de.woq.osgi.akka.persistence.internal.PersistenceBundleName
-import de.woq.osgi.akka.system.OSGIActor
 
   package object protocol {
 
@@ -91,7 +87,7 @@ import de.woq.osgi.akka.system.OSGIActor
     // layer as a unique index. To leverage the persistence manager, a data object must know how create the
     // PersistenceProperties from its internal data. This can usually done by a simple tranformation of the JSONObject.
     abstract class DataObject(uuid : String) {
-      import DataObject._
+      import de.woq.blended.persistence.protocol.DataObject._
 
       // The object unique id
       final def objectId = this.uuid

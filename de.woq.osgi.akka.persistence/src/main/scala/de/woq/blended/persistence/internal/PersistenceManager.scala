@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.persistence.internal
+package de.woq.blended.persistence.internal
 
 import akka.actor._
-import de.woq.osgi.akka.system.{BundleName, OSGIActor}
+import de.woq.blended.akka.protocol._
+import de.woq.blended.akka.{BundleName, OSGIActor}
+import de.woq.blended.container.context.ContainerContext
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
 import akka.pattern._
-import de.woq.osgi.java.container.context.ContainerContext
-import de.woq.osgi.akka.persistence.protocol._
-import de.woq.osgi.akka.system.protocol.ServiceResult
-import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
-import de.woq.osgi.akka.system.protocol.InitializeBundle
-import scala.Some
-import de.woq.osgi.akka.persistence.protocol.StoreObject
-import de.woq.osgi.akka.persistence.protocol.FindObjectByID
-import de.woq.osgi.akka.system.protocol.ConfigLocatorResponse
-import scala.Some
-import de.woq.osgi.akka.persistence.protocol.QueryResult
-import de.woq.osgi.akka.system.protocol.ServiceResult
-import de.woq.osgi.akka.system.protocol.InitializeBundle
-import de.woq.osgi.akka.persistence.protocol.CreateObjectFromProperties
+import de.woq.blended.persistence.protocol._
 
 trait PersistenceProvider {
   val backend : PersistenceBackend
