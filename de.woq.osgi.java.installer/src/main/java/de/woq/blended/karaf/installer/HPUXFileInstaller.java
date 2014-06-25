@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
 import java.io.File;
 
-import static de.woq.osgi.java.installer.ServiceInstaller.KARAF_ROOT;
-
-public class MacOSFileInstaller implements FileInstaller {
+public class HPUXFileInstaller implements FileInstaller {
 
   @Override
   public void installFiles(ServiceInstaller installer) throws Exception {
@@ -32,7 +30,7 @@ public class MacOSFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
 
     File file = new File(bin, installer.getName() + "-wrapper");
-    ResourceHelper.copyResourceTo(file, KARAF_ROOT + "macosx/karaf-wrapper");
+    ResourceHelper.copyResourceTo(file, "hpux/parisc64/karaf-wrapper");
     ResourceHelper.chmod(file, "a+x");
 
     ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
@@ -41,6 +39,7 @@ public class MacOSFileInstaller implements FileInstaller {
     ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     ResourceHelper.mkdir(lib);
-    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.jnilib"), "macosx/libwrapper.jnilib");
+    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.sl"), "hpux/parisc64/libwrapper.sl");
+
   }
 }

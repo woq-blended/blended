@@ -15,7 +15,7 @@
  */
 package de.woq.blended
 
-import java.util.Dictionary
+import karaf.util.Dictionary
 
 import org.osgi.framework.{BundleContext, ServiceReference}
 

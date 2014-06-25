@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
 import java.io.File;
-
-import static de.woq.osgi.java.installer.ServiceInstaller.WOQ_ROOT;
 
 
 public class WindowsFileInstaller implements FileInstaller {
@@ -35,7 +33,7 @@ public class WindowsFileInstaller implements FileInstaller {
     ResourceHelper.mkdir(bin);
     ResourceHelper.mkdir(lib);
 
-    ResourceHelper.copyResourceTo(installer.getWrapperConf(), WOQ_ROOT + "/windows/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), ServiceInstaller.WOQ_ROOT + "/windows/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
     if (arch.equalsIgnoreCase("amd64") || arch.equalsIgnoreCase("x86_64")) {
       ResourceHelper.copyResourceTo(new File(bin, installer.getName() + "-wrapper.exe"), "windows64/karaf-wrapper.exe");

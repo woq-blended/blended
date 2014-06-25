@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
 import java.io.File;
 

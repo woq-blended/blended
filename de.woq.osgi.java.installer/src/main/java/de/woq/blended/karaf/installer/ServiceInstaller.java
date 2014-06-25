@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
-import de.woq.osgi.java.util.ReflectionHelper;
+import de.woq.blended.util.ReflectionHelper;
 
 import java.io.File;
 import java.util.HashMap;

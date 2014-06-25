@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
 import java.io.File;
 
-import static de.woq.osgi.java.installer.ServiceInstaller.WOQ_ROOT;
+import static de.woq.blended.karaf.installer.ServiceInstaller.KARAF_ROOT;
 
-public class LinuxFileInstaller implements FileInstaller {
+public class MacOSFileInstaller implements FileInstaller {
 
   @Override
   public void installFiles(ServiceInstaller installer) throws Exception {
@@ -29,25 +29,18 @@ public class LinuxFileInstaller implements FileInstaller {
     final File bin = new File(base, "bin");
     final File lib = new File(base, "lib");
 
-    final String arch = System.getProperty("os.arch");
-    final File file = new File(bin, installer.getName() + "-wrapper");
-
     ResourceHelper.mkdir(bin);
-    ResourceHelper.mkdir(lib);
+
+    File file = new File(bin, installer.getName() + "-wrapper");
+    ResourceHelper.copyResourceTo(file, KARAF_ROOT + "macosx/karaf-wrapper");
+    ResourceHelper.chmod(file, "a+x");
 
     ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
-    ResourceHelper.copyResourceTo(installer.getWrapperConf(), WOQ_ROOT + "/unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
+    ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
-    if (arch.equalsIgnoreCase("amd64") || arch.equalsIgnoreCase("x86_64")) {
-      ResourceHelper.copyResourceTo(file, "linux64/karaf-wrapper");
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux64/libwrapper.so");
-    } else {
-      ResourceHelper.copyResourceTo(file, "linux/karaf-wrapper");
-      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "linux/libwrapper.so");
-    }
-
-    ResourceHelper.chmod(file, "a+x");
+    ResourceHelper.mkdir(lib);
+    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.jnilib"), "macosx/libwrapper.jnilib");
   }
 }

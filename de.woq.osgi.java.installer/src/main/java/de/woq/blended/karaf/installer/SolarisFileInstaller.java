@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.installer;
+package de.woq.blended.karaf.installer;
 
 import java.io.File;
 
-public class HPUXFileInstaller implements FileInstaller {
+public class SolarisFileInstaller implements FileInstaller {
 
   @Override
   public void installFiles(ServiceInstaller installer) throws Exception {
@@ -27,19 +27,28 @@ public class HPUXFileInstaller implements FileInstaller {
     final File bin = new File(base, "bin");
     final File lib = new File(base, "lib");
 
-    ResourceHelper.mkdir(bin);
+    final File file = new File(bin, installer.getName() + "-wrapper");
+    final String arch = System.getProperty("os.arch");
 
-    File file = new File(bin, installer.getName() + "-wrapper");
-    ResourceHelper.copyResourceTo(file, "hpux/parisc64/karaf-wrapper");
-    ResourceHelper.chmod(file, "a+x");
+    ResourceHelper.mkdir(bin);
+    ResourceHelper.mkdir(lib);
 
     ResourceHelper.copyResourceTo(installer.getServiceFile(), "unix/karaf-service", installer.getDefaultWrapperProperties());
     ResourceHelper.chmod(installer.getServiceFile(), "a+x");
 
     ResourceHelper.copyResourceTo(installer.getWrapperConf(), "unix/karaf-wrapper.conf", installer.getDefaultWrapperProperties());
 
-    ResourceHelper.mkdir(lib);
-    ResourceHelper.copyResourceTo(new File(lib, "libwrapper.sl"), "hpux/parisc64/libwrapper.sl");
+    if (arch.equalsIgnoreCase("sparc")) {
+      ResourceHelper.copyResourceTo(file, "solaris/sparc64/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc64/libwrapper.so");
+    } else if (arch.equalsIgnoreCase("x86")) {
+      ResourceHelper.copyResourceTo(file, "solaris/x86/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/x86/libwrapper.so");
+    } else {
+      ResourceHelper.copyResourceTo(file, "solaris/sparc32/karaf-wrapper");
+      ResourceHelper.copyResourceTo(new File(lib, "libwrapper.so"), "solaris/sparc32/libwrapper.so");
+    }
 
+    ResourceHelper.chmod(file, "a+x");
   }
 }
