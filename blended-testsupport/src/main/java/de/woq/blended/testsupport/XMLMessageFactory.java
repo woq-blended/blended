@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.testsupport;
+package de.woq.blended.testsupport;
 
 import de.woq.blended.util.FileReader;
 import org.apache.camel.Message;

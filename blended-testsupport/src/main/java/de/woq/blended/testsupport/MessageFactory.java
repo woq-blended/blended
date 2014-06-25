@@ -14,26 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.testsupport
+package de.woq.blended.testsupport;
 
-import akka.testkit.{ImplicitSender, TestKit}
-import akka.actor.ActorSystem
-import java.util.concurrent.atomic.AtomicInteger
+import org.apache.camel.Message;
 
-object TestActorSys {
-  val uniqueId = new AtomicInteger(0)
-}
+public interface MessageFactory {
 
-class TestActorSys(name : String)
-  extends TestKit(ActorSystem(name))
-  with ImplicitSender {
-
-  def this() = this("TestSystem%05d".format(TestActorSys.uniqueId.incrementAndGet()))
-
-  def shutdown() { system.shutdown() }
-
-  def apply(block : Unit) {
-    try block
-    finally shutdown()
-  }
+  public Message createMessage() throws Exception;
 }

@@ -14,24 +14,27 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.testsupport;
+package de.woq.blended.testsupport
 
-import org.apache.camel.Message;
-import org.junit.Assert;
-import org.junit.Test;
+import java.util.concurrent.atomic.AtomicInteger
 
-public class XMLMessageFactoryTest {
+import akka.actor.ActorSystem
+import akka.testkit.{ImplicitSender, TestKit}
 
-  private final static String FILE = "sampleTestmessage.xml";
+object TestActorSys {
+  val uniqueId = new AtomicInteger(0)
+}
 
-  @Test
-  public void createMessageTest() throws Exception{
+class TestActorSys(name : String)
+  extends TestKit(ActorSystem(name))
+  with ImplicitSender {
 
-    Message msg = new XMLMessageFactory(FILE).createMessage();
-    Assert.assertNotNull(msg);
+  def this() = this("TestSystem%05d".format(TestActorSys.uniqueId.incrementAndGet()))
 
-    Assert.assertTrue(msg.getHeaders().size() > 0);
-    Assert.assertNotNull(msg.getBody(String.class));
-    Assert.assertEquals("Hallo Andreas", msg.getBody(String.class));
+  def shutdown() { system.shutdown() }
+
+  def apply(block : Unit) {
+    try block
+    finally shutdown()
   }
 }
