@@ -20,13 +20,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.camelutils</artifactId>
+  <artifactId>de.woq.blended.camel.utils</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -69,12 +68,6 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>${slf4j.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
       <version>${slf4j.version}</version>
     </dependency>
 
