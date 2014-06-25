@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
-import akka.actor.{Terminated, ActorRef, Props, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import akka.actor.{ActorRef, ActorSystem, Props, Terminated}
+import akka.event.Logging.Info
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import de.woq.blended.akka.internal.{OSGIServiceTracker, TrackerAdapter}
+import de.woq.blended.akka.protocol._
+import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import akka.event.Logging.Info
-import de.woq.osgi.java.testsupport.TestActorSys
-import de.woq.osgi.akka.system.internal.{OSGIServiceTracker, TrackerAdapter}
-
-import protocol._
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
   with WordSpecLike

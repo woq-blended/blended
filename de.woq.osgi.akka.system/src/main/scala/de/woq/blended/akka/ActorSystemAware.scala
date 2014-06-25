@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
+import de.woq.blended.modules._
+import de.woq.blended.akka.protocol._
 import org.osgi.framework.{BundleActivator, BundleContext}
-import akka.actor.{PoisonPill, Props, ActorRef, ActorSystem}
-import de.woq.osgi.akka.system.protocol._
-import de.woq.osgi.akka.modules._
 
 trait BundleName {
   def bundleSymbolicName : String

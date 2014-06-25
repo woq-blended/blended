@@ -16,11 +16,11 @@
  * Credits for the original idea goes to D.Wyatt in his book "Akka concurrency"
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import akka.actor.{ActorLogging, Terminated, ActorRef, Actor}
-import de.woq.osgi.akka.system.protocol._
 import akka.actor.Actor.Receive
+import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
+import de.woq.blended.akka.protocol._
 
 trait EventSource {
   def sendEvent[T](event : T) : Unit

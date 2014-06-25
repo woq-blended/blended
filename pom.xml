@@ -62,7 +62,7 @@
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>
-        <module>de.woq.osgi.java.container.id</module>
+        <module>blended-container-id</module>
         <module>de.woq.osgi.java.container.registry</module>
         <module>blended-util</module>
         <module>de.woq.osgi.java.mgmt_core</module>

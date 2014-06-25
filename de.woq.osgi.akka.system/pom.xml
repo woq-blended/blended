@@ -28,7 +28,7 @@
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.osgi.akka.system</artifactId>
+  <artifactId>de.woq.blended.akka.system</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -45,7 +45,7 @@
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
+      <groupId>de.woq.blended</groupId>
       <artifactId>de.woq.blended.modules</artifactId>
       <version>${project.version}</version>
     </dependency>

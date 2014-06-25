@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka
+package de.woq.blended
 
+import _root_.akka.actor.{ActorSystem, ActorRef}
+import _root_.akka.event.LoggingAdapter
+import _root_.akka.util.Timeout
+import de.woq.blended.modules._
 import org.osgi.framework.BundleContext
-import scala.concurrent.Future
-import akka.actor.{ActorSystem, ActorRef}
-import akka.util.Timeout
-import scala.concurrent.duration._
-import de.woq.osgi.akka.modules._
-import akka.event.LoggingAdapter
 
-package object system {
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
+package object akka {
 
   implicit def context2Facade(bundleContext: BundleContext)(implicit log: LoggingAdapter) : Future[ActorRef] = {
 

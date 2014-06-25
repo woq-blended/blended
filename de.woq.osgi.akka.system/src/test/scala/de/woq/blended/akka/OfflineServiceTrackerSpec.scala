@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.junit.AssertionsForJUnit
-import de.woq.osgi.java.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import akka.testkit.TestProbe
-import de.woq.osgi.akka.system.internal.OfflineServiceTracker
 import akka.actor.Props
-
-import protocol._
+import akka.testkit.TestProbe
+import de.woq.blended.akka.internal.OfflineServiceTracker
+import de.woq.blended.akka.protocol.{TrackerAddingService, Service, CreateReference}
+import de.woq.blended.testsupport.TestActorSys
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class OfflineServiceTrackerSpec extends WordSpec
   with Matchers

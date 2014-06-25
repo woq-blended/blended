@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system {
+package de.woq.blended.akka {
 
   import akka.actor.ActorRef
   import org.osgi.framework.{BundleContext, ServiceReference}

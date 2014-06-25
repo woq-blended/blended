@@ -15,12 +15,12 @@
  */
 package de.woq.blended.modules
 
-import de.woq.blended.testsupport.TestActorSys
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.verify
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
+import de.woq.blended.testsupport.TestActorSys
 
 class RichBundleContextSpec extends TestActorSys() with WordSpecLike with MockitoSugar with Matchers {
 

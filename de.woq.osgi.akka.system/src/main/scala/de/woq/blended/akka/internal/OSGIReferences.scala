@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.internal
+package de.woq.blended.akka.internal
 
 import akka.actor._
 import org.osgi.framework.{ServiceReference, BundleContext}
-import de.woq.osgi.akka.modules._
+import de.woq.blended.modules._
 import akka.event.LoggingReceive
 import akka.actor.SupervisorStrategy.Stop
-import de.woq.osgi.akka.system.protocol._
-import scala.Some
+import de.woq.blended.akka.protocol._
 import akka.actor.OneForOneStrategy
 import scala.concurrent.duration._
 

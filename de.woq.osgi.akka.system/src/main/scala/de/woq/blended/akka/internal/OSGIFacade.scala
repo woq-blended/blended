@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.internal
+package de.woq.blended.akka.internal
 
 import akka.actor._
-import de.woq.blended.container.context.ContainerContext
-import org.osgi.framework.BundleContext
-import akka.util.Timeout
-import scala.concurrent.duration._
-import de.woq.osgi.akka.system.WOQAkkaConstants._
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol._
-import scala.Some
-import akka.actor.Props
 import akka.pattern._
-import de.woq.osgi.akka.modules._
+import akka.util.Timeout
+import de.woq.blended.akka.WOQAkkaConstants
+import de.woq.blended.container.context.ContainerContext
+import WOQAkkaConstants._
+import de.woq.blended.akka.protocol._
+import org.osgi.framework.BundleContext
+import de.woq.blended.modules._
+
+import scala.concurrent.duration._
 
 object OSGIFacade {
   def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()

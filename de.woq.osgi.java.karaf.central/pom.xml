@@ -24,32 +24,31 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.karaf.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.karaf.parent</relativePath>
   </parent>
 
   <properties>
     <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>de.woq.osgi.java.karaf.branding</woq.branding.artifactId>
+    <woq.branding.artifactId>de.woq.blended.karaf.branding</woq.branding.artifactId>
     <woq.branding.version>${project.version}</woq.branding.version>
   </properties>
 
-  <artifactId>de.woq.osgi.java.karaf.central</artifactId>
+  <artifactId>de.woq.blended.karaf.central</artifactId>
 
   <dependencies>
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.karaf.parent</artifactId>
       <version>${woq.container.version}</version>
       <classifier>assembly</classifier>
       <type>linux-nojre</type>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.karaf.parent</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.karaf.parent</artifactId>
       <version>${woq.container.version}</version>
       <classifier>assembly</classifier>
       <type>windows-nojre</type>
@@ -63,8 +62,8 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
-            <descriptor>${project.build.directory}/descriptors/de.woq.osgi.java.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/de.woq.blended.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/de.woq.blended.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
           </descriptors>
         </configuration>
       </plugin>

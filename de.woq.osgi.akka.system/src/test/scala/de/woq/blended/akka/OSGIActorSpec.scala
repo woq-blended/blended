@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.junit.AssertionsForJUnit
-import de.woq.osgi.java.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.system.internal.OSGIFacade
-import akka.actor.{ActorLogging, Actor, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
+import akka.pattern.{ask, pipe}
 import akka.testkit.TestActorRef
+import akka.util.Timeout
+import de.woq.blended.akka.protocol.ServiceResult
+import de.woq.blended.testsupport.TestActorSys
+import de.woq.blended.akka.internal.OSGIFacade
 import org.osgi.framework.BundleContext
-import akka.pattern.{ask,pipe}
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
+
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import akka.util.Timeout
-
-import protocol._
 
 object OSGIActorDummy {
   def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with OSGIActor

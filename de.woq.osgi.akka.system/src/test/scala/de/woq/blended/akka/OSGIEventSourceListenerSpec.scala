@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import org.scalatest.{Matchers, WordSpec}
-import org.osgi.framework.BundleContext
 import akka.actor._
-import de.woq.osgi.java.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.akka.system.internal.OSGIFacade
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol._
-import akka.testkit.{TestLatch, TestActorRef}
+import akka.testkit.{TestActorRef, TestLatch}
+import de.woq.blended.testsupport.TestActorSys
+import de.woq.blended.akka.internal.OSGIFacade
+import de.woq.blended.akka.protocol._
+import org.osgi.framework.BundleContext
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
+import akka.pattern.pipe
+
 import scala.concurrent.Await
 
 object OSGIActorDummyPublisher {
@@ -40,8 +42,6 @@ object OSGIDummyListener {
 }
 
 class OSGIDummyListener extends Actor with ActorLogging with OSGIActor { this : OSGIEventSourceListener =>
-
-  import akka.pattern._
 
   implicit val actorSys = context.system
   val latch = TestLatch(1)

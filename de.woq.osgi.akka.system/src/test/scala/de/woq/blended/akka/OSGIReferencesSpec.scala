@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import de.woq.osgi.java.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
 import akka.actor.Props
-import de.woq.osgi.akka.system.internal.OSGIFacade
-import org.scalatest.{Matchers, WordSpec}
+import de.woq.blended.akka.internal.OSGIFacade
+import de.woq.blended.akka.protocol._
+import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.junit.AssertionsForJUnit
-
-import protocol._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 class OSGIReferencesSpec extends WordSpec
   with Matchers

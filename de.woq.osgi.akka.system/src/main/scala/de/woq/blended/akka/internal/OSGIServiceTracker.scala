@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system.internal
+package de.woq.blended.akka.internal
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
 import org.osgi.framework.{ServiceReference, BundleContext}
 import org.osgi.util.tracker.{ServiceTracker, ServiceTrackerCustomizer}
 import akka.event.LoggingReceive
-import de.woq.osgi.akka.system.protocol._
+import de.woq.blended.akka.protocol._
 
 trait TrackerAdapterProvider[I <: AnyRef] {
   def trackerAdapter(observer: ActorRef)(implicit osgiContext : BundleContext) : TrackerAdapter[I]

@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.actor.ActorSystem
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers}
-import org.scalatest.junit.AssertionsForJUnit
-import de.woq.osgi.akka.system.internal.{ConfigDirectoryProvider, ConfigLocator}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
-
-import protocol._
+import de.woq.blended.akka.internal.{ConfigDirectoryProvider, ConfigLocator}
+import de.woq.blended.akka.protocol.{ConfigLocatorResponse, ConfigLocatorRequest}
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
   override def configDirectory: String = getClass.getResource("/").getPath

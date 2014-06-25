@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
 import akka.actor.Props
-import org.scalatest.{WordSpec, Matchers}
+import de.woq.blended.akka.internal.OSGIFacade
+import de.woq.blended.testsupport.TestActorSys
+import de.woq.blended.akka.protocol._
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.java.testsupport.TestActorSys
-import de.woq.osgi.akka.system.internal.OSGIFacade
-
-import protocol._
+import org.scalatest.{Matchers, WordSpec}
 
 class OSGIFacadeSpec extends WordSpec
   with Matchers
@@ -31,15 +30,12 @@ class OSGIFacadeSpec extends WordSpec
 
   "OSGIFacade" should {
 
-    "handle config requests correctly" in new TestActorSys with TestSetup with MockitoSugar {
-      apply {
-        val facade = system.actorOf(Props(OSGIFacade()), "facade")
-        facade ! ConfigLocatorRequest("foo")
-        expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
-          m.config.getString("bar") should be ("YES")
-        }
+    "handle config requests correctly" in new TestActorSys() with TestSetup with MockitoSugar {
+      val facade = system.actorOf(Props(OSGIFacade()), "facade")
+      facade ! ConfigLocatorRequest("foo")
+      expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
+        m.config.getString("bar") should be ("YES")
       }
     }
-
   }
 }

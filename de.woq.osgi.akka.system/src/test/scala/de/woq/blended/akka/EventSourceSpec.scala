@@ -16,12 +16,12 @@
  * Credits for the original idea goes to D.Wyatt in his book "Akka conncurrency"
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import org.scalatest._
-import akka.actor.{ActorLogging, PoisonPill, ActorSystem, Actor}
+import akka.actor.{Actor, ActorLogging, ActorSystem, PoisonPill}
 import akka.testkit.{TestActorRef, TestKit}
-import de.woq.osgi.akka.system.protocol._
+import de.woq.blended.akka.protocol._
+import org.scalatest._
 
 class TestEventSource extends Actor with ActorLogging with ProductionEventSource {
   def receive = eventSourceReceive

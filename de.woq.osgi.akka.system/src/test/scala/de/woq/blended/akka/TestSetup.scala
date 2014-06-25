@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
 import de.woq.blended.container.context.ContainerContext
-import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
 import org.mockito.Mockito._
+import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
 
 trait TestSetup { this : MockitoSugar =>

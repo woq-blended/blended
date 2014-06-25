@@ -14,31 +14,32 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.system
+package de.woq.blended.akka
 
-import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
-import akka.actor.{Props, ActorSystem}
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import akka.actor.{ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import de.woq.blended.akka.internal.OSGIServiceReference
+import de.woq.blended.akka.protocol._
+import org.mockito.Mockito.verify
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.slf4j.LoggerFactory
-import org.mockito.Mockito.verify
-import de.woq.osgi.akka.system.internal.OSGIServiceReference
-
-import protocol._
 
 class OSGIServiceReferenceSpec extends TestKit(ActorSystem("OSGIServiceRef"))
   with WordSpecLike
   with Matchers
   with AssertionsForJUnit
   with BeforeAndAfterAll
-  with ImplicitSender {
+  with ImplicitSender
+  with TestSetup
+  with MockitoSugar {
 
   val log = LoggerFactory.getLogger(classOf[OSGIServiceReferenceSpec])
 
   "OSGIServiceReference" should {
 
-    "allow to invoke the underlying Service" in new TestSetup with MockitoSugar {
+    "allow to invoke the underlying Service" in {
 
       val testActor = TestActorRef(Props(OSGIServiceReference(svcRef)))
       testActor ! InvokeService { svc: TestInterface1 => svc.name }
@@ -49,7 +50,7 @@ class OSGIServiceReferenceSpec extends TestKit(ActorSystem("OSGIServiceRef"))
       }
     }
 
-    "allow to unget the underlying service reference" in new TestSetup with MockitoSugar {
+    "allow to unget the underlying service reference" in {
       val testActor = TestActorRef(Props(OSGIServiceReference(svcRef)))
       testActor ! UngetServiceReference
 
