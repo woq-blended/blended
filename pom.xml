@@ -69,7 +69,7 @@
         <module>de.woq.osgi.java.jaxrs</module>
         <module>de.woq.osgi.java.camelutils</module>
 
-        <module>de.woq.osgi.java.testsupport</module>
+        <module>blended-testsupport</module>
 
         <module>de.woq.osgi.java.karaf.features</module>
         <module>blended-karaf-branding</module>
