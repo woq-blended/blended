@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.context.internal;
+package de.woq.blended.container.context;
 
-public interface ContainerShutdownMBean {
+import java.util.Properties;
+
+public interface ContainerContext {
+
+  public String getContainerDirectory();
+  public String getContainerConfigDirectory();
+  public String getContainerHostname();
+
+  public Properties readConfig(final String configId);
+  public void writeConfig(final String configId, final Properties props);
 
   public void shutdown();
 }

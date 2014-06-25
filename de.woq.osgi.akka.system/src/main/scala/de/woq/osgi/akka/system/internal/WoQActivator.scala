@@ -17,11 +17,11 @@
 package de.woq.osgi.akka.system.internal
 
 import akka.osgi.ActorSystemActivator
+import de.woq.blended.container.context.ContainerContext
 import org.osgi.framework.BundleContext
 import akka.actor.{Props, ActorSystem}
 import akka.event.{LogSource, Logging}
 import de.woq.osgi.akka.system.WOQAkkaConstants._
-import de.woq.osgi.java.container.context.ContainerContext
 import com.typesafe.config.{ConfigFactory, Config}
 import java.io.File
 import de.woq.osgi.akka.modules._

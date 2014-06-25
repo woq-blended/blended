@@ -21,13 +21,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.container.context</artifactId>
+  <artifactId>de.woq.blended.container.context</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -38,8 +37,8 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.util</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.util</artifactId>
       <version>${woq.container.version}</version>
     </dependency>
 

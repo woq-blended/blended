@@ -17,6 +17,7 @@
 package de.woq.osgi.akka.system.internal
 
 import akka.actor._
+import de.woq.blended.container.context.ContainerContext
 import org.osgi.framework.BundleContext
 import akka.util.Timeout
 import scala.concurrent.duration._
@@ -27,7 +28,6 @@ import scala.Some
 import akka.actor.Props
 import akka.pattern._
 import de.woq.osgi.akka.modules._
-import de.woq.osgi.java.container.context.ContainerContext
 
 object OSGIFacade {
   def apply()(implicit bundleContext : BundleContext) = new OSGIFacade()

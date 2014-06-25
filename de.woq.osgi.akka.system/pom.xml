@@ -23,8 +23,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
@@ -39,14 +39,14 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.container.context</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.container.context</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>de.woq.osgi.akka.modules</artifactId>
+      <artifactId>de.woq.blended.modules</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -69,8 +69,8 @@
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.testsupport</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.testsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

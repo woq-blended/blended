@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.context.internal;
+package de.woq.blended.container.context.internal;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

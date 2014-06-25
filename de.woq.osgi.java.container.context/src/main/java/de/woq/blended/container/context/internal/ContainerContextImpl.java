@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.context.internal;
+package de.woq.blended.container.context.internal;
 
-import de.woq.osgi.java.container.context.ContainerContext;
+import de.woq.blended.container.context.ContainerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
