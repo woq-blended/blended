@@ -143,7 +143,7 @@
     <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
     <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
     <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.activemq.brokerstarter/${project.version}</bundle>
+    <bundle>mvn:de.woq.osgi.java/de.woq.blended.activemq.brokerstarter/${project.version}</bundle>
 
   </feature>
 

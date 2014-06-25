@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.activemq.brokerstarter;
+package de.woq.blended.activemq.brokerstarter;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
