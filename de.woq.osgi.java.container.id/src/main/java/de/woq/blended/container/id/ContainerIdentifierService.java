@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.id;
+package de.woq.blended.container.id;
 
-import de.woq.osgi.java.container.context.ContainerContext;
+import de.woq.blended.container.context.ContainerContext;
 
 import java.util.Properties;
 

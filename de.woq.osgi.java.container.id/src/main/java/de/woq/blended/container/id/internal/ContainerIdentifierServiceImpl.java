@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.id.internal;
+package de.woq.blended.container.id.internal;
 
-import de.woq.osgi.java.container.context.ContainerContext;
-import de.woq.osgi.java.container.id.ContainerIdentifierService;
-import de.woq.osgi.java.util.ManagedServiceSupport;
+import de.woq.blended.container.context.ContainerContext;
+import de.woq.blended.container.id.ContainerIdentifierService;
+import de.woq.blended.util.ManagedServiceSupport;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.slf4j.Logger;
