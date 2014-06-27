@@ -22,8 +22,8 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.woq.osgi.java</groupId>
-  <artifactId>de.woq.osgi.java.samples.reactor</artifactId>
+  <groupId>de.woq.blended</groupId>
+  <artifactId>de.woq.blended.samples.reactor</artifactId>
   <version>1.0.7-M2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -39,9 +39,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</developerConnection>
-    <url>https://github.com/atooni/de.woq.osgi.java</url>
+    <connection>scm:git:ssh://git@github.com/atooni/de.woq.blended.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/atooni/de.woq.blended.git</developerConnection>
+    <url>https://github.com/atooni/de.woq.blended</url>
   </scm>
 
   <profiles>

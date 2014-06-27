@@ -23,14 +23,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>de.woq.blended.parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <groupId>de.woq.osgi.java.samples</groupId>
-  <artifactId>de.woq.osgi.spray.helloworld</artifactId>
+  <groupId>de.woq.blended.samples</groupId>
+  <artifactId>de.woq.blended.samples.spray.helloworld</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -41,8 +40,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.spray.servlet</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.spray</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -61,22 +60,22 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.mgmt_core</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.mgmt_core</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.akka.system</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.akka</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.akka.modules</artifactId>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>de.woq.blended.modules</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

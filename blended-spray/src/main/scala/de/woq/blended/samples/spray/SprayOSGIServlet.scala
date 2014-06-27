@@ -1,4 +1,4 @@
-package de.woq.blended.spray
+package de.woq.blended.samples.spray
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.Logging

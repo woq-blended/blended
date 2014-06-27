@@ -25,7 +25,7 @@
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.spray</artifactId>
+  <artifactId>de.woq.blended.samples.spray</artifactId>
   <packaging>bundle</packaging>
 
   <properties>

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.spray.helloworld.internal
+package de.woq.blended.samples.spray.helloworld.internal
 
 import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest

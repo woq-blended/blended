@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.spray.helloworld.internal
+package de.woq.blended.samples.spray.helloworld.internal
 
+import akka.actor.{ActorLogging, Actor}
+import de.woq.blended.akka.{BundleName, OSGIActor}
 import de.woq.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
-import spray.routing._
 import spray.http.MediaTypes._
-import akka.actor._
 import org.osgi.framework.BundleContext
-import akka.pattern._
-import de.woq.osgi.spray.servlet.SprayOSGIServlet
 import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
-import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
 
-import de.woq.osgi.akka.system._
-import de.woq.osgi.akka.system.protocol._
+import spray.routing._
+import akka.pattern._
+
+import de.woq.blended.modules._
+import de.woq.blended.akka.protocol._
 
 trait HelloService extends HttpService {
 

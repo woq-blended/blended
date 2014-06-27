@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.spray.helloworld.internal
+package de.woq.blended.samples.spray.helloworld.internal
 
-import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
+import de.woq.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
 
 trait HelloBundleName extends BundleName {
