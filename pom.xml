@@ -78,7 +78,7 @@
         <module>blended-akka</module>
         <module>de.woq.osgi.akka.mgmt.reporter</module>
         <module>de.woq.osgi.akka.mgmt.rest</module>
-        <module>de.woq.osgi.spray.servlet</module>
+        <module>blended-spray</module>
 
         <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
