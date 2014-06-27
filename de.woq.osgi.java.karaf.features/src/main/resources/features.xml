@@ -190,7 +190,7 @@
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-client/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-json_${scala.version}/${spray-json.version}</bundle>
-    <bundle>mvn:de.woq.blended/de.woq.osgi.spray.servlet/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-spray/${project.version}</bundle>
   </feature>
 
   <feature name="blended-samples" description="Sample bundles" version="${project.version}" resolver="(obr)">
