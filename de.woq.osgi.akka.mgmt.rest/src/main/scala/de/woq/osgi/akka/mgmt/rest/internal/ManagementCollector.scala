@@ -16,12 +16,13 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
+import de.woq.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.routing._
 import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.{SprayOSGIServlet, SprayOSGIBridge}
+import de.woq.osgi.spray.servlet.SprayOSGIServlet
 import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
