@@ -24,7 +24,7 @@
 
     <argument index="0" ref="blueprintBundleContext" />
     <argument index="1">
-      <reference interface="de.woq.osgi.java.container.context.ContainerContext" timeout="1000" />
+      <reference interface="de.woq.blended.container.context.ContainerContext" timeout="1000" />
     </argument>
   </bean>
 
