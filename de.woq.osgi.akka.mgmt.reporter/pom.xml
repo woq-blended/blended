@@ -28,7 +28,7 @@
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.osgi.akka.mgmt.reporter</artifactId>
+  <artifactId>de.woq.blended.mgmt.agent</artifactId>
   <packaging>bundle</packaging>
 
   <properties>

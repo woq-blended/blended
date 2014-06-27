@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.mgmt.reporter.internal
+package de.woq.blended.mgmt.agent.internal
+
 
 import akka.actor.{Actor, ActorLogging, Cancellable}
-import de.woq.osgi.akka.system.{OSGIActor, BundleName}
-import de.woq.osgi.java.container.id.ContainerIdentifierService
+import de.woq.blended.akka.protocol._
+import de.woq.blended.akka.{OSGIActor, BundleName}
+import de.woq.blended.container.id.ContainerIdentifierService
+import de.woq.blended.container.registry.protocol._
 import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import scala.concurrent.duration._
-import scala.collection.JavaConversions._
-import spray.json._
 import spray.httpx.SprayJsonSupport
-import de.woq.osgi.java.container.registry.protocol._
-import de.woq.osgi.akka.system.protocol._
 import scala.concurrent.Future
 import spray.client.pipelining._
 import spray.http.HttpRequest
+import scala.collection.JavaConversions._
 
 object MgmtReporter {
-  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtReporterBundleName
+  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtAgentBundleName
 }
 
 class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this : OSGIActor with BundleName =>

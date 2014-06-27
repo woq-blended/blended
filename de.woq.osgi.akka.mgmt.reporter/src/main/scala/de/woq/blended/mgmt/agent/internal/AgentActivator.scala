@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.mgmt.reporter.internal
+package de.woq.blended.mgmt.agent.internal
 
-import de.woq.osgi.akka.system.{BundleName, ActorSystemAware}
+import de.woq.blended.akka.{BundleName, ActorSystemAware}
 import org.osgi.framework.BundleActivator
 import akka.actor.Props
 
 // Simply expose the bundle's symbolic name so that it can be mixed in where required
-trait MgmtReporterBundleName extends BundleName {
-  override def bundleSymbolicName = "de.woq.osgi.akka.mgmt.reporter"
+trait MgmtAgentBundleName extends BundleName {
+  override def bundleSymbolicName = "de.woq.blended.mgmt.agent"
 }
 
 // The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
-class ReporterActivator extends ActorSystemAware with BundleActivator with MgmtReporterBundleName {
+class AgentActivator extends ActorSystemAware with BundleActivator with MgmtAgentBundleName {
   def prepareBundleActor(): Props = Props(MgmtReporter())
 }
