@@ -22,11 +22,11 @@
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.util</artifactId>
+  <artifactId>blended-util</artifactId>
   <packaging>bundle</packaging>
 
   <properties>

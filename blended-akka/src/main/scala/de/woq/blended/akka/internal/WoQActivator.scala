@@ -42,7 +42,7 @@ class WoQActivator extends ActorSystemActivator {
     log info s"ActorSystem [${system.name}] initialized."
   }
 
-  override def getActorSystemName(context: BundleContext): String = "WoQActorSystem"
+  override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
 
   override def getActorSystemConfiguration(context: BundleContext): Config = {
     ConfigFactory.parseFile(new File(configDir(context), "application.conf"))

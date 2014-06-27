@@ -17,7 +17,7 @@
 package de.woq.osgi.akka.mgmt.rest.internal
 
 import de.woq.blended.akka.{ProductionEventSource, OSGIActor}
-import de.woq.blended.samples.spray.{SprayOSGIServlet, SprayOSGIBridge}
+import de.woq.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.routing._
 import akka.actor._
 import org.osgi.framework.BundleContext

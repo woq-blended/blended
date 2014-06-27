@@ -16,6 +16,7 @@
 
 package de.woq.osgi.akka.itest
 
+import de.woq.blended.container.registry.protocol.ContainerInfo
 import org.junit.runner.RunWith
 import org.ops4j.pax.exam.junit.PaxExam
 import org.scalatest.junit.{AssertionsForJUnit, JUnitSuite}
@@ -27,27 +28,26 @@ import javax.inject.Inject
 import org.ops4j.pax.exam.CoreOptions._
 import akka.testkit.TestProbe
 import akka.event.Logging.Info
-import de.woq.osgi.java.container.registry.protocol.ContainerInfo
 
 @RunWith(classOf[PaxExam])
 class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
 
   val testOptions = new TestOptions with ITestConfig {
     override def containerUrl = maven()
-      .groupId("de.woq.osgi.java")
-      .artifactId("de.woq.osgi.java.karaf.central")
+      .groupId("de.woq.blended")
+      .artifactId("blended-karaf-central")
       .versionAsInProject()
       .`type`("tar.gz")
       .classifier("nojre")
 
     override def featureUrl = maven()
-      .groupId("de.woq.osgi.java")
-      .artifactId("de.woq.osgi.java.karaf.features")
+      .groupId("de.woq.blended")
+      .artifactId("blended-karaf-features")
       .versionAsInProject()
       .`type`("xml")
       .classifier("features")
 
-    override def featureUnderTest = "woq-akka-system"
+    override def featureUnderTest = "blended-akka"
   }
 
   @Inject
@@ -70,9 +70,9 @@ class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
 
     system should not be (null)
 
-//    testProbe.fishForMessage(1.minute) {
-//      case Info(_, _, m) => m.toString.startsWith(classOf[ContainerInfo].getSimpleName)
-//    }
+    testProbe.fishForMessage(1.minute) {
+      case Info(_, _, m) => m.toString.startsWith(classOf[ContainerInfo].getSimpleName)
+    }
   }
 
 }

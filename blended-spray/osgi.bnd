@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Export-Package: \
-  de.woq.osgi.spray.servlet
+  de.woq.blended.spray.servlet
 
 Import-Package: \
   *

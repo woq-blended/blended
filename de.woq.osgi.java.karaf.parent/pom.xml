@@ -25,18 +25,18 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.blended.parent</relativePath>
+    <relativePath>../blended-parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.blended.karaf.parent</artifactId>
+  <artifactId>blended-karaf-parent</artifactId>
   <packaging>pom</packaging>
 
   <properties>
     <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>de.woq.blended.karaf.branding</woq.branding.artifactId>
-    <woq.branding.version>${woq.container.version}</woq.branding.version>
+    <woq.branding.artifactId>blended-karaf-branding</woq.branding.artifactId>
+    <woq.branding.version>${blended.version}</woq.branding.version>
   </properties>
 
   <dependencies>
@@ -88,8 +88,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.util</artifactId>
-      <version>${woq.container.version}</version>
+      <artifactId>blended-util</artifactId>
+      <version>${blended.version}</version>
       <exclusions>
         <exclusion>
           <groupId>*</groupId>
@@ -99,15 +99,15 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.installer</artifactId>
-      <version>${woq.container.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-installer</artifactId>
+      <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.installer</artifactId>
-      <version>${woq.container.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-installer</artifactId>
+      <version>${blended.version}</version>
       <type>linux</type>
       <classifier>scripts</classifier>
       <exclusions>
@@ -119,9 +119,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.osgi.java</groupId>
-      <artifactId>de.woq.osgi.java.installer</artifactId>
-      <version>${woq.container.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-installer</artifactId>
+      <version>${blended.version}</version>
       <type>windows</type>
       <classifier>scripts</classifier>
       <exclusions>
@@ -194,7 +194,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <goal>copy-dependencies</goal>
               </goals>
               <configuration>
-                <includeArtifactIds>de.woq.osgi.java.installer,de.woq.osgi.java.util,org.apache.karaf.shell.wrapper</includeArtifactIds>
+                <includeArtifactIds>blended-installer,blended-util,org.apache.karaf.shell.wrapper</includeArtifactIds>
                 <outputDirectory>${project.build.directory}/installer</outputDirectory>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>
@@ -220,7 +220,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <goal>copy-dependencies</goal>
               </goals>
               <configuration>
-                <includeArtifactIds>de.woq.blended.karaf.parent</includeArtifactIds>
+                <includeArtifactIds>blended-karaf-parent</includeArtifactIds>
                 <outputDirectory>${project.build.directory}/descriptors</outputDirectory>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>

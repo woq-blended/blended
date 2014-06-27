@@ -7,4 +7,4 @@ Bundle-SymbolicName:\
 Import-Package: *
 
 Private-Package:\
-  ${bundle.namespace}.internal.*
+  *.internal.*

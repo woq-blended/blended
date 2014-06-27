@@ -21,13 +21,13 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.woq.blended</groupId>
-  <artifactId>de.woq.blended.parent</artifactId>
+  <artifactId>blended-parent</artifactId>
   <packaging>pom</packaging>
 
   <version>1.0.7-M2-SNAPSHOT</version>
 
   <properties>
-    <woq.container.version>1.0.7-M2-SNAPSHOT</woq.container.version>
+    <blended.version>1.0.7-M2-SNAPSHOT</blended.version>
 
     <java.version>1.7</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -100,7 +100,7 @@
     <protobuf.version>2.5.0</protobuf.version>
     <scala.version>2.10</scala.version>
     <scala.micro.version>4</scala.micro.version>
-    <scalatest.version>2.1.2</scalatest.version>
+    <scalatest.version>2.2.0</scalatest.version>
     <shapeless.version>1.2.4</shapeless.version>
     <slf4j.version>1.7.2</slf4j.version>
     <spray.version>1.3.1</spray.version>

@@ -22,11 +22,11 @@
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.persistence</artifactId>
+  <artifactId>blended-persistence</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -38,7 +38,7 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.akka</artifactId>
+      <artifactId>blended-akka</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -50,7 +50,7 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.neo4j.api</artifactId>
+      <artifactId>blended-neo4j-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -68,7 +68,6 @@
 
     <!-- Test dependencies -->
 
-
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
@@ -78,7 +77,7 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.testsupport</artifactId>
+      <artifactId>blended-testsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

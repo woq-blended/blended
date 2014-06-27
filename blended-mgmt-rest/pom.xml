@@ -24,11 +24,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.mgmt.rest</artifactId>
+  <artifactId>blended-mgmt-rest</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -40,7 +40,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.samples.spray</artifactId>
+      <artifactId>blended-spray</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -72,21 +72,21 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.container.registry</artifactId>
+      <artifactId>blended-container-registry</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.akka</artifactId>
+      <artifactId>blended-akka</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.modules</artifactId>
+      <artifactId>blended-modules</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

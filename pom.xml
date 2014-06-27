@@ -23,7 +23,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>de.woq.blended</groupId>
-  <artifactId>de.woq.blended.reactor</artifactId>
+  <artifactId>blended-reactor</artifactId>
   <version>1.0.7-M2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -87,7 +87,7 @@
 
         <module>de.woq.osgi.java.archetypes.project</module>
 
-        <module>samples</module>
+        <module>blended-samples</module>
       </modules>
     </profile>
 

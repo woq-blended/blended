@@ -22,8 +22,8 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.woq.blended</groupId>
-  <artifactId>de.woq.blended.samples.reactor</artifactId>
+  <groupId>de.woq.blended.samples</groupId>
+  <artifactId>blended-samples-reactor</artifactId>
   <version>1.0.7-M2-SNAPSHOT</version>
   <packaging>pom</packaging>
 

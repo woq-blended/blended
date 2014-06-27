@@ -9,6 +9,3 @@ Import-Package:\
   com.sun.*;resolution:=optional,\
   sun.*;resolution:=optional,\
   *
-
-Private-Package:\
-  ${bundle.namespace}.internal.*

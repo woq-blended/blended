@@ -10,4 +10,4 @@ Bundle-Activator: \
   de.woq.blended.persistence.internal.PersistenceActivator
 
 Private-Package:\
-  ${bundle.namespace}.internal.*
+  de.woq.blended.*.internal.*

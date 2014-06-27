@@ -7,6 +7,6 @@ Bundle-SymbolicName:\
 Import-Package: *
 
 Private-Package:\
-  ${bundle.namespace}.internal.*
+  de.woq.blended.*.internal.*
 
 Bundle-Activator: de.woq.osgi.java.container.registry.internal.RegistryActivator

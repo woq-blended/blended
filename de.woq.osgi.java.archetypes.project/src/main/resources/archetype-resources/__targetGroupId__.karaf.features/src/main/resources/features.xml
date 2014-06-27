@@ -21,7 +21,7 @@
 
 <features name="${targetFeature}-features-${symbol_dollar}{project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
 
-  <repository>mvn:${groupId}/${groupId}.karaf.features/${symbol_dollar}{woq.container.version}/xml/features</repository>
+  <repository>mvn:${groupId}/${groupId}.karaf.features/${symbol_dollar}{blended.version}/xml/features</repository>
   
   <feature name="${targetFeature}" version="${symbol_dollar}{project.version}" start-level="60">
   </feature>

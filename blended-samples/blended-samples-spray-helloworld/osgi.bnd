@@ -5,14 +5,14 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  de.woq.osgi.spray.helloworld.internal.HelloActivator
+  de.woq.blended.samples.spray.helloworld.internal.HelloActivator
 
 Import-Package: \
   spray.routing,\
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  de.woq.osgi.spray.servlet,\
+  de.woq.blended.spray.servlet,\
   *
 
 

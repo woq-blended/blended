@@ -25,31 +25,31 @@
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.karaf.parent</artifactId>
+    <artifactId>blended-karaf-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
   <properties>
     <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>de.woq.blended.karaf.branding</woq.branding.artifactId>
+    <woq.branding.artifactId>blended-karaf-branding</woq.branding.artifactId>
     <woq.branding.version>${project.version}</woq.branding.version>
   </properties>
 
-  <artifactId>de.woq.blended.karaf.central</artifactId>
+  <artifactId>blended-karaf-central</artifactId>
 
   <dependencies>
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.karaf.parent</artifactId>
-      <version>${woq.container.version}</version>
+      <artifactId>blended-karaf-parent</artifactId>
+      <version>${blended.version}</version>
       <classifier>assembly</classifier>
       <type>linux-nojre</type>
     </dependency>
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.karaf.parent</artifactId>
-      <version>${woq.container.version}</version>
+      <artifactId>blended-karaf-parent</artifactId>
+      <version>${blended.version}</version>
       <classifier>assembly</classifier>
       <type>windows-nojre</type>
     </dependency>
@@ -62,8 +62,8 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>${project.build.directory}/descriptors/de.woq.blended.karaf.parent-${woq.container.version}-assembly.linux-nojre</descriptor>
-            <descriptor>${project.build.directory}/descriptors/de.woq.blended.karaf.parent-${woq.container.version}-assembly.windows-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.windows-nojre</descriptor>
           </descriptors>
         </configuration>
       </plugin>
@@ -83,7 +83,7 @@
         <artifactId>features-maven-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>mvn:${project.groupId}/${project.groupId}.karaf.features/${project.version}/xml/features</descriptor>
+            <descriptor>mvn:${project.groupId}/blended-karaf-features/${project.version}/xml/features</descriptor>
           </descriptors>
           <features>
             <feature>config</feature>
@@ -94,10 +94,10 @@
             <feature>http</feature>
             <feature>http-whiteboard</feature>
             <feature>war</feature>
-            <feature>woq-camel</feature>
-            <feature>woq-activemq-broker</feature>
+            <feature>blended-camel</feature>
+            <feature>blended-activemq-broker</feature>
             <feature>hawtio</feature>
-            <feature>woq-samples</feature>
+            <feature>blended-samples</feature>
           </features>
           <repository>target/repository</repository>
         </configuration>

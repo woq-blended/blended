@@ -25,11 +25,57 @@
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.karaf.features</artifactId>
+  <artifactId>blended-karaf-features</artifactId>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-util</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-container-context</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-container-id</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-jmx</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-persistence</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-neo4j-api</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-container-registry</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+  </dependencies>
 
   <build>
     <plugins>

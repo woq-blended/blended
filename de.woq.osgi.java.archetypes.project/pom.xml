@@ -19,16 +19,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.osgi.java</groupId>
-    <artifactId>de.woq.osgi.java.parent</artifactId>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
-    <relativePath>../de.woq.osgi.java.parent</relativePath>
   </parent>
 
-  <artifactId>de.woq.osgi.java.archetypes.project</artifactId>
+  <artifactId>blended-archetypes-archetypes</artifactId>
   <packaging>maven-archetype</packaging>
-
-  <name>de.woq.osgi.java.archetypes.project</name>
 
   <build>
 

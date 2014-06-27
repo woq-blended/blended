@@ -14,7 +14,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<features name="woq-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
+<features name="blended-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
 
   <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
   <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
@@ -22,7 +22,7 @@
   <repository>mvn:io.hawt/hawtio-karaf/${hawtio.version}/xml/features</repository>
   <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax-web.version}/xml/features</repository>
 
-  <feature name="woq-commons" description="WoQ - Commons feature" version="${project.version}" start-level="10" resolver="(obr)">
+  <feature name="blended-commons" description="Blended - Commons" version="${project.version}" start-level="10" resolver="(obr)">
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}</bundle>
     <bundle>mvn:commons-lang/commons-lang/${commons.lang.version}</bundle>
@@ -35,41 +35,41 @@
     <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/${commons.beanutils.version}</bundle>
   </feature>
 
-  <feature name="woq-base" description="WoQ - Base WoQ bundles" version="${project.version}" resolver="(obr)" start-level="20">
-    <feature version="${akka.version}">woq-akka</feature>
-    <feature version="${project.version}">woq-commons</feature>
+  <feature name="blended-base" description="Blended - Base bundles" version="${project.version}" resolver="(obr)" start-level="20">
+    <feature version="${akka.version}">blended-akka</feature>
+    <feature version="${project.version}">blended-commons</feature>
     <feature version="${karaf.version}">wrapper</feature>
     <bundle>mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
     <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.util/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.container.context/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.container.id/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.mgmt_core/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.persistence/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.neo4j/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.container.registry/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-util/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-context/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-id/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-jmx/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-persistence/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-neo4j-api/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-registry/${blended.version}</bundle>
   </feature>
 
-  <feature name="woq-camel" description="WoQ - Camel" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">woq-base</feature>
+  <feature name="blended-camel" description="Blended - Camel" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">blended-base</feature>
     <feature version="${camel.version}">camel</feature>
     <feature version="${camel.version}">camel-jms</feature>
     <feature version="${camel.version}">camel-exec</feature>
     <bundle>mvn:org.apache.camel/camel-http/${camel.version}</bundle>
     <bundle>mvn:org.apache.camel/camel-servlet/${camel.version}</bundle>
     <bundle>mvn:org.apache.camel/camel-servletlistener/${camel.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.camelutils/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-camel-utils/${blended.version}</bundle>
   </feature>
 
-  <feature name="woq-activemq-broker" description="WoQ - A default Active MQ broker" resolver="(obr)">
-    <feature version="${activemq.version}">woq-activemq-blueprint</feature>
-    <feature version="${project.version}">woq-base</feature>
+  <feature name="blended-activemq-broker" description="Blended - Active MQ support" resolver="(obr)">
+    <feature version="${activemq.version}">blended-activemq-blueprint</feature>
+    <feature version="${project.version}">blended-base</feature>
   </feature>
 
   <!-- Active MQ 5.9.0 Feature Fix : Obsolete with upcoming fix ( see https://issues.apache.org/jira/browse/AMQ-4833 ) -->
 
   <!-- Bundles needed if only client will be deployed in the container -->
-  <feature name="woq-activemq-client" description="ActiveMQ client libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
+  <feature name="blended-activemq-client" description="Blended - ActiveMQ client libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
     <feature version="[3.1,4)">spring</feature>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.0_spec/1.1.1</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
@@ -83,12 +83,12 @@
     <bundle>mvn:org.apache.activemq/activemq-osgi/${activemq.version}</bundle>
   </feature>
 
-  <feature name="woq-scala" version="${scala.version}" resolver="(obr)" start-level="10" >
+  <feature name="blended-scala" description="Blended - Scala libraries" version="${scala.version}" resolver="(obr)" start-level="10" >
     <bundle>mvn:org.scala-lang/scala-library/${scala.version}.${scala.micro.version}</bundle>
     <bundle>mvn:org.scala-lang/scala-reflect/${scala.version}.${scala.micro.version}</bundle>
   </feature>
 
-  <feature name="woq-jaxrs" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
+  <feature name="blended-jaxrs" description="Blended - JAXRS Extender" version="${project.version}" resolver="(obr)" start-level="50">
     <feature version="${pax-web.version}">pax-http-whiteboard</feature>
 
     <bundle>mvn:org.codehaus.jettison/jettison/${jettison.version}</bundle>
@@ -104,11 +104,11 @@
 
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
 
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.java.jaxrs/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-jaxrs/${project.version}</bundle>
   </feature>
 
-  <feature name="woq-hawtio" description="Bundles to operate a REST ful HTTP server" version="${project.version}" resolver="(obr)" start-level="50">
-    <feature version="${project.version}">woq-jaxrs</feature>
+  <feature name="blended-hawtio" description="Blended - HawtIO bundles" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature version="${project.version}">blended-jaxrs</feature>
 
     <bundle>mvn:io.hawt/hawtio-json-schema-mbean/${hawtio.version}</bundle>
     <bundle>mvn:io.hawt/hawtio-osgi-jmx/${hawtio.version}</bundle>
@@ -118,11 +118,11 @@
   </feature>
 
   <!-- All bundles needed by the broker -->
-  <feature name="woq-activemq" description="ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
-    <feature version="${project.version}">woq-jaxrs</feature>
-    <feature version="${scala.version}">woq-scala</feature>
-    <feature version="${project.version}">woq-commons</feature>
-    <feature version="${activemq.version}">woq-activemq-client</feature>
+  <feature name="blended-activemq" description="Blended - ActiveMQ broker libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
+    <feature version="${project.version}">blended-jaxrs</feature>
+    <feature version="${scala.version}">blended-scala</feature>
+    <feature version="${project.version}">blended-commons</feature>
+    <feature version="${activemq.version}">blended-activemq-client</feature>
     <bundle>mvn:org.apache.activemq/activemq-karaf/${activemq.version}</bundle>
     <bundle dependency="true">mvn:org.apache.xbean/xbean-spring/${xbean.version}</bundle>
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.velocity/${velocity.version}</bundle>
@@ -137,28 +137,28 @@
     <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
   </feature>
 
-  <feature name="woq-activemq-blueprint" version="${activemq.version}" resolver="(obr)" start-level="50">
-    <feature version="${activemq.version}">woq-activemq</feature>
+  <feature name="blended-activemq-blueprint" description="Blended - ActiveMQ Blueprint support" version="${activemq.version}" resolver="(obr)" start-level="50">
+    <feature version="${activemq.version}">blended-activemq</feature>
     <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/1.9.0</bundle>
     <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
     <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
     <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.blended.activemq.brokerstarter/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-activemq-brokerstarter/${project.version}</bundle>
 
   </feature>
 
-  <feature name="woq-akka" description="The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
-    <feature version="${scala.version}">woq-scala</feature>
+  <feature name="blended-akka" description="Blended - The basic Akka bundles" version="${akka.version}" resolver="(obr)" start-level="15" >
+    <feature version="${scala.version}">blended-scala</feature>
     <bundle dependency="true">mvn:com.typesafe/config/${typesafe.config.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-slf4j_${scala.version}/${akka.version}</bundle>
     <bundle>mvn:com.typesafe.akka/akka-osgi_${scala.version}/${akka.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.modules/${project.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.akka.system/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-modules/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-akka/${project.version}</bundle>
   </feature>
 
-  <feature name="woq-akka-cluster" description="Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
-    <feature version="${akka.version}">woq-akka</feature>
+  <feature name="blended-akka-cluster" description="Blended - Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
+    <feature version="${akka.version}">blended-akka</feature>
     <bundle dependency="true">wrap:mvn:org.uncommons.maths/uncommons-maths/${uncommons.maths.version}</bundle>
     <bundle dependency="true">mvn:com.google.protobuf/protobuf-java/${protobuf.version}</bundle>
     <bundle dependency="true">mvn:io.netty/netty/${netty.version}</bundle>
@@ -166,18 +166,14 @@
     <bundle>mvn:com.typesafe.akka/akka-cluster_${scala.version}/${akka.version}</bundle>
   </feature>
 
-  <feature name="woq-akka-camel" description="Bundles for Akka-Camel integration" version="${akka.version}" resolver="(obr)" start-level="20">
-    <feature version="${project.version}">woq-camel</feature>
-    <feature version="${akka.version}">woq-akka</feature>
+  <feature name="blended-akka-camel" description="Blended - Bundles for Akka-Camel integration" version="${akka.version}" resolver="(obr)" start-level="20">
+    <feature version="${project.version}">blended-camel</feature>
+    <feature version="${akka.version}">blended-akka</feature>
     <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
   </feature>
 
-  <feature name="woq-akka-system" version="${project.version}" start-level="30">
-    <feature version="${akka.version}">woq-akka-cluster</feature>
-  </feature>
-
-  <feature name="woq-akka-spray" description="Bundles for the Spray support (REST)" version="${project.version}" resolver="(obr)" start-level="50">
-    <feature version="${project.version}">woq-akka-system</feature>
+  <feature name="blended-akka-spray" description="Blended - Bundles for the Spray support" version="${project.version}" resolver="(obr)" start-level="50">
+    <feature version="${project.version}">blended-akka</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
     <bundle>mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}/jar/woq</bundle>
     <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
@@ -194,12 +190,12 @@
     <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-client/${spray.version}</bundle>
     <bundle>mvn:io.spray/spray-json_${scala.version}/${spray-json.version}</bundle>
-    <bundle>mvn:de.woq.osgi.java/de.woq.osgi.spray.servlet/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-spray/${project.version}</bundle>
   </feature>
 
-  <feature name="woq-samples" description="Sample bundles" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">woq-akka-spray</feature>
-    <bundle>mvn:de.woq.osgi.java.samples/de.woq.osgi.spray.helloworld/${project.version}</bundle>
+  <feature name="blended-samples" description="Sample bundles" version="${project.version}" resolver="(obr)">
+    <feature version="${project.version}">blended-akka-spray</feature>
+    <bundle>mvn:de.woq.blended.samples/blended-samples-spray-helloworld/${project.version}</bundle>
   </feature>
 
 </features>

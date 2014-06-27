@@ -20,11 +20,11 @@
 
   <parent>
     <groupId>de.woq.blended</groupId>
-    <artifactId>de.woq.blended.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>de.woq.blended.itestsupport</artifactId>
+  <artifactId>blended-itestsupport</artifactId>
   <packaging>bundle</packaging>
 
   <properties>
@@ -36,8 +36,8 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>de.woq.blended.testsupport</artifactId>
-      <version>${woq.container.version}</version>
+      <artifactId>blended-testsupport</artifactId>
+      <version>${blended.version}</version>
     </dependency>
 
     <dependency>

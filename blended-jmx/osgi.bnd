@@ -7,5 +7,5 @@ Bundle-SymbolicName:\
 Import-Package: \
   *
 
-Private-Package: \
-  ${bundle.namespace}.internal
+Private-Package:\
+  de.woq.blended.*.internal.*
