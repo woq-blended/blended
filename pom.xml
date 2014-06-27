@@ -85,7 +85,7 @@
 
         <module>blended-itestsupport</module>
 
-        <module>de.woq.osgi.java.archetypes.project</module>
+        <module>blended-archetypes-project</module>
 
         <module>blended-samples</module>
       </modules>
