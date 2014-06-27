@@ -41,13 +41,13 @@
     <feature version="${karaf.version}">wrapper</feature>
     <bundle>mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
     <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-util/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-container-context/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-container-id/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-jmx/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-persistence/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-neo4j-api/${woq.container.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-container-registry/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-util/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-context/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-id/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-jmx/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-persistence/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-neo4j-api/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-registry/${blended.version}</bundle>
   </feature>
 
   <feature name="blended-camel" description="Blended - Camel" version="${project.version}" resolver="(obr)">
@@ -58,7 +58,7 @@
     <bundle>mvn:org.apache.camel/camel-http/${camel.version}</bundle>
     <bundle>mvn:org.apache.camel/camel-servlet/${camel.version}</bundle>
     <bundle>mvn:org.apache.camel/camel-servletlistener/${camel.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-camel-utils/${woq.container.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-camel-utils/${blended.version}</bundle>
   </feature>
 
   <feature name="blended-activemq-broker" description="Blended - Active MQ support" resolver="(obr)">
@@ -193,9 +193,9 @@
     <bundle>mvn:de.woq.blended/blended-spray/${project.version}</bundle>
   </feature>
 
-  <feature name="blended-samples" description="Sample bundles" version="${project.version}" resolver="(obr)">
-    <feature version="${project.version}">blended-akka-spray</feature>
-    <bundle>mvn:de.woq.blended.samples/blended-samples-spray-helloworld/${project.version}</bundle>
+  <feature name="blended-samples" description="Sample bundles" version="${blended.version}" resolver="(obr)">
+    <feature version="${blended.version}">blended-akka-spray</feature>
+    <bundle>mvn:de.woq.blended.samples/blended-samples-spray-helloworld/${blended.version}</bundle>
   </feature>
 
 </features>
