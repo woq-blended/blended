@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  de.woq.blended.akka.internal.WoQActivator
+  de.woq.blended.akka.internal.BlendedAkkaActivator
 
 Import-Package: \
   akka.event.slf4j,\

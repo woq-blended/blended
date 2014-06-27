@@ -53,7 +53,7 @@ class OSGIActorSpec extends WordSpec
     implicit val timeout = Timeout(1.second)
 
     "allow to invoke a service" in new TestActorSys with TestSetup with MockitoSugar {
-      val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+      val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
       val probe = TestActorRef(Props(OSGIActorDummy()), "testActor")
 

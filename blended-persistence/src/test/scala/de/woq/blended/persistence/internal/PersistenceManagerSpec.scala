@@ -24,7 +24,7 @@ import de.woq.blended.akka.protocol._
 import akka.actor.{ActorRef, Props, PoisonPill}
 import org.scalatest.mock.MockitoSugar
 import de.woq.blended.akka.internal.OSGIFacade
-import de.woq.blended.akka.{OSGIActor, WOQAkkaConstants}
+import de.woq.blended.akka.{OSGIActor, BlendedAkkaConstants}
 import scala.concurrent.duration._
 import de.woq.blended.persistence.protocol._
 import de.woq.blended.persistence.protocol.QueryResult
@@ -45,7 +45,7 @@ class PersistenceManagerSpec
   var dataCreator : ActorRef = _
 
   override protected def beforeAll() {
-    facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+    facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     pMgr = system.actorOf(Props(PersistenceManager(new Neo4jBackend())), bundleSymbolicName)
     pMgr ! InitializeBundle(osgiContext)
 

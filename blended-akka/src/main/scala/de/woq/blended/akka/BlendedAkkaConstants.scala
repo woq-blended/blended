@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.blended.mgmt.rest.internal
+package de.woq.blended.akka
 
-import de.woq.blended.akka.{ActorSystemAware, BundleName}
-import akka.actor.Props
+object BlendedAkkaConstants {
 
-trait CollectorBundleName extends BundleName {
-  def bundleSymbolicName = "de.woq.osgi.akka.mgmt.rest"
-}
-
-class CollectorActivator extends ActorSystemAware with CollectorBundleName {
-  override def prepareBundleActor() = Props(ManagementCollector("woq"))
+  val referencesPath = "References"
+  val osgiFacadePath = "OSGI"
+  val configLocatorPath = "ConfigLocator"
 }

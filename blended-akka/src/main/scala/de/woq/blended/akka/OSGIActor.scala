@@ -21,7 +21,7 @@ trait OSGIActor { this : Actor with ActorLogging =>
     context.actorSelection(s"/user/$bundleName").resolveOne()
   }
 
-  def osgiFacade = bundleActor(WOQAkkaConstants.osgiFacadePath)
+  def osgiFacade = bundleActor(BlendedAkkaConstants.osgiFacadePath)
 
   def getActorConfig(id: String) = for {
       facade <- osgiFacade.mapTo[ActorRef]

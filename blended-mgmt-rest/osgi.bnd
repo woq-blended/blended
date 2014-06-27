@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  de.woq.osgi.akka.mgmt.rest.internal.CollectorActivator
+  de.woq.blended.mgmt.rest.internal.CollectorActivator
 
 Import-Package: \
   spray.routing,\

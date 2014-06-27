@@ -66,7 +66,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       import scala.concurrent.duration._
 
-      val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+      val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
       val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
       val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
@@ -89,7 +89,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "start referring to the dlc when the publisher is unavailbale" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
     listener ! InitializeBundle(osgiContext)
@@ -109,7 +109,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     import scala.concurrent.duration._
 
-    val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
     listener ! InitializeBundle(osgiContext)
@@ -135,7 +135,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "fallback to system.dlc when the publisher becomes unavailable" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val facade = system.actorOf(Props(OSGIFacade()), WOQAkkaConstants.osgiFacadePath)
+    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
     listener ! InitializeBundle(osgiContext)

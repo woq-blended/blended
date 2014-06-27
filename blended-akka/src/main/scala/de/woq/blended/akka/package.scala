@@ -34,7 +34,7 @@ package object akka {
 
     (bundleContext findService(classOf[ActorSystem]) match {
       case Some(ref) => ref invokeService { system =>
-        system.actorSelection(s"/user/${WOQAkkaConstants.osgiFacadePath}").resolveOne()
+        system.actorSelection(s"/user/${BlendedAkkaConstants.osgiFacadePath}").resolveOne()
       }
       case _ => throw new IllegalStateException("No Actor System found as OSGI Service.")
     }) match {

@@ -20,9 +20,9 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
 import akka.util.Timeout
-import de.woq.blended.akka.WOQAkkaConstants
+import de.woq.blended.akka.BlendedAkkaConstants
 import de.woq.blended.container.context.ContainerContext
-import WOQAkkaConstants._
+import BlendedAkkaConstants._
 import de.woq.blended.akka.protocol._
 import org.osgi.framework.BundleContext
 import de.woq.blended.modules._

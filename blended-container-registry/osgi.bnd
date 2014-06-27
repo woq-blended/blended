@@ -9,4 +9,4 @@ Import-Package: *
 Private-Package:\
   de.woq.blended.*.internal.*
 
-Bundle-Activator: de.woq.osgi.java.container.registry.internal.RegistryActivator
+Bundle-Activator: de.woq.blended.container.registry.internal.RegistryActivator

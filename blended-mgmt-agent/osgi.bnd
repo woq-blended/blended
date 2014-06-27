@@ -5,6 +5,6 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  de.woq.osgi.akka.mgmt.reporter.internal.ReporterActivator
+  de.woq.blended.mgmt.agent.internal.AgentActivator
 
 Import-Package: *

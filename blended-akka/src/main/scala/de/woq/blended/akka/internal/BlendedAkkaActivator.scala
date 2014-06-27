@@ -22,13 +22,13 @@ import akka.actor.{ActorSystem, Props}
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
-import de.woq.blended.akka.WOQAkkaConstants
+import de.woq.blended.akka.BlendedAkkaConstants
 import de.woq.blended.container.context.ContainerContext
 import de.woq.blended.modules._
-import WOQAkkaConstants._
+import BlendedAkkaConstants._
 import org.osgi.framework.BundleContext
 
-class WoQActivator extends ActorSystemActivator {
+class BlendedAkkaActivator extends ActorSystemActivator {
 
   def configure(osgiContext: BundleContext, system: ActorSystem) {
     val log = system.log
@@ -48,7 +48,7 @@ class WoQActivator extends ActorSystemActivator {
     ConfigFactory.parseFile(new File(configDir(context), "application.conf"))
   }
   
-  private[WoQActivator] def configDir(implicit osgiContext : BundleContext) = {
+  private[BlendedAkkaActivator] def configDir(implicit osgiContext : BundleContext) = {
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
 
@@ -62,7 +62,7 @@ class WoQActivator extends ActorSystemActivator {
   }
 }
 
-object WoQActivator {
+object BlendedAkkaActivator {
   implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
     def genString(o: AnyRef): String = o.getClass.getName
     override def getClazz(o: AnyRef): Class[_] = o.getClass

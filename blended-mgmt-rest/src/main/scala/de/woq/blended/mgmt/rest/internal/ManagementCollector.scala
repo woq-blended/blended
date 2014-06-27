@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.mgmt.rest.internal
+package de.woq.blended.mgmt.rest.internal
 
 import de.woq.blended.akka.{ProductionEventSource, OSGIActor}
 import de.woq.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
