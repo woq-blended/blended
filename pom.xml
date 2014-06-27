@@ -94,7 +94,7 @@
     <profile>
       <id>itest</id>
       <modules>
-        <module>de.woq.osgi.akka.itest</module>
+        <module>blended-akka-itest</module>
       </modules>
     </profile>
 
