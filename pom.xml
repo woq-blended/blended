@@ -50,7 +50,7 @@
       <id>parent</id>
       <modules>
         <module>blended-parent</module>
-        <module>de.woq.osgi.java.karaf.parent</module>
+        <module>blended-karaf-parent</module>
         <module>blended-karaf-branding</module>
       </modules>
     </profile>
