@@ -101,7 +101,7 @@
     <profile>
       <id>assembly</id>
       <modules>
-        <module>de.woq.osgi.java.karaf.central</module>
+        <module>blended-karaf-central</module>
       </modules>
     </profile>
 
