@@ -12,7 +12,7 @@ Import-Package: \
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  de.woq.blended.spray.servlet,\
+  de.woq.blended.spray,\
   *
 
 
