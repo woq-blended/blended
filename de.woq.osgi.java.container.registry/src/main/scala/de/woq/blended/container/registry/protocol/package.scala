@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.internal
+package de.woq.blended.container.registry
 
-import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
-import akka.actor.Props
-import de.woq.osgi.java.container.registry.RegistryBundleName
+import spray.json.DefaultJsonProtocol
 
-class RegistryActivator extends ActorSystemAware with RegistryBundleName {
-  override def prepareBundleActor() = Props(ContainerRegistryImpl())
+package object protocol extends DefaultJsonProtocol {
+  implicit val infoFormat = jsonFormat2(ContainerInfo)
+  implicit val responseFormat = jsonFormat1(ContainerRegistryResponseOK)
 }

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry
+package de.woq.blended.container.registry.internal
 
-import de.woq.osgi.akka.system.BundleName
+import de.woq.blended.akka.{ActorSystemAware, BundleName}
+import akka.actor.Props
+import de.woq.blended.container.registry.RegistryBundleName
 
-trait RegistryBundleName extends BundleName {
-  override def bundleSymbolicName = "de.woq.osgi.java.container.registry"
+class RegistryActivator extends ActorSystemAware with RegistryBundleName {
+  override def prepareBundleActor() = Props(ContainerRegistryImpl())
 }

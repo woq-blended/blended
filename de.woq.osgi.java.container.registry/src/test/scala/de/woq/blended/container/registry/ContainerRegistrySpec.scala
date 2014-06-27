@@ -2,12 +2,12 @@ package de.woq.osgi.java.container.registry
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.woq.osgi.java.container.registry.internal.ContainerRegistryImpl
-import de.woq.osgi.java.testsupport.TestActorSys
+import de.woq.blended.container.registry.internal.ContainerRegistryImpl
+import de.woq.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import de.woq.osgi.java.container.registry.protocol._
+import de.woq.blended.container.registry.protocol._
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)

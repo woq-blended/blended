@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry
+package de.woq.blended.container.registry
 
-import spray.json.DefaultJsonProtocol
+import de.woq.blended.akka.BundleName
 
-package object protocol extends DefaultJsonProtocol {
-  implicit val infoFormat = jsonFormat2(ContainerInfo)
-  implicit val responseFormat = jsonFormat1(ContainerRegistryResponseOK)
+trait RegistryBundleName extends BundleName {
+  override def bundleSymbolicName = "de.woq.blended.container.registry"
 }

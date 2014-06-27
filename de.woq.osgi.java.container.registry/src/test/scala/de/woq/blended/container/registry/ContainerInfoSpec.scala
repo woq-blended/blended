@@ -2,8 +2,8 @@ package de.woq.osgi.java.container.registry
 
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-import de.woq.osgi.java.container.registry.protocol._
-import de.woq.osgi.akka.persistence.protocol.{PersistenceProperty, DataObject}
+import de.woq.blended.persistence.protocol._
+import de.woq.blended.container.registry.protocol._
 
 /*
  * Copyright 2014ff, WoQ - Way of Quality UG(mbH)

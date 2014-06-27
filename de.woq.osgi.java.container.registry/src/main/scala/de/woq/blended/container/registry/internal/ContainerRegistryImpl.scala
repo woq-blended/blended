@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.internal
+package de.woq.blended.container.registry.internal
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
-import de.woq.osgi.akka.system.{BundleName, OSGIActor}
+import de.woq.blended.akka.{BundleName, OSGIActor}
+import de.woq.blended.persistence.protocol.StoreObject
 import org.osgi.framework.BundleContext
-import de.woq.osgi.java.container.registry.RegistryBundleName
-import de.woq.osgi.java.container.registry.protocol._
-import de.woq.osgi.akka.persistence.protocol.StoreObject
+import de.woq.blended.container.registry.RegistryBundleName
+import de.woq.blended.container.registry.protocol._
+
 
 object ContainerRegistryImpl {
   def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.java.container.registry.protocol
+package de.woq.blended.container.registry.protocol
 
-import de.woq.osgi.akka.persistence.protocol._
+import de.woq.blended.persistence.protocol._
 import scala.collection.mutable
 
 case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId) {
