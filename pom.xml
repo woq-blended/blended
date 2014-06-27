@@ -71,7 +71,7 @@
 
         <module>blended-testsupport</module>
 
-        <module>de.woq.osgi.java.karaf.features</module>
+        <module>blended-karaf-features</module>
         <module>blended-karaf-branding</module>
 
         <module>blended-modules</module>
