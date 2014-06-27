@@ -16,9 +16,8 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
-import de.woq.osgi.akka.system.{ActorSystemAware, BundleName}
+import de.woq.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
-import de.woq.osgi.java.container.registry.RegistryBundleName
 
 trait CollectorBundleName extends BundleName {
   def bundleSymbolicName = "de.woq.osgi.akka.mgmt.rest"

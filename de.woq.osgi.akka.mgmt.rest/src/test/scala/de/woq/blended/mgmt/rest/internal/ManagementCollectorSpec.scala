@@ -20,8 +20,9 @@ import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest
 import spray.httpx.SprayJsonSupport
 import org.scalatest.mock.MockitoSugar
-import de.woq.osgi.java.container.registry.protocol._
 import akka.testkit.TestLatch
+
+import de.woq.blended.container.registry.protocol._
 
 class ManagementCollectorSpec
   extends WordSpec

@@ -16,24 +16,23 @@
 
 package de.woq.osgi.akka.mgmt.rest.internal
 
+import de.woq.blended.akka.{ProductionEventSource, OSGIActor}
 import de.woq.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
 import spray.routing._
-import de.woq.osgi.akka.system._
 import akka.actor._
 import org.osgi.framework.BundleContext
 import akka.pattern._
-import de.woq.osgi.spray.servlet.SprayOSGIServlet
 import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
 import spray.util.LoggingContext
-import de.woq.osgi.akka.modules._
 import spray.http.Uri.Path
 import scala.concurrent.duration._
 import akka.util.Timeout
 import spray.httpx.SprayJsonSupport
-import de.woq.osgi.java.container.registry.protocol._
 
-import de.woq.osgi.akka.system.protocol._
+import de.woq.blended.container.registry.protocol._
+import de.woq.blended.akka.protocol._
+import de.woq.blended.modules._
 
 trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
@@ -58,7 +57,8 @@ object ManagementCollector {
 }
 
 class ManagementCollector(contextPath: String)(implicit bundleContext: BundleContext)
-  extends CollectorService with Actor with ActorLogging { this : OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource =>
+  extends CollectorService with Actor with ActorLogging {
+  this : OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource =>
 
   override implicit def actorRefFactory = context
 
