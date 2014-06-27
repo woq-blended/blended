@@ -49,7 +49,7 @@
     <profile>
       <id>build</id>
       <modules>
-        <module>de.woq.osgi.spray.helloworld</module>
+        <module>blended-samples-spray-helloworld</module>
       </modules>
     </profile>
 
