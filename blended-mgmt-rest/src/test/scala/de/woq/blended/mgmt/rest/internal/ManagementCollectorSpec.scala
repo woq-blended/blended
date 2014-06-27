@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.mgmt.rest.internal
+package de.woq.blended.mgmt.rest.internal
 
 import org.scalatest.{Matchers, WordSpec}
 import spray.testkit.ScalatestRouteTest
