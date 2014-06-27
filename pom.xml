@@ -77,7 +77,7 @@
         <module>blended-modules</module>
         <module>blended-akka</module>
         <module>blended-mgmt-agent</module>
-        <module>de.woq.osgi.akka.mgmt.rest</module>
+        <module>blended-mgmt-rest</module>
         <module>blended-spray</module>
 
         <module>blended-neo4j-api</module>
