@@ -4,8 +4,5 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Export-Package: \
-  de.woq.blended.spray.servlet
-
 Import-Package: \
   *
