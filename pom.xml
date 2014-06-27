@@ -76,7 +76,7 @@
 
         <module>blended-modules</module>
         <module>blended-akka</module>
-        <module>de.woq.osgi.akka.mgmt.reporter</module>
+        <module>blended-mgmt-agent</module>
         <module>de.woq.osgi.akka.mgmt.rest</module>
         <module>blended-spray</module>
 
