@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.itest
+package de.woq.blended.akka.itest
 
 import org.ops4j.pax.exam.karaf.options.KarafDistributionOption._
 import org.ops4j.pax.exam.CoreOptions._
@@ -49,7 +49,8 @@ class TestOptions { this : ITestConfig =>
   def testBundles(): PaxOption = {
     new DefaultCompositeOption(
       mavenBundle("com.typesafe.akka", "akka-testkit_%s".format(scalaVersion)).versionAsInProject,
-      mavenBundle("org.scalatest", "scalatest_%s".format(scalaVersion)).versionAsInProject,
+      mavenBundle("org.testng", "testng").versionAsInProject(),
+      mavenBundle("de.woq.blended", "blended-scalatest-bundle").versionAsInProject,
       junitBundles
     )
   }
@@ -60,5 +61,4 @@ class TestOptions { this : ITestConfig =>
       testBundles()
     )
   }
-
 }

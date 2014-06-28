@@ -100,6 +100,8 @@
     <protobuf.version>2.5.0</protobuf.version>
     <scala.version>2.10</scala.version>
     <scala.micro.version>4</scala.micro.version>
+    <scalacheck.version>1.11.4</scalacheck.version>
+    <scalactic.version>2.2.0</scalactic.version>
     <scalatest.version>2.2.0</scalatest.version>
     <shapeless.version>1.2.4</shapeless.version>
     <slf4j.version>1.7.2</slf4j.version>
@@ -108,6 +110,7 @@
     <spring.version>3.2.4.RELEASE</spring.version>
     <spring.osgi.version>1.2.1</spring.osgi.version>
     <stax.api.version>2.2.0</stax.api.version>
+    <testng.version>6.8.8</testng.version>
     <tinybundles.version>1.0.0</tinybundles.version>
     <typesafe.config.version>1.2.0</typesafe.config.version>
     <uncommons.maths.version>1.2.2</uncommons.maths.version>
@@ -289,7 +292,7 @@
             <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
             <argLine>-Xmx1024m</argLine>
             <systemProperties>
-              <java.protocol.handler.pkgs>de.woq.osgi.java.itestsupport.handler</java.protocol.handler.pkgs>
+              <java.protocol.handler.pkgs>de.woq.blended.java.itestsupport.handler</java.protocol.handler.pkgs>
             </systemProperties>
           </configuration>
 

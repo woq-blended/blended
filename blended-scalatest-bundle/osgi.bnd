@@ -1,0 +1,17 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: \
+  org.apache.tools.ant.*;resolution:=optional,\
+  org.easymock.*;resolution:=optional,\
+  org.hamcrest.*;resolution:=optional,\
+  org.jmock.*;resolution:=optional,\
+  org.mockito.*;resolution:=optional,\
+  org.openqa.selenium.*;resolution:=optional,\
+  org.pegdown.*;resolution:=optional,\
+  scala.reflect.macros.runtime.*;resolution:=optional,\
+  scala.tools.nsc.typechecker;resolution:=optional,\
+  *

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.woq.osgi.akka.modules
+package de.woq.blended.akka.modules
 
 import java.util.Dictionary
 import de.woq.blended.modules.{RichServiceReference, RichBundleContext, PresentBuilder, SimpleOpBuilder}

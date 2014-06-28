@@ -1,4 +1,4 @@
-package de.woq.osgi.java.container.registry
+package de.woq.blended.java.container.registry
 
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory

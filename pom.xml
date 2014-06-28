@@ -83,6 +83,7 @@
         <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
 
+        <module>blended-scalatest-bundle</module>
         <module>blended-itestsupport</module>
 
         <module>blended-archetypes-project</module>

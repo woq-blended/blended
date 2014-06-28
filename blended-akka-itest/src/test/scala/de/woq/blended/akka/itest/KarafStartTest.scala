@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package de.woq.osgi.akka.itest
+package de.woq.blended.akka.itest
 
+import de.woq.blended.container.registry.protocol.ContainerInfo
 import org.junit.runner.RunWith
 import org.ops4j.pax.exam.junit.PaxExam
 import org.scalatest.junit.{AssertionsForJUnit, JUnitSuite}

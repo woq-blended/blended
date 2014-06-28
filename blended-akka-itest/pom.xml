@@ -71,9 +71,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_2.10</artifactId>
-      <version>${scalatest.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-scalatest-bundle</artifactId>
+      <version>${blended.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -187,6 +187,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
           <groupId>org.ops4j.pax.logging</groupId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>${testng.version}</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
