@@ -30,9 +30,9 @@
   </parent>
 
   <properties>
-    <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>blended-karaf-branding</woq.branding.artifactId>
-    <woq.branding.version>${project.version}</woq.branding.version>
+    <blended.branding.groupId>${project.groupId}</blended.branding.groupId>
+    <blended.branding.artifactId>blended-karaf-branding</blended.branding.artifactId>
+    <blended.branding.version>${project.version}</blended.branding.version>
   </properties>
 
   <artifactId>blended-karaf-central</artifactId>
@@ -89,14 +89,11 @@
             <feature>config</feature>
             <feature>ssh</feature>
             <feature>management</feature>
-            <feature>kar</feature>
-            <feature>scr</feature>
-            <feature>http</feature>
-            <feature>http-whiteboard</feature>
-            <feature>war</feature>
-            <feature>blended-camel</feature>
-            <feature>blended-activemq-broker</feature>
-            <feature>hawtio</feature>
+            <feature>pax-http-whiteboard</feature>
+            <feature>pax-war</feature>
+            <feature>blended-commons</feature>
+            <feature>blended-base</feature>
+            <feature>blended-hawtio</feature>
             <feature>blended-samples</feature>
           </features>
           <repository>target/repository</repository>

@@ -24,7 +24,7 @@
     <version>1.0.7-M2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>blended-archetypes-archetypes</artifactId>
+  <artifactId>blended-archetypes-project</artifactId>
   <packaging>maven-archetype</packaging>
 
   <build>

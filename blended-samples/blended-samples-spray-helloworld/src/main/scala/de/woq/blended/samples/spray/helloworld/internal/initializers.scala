@@ -20,9 +20,9 @@ import de.woq.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
 
 trait HelloBundleName extends BundleName {
-  def bundleSymbolicName = "de.woq.osgi.spray.helloworld"
+  def bundleSymbolicName = "de.woq.blended.samples.spray.helloworld"
 }
 
 class HelloActivator extends ActorSystemAware with HelloBundleName {
-  override def prepareBundleActor() = Props(HelloRoute("woq"))
+  override def prepareBundleActor() = Props(HelloRoute("blended"))
 }

@@ -8,7 +8,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>${groupId}</groupId>
-    <artifactId>${groupId}.parent</artifactId>
+    <artifactId>blended-parent</artifactId>
     <version>${version}</version>
   </parent>
 

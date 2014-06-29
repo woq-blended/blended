@@ -52,6 +52,15 @@
             <descriptor>mvn:${symbol_dollar}{project.groupId}/${symbol_dollar}{project.groupId}.karaf.features/${symbol_dollar}{project.version}/xml/features</descriptor>
           </descriptors>
           <features>
+            <feature>config</feature>
+            <feature>ssh</feature>
+            <feature>management</feature>
+            <feature>pax-http-whiteboard</feature>
+            <feature>pax-war</feature>
+            <feature>blended-commons</feature>
+            <feature>blended-base</feature>
+            <feature>blended-hawtio</feature>
+            <feature>blended-samples</feature>
             <feature>${targetFeature}</feature>
           </features>
           <repository>target/repository</repository>

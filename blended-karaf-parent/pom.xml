@@ -34,17 +34,17 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <packaging>pom</packaging>
 
   <properties>
-    <woq.branding.groupId>${project.groupId}</woq.branding.groupId>
-    <woq.branding.artifactId>blended-karaf-branding</woq.branding.artifactId>
-    <woq.branding.version>${blended.version}</woq.branding.version>
+    <blended.branding.groupId>${project.groupId}</blended.branding.groupId>
+    <blended.branding.artifactId>blended-karaf-branding</blended.branding.artifactId>
+    <blended.branding.version>${blended.version}</blended.branding.version>
   </properties>
 
   <dependencies>
 
     <dependency>
-      <groupId>${woq.branding.groupId}</groupId>
-      <artifactId>${woq.branding.artifactId}</artifactId>
-      <version>${woq.branding.version}</version>
+      <groupId>${blended.branding.groupId}</groupId>
+      <artifactId>${blended.branding.artifactId}</artifactId>
+      <version>${blended.branding.version}</version>
     </dependency>
 
     <dependency>
@@ -207,7 +207,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <goal>copy-dependencies</goal>
               </goals>
               <configuration>
-                <includeArtifactIds>${woq.branding.artifactId}</includeArtifactIds>
+                <includeArtifactIds>${blended.branding.artifactId}</includeArtifactIds>
                 <outputDirectory>${project.build.directory}/branding</outputDirectory>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>

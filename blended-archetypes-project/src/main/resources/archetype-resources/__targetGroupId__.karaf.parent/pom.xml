@@ -27,7 +27,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>${groupId}</groupId>
-    <artifactId>${groupId}.karaf.parent</artifactId>
+    <artifactId>blended-karaf-parent</artifactId>
     <version>${version}</version>
   </parent>
 
@@ -38,9 +38,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <properties>
     <container.java.version>1.7.45</container.java.version>
-    <woq.branding.groupId>${targetGroupId}</woq.branding.groupId>
-    <woq.branding.artifactId>${targetGroupId}.karaf.branding</woq.branding.artifactId>
-    <woq.branding.version>${symbol_dollar}{project.version}</woq.branding.version>
+    <blended.branding.groupId>${targetGroupId}</blended.branding.groupId>
+    <blended.branding.artifactId>${targetGroupId}.karaf.branding</blended.branding.artifactId>
+    <blended.branding.version>${symbol_dollar}{project.version}</blended.branding.version>
   </properties>
 
   <dependencies>
@@ -63,18 +63,18 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${groupId}</groupId>
-      <artifactId>${groupId}.karaf.parent</artifactId>
+      <artifactId>blended-karaf-parent</artifactId>
       <version>${version}</version>
       <classifier>assembly</classifier>
-      <type>linux</type>
+      <type>linux-nojre</type>
     </dependency>
 
     <dependency>
       <groupId>${groupId}</groupId>
-      <artifactId>${groupId}.karaf.parent</artifactId>
+      <artifactId>blended-karaf-parent</artifactId>
       <version>${version}</version>
       <classifier>assembly</classifier>
-      <type>windows</type>
+      <type>windows-nojre</type>
     </dependency>
 
   </dependencies>
@@ -82,82 +82,16 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <executions>
-
-            <execution>
-              <id>extract-java-linux</id>
-              <phase>process-resources</phase>
-              <goals>
-                <goal>unpack-dependencies</goal>
-              </goals>
-              <configuration>
-                <includeArtifactIds>jre</includeArtifactIds>
-                <includeTypes>tar.gz</includeTypes>
-                <outputDirectory>${symbol_dollar}{project.build.directory}/java/linux</outputDirectory>
-              </configuration>
-            </execution>
-
-            <execution>
-              <id>extract-java-windows</id>
-              <phase>process-resources</phase>
-              <goals>
-                <goal>unpack-dependencies</goal>
-              </goals>
-              <configuration>
-                <includeArtifactIds>jre</includeArtifactIds>
-                <includeTypes>zip</includeTypes>
-                <outputDirectory>${symbol_dollar}{project.build.directory}/java/windows</outputDirectory>
-              </configuration>
-            </execution>
-
-          </executions>
-        </plugin>
 
         <plugin>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>copy-linux-jre</id>
-              <!-- here the phase you need -->
-              <phase>compile</phase>
-              <goals>
-                <goal>run</goal>
-              </goals>
-              <configuration>
-                <customTaskPrefix>mvn</customTaskPrefix>
-                <target>
-                  <move todir="${symbol_dollar}{project.build.directory}/java/linux/jre" includeemptydirs="true">
-                    <fileset dir="${symbol_dollar}{project.build.directory}/java/linux" />
-                    <chainedmapper>
-                      <regexpmapper from="(jre[^/]+/)(.*)" to="${symbol_escape}2" />
-                    </chainedmapper>
-                  </move>
-                </target>
-              </configuration>
-            </execution>
-
-            <execution>
-              <id>copy-windows-jre</id>
-              <!-- here the phase you need -->
-              <phase>compile</phase>
-              <goals>
-                <goal>run</goal>
-              </goals>
-              <configuration>
-                <customTaskPrefix>mvn</customTaskPrefix>
-                <target>
-                  <move todir="${symbol_dollar}{project.build.directory}/java/windows/jre" includeemptydirs="true">
-                    <fileset dir="${symbol_dollar}{project.build.directory}/java/windows" />
-                    <chainedmapper>
-                      <regexpmapper from="(jre[^/]+/)(.*)" to="${symbol_escape}2" />
-                    </chainedmapper>
-                  </move>
-                </target>
-              </configuration>
-            </execution>
-          </executions>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <configuration>
+            <descriptors>
+              <descriptor>${symbol_dollar}{project.build.directory}/descriptors/blended-karaf-parent-${symbol_dollar}{blended.version}-assembly.linux-nojre</descriptor>
+              <descriptor>${symbol_dollar}{project.build.directory}/descriptors/blended-karaf-parent-${symbol_dollar}{blended.version}-assembly.windows-nojre</descriptor>
+            </descriptors>
+          </configuration>
         </plugin>
 
       </plugins>
