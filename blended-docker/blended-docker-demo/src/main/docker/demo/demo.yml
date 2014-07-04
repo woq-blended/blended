@@ -1,0 +1,5 @@
+packaging:
+  add:
+    - target/blended-karaf-demo-${project.version}-nojre.tar.gz
+  ports:
+    - 8181
