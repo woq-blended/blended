@@ -96,7 +96,7 @@
       </plugin>
 
       <plugin>
-        <groupId>com.alexcollins.docker</groupId>
+        <groupId>com.alexecollins.docker</groupId>
         <artifactId>docker-maven-plugin</artifactId>
         <executions>
           <execution>
