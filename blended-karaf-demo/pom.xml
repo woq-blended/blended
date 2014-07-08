@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2014ff, WoQ - Way of Quality UG(mbH)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project
+xmlns="http://maven.apache.org/POM/4.0.0"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.woq.blended</groupId>
+    <artifactId>blended-karaf-parent</artifactId>
+    <version>1.0.7-M3-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <blended.branding.groupId>${project.groupId}</blended.branding.groupId>
+    <blended.branding.artifactId>blended-karaf-branding</blended.branding.artifactId>
+    <blended.branding.version>${project.version}</blended.branding.version>
+  </properties>
+
+  <artifactId>blended-karaf-demo</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-parent</artifactId>
+      <version>${blended.version}</version>
+      <classifier>assembly</classifier>
+      <type>linux-nojre</type>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-parent</artifactId>
+      <version>${blended.version}</version>
+      <classifier>assembly</classifier>
+      <type>windows-nojre</type>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.windows-nojre</descriptor>
+          </descriptors>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>features-maven-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>mvn:${project.groupId}/blended-karaf-features/${project.version}/xml/features</descriptor>
+          </descriptors>
+          <features>
+            <feature>config</feature>
+            <feature>ssh</feature>
+            <feature>management</feature>
+            <feature>pax-http-whiteboard</feature>
+            <feature>pax-war</feature>
+            <feature>blended-commons</feature>
+            <feature>blended-base</feature>
+            <feature>blended-hawtio</feature>
+            <feature>blended-samples</feature>
+          </features>
+          <repository>target/repository</repository>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

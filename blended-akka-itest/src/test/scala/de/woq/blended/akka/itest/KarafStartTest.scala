@@ -35,7 +35,7 @@ class KarafStartTest extends JUnitSuite with Matchers with AssertionsForJUnit {
   val testOptions = new TestOptions with ITestConfig {
     override def containerUrl = maven()
       .groupId("de.woq.blended")
-      .artifactId("blended-karaf-central")
+      .artifactId("blended-karaf-demo")
       .versionAsInProject()
       .`type`("tar.gz")
       .classifier("nojre")

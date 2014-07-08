@@ -17,3 +17,4 @@ ENV PATH ${PATH}:${JAVA_HOME}/bin
 ENTRYPOINT ["/opt/blended/bin/karaf"]
 
 EXPOSE 8181
+EXPOSE 1099

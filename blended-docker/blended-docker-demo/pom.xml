@@ -39,6 +39,20 @@
       <type>tar.gz</type>
     </dependency>
 
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.version}.${scala.micro.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-scalatest-bundle</artifactId>
+      <version>${blended.version}</version>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -48,7 +62,18 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+
     <plugins>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+      </plugin>
 
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>

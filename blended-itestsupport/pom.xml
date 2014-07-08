@@ -25,7 +25,6 @@
   </parent>
 
   <artifactId>blended-itestsupport</artifactId>
-  <packaging>bundle</packaging>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
@@ -38,6 +37,18 @@
       <groupId>de.woq.blended</groupId>
       <artifactId>blended-testsupport</artifactId>
       <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.docker-java</groupId>
+      <artifactId>docker-java</artifactId>
+      <version>${docker-java.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>${typesafe.config.version}</version>
     </dependency>
 
     <dependency>
@@ -86,10 +97,22 @@
 
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+      </plugin>
+
     </plugins>
   </build>
 

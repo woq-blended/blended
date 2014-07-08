@@ -160,7 +160,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>blended-karaf-central</artifactId>
+      <artifactId>blended-karaf-demo</artifactId>
       <version>${project.version}</version>
       <classifier>nojre</classifier>
       <type>tar.gz</type>
