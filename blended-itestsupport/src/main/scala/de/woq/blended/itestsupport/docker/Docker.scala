@@ -1,7 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.client.model.Image
-import de.woq.blended.itestsupport.PortScanner
 import org.slf4j.LoggerFactory
 
 import scala.collection.convert.Wrappers.JListWrapper
@@ -10,11 +9,11 @@ import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.mutable
 
-object Docker {
+trait Docker {
 
   private[Docker] var currentMinPort : Int = 1024
 
-  private[Docker] lazy val logger = LoggerFactory.getLogger(Docker.getClass)
+  private[Docker] lazy val logger = LoggerFactory.getLogger(getClass.getName)
 
   private[Docker] lazy val config = {
     ConfigFactory.parseResources("docker.conf")
@@ -97,9 +96,4 @@ object Docker {
   def container(i : Image)  = new DockerContainer(i.getId)
   def container(s : String) = new DockerContainer(s)
 
-  def nextFreePort = {
-    val port = PortScanner.findFreePort(currentMinPort)
-    currentMinPort = port + 1
-    port
-  }
 }

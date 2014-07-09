@@ -7,12 +7,13 @@ import org.slf4j.LoggerFactory
 
 object PortScanner {
 
-  private val maxPortNumber = 65535;
+  private var minPortNumber = 1024
+  private val maxPortNumber = 65535
   private val logger = LoggerFactory.getLogger(PortScanner.getClass)
 
-  def findFreePort(minPortNumber : Int = 1024) : Int = {
+  def findFreePort : Int = {
     val port = findFirstFreePort((minPortNumber to maxPortNumber).toList)
-    logger debug (s"Found free port [$port].")
+    minPortNumber = port + 1
     port
   }
 

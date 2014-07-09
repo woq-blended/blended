@@ -1,10 +1,8 @@
 package de.woq.blended.itestsupport.docker
 
-object DockerSample extends App {
+object DockerSample extends App with Docker {
 
-  val container = Docker.configuredContainers
-
-  container.values foreach { c =>
+  configuredContainers.values foreach { c =>
     c.startContainer.waitContainer.stopContainer
   }
 

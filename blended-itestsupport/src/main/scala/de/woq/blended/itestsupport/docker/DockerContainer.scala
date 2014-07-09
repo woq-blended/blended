@@ -3,6 +3,7 @@ package de.woq.blended.itestsupport.docker
 import com.github.dockerjava.client.DockerClient
 import com.github.dockerjava.client.model.Ports.Binding
 import com.github.dockerjava.client.model.{ExposedPort, Ports}
+import de.woq.blended.itestsupport.PortScanner
 import org.slf4j.LoggerFactory
 
 case class NamedContainerPort(name: String, sourcePort: Int)
@@ -61,7 +62,7 @@ class DockerContainer(s: String)(implicit client: DockerClient) {
     val bindings = new Ports()
 
     ports.values.foreach{ namedPort : NamedContainerPort =>
-      val port = Docker.nextFreePort
+      val port = PortScanner.findFreePort
       bindings.bind(new ExposedPort("tcp", namedPort.sourcePort), new Binding(port))
       namedPorts += (namedPort.name -> port)
     }
