@@ -16,18 +16,13 @@
 
 package de.woq.blended.itestsupport.condition;
 
-import de.woq.blended.itestsupport.ContainerConnector;
-import de.woq.blended.itestsupport.ContainerRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.MBeanInfo;
 import javax.management.ObjectName;
-import java.util.Map;
 
 public class ConditionMBeanExists implements Condition {
-
-  private final ContainerRunner runner;
 
   private final String   domain;
   private final String   className;
@@ -36,13 +31,10 @@ public class ConditionMBeanExists implements Condition {
   private final static Logger LOGGER = LoggerFactory.getLogger(ConditionMBeanExists.class);
 
   public ConditionMBeanExists(
-    final ContainerRunner runner,
     final String domain,
     final String className,
     final String...properties
   ) {
-    this.runner = runner;
-
     this.domain = domain;
     this.className = className;
     this.properties = properties;
@@ -51,20 +43,20 @@ public class ConditionMBeanExists implements Condition {
   @Override
   public boolean satisfied() {
 
-    boolean result = false;
+//    boolean result = false;
+//
+//    ContainerConnector connector = runner.getConnector();
+//
+//    if (connector != null) {
+//      try {
+//        Map<ObjectName, MBeanInfo> infos = connector.getMBeanInfo(new Matcher(domain, className, properties));
+//        result = infos.size() > 0;
+//      } catch (Exception e) {
+//        // ignore
+//      }
+//    }
 
-    ContainerConnector connector = runner.getConnector();
-
-    if (connector != null) {
-      try {
-        Map<ObjectName, MBeanInfo> infos = connector.getMBeanInfo(new Matcher(domain, className, properties));
-        result = infos.size() > 0;
-      } catch (Exception e) {
-        // ignore
-      }
-    }
-
-    return result;
+    return false;
   }
 
   @Override

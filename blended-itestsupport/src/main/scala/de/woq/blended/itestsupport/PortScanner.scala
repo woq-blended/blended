@@ -3,11 +3,18 @@ package de.woq.blended.itestsupport
 import java.io.IOException
 import java.net.{DatagramSocket, ServerSocket}
 
+import org.slf4j.LoggerFactory
+
 object PortScanner {
 
-  val maxPortNumber = 65535;
+  private val maxPortNumber = 65535;
+  private val logger = LoggerFactory.getLogger(PortScanner.getClass)
 
-  def findFreePort(minPortNumber : Int = 1024) : Int = findFirstFreePort((minPortNumber to maxPortNumber).toList)
+  def findFreePort(minPortNumber : Int = 1024) : Int = {
+    val port = findFirstFreePort((minPortNumber to maxPortNumber).toList)
+    logger debug (s"Found free port [$port].")
+    port
+  }
 
   private[PortScanner] def findFirstFreePort(portList: List[Int]): Int = portList match {
     case x :: xs => if (available(x)) x else findFirstFreePort(xs)

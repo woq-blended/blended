@@ -16,11 +16,10 @@
 
 package de.woq.blended.itestsupport.condition;
 
-import de.woq.blended.itestsupport.ContainerRunner;
 
 public class ConditionCamelContextExists extends ConditionMBeanExists {
 
-  public ConditionCamelContextExists(final ContainerRunner runner, final String contextName) {
-    super(runner, "org.apache.camel", "org.apache.camel.management.mbean.ManagedCamelContext",  "name=\"" + contextName + "\"");
+  public ConditionCamelContextExists(final String contextName) {
+    super("org.apache.camel", "org.apache.camel.management.mbean.ManagedCamelContext",  "name=\"" + contextName + "\"");
   }
 }

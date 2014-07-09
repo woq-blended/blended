@@ -3,28 +3,55 @@ package de.woq.blended.itestsupport.docker
 import com.github.dockerjava.client.DockerClient
 import com.github.dockerjava.client.model.Ports.Binding
 import com.github.dockerjava.client.model.{ExposedPort, Ports}
-import de.woq.blended.itestsupport.PortScanner
+import org.slf4j.LoggerFactory
 
 case class NamedContainerPort(name: String, sourcePort: Int)
 
 class DockerContainer(s: String)(implicit client: DockerClient) {
 
-  private[DockerContainer] val container = client.createContainerCmd(s).exec()
-  private[DockerContainer] var ports      : Option[Seq[NamedContainerPort]] = None
+  private[DockerContainer] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
+
+  private[DockerContainer] val container  = client.createContainerCmd(s).exec()
+  private[DockerContainer] var ports      : Map[String, NamedContainerPort] = Map.empty
   private[DockerContainer] var namedPorts : Map[String, Int] = Map.empty
+  private[DockerContainer] var name = s;
 
   def id = container.getId
 
-  def startContainer   {
+  def startContainer = {
+    logger info s"Starting container [${name}]"
     client.startContainerCmd(id).withPortBindings(portBindings).exec()
+    this
   }
 
-  def waitContainer    { client.waitContainerCmd(id).exec() }
-  def stopContainer    { client.stopContainerCmd(id).exec() }
-  def inspectContainer { client.inspectContainerCmd(id).exec() }
+  def waitContainer = {
+    logger info s"Waiting for container [${name}]"
+    client.waitContainerCmd(id).exec()
+    this
+  }
 
-  def withNamedPorts(ports : NamedContainerPort*) = {
-    this.ports = Some(ports)
+  def stopContainer = {
+    logger info s"Stopping container [${name}]"
+    client.stopContainerCmd(id).exec()
+    this
+  }
+
+  def inspectContainer = {
+    client.inspectContainerCmd(id).exec()
+    this
+  }
+
+  def withNamedPort(port: NamedContainerPort) = {
+    this.ports += (port.name -> port)
+  }
+
+  def withNamedPorts(ports : Seq[NamedContainerPort]) = {
+    ports.foreach(withNamedPort _)
+    this
+  }
+
+  def withName(name : String) = {
+    this.name = name
     this
   }
 
@@ -32,15 +59,12 @@ class DockerContainer(s: String)(implicit client: DockerClient) {
 
   lazy val portBindings = {
     val bindings = new Ports()
-    var nextPort = 1024;
 
-    ports.foreach{_ foreach { namedPort =>
-      val port = PortScanner.findFreePort(nextPort)
+    ports.values.foreach{ namedPort : NamedContainerPort =>
+      val port = Docker.nextFreePort
       bindings.bind(new ExposedPort("tcp", namedPort.sourcePort), new Binding(port))
       namedPorts += (namedPort.name -> port)
-
-      nextPort = port + 1
-    }}
+    }
 
     bindings
   }
