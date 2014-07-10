@@ -194,7 +194,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
                 <goal>copy-dependencies</goal>
               </goals>
               <configuration>
-                <includeArtifactIds>blended-installer,blended-util,org.apache.karaf.shell.wrapper</includeArtifactIds>
+                <includeArtifactIds>blended-karaf-installer,blended-util,org.apache.karaf.shell.wrapper</includeArtifactIds>
                 <outputDirectory>${project.build.directory}/installer</outputDirectory>
                 <useRepositoryLayout>false</useRepositoryLayout>
               </configuration>
