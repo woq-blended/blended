@@ -26,7 +26,7 @@ class BlendedDemoSpec extends TestActorSys
       mgr ! StartContainerManager
       expectMsg(ContainerManagerStarted)
 
-      mgr ! GetContainerPorts("blended-demo_0")
+      mgr ! GetContainerPorts("blended_demo_0")
       fishForMessage(10.seconds) {
         case ContainerPorts(ports) => {
           logger info ports.toString
