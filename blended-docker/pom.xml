@@ -47,7 +47,7 @@
   <profiles>
 
     <profile>
-      <id>build</id>
+      <id>docker</id>
       <modules>
         <module>blended-docker-demo</module>
       </modules>

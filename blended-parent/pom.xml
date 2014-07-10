@@ -345,6 +345,8 @@
             <version>1.12</version>
             <username>atooni</username>
             <email>andreas@wayofquality.de</email>
+            <!-- This is not the real password - the real password is required when pushing to docker. -->
+            <password>foo</password>
             <removeIntermediateImages>true</removeIntermediateImages>
           </configuration>
         </plugin>

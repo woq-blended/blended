@@ -1,28 +1,39 @@
 package de.woq.blended.akka.itest
 
-import de.woq.blended.itestsupport.docker.Docker
-import org.scalatest.junit.AssertionsForJUnit
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.slf4j.LoggerFactory
 
-class BlendedDemoSpec
-  extends WordSpec
+import scala.concurrent.duration._
+import akka.actor.Props
+import de.woq.blended.itestsupport.docker.ContainerManager
+import de.woq.blended.testsupport.TestActorSys
+import org.scalatest.junit.AssertionsForJUnit
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
+import de.woq.blended.itestsupport.docker.protocol._
+
+class BlendedDemoSpec extends TestActorSys
+  with WordSpecLike
   with Matchers
   with AssertionsForJUnit
-  with BeforeAndAfterAll
-  with Docker {
+  with BeforeAndAfterAll {
 
-  override protected def beforeAll() {
-    configuredContainers.values.foreach(_.startContainer.waitContainer)
-  }
-
-  override protected def afterAll() {
-    configuredContainers.values.foreach(_.stopContainer)
-  }
+  val logger = LoggerFactory.getLogger(classOf[BlendedDemoSpec].getName)
 
   "The demo container" should {
 
     "do something" in {
-      1 should be(1)
+      val mgr = system.actorOf(Props[ContainerManager], "ContainerManager")
+      mgr ! StartContainerManager
+      expectMsg(ContainerManagerStarted)
+
+      mgr ! GetContainerPorts("blended-demo_0")
+      fishForMessage(10.seconds) {
+        case ContainerPorts(ports) => {
+          logger info ports.toString
+          true
+        }
+        case _ => false
+      }
     }
   }
 }

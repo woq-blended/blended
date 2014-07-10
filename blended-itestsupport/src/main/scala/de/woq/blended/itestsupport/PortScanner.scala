@@ -3,23 +3,41 @@ package de.woq.blended.itestsupport
 import java.io.IOException
 import java.net.{DatagramSocket, ServerSocket}
 
-import org.slf4j.LoggerFactory
+import akka.actor.{Actor, ActorLogging}
+import akka.event.LoggingReceive
+
+import de.woq.blended.itestsupport.protocol._
+
+trait PortRange {
+  val fromPort : Int = 1024
+  val toPort   : Int = 65535
+}
 
 object PortScanner {
+  def apply() = new PortScanner()
+}
 
-  private var minPortNumber = 1024
-  private val maxPortNumber = 65535
-  private val logger = LoggerFactory.getLogger(PortScanner.getClass)
+class PortScanner extends Actor with ActorLogging with PortRange {
 
-  def findFreePort : Int = {
-    val port = findFirstFreePort((minPortNumber to maxPortNumber).toList)
-    minPortNumber = port + 1
-    port
-  }
+  private var minPortNumber = fromPort
 
-  private[PortScanner] def findFirstFreePort(portList: List[Int]): Int = portList match {
-    case x :: xs => if (available(x)) x else findFirstFreePort(xs)
-    case Nil => throw new IllegalStateException(s"Cannot find a free port ...")
+  def receive = LoggingReceive {
+    case GetPort => {
+      val range = minPortNumber to toPort
+      range.find {
+        available _
+      } match {
+        case None => self ! Reset
+        case Some(port) => {
+          log debug s"Found free port [${port}]."
+          minPortNumber = port + 1
+          sender ! FreePort(port)
+        }
+      }
+    }
+    case Reset => {
+      minPortNumber = fromPort
+    }
   }
 
   private[PortScanner] def available(port: Int) = {

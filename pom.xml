@@ -89,7 +89,13 @@
         <module>blended-archetypes-project</module>
 
         <module>blended-samples</module>
-        <module>blended-docker</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>assembly</id>
+      <modules>
+        <module>blended-karaf-demo</module>
       </modules>
     </profile>
 
@@ -101,9 +107,9 @@
     </profile>
 
     <profile>
-      <id>assembly</id>
+      <id>docker</id>
       <modules>
-        <module>blended-karaf-demo</module>
+        <module>blended-docker</module>
       </modules>
     </profile>
 

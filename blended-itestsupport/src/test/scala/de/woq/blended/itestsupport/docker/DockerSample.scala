@@ -1,9 +1,7 @@
 package de.woq.blended.itestsupport.docker
 
-object DockerSample extends App with Docker {
+object DockerSample extends App {
 
-  configuredContainers.values foreach { c =>
-    c.startContainer.waitContainer.stopContainer
-  }
+
 
 }

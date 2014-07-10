@@ -1,51 +1,18 @@
 package de.woq.blended.itestsupport.docker
 
+import akka.event.LoggingAdapter
 import com.github.dockerjava.client.model.Image
-import org.slf4j.LoggerFactory
 
 import scala.collection.convert.Wrappers.JListWrapper
 import com.github.dockerjava.client.DockerClient
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 
 import scala.collection.mutable
 
 trait Docker {
 
-  private[Docker] var currentMinPort : Int = 1024
-
-  private[Docker] lazy val logger = LoggerFactory.getLogger(getClass.getName)
-
-  private[Docker] lazy val config = {
-    ConfigFactory.parseResources("docker.conf")
-  }
-
-  implicit private[Docker] lazy val client = {
-    val client = new DockerClient(config.getString("docker.url"))
-    client.setCredentials(
-      config.getString("docker.user"),
-      config.getString("docker.password"),
-      config.getString("docker.eMail")
-    )
-
-    val version = client.versionCmd().exec()
-
-    logger info
-      s"""
-         Using Docker version  ${version.getVersion}
-         Docker API version    ${version.getApiVersion}
-         Docker Go version     ${version.getGoVersion}
-         Architecture          ${version.getArch}
-         Kernel version        ${version.getKernelVersion}"""
-
-    client
-  }
-
-  def searchByTag(s: String) = { img: Image =>
-    img.getRepoTags.exists(_ matches(s))
-  }
-
-  def images = new JListWrapper(client.listImagesCmd().exec()).toList
-  def search(f : Image => Boolean) = images.filter(f)
+  val config : Config
+  val logger : LoggingAdapter
 
   lazy val configuredContainers : Map[String, DockerContainer] = {
 
@@ -93,7 +60,33 @@ trait Docker {
     result.seq
   }
 
-  def container(i : Image)  = new DockerContainer(i.getId)
-  def container(s : String) = new DockerContainer(s)
+  implicit private[Docker] lazy val client = {
+    val client = new DockerClient(config.getString("docker.url"))
+    client.setCredentials(
+      config.getString("docker.user"),
+      config.getString("docker.password"),
+      config.getString("docker.eMail")
+    )
+
+    val version = client.versionCmd().exec()
+
+    logger info
+      s"""
+         Using Docker version  ${version.getVersion}
+         Docker API version    ${version.getApiVersion}
+         Docker Go version     ${version.getGoVersion}
+         Architecture          ${version.getArch}
+         Kernel version        ${version.getKernelVersion}"""
+
+    client
+  }
+
+  private[Docker] def searchByTag(s: String) = { img: Image =>
+    img.getRepoTags.exists(_ matches(s))
+  }
+
+  private[Docker] def images = new JListWrapper(client.listImagesCmd().exec()).toList
+  private[Docker] def search(f : Image => Boolean) = images.filter(f)
+  private[Docker] def container(i : Image)  = new DockerContainer(i.getId)
 
 }
