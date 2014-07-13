@@ -14,7 +14,7 @@ USER blended
 ENV JAVA_HOME /opt/java
 ENV PATH ${PATH}:${JAVA_HOME}/bin
 
-ENTRYPOINT ["/opt/blended/bin/karaf"]
+ENTRYPOINT ["/opt/blended/bin/karaf server"]
 
 EXPOSE 8181
 EXPOSE 1099
