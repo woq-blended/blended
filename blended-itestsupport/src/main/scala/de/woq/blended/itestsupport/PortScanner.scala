@@ -13,20 +13,46 @@ trait PortRange {
   val toPort   : Int = 65535
 }
 
-object PortScanner {
-  def apply() = new PortScanner()
+trait PortChecker {
+  def available : (Int => Boolean)
 }
 
-class PortScanner extends Actor with ActorLogging with PortRange {
+object PortScanner {
+  def apply(
+    minPort: Int = 1024,
+    maxPort : Int = 65535,
+    portCheck : (Int => Boolean) = { port =>
+      var ss: Option[ServerSocket] = None
+      var ds: Option[DatagramSocket] = None
 
-  private var minPortNumber = fromPort
+      try {
+        ss = Some(new ServerSocket(port))
+        ss.get.setReuseAddress(true)
+        ds = Some(new DatagramSocket(port))
+        ds.get.setReuseAddress(true)
+        true
+      } catch {
+        case ioe: IOException => false
+      } finally {
+        ds.foreach(_.close)
+        ss.foreach(_.close)
+      }
+    }
+  ) = new PortScanner() with PortRange with PortChecker {
+    override val fromPort: Int = minPort
+    override val toPort: Int = maxPort
+    override def available = portCheck
+  }
+}
+
+class PortScanner extends Actor with ActorLogging { this : PortRange with PortChecker =>
+
+  var minPortNumber = 0
 
   def receive = LoggingReceive {
     case GetPort => {
       val range = minPortNumber to toPort
-      range.find {
-        available _
-      } match {
+      range.find { port => available(port) } match {
         case None => self ! Reset
         case Some(port) => {
           log debug s"Found free port [${port}]."
@@ -40,22 +66,7 @@ class PortScanner extends Actor with ActorLogging with PortRange {
     }
   }
 
-  private[PortScanner] def available(port: Int) = {
-
-    var ss: Option[ServerSocket] = None
-    var ds: Option[DatagramSocket] = None
-
-    try {
-      ss = Some(new ServerSocket(port))
-      ss.get.setReuseAddress(true)
-      ds = Some(new DatagramSocket(port))
-      ds.get.setReuseAddress(true)
-      true
-    } catch {
-      case ioe: IOException => false
-    } finally {
-      ds.foreach(_.close)
-      ss.foreach(_.close)
-    }
+  override def preStart() {
+    minPortNumber = fromPort
   }
 }
