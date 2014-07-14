@@ -22,6 +22,7 @@ class BlendedDemoSpec extends TestActorSys
   "The demo container" should {
 
     "do something" in {
+      System.setProperty("docker.io.version", "1.12")
       val mgr = system.actorOf(Props[ContainerManager], "ContainerManager")
       mgr ! StartContainerManager
       expectMsg(ContainerManagerStarted)

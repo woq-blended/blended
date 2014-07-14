@@ -7,6 +7,7 @@ package object protocol {
 
   case class StartContainer(name: String)
   case class ContainerStarted(name: String)
+  case class DependenciesStarted(container: DockerContainer)
 
   case class StopContainer(name: String)
   case class ContainerStopped(name: String)

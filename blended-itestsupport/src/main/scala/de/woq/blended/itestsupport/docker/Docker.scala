@@ -29,9 +29,19 @@ trait Docker {
       val images = search(searchByTag(cfg.getString("image")))
       logger info s"Found [${images.length}] image(s) for container definition."
 
+      val links : List[String] =
+        if (cfg.hasPath("links"))
+          new JListWrapper(cfg.getStringList("links")).toList
+        else
+          List.empty
+
+      logger info s"Container is linked to [${links.toString}]."
+
       images.foreach { img =>
         val name = if (cfg.hasPath("name")) cfg.getString("name") + "_" + idx else img.getId
-        val ct = container(img).withName(name).withNamedPorts(namedPorts(cfg))
+        val ct = container(img, name).withNamedPorts(namedPorts(cfg))
+
+        links.foreach(link => ct.withLink(link))
 
         builder += (name -> ct)
         logger info s"Configured container [${name}]."
@@ -61,6 +71,7 @@ trait Docker {
   }
 
   implicit private[Docker] lazy val client = {
+
     val client = new DockerClient(config.getString("docker.url"))
     client.setCredentials(
       config.getString("docker.user"),
@@ -87,6 +98,6 @@ trait Docker {
 
   private[Docker] def images = new JListWrapper(client.listImagesCmd().exec()).toList
   private[Docker] def search(f : Image => Boolean) = images.filter(f)
-  private[Docker] def container(i : Image)  = new DockerContainer(i.getId)
+  private[Docker] def container(i : Image, name: String)  = new DockerContainer(i.getId, name)
 
 }

@@ -3,7 +3,7 @@ package de.woq.blended.itestsupport.docker
 import de.woq.blended.itestsupport.PortScanner
 
 import scala.concurrent.duration._
-import akka.actor.{ActorRef, Props, ActorLogging, Actor}
+import akka.actor._
 import akka.event.{LoggingAdapter, LoggingReceive}
 import akka.util.Timeout
 import com.typesafe.config.Config
@@ -17,17 +17,35 @@ class ContainerManager extends Actor with ActorLogging with Docker {
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
 
-  def initializing : Receive = LoggingReceive {
+  var portScanner : ActorRef = _
+  var pendingContainer : Map [String, ActorRef] = Map.empty
+  var requestor : ActorRef = _
+
+  def starting : Receive = LoggingReceive {
     case StartContainerManager => {
       log info s"Initializing Container manager"
-      val portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
+      requestor = sender
+      portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
       configuredContainers.foreach{ case(name, ct) =>
-        val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), name)
-        actor ! StartContainer(name)
+        if (ct.links.isEmpty) {
+          val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), name)
+          actor ! StartContainer(name)
+        } else {
+          val actor = context.actorOf(Props(DependentContainerActor(ct)))
+          pendingContainer += (ct.containerName -> actor)
+        }
       }
-      context become running
-      log info "Container Manager started."
-      sender ! ContainerManagerStarted
+      if (checkPending) context become running
+    }
+    case DependenciesStarted(ct) => {
+      sender ! PoisonPill
+      pendingContainer -= ct.id
+      val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), ct.containerName)
+      actor ! StartContainer(ct.containerName)
+      if (checkPending) context become running
+    }
+    case ContainerStarted(name) => {
+      pendingContainer.values.foreach(a => a.forward(ContainerStarted(name)))
     }
   }
 
@@ -40,7 +58,15 @@ class ContainerManager extends Actor with ActorLogging with Docker {
     }
   }
 
-  def receive = initializing
+  def receive = starting
 
   private def containerActor(name: String) = context.actorSelection(name).resolveOne()
+
+  private def checkPending = {
+    if (pendingContainer.isEmpty) {
+      log info "Container Manager started."
+      sender ! ContainerManagerStarted
+      true
+    } else false
+  }
 }
