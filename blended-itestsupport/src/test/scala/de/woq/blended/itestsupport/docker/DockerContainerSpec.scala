@@ -1,32 +1,78 @@
 package de.woq.blended.itestsupport.docker
 
-import com.github.dockerjava.client.DockerClient
-import com.github.dockerjava.client.command.CreateContainerCmd
-import com.github.dockerjava.client.model.ContainerCreateResponse
-import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 
 class DockerContainerSpec extends WordSpec
   with Matchers
+  with DockerTestSetup
   with MockitoSugar {
-
-  val createResp = mock[ContainerCreateResponse]
-  val createCmd = mock[CreateContainerCmd]
-  when(createCmd.exec()) thenReturn(createResp)
-
-  implicit val client = mock[DockerClient]
-  when(client.createContainerCmd("test")) thenReturn(createCmd)
-  when(createCmd.withName("myHost")) thenReturn(createCmd)
 
   "A Docker Container should" should {
 
     "be created from the image id and a name" in {
-      val container = new DockerContainer("test", "myHost")
+      val container = new DockerContainer(imageId, ctName)
 
-      verify(client).createContainerCmd("test")
-      verify(createCmd).withName("myHost")
+      verify(client).createContainerCmd(imageId)
+      verify(createCmd).withName(ctName)
+    }
+
+    "issue the wait command with the correct id" in {
+      val container = new DockerContainer(imageId, ctName)
+      container.waitContainer
+
+      verify(client).waitContainerCmd(ctName)
+    }
+    
+    "issue the stop command with the correct id" in {
+      val container = new DockerContainer(imageId, ctName)
+      container.stopContainer
+
+      verify(client).stopContainerCmd(ctName)
+    }
+
+    "issue the start command with the correct id" in {
+      val container = new DockerContainer(imageId, ctName)
+      container.startContainer(portBindings)
+
+      verify(client).startContainerCmd(ctName)
+    }
+
+    "allow to set the linked containers" in {
+      val container = new DockerContainer(imageId, ctName)
+      container.withLink("foo").withLink("bar")
+
+      val links = container.links
+
+      links should contain theSameElementsAs Vector("foo", "bar")
+    }
+
+    "allow to set single exposed ports" in {
+      val container = new DockerContainer(imageId, ctName)
+      val namedPort : NamedContainerPort = ("jmx", 1099)
+      container.withNamedPort(namedPort)
+
+      val ports = container.ports should be (Map("jmx" -> namedPort))
+    }
+
+    "allow to set multiple exposed ports" in {
+      val container = new DockerContainer(imageId, ctName)
+      val port1 : NamedContainerPort = ("jmx", 1099)
+      val port2 : NamedContainerPort = ("http", 8181)
+      container.withNamedPort(port1).withNamedPort(port2)
+
+      val ports = container.ports should be (Map("jmx" -> port1, "http" -> port2))
+    }
+
+    "allow to set multiple exposed ports at once" in {
+      val container = new DockerContainer(imageId, ctName)
+      val port1 : NamedContainerPort = ("jmx", 1099)
+      val port2 : NamedContainerPort = ("http", 8181)
+      container.withNamedPorts(Seq(port1, port2))
+
+      val ports = container.ports should be (Map("jmx" -> port1, "http" -> port2))
     }
   }
 }
