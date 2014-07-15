@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 
 import de.woq.blended.jolokia.protocol._
 
-class HelloJolokiaSpec extends TestActorSys
+class JolokiaClientSpec extends TestActorSys
   with WordSpecLike
   with Matchers {
 
