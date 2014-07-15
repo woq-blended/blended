@@ -101,12 +101,27 @@ trait Docker {
     result.seq
   }
 
+  def exitingContainers() =
+    new JListWrapper(client.listContainersCmd().withShowAll(true).exec()).toList
+
+  def shutDownContainers() = {
+    exitingContainers().foreach { ct =>
+      logger.info(s"Removing container [${ct.getId}]")
+      client.removeContainerCmd(ct.getId).withRemoveVolumes(true).withForce(true).exec()
+    }
+  }
 
   private[Docker] def searchByTag(s: String) = { img: Image =>
     img.getRepoTags.exists(_ matches(s))
   }
 
-  private[Docker] def images = new JListWrapper(client.listImagesCmd().exec()).toList
-  private[Docker] def search(f : Image => Boolean) = images.filter(f)
-  private[Docker] def container(i : Image, name: String)  = new DockerContainer(i.getId, name)
+  private[Docker] def images =
+    new JListWrapper(client.listImagesCmd().exec()).toList
+
+  private[Docker] def search(f : Image => Boolean) =
+    images.filter(f)
+
+  private[Docker] def container(i : Image, name: String)  =
+    new DockerContainer(i.getId, name)
+
 }

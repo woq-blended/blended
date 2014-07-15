@@ -1,5 +1,6 @@
 package de.woq.blended.akka.itest
 
+import akka.util.Timeout
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
@@ -28,18 +29,21 @@ class BlendedDemoSpec extends TestActorSys
 
   "The demo container" should {
 
+    val timeOut = 30.seconds
+
     "do something" in {
       System.setProperty("docker.io.version", "1.12")
       val mgr = system.actorOf(Props[TestContainerManager], "ContainerManager")
       mgr ! StartContainerManager
-      expectMsg(ContainerManagerStarted)
+
+      fishForMessage(timeOut) {
+        case ContainerManagerStarted => true
+        case _ => false
+      }
 
       mgr ! GetContainerPorts("blended_demo_0")
-      fishForMessage(10.seconds) {
-        case ContainerPorts(ports) => {
-          logger info ports.toString
-          true
-        }
+      fishForMessage(timeOut) {
+        case ContainerPorts(_) => true
         case _ => false
       }
     }

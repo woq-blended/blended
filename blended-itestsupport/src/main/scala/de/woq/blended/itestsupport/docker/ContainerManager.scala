@@ -30,6 +30,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
   def starting : Receive = LoggingReceive {
     case StartContainerManager => {
       log info s"Initializing Container manager"
+      shutDownContainers()
       requestor = sender
       portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
       configuredContainers.foreach{ case(name, ct) =>
