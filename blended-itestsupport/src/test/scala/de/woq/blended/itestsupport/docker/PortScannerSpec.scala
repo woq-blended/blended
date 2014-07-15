@@ -32,5 +32,13 @@ class PortScannerSpec extends TestActorSys
       scanner ! GetPort
       expectMsg(FreePort(defaultRange.fromPort))
     }
+
+    "Return the next available port" in {
+      val scanner = TestActorRef(Props(PortScanner(portCheck = checker)))
+      scanner ! GetPort
+      expectMsg(FreePort(defaultRange.fromPort))
+      scanner ! GetPort
+      expectMsg(FreePort(defaultRange.fromPort + 1))
+    }
   }
 }

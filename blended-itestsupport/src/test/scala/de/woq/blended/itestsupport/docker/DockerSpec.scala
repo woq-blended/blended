@@ -1,0 +1,30 @@
+package de.woq.blended.itestsupport.docker
+
+import akka.event.LoggingAdapter
+import com.typesafe.config.Config
+import de.woq.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+
+class DockerSpec extends TestActorSys
+  with WordSpecLike
+  with Matchers {
+
+  private def docker = {
+    System.setProperty("docker.io.version", "1.12")
+    new Docker {
+      override val config: Config = system.settings.config
+      override val logger: LoggingAdapter = system.log
+    }
+  }
+
+  "The Docker trait" should {
+
+    "Read initialize from the configuration" in {
+      docker.configuredContainers should have size(1)
+
+      val container = docker.configuredContainers.get("blended_demo_0").get
+
+      container.containerName should be ("blended_demo_0")
+    }
+  }
+}

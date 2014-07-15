@@ -22,28 +22,25 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
   implicit val timeout = new Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
-  def stopped : Receive = {
+  def stopped : Receive = LoggingReceive {
     case StartContainer(n) if container.containerName == n  => {
       portBindings
     }
     case p : Ports => {
       val requestor = sender
       container.startContainer(p).waitContainer
-      context become ( LoggingReceive { started orElse common } )
+      context become started
       requestor ! ContainerStarted(container.containerName)
     }
   }
 
-  def started : Receive = {
+  def started : Receive = LoggingReceive {
     case StopContainer(n) if container.containerName == n  => {
       val requestor = sender
       container.stopContainer
-      context become LoggingReceive { stopped orElse common }
+      context become stopped
       requestor ! ContainerStopped(container.containerName)
     }
-  }
-
-  def common : Receive = {
     case GetContainerPorts(n) if container.containerName == n => {
       val ports : Map[String, NamedContainerPort] =
         container.ports.mapValues { namedPort =>
@@ -56,18 +53,22 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     }
   }
 
-  def receive = LoggingReceive { stopped orElse common }
+  def receive = stopped
 
   private def portBindings {
     val bindings = new Ports()
 
-    val portRequests : Iterable[Future[(NamedContainerPort, FreePort)]]=
+    // We create a Future for each port. The Future uses the underlying PortScanner
+    // to retreive the next port number
+    val portRequests : Iterable[Future[(NamedContainerPort, FreePort)]] =
       container.ports.values.map { case namedPort =>
         (portScanner ? GetPort).mapTo[FreePort].collect { case fp =>
           (namedPort, fp)
         }
     }
 
+    // We create a single Future from the list of futures created before, collect the result
+    // and then pass on the Bindings to ourselves.
     Future.sequence(portRequests).mapTo[Iterable[(NamedContainerPort, FreePort)]].collect { case ports =>
       ports.foreach { case (namedPort, freeport) =>
         bindings.bind(new ExposedPort("tcp", namedPort.sourcePort), new Binding(freeport.p))
