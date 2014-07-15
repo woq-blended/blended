@@ -9,10 +9,41 @@ import com.typesafe.config.Config
 
 import scala.collection.mutable
 
+object DockerClientFactory {
+
+  var client : Option[DockerClient] = None
+  
+  def apply(config : Config)(implicit logger: LoggingAdapter) = client match {
+    case Some(dockerClient) => dockerClient
+    case _ => {
+      val dockerClient = new DockerClient(config.getString("docker.url"))
+      dockerClient.setCredentials(
+        config.getString("docker.user"),
+        config.getString("docker.password"),
+        config.getString("docker.eMail")
+      )
+
+      val version = dockerClient.versionCmd().exec()
+
+      logger info
+        s"""
+       Using Docker version  ${version.getVersion}
+       Docker API version    ${version.getApiVersion}
+       Docker Go version     ${version.getGoVersion}
+       Architecture          ${version.getArch}
+       Kernel version        ${version.getKernelVersion}"""
+
+      client = Some(dockerClient)
+      dockerClient
+    }
+  }
+}
+
 trait Docker {
 
-  val config : Config
-  val logger : LoggingAdapter
+  implicit val logger  : LoggingAdapter
+  implicit val config  : Config
+  implicit val client  : DockerClient
 
   lazy val configuredContainers : Map[String, DockerContainer] = {
 
@@ -70,27 +101,6 @@ trait Docker {
     result.seq
   }
 
-  implicit private[Docker] lazy val client = {
-
-    val client = new DockerClient(config.getString("docker.url"))
-    client.setCredentials(
-      config.getString("docker.user"),
-      config.getString("docker.password"),
-      config.getString("docker.eMail")
-    )
-
-    val version = client.versionCmd().exec()
-
-    logger info
-      s"""
-         Using Docker version  ${version.getVersion}
-         Docker API version    ${version.getApiVersion}
-         Docker Go version     ${version.getGoVersion}
-         Architecture          ${version.getArch}
-         Kernel version        ${version.getKernelVersion}"""
-
-    client
-  }
 
   private[Docker] def searchByTag(s: String) = { img: Image =>
     img.getRepoTags.exists(_ matches(s))
@@ -99,5 +109,4 @@ trait Docker {
   private[Docker] def images = new JListWrapper(client.listImagesCmd().exec()).toList
   private[Docker] def search(f : Image => Boolean) = images.filter(f)
   private[Docker] def container(i : Image, name: String)  = new DockerContainer(i.getId, name)
-
 }

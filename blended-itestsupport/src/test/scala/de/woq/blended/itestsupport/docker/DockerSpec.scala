@@ -3,17 +3,21 @@ package de.woq.blended.itestsupport.docker
 import akka.event.LoggingAdapter
 import com.typesafe.config.Config
 import de.woq.blended.testsupport.TestActorSys
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DockerSpec extends TestActorSys
   with WordSpecLike
-  with Matchers {
+  with Matchers
+  with DockerTestSetup
+  with MockitoSugar {
 
   private def docker = {
     System.setProperty("docker.io.version", "1.12")
     new Docker {
-      override val config: Config = system.settings.config
-      override val logger: LoggingAdapter = system.log
+      override implicit val logger: LoggingAdapter = system.log
+      override implicit val config: Config = system.settings.config
+      override implicit val client = mockClient
     }
   }
 

@@ -15,7 +15,7 @@ class DockerContainerSpec extends WordSpec
     "be created from the image id and a name" in {
       val container = new DockerContainer(imageId, ctName)
 
-      verify(client).createContainerCmd(imageId)
+      verify(mockClient).createContainerCmd(imageId)
       verify(createCmd).withName(ctName)
     }
 
@@ -23,21 +23,21 @@ class DockerContainerSpec extends WordSpec
       val container = new DockerContainer(imageId, ctName)
       container.waitContainer
 
-      verify(client).waitContainerCmd(ctName)
+      verify(mockClient).waitContainerCmd(ctName)
     }
     
     "issue the stop command with the correct id" in {
       val container = new DockerContainer(imageId, ctName)
       container.stopContainer
 
-      verify(client).stopContainerCmd(ctName)
+      verify(mockClient).stopContainerCmd(ctName)
     }
 
     "issue the start command with the correct id" in {
       val container = new DockerContainer(imageId, ctName)
       container.startContainer(portBindings)
 
-      verify(client).startContainerCmd(ctName)
+      verify(mockClient).startContainerCmd(ctName)
     }
 
     "allow to set the linked containers" in {

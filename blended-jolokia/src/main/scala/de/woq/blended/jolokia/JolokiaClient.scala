@@ -13,7 +13,6 @@ import de.woq.blended.jolokia.model._
 import de.woq.blended.jolokia.protocol._
 
 import spray.json._
-import DefaultJsonProtocol._
 
 import scala.concurrent.Future
 

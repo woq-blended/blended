@@ -1,5 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
+import com.github.dockerjava.client.DockerClient
 import de.woq.blended.itestsupport.PortScanner
 
 import scala.concurrent.duration._
@@ -9,13 +10,18 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import de.woq.blended.itestsupport.docker.protocol._
 
-class ContainerManager extends Actor with ActorLogging with Docker {
+trait DockerClientProvider {
+  def getClient : DockerClient
+}
+
+class ContainerManager extends Actor with ActorLogging with Docker { this:  DockerClientProvider =>
 
   implicit val timeout = Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
+  implicit val client = getClient
 
   var portScanner : ActorRef = _
   var pendingContainer : Map [String, ActorRef] = Map.empty

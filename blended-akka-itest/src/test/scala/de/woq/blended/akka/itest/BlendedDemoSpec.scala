@@ -4,12 +4,19 @@ import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import akka.actor.Props
-import de.woq.blended.itestsupport.docker.ContainerManager
+import de.woq.blended.itestsupport.docker.{DockerClientFactory, DockerClientProvider, ContainerManager}
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import de.woq.blended.itestsupport.docker.protocol._
+
+class TestContainerManager extends ContainerManager with DockerClientProvider {
+  override def getClient = {
+    implicit val logger = context.system.log
+    DockerClientFactory(context.system.settings.config)
+  }
+}
 
 class BlendedDemoSpec extends TestActorSys
   with WordSpecLike
@@ -23,7 +30,7 @@ class BlendedDemoSpec extends TestActorSys
 
     "do something" in {
       System.setProperty("docker.io.version", "1.12")
-      val mgr = system.actorOf(Props[ContainerManager], "ContainerManager")
+      val mgr = system.actorOf(Props[TestContainerManager], "ContainerManager")
       mgr ! StartContainerManager
       expectMsg(ContainerManagerStarted)
 
