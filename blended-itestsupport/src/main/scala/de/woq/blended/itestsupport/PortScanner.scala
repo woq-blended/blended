@@ -53,7 +53,7 @@ class PortScanner extends Actor with ActorLogging { this : PortRange with PortCh
     case GetPort => {
       val range = minPortNumber to toPort
       range.find { port => available(port) } match {
-        case None => self ! Reset
+        case None => self ! ResetPortRange
         case Some(port) => {
           log debug s"Found free port [${port}]."
           minPortNumber = port + 1
@@ -61,7 +61,7 @@ class PortScanner extends Actor with ActorLogging { this : PortRange with PortCh
         }
       }
     }
-    case Reset => {
+    case ResetPortRange => {
       minPortNumber = fromPort
     }
   }

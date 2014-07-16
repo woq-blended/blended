@@ -17,6 +17,5 @@
 package de.woq.blended.itestsupport.condition;
 
 public interface Condition {
-
-  public boolean satisfied();
+  boolean satisfied();
 }

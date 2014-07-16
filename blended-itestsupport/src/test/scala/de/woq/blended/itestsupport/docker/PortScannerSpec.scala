@@ -8,15 +8,13 @@ import org.scalatest.{Matchers, WordSpecLike}
 
 import de.woq.blended.itestsupport.protocol._
 
-class DefaultRange extends PortRange
-
 class PortScannerSpec extends TestActorSys
   with WordSpecLike
   with Matchers {
 
   "The port scanner" should {
 
-    val defaultRange = new DefaultRange
+    val defaultRange = new PortRange {}
     val checker = { p: Int => true }
 
     "initialize itself with the default ports" in {

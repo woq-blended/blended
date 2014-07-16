@@ -1,7 +1,5 @@
 package de.woq.blended.jolokia
 
-import javax.management.ObjectName
-
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
