@@ -12,8 +12,7 @@ object SequentialChecker {
 
 class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLogging {
 
-  case object TimeOut
-  case object Check
+  case object SequentialCheck
 
   var processed : List[Condition] = List.empty
   var remaining : List[Condition] = List.empty
@@ -25,14 +24,14 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
   def initializing = LoggingReceive {
     case CheckCondition(d) => {
       remaining = conditions
-      self ! Check
+      self ! SequentialCheck
       context become checking(d, sender)
     }
   }
 
   def checking( d : FiniteDuration, checkingFor : ActorRef ) = LoggingReceive {
 
-    case Check => {
+    case SequentialCheck => {
       remaining match {
         case Nil  => {
           log.debug(s"Successfully processed [${processed.size}] conditions.")
@@ -48,7 +47,7 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
     }
     case ConditionSatisfied(c :: Nil) => {
       processed = c :: processed
-      self ! Check
+      self ! SequentialCheck
     }
     case ConditionTimeOut(c :: Nil) => {
       remaining = c :: remaining

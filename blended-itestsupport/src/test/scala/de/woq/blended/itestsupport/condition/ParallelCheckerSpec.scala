@@ -2,13 +2,13 @@ package de.woq.blended.itestsupport.condition
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
+import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
-import de.woq.blended.itestsupport.protocol._
-
-class SequentialCheckerSpec extends TestActorSys
+class ParallelCheckerSpec extends TestActorSys
   with WordSpecLike
   with Matchers
   with ConditionProvider {
@@ -16,7 +16,7 @@ class SequentialCheckerSpec extends TestActorSys
   "The Condition Checker" should {
 
     "respond with a satisfied message on an empty list of conditions" in {
-      val checker = TestActorRef(Props(SequentialChecker(List.empty)))
+      val checker = TestActorRef(Props(ParallelChecker(List.empty)))
       checker ! CheckCondition()
       expectMsg(ConditionSatisfied(List.empty))
     }
@@ -24,7 +24,7 @@ class SequentialCheckerSpec extends TestActorSys
     "respond with a satisfied message after a single wrapped condition has been satisfied" in {
       val conditions = (1 to 1).map { i => alwaysTrue }.toList
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
       fishForMessage() {
@@ -36,7 +36,7 @@ class SequentialCheckerSpec extends TestActorSys
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
       val conditions = (1 to 5).map { i => alwaysTrue }.toList
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
       fishForMessage() {
@@ -57,31 +57,16 @@ class SequentialCheckerSpec extends TestActorSys
       }
     }
 
-    "respond with a timeout message after the first wrapped condition has timed out" in {
-      val conditions = (1 to 5).map { i => neverTrue }.toList
+    "respond with a timeout message containing the timed out conditions only" in {
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val failCondition   = neverTrue
+      val conditions = List(alwaysTrue, alwaysTrue, failCondition, alwaysTrue, alwaysTrue)
+
+      val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
-      fishForMessage(400.millis) {
-        case ConditionTimeOut(remaining) => remaining == conditions
-        case _ => false
-      }
-    }
-
-    """"
-     respond with a timeout message containing the remaining Conditions
-     after the first failing condition has timed out
-    """ in {
-
-      val trueConditions      = (1 to 2).map { i => alwaysTrue }.toList
-      val remainingConditions = neverTrue :: (1 to 2).map { i => alwaysTrue }.toList
-
-      val checker = TestActorRef(Props(SequentialChecker(trueConditions ::: remainingConditions)))
-      checker ! CheckCondition(300.millis)
-
-      fishForMessage(1.second) {
-        case ConditionTimeOut(remaining) => remaining == remainingConditions
+      fishForMessage() {
+        case ConditionTimeOut(remaining) => remaining == failCondition :: Nil
         case _ => false
       }
     }

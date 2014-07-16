@@ -23,10 +23,10 @@ class ConditionCheckerSpec extends TestActorSys
       expectMsg(ConditionSatisfied(c :: Nil))
     }
 
-    "respond with a timeout message if the condition wasn't satidfied in a given timeframe" in {
+    "respond with a timeout message if the condition wasn't satisfied in a given timeframe" in {
       val c = neverTrue
       val checker = TestActorRef(Props(ConditionChecker(cond = c)))
-      checker ! CheckCondition(1.second)
+      checker ! CheckCondition(300.millis)
       expectMsg(ConditionTimeOut(c :: Nil))
     }
   }
