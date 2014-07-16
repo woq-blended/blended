@@ -66,7 +66,7 @@ class ParallelCheckerSpec extends TestActorSys
       checker ! CheckCondition(300.millis)
 
       fishForMessage() {
-        case ConditionTimeOut(remaining) => remaining == failCondition :: Nil
+        case ConditionTimeOut(remaining) => remaining == List(failCondition)
         case _ => false
       }
     }
