@@ -75,6 +75,48 @@
       <version>${blended.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-camel-utils</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-jaxrs</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-activemq-brokerstarter</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-modules</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-akka</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-spray</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended.samples</groupId>
+      <artifactId>blended-samples-spray-helloworld</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
