@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.{Props, ActorSystem, ActorRef}
 import akka.pattern.ask
+import akka.util.Timeout
 import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.duration.FiniteDuration
@@ -12,6 +13,8 @@ import scala.util.Success
 abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorSystem, timeout: FiniteDuration) extends Condition {
 
   var isSatisfied : AtomicBoolean = new AtomicBoolean(false)
+
+  implicit val maxWait = new Timeout(timeout)
 
   (conditionChecker ? CheckCondition(timeout)).onComplete {
     case Success(result) => { result match {
