@@ -23,8 +23,6 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
   val system: ActorSystem
   private val mgrName = "ContainerManager"
 
-  implicit val eCtxt = system.dispatcher
-
   def startContainer(timeout : FiniteDuration) = {
 
     implicit val eCtxt = system.dispatcher
@@ -40,13 +38,11 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
     system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef]
   }
 
-  def containerPort()
-
   def jolokiaUrl = {
-    implicit val timeout = new Timeout(3.seconds)
+    implicit val eCtxt = system.dispatcher
 
     containerMgr.map { mgr =>
-      (mgr ? GetContainerPorts("blended_demo_0")).mapTo[ContainerPorts].onComplete {
+      (mgr ? GetContainerPorts("blended_demo_0"))(new Timeout(3.seconds)).mapTo[ContainerPorts].onComplete {
         case Success(port) => log info port.toString
         case Failure(cause) => fail(cause)
       }
