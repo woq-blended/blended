@@ -15,6 +15,7 @@ abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorS
   var isSatisfied : AtomicBoolean = new AtomicBoolean(false)
 
   implicit val maxWait = new Timeout(timeout)
+  implicit val eCtxt = system.dispatcher
 
   (conditionChecker ? CheckCondition(timeout)).onComplete {
     case Success(result) => { result match {
