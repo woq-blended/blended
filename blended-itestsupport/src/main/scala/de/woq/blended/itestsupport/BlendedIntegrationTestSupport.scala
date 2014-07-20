@@ -43,8 +43,8 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
 
     containerMgr.map { mgr =>
       (mgr ? GetContainerPorts("blended_demo_0"))(new Timeout(3.seconds)).mapTo[ContainerPorts].onComplete {
-        case Success(port) => log info port.toString
-        case Failure(cause) => fail(cause)
+        case Success(ports) => ports
+        case Failure(cause) => throw cause
       }
     }
   }
