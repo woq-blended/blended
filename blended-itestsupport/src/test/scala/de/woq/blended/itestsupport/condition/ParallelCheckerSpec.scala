@@ -22,7 +22,7 @@ class ParallelCheckerSpec extends TestActorSys
     }
 
     "respond with a satisfied message after a single wrapped condition has been satisfied" in {
-      val conditions = (1 to 1).map { i => alwaysTrue }.toList
+      val conditions = (1 to 1).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
@@ -31,7 +31,7 @@ class ParallelCheckerSpec extends TestActorSys
     }
 
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
-      val conditions = (1 to 5).map { i => alwaysTrue }.toList
+      val conditions = (1 to 5).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
@@ -40,7 +40,7 @@ class ParallelCheckerSpec extends TestActorSys
     }
 
     "respond with a timeout message after a single wrapped condition has timed out" in {
-      val conditions = (1 to 1).map { i => neverTrue }.toList
+      val conditions = (1 to 1).map { i => neverTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
       checker ! CheckCondition(300.millis)
@@ -50,8 +50,8 @@ class ParallelCheckerSpec extends TestActorSys
 
     "respond with a timeout message containing the timed out conditions only" in {
 
-      val failCondition   = neverTrue
-      val conditions = List(alwaysTrue, alwaysTrue, failCondition, alwaysTrue, alwaysTrue)
+      val failCondition   = neverTrue()
+      val conditions = List(alwaysTrue(), alwaysTrue(), failCondition, alwaysTrue(), alwaysTrue())
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)

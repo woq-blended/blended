@@ -15,6 +15,6 @@ class NeverTrue extends Condition {
 }
 
 trait ConditionProvider {
-  def alwaysTrue = new AlwaysTrue
-  def neverTrue = new NeverTrue
+  def alwaysTrue() = new AlwaysTrue
+  def neverTrue() = new NeverTrue
 }
