@@ -19,7 +19,7 @@ abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorS
 
   (conditionChecker ? CheckCondition(timeout)).onComplete {
     case Success(result) => { result match {
-      case ConditionSatisfied(list) if list == conditions.toList => isSatisfied.set(true)
+      case ConditionSatisfied(_) => isSatisfied.set(true)
     }}
     case _ =>
   }
