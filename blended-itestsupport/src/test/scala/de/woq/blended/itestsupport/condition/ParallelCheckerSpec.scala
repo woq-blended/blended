@@ -27,10 +27,7 @@ class ParallelCheckerSpec extends TestActorSys
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
-      fishForMessage() {
-        case ConditionSatisfied(checked) => checked == conditions
-        case _ => false
-      }
+      expectMsg(ConditionSatisfied(conditions))
     }
 
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
@@ -39,10 +36,7 @@ class ParallelCheckerSpec extends TestActorSys
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
-      fishForMessage() {
-        case ConditionSatisfied(checked) => checked == conditions
-        case _ => false
-      }
+      expectMsg(ConditionSatisfied(conditions))
     }
 
     "respond with a timeout message after a single wrapped condition has timed out" in {
@@ -51,10 +45,7 @@ class ParallelCheckerSpec extends TestActorSys
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
-      fishForMessage() {
-        case ConditionTimeOut(remaining) => remaining == conditions
-        case _ => false
-      }
+      expectMsg(ConditionTimeOut(conditions))
     }
 
     "respond with a timeout message containing the timed out conditions only" in {
@@ -65,10 +56,7 @@ class ParallelCheckerSpec extends TestActorSys
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition(300.millis)
 
-      fishForMessage() {
-        case ConditionTimeOut(remaining) => remaining == List(failCondition)
-        case _ => false
-      }
+      expectMsg(ConditionTimeOut(List(failCondition)))
     }
   }
 
