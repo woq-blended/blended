@@ -34,5 +34,6 @@ class BlendedDemoSpecSupport extends TestActorSys
 
   override protected def beforeAll() {
     startContainer(30.seconds) should be (ContainerManagerStarted)
+
   }
 }

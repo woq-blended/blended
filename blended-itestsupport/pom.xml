@@ -35,6 +35,12 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
+      <artifactId>blended-jolokia</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
       <artifactId>blended-testsupport</artifactId>
       <version>${blended.version}</version>
     </dependency>

@@ -9,6 +9,10 @@ package object protocol {
   case object GetPort
   case class FreePort(p: Int)
 
+  case object ConditionTimeOut
+  case object ConditionTick
+  case class  ConditionCheckResult(condition: Condition, satisfied: Boolean)
+
   case class CheckCondition(timeOut: FiniteDuration = 30.seconds)
   case class ConditionTimeOut(conditions : List[Condition])
   case class ConditionSatisfied(conditions: List[Condition])
