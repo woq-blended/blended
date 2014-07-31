@@ -3,8 +3,8 @@ package de.woq.blended.itestsupport.jolokia
 import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor._
-import akka.pattern._
 import akka.event.LoggingReceive
+import akka.pattern._
 import akka.util.Timeout
 import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.protocol._
@@ -13,7 +13,7 @@ import de.woq.blended.jolokia.protocol._
 import de.woq.blended.jolokia.{JolokiaAddress, JolokiaClient}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.util.Success
+import scala.util.Failure
 
 class JolokiaAvailableCondition(
   url: String,
@@ -38,16 +38,15 @@ class JolokiaAvailableCondition(
   val connector        = system.actorOf(Props(JolokiaConnector(url, userName, userPwd)))
   val checker          = system.actorOf(Props(ConditionChecker(this, Props(JolokiaChecker(this, connector)))))
 
-  (checker ? CheckCondition()).mapTo[ConditionCheckResult].onComplete {
-    case Success(ConditionCheckResult(_, available)) => jolokiaAvailable.set(available)
-    case _ =>
+  (checker ? CheckCondition()).mapTo[ConditionSatisfied].map {
+    _ => jolokiaAvailable.set(true)
+  }.andThen {
+    case _ => Seq(connector, checker).foreach { system.stop(_) }
   }
 
   override def toString = s"JolokiaAvailableCondition(${url})"
 
-  override def satisfied = {
-    jolokiaAvailable.get
-  }
+  override def satisfied = jolokiaAvailable.get
 
   object JolokiaChecker {
     def apply(condition: Condition, connector: ActorRef) = new JolokiaChecker(condition, connector)
@@ -55,14 +54,23 @@ class JolokiaAvailableCondition(
 
   class JolokiaChecker(condition: Condition, connector: ActorRef) extends Actor with ActorLogging {
 
-    var requestor : Option[ActorRef] = None
+    def receive = idle
 
-    def receive = LoggingReceive {
+    def idle : Receive = LoggingReceive {
       case ConditionTick => {
-        requestor = Some(sender)
-        (connector ? GetJolokiaVersion).mapTo[JolokiaVersion].onSuccess {
-          case version => requestor.foreach(_ ! ConditionCheckResult(condition, true))
-        }
+        context become(busy(sender))
+        connector ! GetJolokiaVersion
+      }
+    }
+
+    def busy(requestor: ActorRef) : Receive = LoggingReceive {
+      case ConditionTick =>
+      case v : JolokiaVersion => {
+        requestor ! ConditionCheckResult(condition, true)
+        context.stop(self)
+      }
+      case Failure(_) => {
+        context.become(idle)
       }
     }
   }

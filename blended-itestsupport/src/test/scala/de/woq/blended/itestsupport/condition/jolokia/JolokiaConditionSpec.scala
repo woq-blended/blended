@@ -18,11 +18,11 @@ class JolokiaConditionSpec extends TestActorSys
     "be satisfied with the intra JVM Jolokia" in {
       val condition = new ParallelComposedCondition(
         new JolokiaAvailableCondition(url = "http://localhost:7777/jolokia", timeout = 5.seconds)
-      )(system, 10.seconds)
+      )(system, 3.seconds)
 
       val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
       checker ! CheckCondition(10.seconds)
-      expectMsg(10.seconds, ConditionSatisfied(condition :: Nil))
+      expectMsg(3.seconds, ConditionSatisfied(condition :: Nil))
     }
   }
 
