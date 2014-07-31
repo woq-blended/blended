@@ -10,6 +10,12 @@ import scala.concurrent.duration._
 
 import de.woq.blended.jolokia.protocol._
 
+class JolokiaBlended extends JolokiaClient with JolokiaAddress {
+  override val jolokiaUrl = "http://localhost:7777/jolokia"
+  override val user: Option[String] = None
+  override val password: Option[String] = None
+}
+
 class JolokiaClientSpec extends TestActorSys
   with WordSpecLike
   with Matchers {
@@ -19,13 +25,13 @@ class JolokiaClientSpec extends TestActorSys
   "The Jolokia client" should {
 
     "Connect to Jolokia" in {
-      val jolokia = TestActorRef(Props(JolokiaClient()))
+      val jolokia = TestActorRef(Props[JolokiaBlended])
       jolokia ! GetJolokiaVersion
       expectMsgAnyClassOf(classOf[JolokiaVersion])
     }
 
     "Allow to search for MBeans" in {
-      val jolokia = TestActorRef(Props(JolokiaClient()))
+      val jolokia = TestActorRef(Props[JolokiaBlended])
       jolokia ! SearchJolokia("java.lang:*")
       fishForMessage() {
         case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
@@ -34,7 +40,7 @@ class JolokiaClientSpec extends TestActorSys
     }
 
     "Allow to read a specific MBean" in {
-      val jolokia = TestActorRef(Props(JolokiaClient()))
+      val jolokia = TestActorRef(Props[JolokiaBlended])
       jolokia ! ReadJolokiaMBean("java.lang:type=Memory")
       fishForMessage() {
         case JolokiaReadResult(objName, _) => objName == "java.lang:type=Memory"

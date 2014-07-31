@@ -47,7 +47,7 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
         case _ => false
       }}.asInstanceOf[List[ConditionSatisfied]]
 
-      // get everuthing that timed out
+      // get everything that timed out
       val timedOut = results.filter { _ match {
         case s : ConditionSatisfied => false
         case _ => true

@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import spray.client.pipelining._
-import spray.http.HttpRequest
+import spray.http.{BasicHttpCredentials, HttpRequest}
 import scala.collection.convert.Wrappers._
 
 import de.woq.blended.jolokia.model._
@@ -31,9 +31,14 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
   }
 
   private def jolokiaGet[T](operation: String)(extract : JsValue => T) {
-    val pipeline : HttpRequest => Future[String] = {
-      sendReceive ~> unmarshal[String]
-    }
+    val pipeline : HttpRequest => Future[String] = (
+      (if (user.isDefined && password.isDefined)
+        addCredentials(BasicHttpCredentials(user.get, password.get))
+      else
+        addHeader("X-Blended", "jolokia"))
+      ~> sendReceive
+      ~> unmarshal[String]
+    )
 
     (pipeline { Get( s"${jolokiaUrl}/${operation}") }).mapTo[String].map{
       result : String => {
@@ -45,6 +50,3 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
   }
 }
 
-object JolokiaClient {
-  def apply() = new JolokiaClient with JolokiaAddress
-}
