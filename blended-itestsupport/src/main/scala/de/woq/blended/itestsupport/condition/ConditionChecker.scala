@@ -1,12 +1,10 @@
 package de.woq.blended.itestsupport.condition
 
-import java.util.concurrent.TimeUnit
-
 import akka.actor._
 import akka.event.LoggingReceive
-import de.woq.blended.itestsupport.protocol._
 import akka.pattern._
 import akka.util.Timeout
+import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.duration._
 
@@ -24,6 +22,8 @@ case object DefaultConditionChecker {
 object ConditionChecker {
   def apply(cond : Condition ) =
     new ConditionChecker(cond, Props(DefaultConditionChecker(cond)))
+
+  def apply(condition: Condition, props: Props) = new ConditionChecker(condition, props)
 }
 
 class ConditionChecker(
@@ -59,7 +59,9 @@ class ConditionChecker(
   ) : Receive = LoggingReceive {
     case ConditionTick => {
       implicit val t = new Timeout(timeout)
-      ( checker ? ConditionTick).mapTo[ConditionCheckResult].pipeTo(self)
+      log info s"Checking Condition [${cond}]."
+      log.debug(s"${checker}")
+      ( checker ? ConditionTick ).mapTo[ConditionCheckResult].pipeTo(self)
     }
     case ConditionCheckResult(condition, satisfied)  => {
       if (satisfied) {
@@ -76,5 +78,7 @@ class ConditionChecker(
       context.stop(self)
     }
   }
+
+  override def toString = s"ConditionChecker[${cond}]"
 }
 

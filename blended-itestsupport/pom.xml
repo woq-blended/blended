@@ -114,10 +114,38 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.jolokia</groupId>
+      <artifactId>jolokia-jvm</artifactId>
+      <version>${jolokia.version}</version>
+      <classifier>agent</classifier>
+      <type>jar</type>
+      <scope>runtime</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
     <plugins>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+
+          <execution>
+            <id>extract-blended-container</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeClassifiers>agent</includeClassifiers>
+              <outputDirectory>${project.build.directory}/jolokia</outputDirectory>
+            </configuration>
+          </execution>
+
+        </executions>
+      </plugin>
 
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -132,6 +160,9 @@
       <plugin>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest-maven-plugin</artifactId>
+        <configuration>
+          <argLine>-javaagent:${build.directory}/jolokia/jolokia-jvm-${jolokia.version}-agent.jar=port=7777,host=localhost</argLine>
+        </configuration>
       </plugin>
 
     </plugins>

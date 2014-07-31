@@ -10,10 +10,14 @@ import scala.concurrent.duration._
 
 import de.woq.blended.jolokia.protocol._
 
-class JolokiaBlended extends JolokiaClient with JolokiaAddress {
+import scala.util.Failure
+
+class JolokiaJVM extends JolokiaClient with JolokiaAddress {
   override val jolokiaUrl = "http://localhost:7777/jolokia"
-  override val user: Option[String] = None
-  override val password: Option[String] = None
+}
+
+class JolokiaFake extends JolokiaClient with JolokiaAddress {
+  override val jolokiaUrl = "http://localhost:8888/jolokia"
 }
 
 class JolokiaClientSpec extends TestActorSys
@@ -25,13 +29,13 @@ class JolokiaClientSpec extends TestActorSys
   "The Jolokia client" should {
 
     "Connect to Jolokia" in {
-      val jolokia = TestActorRef(Props[JolokiaBlended])
+      val jolokia = TestActorRef(Props[JolokiaJVM])
       jolokia ! GetJolokiaVersion
       expectMsgAnyClassOf(classOf[JolokiaVersion])
     }
 
     "Allow to search for MBeans" in {
-      val jolokia = TestActorRef(Props[JolokiaBlended])
+      val jolokia = TestActorRef(Props[JolokiaJVM])
       jolokia ! SearchJolokia("java.lang:*")
       fishForMessage() {
         case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
@@ -40,11 +44,19 @@ class JolokiaClientSpec extends TestActorSys
     }
 
     "Allow to read a specific MBean" in {
-      val jolokia = TestActorRef(Props[JolokiaBlended])
+      val jolokia = TestActorRef(Props[JolokiaJVM])
       jolokia ! ReadJolokiaMBean("java.lang:type=Memory")
       fishForMessage() {
         case JolokiaReadResult(objName, _) => objName == "java.lang:type=Memory"
         case _ => false
+      }
+    }
+    
+    "Respond with a failure if the rest call fails" in {
+      val jolokia = TestActorRef(Props[JolokiaFake])
+      jolokia ! GetJolokiaVersion
+      fishForMessage() {
+        case Failure(error) => true
       }
     }
   }
