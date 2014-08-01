@@ -37,6 +37,7 @@ trait DockerTestSetup { this : MockitoSugar =>
   implicit val mockClient = mock[DockerClient]
   when(mockClient.createContainerCmd(imageId)) thenReturn(createCmd)
   when(createCmd.withName(ctName)) thenReturn(createCmd)
+  when(createCmd.withTTY(true)) thenReturn(createCmd)
   when(mockClient.waitContainerCmd(ctName)).thenReturn(waitCmd)
   when(mockClient.stopContainerCmd(ctName)).thenReturn(stopCmd)
   when(mockClient.startContainerCmd(ctName)).thenReturn(startCmd)

@@ -29,7 +29,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
     def receive = LoggingReceive {
       case PerformStart(container, ports) =>
-        container.startContainer(ports).waitContainer
+        container.startContainer(ports) //.waitContainer
         sender ! ContainerStarted(container.containerName)
     }
   }
@@ -37,33 +37,33 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
   implicit val timeout = new Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
-  def stopped : Receive = LoggingReceive {
+  def stopped : Receive = {
     case StartContainer(n) if container.containerName == n  => {
       portBindings
     }
     case p : Ports => {
       val starter = context.actorOf(Props(ContainerStartActor()))
-      context become starting(sender)
+      context become LoggingReceive(starting(sender) orElse(getPorts))
       starter ! PerformStart(container, p)
     }
   }
 
-  def starting(requestor : ActorRef) : Receive = LoggingReceive {
+  def starting(requestor : ActorRef) : Receive = {
     case msg : ContainerStarted =>
       requestor ! msg
-      context become started
-  } orElse(getPorts)
+      context become LoggingReceive(started orElse getPorts)
+  }
 
-  def started : Receive = LoggingReceive {
+  def started : Receive = {
     case StopContainer(n) if container.containerName == n  => {
       val requestor = sender
       container.stopContainer
       context become stopped
       requestor ! ContainerStopped(container.containerName)
     }
-  } orElse(getPorts)
+  }
 
-  def getPorts : Receive = LoggingReceive {
+  def getPorts : Receive = {
     case GetContainerPorts(n) if container.containerName == n => {
       val ports : Map[String, NamedContainerPort] =
         container.ports.mapValues { namedPort =>
@@ -77,7 +77,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     }
   }
 
-  def receive = stopped
+  def receive = LoggingReceive(stopped)
 
   private def portBindings {
     val bindings = new Ports()

@@ -15,7 +15,6 @@ USER blended
 ENV JAVA_HOME /opt/java
 ENV PATH ${PATH}:${JAVA_HOME}/bin
 
-#ENTRYPOINT ["/bin/bash"]
 ENTRYPOINT ["/opt/blended/bin/karaf"]
 
 VOLUME /opt/blended/data
