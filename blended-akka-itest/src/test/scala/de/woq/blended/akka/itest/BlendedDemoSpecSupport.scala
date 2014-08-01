@@ -8,6 +8,7 @@ import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -24,11 +25,14 @@ class BlendedDemoSpecSupport extends TestActorSys
 
   "The demo container" should {
 
-    "do something" in {
-      jolokiaUrl("blended_demo_0").map { url =>
-        log info s"Jolokia url is [${url}]"
-        url should not be (None)
-      }
+    "expose Jolokia as a REST service" in {
+
+      val t = 30.seconds
+
+      val url = Await.result(jolokiaUrl("blended_demo_0"), t)
+
+      url should not be (None)
+      assertCondition(new JolokiaAvailableCondition(url.get, t, Some("blended"), Some("blended")), t) should be (true)
     }
   }
 

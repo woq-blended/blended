@@ -44,7 +44,12 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
   def startContainer(exposedPorts: Ports) = {
     logger info s"Starting container [${name}] with port bindings [${exposedPorts}]."
     this.exposedPorts = Some(exposedPorts)
-    client.startContainerCmd(containerName).withPortBindings(exposedPorts)
+
+    val cmd = client.startContainerCmd(containerName)
+    if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
+
+    cmd.exec()
+
     this
   }
 

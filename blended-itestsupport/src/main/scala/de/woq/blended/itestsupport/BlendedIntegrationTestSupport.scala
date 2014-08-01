@@ -4,13 +4,13 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
-import de.woq.blended.itestsupport.condition.{Condition, ComposedCondition}
+import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.docker._
 import de.woq.blended.itestsupport.docker.protocol._
+import de.woq.blended.itestsupport.protocol._
 
-import scala.concurrent.{Future, Await}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.concurrent.{Await, Future}
 
 class TestContainerManager extends ContainerManager with DockerClientProvider {
   override def getClient = {
@@ -21,7 +21,7 @@ class TestContainerManager extends ContainerManager with DockerClientProvider {
 
 trait BlendedIntegrationTestSupport { this: TestKit =>
 
-  val system: ActorSystem
+  implicit val system: ActorSystem
   private val mgrName = "ContainerManager"
 
   def preCondition : Condition = new Condition {
@@ -39,8 +39,8 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
     Await.result(call, timeout)
   }
 
-  def containerMgr = {
-    system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef]
+  def containerMgr : ActorRef = {
+    Await.result(system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
   }
 
   def jolokiaUrl(ctName : String) : Future[Option[String]] = {
@@ -57,14 +57,29 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
 
     implicit val eCtxt = system.dispatcher
 
-    containerMgr.map { mgr =>
-      (mgr ? GetContainerPorts(ctName))(new Timeout(3.seconds)).mapTo[ContainerPorts].map { ctPorts : ContainerPorts =>
+    (containerMgr ? GetContainerPorts(ctName))(new Timeout(3.seconds))
+      .mapTo[ContainerPorts].map { ctPorts =>
         ctPorts.ports.get(portName) match {
           case Some(namedPort) => Some(namedPort.sourcePort)
           case _ => None
         }
       }
-    }.mapTo[Option[Int]]
+  }
+
+  def assertCondition(condition: Condition, timeout: FiniteDuration) : Boolean = {
+
+    implicit val eCtxt = system.dispatcher
+    implicit val t = new Timeout(timeout)
+    val checker = system.actorOf(Props(ConditionChecker(condition)))
+
+    val checkFuture = (checker ? CheckCondition(timeout))(t).map { result =>
+      result match {
+        case ConditionSatisfied(_) => true
+        case _ => false
+      }
+    }
+
+    Await.result(checkFuture, timeout)
   }
 
 }

@@ -1,6 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
-import akka.actor.{ActorLogging, Actor, ActorRef}
+import akka.actor.{Props, ActorLogging, Actor, ActorRef}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import akka.pattern.ask
@@ -19,6 +19,21 @@ object ContainerActor {
 
 class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends Actor with ActorLogging {
 
+  case class PerformStart(container: DockerContainer, ports: Ports)
+
+  object ContainerStartActor {
+    def apply() = new ContainerStartActor
+  }
+
+  class ContainerStartActor extends Actor with ActorLogging {
+
+    def receive = LoggingReceive {
+      case PerformStart(container, ports) =>
+        container.startContainer(ports).waitContainer
+        sender ! ContainerStarted(container.containerName)
+    }
+  }
+
   implicit val timeout = new Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
@@ -27,12 +42,17 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
       portBindings
     }
     case p : Ports => {
-      val requestor = sender
-      container.startContainer(p).waitContainer
-      context become started
-      requestor ! ContainerStarted(container.containerName)
+      val starter = context.actorOf(Props(ContainerStartActor()))
+      context become starting(sender)
+      starter ! PerformStart(container, p)
     }
   }
+
+  def starting(requestor : ActorRef) : Receive = LoggingReceive {
+    case msg : ContainerStarted =>
+      requestor ! msg
+      context become started
+  } orElse(getPorts)
 
   def started : Receive = LoggingReceive {
     case StopContainer(n) if container.containerName == n  => {
@@ -41,6 +61,9 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
       context become stopped
       requestor ! ContainerStopped(container.containerName)
     }
+  } orElse(getPorts)
+
+  def getPorts : Receive = LoggingReceive {
     case GetContainerPorts(n) if container.containerName == n => {
       val ports : Map[String, NamedContainerPort] =
         container.ports.mapValues { namedPort =>
@@ -49,6 +72,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
           val realPort = mapped.getHostPort
           NamedContainerPort(namedPort.name, realPort)
         }
+      log.debug(s"Sending [${ContainerPorts(ports)}] to [${sender}]")
       sender ! ContainerPorts(ports)
     }
   }

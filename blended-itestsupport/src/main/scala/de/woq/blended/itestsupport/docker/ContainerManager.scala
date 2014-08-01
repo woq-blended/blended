@@ -16,7 +16,7 @@ trait DockerClientProvider {
 
 class ContainerManager extends Actor with ActorLogging with Docker { this:  DockerClientProvider =>
 
-  implicit val timeout = Timeout(5.seconds)
+  implicit val timeout = Timeout(30.seconds)
   implicit val eCtxt   = context.dispatcher
 
   override val config: Config = context.system.settings.config
