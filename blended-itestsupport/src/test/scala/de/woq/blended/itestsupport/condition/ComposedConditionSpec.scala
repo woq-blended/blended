@@ -15,33 +15,34 @@ class ComposedConditionSpec extends TestActorSys
 
   "A composed condition" should {
 
+    val timeout = 2.seconds
+
     "be satisfied with an empty condition list" in {
-      val condition = new ParallelComposedCondition()(system, 300.millis)
+      val condition = new ParallelComposedCondition()(system, timeout)
 
       val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition(timeout)
       expectMsg(ConditionSatisfied(condition :: Nil))
     }
 
     "be satisfied with a list of conditions that eventually satisfy" in {
       val condition = new ParallelComposedCondition(
         alwaysTrue, alwaysTrue, alwaysTrue, alwaysTrue
-      )(system, 300.millis)
+      )(system, timeout)
 
       val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition(timeout)
       expectMsg(ConditionSatisfied(condition :: Nil))
     }
 
     "timeout with at least failing condition" in {
       val condition = new ParallelComposedCondition(
         alwaysTrue, alwaysTrue, neverTrue, alwaysTrue
-      )(system, 300.millis)
+      )(system, timeout)
 
       val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
-      checker ! CheckCondition(500.millis)
+      checker ! CheckCondition(timeout)
       expectMsg(ConditionTimeOut(condition :: Nil))
     }
   }
-
 }

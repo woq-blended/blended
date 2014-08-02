@@ -73,7 +73,7 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
       }
   }
 
-  def assertCondition(condition: Condition, timeout: FiniteDuration) : Boolean = {
+  def assertCondition(condition: Condition)(implicit timeout: FiniteDuration) : Boolean = {
 
     implicit val eCtxt = system.dispatcher
     implicit val t = new Timeout(timeout)

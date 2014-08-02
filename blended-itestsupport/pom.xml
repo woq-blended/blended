@@ -94,6 +94,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.geronimo.specs</groupId>
+      <artifactId>geronimo-jms_1.1_spec</artifactId>
+      <version>1.1.1</version>
+    </dependency>
+
+    <dependency>
       <groupId>de.woq.blended</groupId>
       <artifactId>blended-docker-demo</artifactId>
       <version>${project.version}</version>
