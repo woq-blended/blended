@@ -23,7 +23,7 @@
         destroy-method="destroy">
     <argument index="0">
       <amq:broker
-        brokerName="sib"
+        brokerName="blended"
         useJmx="true"
         persistent="true"
         offlineDurableSubscriberTimeout="604800000"
