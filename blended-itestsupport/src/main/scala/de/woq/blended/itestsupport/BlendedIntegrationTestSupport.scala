@@ -39,6 +39,13 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
     Await.result(call, timeout)
   }
 
+  def stopContainer(timeout : FiniteDuration) = {
+    implicit val eCtxt = system.dispatcher
+
+    val call = (containerMgr ? StopContainerManager)(new Timeout(timeout))
+    Await.result(call, timeout)
+  }
+
   def containerMgr : ActorRef = {
     Await.result(system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
   }

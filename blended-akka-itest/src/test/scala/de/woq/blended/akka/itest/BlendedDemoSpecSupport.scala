@@ -39,4 +39,8 @@ class BlendedDemoSpecSupport extends TestActorSys
   override protected def beforeAll() {
     startContainer(30.seconds) should be (ContainerManagerStarted)
   }
+
+  override protected def afterAll() {
+    stopContainer(30.seconds) should be (ContainerManagerStopped)
+  }
 }

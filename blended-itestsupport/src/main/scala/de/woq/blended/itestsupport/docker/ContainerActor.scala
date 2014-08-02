@@ -30,6 +30,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     def receive = LoggingReceive {
       case PerformStart(container, ports) =>
         container.startContainer(ports) //.waitContainer
+        log info s"XXX :Started container ${container.containerName}"
         sender ! ContainerStarted(container.containerName)
     }
   }
@@ -39,11 +40,11 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
   def stopped : Receive = {
     case StartContainer(n) if container.containerName == n  => {
-      portBindings
+      portBindings(sender)
     }
-    case p : Ports => {
+    case (p : Ports, requestor: ActorRef) => {
       val starter = context.actorOf(Props(ContainerStartActor()))
-      context become LoggingReceive(starting(sender) orElse(getPorts))
+      context become LoggingReceive(starting(requestor) orElse(getPorts))
       starter ! PerformStart(container, p)
     }
   }
@@ -79,7 +80,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
   def receive = LoggingReceive(stopped)
 
-  private def portBindings {
+  private def portBindings(requestor: ActorRef) {
     val bindings = new Ports()
 
     // We create a Future for each port. The Future uses the underlying PortScanner
@@ -97,6 +98,6 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
       ports.foreach { case (namedPort, freeport) =>
         bindings.bind(new ExposedPort("tcp", namedPort.sourcePort), new Binding(freeport.p))
       }
-    } onSuccess { case _ => self ! bindings }
+    } onSuccess { case _ => self ! (bindings, requestor) }
   }
 }
