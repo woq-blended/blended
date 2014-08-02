@@ -27,7 +27,7 @@ class BlendedDemoSpecSupport extends TestActorSys
 
   "The demo container" should {
 
-    "expose Jolokia as a REST service" in {
+    "expose Jolokia and JMS" in {
 
       implicit val t = 30.seconds
 
