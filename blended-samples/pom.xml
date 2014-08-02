@@ -49,6 +49,7 @@
     <profile>
       <id>build</id>
       <modules>
+        <module>blended-samples-camel</module>
         <module>blended-samples-spray-helloworld</module>
       </modules>
     </profile>

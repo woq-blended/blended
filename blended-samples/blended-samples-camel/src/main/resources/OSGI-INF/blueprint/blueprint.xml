@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+
+<blueprint
+  xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:camel="http://camel.apache.org/schema/blueprint"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  >
+
+  <!-- Use the Active MQ connection factory exposed in another bundle as Connection Factory. -->
+  <bean  id="activemq"
+         class="org.apache.camel.component.jms.JmsComponent"
+         factory-method="jmsComponent">
+
+    <argument index="0">
+      <reference
+        interface="javax.jms.ConnectionFactory"
+        filter="provider=activemq"
+        timeout="1000"/>
+    </argument>
+  </bean>
+
+  <camel:camelContext id="BlendedSample">
+
+    <camel:route id="SampleRoute">
+      <camel:from uri="activemq:queue:SampleIn" />
+
+      <camel:setHeader headerName="Description">
+        <camel:constant>BlendedSample</camel:constant>
+      </camel:setHeader>
+
+      <camel:to uri="activemq:queue:SampleOut" />
+    </camel:route>
+  </camel:camelContext>
+</blueprint>
+
