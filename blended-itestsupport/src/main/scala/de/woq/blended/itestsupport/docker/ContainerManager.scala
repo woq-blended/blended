@@ -1,8 +1,10 @@
 package de.woq.blended.itestsupport.docker
 
+import akka.pattern.ask
 import com.github.dockerjava.client.DockerClient
 import de.woq.blended.itestsupport.PortScanner
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.actor._
 import akka.event.{LoggingAdapter, LoggingReceive}
@@ -25,6 +27,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
 
   var portScanner : ActorRef = _
   var pendingContainer : Map [String, ActorRef] = Map.empty
+  var runningContainer : Map [String, ActorRef] = Map.empty
   var requestor : ActorRef = _
 
   def starting : Receive = LoggingReceive {
@@ -52,6 +55,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       if (checkPending) context become running
     }
     case ContainerStarted(name) => {
+      runningContainer += (name -> sender)
       pendingContainer.filterKeys( key => key != name ).values.foreach(a => a.forward(ContainerStarted(name)))
     }
   }
@@ -62,6 +66,10 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       containerActor(name).mapTo[ActorRef].onSuccess { case ct =>
         ct.tell(GetContainerPorts(name), requestor)
       }
+    }
+    case StopContainerManager => {
+
+      log info s"Stopping Container Manager"
     }
   }
 

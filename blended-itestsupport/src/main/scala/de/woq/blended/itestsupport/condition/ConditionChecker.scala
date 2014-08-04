@@ -59,8 +59,7 @@ class ConditionChecker(
   ) : Receive = LoggingReceive {
     case ConditionTick => {
       implicit val t = new Timeout(timeout)
-      log info s"Checking Condition [${cond}]."
-      log.debug(s"${checker}")
+      log debug s"Checking Condition [${cond}]."
       ( checker ? ConditionTick ).mapTo[ConditionCheckResult].pipeTo(self)
     }
     case ConditionCheckResult(condition, satisfied)  => {

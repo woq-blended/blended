@@ -29,7 +29,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
     def receive = LoggingReceive {
       case PerformStart(container, ports) =>
-        container.startContainer(ports) //.waitContainer
+        container.startContainer(ports)
         sender ! ContainerStarted(container.containerName)
     }
   }

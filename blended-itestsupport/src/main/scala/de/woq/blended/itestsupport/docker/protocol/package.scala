@@ -4,6 +4,7 @@ package object protocol {
 
   case object StartContainerManager
   case object ContainerManagerStarted
+  case object StopContainerManager
 
   case class StartContainer(name: String)
   case class ContainerStarted(name: String)
