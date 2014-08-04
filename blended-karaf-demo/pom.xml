@@ -40,6 +40,14 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
     <dependency>
       <groupId>de.woq.blended</groupId>
+      <artifactId>blended-karaf-features</artifactId>
+      <version>${blended.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
       <artifactId>blended-karaf-parent</artifactId>
       <version>${blended.version}</version>
       <classifier>assembly</classifier>

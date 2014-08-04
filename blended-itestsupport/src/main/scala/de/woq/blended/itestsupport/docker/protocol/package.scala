@@ -3,8 +3,9 @@ package de.woq.blended.itestsupport.docker
 package object protocol {
 
   case object StartContainerManager
-  case object ContainerManagerStarted
   case object StopContainerManager
+  case object ContainerManagerStarted
+  case object ContainerManagerStopped
 
   case class StartContainer(name: String)
   case class ContainerStarted(name: String)

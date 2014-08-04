@@ -19,6 +19,7 @@ ENTRYPOINT ["/opt/blended/bin/karaf"]
 
 VOLUME /opt/blended/data
 
+EXPOSE 1883
 EXPOSE 8181
 EXPOSE 1099
 

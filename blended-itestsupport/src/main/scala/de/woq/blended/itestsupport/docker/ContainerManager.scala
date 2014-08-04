@@ -1,12 +1,12 @@
 package de.woq.blended.itestsupport.docker
 
-import akka.pattern.ask
 import com.github.dockerjava.client.DockerClient
 import de.woq.blended.itestsupport.PortScanner
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.actor._
+import akka.pattern.ask
 import akka.event.{LoggingAdapter, LoggingReceive}
 import akka.util.Timeout
 import com.typesafe.config.Config
@@ -28,13 +28,13 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
   var portScanner : ActorRef = _
   var pendingContainer : Map [String, ActorRef] = Map.empty
   var runningContainer : Map [String, ActorRef] = Map.empty
-  var requestor : ActorRef = _
+  var requestor : Option[ActorRef] = _
 
   def starting : Receive = LoggingReceive {
     case StartContainerManager => {
       log info s"Initializing Container manager"
       shutDownContainers()
-      requestor = sender
+      requestor = Some(sender)
       portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
       configuredContainers.foreach{ case(name, ct) =>
         if (ct.links.isEmpty) {
@@ -56,11 +56,14 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
     }
     case ContainerStarted(name) => {
       runningContainer += (name -> sender)
-      pendingContainer.filterKeys( key => key != name ).values.foreach(a => a.forward(ContainerStarted(name)))
+      pendingContainer.values.foreach(a => a.forward(ContainerStarted(name)))
     }
   }
 
   def running : Receive = LoggingReceive {
+    case ContainerStarted(name) => {
+      runningContainer += (name -> sender)
+    }
     case GetContainerPorts(name) => {
       val requestor = sender
       containerActor(name).mapTo[ActorRef].onSuccess { case ct =>
@@ -68,8 +71,17 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       }
     }
     case StopContainerManager => {
+      val requestor = sender
 
-      log info s"Stopping Container Manager"
+      log debug s"Stopping container [${runningContainer}]"
+
+      val stopFutures = runningContainer.collect {
+        case (name, ctActor) => (ctActor ? StopContainer(name)).mapTo[ContainerStopped]
+      }
+
+      val stopped = Future.sequence(stopFutures).map( _ => requestor ! ContainerManagerStopped )
+
+      context stop(self)
     }
   }
 
@@ -80,7 +92,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
   private def checkPending = {
     if (pendingContainer.isEmpty) {
       log info "Container Manager started."
-      sender ! ContainerManagerStarted
+      requestor.foreach { _ ! ContainerManagerStarted }
       true
     } else false
   }

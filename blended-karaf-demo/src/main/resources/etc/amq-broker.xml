@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!--
+  ~ Copyright 2013, WoQ - Way of Quality UG(mbH)
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~
+  ~       http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~  distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  -->
+
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+           xmlns:amq="http://activemq.apache.org/schema/core">
+
+  <bean id="brokerStarter" class="de.woq.blended.activemq.brokerstarter.BrokerStarter" init-method="init"
+        destroy-method="destroy">
+    <argument index="0">
+      <amq:broker
+        brokerName="blended"
+        useJmx="true"
+        persistent="true"
+        offlineDurableSubscriberTimeout="604800000"
+        offlineDurableSubscriberTaskSchedule="86400000"
+        advisorySupport="false">
+
+        <amq:managementContext>
+          <amq:managementContext createConnector="false"/>
+        </amq:managementContext>
+
+        <amq:persistenceAdapter>
+          <amq:kahaDB directory="amq/kahadb" indexWriteBatchSize="1000" enableIndexWriteAsync="true"
+                      enableJournalDiskSyncs="false"/>
+        </amq:persistenceAdapter>
+
+        <amq:transportConnectors>
+          <amq:transportConnector name="openWire" uri="tcp://0.0.0.0:1883"/>
+        </amq:transportConnectors>
+
+        <amq:systemUsage>
+          <amq:systemUsage sendFailIfNoSpaceAfterTimeout="10000">
+            <amq:memoryUsage>
+              <amq:memoryUsage limit="50m"/>
+            </amq:memoryUsage>
+            <amq:storeUsage>
+              <amq:storeUsage limit="2000m"/>
+            </amq:storeUsage>
+            <amq:tempUsage>
+              <amq:tempUsage limit="1500m"/>
+            </amq:tempUsage>
+          </amq:systemUsage>
+        </amq:systemUsage>
+
+      </amq:broker>
+    </argument>
+
+    <property name="bundleContext" ref="blueprintBundleContext"/>
+  </bean>
+
+</blueprint>

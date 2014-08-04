@@ -40,44 +40,35 @@ public class ResourceResolver {
     InputStream is = null;
 
     try {
-      LOGGER.debug("Trying to read file [" + location + "]");
       is = new BufferedInputStream(new FileInputStream(location));
     } catch (Exception e) {
-      LOGGER.debug("File [" + location + "] not accessible.");
     }
 
     if (is == null) {
       try {
-        LOGGER.debug("Trying to read URL [" + location + "]");
         URL url = new URL(location);
         is = url.openStream();
       } catch (Exception e) {
-        LOGGER.debug("URL [" + location + "] not accessible.");
       }
     }
 
     if (is == null) {
       try {
-        LOGGER.debug("Trying to read Resource [" + location + "]");
         final String path = ResourceResolver.class.getResource(location).getPath();
         is = new FileInputStream(path);
       } catch (Exception e) {
-        LOGGER.debug("URL [" + location + "] not accessible.");
       }
     }
 
     if (is == null) {
       try {
-        LOGGER.debug("Trying to read Resource [" + location + "]");
         is = loader.getResourceAsStream(location);
       } catch (Exception e) {
-        LOGGER.debug("URL [" + location + "] not accessible.");
       }
     }
 
     if (is == null) {
       final String logString = location.length() < 50 ? location : (location.substring(0, 50) + "...");
-      LOGGER.debug("Using [" + logString + "] as input stream");
       is = new ByteArrayInputStream(location.getBytes());
     }
 

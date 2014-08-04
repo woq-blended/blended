@@ -194,8 +194,12 @@
   </feature>
 
   <feature name="blended-samples" description="Sample bundles" version="${blended.version}" resolver="(obr)">
+    <feature version="${blended.version}">blended-camel</feature>
+    <feature version="${activemq.version}">blended-activemq-blueprint</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
+    <bundle>blueprint:file:etc/amq-broker.xml</bundle>
     <bundle>mvn:de.woq.blended.samples/blended-samples-spray-helloworld/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended.samples/blended-samples-camel/${blended.version}</bundle>
   </feature>
 
 </features>
