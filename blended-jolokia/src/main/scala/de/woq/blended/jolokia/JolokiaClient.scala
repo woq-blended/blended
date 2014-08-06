@@ -1,5 +1,7 @@
 package de.woq.blended.jolokia
 
+import java.net.URI
+
 import akka.actor.{ActorRef, Actor, ActorLogging}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
@@ -27,8 +29,20 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
 
   def receive = LoggingReceive {
     case GetJolokiaVersion => jolokiaGet(sender, "version"){ JolokiaVersion(_) }
-    case SearchJolokia(p) => jolokiaGet(sender, s"search/$p"){ JolokiaSearchResult(_) }
-    case ReadJolokiaMBean(name) => jolokiaGet(sender, s"read/${name}"){ JolokiaReadResult(_) }
+    case SearchJolokia(searchSpec) => {
+      val propPattern = searchSpec.pattern match {
+        case "" => ""
+        case p => s"${p},"
+      }
+      val request = URI.create(s"search/${searchSpec.jmxDomain}:${propPattern}*".replaceAll("\"", "%22")).toString
+      log.debug(s"Jolokia search request is [${request}")
+      jolokiaGet(sender, request){ JolokiaSearchResult(_) }
+    }
+    case ReadJolokiaMBean(name) => {
+      val request = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
+      log.debug(s"Jolokia read request is [${request}")
+      jolokiaGet(sender, request){ JolokiaReadResult(_) }
+    }
   }
 
   private def jolokiaGet[T](requestor: ActorRef, operation: String)(extract : JsValue => T) {

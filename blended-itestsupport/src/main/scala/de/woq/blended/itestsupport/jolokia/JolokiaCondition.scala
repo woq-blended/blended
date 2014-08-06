@@ -11,14 +11,13 @@ import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.jolokia.{JolokiaAddress, JolokiaClient}
 
 import scala.concurrent.duration.FiniteDuration
-import scala.util.Failure
 
 trait JolokiaAssertion {
   def jolokiaRequest : Any
   def assertJolokia  : Any => Boolean
 }
 
-class JolokiaCondition (
+abstract class JolokiaCondition (
   url: String,
   timeout: FiniteDuration,
   userName: Option[String] = None,
@@ -46,8 +45,6 @@ class JolokiaCondition (
   }.andThen {
     case _ => Seq(connector, checker).foreach { system.stop(_) }
   }
-
-  override def toString = s"JolokiaAvailableCondition(${url})"
 
   override def satisfied = jolokiaAsserted.get
 
@@ -79,6 +76,3 @@ class JolokiaCondition (
     }
   }
 }
-
-
-

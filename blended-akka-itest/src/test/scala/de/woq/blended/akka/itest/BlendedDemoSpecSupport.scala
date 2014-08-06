@@ -1,12 +1,12 @@
 package de.woq.blended.akka.itest
 
 import akka.util.Timeout
-import akka.pattern.ask
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, SequentialChecker}
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
+import de.woq.blended.itestsupport.jolokia.{MbeanExistsCondition, JolokiaAvailableCondition}
+import de.woq.blended.jolokia.protocol.MBeanSearchSpec
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -38,9 +38,19 @@ class BlendedDemoSpecSupport extends TestActorSys
       url should not be (None)
 
       assertCondition(
-        new ParallelComposedCondition(
-          new JolokiaAvailableCondition(url.get, t, Some("blended"), Some("blended")),
-          new JMSAvailableCondition(cf, t)
+        new SequentialComposedCondition(
+          new ParallelComposedCondition(
+            new JolokiaAvailableCondition(url.get, t, Some("blended"), Some("blended")),
+            new JMSAvailableCondition(cf, t)
+          ),
+          new MbeanExistsCondition(url.get, t, Some("blended"), Some("blended")) with MBeanSearchSpec {
+            override def jmxDomain = "org.apache.camel"
+
+            override def searchProperties = Map(
+              "name" -> "\"BlendedSample\"",
+              "type" -> "context"
+            )
+          }
         )
       ) should be (true)
     }

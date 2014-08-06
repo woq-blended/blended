@@ -34,9 +34,23 @@ class JolokiaClientSpec extends TestActorSys
       expectMsgAnyClassOf(classOf[JolokiaVersion])
     }
 
-    "Allow to search for MBeans" in {
+    "Allow to search for MBeans by domain only" in {
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! SearchJolokia("java.lang:*")
+      jolokia ! SearchJolokia(new MBeanSearchSpec {
+        override def jmxDomain = "java.lang"
+      })
+      fishForMessage() {
+        case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
+        case _ => false
+      }
+    }
+
+    "Allow to search for MBeans by domain and properties" in {
+      val jolokia = TestActorRef(Props[JolokiaJVM])
+      jolokia ! SearchJolokia(new MBeanSearchSpec {
+        override def jmxDomain = "java.lang"
+        override def searchProperties = Map( "type" -> "Memory" )
+      })
       fishForMessage() {
         case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
         case _ => false
