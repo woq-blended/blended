@@ -27,6 +27,7 @@ class DependentContainerActor(container: DockerContainer) extends Actor with Act
       if (pendingContainers.isEmpty) {
         log info s"Dependencies for container [${container.id}] started."
         sender ! DependenciesStarted(container)
+        context.stop(self)
       }
     }
   }

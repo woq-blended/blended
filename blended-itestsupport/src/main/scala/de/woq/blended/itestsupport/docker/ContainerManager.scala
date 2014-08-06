@@ -48,7 +48,6 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       if (checkPending) context become running
     }
     case DependenciesStarted(ct) => {
-      sender ! PoisonPill
       pendingContainer -= ct.id
       val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), ct.containerName)
       actor ! StartContainer(ct.containerName)

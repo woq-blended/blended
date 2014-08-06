@@ -1,11 +1,12 @@
 package de.woq.blended.itestsupport.docker
 
-import akka.actor.Props
+import akka.actor.{Terminated, Props}
 import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
+import scala.concurrent.duration._
 
 class DependentContainerActorSpec extends TestActorSys
   with WordSpecLike
@@ -34,11 +35,16 @@ class DependentContainerActorSpec extends TestActorSys
     "Respond with a DependenciesStarted message after the last dependant container was started" in {
       val container = new DockerContainer(imageId, ctName).withLink("blended_demo_0")
       val depActor = TestActorRef(Props(DependentContainerActor(container)))
-      depActor ! ContainerStarted("blended_demo_0")
-      val realActor = depActor.underlyingActor.asInstanceOf[DependentContainerActor]
-      realActor.pendingContainers.size should be (0)
 
-      expectMsg(DependenciesStarted(container))
+      watch(depActor)
+
+      depActor ! ContainerStarted("blended_demo_0")
+      expectMsg( DependenciesStarted(container) )
+
+      fishForMessage(3.seconds) {
+        case m : Terminated => true
+        case _ => false
+      }
     }
 
   }

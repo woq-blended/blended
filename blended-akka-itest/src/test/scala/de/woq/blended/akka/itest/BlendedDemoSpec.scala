@@ -2,7 +2,7 @@ package de.woq.blended.akka.itest
 
 import akka.util.Timeout
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
-import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, SequentialChecker}
+import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{MbeanExistsCondition, JolokiaAvailableCondition}
