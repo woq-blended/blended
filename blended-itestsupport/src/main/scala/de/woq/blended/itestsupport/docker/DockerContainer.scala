@@ -1,7 +1,7 @@
 package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.client.DockerClient
-import com.github.dockerjava.client.model.Ports
+import com.github.dockerjava.client.model.{Link, Ports}
 import org.slf4j.LoggerFactory
 
 /*
@@ -13,7 +13,7 @@ case class NamedContainerPort(name: String, sourcePort: Int)
 
 private[docker] class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
 
-  var linkedContainers : List[String] = List.empty
+  var linkedContainers : List[Link] = List.empty
   var ports : Map[String, NamedContainerPort] = Map.empty
   var exposedPorts : Option[Ports] = None
 
@@ -42,11 +42,12 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer(exposedPorts: Ports) = {
-    logger info s"Starting container [${name}] with port bindings [${exposedPorts}]."
+    logger info s"Starting container [${name}] with port bindings [${exposedPorts}] and container links [${linkedContainers}]."
     this.exposedPorts = Some(exposedPorts)
 
     val cmd = client.startContainerCmd(containerName)
     if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
+    if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
 
     cmd.exec()
 
@@ -84,7 +85,7 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
   }
 
   def withLink(link : String) = {
-    this.linkedContainers = link :: this.linkedContainers
+    this.linkedContainers = Link.parse(link) :: this.linkedContainers
     this
   }
 

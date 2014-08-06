@@ -5,7 +5,7 @@ import java.util.UUID
 
 import com.github.dockerjava.client.DockerClient
 import com.github.dockerjava.client.command._
-import com.github.dockerjava.client.model.{Container, Image, ContainerCreateResponse, Ports}
+import com.github.dockerjava.client.model._
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 
@@ -40,7 +40,8 @@ trait DockerTestSetup { this : MockitoSugar =>
   val waitCmd = mock[WaitContainerCmd]
   val stopCmd = mock[StopContainerCmd]
   val startCmd = mock[StartContainerCmd]
-  when(startCmd.withPortBindings(portBindings)) thenReturn(null)
+  when(startCmd.withPortBindings(portBindings)) thenReturn(startCmd)
+  when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn(startCmd)
 
   ctNames.foreach { name =>
     when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn(createCmd)

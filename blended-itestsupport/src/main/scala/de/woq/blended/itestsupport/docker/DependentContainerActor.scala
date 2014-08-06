@@ -19,7 +19,7 @@ import de.woq.blended.itestsupport.docker.protocol._
 class DependentContainerActor(container: DockerContainer) extends Actor with ActorLogging {
 
   // Initialize the
-  var pendingContainers : List[String] = container.links
+  var pendingContainers : List[String] = container.links.map(_.getName)
 
   def receive = LoggingReceive {
     case ContainerStarted(n) => {

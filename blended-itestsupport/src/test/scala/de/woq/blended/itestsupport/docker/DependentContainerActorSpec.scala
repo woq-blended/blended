@@ -17,7 +17,7 @@ class DependentContainerActorSpec extends TestActorSys
   "the DependentContainerActor" should {
 
     "Initialize itself with the links from the container config" in {
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0")
+      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
 
       val depActor = TestActorRef(Props(DependentContainerActor(container)))
       val realActor = depActor.underlyingActor.asInstanceOf[DependentContainerActor]
@@ -25,7 +25,7 @@ class DependentContainerActorSpec extends TestActorSys
     }
 
     "Ignore Container starts that are not of any interest" in {
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0")
+      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
       val depActor = TestActorRef(Props(DependentContainerActor(container)))
       depActor ! ContainerStarted("foo")
       val realActor = depActor.underlyingActor.asInstanceOf[DependentContainerActor]
@@ -33,7 +33,7 @@ class DependentContainerActorSpec extends TestActorSys
     }
 
     "Respond with a DependenciesStarted message after the last dependant container was started" in {
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0")
+      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
       val depActor = TestActorRef(Props(DependentContainerActor(container)))
 
       watch(depActor)

@@ -1,5 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
+import com.github.dockerjava.client.model.Link
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
@@ -42,11 +43,16 @@ class DockerContainerSpec extends WordSpec
 
     "allow to set the linked containers" in {
       val container = new DockerContainer(imageId, ctName)
-      container.withLink("foo").withLink("bar")
+      container
+        .withLink("foo_0:foo")
+        .withLink("bar_0:bar")
 
       val links = container.links
 
-      links should contain theSameElementsAs Vector("foo", "bar")
+      links should contain theSameElementsAs Vector(
+        Link.parse("foo_0:foo"),
+        Link.parse("bar_0:bar")
+      )
     }
 
     "allow to set single exposed ports" in {
