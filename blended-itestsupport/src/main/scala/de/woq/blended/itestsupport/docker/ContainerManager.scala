@@ -56,7 +56,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
     }
     case ContainerStarted(name) => {
       runningContainer += (name -> sender)
-      pendingContainer.values.foreach(a => a.forward(ContainerStarted(name)))
+      pendingContainer.values.foreach { _ ! ContainerStarted(name) }
     }
   }
 
