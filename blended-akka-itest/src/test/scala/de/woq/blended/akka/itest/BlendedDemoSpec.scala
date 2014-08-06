@@ -13,7 +13,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class BlendedDemoSpecSupport extends TestActorSys
+class BlendedDemoSpec extends TestActorSys
   with WordSpecLike
   with Matchers
   with BeforeAndAfterAll
