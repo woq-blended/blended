@@ -12,7 +12,6 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 class BlendedDemoSpecSupport extends TestActorSys
   with WordSpecLike
