@@ -23,7 +23,7 @@ class DockerContainerSpec extends WordSpec
       val container = new DockerContainer(imageId, ctName)
       container.waitContainer
 
-      verify(mockClient).waitContainerCmd(ctName)
+      verify(mockClient).waitContainerCmd(ctNames(0))
     }
     
     "issue the stop command with the correct id" in {

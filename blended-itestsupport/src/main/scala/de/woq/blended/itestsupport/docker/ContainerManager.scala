@@ -20,10 +20,10 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
 
   implicit val timeout = Timeout(30.seconds)
   implicit val eCtxt   = context.dispatcher
+  implicit val client  = getClient
 
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
-  implicit val client = getClient
 
   var portScanner : ActorRef = _
   var pendingContainer : Map [String, ActorRef] = Map.empty
@@ -48,10 +48,10 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       if (checkPending) context become running
     }
     case DependenciesStarted(ct) => {
-      pendingContainer -= ct.id
+      pendingContainer -= ct.containerName
       val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), ct.containerName)
       actor ! StartContainer(ct.containerName)
-      if (checkPending) context become running
+      if (checkPending) context.become(running)
     }
     case ContainerStarted(name) => {
       runningContainer += (name -> sender)

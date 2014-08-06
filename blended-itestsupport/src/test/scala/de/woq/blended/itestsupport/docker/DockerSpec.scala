@@ -24,11 +24,12 @@ class DockerSpec extends TestActorSys
   "The Docker trait" should {
 
     "Read initialize from the configuration" in {
-      docker.configuredContainers should have size(1)
+      docker.configuredContainers should have size(ctNames.size)
 
-      val container = docker.configuredContainers.get("blended_demo_0").get
-
-      container.containerName should be ("blended_demo_0")
+      ctNames.foreach { name =>
+        val container = docker.configuredContainers.get(name).get
+        container.containerName should be (name)
+      }
     }
   }
 }

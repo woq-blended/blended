@@ -5,41 +5,53 @@ import java.util.UUID
 
 import com.github.dockerjava.client.DockerClient
 import com.github.dockerjava.client.command._
-import com.github.dockerjava.client.model.{Image, ContainerCreateResponse, Ports}
+import com.github.dockerjava.client.model.{Container, Image, ContainerCreateResponse, Ports}
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 
 trait DockerTestSetup { this : MockitoSugar =>
 
-  val imageId = UUID.randomUUID().toString
-  val ctName  = "blended_demo_0"
+  implicit val mockClient = mock[DockerClient]
 
   val portBindings = new Ports()
+  val ctNames  = Seq("blended_demo_0", "jms_demo_0")
+  val imageIds = ctNames.map( _ -> UUID.randomUUID().toString).toMap
+  val images   = ctNames.map( _ -> mock[Image] ).toMap
 
-  val image = mock[Image]
-  when(image.getId).thenReturn(imageId)
-  when(image.getRepoTags).thenReturn(Array("atooni/blended_demo"))
+  val ctName = ctNames(0)
+  val imageId = imageIds.get(ctName).get
+
+  ctNames.foreach { name =>
+    when(images.get(name).get.getId) thenReturn(imageIds.get(name).get)
+    when(images.get(name).get.getRepoTags).thenReturn(Array(s"atooni/${name}"))
+  }
 
   val createResp = mock[ContainerCreateResponse]
   val createCmd = mock[CreateContainerCmd]
   when(createCmd.exec()) thenReturn(createResp)
+  when(createCmd.withTTY(true)) thenReturn(createCmd)
 
   val listImgCmd = mock[ListImagesCmd]
   val imgList = new util.ArrayList[Image]
-  imgList.add(image)
-  when(listImgCmd.exec()).thenReturn(imgList)
+  images.values.foreach(imgList.add(_))
+  when(listImgCmd.exec()) thenReturn(imgList)
+  when(mockClient.listImagesCmd()) thenReturn(listImgCmd)
 
   val waitCmd = mock[WaitContainerCmd]
   val stopCmd = mock[StopContainerCmd]
   val startCmd = mock[StartContainerCmd]
   when(startCmd.withPortBindings(portBindings)) thenReturn(null)
 
-  implicit val mockClient = mock[DockerClient]
-  when(mockClient.createContainerCmd(imageId)) thenReturn(createCmd)
-  when(createCmd.withName(ctName)) thenReturn(createCmd)
-  when(createCmd.withTTY(true)) thenReturn(createCmd)
-  when(mockClient.waitContainerCmd(ctName)).thenReturn(waitCmd)
-  when(mockClient.stopContainerCmd(ctName)).thenReturn(stopCmd)
-  when(mockClient.startContainerCmd(ctName)).thenReturn(startCmd)
-  when(mockClient.listImagesCmd()).thenReturn(listImgCmd)
+  ctNames.foreach { name =>
+    when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn(createCmd)
+    when(createCmd.withName(name)) thenReturn(createCmd)
+    when(mockClient.waitContainerCmd(name)).thenReturn(waitCmd)
+    when(mockClient.stopContainerCmd(name)).thenReturn(stopCmd)
+    when(mockClient.startContainerCmd(name)).thenReturn(startCmd)
+  }
+
+  val listContainersCmd = mock[ListContainersCmd]
+  when(mockClient.listContainersCmd()) thenReturn(listContainersCmd)
+  when(listContainersCmd.withShowAll(true)) thenReturn(listContainersCmd)
+  when(listContainersCmd.exec()) thenReturn(new util.ArrayList[Container]())
 }
