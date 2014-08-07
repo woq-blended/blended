@@ -4,22 +4,20 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.{Props, ActorSystem, ActorRef}
 import akka.pattern.ask
-import akka.util.Timeout
 import de.woq.blended.itestsupport.protocol._
 
-import scala.concurrent.duration.FiniteDuration
 import scala.util.Success
 
-abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorSystem, timeout: FiniteDuration) extends Condition {
+abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorSystem) extends Condition {
 
   var isSatisfied : AtomicBoolean = new AtomicBoolean(false)
 
-  implicit val maxWait = new Timeout(timeout)
   implicit val eCtxt = system.dispatcher
 
-  (conditionChecker ? CheckCondition(timeout)).onComplete {
+  (conditionChecker ? CheckCondition)(timeout).onComplete {
     case Success(result) => { result match {
       case ConditionSatisfied(_) => isSatisfied.set(true)
+      case _ =>
     }}
     case _ =>
   }
@@ -29,13 +27,20 @@ abstract class ComposedCondition(conditions: Condition*)(implicit system: ActorS
 }
 
 class SequentialComposedCondition(conditions: Condition*)
-  (implicit system: ActorSystem, timeout: FiniteDuration) extends ComposedCondition {
+  (implicit system: ActorSystem) extends ComposedCondition {
 
+  override def timeout = conditions.foldLeft(interval * 2)( (sum, c) => sum + c.timeout)
   override def conditionChecker = system.actorOf(Props(SequentialChecker(conditions.toList)))
+
+  override def toString = s"SequentialComposedCondition(${conditions.toList}})"
 }
 
 class ParallelComposedCondition(conditions: Condition*)
-  (implicit system: ActorSystem, timeout: FiniteDuration) extends ComposedCondition {
+  (implicit system: ActorSystem) extends ComposedCondition {
+
+  override def timeout = (conditions.foldLeft(interval * 2)((m, c) => if (c.timeout > m) c.timeout else m)) + interval * 2
 
   override def conditionChecker = system.actorOf(Props(ParallelChecker(conditions.toList)))
+
+  override def toString = s"ParallelComposedCondition(${conditions.toList}})"
 }

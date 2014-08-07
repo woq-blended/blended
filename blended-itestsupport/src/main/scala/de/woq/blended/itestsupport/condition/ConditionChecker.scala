@@ -20,7 +20,7 @@ case object DefaultConditionChecker {
 }
 
 object ConditionChecker {
-  def apply(cond : Condition ) =
+  def apply(cond : Condition) =
     new ConditionChecker(cond, Props(DefaultConditionChecker(cond)))
 
   def apply(condition: Condition, props: Props) = new ConditionChecker(condition, props)
@@ -31,21 +31,19 @@ class ConditionChecker(
   checkerProps : Props
 ) extends Actor with ActorLogging {
 
-  val frequency = (context.system.settings.config.getLong(getClass.getPackage.getName + ".checkfrequency")).millis
-
   implicit val eCtxt = context.dispatcher
 
   def receive = initializing
 
   def initializing : Receive = LoggingReceive {
-    case CheckCondition(d) => {
+    case CheckCondition => {
 
       val checker = context.actorOf(checkerProps)
 
       context become checking(
-        sender, checker, d,
-        context.system.scheduler.scheduleOnce(d, self, ConditionTimeOut),
-        context.system.scheduler.schedule(1.micro, frequency, self, ConditionTick)
+        sender, checker,
+        context.system.scheduler.scheduleOnce(cond.timeout, self, ConditionTimeOut),
+        context.system.scheduler.schedule(1.micro, cond.interval, self, ConditionTick)
       )
     }
   }
@@ -53,17 +51,17 @@ class ConditionChecker(
   def checking(
     checkingFor    : ActorRef,
     checker        : ActorRef,
-    timeout        : FiniteDuration,
     checkTimer     : Cancellable,
     timeoutChecker : Cancellable
   ) : Receive = LoggingReceive {
     case ConditionTick => {
-      implicit val t = new Timeout(timeout)
+      implicit val t = new Timeout(cond.timeout)
       log debug s"Checking Condition [${cond}]."
       ( checker ? ConditionTick ).mapTo[ConditionCheckResult].pipeTo(self)
     }
     case ConditionCheckResult(condition, satisfied)  => {
       if (satisfied) {
+        log info s"Condition [${cond}] is now satisfied."
         checkTimer.cancel()
         timeoutChecker.cancel()
         checkingFor ! new ConditionSatisfied(List(condition))
@@ -71,6 +69,7 @@ class ConditionChecker(
       }
     }
     case ConditionTimeOut => {
+      log info s"Condition [${cond}] has timed out."
       checkTimer.cancel()
       timeoutChecker.cancel()
       checkingFor ! new ConditionTimeOut(List(cond))

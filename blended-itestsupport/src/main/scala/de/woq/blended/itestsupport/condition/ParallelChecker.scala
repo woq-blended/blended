@@ -23,14 +23,14 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
   def receive = initializing
 
   def initializing : Receive = LoggingReceive {
-    case CheckCondition(d) => {
+    case CheckCondition => {
       conditions match {
         case Nil => sender ! ConditionSatisfied(List.empty)
         case _ => {
           context become checking(sender)
           // Create a single future that terminates when all condition checkers are done
           // The list will be a mix of ConditionSatisfied / ConditionTimeout messages
-          Future.sequence(checker(d))
+          Future.sequence(checker)
             .mapTo[List[Any]]
             .map(new ParallelCheckerResults(_))
             .pipeTo(self)
@@ -66,14 +66,13 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
   }
 
   // Create a list of Future that execute in parallel
-  private def checker(d : FiniteDuration) : Seq[Future[Any]] = conditions.map { c =>
+  private def checker : Seq[Future[Any]] = conditions.map { c =>
     (
       c,                                           // Keep the condition under check in the context
       context.actorOf(Props(ConditionChecker(c)))  // The actor checking a single condition
     )
   }.map { p =>
-    implicit val timeout = new Timeout(d)
-    (p._2 ? CheckCondition(d)).recover {
+    (p._2 ? CheckCondition)(p._1.timeout).recover {
       case _ => ConditionTimeOut(List(p._1))
     }
   } toSeq

@@ -41,7 +41,7 @@ class BlendedDemoSpec extends TestActorSys
         new SequentialComposedCondition(
           new ParallelComposedCondition(
             new JolokiaAvailableCondition(url.get, t, Some("blended"), Some("blended")),
-            new JMSAvailableCondition(cf, t)
+            new JMSAvailableCondition(cf, "amq", t)
           ),
           new MbeanExistsCondition(url.get, t, Some("blended"), Some("blended")) with MBeanSearchSpec {
             override def jmxDomain = "org.apache.camel"

@@ -84,7 +84,6 @@
         <module>blended-persistence</module>
 
         <module>blended-jolokia</module>
-        <module>blended-scalatest-bundle</module>
         <module>blended-itestsupport</module>
 
         <module>blended-archetypes-project</module>

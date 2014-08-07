@@ -73,20 +73,20 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
       }
   }
 
-  def assertCondition(condition: Condition)(implicit timeout: FiniteDuration) : Boolean = {
+  def assertCondition(condition: Condition) : Boolean = {
 
     implicit val eCtxt = system.dispatcher
-    implicit val t = new Timeout(timeout)
+
     val checker = system.actorOf(Props(ConditionChecker(condition)))
 
-    val checkFuture = (checker ? CheckCondition(timeout))(t).map { result =>
+    val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
       result match {
         case ConditionSatisfied(_) => true
         case _ => false
       }
     }
 
-    Await.result(checkFuture, timeout)
+    Await.result(checkFuture, condition.timeout)
   }
 
 }

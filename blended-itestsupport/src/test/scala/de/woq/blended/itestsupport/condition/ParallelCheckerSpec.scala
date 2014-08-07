@@ -17,7 +17,7 @@ class ParallelCheckerSpec extends TestActorSys
 
     "respond with a satisfied message on an empty list of conditions" in {
       val checker = TestActorRef(Props(ParallelChecker(List.empty)))
-      checker ! CheckCondition()
+      checker ! CheckCondition
       expectMsg(ConditionSatisfied(List.empty))
     }
 
@@ -25,7 +25,7 @@ class ParallelCheckerSpec extends TestActorSys
       val conditions = (1 to 1).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionSatisfied(conditions))
     }
@@ -34,7 +34,7 @@ class ParallelCheckerSpec extends TestActorSys
       val conditions = (1 to 5).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionSatisfied(conditions))
     }
@@ -43,7 +43,7 @@ class ParallelCheckerSpec extends TestActorSys
       val conditions = (1 to 1).map { i => neverTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(conditions))
     }
@@ -54,7 +54,7 @@ class ParallelCheckerSpec extends TestActorSys
       val conditions = List(alwaysTrue(), alwaysTrue(), failCondition, alwaysTrue(), alwaysTrue())
 
       val checker = TestActorRef(Props(ParallelChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(List(failCondition)))
     }

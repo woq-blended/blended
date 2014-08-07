@@ -13,7 +13,7 @@ package object protocol {
   case object ConditionTick
   case class  ConditionCheckResult(condition: Condition, satisfied: Boolean)
 
-  case class CheckCondition(timeOut: FiniteDuration = 30.seconds)
+  case class CheckCondition
   case class ConditionTimeOut(conditions : List[Condition])
   case class ConditionSatisfied(conditions: List[Condition])
 }

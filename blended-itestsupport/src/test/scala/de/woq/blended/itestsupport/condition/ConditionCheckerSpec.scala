@@ -19,14 +19,14 @@ class ConditionCheckerSpec extends TestActorSys
     "respond with a satisfied message once the condition was satisfied" in {
       val c = alwaysTrue
       val checker = TestActorRef(Props(ConditionChecker(cond = c)))
-      checker ! CheckCondition()
+      checker ! CheckCondition
       expectMsg(ConditionSatisfied(c :: Nil))
     }
 
     "respond with a timeout message if the condition wasn't satisfied in a given timeframe" in {
       val c = neverTrue
       val checker = TestActorRef(Props(ConditionChecker(cond = c)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
       expectMsg(ConditionTimeOut(c :: Nil))
     }
   }

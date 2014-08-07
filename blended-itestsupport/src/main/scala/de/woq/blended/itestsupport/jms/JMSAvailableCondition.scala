@@ -19,12 +19,13 @@ import de.woq.blended.itestsupport.protocol._
 
 class JMSAvailableCondition(
   cf : ConnectionFactory,
-  timeout : FiniteDuration
+  prefix: String,
+  jmsTimeout : FiniteDuration
 )(implicit system : ActorSystem) extends Condition {
 
   object JMSConnector {
 
-    val testUri = "jms:topic:blendedTest"
+    val testUri = s"${prefix}:topic:blendedTest"
     val mockName = "test"
 
     def apply(cf: ConnectionFactory) = {
@@ -32,7 +33,7 @@ class JMSAvailableCondition(
       val connector = new CamelTestSupport {
         override def init() {
           super.init()
-          getContext().addComponent("jms", JmsComponent.jmsComponent(cf) )
+          getContext().addComponent(prefix, JmsComponent.jmsComponent(cf) )
           wireMock(mockName, testUri)
           getContext().start()
         }
@@ -42,8 +43,9 @@ class JMSAvailableCondition(
     }
   }
 
+  override def timeout = jmsTimeout
+
   implicit val eCtxt = system.dispatcher
-  implicit val jmsTimeout = new Timeout(timeout)
 
   val testSupport  = JMSConnector(cf)
   testSupport.init()
@@ -51,7 +53,7 @@ class JMSAvailableCondition(
   val jmsAvailable = new AtomicBoolean(false)
   val checker      = system.actorOf(Props(ConditionChecker(this, Props(JMSChecker(this, testSupport)))))
 
-  (checker ? CheckCondition()).mapTo[ConditionSatisfied].map {
+  (checker ? CheckCondition)(jmsTimeout).mapTo[ConditionSatisfied].map {
     _ => jmsAvailable.set(true)
   }.andThen {
     case _ => {
@@ -73,7 +75,6 @@ class JMSAvailableCondition(
     import JMSConnector.{testUri, mockName}
 
     case class CheckJMS(condition: Condition, testSupport: CamelTestSupport)
-
 
     override def supervisorStrategy = OneForOneStrategy() {
       case _ => SupervisorStrategy.Stop

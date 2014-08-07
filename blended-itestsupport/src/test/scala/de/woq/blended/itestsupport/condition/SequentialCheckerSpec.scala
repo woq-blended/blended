@@ -17,7 +17,7 @@ class SequentialCheckerSpec extends TestActorSys
 
     "respond with a satisfied message on an empty list of conditions" in {
       val checker = TestActorRef(Props(SequentialChecker(List.empty)))
-      checker ! CheckCondition()
+      checker ! CheckCondition
       expectMsg(ConditionSatisfied(List.empty))
     }
 
@@ -25,7 +25,7 @@ class SequentialCheckerSpec extends TestActorSys
       val conditions = (1 to 1).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionSatisfied(conditions))
     }
@@ -34,7 +34,7 @@ class SequentialCheckerSpec extends TestActorSys
       val conditions = (1 to 5).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionSatisfied(conditions))
     }
@@ -43,7 +43,7 @@ class SequentialCheckerSpec extends TestActorSys
       val conditions = (1 to 1).map { i => neverTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(conditions))
     }
@@ -52,7 +52,7 @@ class SequentialCheckerSpec extends TestActorSys
       val conditions = (1 to 5).map { i => neverTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(conditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(conditions))
     }
@@ -66,7 +66,7 @@ class SequentialCheckerSpec extends TestActorSys
       val remainingConditions = neverTrue() :: (1 to 2).map { i => alwaysTrue() }.toList
 
       val checker = TestActorRef(Props(SequentialChecker(trueConditions ::: remainingConditions)))
-      checker ! CheckCondition(300.millis)
+      checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(remainingConditions))
     }

@@ -19,7 +19,7 @@ trait JolokiaAssertion {
 
 abstract class JolokiaCondition (
   url: String,
-  timeout: FiniteDuration,
+  jolokiaTimeout: FiniteDuration,
   userName: Option[String] = None,
   userPwd: Option[String] = None
 )(implicit system: ActorSystem) extends Condition { this : JolokiaAssertion =>
@@ -33,14 +33,15 @@ abstract class JolokiaCondition (
       }
   }
 
+  override def timeout = jolokiaTimeout
+
   implicit val eCtxt = system.dispatcher
-  implicit val jolokiaTimeout = new Timeout(timeout)
 
   val jolokiaAsserted  = new AtomicBoolean(false)
   val connector        = system.actorOf(Props(JolokiaConnector(url, userName, userPwd)))
   val checker          = system.actorOf(Props(ConditionChecker(this, Props(JolokiaChecker(this, connector)))))
 
-  (checker ? CheckCondition()).mapTo[ConditionSatisfied].map {
+  (checker ? CheckCondition)(timeout).mapTo[ConditionSatisfied].map {
     _ => jolokiaAsserted.set(true)
   }.andThen {
     case _ => Seq(connector, checker).foreach { system.stop(_) }
