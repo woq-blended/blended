@@ -96,7 +96,6 @@
     <osgi.enterprise.version>4.2.0</osgi.enterprise.version>
     <osweb.asm.version>3.1.0</osweb.asm.version>
     <parboiled.version>1.1.6</parboiled.version>
-    <pax-exam.version>3.4.0</pax-exam.version>
     <pax-logging.version>1.6.4</pax-logging.version>
     <pax-swissbox.version>1.7.0</pax-swissbox.version>
     <pax-url.version>1.3.6</pax-url.version>
@@ -127,7 +126,7 @@
 
   <ciManagement>
     <system>jenkins</system>
-    <url>http://ci.wayofquality.de:8081/jenkins/job/de.woq.java.osgi</url>
+    <url>http://ci.wayofquality.de:8081/jenkins/job</url>
   </ciManagement>
     
   <distributionManagement>
@@ -142,9 +141,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</developerConnection>
-    <url>https://github.com/atooni/de.woq.osgi.java</url>
+    <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
+    <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
+    <url>https://github.com/woq-blended/blended</url>
   </scm>
 
   <dependencies>
@@ -183,21 +182,6 @@
       <plugins>
 
         <plugin>
-          <groupId>org.ops4j.pax.exam</groupId>
-          <artifactId>maven-paxexam-plugin</artifactId>
-          <version>1.2.4</version>
-          <executions>
-            <execution>
-              <id>generate-config</id>
-              <goals>
-                <goal>generate-depends-file</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
-
-        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-archetype-plugin</artifactId>
           <version>2.2</version>
@@ -216,7 +200,7 @@
               <configuration>
                 <rules>
                   <requireMavenVersion>
-                    <version>3.0.4</version>
+                    <version>3.0.5</version>
                   </requireMavenVersion>
                 </rules>
               </configuration>
@@ -295,9 +279,6 @@
             <forkMode>always</forkMode>
             <forkedProcessTimeoutInSeconds>300</forkedProcessTimeoutInSeconds>
             <argLine>-Xmx1024m</argLine>
-            <systemProperties>
-              <java.protocol.handler.pkgs>de.woq.blended.karaf.itestsupport.handler</java.protocol.handler.pkgs>
-            </systemProperties>
           </configuration>
 
           <executions>
@@ -312,9 +293,9 @@
         </plugin>
 
         <plugin>
-          <groupId>org.scala-tools</groupId>
-          <artifactId>maven-scala-plugin</artifactId>
-          <version>2.15.2</version>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.0</version>
           <executions>
             <execution>
               <id>compile-scala</id>
@@ -330,12 +311,19 @@
             </execution>
           </executions>
           <configuration>
+            <fork>true</fork>
             <scalaVersion>${scala.version}.${scala.micro.version}</scalaVersion>
-            <sourceDir>src/main/scala</sourceDir>
-            <testSourceDir>src/test/scala</testSourceDir>
-            <includes>
-              <include>**/*.scala</include>
-            </includes>
+            <recompileMode>incremental</recompileMode>
+            <useZincServer>true</useZincServer>
+            <args>
+              <arg>-deprecation</arg>
+              <arg>-feature</arg>
+            </args>
+            <jvmArgs>
+              <jvmArg>-Xms256m</jvmArg>
+              <jvmArg>-Xmx512m</jvmArg>
+              <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+            </jvmArgs>
           </configuration>
         </plugin>
 
@@ -350,7 +338,6 @@
             <!-- This is not the real password - the real password is required when pushing to docker. -->
             <password>foo</password>
             <prefix>atooni/blended</prefix>
-            <removeIntermediateImages>true</removeIntermediateImages>
           </configuration>
           <executions>
             <execution>
