@@ -1,7 +1,11 @@
 package de.woq.blended.itestsupport.docker
 
+import java.io.File
+
 import akka.event.LoggingAdapter
-import com.github.dockerjava.client.model.Image
+import com.github.dockerjava.client.model.{Bind, Volume, Image}
+import de.woq.blended.itestsupport.ShellExecutor
+import org.apache.commons.io.FileUtils
 
 import scala.collection.convert.Wrappers.JListWrapper
 import com.github.dockerjava.client.DockerClient
@@ -45,6 +49,12 @@ trait Docker {
   implicit val config  : Config
   implicit val client  : DockerClient
 
+  val volumeBaseDir = {
+    val dirName = System.getProperty("user.dir") + "/target/volumes"
+    new File(dirName).mkdirs()
+    dirName
+  }
+
   lazy val configuredContainers : Map[String, DockerContainer] = {
 
     val builder =
@@ -60,19 +70,24 @@ trait Docker {
       val images = search(searchByTag(cfg.getString("image")))
       logger info s"Found [${images.length}] image(s) for container definition."
 
-      val links : List[String] =
-        if (cfg.hasPath("links"))
-          new JListWrapper(cfg.getStringList("links")).toList
-        else
-          List.empty
+      val ctLinks = links(cfg)
+      logger info s"Container is linked to [${ctLinks.toString}]."
 
-      logger info s"Container is linked to [${links.toString}]."
+      val ctVolumes = volumes(cfg)
+      logger info s"Container has volumes [${ctVolumes.toString}]."
 
       images.foreach { img =>
         val name = if (cfg.hasPath("name")) cfg.getString("name") + "_" + idx else img.getId
         val ct = container(img, name).withNamedPorts(namedPorts(cfg))
 
-        links.foreach(link => ct.withLink(link))
+
+        ctLinks.foreach(link => ct.withLink(link))
+        ctVolumes.foreach{volume =>
+          val dirName = s"${volumeBaseDir}/${name}/${volume._1}"
+          ct.withVolume(dirName, volume._2, volume._3)
+          new File(dirName).mkdirs()
+          ShellExecutor.excute(s"chmod -R 777 ${dirName}")
+        }
 
         builder += (name -> ct)
         logger info s"Configured container [${name}]."
@@ -83,6 +98,32 @@ trait Docker {
     val result = builder.result().toMap
     result
   }
+
+  private[Docker] def links(cfg: Config) : List[String] =
+    if (cfg.hasPath("links"))
+      new JListWrapper(cfg.getStringList("links")).toList
+    else
+      List.empty
+
+  private[Docker] def volumes(cfg : Config) : List[(String, Volume, Boolean)] =
+    if (cfg.hasPath("volumes")) {
+      val volumesConfig = new JListWrapper(cfg.getConfigList("volumes")).toList
+
+      volumesConfig.map { volumeConfig =>
+
+        val hostDir = volumeConfig.getString("host")
+        val ctDir = volumeConfig.getString("container")
+        val ro = if (volumeConfig.hasPath("readonly"))
+          volumeConfig.getBoolean("readonly")
+        else
+          false
+
+        (hostDir, new Volume(ctDir), ro)
+      }
+    }
+    else
+      List.empty
+
 
   private[Docker] def namedPorts(cfg: Config) : Seq[NamedContainerPort] = {
     logger debug "Reading named ports for container..."

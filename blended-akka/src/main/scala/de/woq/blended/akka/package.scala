@@ -16,6 +16,7 @@
 
 package de.woq.blended
 
+import scala.language.implicitConversions
 import _root_.akka.actor.{ActorSystem, ActorRef}
 import _root_.akka.event.LoggingAdapter
 import _root_.akka.util.Timeout

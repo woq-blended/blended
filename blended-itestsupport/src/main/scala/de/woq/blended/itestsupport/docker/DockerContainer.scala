@@ -1,7 +1,7 @@
 package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.client.DockerClient
-import com.github.dockerjava.client.model.{Link, Ports}
+import com.github.dockerjava.client.model.{Bind, Volume, Link, Ports}
 import org.slf4j.LoggerFactory
 
 /*
@@ -14,6 +14,7 @@ case class NamedContainerPort(name: String, sourcePort: Int)
 private[docker] class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
 
   var linkedContainers : List[Link] = List.empty
+  var mappedVolumes : List[Bind] = List.empty
   var ports : Map[String, NamedContainerPort] = Map.empty
   var exposedPorts : Option[Ports] = None
 
@@ -35,6 +36,8 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
    */
   def links = linkedContainers
 
+  def binds = mappedVolumes
+
   /**
    * Start the container with a given set of exposed ports. Exposed ports are defined in terms of docker
    * port mappings and map zero or more exposed container ports to physical ports within the hosting
@@ -48,6 +51,7 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
     val cmd = client.startContainerCmd(containerName)
     if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
+    if (!mappedVolumes.isEmpty) cmd.withBinds(binds:_*)
 
     cmd.exec()
 
@@ -86,6 +90,11 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
 
   def withLink(link : String) = {
     this.linkedContainers = Link.parse(link) :: this.linkedContainers
+    this
+  }
+
+  def withVolume(mappedDir : String, volume: Volume, rw: Boolean) = {
+    this.mappedVolumes = new Bind(mappedDir, volume, rw) :: mappedVolumes
     this
   }
 
