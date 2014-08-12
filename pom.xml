@@ -24,7 +24,7 @@
 
   <groupId>de.woq.blended</groupId>
   <artifactId>blended-reactor</artifactId>
-  <version>1.0.7-M3</version>
+  <version>1.0.7-M4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <distributionManagement>
