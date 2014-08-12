@@ -16,6 +16,7 @@
 
 package de.woq.blended.persistence {
 
+import scala.language.implicitConversions
 import akka.actor.ActorRef
 import spray.json._
 

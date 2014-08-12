@@ -15,6 +15,8 @@
  */
 package de.woq.blended.modules
 
+import scala.language.implicitConversions
+
 private[modules] object Filter {
 
   /**

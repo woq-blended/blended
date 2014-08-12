@@ -43,7 +43,7 @@ class Neo4jBackend extends PersistenceBackend {
       val path = try
         config.getString("dbPath")
       catch {
-        case _ => "neo4j.db"
+        case _ : Throwable => "neo4j.db"
       }
       s"$dir/$path"
     }

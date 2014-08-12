@@ -15,6 +15,7 @@
  */
 package de.woq.blended
 
+import scala.language.implicitConversions
 import java.util.Dictionary
 
 import org.osgi.framework.{BundleContext, ServiceReference}
