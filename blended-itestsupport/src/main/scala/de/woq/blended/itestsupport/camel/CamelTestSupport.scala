@@ -52,6 +52,11 @@ trait CamelTestSupport { this : CamelContextProvider =>
     }
   }
 
+  def headerExists(exchange: Exchange, headerName: String) = exchange.getIn.getHeader(headerName) != null
+
+  def missingHeaderNames(exchange: Exchange, mandatoryHeaders: List[String]) =
+    mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
+
   private def createMessageFromFile(message: String, props: Map[String, String]) : Option[Message] = {
 
     try {
@@ -92,7 +97,7 @@ trait CamelTestSupport { this : CamelContextProvider =>
 
     camelContext.addRoutes(new RouteBuilder {
       def configure {
-        from(uri).to(result)
+        from(uri).id(mockName).to(result)
       }
     })
 

@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
+import com.typesafe.config.{ConfigFactory, Config}
 import de.woq.blended.itestsupport.condition.{ConditionProvider, Condition, ConditionChecker}
 import de.woq.blended.itestsupport.docker._
 import de.woq.blended.itestsupport.docker.protocol._
@@ -90,5 +91,7 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
 
     Await.result(checkFuture, condition.timeout)
   }
+
+  def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
 
 }

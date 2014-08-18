@@ -5,11 +5,14 @@ import org.apache.camel.impl.DefaultCamelContext
 
 trait CamelContextProvider {
 
-  lazy val camelContext = {
+  final lazy val camelContext = {
     val context = new DefaultCamelContext()
-    camelComponents.keys.foreach(compName => context.addComponent(compName, camelComponents(compName)))
-    context.start()
     context
+  }
+
+  final def startContext {
+    camelComponents.keys.foreach(compName => camelContext.addComponent(compName, camelComponents(compName)))
+    camelContext.start()
   }
 
   val  camelComponents : Map[String, Component] = Map.empty

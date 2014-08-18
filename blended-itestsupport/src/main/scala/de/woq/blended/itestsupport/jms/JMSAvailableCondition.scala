@@ -42,6 +42,7 @@ class JMSAvailableCondition(
   implicit val eCtxt = system.dispatcher
 
   val testSupport = new JMSConnector(cf)
+  testSupport.startContext
   testSupport.wireMock(mockName, testUri)
 
   val jmsAvailable = new AtomicBoolean(false)
