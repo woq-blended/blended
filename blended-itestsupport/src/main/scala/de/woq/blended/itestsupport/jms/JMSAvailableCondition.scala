@@ -3,43 +3,39 @@ package de.woq.blended.itestsupport.jms
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.ConnectionFactory
 
-import akka.actor.Actor.Receive
-import akka.pattern.ask
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.util.Timeout
-import de.woq.blended.itestsupport.CamelTestSupport
+import akka.pattern.ask
+import de.woq.blended.itestsupport.camel.{CamelContextProvider, CamelTestSupport}
 import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
+import de.woq.blended.itestsupport.protocol._
+import org.apache.camel.Component
+import org.apache.camel.component.jms
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.component.mock.MockEndpoint
+import org.apache.camel.impl.DefaultCamelContext
 
+import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 
-import de.woq.blended.itestsupport.protocol._
+private object JMSAvailableConditionConstants {
+  val testUri = s"jms:topic:blendedTest"
+  val mockName = "test"
+}
 
 class JMSAvailableCondition(
   cf : ConnectionFactory,
-  prefix: String,
   jmsTimeout : FiniteDuration
 )(implicit system : ActorSystem) extends Condition {
 
-  object JMSConnector {
+  import JMSAvailableConditionConstants._
 
-    val testUri = s"${prefix}:topic:blendedTest"
-    val mockName = "test"
+  class JMSConnector(cf: ConnectionFactory) extends CamelTestSupport with CamelContextProvider {
 
-    def apply(cf: ConnectionFactory) = {
-
-      val connector = new CamelTestSupport {
-        override def init() {
-          super.init()
-          getContext().addComponent(prefix, JmsComponent.jmsComponent(cf) )
-          wireMock(mockName, testUri)
-          getContext().start()
-        }
-      }
-
-      connector
+    override val camelComponents = {
+      val builder = new mutable.MapBuilder[String, Component, Map[String, Component]](Map.empty)
+      builder += ("jms" -> JmsComponent.jmsComponent(cf))
+      builder.result().toMap
     }
   }
 
@@ -47,8 +43,8 @@ class JMSAvailableCondition(
 
   implicit val eCtxt = system.dispatcher
 
-  val testSupport  = JMSConnector(cf)
-  testSupport.init()
+  val testSupport = new JMSConnector(cf)
+  testSupport.wireMock(mockName, testUri)
 
   val jmsAvailable = new AtomicBoolean(false)
   val checker      = system.actorOf(Props(ConditionChecker(this, Props(JMSChecker(this, testSupport)))))
@@ -58,7 +54,7 @@ class JMSAvailableCondition(
   }.andThen {
     case _ => {
       system stop checker
-      testSupport.getContext.stop()
+      testSupport.testContext.stop()
     }
   }
 
@@ -72,7 +68,7 @@ class JMSAvailableCondition(
 
   class JMSChecker(condition: Condition, testSupport : CamelTestSupport) extends Actor with ActorLogging {
 
-    import JMSConnector.{testUri, mockName}
+    import JMSAvailableConditionConstants._
 
     case class CheckJMS(condition: Condition, testSupport: CamelTestSupport)
 
@@ -87,8 +83,9 @@ class JMSAvailableCondition(
         val worker = context.actorOf(Props(new Actor with ActorLogging {
 
           override def receive : Receive = LoggingReceive {
+
             case CheckJMS(condition, testSupport) => {
-              val mockEndpoint: MockEndpoint = testSupport.getContext.getEndpoint(s"mock:${mockName}").asInstanceOf[MockEndpoint]
+              val mockEndpoint: MockEndpoint = testSupport.testContext.getEndpoint(s"mock:${mockName}").asInstanceOf[MockEndpoint]
               mockEndpoint.reset()
               mockEndpoint.setExpectedMessageCount(1)
               testSupport.sendTestMessage("Hello Blended!", testUri)
