@@ -10,10 +10,8 @@ import de.woq.blended.itestsupport.camel.{CamelContextProvider, CamelTestSupport
 import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.protocol._
 import org.apache.camel.Component
-import org.apache.camel.component.jms
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.component.mock.MockEndpoint
-import org.apache.camel.impl.DefaultCamelContext
 
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
@@ -28,7 +26,7 @@ class JMSAvailableCondition(
   jmsTimeout : FiniteDuration
 )(implicit system : ActorSystem) extends Condition {
 
-  import JMSAvailableConditionConstants._
+  import de.woq.blended.itestsupport.jms.JMSAvailableConditionConstants._
 
   class JMSConnector(cf: ConnectionFactory) extends CamelTestSupport with CamelContextProvider {
 
@@ -68,7 +66,7 @@ class JMSAvailableCondition(
 
   class JMSChecker(condition: Condition, testSupport : CamelTestSupport) extends Actor with ActorLogging {
 
-    import JMSAvailableConditionConstants._
+    import de.woq.blended.itestsupport.jms.JMSAvailableConditionConstants._
 
     case class CheckJMS(condition: Condition, testSupport: CamelTestSupport)
 
