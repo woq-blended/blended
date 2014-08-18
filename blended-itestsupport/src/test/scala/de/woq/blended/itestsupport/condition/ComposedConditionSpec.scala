@@ -5,13 +5,13 @@ import akka.testkit.TestActorRef
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
 import scala.concurrent.duration._
+import ConditionProvider._
 
 import de.woq.blended.itestsupport.protocol._
 
 class ComposedConditionSpec extends TestActorSys
   with WordSpecLike
-  with Matchers
-  with ConditionProvider {
+  with Matchers {
 
   "A composed condition" should {
 

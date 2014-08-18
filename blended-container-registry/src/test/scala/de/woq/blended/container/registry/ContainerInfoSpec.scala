@@ -6,7 +6,7 @@ import de.woq.blended.persistence.protocol._
 import de.woq.blended.container.registry.protocol._
 
 /*
- * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
+ * Copyright 2014ff, WoQ - Way of Quality GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

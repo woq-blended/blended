@@ -5,13 +5,11 @@ import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
-
-import scala.concurrent.duration._
+import ConditionProvider._
 
 class ParallelCheckerSpec extends TestActorSys
   with WordSpecLike
-  with Matchers
-  with ConditionProvider {
+  with Matchers {
 
   "The Condition Checker" should {
 

@@ -2,7 +2,7 @@ package de.woq.blended.akka.itest
 
 import akka.util.Timeout
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
-import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
+import de.woq.blended.itestsupport.condition.{Condition, ConditionProvider, ParallelComposedCondition, SequentialComposedCondition}
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{MbeanExistsCondition, JolokiaAvailableCondition}
@@ -27,37 +27,44 @@ class BlendedDemoSpec extends TestActorSys
   "The demo container" should {
 
     "expose Jolokia and JMS" in {
-
-      implicit val t = 30.seconds
-
-      val url = Await.result(jolokiaUrl("blended_demo_0"), t)
-      val jmsPort = Await.result(containerPort("blended_demo_0", "jms"), 3.seconds)
-
-      jmsPort should not be (None)
-      val cf = new ActiveMQConnectionFactory(s"tcp://localhost:${jmsPort.get}")
-      url should not be (None)
-
-      assertCondition(
-        new SequentialComposedCondition(
-          new ParallelComposedCondition(
-            new JolokiaAvailableCondition(url.get, t, Some("blended"), Some("blended")),
-            new JMSAvailableCondition(cf, "amq", t)
-          ),
-          new MbeanExistsCondition(url.get, t, Some("blended"), Some("blended")) with MBeanSearchSpec {
-            override def jmxDomain = "org.apache.camel"
-
-            override def searchProperties = Map(
-              "name" -> "\"BlendedSample\"",
-              "type" -> "context"
-            )
-          }
-        )
-      ) should be (true)
+      true should be (true)
     }
+  }
+
+  override def preCondition = {
+    val t = 30.seconds
+
+    new SequentialComposedCondition(
+      new ParallelComposedCondition(
+        new JolokiaAvailableCondition(jmxRest, t, Some("blended"), Some("blended")),
+        new JMSAvailableCondition(amqConnectionFactory, "amq", t)
+      ),
+      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchSpec {
+        override def jmxDomain = "org.apache.camel"
+
+        override def searchProperties = Map(
+          "name" -> "\"BlendedSample\"",
+          "type" -> "context"
+        )
+      }
+    )
+  }
+
+  private lazy val jmxRest = {
+    val url = Await.result(jolokiaUrl("blended_demo_0"), 3.seconds)
+    url should not be (None)
+    url.get
+  }
+
+  lazy val amqConnectionFactory = {
+    val jmsPort = Await.result(containerPort("blended_demo_0", "jms"), 3.seconds)
+    jmsPort should not be (None)
+    new ActiveMQConnectionFactory(s"tcp://localhost:${jmsPort.get}")
   }
 
   override protected def beforeAll() {
     startContainer(30.seconds) should be (ContainerManagerStarted)
+    assertCondition(preCondition) should be (true)
   }
 
   override protected def afterAll() {

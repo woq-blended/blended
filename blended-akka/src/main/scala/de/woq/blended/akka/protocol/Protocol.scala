@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality UG(mbH)
+ * Copyright 2014ff, WoQ - Way of Quality GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ package de.woq.blended.akka {
 
     // A bundle has been started via ActorSystemAware
     case class BundleActorStarted(bundleId: String)
-    // This can be posted on the Event bus if the bund actor has finished initializing
+    // This can be posted on the Event bus if the bundle actor has finished initializing
     case class BundleActorInitialized(bundleId: String)
 
     // look up a bundleActor by the bundle symbolicName

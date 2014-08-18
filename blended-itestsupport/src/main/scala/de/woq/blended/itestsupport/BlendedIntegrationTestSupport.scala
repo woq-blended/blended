@@ -4,7 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
-import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
+import de.woq.blended.itestsupport.condition.{ConditionProvider, Condition, ConditionChecker}
 import de.woq.blended.itestsupport.docker._
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.protocol._
@@ -21,12 +21,14 @@ class TestContainerManager extends ContainerManager with DockerClientProvider {
 
 trait BlendedIntegrationTestSupport { this: TestKit =>
 
+  import ConditionProvider._
+
   implicit val system: ActorSystem
   private val mgrName = "ContainerManager"
 
-  def preCondition : Condition = new Condition {
-    override def satisfied = true
-  }
+  def preCondition : Condition = alwaysTrue()
+
+  def postCondition : Condition = alwaysTrue()
 
   def startContainer(timeout : FiniteDuration) = {
 
