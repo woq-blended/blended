@@ -6,14 +6,14 @@ import javax.jms.ConnectionFactory
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern.ask
-import de.woq.blended.itestsupport.camel.{CamelContextProvider, CamelTestSupport}
+import de.woq.blended.itestsupport.camel.CamelTestSupport
 import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.protocol._
-import org.apache.camel.Component
+import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.component.mock.MockEndpoint
+import org.apache.camel.impl.DefaultCamelContext
 
-import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 
 private object JMSAvailableConditionConstants {
@@ -26,35 +26,18 @@ class JMSAvailableCondition(
   jmsTimeout : FiniteDuration
 )(implicit system : ActorSystem) extends Condition {
 
-  import de.woq.blended.itestsupport.jms.JMSAvailableConditionConstants._
-
-  class JMSConnector(cf: ConnectionFactory) extends CamelTestSupport with CamelContextProvider {
-
-    override lazy val camelComponents = {
-      val builder = new mutable.MapBuilder[String, Component, Map[String, Component]](Map.empty)
-      builder += ("jms" -> JmsComponent.jmsComponent(cf))
-      builder.result().toMap
-    }
-  }
+  implicit val eCtxt = system.dispatcher
 
   override def timeout = jmsTimeout
 
-  implicit val eCtxt = system.dispatcher
-
-  val testSupport = new JMSConnector(cf)
-  testSupport.addCompoments
-  testSupport.startContext
-  testSupport.wireMock(mockName, testUri)
-
   val jmsAvailable = new AtomicBoolean(false)
-  val checker      = system.actorOf(Props(ConditionChecker(this, Props(JMSChecker(this, testSupport)))))
+  val checker      = system.actorOf(Props(ConditionChecker(this, Props(JMSChecker(this, cf)))))
 
   (checker ? CheckCondition)(jmsTimeout).mapTo[ConditionSatisfied].map {
     _ => jmsAvailable.set(true)
   }.andThen {
     case _ => {
       system stop checker
-      testSupport.testContext.stop()
     }
   }
 
@@ -63,14 +46,12 @@ class JMSAvailableCondition(
   override def satisfied = jmsAvailable.get
 
   object JMSChecker {
-    def apply(condition: Condition, testSupport: CamelTestSupport) = new JMSChecker(condition, testSupport)
+    def apply(condition: Condition, cf: ConnectionFactory) = new JMSChecker(condition, cf) with CamelTestSupport
   }
 
-  class JMSChecker(condition: Condition, testSupport : CamelTestSupport) extends Actor with ActorLogging {
+  class JMSChecker(condition: Condition, cf: ConnectionFactory) extends Actor with ActorLogging { this : CamelTestSupport =>
 
-    import de.woq.blended.itestsupport.jms.JMSAvailableConditionConstants._
-
-    case class CheckJMS(condition: Condition, testSupport: CamelTestSupport)
+    case class CheckJMS(condition: Condition)
 
     override def supervisorStrategy = OneForOneStrategy() {
       case _ => SupervisorStrategy.Stop
@@ -82,21 +63,36 @@ class JMSAvailableCondition(
       case ConditionTick => {
         val worker = context.actorOf(Props(new Actor with ActorLogging {
 
-          override def receive : Receive = LoggingReceive {
+          import JMSAvailableConditionConstants._
 
-            case CheckJMS(condition, testSupport) => {
-              val mockEndpoint: MockEndpoint = testSupport.testContext.getEndpoint(s"mock:${mockName}").asInstanceOf[MockEndpoint]
+          var camelContext : Option[CamelContext] = None
+
+          override def preStart() {
+            implicit val result = new DefaultCamelContext()
+            result.addComponent("jms", JmsComponent.jmsComponent(cf))
+            wireMock(mockName, testUri)
+            result.start()
+            camelContext = Some(result)
+          }
+
+          override def postStop() {
+            camelContext.foreach(_.stop())
+          }
+
+          override def receive : Receive = LoggingReceive {
+            case CheckJMS(condition) if camelContext.isDefined => {
+              val mockEndpoint: MockEndpoint = camelContext.get.getEndpoint(s"mock:${mockName}").asInstanceOf[MockEndpoint]
               mockEndpoint.reset()
               mockEndpoint.setExpectedMessageCount(1)
-              testSupport.sendTestMessage("Hello Blended!", testUri)
+              sendTestMessage("Hello Blended!", testUri)(camelContext.get)
               mockEndpoint.assertIsSatisfied(500)
               sender ! ConditionCheckResult(condition, true)
             }
           }
-
         }))
+
         context watch worker
-        worker ! CheckJMS(condition, testSupport)
+        worker ! CheckJMS(condition)
         context become busy(worker, sender)
       }
     }

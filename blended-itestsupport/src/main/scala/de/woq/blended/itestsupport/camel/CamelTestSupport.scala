@@ -8,21 +8,21 @@ import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
 import org.slf4j.{Logger, LoggerFactory}
 
-trait CamelTestSupport { this : CamelContextProvider =>
+import scala.collection.convert.Wrappers.JCollectionWrapper
+
+trait CamelTestSupport {
 
   private final val LOGGER: Logger = LoggerFactory.getLogger(classOf[CamelTestSupport])
 
-  def testContext = camelContext
-
-  def sendTestMessage(message: String, uri: String) {
+  def sendTestMessage(message: String, uri: String)(implicit context: CamelContext) : Boolean = {
     sendTestMessage(message, Map.empty, uri)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String) {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String)(implicit context: CamelContext) : Boolean = {
     sendTestMessage(message, properties, uri, true)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean) : Boolean = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean)(implicit context: CamelContext) : Boolean = {
 
     var msg: Option[Message] =  evaluteXML match {
       case true => createMessageFromXML(message)
@@ -36,10 +36,10 @@ trait CamelTestSupport { this : CamelContextProvider =>
       addMessageProperties(msg, properties)
     }
 
-    val sent = new DefaultExchange(camelContext, ExchangePattern.InOnly)
+    val sent = new DefaultExchange(context, ExchangePattern.InOnly)
     sent.setIn(msg.get)
 
-    val producer = camelContext.createProducerTemplate
+    val producer = context.createProducerTemplate
     val response = producer.send(uri, sent)
 
     if (response.getException != null) {
@@ -92,14 +92,14 @@ trait CamelTestSupport { this : CamelContextProvider =>
     message
   }
 
-  def wireMock(mockName: String, uri: String): MockEndpoint = {
+  def wireMock(mockName: String, uri: String)(implicit context: CamelContext) : MockEndpoint = {
 
     val mockUri = s"mock://${mockName}"
 
-    val result = camelContext.getEndpoint(mockUri).asInstanceOf[MockEndpoint]
+    val result = context.getEndpoint(mockUri).asInstanceOf[MockEndpoint]
 
     LOGGER.debug(s"Creating Route from [${uri}] to [${mockUri}].")
-    camelContext.addRoutes(new RouteBuilder {
+    context.addRoutes(new RouteBuilder {
       def configure {
         from(uri).id(mockName).to(mockUri)
       }
@@ -107,4 +107,11 @@ trait CamelTestSupport { this : CamelContextProvider =>
 
     result
   }
+
+  final def resetMockEndpoints(implicit context: CamelContext) {
+    JCollectionWrapper(context.getEndpoints)
+      .filter(_.isInstanceOf[MockEndpoint])
+      .foreach( ep => ep.asInstanceOf[MockEndpoint].reset())
+  }
+
 }
