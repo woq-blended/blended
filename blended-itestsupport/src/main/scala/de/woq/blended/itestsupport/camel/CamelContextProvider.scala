@@ -10,11 +10,14 @@ trait CamelContextProvider {
     context
   }
 
-  final def startContext {
+  final def addCompoments {
     camelComponents.keys.foreach(compName => camelContext.addComponent(compName, camelComponents(compName)))
+  }
+
+  final def startContext {
     camelContext.start()
   }
 
-  val  camelComponents : Map[String, Component] = Map.empty
+  lazy val camelComponents : Map[String, Component] = Map.empty
 
 }

@@ -30,7 +30,7 @@ trait CamelTestSupport { this : CamelContextProvider =>
     }
 
     if (msg == None) {
-      LOGGER.info("Using text as msg body: [{}]", message)
+      LOGGER.info(s"Using text as msg body: [${message}]")
       msg = Some(new DefaultMessage)
       msg.get.setBody(message)
       addMessageProperties(msg, properties)
@@ -43,11 +43,11 @@ trait CamelTestSupport { this : CamelContextProvider =>
     val response = producer.send(uri, sent)
 
     if (response.getException != null) {
-      LOGGER.warn("Message not sent to [{}]", uri)
+      LOGGER.warn(s"Message not sent to [${uri}]")
       false
     }
     else {
-      LOGGER.info("Sent test message to [{}]", uri)
+      LOGGER.info(s"Sent test message to [${uri}]")
       true
     }
   }
@@ -93,11 +93,15 @@ trait CamelTestSupport { this : CamelContextProvider =>
   }
 
   def wireMock(mockName: String, uri: String): MockEndpoint = {
-    val result: MockEndpoint = camelContext.getEndpoint("mock:" + mockName).asInstanceOf[MockEndpoint]
 
+    val mockUri = s"mock://${mockName}"
+
+    val result = camelContext.getEndpoint(mockUri).asInstanceOf[MockEndpoint]
+
+    LOGGER.debug(s"Creating Route from [${uri}] to [${mockUri}].")
     camelContext.addRoutes(new RouteBuilder {
       def configure {
-        from(uri).id(mockName).to(result)
+        from(uri).id(mockName).to(mockUri)
       }
     })
 

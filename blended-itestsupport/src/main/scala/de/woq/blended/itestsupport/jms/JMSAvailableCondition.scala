@@ -30,7 +30,7 @@ class JMSAvailableCondition(
 
   class JMSConnector(cf: ConnectionFactory) extends CamelTestSupport with CamelContextProvider {
 
-    override val camelComponents = {
+    override lazy val camelComponents = {
       val builder = new mutable.MapBuilder[String, Component, Map[String, Component]](Map.empty)
       builder += ("jms" -> JmsComponent.jmsComponent(cf))
       builder.result().toMap
@@ -42,6 +42,7 @@ class JMSAvailableCondition(
   implicit val eCtxt = system.dispatcher
 
   val testSupport = new JMSConnector(cf)
+  testSupport.addCompoments
   testSupport.startContext
   testSupport.wireMock(mockName, testUri)
 
