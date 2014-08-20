@@ -51,11 +51,11 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
       pendingContainer -= ct.containerName
       val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), ct.containerName)
       actor ! StartContainer(ct.containerName)
-      if (checkPending) context.become(running)
     }
     case ContainerStarted(name) => {
       runningContainer += (name -> sender)
       pendingContainer.values.foreach { _ ! ContainerStarted(name) }
+      if (checkPending) context.become(running)
     }
   }
 
