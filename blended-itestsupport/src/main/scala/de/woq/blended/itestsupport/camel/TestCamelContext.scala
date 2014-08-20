@@ -4,26 +4,39 @@ import org.apache.camel.Component
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
-import org.scalatest.fixture
+import org.slf4j.LoggerFactory
 
-class TestCamelContext(components: Map[String, Component], mocks: Map[String, String]) extends fixture.NoArg {
+object TestCamelContext {
+  def withTestContext(body: TestCamelContext => AnyRef)(implicit testContext: TestCamelContext) {
 
-  implicit  val camelContext = new DefaultCamelContext()
+    try {
+      testContext.start()
+      body(testContext)
+    } finally testContext.stop()
 
-  components.keys.foreach{ compName => camelContext.addComponent(compName, components(compName)) }
+  }
+}
 
-  mocks.keys.foreach{ mockName =>
-    camelContext.addRoutes( new RouteBuilder() {
+class TestCamelContext() extends DefaultCamelContext with CamelTestSupport {
+
+  private val log = LoggerFactory.getLogger(classOf[TestCamelContext])
+
+  def mockEndpoint(name: String) = getEndpoint(s"mock://${name}").asInstanceOf[MockEndpoint]
+
+  def withComponent(compName: String, component: Component) = {
+    log.debug(s"Adding component [${compName}] to TestCamelContext")
+    addComponent(compName, component)
+    this
+  }
+
+  def withMock(mockName: String, mockUri: String) = {
+    log.debug(s"Adding mock endpoint and route [${mockName}] to TestCamelContext.")
+
+    addRoutes( new RouteBuilder() {
       override def configure() {
-        from(mocks(mockName)).id(mockName).to(s"mock://${mockName}")
+        from(mockUri).id(mockName).to(s"mock://${mockName}")
       }
     })
+    this
   }
-
-  override def apply() {
-    try super.apply()
-    finally camelContext.stop()
-  }
-
-  def mockEndpoint(name: String) = camelContext.getEndpoint(s"mock://${name}").asInstanceOf[MockEndpoint]
 }
