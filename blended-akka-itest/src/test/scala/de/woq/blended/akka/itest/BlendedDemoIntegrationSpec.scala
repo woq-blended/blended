@@ -19,7 +19,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport {
 
-  override def nestedSuites: IndexedSeq[Suite] = IndexedSeq(new BlendedDemoSpec)
+  override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
   override def preCondition = {
     val t = 30.seconds
