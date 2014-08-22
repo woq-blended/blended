@@ -4,11 +4,12 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
-import com.typesafe.config.{ConfigFactory, Config}
-import de.woq.blended.itestsupport.condition.{ConditionProvider, Condition, ConditionChecker}
+import com.typesafe.config.{Config, ConfigFactory}
+import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.docker._
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.protocol._
+import org.scalatest.{BeforeAndAfterAll, Matchers, Suite}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -20,9 +21,12 @@ class TestContainerManager extends ContainerManager with DockerClientProvider {
   }
 }
 
-trait BlendedIntegrationTestSupport { this: TestKit =>
+trait BlendedIntegrationTestSupport
+  extends Suite
+  with Matchers
+  with BeforeAndAfterAll { this: TestKit =>
 
-  import ConditionProvider._
+  import de.woq.blended.itestsupport.condition.ConditionProvider._
 
   implicit val system: ActorSystem
   private val mgrName = "ContainerManager"
@@ -47,6 +51,16 @@ trait BlendedIntegrationTestSupport { this: TestKit =>
 
     val call = (containerMgr ? StopContainerManager)(new Timeout(timeout))
     Await.result(call, timeout)
+  }
+
+  override protected def beforeAll() {
+    startContainer(30.seconds) should be (ContainerManagerStarted)
+    assertCondition(preCondition) should be (true)
+    Thread.sleep(5000)
+  }
+
+  override protected def afterAll() {
+    stopContainer(30.seconds) should be (ContainerManagerStopped)
   }
 
   def containerMgr : ActorRef = {
