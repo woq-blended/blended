@@ -47,8 +47,8 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   }
 
   lazy val amqConnectionFactory = {
-    val jmsPort = Await.result(containerPort("blended_demo_0", "jms"), 3.seconds)
-    jmsPort should not be (None)
-    BlendedTestContext.set("amqConnectionFactory", new ActiveMQConnectionFactory(s"tcp://localhost:${jmsPort.get}")).asInstanceOf[ConnectionFactory]
+    val ctInfo = Await.result(containerInfo("blended_demo_0"), 3.seconds)
+    val address = ctInfo.getNetworkSettings.getIpAddress
+    BlendedTestContext.set("amqConnectionFactory", new ActiveMQConnectionFactory(s"tcp://${address}:1883")).asInstanceOf[ConnectionFactory]
   }
 }

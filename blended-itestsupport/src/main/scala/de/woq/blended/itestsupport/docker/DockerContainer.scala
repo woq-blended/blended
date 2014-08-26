@@ -58,15 +58,7 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
     this
   }
 
-  /**
-   * Simply expose the wait operation of the container. This is usually called after the container has been
-   * started.
-   */
-  def waitContainer = {
-    logger info s"Waiting for container [${name}]"
-    client.waitContainerCmd(containerName).exec()
-    this
-  }
+  def containerInfo = client.inspectContainerCmd(containerName).exec()
 
   /**
    * Simply expose the stop operation of the container.

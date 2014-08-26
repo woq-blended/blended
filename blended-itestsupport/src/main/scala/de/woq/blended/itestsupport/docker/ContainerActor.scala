@@ -37,6 +37,8 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
   implicit val timeout = new Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
+  var pendingCommands : List[(ActorRef, Any)] = List.empty
+
   def stopped : Receive = {
     case StartContainer(n) if container.containerName == n  => {
       portBindings(sender)
@@ -46,12 +48,17 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
       context become LoggingReceive(starting(requestor) orElse(getPorts))
       starter ! PerformStart(container, p)
     }
+    case cmd => pendingCommands ::= (sender, cmd)
   }
 
   def starting(requestor : ActorRef) : Receive = {
     case msg : ContainerStarted =>
       requestor ! msg
+      pendingCommands.reverse.map {
+        case (requestor: ActorRef, cmd: Any) => self.tell(cmd, requestor)
+      }
       context become LoggingReceive(started orElse getPorts)
+    case cmd => pendingCommands ::= (sender, cmd)
   }
 
   def started : Receive = {
@@ -60,6 +67,10 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
       container.stopContainer
       context become stopped
       requestor ! ContainerStopped(container.containerName)
+    }
+    case InspectContainer(n) if container.containerName == n => {
+      val requestor = sender
+      requestor ! container.containerInfo
     }
   }
 

@@ -4,6 +4,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
+import com.github.dockerjava.api.command.InspectContainerResponse
 import com.typesafe.config.{Config, ConfigFactory}
 import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
 import de.woq.blended.itestsupport.docker._
@@ -87,6 +88,13 @@ trait BlendedIntegrationTestSupport
           case _ => None
         }
       }
+  }
+
+  def containerInfo(ctName: String) : Future[InspectContainerResponse] = {
+
+    implicit val eCtxt = system.dispatcher
+
+    (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
   }
 
   def assertCondition(condition: Condition) : Boolean = {

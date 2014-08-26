@@ -5,7 +5,6 @@ import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
-
 class DockerContainerSpec extends WordSpec
   with Matchers
   with DockerTestSetup
@@ -20,13 +19,6 @@ class DockerContainerSpec extends WordSpec
       verify(createCmd).withName(ctName)
     }
 
-    "issue the wait command with the correct id" in {
-      val container = new DockerContainer(imageId, ctName)
-      container.waitContainer
-
-      verify(mockClient).waitContainerCmd(ctNames(0))
-    }
-    
     "issue the stop command with the correct id" in {
       val container = new DockerContainer(imageId, ctName)
       container.stopContainer
@@ -39,6 +31,13 @@ class DockerContainerSpec extends WordSpec
       container.startContainer(portBindings)
 
       verify(mockClient).startContainerCmd(ctName)
+    }
+
+    "issue the InspectContainerCommand with the correct id" in {
+      val container = new DockerContainer(imageId, ctName)
+      container.containerInfo
+
+      verify(mockClient).inspectContainerCmd(ctName)
     }
 
     "allow to set the linked containers" in {

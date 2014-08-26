@@ -43,12 +43,17 @@ trait DockerTestSetup { this : MockitoSugar =>
   when(startCmd.withPortBindings(portBindings)) thenReturn(startCmd)
   when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn(startCmd)
 
+  val inspectCmd = mock[InspectContainerCmd]
+  val containerInfo = mock[InspectContainerResponse]
+  when(inspectCmd.exec()) thenReturn(containerInfo)
+
   ctNames.foreach { name =>
     when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn(createCmd)
     when(createCmd.withName(name)) thenReturn(createCmd)
     when(mockClient.waitContainerCmd(name)).thenReturn(waitCmd)
     when(mockClient.stopContainerCmd(name)).thenReturn(stopCmd)
     when(mockClient.startContainerCmd(name)).thenReturn(startCmd)
+    when(mockClient.inspectContainerCmd(name)).thenReturn(inspectCmd)
   }
 
   val listContainersCmd = mock[ListContainersCmd]

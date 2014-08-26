@@ -16,4 +16,6 @@ package object protocol {
 
   case class GetContainerPorts(name: String)
   case class ContainerPorts(ports: Map[String, NamedContainerPort])
+
+  case class InspectContainer(name: String)
 }

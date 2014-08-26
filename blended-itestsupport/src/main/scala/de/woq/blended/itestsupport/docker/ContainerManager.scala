@@ -69,6 +69,12 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
         ct.tell(GetContainerPorts(name), requestor)
       }
     }
+    case InspectContainer(name) => {
+      val requestor = sender
+      containerActor(name).mapTo[ActorRef].onSuccess{ case ct =>
+        ct.tell(InspectContainer(name), requestor)
+      }
+    }
     case StopContainerManager => {
       val requestor = sender
 
