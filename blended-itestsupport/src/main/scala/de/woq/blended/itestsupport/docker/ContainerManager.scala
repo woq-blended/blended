@@ -1,6 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
-import com.github.dockerjava.client.DockerClient
+import com.github.dockerjava.api.DockerClient
 import de.woq.blended.itestsupport.PortScanner
 
 import scala.concurrent.Future

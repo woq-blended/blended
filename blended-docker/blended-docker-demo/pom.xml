@@ -37,6 +37,7 @@
       <version>${project.version}</version>
       <classifier>nojre</classifier>
       <type>tar.gz</type>
+      <scope>provided</scope>
     </dependency>
 
   </dependencies>
@@ -62,8 +63,7 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-              <includeGroupIds>de.woq.blended</includeGroupIds>
-              <includeTypes>tar.gz</includeTypes>
+              <includeScope>provided</includeScope>
               <outputDirectory>${project.build.directory}/docker/demo</outputDirectory>
             </configuration>
           </execution>

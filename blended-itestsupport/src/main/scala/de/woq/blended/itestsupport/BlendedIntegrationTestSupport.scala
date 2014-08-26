@@ -39,7 +39,6 @@ trait BlendedIntegrationTestSupport
 
     implicit val eCtxt = system.dispatcher
 
-    System.setProperty("docker.io.version", "1.12")
     val mgr = system.actorOf(Props[TestContainerManager], mgrName)
 
     val call = (mgr ? StartContainerManager)(new Timeout(timeout))

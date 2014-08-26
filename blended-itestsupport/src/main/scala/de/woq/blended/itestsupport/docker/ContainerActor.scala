@@ -4,9 +4,9 @@ import akka.actor.{Props, ActorLogging, Actor, ActorRef}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import akka.pattern.ask
+import com.github.dockerjava.api.model.Ports.Binding
+import com.github.dockerjava.api.model.{ExposedPort, Ports}
 import scala.concurrent.duration._
-import com.github.dockerjava.client.model.Ports.Binding
-import com.github.dockerjava.client.model.{ExposedPort, Ports}
 
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.protocol._

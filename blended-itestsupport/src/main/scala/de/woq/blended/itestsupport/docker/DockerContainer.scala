@@ -1,7 +1,7 @@
 package de.woq.blended.itestsupport.docker
 
-import com.github.dockerjava.client.DockerClient
-import com.github.dockerjava.client.model.{Bind, Volume, Link, Ports}
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model._
 import org.slf4j.LoggerFactory
 
 /*
@@ -19,7 +19,7 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
   var exposedPorts : Option[Ports] = None
 
   private[DockerContainer] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
-  private[DockerContainer] val container  = client.createContainerCmd(id).withName(name).withTTY(true).exec()
+  private[DockerContainer] val container  = client.createContainerCmd(id).withName(name).withTty(true).exec()
 
   /**
    * @return The docker image id of the container.

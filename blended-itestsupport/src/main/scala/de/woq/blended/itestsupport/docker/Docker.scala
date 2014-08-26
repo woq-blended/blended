@@ -3,12 +3,13 @@ package de.woq.blended.itestsupport.docker
 import java.io.File
 
 import akka.event.LoggingAdapter
-import com.github.dockerjava.client.model.{Bind, Volume, Image}
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.model.{Image, Volume}
+import com.github.dockerjava.core.DockerClientConfig.DockerClientConfigBuilder
+import com.github.dockerjava.core.{DockerClientConfig, DockerClientImpl}
 import de.woq.blended.itestsupport.ShellExecutor
-import org.apache.commons.io.FileUtils
 
 import scala.collection.convert.Wrappers.JListWrapper
-import com.github.dockerjava.client.DockerClient
 import com.typesafe.config.Config
 
 import scala.collection.mutable
@@ -20,12 +21,15 @@ object DockerClientFactory {
   def apply(config : Config)(implicit logger: LoggingAdapter) = client match {
     case Some(dockerClient) => dockerClient
     case _ => {
-      val dockerClient = new DockerClient(config.getString("docker.url"))
-      dockerClient.setCredentials(
-        config.getString("docker.user"),
-        config.getString("docker.password"),
-        config.getString("docker.eMail")
-      )
+
+      val dockerConfig =  new DockerClientConfigBuilder()
+        .withUri(config.getString("docker.url"))
+        .withUsername(config.getString("docker.user"))
+        .withPassword(config.getString("docker.password"))
+        .withEmail(config.getString("docker.eMail"))
+        .build()
+
+      val dockerClient = new DockerClientImpl(dockerConfig)
 
       val version = dockerClient.versionCmd().exec()
 
@@ -38,7 +42,7 @@ object DockerClientFactory {
        Kernel version        ${version.getKernelVersion}"""
 
       client = Some(dockerClient)
-      dockerClient
+      dockerClient.asInstanceOf[DockerClient]
     }
   }
 }

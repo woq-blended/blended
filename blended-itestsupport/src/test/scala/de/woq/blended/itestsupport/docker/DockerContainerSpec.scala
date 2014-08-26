@@ -1,6 +1,6 @@
 package de.woq.blended.itestsupport.docker
 
-import com.github.dockerjava.client.model.Link
+import com.github.dockerjava.api.model.Link
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
