@@ -36,7 +36,7 @@ class JolokiaClientSpec extends TestActorSys
 
     "Allow to search for MBeans by domain only" in {
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! SearchJolokia(new MBeanSearchSpec {
+      jolokia ! SearchJolokia(new MBeanSearchDef {
         override def jmxDomain = "java.lang"
       })
       fishForMessage() {
@@ -47,7 +47,7 @@ class JolokiaClientSpec extends TestActorSys
 
     "Allow to search for MBeans by domain and properties" in {
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! SearchJolokia(new MBeanSearchSpec {
+      jolokia ! SearchJolokia(new MBeanSearchDef {
         override def jmxDomain = "java.lang"
         override def searchProperties = Map( "type" -> "Memory" )
       })
@@ -62,6 +62,19 @@ class JolokiaClientSpec extends TestActorSys
       jolokia ! ReadJolokiaMBean("java.lang:type=Memory")
       fishForMessage() {
         case JolokiaReadResult(objName, _) => objName == "java.lang:type=Memory"
+        case _ => false
+      }
+    }
+
+    "Allow to execute a given operation on a MBean" in {
+      val jolokia = TestActorRef(Props[JolokiaJVM])
+      jolokia ! ExecJolokiaOperation(new OperationExecDef {
+        override def objectName = "java.lang:type=Threading"
+        override def operationName = "dumpAllThreads"
+        override def parameters = List("true", "true")
+      })
+      fishForMessage() {
+        case JolokiaExecResult(objName, operation, _) => objName == "java.lang:type=Threading" && operation == "dumpAllThreads"
         case _ => false
       }
     }

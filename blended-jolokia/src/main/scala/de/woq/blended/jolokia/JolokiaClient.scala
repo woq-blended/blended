@@ -29,12 +29,8 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
 
   def receive = LoggingReceive {
     case GetJolokiaVersion => jolokiaGet(sender, "version"){ JolokiaVersion(_) }
-    case SearchJolokia(searchSpec) => {
-      val propPattern = searchSpec.pattern match {
-        case "" => ""
-        case p => s"${p},"
-      }
-      val request = URI.create(s"search/${searchSpec.jmxDomain}:${propPattern}*".replaceAll("\"", "%22")).toString
+    case SearchJolokia(searchDef) => {
+      val request = URI.create(s"search/${searchDef.jmxDomain}:${searchDef.pattern}*".replaceAll("\"", "%22")).toString
       log.debug(s"Jolokia search request is [${request}")
       jolokiaGet(sender, request){ JolokiaSearchResult(_) }
     }
@@ -42,6 +38,11 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
       val request = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
       log.debug(s"Jolokia read request is [${request}")
       jolokiaGet(sender, request){ JolokiaReadResult(_) }
+    }
+    case ExecJolokiaOperation(execDef) => {
+      val request = s"exec/${execDef.pattern}"
+      log.debug(s"Jolokia exec request is [${request}].")
+      jolokiaGet(sender, request) { JolokiaExecResult(_) }
     }
   }
 

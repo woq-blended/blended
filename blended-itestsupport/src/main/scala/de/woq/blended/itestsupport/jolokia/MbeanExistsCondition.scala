@@ -12,7 +12,7 @@ class MbeanExistsCondition(
   userName: Option[String] = None,
   userPwd: Option[String] = None
 )(implicit system:ActorSystem) extends JolokiaCondition(url, timeout, userName, userPwd) with JolokiaAssertion {
-  this: MBeanSearchSpec =>
+  this: MBeanSearchDef =>
 
   override def toString = s"MbeanExistsCondition(${url}, ${pattern}})"
 

@@ -6,7 +6,7 @@ import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, Sequent
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, MbeanExistsCondition}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
-import de.woq.blended.jolokia.protocol.MBeanSearchSpec
+import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.{SpecLike, Spec, Suite}
@@ -29,7 +29,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
         new JolokiaAvailableCondition(jmxRest, t, Some("blended"), Some("blended")),
         new JMSAvailableCondition(amqConnectionFactory, t)
       ),
-      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchSpec {
+      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchDef {
         override def jmxDomain = "org.apache.camel"
 
         override def searchProperties = Map(
