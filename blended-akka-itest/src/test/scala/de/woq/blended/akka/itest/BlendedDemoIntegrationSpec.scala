@@ -3,6 +3,7 @@ package de.woq.blended.akka.itest
 import javax.jms.ConnectionFactory
 
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
+import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, MbeanExistsCondition}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
@@ -18,6 +19,8 @@ import scala.concurrent.duration._
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport {
+
+  startContainer(30.seconds) should be (ContainerManagerStarted)
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 

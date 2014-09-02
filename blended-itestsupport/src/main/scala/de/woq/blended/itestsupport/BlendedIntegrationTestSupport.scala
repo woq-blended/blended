@@ -54,7 +54,6 @@ trait BlendedIntegrationTestSupport
   }
 
   override protected def beforeAll() {
-    startContainer(30.seconds) should be (ContainerManagerStarted)
     assertCondition(preCondition) should be (true)
     Thread.sleep(5000)
   }
