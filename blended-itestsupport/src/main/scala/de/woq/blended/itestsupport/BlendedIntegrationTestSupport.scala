@@ -67,13 +67,12 @@ trait BlendedIntegrationTestSupport
     Await.result(system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
   }
 
-  def jolokiaUrl(ctName : String) : Future[Option[String]] = {
+  def jolokiaUrl(ctName : String, port: Int, path : String = "/hawtio/jolokia") : Future[Option[String]] = {
 
     implicit val eCtxt = system.dispatcher
 
-    containerPort(ctName, "http").map {
-      case Some(port) => Some(s"http://localhost:${port}/hawtio/jolokia")
-      case _ => None
+    containerInfo(ctName).map { info =>
+      Some(s"http://${info.getNetworkSettings.getIpAddress}:${port}${path}")
     }
   }
 

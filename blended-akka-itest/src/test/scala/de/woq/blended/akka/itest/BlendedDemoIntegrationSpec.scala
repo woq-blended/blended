@@ -41,7 +41,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   }
 
   private lazy val jmxRest = {
-    val url = Await.result(jolokiaUrl("blended_demo_0"), 3.seconds)
+    val url = Await.result(jolokiaUrl(ctName = "blended_demo_0", port = 8181), 3.seconds)
     url should not be (None)
     url.get
   }
