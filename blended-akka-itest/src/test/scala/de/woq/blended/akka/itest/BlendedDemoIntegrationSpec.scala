@@ -21,6 +21,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   with BlendedIntegrationTestSupport {
 
   startContainer(30.seconds) should be (ContainerManagerStarted)
+  assertCondition(preCondition) should be (true)
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 

@@ -54,7 +54,6 @@ trait BlendedIntegrationTestSupport
   }
 
   override protected def beforeAll() {
-    assertCondition(preCondition) should be (true)
     Thread.sleep(5000)
   }
 
