@@ -24,23 +24,11 @@ trait CamelTestSupport {
 
   def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean)(implicit context: CamelContext) : Boolean = {
 
-    var msg: Option[Message] =  evaluteXML match {
-      case true => createMessageFromXML(message)
-      case false => createMessageFromFile(message, properties)
-    }
-
-    if (msg == None) {
-      LOGGER.info(s"Using text as msg body: [${message}]")
-      msg = Some(new DefaultMessage)
-      msg.get.setBody(message)
-      addMessageProperties(msg, properties)
-    }
-
-    val sent = new DefaultExchange(context, ExchangePattern.InOnly)
-    sent.setIn(msg.get)
+    val exchange = createExchange(message, properties, evaluteXML)
+    exchange.setPattern(ExchangePattern.InOnly)
 
     val producer = context.createProducerTemplate
-    val response = producer.send(uri, sent)
+    val response = producer.send(uri, exchange)
 
     if (response.getException != null) {
       LOGGER.warn(s"Message not sent to [${uri}]")
@@ -52,10 +40,41 @@ trait CamelTestSupport {
     }
   }
 
+  def executeRequest(message: String, properties : Map[String, String], uri: String)(implicit context: CamelContext) : Exchange = {
+    executeRequest(message, properties, uri, true)
+  }
+
+  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean)(implicit context: CamelContext) : Exchange = {
+    val exchange = createExchange(message, properties, evaluateXML)
+    exchange.setPattern(ExchangePattern.InOut)
+
+    val producer = context.createProducerTemplate
+    producer.send(uri, exchange)
+  }
+
   def headerExists(exchange: Exchange, headerName: String) = exchange.getIn.getHeader(headerName) != null
 
   def missingHeaderNames(exchange: Exchange, mandatoryHeaders: List[String]) =
     mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
+
+  private def createExchange(message: String, properties: Map[String, String], evaluateXML: Boolean)(implicit context: CamelContext) = {
+    var msg: Option[Message] =  evaluateXML match {
+      case true => createMessageFromXML(message)
+      case false => createMessageFromFile(message, properties)
+    }
+
+    if (msg == None) {
+      LOGGER.info(s"Using text as msg body: [${message}]")
+      msg = Some(new DefaultMessage)
+      msg.get.setBody(message)
+      addMessageProperties(msg, properties)
+    }
+
+    val sent = new DefaultExchange(context)
+    sent.setIn(msg.get)
+
+    sent
+  }
 
   private def createMessageFromFile(message: String, props: Map[String, String]) : Option[Message] = {
 

@@ -10,7 +10,6 @@ object TestCamelContext {
   def withTestContext(body: TestCamelContext => AnyRef)(implicit testContext: TestCamelContext) {
 
     try {
-      testContext.start()
       body(testContext)
     } finally testContext.stop()
 
