@@ -33,6 +33,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <blended.branding.groupId>${project.groupId}</blended.branding.groupId>
     <blended.branding.artifactId>blended-karaf-branding</blended.branding.artifactId>
     <blended.branding.version>${project.version}</blended.branding.version>
+
+    <karaf.min.memory>128</karaf.min.memory>
+    <karaf.max.memory>1024</karaf.max.memory>
   </properties>
 
   <artifactId>blended-karaf-demo</artifactId>
@@ -65,6 +68,30 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <build>
     <plugins>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>installer-resources</id>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <phase>process-resources</phase>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/main/installer</directory>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
+              <outputDirectory>${project.build.directory}/installer</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>

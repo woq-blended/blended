@@ -35,6 +35,9 @@ public final class ServiceInstaller {
   private String karafHome = null;
   private String karafData = null;
 
+  private String minMemory = "64";
+  private String maxMemory = "512";
+
   private File serviceFile = null;
   private File wrapperConf = null;
 
@@ -72,6 +75,8 @@ public final class ServiceInstaller {
     params.put("-b", "karafBase");
     params.put("-h", "karafHome");
     params.put("-d", "karafData");
+    params.put("-ms", "minMemory");
+    params.put("-mx", "maxMemory");
 
     for(int i=0; i<args.length; i++) {
 
@@ -164,6 +169,8 @@ public final class ServiceInstaller {
     props.put("${displayName}", getDisplayName());
     props.put("${description}", getDescription());
     props.put("${startType}", getStartType());
+    props.put("${karaf.min.memory}", new Integer(getMinMemory()).toString());
+    props.put("${karaf.max.memory}", new Integer(getMaxMemory()).toString());
 
     return props;
   }
@@ -251,5 +258,21 @@ public final class ServiceInstaller {
 
   public void setWrapperConf(File wrapperConf) {
     this.wrapperConf = wrapperConf;
+  }
+
+  public String getMinMemory() {
+    return minMemory;
+  }
+
+  public void setMinMemory(String minMemory) {
+    this.minMemory = minMemory;
+  }
+
+  public String getMaxMemory() {
+    return maxMemory;
+  }
+
+  public void setMaxMemory(String maxMemory) {
+    this.maxMemory = maxMemory;
   }
 }
