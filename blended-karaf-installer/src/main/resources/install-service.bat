@@ -5,9 +5,7 @@ set SERVICE_NAME=%1
 
 set SCRIPT_HOME=%~dp0
 
-if exist {%SCRIPT_HOME%\setenv.bat} (
-  call %SCRIPT_HOME%\setenv.bat
-)
+if exist %SCRIPT_HOME%\setenv.bat call %SCRIPT_HOME%\setenv.bat
 
 cd %SCRIPT_HOME%\..
 
