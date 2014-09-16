@@ -17,6 +17,8 @@ package de.woq.blended.modules
 
 import org.osgi.framework.{BundleContext, ServiceReference, ServiceRegistration}
 
+import scala.reflect.ClassTag
+
 class RichBundleContext(context: BundleContext) {
 
   assert(context != null, "The BundleContext must not be null!")
@@ -55,13 +57,6 @@ class RichBundleContext(context: BundleContext) {
     }
   }
 
-  /**
-   * Starting point for watching services with the given service interface.
-   * @param interface The service interface for which a ServicesWatcher is to be created; must not be null!
-   * @return A ServicesWatcher for the given service interface
-   */
-//  def watchServices[I <: AnyRef](interface: Class[I]): ServicesWatcher[I] = {
-//    require(interface != null, "The service interface must not be null!")
-//    new ServicesWatcher(interface, context)
-//  }
+  def findService[I <: AnyRef](interface: Class[I], filter: Filter)(implicit ctag: ClassTag[I]) =
+    context.getServiceReferences(interface, filter.toString).toArray
 }
