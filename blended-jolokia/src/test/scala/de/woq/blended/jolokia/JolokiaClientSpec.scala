@@ -17,7 +17,7 @@ class JolokiaJVM extends JolokiaClient with JolokiaAddress {
 }
 
 class JolokiaFake extends JolokiaClient with JolokiaAddress {
-  override val jolokiaUrl = "http://localhost:8888/jolokia"
+  override val jolokiaUrl = "http://localhost:43888/jolokia"
 }
 
 class JolokiaClientSpec extends TestActorSys
