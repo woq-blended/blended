@@ -31,13 +31,11 @@ public class EndpointURIDispatcher {
 
     String[] endpointUris = uriFactory.createEndpointUris(exchange);
 
-    if (endpointUris == null || endpointUris.length == 0) {
-      throw new Exception("List of dispatch endpoints cannot be empty");
-    }
-
-    ProducerTemplate template = exchange.getContext().createProducerTemplate();
-    for(String uri: endpointUris) {
-      template.send(uri, exchange);
+    if (endpointUris != null && endpointUris.length > 0) {
+      ProducerTemplate template = exchange.getContext().createProducerTemplate();
+      for (String uri : endpointUris) {
+        template.send(uri, exchange);
+      }
     }
   }
 }
