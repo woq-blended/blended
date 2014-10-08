@@ -1,10 +1,10 @@
-package de.woq.blended.itestsupport
+package de.woq.blended.itestsupport.jms
 
 import javax.jms.DeliveryMode
 
 import akka.actor.ActorRef
 
-package object jms {
+package object protocol {
   case class Connect(clientId: String)
   case class Connected(clientId: String)
 
@@ -33,5 +33,4 @@ package object jms {
 
   case class AddConsumerToCounter(consumer: ActorRef)
   case class MessageCount(counter: ActorRef, count: Int)
-
 }

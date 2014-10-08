@@ -20,6 +20,7 @@ import javax.jms._
 import akka.actor.{Cancellable, ActorRef, ActorLogging, Actor}
 import akka.event.LoggingReceive
 
+import de.woq.blended.itestsupport.jms.protocol._
 import scala.concurrent.duration._
 
 trait JMSSupport {
