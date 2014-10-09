@@ -19,74 +19,10 @@ package de.woq.blended.itestsupport.jms
 import javax.jms._
 import akka.actor.{Cancellable, ActorRef, ActorLogging, Actor}
 import akka.event.LoggingReceive
-import akka.util.Timeout
 
 import de.woq.blended.itestsupport.jms.protocol._
 import de.woq.blended.util.protocol.IncrementCounter
 import scala.concurrent.duration._
-
-trait JMSSupport {
-
-  val TOPICTAG = "topic:"
-  val QUEUETAG = "queue:"
-
-  def jmsConnection : Connection
-
-  def withSession(f: (Session => Unit)) {
-
-    var session : Option[Session] = None
-    try {
-      session = Some(jmsConnection.createSession(false, Session.AUTO_ACKNOWLEDGE))
-      f(session.get)
-    } finally {
-      session.foreach { s =>
-        s.close() }
-    }
-  }
-
-  def destination(session: Session, destName: String) : Destination = {
-    if (destName.startsWith(TOPICTAG))
-      session.createTopic(destName.substring(TOPICTAG.length))
-    else if (destName.startsWith(QUEUETAG))
-      session.createQueue(destName.substring(QUEUETAG.length))
-    else
-      session.createQueue(destName)
-  }
-
-}
-
-object Producer {
-
-  def apply(connection: Connection, destName: String, msgCounter: Option[ActorRef]) =
-    new Producer(connection, destName, msgCounter)
-}
-
-class Producer(connection: Connection, destName: String, msgCounter: Option[ActorRef])
-  extends JMSSupport with Actor with ActorLogging {
-
-  override def jmsConnection = connection
-
-  override def receive = LoggingReceive {
-
-    case produce : ProduceMessage => {
-      withSession { session =>
-        log.debug(s"Sending message to [${destName}]")
-        val dest = destination(session, destName)
-        val producer = session.createProducer(null)
-        val msg = produce.msgFactory.createMessage(session)
-        producer.send(
-          dest,
-          msg,
-          produce.deliveryMode,
-          produce.priority,
-          produce.ttl
-        )
-        msgCounter.foreach { counter => counter ! new IncrementCounter() }
-      }
-      sender ! MessageProduced
-    }
-  }
-}
 
 class AkkaConsumer(
   consumerFor: ActorRef,

@@ -1,14 +1,3 @@
-package de.woq.blended.karaf.container.registry
-
-import akka.actor.Props
-import akka.testkit.TestActorRef
-import de.woq.blended.container.registry.internal.ContainerRegistryImpl
-import de.woq.blended.testsupport.TestActorSys
-import org.osgi.framework.BundleContext
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-import de.woq.blended.container.registry.protocol._
-
 /*
  * Copyright 2014ff, WoQ - Way of Quality GmbH
  *
@@ -24,6 +13,17 @@ import de.woq.blended.container.registry.protocol._
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.woq.blended.karaf.container.registry
+
+import akka.actor.Props
+import akka.testkit.TestActorRef
+import de.woq.blended.container.registry.internal.ContainerRegistryImpl
+import de.woq.blended.testsupport.TestActorSys
+import org.osgi.framework.BundleContext
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
+import de.woq.blended.container.registry.protocol._
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 

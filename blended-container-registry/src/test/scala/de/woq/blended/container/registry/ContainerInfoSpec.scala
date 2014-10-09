@@ -1,10 +1,3 @@
-package de.woq.blended.karaf.container.registry
-
-import org.scalatest.{Matchers, WordSpec}
-import org.slf4j.LoggerFactory
-import de.woq.blended.persistence.protocol._
-import de.woq.blended.container.registry.protocol._
-
 /*
  * Copyright 2014ff, WoQ - Way of Quality GmbH
  *
@@ -20,6 +13,13 @@ import de.woq.blended.container.registry.protocol._
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package de.woq.blended.karaf.container.registry
+
+import org.scalatest.{Matchers, WordSpec}
+import org.slf4j.LoggerFactory
+import de.woq.blended.persistence.protocol._
+import de.woq.blended.container.registry.protocol._
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
