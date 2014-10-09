@@ -19,8 +19,10 @@ package de.woq.blended.itestsupport.jms
 import javax.jms._
 import akka.actor.{Cancellable, ActorRef, ActorLogging, Actor}
 import akka.event.LoggingReceive
+import akka.util.Timeout
 
 import de.woq.blended.itestsupport.jms.protocol._
+import de.woq.blended.util.protocol.IncrementCounter
 import scala.concurrent.duration._
 
 trait JMSSupport {
@@ -55,11 +57,12 @@ trait JMSSupport {
 
 object Producer {
 
-  def apply(connection: Connection, destName: String) =
-    new Producer(connection, destName)
+  def apply(connection: Connection, destName: String, msgCounter: Option[ActorRef]) =
+    new Producer(connection, destName, msgCounter)
 }
 
-class Producer(connection: Connection, destName: String) extends JMSSupport with Actor with ActorLogging {
+class Producer(connection: Connection, destName: String, msgCounter: Option[ActorRef])
+  extends JMSSupport with Actor with ActorLogging {
 
   override def jmsConnection = connection
 
@@ -78,6 +81,7 @@ class Producer(connection: Connection, destName: String) extends JMSSupport with
           produce.priority,
           produce.ttl
         )
+        msgCounter.foreach { counter => counter ! new IncrementCounter() }
       }
       sender ! MessageProduced
     }
@@ -125,24 +129,34 @@ class AkkaConsumer(
 
   def stop() {
     session.foreach { _.close() }
-    consumerFor ! ConsumerStopped
+    consumerFor ! ConsumerStopped(destName)
   }
 
   override def onMessage(msg: Message) { consumerFor ! msg }
 }
 
 object Consumer {
-  def apply(connection: Connection, destName: String, subscriberName: Option[String]) =
-    new Consumer(connection, destName, subscriberName)
+  def apply(
+    connection: Connection,
+    destName: String,
+    subscriberName: Option[String],
+    msgCounter : Option[ActorRef] = None
+  ) = new Consumer(connection, destName, subscriberName, msgCounter)
 }
 
-class Consumer(connection: Connection, destName: String, subscriberName: Option[String]) extends Actor with ActorLogging {
+class Consumer(
+  connection: Connection,
+  destName: String,
+  subscriberName: Option[String],
+  msgCounter: Option[ActorRef]
+) extends Actor with ActorLogging {
 
   implicit val eCtxt = context.dispatcher
 
-  val idleTimeout = 5.seconds
+  val idleTimeout = FiniteDuration(
+    context.system.settings.config.getLong("de.woq.blended.itestsupport.jms.consumerTimeout"), SECONDS
+  )
 
-  var msgCount : Int = 0
   var jmsConsumer : AkkaConsumer = _
   var idleTimer : Option[Cancellable] = None
 
@@ -160,21 +174,16 @@ class Consumer(connection: Connection, destName: String, subscriberName: Option[
   override def receive = LoggingReceive {
     case msg : Message => {
       log.debug(s"Received message ...")
-      idleTimer.foreach { _.cancel() }
-      msgCount += 1
-      if (msgCount % 100 == 0) {
-        log.info(s"Consumer at [${msgCount}] messages.")
-      }
+      msgCounter.foreach { counter => counter ! new IncrementCounter() }
       resetTimer()
     }
     case Unsubscribe => {
       log.info(s"Unsubscribing [${subscriberName}]")
       jmsConsumer.unsubscribe()
     }
-    case ConsumerStopped => {
-      log.debug("Consumer stopped")
+    case stopped : ConsumerStopped => {
+      context.system.eventStream.publish(stopped)
       idleTimer.foreach { _.cancel() }
-      context.system.eventStream.publish(MessageCount(self, msgCount))
     }
     case MsgTimeout => {
       log.info(s"No message received in [${idleTimeout}]. Stopping subscriber.")
