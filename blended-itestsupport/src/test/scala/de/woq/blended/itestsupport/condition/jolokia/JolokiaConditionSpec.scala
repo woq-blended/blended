@@ -18,12 +18,12 @@ package de.woq.blended.itestsupport.condition.jolokia
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.woq.blended.itestsupport.condition.{ConditionActor, ParallelComposedCondition}
-import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
-import de.woq.blended.itestsupport.protocol.{CheckCondition, ConditionSatisfied}
+import de.woq.blended.itestsupport.condition.{Condition, AsyncCondition, ConditionActor}
+import de.woq.blended.itestsupport.jolokia.JolokiaAvailableChecker
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
 
+import de.woq.blended.itestsupport.protocol._
 import scala.concurrent.duration._
 
 class JolokiaConditionSpec extends TestActorSys
@@ -36,13 +36,13 @@ class JolokiaConditionSpec extends TestActorSys
 
       val t = 10.seconds
 
-      val condition = new ParallelComposedCondition(
-        new JolokiaAvailableCondition(url = "http://localhost:7777/jolokia", timeout = t)
-      )
+      val condition = new AsyncCondition(Props(
+        JolokiaAvailableChecker("http://localhost:7777/jolokia")
+      ))
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
-      expectMsg(t, ConditionSatisfied(condition :: Nil))
+      expectMsg(t, ConditionCheckResult(List(condition), List.empty[Condition]))
     }
   }
 

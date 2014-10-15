@@ -21,7 +21,7 @@ import javax.jms.ConnectionFactory
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, MbeanExistsCondition}
+import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableChecker, MBeanExistsChecker}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys

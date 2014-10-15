@@ -16,8 +16,7 @@
 
 package de.woq.blended.itestsupport
 
-import de.woq.blended.itestsupport.condition.Condition
-import scala.concurrent.duration._
+import de.woq.blended.itestsupport.condition.{AsyncCondition, Condition}
 
 package object protocol {
 
@@ -28,11 +27,14 @@ package object protocol {
   // Use this object to query an actor that encapsulates a condition.
   case object CheckCondition
 
+  // Use this object to kick off an Asynchronous checker
+  case class CheckAsyncCondition(condition: AsyncCondition)
+
   object ConditionCheckResult {
     def apply(results: List[ConditionCheckResult]) = {
       new ConditionCheckResult(
-        results.map { r => r.satisfied} flatten,
-        results.map { r => r.timedOut} flatten
+        results.map { r => r.satisfied}.flatten,
+        results.map { r => r.timedOut}.flatten
       )
     }
   }
@@ -44,8 +46,5 @@ package object protocol {
         s"\nA total of [${timedOut.size}] conditions have timed out", "\n", ""
       )
   }
-
-  case class ConditionTimeOut(conditions : List[Condition])
-  case class ConditionSatisfied(conditions: List[Condition])
 
 }

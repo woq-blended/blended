@@ -22,12 +22,19 @@ import de.woq.blended.jolokia.protocol._
 
 import scala.concurrent.duration.FiniteDuration
 
-class JolokiaAvailableCondition(
+object JolokiaAvailableChecker {
+  def apply(
+    url: String,
+    userName: Option[String] = None,
+    userPwd: Option[String] = None
+  )(implicit actorSys: ActorSystem) = new JolokiaAvailableChecker(url, userName, userPwd)
+}
+
+class JolokiaAvailableChecker(
   url: String,
-  timeout: FiniteDuration,
   userName: Option[String] = None,
   userPwd: Option[String] = None
-)(implicit system:ActorSystem) extends JolokiaCondition(url, timeout, userName, userPwd) with JolokiaAssertion {
+)(implicit system:ActorSystem) extends JolokiaChecker(url, userName, userPwd) with JolokiaAssertion {
 
   override def toString = s"JolokiaAvailableCondition(${url})"
 

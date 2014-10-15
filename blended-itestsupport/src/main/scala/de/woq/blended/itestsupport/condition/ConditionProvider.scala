@@ -18,6 +18,8 @@ package de.woq.blended.itestsupport.condition
 
 import java.util.concurrent.atomic.AtomicInteger
 
+import scala.concurrent.duration.FiniteDuration
+
 class AlwaysTrue extends Condition {
 
   val id = ConditionProvider.counter.incrementAndGet().toString
@@ -30,6 +32,15 @@ class NeverTrue extends Condition {
   val id = ConditionProvider.counter.incrementAndGet().toString
   override def satisfied(): Boolean = false
   override def toString: String = s"NeverTrueCondition[$id]"
+}
+
+class DelayedTrue(d: FiniteDuration) extends Condition {
+
+  private val id = ConditionProvider.counter.incrementAndGet().toString
+  private val created = System.currentTimeMillis()
+
+  override def satisfied(): Boolean = (System.currentTimeMillis() - created) >= d.toMillis
+  override def toString: String = s"DelayedTrue[${id}]"
 }
 
 object ConditionProvider {
