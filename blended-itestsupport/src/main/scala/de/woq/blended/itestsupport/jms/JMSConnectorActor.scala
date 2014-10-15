@@ -28,27 +28,54 @@ object JMSConnectorActor {
 
 class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
 
+  var postStopActions = List.empty[() => Unit]
+
+  private def addPostStopAction(f : () => Unit) {
+    postStopActions = f :: postStopActions
+  }
+
+  private def clearPostStopActions() {
+    postStopActions = List.empty[() => Unit]
+  }
+
   def receive = disconnected
 
-  def disconnected : Receive = LoggingReceive {
+  def disconnected : Receive = {
     case Connect(clientId, user, pwd) => {
-      val connection = if (user.isDefined && pwd.isDefined)
-        cf.createConnection(user.get, pwd.get)
-      else
-        cf.createConnection()
+      try {
+        val connection = if (user.isDefined && pwd.isDefined)
+          cf.createConnection(user.get, pwd.get)
+        else
+          cf.createConnection()
 
-      connection.setClientID(clientId)
-      connection.start()
-      context.become(connected(connection))
-      sender ! Connected(clientId)
+        log.debug(s"Connection [${clientId}] created ...")
+
+        connection.setClientID(clientId)
+        connection.start()
+        context.become(connected(connection))
+
+        val f = ( () => { c: Connection =>
+          log.debug(s"Closing connection [${clientId}]")
+          c.close()
+        }.apply(connection))
+
+        addPostStopAction(f)
+
+        sender ! Right(Connected(clientId))
+      } catch {
+        case t : Throwable =>
+          log.debug(s"Couldn't create JMS connection [${clientId}]")
+          sender ! Left(JMSCaughtException(t))
+      }
     }
   }
 
-  def connected(connection: Connection) : Receive = LoggingReceive {
+  def connected(connection: Connection) : Receive =  {
     case Disconnect => {
       connection.close()
       context.become(disconnected)
-      sender ! Disconnected
+      clearPostStopActions()
+      sender ! Right(Disconnected)
     }
     case CreateProducer(destName, msgCounter) => {
       val producer = context.actorOf(Props(Producer(connection, destName, msgCounter)))
@@ -62,5 +89,12 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
       val consumer = context.actorOf(Props(Consumer(connection, destName, Some(subscriberName), msgCounter)))
       sender ! ConsumerActor(consumer)
     }
+  }
+
+  override def postStop(): Unit = {
+
+    postStopActions.foreach(f => f)
+    clearPostStopActions()
+    super.postStop()
   }
 }

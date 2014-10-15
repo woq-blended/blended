@@ -37,7 +37,7 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
 
   def receive = initializing
 
-  def initializing : Receive = LoggingReceive {
+  def initializing : Receive = {
     case CheckCondition => {
       conditions match {
         case Nil => sender ! ConditionSatisfied(List.empty)
@@ -54,7 +54,7 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
     }
   }
 
-  def checking(checkingFor: ActorRef) : Receive = LoggingReceive {
+  def checking(checkingFor: ActorRef) : Receive = {
     case ParallelCheckerResults(results) => {
       // get everything that succeeded
       val succeeded = results.filter { _ match {

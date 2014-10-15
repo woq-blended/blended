@@ -26,8 +26,8 @@ import scala.concurrent.duration._
 
 class DefaultConditionChecker(condition: Condition) extends Actor with ActorLogging {
 
-  def receive = LoggingReceive {
-    case ConditionTick => sender ! ConditionCheckResult(condition, condition.satisfied)
+  def receive = {
+    case CheckCondition => sender ! ConditionCheckResult(condition, condition.satisfied)
   }
 }
 
@@ -51,43 +51,34 @@ class ConditionChecker(
 
   def receive = initializing
 
-  def initializing : Receive = LoggingReceive {
+  def initializing : Receive = {
     case CheckCondition => {
 
       val checker = context.actorOf(checkerProps)
 
-      context become checking(
-        sender, checker,
-        context.system.scheduler.scheduleOnce(cond.timeout, self, ConditionTimeOut),
-        context.system.scheduler.schedule(1.micro, cond.interval, self, ConditionTick)
-      )
+      context become busy(sender, checker).orElse(handleTimeout(sender))
+      context.system.scheduler.scheduleOnce(cond.timeout, self, ConditionTimeOut)
+
+      checker ! CheckCondition
     }
   }
 
-  def checking(
-    checkingFor    : ActorRef,
-    checker        : ActorRef,
-    checkTimer     : Cancellable,
-    timeoutChecker : Cancellable
-  ) : Receive = LoggingReceive {
-    case ConditionTick => {
-      implicit val t = new Timeout(cond.timeout)
-      log debug s"Checking Condition [${cond}]."
-      ( checker ? ConditionTick ).mapTo[ConditionCheckResult].pipeTo(self)
-    }
+  def busy(checkingFor: ActorRef, checker: ActorRef) : Receive = {
     case ConditionCheckResult(condition, satisfied)  => {
       if (satisfied) {
         log info s"Condition [${cond}] is now satisfied."
-        checkTimer.cancel()
-        timeoutChecker.cancel()
         checkingFor ! new ConditionSatisfied(List(condition))
         context.stop(self)
+      } else {
+        log.debug(s"Condition [${cond}] is not yet satisfied.")
+        context.system.scheduler.scheduleOnce(cond.interval, checker, CheckCondition)
       }
     }
+  }
+
+  def handleTimeout(checkingFor: ActorRef) : Receive = {
     case ConditionTimeOut => {
       log info s"Condition [${cond}] has timed out."
-      checkTimer.cancel()
-      timeoutChecker.cancel()
       checkingFor ! new ConditionTimeOut(List(cond))
       context.stop(self)
     }

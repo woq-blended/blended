@@ -55,8 +55,10 @@ class TrackingCounter(idleTimeout: FiniteDuration, counterFor: ActorRef)
     }
     case StopCounter => {
       timer.foreach(_.cancel())
-      (counter ? QueryCounter) pipeTo (counterFor)
-      self ! PoisonPill
+      (counter ? QueryCounter).mapTo[CounterInfo].map { info =>
+        counterFor ! info
+        context.stop(self)
+      }
     }
     case QueryCounter => counter.forward()
   }

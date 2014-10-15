@@ -26,7 +26,7 @@ package object protocol {
   case class FreePort(p: Int)
 
   case object ConditionTimeOut
-  case object ConditionTick
+  //case object ConditionTick
   case class  ConditionCheckResult(condition: Condition, satisfied: Boolean)
 
   case object  CheckCondition

@@ -33,6 +33,10 @@
     <java.version>1.7</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
+    <!-- Where is our docker for building the images and running the itests -->
+    <docker.host>localhost</docker.host>
+    <docker.port>2375</docker.port>
+
     <!-- plugin versions -->
     <compiler-plugin.version>2.5.1</compiler-plugin.version>
 
@@ -339,6 +343,7 @@
             <!-- This is not the real password - the real password is required when pushing to docker. -->
             <password>foo</password>
             <prefix>atooni/blended</prefix>
+            <host>http://${docker.host}:${docker.port}</host>
           </configuration>
           <executions>
             <execution>

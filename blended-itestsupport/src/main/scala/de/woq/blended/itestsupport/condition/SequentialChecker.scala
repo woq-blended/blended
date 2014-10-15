@@ -37,7 +37,7 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
 
   def receive = initializing
 
-  def initializing = LoggingReceive {
+  def initializing : Receive = {
     case CheckCondition => {
       remaining = conditions
       self ! SequentialCheck
@@ -45,7 +45,7 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
     }
   }
 
-  def checking(checkingFor : ActorRef ) = LoggingReceive {
+  def checking(checkingFor : ActorRef ) : Receive = {
 
     case SequentialCheck => {
       remaining match {

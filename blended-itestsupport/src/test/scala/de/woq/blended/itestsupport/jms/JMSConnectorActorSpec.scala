@@ -16,32 +16,19 @@
 
 package de.woq.blended.itestsupport.jms
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.Props
+import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import de.woq.blended.testsupport.TestActorSys
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.BrokerService
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-import akka.pattern.ask
-import scala.concurrent.duration._
-
-import de.woq.blended.util.protocol._
 import de.woq.blended.itestsupport.jms.protocol._
+import de.woq.blended.util.protocol._
+import org.apache.activemq.ActiveMQConnectionFactory
 
 import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.Random
 
-class JMSConnectorActorSpec extends TestActorSys("JMS")
-  with WordSpecLike
-  with Matchers
-  with BeforeAndAfterAll {
-
-  val BROKER_NAME = "blended"
-  var broker : Option[BrokerService] = None
-
-  val cf = new ActiveMQConnectionFactory("vm://blended")
+class JMSConnectorActorSpec extends AbstractJMSSpec {
 
   "The JMSConnectorActor" should {
 
@@ -50,6 +37,18 @@ class JMSConnectorActorSpec extends TestActorSys("JMS")
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
       connect(connector)
       disconnect(connector)
+    }
+
+    "Respond with a caught exception if the connection can't be established" in {
+      val invalidCf = new ActiveMQConnectionFactory("vm://foo?create=false")
+      val connector = TestActorRef(Props(JMSConnectorActor(invalidCf)))
+
+      connector ! Connect("invalid")
+
+      fishForMessage() {
+        case Left(e: JMSCaughtException) => true
+        case _ => false
+      }
     }
 
     "Allow to create a producer" in {
@@ -124,40 +123,5 @@ class JMSConnectorActorSpec extends TestActorSys("JMS")
 
       disconnect(connector)
     }
-  }
-
-  private def connect(connector: ActorRef) {
-    connector ! Connect("test")
-    expectMsg(Connected("test"))
-  }
-
-  private def disconnect(connector: ActorRef) {
-    connector ! Disconnect
-    expectMsg(Disconnected)
-  }
-  override protected def beforeAll() {
-    super.beforeAll()
-
-    broker = {
-      val b = new BrokerService()
-      b.setBrokerName(BROKER_NAME)
-      b.setPersistent(false)
-      b.setPersistenceAdapter(new MemoryPersistenceAdapter)
-
-      b.start()
-      b.waitUntilStarted()
-
-      Some(b)
-    }
-  }
-
-  override protected def afterAll() {
-    super.afterAll()
-
-    broker.foreach { b =>
-      b.stop()
-      b.waitUntilStopped()
-    }
-    broker = None
   }
 }

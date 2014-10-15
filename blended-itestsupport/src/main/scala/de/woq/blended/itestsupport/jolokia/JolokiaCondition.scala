@@ -74,14 +74,13 @@ abstract class JolokiaCondition (
     def receive = idle
 
     def idle : Receive = LoggingReceive {
-      case ConditionTick => {
+      case CheckCondition => {
         context become(busy(sender))
         connector ! jolokiaRequest
       }
     }
 
     def busy(requestor: ActorRef) : Receive = LoggingReceive {
-      case ConditionTick =>
       case msg  => {
         if (assertJolokia(msg)) {
           requestor ! ConditionCheckResult(condition, true)

@@ -56,7 +56,7 @@ class ParallelCheckerSpec extends TestActorSys
     "respond with a timeout message after a single wrapped condition has timed out" in {
       val conditions = (1 to 1).map { i => neverTrue() }.toList
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ParallelChecker(conditions)))
       checker ! CheckCondition
 
       expectMsg(ConditionTimeOut(conditions))
