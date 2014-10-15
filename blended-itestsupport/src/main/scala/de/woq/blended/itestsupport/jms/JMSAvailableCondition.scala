@@ -24,11 +24,12 @@ import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
 import de.woq.blended.itestsupport.camel.CamelTestSupport
-import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
+import de.woq.blended.itestsupport.condition.{ConditionActor, Condition}
 import de.woq.blended.itestsupport.jms.protocol._
 import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.duration._
+import scala.util.Success
 
 class JMSAvailableCondition(
   cf : ConnectionFactory,
@@ -40,14 +41,16 @@ class JMSAvailableCondition(
   override def timeout = jmsTimeout
 
   val jmsAvailable = new AtomicBoolean(false)
-  val checker      = system.actorOf(Props(ConditionChecker(this, Props(JMSChecker(this, cf)))))
+  val checker      = system.actorOf(Props(ConditionActor(this)))
 
-  (checker ? CheckCondition)(jmsTimeout).mapTo[ConditionSatisfied].map {
-    _ => jmsAvailable.set(true)
-  }.andThen {
-    case _ => {
-      system stop checker
-    }
+  (checker ? CheckCondition)(jmsTimeout).onComplete {
+    case Success(result) => {
+      result match {
+      case ConditionSatisfied(_) =>
+        jmsAvailable.set(true)
+        system.stop(checker)
+      case _ =>
+    }}
   }
 
   override def toString = s"jmsAvailableCondition(${cf})"
@@ -83,10 +86,10 @@ class JMSAvailableCondition(
               implicit val timeout = Timeout(1.second)
               val requestor = sender
               (jmsConnector.get ? Connect("test")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
-                log info(s"${result}")
+                //TODO
                 result match {
-                  case Left(e) => requestor ! ConditionCheckResult(condition, false)
-                  case Right(c : Connected) => requestor ! ConditionCheckResult(condition, true)
+                  case Left(e) => requestor ! ConditionCheckResult(List(condition), List.empty[Condition])
+                  case Right(c : Connected) => requestor ! "true"
                 }
               }
             }

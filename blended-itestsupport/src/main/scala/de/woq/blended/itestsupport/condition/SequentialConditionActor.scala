@@ -22,11 +22,12 @@ import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.duration.FiniteDuration
 
-object SequentialChecker {
-  def apply(conditions: List[Condition]) = new SequentialChecker(conditions)
+object SequentialConditionActor {
+  def apply(cond: SequentialComposedCondition) =
+    new SequentialConditionActor(cond.conditions)
 }
 
-class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLogging {
+class SequentialConditionActor(conditions: Seq[Condition]) extends Actor with ActorLogging {
 
   case object SequentialCheck
 
@@ -39,7 +40,7 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
 
   def initializing : Receive = {
     case CheckCondition => {
-      remaining = conditions
+      remaining = conditions.toList
       self ! SequentialCheck
       context become checking(sender)
     }
@@ -51,24 +52,26 @@ class SequentialChecker(conditions: List[Condition]) extends Actor with ActorLog
       remaining match {
         case Nil  => {
           log.debug(s"Successfully processed [${processed.size}] conditions.")
-          checkingFor ! new ConditionSatisfied(processed.reverse)
+          checkingFor ! new ConditionCheckResult(processed.reverse, List.empty[Condition])
           context stop self
         }
         case x::xs => {
           remaining = xs
-          val subChecker = context.actorOf(Props(ConditionChecker(cond = x)))
+          val subChecker = context.actorOf(Props(ConditionActor(x)))
           subChecker ! CheckCondition
         }
       }
     }
-    case ConditionSatisfied(c :: Nil) => {
-      processed = c :: processed
-      self ! SequentialCheck
-    }
-    case ConditionTimeOut(c :: Nil) => {
-      remaining = c :: remaining
-      checkingFor ! ConditionTimeOut(remaining)
-      context stop self
+    case cr : ConditionCheckResult => {
+      cr.allSatisfied match {
+        case true =>
+          processed = cr.satisfied.head :: processed
+          self ! SequentialCheck
+        case _ =>
+          remaining = cr.timedOut.head :: remaining
+          checkingFor ! ConditionCheckResult(processed.reverse, remaining)
+          context.stop(self)
+      }
     }
   }
 }

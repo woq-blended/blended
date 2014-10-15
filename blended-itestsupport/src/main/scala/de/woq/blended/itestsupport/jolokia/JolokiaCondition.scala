@@ -21,8 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
-import akka.util.Timeout
-import de.woq.blended.itestsupport.condition.{Condition, ConditionChecker}
+import de.woq.blended.itestsupport.condition.{ConditionActor, Condition}
 import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.jolokia.{JolokiaAddress, JolokiaClient}
 
@@ -55,7 +54,7 @@ abstract class JolokiaCondition (
 
   val jolokiaAsserted  = new AtomicBoolean(false)
   val connector        = system.actorOf(Props(JolokiaConnector(url, userName, userPwd)))
-  val checker          = system.actorOf(Props(ConditionChecker(this, Props(JolokiaChecker(this, connector)))))
+  val checker          = system.actorOf(Props(ConditionActor(this)))
 
   (checker ? CheckCondition)(timeout).mapTo[ConditionSatisfied].map {
     _ => jolokiaAsserted.set(true)
@@ -83,7 +82,8 @@ abstract class JolokiaCondition (
     def busy(requestor: ActorRef) : Receive = LoggingReceive {
       case msg  => {
         if (assertJolokia(msg)) {
-          requestor ! ConditionCheckResult(condition, true)
+          // TODO
+          requestor ! "true"
           context.stop(self)
         } else {
           context.become(idle)

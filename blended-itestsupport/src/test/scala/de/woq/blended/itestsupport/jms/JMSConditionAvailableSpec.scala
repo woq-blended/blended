@@ -2,11 +2,11 @@ package de.woq.blended.itestsupport.jms
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.woq.blended.itestsupport.condition.{ConditionChecker, ParallelComposedCondition}
-import org.apache.activemq.ActiveMQConnectionFactory
-import scala.concurrent.duration._
-
+import de.woq.blended.itestsupport.condition.{ConditionActor, ParallelComposedCondition}
 import de.woq.blended.itestsupport.protocol._
+import org.apache.activemq.ActiveMQConnectionFactory
+
+import scala.concurrent.duration._
 
 class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
@@ -19,7 +19,7 @@ class JMSConditionAvailableSpec extends AbstractJMSSpec {
         new JMSAvailableCondition(cf, 3.seconds)
       )
 
-      val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
       expectMsg(5.seconds, ConditionTimeOut(condition :: Nil))
     }
@@ -31,7 +31,7 @@ class JMSConditionAvailableSpec extends AbstractJMSSpec {
         new JMSAvailableCondition(cf, 3.seconds)
       )
 
-      val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
       expectMsg(5.seconds, ConditionSatisfied(condition :: Nil))
     }

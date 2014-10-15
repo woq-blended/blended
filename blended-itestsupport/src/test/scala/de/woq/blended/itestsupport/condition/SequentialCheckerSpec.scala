@@ -20,8 +20,8 @@ import akka.actor.Props
 import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.testsupport.TestActorSys
+
 import org.scalatest.{Matchers, WordSpecLike}
-import ConditionProvider._
 
 class SequentialCheckerSpec extends TestActorSys
   with WordSpecLike
@@ -30,45 +30,52 @@ class SequentialCheckerSpec extends TestActorSys
   "The Condition Checker" should {
 
     "respond with a satisfied message on an empty list of conditions" in {
-      val checker = TestActorRef(Props(SequentialChecker(List.empty)))
+
+      val condition = new SequentialComposedCondition()
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
-      expectMsg(ConditionSatisfied(List.empty))
+
+      expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
     }
 
     "respond with a satisfied message after a single wrapped condition has been satisfied" in {
-      val conditions = (1 to 1).map { i => alwaysTrue() }.toList
+      val conditions = (1 to 1).map { i => new AlwaysTrue() }.toList
+      val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
 
-      expectMsg(ConditionSatisfied(conditions))
+      expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
-      val conditions = (1 to 5).map { i => alwaysTrue() }.toList
+      val conditions = (1 to 5).map { i => new AlwaysTrue() }.toList
+      val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
 
-      expectMsg(ConditionSatisfied(conditions))
+      expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
     "respond with a timeout message after a single wrapped condition has timed out" in {
-      val conditions = (1 to 1).map { i => neverTrue() }.toList
+      val conditions = (1 to 1).map { i => new NeverTrue() }.toList
+      val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
 
-      expectMsg(ConditionTimeOut(conditions))
+      expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
     }
 
     "respond with a timeout message after the first wrapped condition has timed out" in {
-      val conditions = (1 to 5).map { i => neverTrue() }.toList
+      val conditions = (1 to 5).map { i => new NeverTrue() }.toList
+      val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
-      val checker = TestActorRef(Props(SequentialChecker(conditions)))
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
 
-      expectMsg(ConditionTimeOut(conditions))
+      expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
     }
 
     """"
@@ -76,13 +83,15 @@ class SequentialCheckerSpec extends TestActorSys
      after the first failing condition has timed out
     """ in {
 
-      val trueConditions      = (1 to 2).map { i => alwaysTrue() }.toList
-      val remainingConditions = neverTrue() :: (1 to 2).map { i => alwaysTrue() }.toList
+      val trueConditions      = (1 to 2).map { i => new AlwaysTrue() }.toList
+      val remainingConditions = new NeverTrue() :: (1 to 2).map { i => new AlwaysTrue() }.toList
 
-      val checker = TestActorRef(Props(SequentialChecker(trueConditions ::: remainingConditions)))
+      val condition = new SequentialComposedCondition((trueConditions ::: remainingConditions).toSeq:_*)
+
+      val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
 
-      expectMsg(ConditionTimeOut(remainingConditions))
+      expectMsg(ConditionCheckResult(trueConditions, remainingConditions))
     }
   }
 

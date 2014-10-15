@@ -25,11 +25,27 @@ package object protocol {
   case object GetPort
   case class FreePort(p: Int)
 
-  case object ConditionTimeOut
-  //case object ConditionTick
-  case class  ConditionCheckResult(condition: Condition, satisfied: Boolean)
+  // Use this object to query an actor that encapsulates a condition.
+  case object CheckCondition
 
-  case object  CheckCondition
+  object ConditionCheckResult {
+    def apply(results: List[ConditionCheckResult]) = {
+      new ConditionCheckResult(
+        results.map { r => r.satisfied} flatten,
+        results.map { r => r.timedOut} flatten
+      )
+    }
+  }
+  case class ConditionCheckResult(satisfied: List[Condition], timedOut: List[Condition]) {
+    def allSatisfied = timedOut.isEmpty
+
+    def reportTimeouts : String =
+      timedOut.mkString(
+        s"\nA total of [${timedOut.size}] conditions have timed out", "\n", ""
+      )
+  }
+
   case class ConditionTimeOut(conditions : List[Condition])
   case class ConditionSatisfied(conditions: List[Condition])
+
 }

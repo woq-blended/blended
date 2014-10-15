@@ -24,12 +24,12 @@ import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.Future
 
-object ParallelChecker {
-  def apply(conditions: List[Condition]) =
-    new ParallelChecker(conditions)
+object ParallelConditionActor {
+  def apply(condition: ParallelComposedCondition) =
+    new ParallelConditionActor(condition.conditions)
 }
 
-class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLogging {
+class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with ActorLogging {
 
   case class ParallelCheckerResults(results : List[Any])
 
@@ -40,7 +40,7 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
   def initializing : Receive = {
     case CheckCondition => {
       conditions match {
-        case Nil => sender ! ConditionSatisfied(List.empty)
+        case Nil => sender ! ConditionCheckResult(List.empty[Condition], List.empty[Condition])
         case _ => {
           context become checking(sender)
           // Create a single future that terminates when all condition checkers are done
@@ -56,39 +56,20 @@ class ParallelChecker(conditions: List[Condition]) extends Actor with ActorLoggi
 
   def checking(checkingFor: ActorRef) : Receive = {
     case ParallelCheckerResults(results) => {
-      // get everything that succeeded
-      val succeeded = results.filter { _ match {
-        case s : ConditionSatisfied => true
-        case _ => false
-      }}.asInstanceOf[List[ConditionSatisfied]]
-
-      // get everything that timed out
-      val timedOut = results.filter { _ match {
-        case s : ConditionSatisfied => false
-        case _ => true
-      }}.asInstanceOf[List[ConditionTimeOut]]
-
-      // If we have any timeout we respond with a timeout otherwise we succeeded
-      // Note that each message contains only a one element condition list and we collect all the
-      // elements in a single list
-      timedOut match {
-        case Nil => checkingFor ! new ConditionSatisfied(succeeded.map { _.conditions.head })
-        case _ => checkingFor ! new ConditionTimeOut( timedOut.map { _.conditions.head} )
-      }
-
+      checkingFor ! ConditionCheckResult(results.asInstanceOf[List[ConditionCheckResult]])
       context stop self
     }
   }
 
   // Create a list of Future that execute in parallel
-  private def checker : Seq[Future[Any]] = conditions.map { c =>
+  private def checker : Seq[Future[Any]] = conditions.toSeq.map { c =>
     (
-      c,                                           // Keep the condition under check in the context
-      context.actorOf(Props(ConditionChecker(c)))  // The actor checking a single condition
+      c,                                         // Keep the condition under check in the context
+      context.actorOf(Props(ConditionActor(c)))  // The actor checking a single condition
     )
   }.map { p =>
     (p._2 ? CheckCondition)(p._1.timeout).recover {
-      case _ => ConditionTimeOut(List(p._1))
+      case _ => ConditionCheckResult(List.empty[Condition], List(p._1))
     }
-  } toSeq
+  }
 }

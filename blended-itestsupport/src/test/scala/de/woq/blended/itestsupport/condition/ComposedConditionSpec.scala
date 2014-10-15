@@ -34,31 +34,34 @@ class ComposedConditionSpec extends TestActorSys
     val timeout = 2.seconds
 
     "be satisfied with an empty condition list" in {
-      val condition = new ParallelComposedCondition()(system)
+      val condition = new ParallelComposedCondition()
 
-      val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
-      expectMsg(ConditionSatisfied(condition :: Nil))
+      expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
     }
 
     "be satisfied with a list of conditions that eventually satisfy" in {
-      val condition = new ParallelComposedCondition(
-        alwaysTrue, alwaysTrue, alwaysTrue, alwaysTrue
-      )(system)
 
-      val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
+      val conditions = List(alwaysTrue(), alwaysTrue(), alwaysTrue(), alwaysTrue())
+      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
-      expectMsg(ConditionSatisfied(condition :: Nil))
+      expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
     "timeout with at least failing condition" in {
-      val condition = new ParallelComposedCondition(
-        alwaysTrue, alwaysTrue, neverTrue, alwaysTrue
-      )(system)
+      val conditions = List(alwaysTrue(), alwaysTrue(), neverTrue(), alwaysTrue())
+      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
 
-      val checker = TestActorRef(Props(ConditionChecker(cond = condition)))
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
-      expectMsg(ConditionTimeOut(condition :: Nil))
+
+      expectMsg(ConditionCheckResult(
+        conditions.filter(_.isInstanceOf[AlwaysTrue]),
+        conditions.filter(_.isInstanceOf[NeverTrue])
+      ))
     }
   }
 }

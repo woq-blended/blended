@@ -44,20 +44,22 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-    new SequentialComposedCondition(
-      new ParallelComposedCondition(
-        new JolokiaAvailableCondition(jmxRest, t, Some("blended"), Some("blended")),
-        new JMSAvailableCondition(amqConnectionFactory, t)
-      ),
-      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchDef {
-        override def jmxDomain = "org.apache.camel"
+    new JMSAvailableCondition(amqConnectionFactory, t)
 
-        override def searchProperties = Map(
-          "name" -> "\"BlendedSample\"",
-          "type" -> "context"
-        )
-      }
-    )
+//    new SequentialComposedCondition(
+//      new ParallelComposedCondition(
+//        //new JolokiaAvailableCondition(jmxRest, t, Some("blended"), Some("blended")),
+//        new JMSAvailableCondition(amqConnectionFactory, t)
+//      )
+////      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchDef {
+////        override def jmxDomain = "org.apache.camel"
+////
+////        override def searchProperties = Map(
+////          "name" -> "\"BlendedSample\"",
+////          "type" -> "context"
+////        )
+////      }
+//    )
   }
 
   private lazy val jmxRest = {
