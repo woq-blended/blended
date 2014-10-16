@@ -38,11 +38,28 @@ class JolokiaConditionSpec extends TestActorSys
 
       val condition = new AsyncCondition(Props(
         JolokiaAvailableChecker("http://localhost:7777/jolokia")
-      ))
+      )) {
+        override def timeout: FiniteDuration = t
+      }
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
       expectMsg(t, ConditionCheckResult(List(condition), List.empty[Condition]))
+    }
+
+    "fail with a not existing Jolokia" in {
+
+      val t = 10.seconds
+
+      val condition = new AsyncCondition(Props(
+        JolokiaAvailableChecker("http://localhost:8888/jolokia")
+      )) {
+        override def timeout: FiniteDuration = t
+      }
+
+      val checker = TestActorRef(Props(ConditionActor(cond = condition)))
+      checker ! CheckCondition
+      expectMsg(t + 1.second, ConditionCheckResult(List.empty[Condition], List(condition)))
     }
   }
 

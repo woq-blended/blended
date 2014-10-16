@@ -21,6 +21,16 @@ import java.util.concurrent.atomic.AtomicBoolean
 import akka.actor.{ActorSystem, Props}
 import de.woq.blended.itestsupport.protocol.CheckAsyncCondition
 
+import scala.concurrent.duration.FiniteDuration
+
+object AsyncCondition{
+  def apply(asyncChecker: Props)(implicit system: ActorSystem) = new AsyncCondition(asyncChecker)
+  def apply(asyncChecker: Props, t: FiniteDuration)(implicit system: ActorSystem) =
+    new AsyncCondition(asyncChecker) {
+      override def timeout = t
+    }
+}
+
 class AsyncCondition(asyncChecker: Props)(implicit val system: ActorSystem) extends Condition {
 
   val isSatisfied = new AtomicBoolean(false)

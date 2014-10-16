@@ -18,15 +18,14 @@ package de.woq.blended.akka.itest
 
 import javax.jms.ConnectionFactory
 
-import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
+import akka.actor.Props
+import de.woq.blended.itestsupport.condition.AsyncCondition
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
-import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableChecker, MBeanExistsChecker}
+import de.woq.blended.itestsupport.jms.JMSChecker
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
-import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.{SpecLike, Spec, Suite}
+import org.scalatest.SpecLike
 
 import scala.collection.immutable.IndexedSeq
 import scala.concurrent.Await
@@ -44,7 +43,9 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-    new JMSAvailableCondition(amqConnectionFactory, t)
+    new AsyncCondition(Props(JMSChecker(amqConnectionFactory))) {
+      override def timeout = t
+    }
 
 //    new SequentialComposedCondition(
 //      new ParallelComposedCondition(

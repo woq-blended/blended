@@ -46,7 +46,7 @@ class JolokiaChecker(url: String, userName: Option[String], password: Option[Str
   }
 
   override def performCheck(condition: AsyncCondition) = {
-    implicit val t = Timeout(condition.interval)
+    implicit val t = Timeout(condition.timeout)
     (jolokiaConnector.get ? jolokiaRequest).map { result =>
       assertJolokia(result)
     }

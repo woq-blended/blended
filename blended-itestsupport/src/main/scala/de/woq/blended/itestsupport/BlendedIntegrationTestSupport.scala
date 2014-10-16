@@ -22,7 +22,7 @@ import akka.testkit.TestKit
 import akka.util.Timeout
 import com.github.dockerjava.api.command.InspectContainerResponse
 import com.typesafe.config.{Config, ConfigFactory}
-import de.woq.blended.itestsupport.condition.Condition
+import de.woq.blended.itestsupport.condition.{ConditionActor, Condition}
 import de.woq.blended.itestsupport.docker._
 import de.woq.blended.itestsupport.docker.protocol._
 import de.woq.blended.itestsupport.protocol._
@@ -110,20 +110,20 @@ trait BlendedIntegrationTestSupport
     (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
   }
 
-  def assertCondition(condition: Condition) : Boolean = { true
+  def assertCondition(condition: Condition) : Boolean = {
 
-//    implicit val eCtxt = system.dispatcher
-//
-//    val checker = system.actorOf(Props(ConditionChecker(condition)))
-//
-//    val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
-//      result match {
-//        case ConditionSatisfied(_) => true
-//        case _ => false
-//      }
-//    }
-//
-//    Await.result(checkFuture, condition.timeout)
+    implicit val eCtxt = system.dispatcher
+
+    val checker = system.actorOf(Props(ConditionActor(condition)))
+
+    val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
+      result match {
+        case cr: ConditionCheckResult => cr.allSatisfied
+        case _ => false
+      }
+    }
+
+    Await.result(checkFuture, condition.timeout)
   }
 
   def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
