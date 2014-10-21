@@ -16,13 +16,12 @@
 
 package de.woq.blended.itestsupport.condition
 
-import scala.language.postfixOps
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.event.LoggingReceive
 import akka.pattern._
 import de.woq.blended.itestsupport.protocol._
 
 import scala.concurrent.Future
+import scala.language.postfixOps
 
 object ParallelConditionActor {
   def apply(condition: ParallelComposedCondition) =

@@ -18,9 +18,12 @@ package de.woq.blended.itestsupport.jms
 
 import javax.jms.{Connection, ConnectionFactory}
 
-import akka.actor.{Props, ActorLogging, Actor}
-import akka.event.LoggingReceive
+import akka.actor.{Actor, ActorLogging, Props}
 import de.woq.blended.itestsupport.jms.protocol._
+
+import scala.concurrent.duration._
+
+import scala.concurrent.{Await, Future}
 
 object JMSConnectorActor {
   def apply(cf: ConnectionFactory) = new JMSConnectorActor(cf)
@@ -28,6 +31,7 @@ object JMSConnectorActor {
 
 class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
 
+  implicit val ctxt = context.dispatcher
   var postStopActions = List.empty[() => Unit]
 
   private def addPostStopAction(f : () => Unit) {
@@ -42,31 +46,13 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
 
   def disconnected : Receive = {
     case Connect(clientId, user, pwd) => {
-      try {
-        val connection = if (user.isDefined && pwd.isDefined)
-          cf.createConnection(user.get, pwd.get)
-        else
-          cf.createConnection()
-
-        log.debug(s"Connection [${clientId}] created ...")
-
-        connection.setClientID(clientId)
-        connection.start()
-        context.become(connected(connection))
-
-        val f = ( () => { c: Connection =>
-          log.debug(s"Closing connection [${clientId}]")
-          c.close()
-        }.apply(connection))
-
-        addPostStopAction(f)
-
-        sender ! Right(Connected(clientId))
+      val result = try {
+        Await.result(createConnection(clientId, user, pwd), 1.second)
       } catch {
-        case t : Throwable =>
-          log.debug(s"Couldn't create JMS connection [${clientId}]")
-          sender ! Left(JMSCaughtException(t))
+        case t: Throwable => Left(JMSCaughtException(t))
       }
+
+      sender ! result
     }
   }
 
@@ -96,5 +82,38 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
     postStopActions.foreach(f => f)
     clearPostStopActions()
     super.postStop()
+  }
+
+  private def createConnection(
+    clientId: String, user: Option[String], password: Option[String]
+  ) : Future[Either[JMSCaughtException, Connected]] = {
+
+    Future {
+      try {
+        val connection = if (user.isDefined && password.isDefined)
+          cf.createConnection(user.get, password.get)
+        else
+          cf.createConnection()
+
+        log.debug(s"Connection [${clientId}] created ...")
+
+        connection.setClientID(clientId)
+        connection.start()
+        context.become(connected(connection))
+
+        val f = (() => { c: Connection =>
+          log.debug(s"Closing connection [${clientId}]")
+          c.close()
+        }.apply(connection))
+
+        addPostStopAction(f)
+
+        Right(Connected(clientId))
+      } catch {
+        case t: Throwable =>
+          log.debug(s"Couldn't create JMS connection [${clientId}]")
+          Left(JMSCaughtException(t))
+      }
+    }
   }
 }

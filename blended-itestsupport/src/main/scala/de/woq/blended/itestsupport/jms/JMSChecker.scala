@@ -21,8 +21,10 @@ import javax.jms.ConnectionFactory
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import de.woq.blended.itestsupport.condition.{AsyncCondition, AsyncChecker, Condition}
+import de.woq.blended.itestsupport.condition.{AsyncChecker, AsyncCondition}
 import de.woq.blended.itestsupport.jms.protocol._
+
+import scala.concurrent.duration._
 
 import scala.concurrent.Future
 
@@ -44,10 +46,14 @@ class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
 
   override def performCheck(cond: AsyncCondition) : Future[Boolean] = {
 
-    implicit val t = Timeout(cond.timeout)
+    implicit val t = Timeout(1.second)
+    log.debug("Checking JMS connection...")
     (jmsConnector.get ? Connect("test")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
       result match {
-        case Left(_) => false
+        case Left(e) => {
+          log.debug(s"Couldn't connect to JMS [${e.inner.getMessage}]")
+          false
+        }
         case Right(_) => true
       }
     }

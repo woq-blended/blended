@@ -22,6 +22,7 @@ import akka.actor.Props
 import de.woq.blended.itestsupport.condition.AsyncCondition
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
 import de.woq.blended.itestsupport.jms.JMSChecker
+import de.woq.blended.itestsupport.jolokia.JolokiaAvailableChecker
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -43,9 +44,8 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-    new AsyncCondition(Props(JMSChecker(amqConnectionFactory))) {
-      override def timeout = t
-    }
+    //AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
+    AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))),t)
 
 //    new SequentialComposedCondition(
 //      new ParallelComposedCondition(

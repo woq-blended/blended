@@ -42,6 +42,7 @@ abstract class AsyncChecker extends Actor with ActorLogging {
 
   def checking(condition: AsyncCondition, timer: Cancellable) : Receive = {
     case Tick =>
+      log.debug("Checking asynchronous condition ....")
       performCheck(condition).map(_ match {
         case true =>
           log.debug(s"Asynchronous condition is now satisfied.")
@@ -49,6 +50,7 @@ abstract class AsyncChecker extends Actor with ActorLogging {
           condition.isSatisfied.set(true)
           context.stop(self)
         case false =>
+          log.debug(s"Scheduling next condition check in [${condition.interval}]")
           context.system.scheduler.scheduleOnce(condition.interval, self, Tick)
       })
     case Stop =>

@@ -17,9 +17,13 @@
 package de.woq.blended.akka.internal
 
 import akka.actor.{ActorRef, ActorLogging, Actor}
+import de.woq.blended.modules.Filter
+import de.woq.blended.modules.FilterComponent._
 import org.osgi.framework.{ServiceReference, BundleContext}
 import org.osgi.util.tracker.{ServiceTracker, ServiceTrackerCustomizer}
 import akka.event.LoggingReceive
+import de.woq.blended.modules._
+
 import de.woq.blended.akka.protocol._
 
 trait TrackerAdapterProvider[I <: AnyRef] {
@@ -68,16 +72,25 @@ object OSGIServiceTracker {
   }
 }
 
-class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef) extends Actor with ActorLogging {
+class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filter: Option[FilterComponent] = None) extends Actor with ActorLogging {
   this : BundleContextProvider with TrackerAdapterProvider[I] =>
 
   case object Initialize
 
   def initializing : Receive = LoggingReceive {
     case Initialize => {
-      val tracker = new ServiceTracker[I, I](
-        bundleContext, clazz, trackerAdapter(observer)
-      )
+      val tracker = filter match {
+        case None => new ServiceTracker[I, I](
+          bundleContext, clazz, trackerAdapter(observer)
+        )
+        case Some(f) =>
+          val realFilter : Filter = ("objectClass" === clazz.getName) && f
+          log.debug(s"Creating Service tracker with filter [${realFilter}]")
+          new ServiceTracker[I, I](
+            bundleContext, bundleContext.createFilter(realFilter.toString), trackerAdapter(observer)
+          )
+      }
+
       tracker.open()
       log info s"Initialized Service Tracker for [${clazz.getName}]."
       context.become(tracking(tracker))

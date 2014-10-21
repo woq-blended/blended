@@ -49,5 +49,5 @@ package object protocol {
   case object Unsubscribe
   case class ConsumerStopped(destName: String)
 
-  case class JMSCaughtException(t: Throwable)
+  case class JMSCaughtException(inner: Throwable)
 }

@@ -18,7 +18,7 @@ package de.woq.blended.modules
 
 import scala.language.implicitConversions
 
-private[modules] object Filter {
+object Filter {
 
   /**
    * Implicitly converts a FilterComponent into a Filter.
@@ -28,7 +28,7 @@ private[modules] object Filter {
   implicit def filterComponentToFilter(filterComponent: FilterComponent) = Filter(filterComponent)
 }
 
-private[modules] case class Filter(filterComponent: FilterComponent) {
+case class Filter(filterComponent: FilterComponent) {
 
   assert(filterComponent != null, "The FilterComponent must not be null!")
 
@@ -41,7 +41,7 @@ private[modules] case class Filter(filterComponent: FilterComponent) {
 
 // FilterComponents
 
-private[modules] object FilterComponent {
+object FilterComponent {
 
   /**
    * Implicitly converts a FilterComponent into an AndBuilder.
@@ -74,9 +74,9 @@ private[modules] object FilterComponent {
   }
 }
 
-private[modules] sealed abstract class FilterComponent
+sealed abstract class FilterComponent
 
-private[modules] case class And(filters: List[Filter]) extends FilterComponent {
+case class And(filters: List[Filter]) extends FilterComponent {
 
   assert(filters != null, "The filters must not be null!")
 
@@ -87,7 +87,7 @@ private[modules] case class And(filters: List[Filter]) extends FilterComponent {
   override def toString = "&" + filters.mkString
 }
 
-private[modules] case class Or(filters: List[Filter]) extends FilterComponent {
+ case class Or(filters: List[Filter]) extends FilterComponent {
 
   assert(filters != null, "The filters must not be null!")
 
@@ -98,7 +98,7 @@ private[modules] case class Or(filters: List[Filter]) extends FilterComponent {
   override def toString = "|" + filters.mkString
 }
 
-private[modules] case class Not(filter: Filter) extends FilterComponent {
+ case class Not(filter: Filter) extends FilterComponent {
 
   assert(filter != null, "The Filter must not be null!")
 
@@ -109,7 +109,7 @@ private[modules] case class Not(filter: Filter) extends FilterComponent {
   override def toString = "!" + filter
 }
 
-private[modules] case class SimpleOp(attr: String, filterType: FilterType, value: Any)
+ case class SimpleOp(attr: String, filterType: FilterType, value: Any)
   extends FilterComponent {
 
   assert(attr != null, "The attr must not be null!")
@@ -123,7 +123,7 @@ private[modules] case class SimpleOp(attr: String, filterType: FilterType, value
   override def toString = attr + filterType + value
 }
 
-private[modules] case class Present(attr: String) extends FilterComponent {
+ case class Present(attr: String) extends FilterComponent {
 
   assert(attr != null, "The attr must not be null!")
 
@@ -136,9 +136,9 @@ private[modules] case class Present(attr: String) extends FilterComponent {
 
 // FilterTypes
 
-private[modules] sealed abstract class FilterType
+ sealed abstract class FilterType
 
-private[modules] case object Equal extends FilterType {
+ case object Equal extends FilterType {
 
   /**
    * String representation for this FilterType.
@@ -147,7 +147,7 @@ private[modules] case object Equal extends FilterType {
   override def toString = "="
 }
 
-private[modules] case object Approx extends FilterType {
+ case object Approx extends FilterType {
 
   /**
    * String representation for this FilterType.
@@ -156,7 +156,7 @@ private[modules] case object Approx extends FilterType {
   override def toString = "~="
 }
 
-private[modules] case object GreaterEqual extends FilterType {
+ case object GreaterEqual extends FilterType {
 
   /**
    * String representation for this FilterType.
@@ -165,7 +165,7 @@ private[modules] case object GreaterEqual extends FilterType {
   override def toString = ">="
 }
 
-private[modules] case object LessEqual extends FilterType {
+ case object LessEqual extends FilterType {
 
   /**
    * String representation for this FilterType.
@@ -176,7 +176,7 @@ private[modules] case object LessEqual extends FilterType {
 
 // Builders
 
-private[modules] class AndBuilder(component: FilterComponent) {
+ class AndBuilder(component: FilterComponent) {
 
   assert(component != null, "The FilterComponent must not be null!")
 
@@ -201,7 +201,7 @@ private[modules] class AndBuilder(component: FilterComponent) {
   }
 }
 
-private[modules] class OrBuilder(component: FilterComponent) {
+ class OrBuilder(component: FilterComponent) {
 
   assert(component != null, "The FilterComponent must not be null!")
 
@@ -226,7 +226,7 @@ private[modules] class OrBuilder(component: FilterComponent) {
   }
 }
 
-private[modules] class NotBuilder(component: FilterComponent) {
+ class NotBuilder(component: FilterComponent) {
 
   assert(component != null, "The FilterComponent must not be null!")
 
@@ -243,7 +243,7 @@ private[modules] class NotBuilder(component: FilterComponent) {
   def not = Not(Filter(component))
 }
 
-private[modules] class SimpleOpBuilder(attr: String) {
+ class SimpleOpBuilder(attr: String) {
 
   assert(attr != null, "The attr must not be null!")
 
@@ -340,7 +340,7 @@ private[modules] class SimpleOpBuilder(attr: String) {
   }
 }
 
-private[modules] class PresentBuilder(attr: String) {
+ class PresentBuilder(attr: String) {
 
   assert(attr != null, "The attr must not be null!")
 
