@@ -18,7 +18,7 @@ package de.woq.blended.persistence.protocol
 
 import akka.actor.{ActorRef, Terminated, ActorLogging, Actor}
 import de.woq.blended.persistence.internal.PersistenceBundleName
-import de.woq.blended.akka.OSGIActor
+import de.woq.blended.akka.{MemoryStash, OSGIActor}
 import de.woq.blended.akka.protocol._
 import akka.event.LoggingReceive
 
@@ -26,8 +26,7 @@ trait DataObjectFactory {
   def createObject(props: PersistenceProperties) : Option[DataObject]
 }
 
-class DataObjectCreator(factory: DataObjectFactory) extends Actor with ActorLogging with PersistenceBundleName {
-  this : OSGIActor =>
+class DataObjectCreator(factory: DataObjectFactory) extends OSGIActor with PersistenceBundleName with MemoryStash {
 
   def createObject(props: PersistenceProperties) : Option[DataObject] = factory.createObject(props)
 
@@ -36,15 +35,17 @@ class DataObjectCreator(factory: DataObjectFactory) extends Actor with ActorLogg
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
   }
 
-  override def receive = registering
+  override def receive = registering orElse stashing
 
-  def registering = LoggingReceive {
-    case BundleActorStarted(name) if name == bundleSymbolicName => {
+  def registering : Receive = LoggingReceive {
+    case BundleActorStarted(name) if name == bundleSymbolicName =>
       setupFactory()
-    }
+    case RegisterDataFactory(f) if f == self =>
+      unstash()
+      context.become(working)
   }
 
-  def working = LoggingReceive {
+  def working : Receive = LoggingReceive {
     case CreateObjectFromProperties(props) => {
       createObject(props) match {
         case Some(dataObject) => {
@@ -66,7 +67,6 @@ class DataObjectCreator(factory: DataObjectFactory) extends Actor with ActorLogg
           log.debug("Registering data factory with persistence manager")
           actor ! RegisterDataFactory(self)
           context.watch(actor)
-          context.become(working)
         }
         case dlq if dlq == context.system.deadLetters =>
       }

@@ -16,22 +16,27 @@
 
 package de.woq.blended.persistence.internal
 
+import akka.actor.ActorSystem
 import de.woq.blended.container.context.ContainerContext
+import de.woq.blended.testsupport.TestActorSys
 import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 
-trait TestSetup { this : MockitoSugar =>
+trait TestSetup { this : TestActorSys with MockitoSugar =>
 
   implicit val osgiContext = mock[BundleContext]
   val ctContext = mock[ContainerContext]
   val ctContextRef = mock[ServiceReference[ContainerContext]]
   val bundle = mock[Bundle]
+  val actorSystemRef = mock[ServiceReference[ActorSystem]]
 
   when(ctContextRef.getBundle) thenReturn (bundle)
   when(bundle.getBundleContext) thenReturn (osgiContext)
   when(osgiContext.getServiceReference(classOf[ContainerContext])) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
+  when(osgiContext.getServiceReference(classOf[ActorSystem])) thenReturn (actorSystemRef)
+  when(osgiContext.getService(actorSystemRef)) thenReturn system
   when(ctContext.getContainerConfigDirectory) thenReturn (getClass.getResource("/").getPath)
   when(ctContext.getContainerDirectory) thenReturn (getClass.getResource("/").getPath)
 

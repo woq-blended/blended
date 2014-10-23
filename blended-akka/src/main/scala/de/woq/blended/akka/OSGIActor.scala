@@ -17,17 +17,18 @@
 package de.woq.blended.akka
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
+import com.typesafe.config.Config
 import de.woq.blended.akka.protocol._
+
+import akka.pattern.pipe
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
 
-/**
- * Created by andreas on 25/06/14.
- */
-trait OSGIActor { this : Actor with ActorLogging =>
+trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
 
   implicit val timeout = new Timeout(1.second)
   implicit val ec = context.dispatcher
@@ -62,5 +63,25 @@ trait OSGIActor { this : Actor with ActorLogging =>
         result
       }
     }
+  }
+}
+
+trait InitializingActor extends OSGIActor { this: BundleName =>
+
+  case object Initialized
+
+  def initialize(config: Config) : Unit
+
+  def working : Receive
+
+  def initializing : Receive = LoggingReceive {
+    case InitializeBundle(_) => {
+      log.debug(s"Initializing bundle actor [${bundleSymbolicName}]")
+      getActorConfig(bundleSymbolicName) pipeTo (self)
+    }
+    case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
+      initialize(cfg)
+    }
+    case Initialized => context.become(working)
   }
 }

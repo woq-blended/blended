@@ -36,9 +36,13 @@ class OSGIServiceReference[I <: AnyRef](serviceRef : ServiceReference[I])
       context.stop(self)
     }
 
-    case InvokeService(f : InvocationType[I, _])=> sender ! ( bundleContext.getService(serviceRef) match {
-      case null => ServiceResult(None)
-      case svc => ServiceResult(Some(f(svc)))
-    })
+    case InvokeService(f : InvocationType[I, _]) => {
+      val result = ( bundleContext.getService(serviceRef) match {
+        case null => None
+        case svc => Some(f(svc))
+      })
+      log.debug(s"Service invocation result is [${result}]")
+      sender ! ServiceResult(result)
+    }
   }
 }

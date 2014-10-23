@@ -1,0 +1,11 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator: \
+  de.woq.blended.samples.tracker.internal.TrackerActivator
+
+Import-Package: \
+  *

@@ -47,7 +47,7 @@ trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging 
   }
 }
 
-trait OSGIEventSourceListener { this : Actor with ActorLogging with OSGIActor =>
+trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
 
   var publisher = context.system.deadLetters
 

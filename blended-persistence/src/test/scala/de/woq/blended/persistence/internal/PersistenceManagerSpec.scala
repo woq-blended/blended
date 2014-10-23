@@ -16,20 +16,21 @@
 
 package de.woq.blended.persistence.internal
 
-import de.woq.blended.testsupport.TestActorSys
-import org.scalatest.{BeforeAndAfterAll, WordSpecLike, Matchers}
+import akka.actor.{ActorRef, Props}
 import akka.event.Logging.Info
-import de.woq.blended.persistence.internal.person.{PersonCreator, Person}
-import de.woq.blended.akka.protocol._
-import akka.actor.{ActorRef, Props, PoisonPill}
-import org.scalatest.mock.MockitoSugar
+import akka.testkit.TestActorRef
+import akka.util.Timeout
 import de.woq.blended.akka.internal.OSGIFacade
-import de.woq.blended.akka.{OSGIActor, BlendedAkkaConstants}
+import de.woq.blended.akka.protocol._
+import de.woq.blended.akka.{BlendedAkkaConstants, OSGIActor}
+import de.woq.blended.persistence.internal.person.{Person, PersonCreator}
+import de.woq.blended.persistence.protocol.{QueryResult, StoreObject, _}
+import de.woq.blended.testsupport.TestActorSys
+import org.osgi.framework.BundleActivator
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
-import de.woq.blended.persistence.protocol._
-import de.woq.blended.persistence.protocol.QueryResult
-import de.woq.blended.persistence.protocol.StoreObject
-import de.woq.blended.persistence.protocol.FindObjectByID
 
 class PersistenceManagerSpec
   extends TestActorSys
@@ -41,20 +42,24 @@ class PersistenceManagerSpec
   with BeforeAndAfterAll {
 
   var facade : ActorRef = _
-  var pMgr : ActorRef = _
+  var activator : BundleActivator = _
   var dataCreator : ActorRef = _
 
-  override protected def beforeAll() {
-    facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
-    pMgr = system.actorOf(Props(PersistenceManager(new Neo4jBackend())), bundleSymbolicName)
-    pMgr ! InitializeBundle(osgiContext)
+  implicit val timeout = Timeout(3.seconds)
+  implicit val ctxt = system.dispatcher
 
-    dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor))
-    dataCreator ! BundleActorStarted(bundleSymbolicName)
+  override protected def beforeAll() {
+    facade = TestActorRef(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
+
+    dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor), "person")
+    system.eventStream.subscribe(dataCreator, classOf[BundleActorStarted])
+
+    activator = new PersistenceActivator
+    activator.start(osgiContext)
   }
 
   override protected def afterAll() {
-    pMgr ! PoisonPill
+    activator.stop(osgiContext)
   }
 
   "The PersistenceManager" should {
@@ -71,7 +76,7 @@ class PersistenceManagerSpec
 
     "Store a data object correctly" in {
       val info = new Person(firstName = "Andreas", name = "Gies")
-      pMgr ! StoreObject(info)
+      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(info)) => true
@@ -81,14 +86,14 @@ class PersistenceManagerSpec
 
     "Retrieve a data object by its uuid" in {
       val info = new Person(firstName = "Andreas", name = "Gies")
-      pMgr ! StoreObject(info)
+      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(info)) => true
         case _ => false
       }
 
-      pMgr ! FindObjectByID(info.objectId, info.persistenceType)
+      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(person)) => person == info

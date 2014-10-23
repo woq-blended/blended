@@ -17,13 +17,13 @@
 package de.woq.blended.persistence.internal
 
 import akka.actor._
-import de.woq.blended.akka.protocol._
-import de.woq.blended.akka.{BundleName, OSGIActor}
-import de.woq.blended.container.context.ContainerContext
-import org.osgi.framework.BundleContext
 import akka.event.LoggingReceive
-import akka.pattern._
+import com.typesafe.config.Config
+import de.woq.blended.akka.protocol._
+import de.woq.blended.akka.{InitializingActor, MemoryStash, OSGIActor}
+import de.woq.blended.container.context.ContainerContext
 import de.woq.blended.persistence.protocol._
+import org.osgi.framework.BundleContext
 
 trait PersistenceProvider {
   val backend : PersistenceBackend
@@ -38,28 +38,33 @@ object PersistenceManager {
 }
 
 class PersistenceManager()(implicit osgiContext : BundleContext)
-  extends Actor with ActorLogging { this : OSGIActor with BundleName with PersistenceProvider =>
+  extends InitializingActor with PersistenceBundleName with MemoryStash { this : OSGIActor with PersistenceProvider =>
 
   implicit val logging = context.system.log
-
   private var factories : List[ActorRef] = List.empty
-  private var requests : List[(ActorRef, Any)] = List.empty
 
-  def initializing = LoggingReceive {
-    case InitializeBundle(_) => {
-      val cfg = getActorConfig(bundleSymbolicName)
-      val d = invokeService(classOf[ContainerContext]) { ctx => ctx.getContainerDirectory }
-      (for {
-        config <- cfg
-        dir <- d
-      } yield (config, dir)) pipeTo(self)
+  override def receive = initializing orElse(stashing)
+
+  override def initialize(config: Config) : Unit = {
+    invokeService(classOf[ContainerContext]) {
+      ctx => ctx.getContainerDirectory
+    }.mapTo[ServiceResult[String]].map { svcResult =>
+      log.info(svcResult.toString)
+      svcResult match {
+        case ServiceResult(r) => {
+          log.debug(r.toString)
+          r match {
+            case Some(dir) =>
+              backend.initBackend(dir, config)
+              self ! Initialized
+              unstash()
+            case _ =>
+              log.error(s"No container directory configured")
+              context.stop(self)
+          }
+        }
+      }
     }
-    case (ConfigLocatorResponse(id, config), ServiceResult(Some(dir : String))) if id == bundleSymbolicName => {
-      backend.initBackend(dir, config)
-      requests.reverse.foreach{ case (s, m) => self.tell(m, s) }
-      context.become(working)
-    }
-    case r => requests = (sender, r) :: requests
   }
 
   def working = LoggingReceive {
@@ -68,6 +73,7 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
         factories = factory :: factories
         context.watch(factory)
       }
+      sender ! DataFactoryRegistered(factory)
     }
     case Terminated(factory) => {
       factories = factories.filter(_ != factory)
@@ -86,8 +92,6 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
       }
     }
   }
-
-  def receive = initializing
 
   override def postStop() {
     backend.shutdownBackend()

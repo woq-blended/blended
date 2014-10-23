@@ -201,6 +201,7 @@
     <bundle>blueprint:file:etc/amq-broker.xml</bundle>
     <bundle>mvn:de.woq.blended.samples/blended-samples-spray-helloworld/${blended.version}</bundle>
     <bundle>mvn:de.woq.blended.samples/blended-samples-camel/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended.samples/blended-samples-tracker/${blended.version}</bundle>
   </feature>
 
 </features>

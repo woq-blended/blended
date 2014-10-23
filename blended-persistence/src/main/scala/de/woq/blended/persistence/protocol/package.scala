@@ -111,6 +111,7 @@ import spray.json._
 
     // The persistence manager will use delegates to create a properly typed DataObject from it's own persistence properties
     case class RegisterDataFactory(factory: ActorRef)
+    case class DataFactoryRegistered(factory: ActorRef)
     case class CreateObjectFromProperties(props: PersistenceProperties)
     case class ObjectCreated(dataObject: DataObject)
   }

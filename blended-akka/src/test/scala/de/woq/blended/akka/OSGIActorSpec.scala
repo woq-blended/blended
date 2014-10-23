@@ -21,7 +21,8 @@ import akka.event.LoggingReceive
 import akka.pattern.{ask, pipe}
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import de.woq.blended.akka.protocol.ServiceResult
+import com.typesafe.config.Config
+import de.woq.blended.akka.protocol.{InitializeBundle, ServiceResult}
 import de.woq.blended.testsupport.TestActorSys
 import de.woq.blended.akka.internal.OSGIFacade
 import org.osgi.framework.BundleContext
@@ -33,15 +34,25 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object OSGIActorDummy {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with OSGIActor
+  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with InitializingActor with MemoryStash
 }
 
-class OSGIActorDummy extends Actor with ActorLogging { this : OSGIActor =>
-  def receive = LoggingReceive {
+class OSGIActorDummy extends InitializingActor with BundleName { this: MemoryStash =>
+
+  override def bundleSymbolicName = "foo"
+
+  override def initialize(config: Config) : Unit = {
+    self ! Initialized
+    unstash()
+  }
+
+  def working : Receive = {
     case "invoke" => {
       invokeService[TestInterface1, String](classOf[TestInterface1]) { svc => svc.name } pipeTo(sender)
     }
   }
+
+  override def receive : Receive = initializing orElse stashing
 }
 
 class OSGIActorSpec extends WordSpec
@@ -56,6 +67,8 @@ class OSGIActorSpec extends WordSpec
       val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
       val probe = TestActorRef(Props(OSGIActorDummy()), "testActor")
+
+      probe ! InitializeBundle(osgiContext)
 
       Await.result(probe ?  "invoke", 1.second) match {
         case ServiceResult(Some(s)) => s should be("Andreas")

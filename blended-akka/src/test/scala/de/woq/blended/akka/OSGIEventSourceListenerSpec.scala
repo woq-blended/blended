@@ -19,6 +19,7 @@ package de.woq.blended.akka
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.testkit.{TestActorRef, TestLatch}
+import com.typesafe.config.Config
 import de.woq.blended.testsupport.TestActorSys
 import de.woq.blended.akka.internal.OSGIFacade
 import de.woq.blended.akka.protocol._
@@ -33,7 +34,10 @@ object OSGIActorDummyPublisher {
   def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummyPublisher() with OSGIActor
 }
 
-class OSGIActorDummyPublisher extends Actor with ActorLogging with ProductionEventSource { this : OSGIActor =>
+class OSGIActorDummyPublisher extends OSGIActor with ProductionEventSource with BundleName {
+
+  override def bundleSymbolicName = "publisher"
+
   def receive = LoggingReceive { eventSourceReceive }
 }
 
@@ -41,21 +45,30 @@ object OSGIDummyListener {
   def apply()(implicit bundleContext : BundleContext) = new OSGIDummyListener() with OSGIEventSourceListener
 }
 
-class OSGIDummyListener extends Actor with ActorLogging with OSGIActor { this : OSGIEventSourceListener =>
+class OSGIDummyListener extends InitializingActor with BundleName { this : OSGIEventSourceListener =>
+
+  var publisherName : Option[String] = None
 
   implicit val actorSys = context.system
   val latch = TestLatch(1)
 
-  def working : Receive = {
-    case InitializeBundle(_) => getActorConfig("listener") pipeTo(self)
-    case ConfigLocatorResponse(bundleId, config) => {
-      setupListener(config.getString("publisher"))
-      context.system.eventStream.publish(BundleActorInitialized("listener"))
-    }
-    case "Andreas" => latch.countDown()
+  def receive = initializing
+
+  override def bundleSymbolicName = "listener"
+
+  override def initialize(config: Config): Unit = {
+
+    publisherName = Some(config.getString("publisher"))
+    setupListener(publisherName.get)
+    context.system.eventStream.publish(BundleActorInitialized(bundleSymbolicName))
+    self ! Initialized
   }
 
-  def receive = LoggingReceive { eventListenerReceive("publisher") orElse working }
+  def working = testing orElse(eventListenerReceive(publisherName.get))
+
+  def testing : Receive = {
+    case "Andreas" => latch.countDown()
+  }
 }
 
 class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
@@ -78,6 +91,9 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
         case BundleActorInitialized(s) if s == "listener" => true
         case _ => false
       }
+
+      //TODO: This is a test only hack to give the listener some time to finish its registration
+      Thread.sleep(100)
 
       publisher ! SendEvent("Andreas")
 

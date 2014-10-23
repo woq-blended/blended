@@ -123,6 +123,12 @@
       <version>${blended.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>de.woq.blended.samples</groupId>
+      <artifactId>blended-samples-tracker</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
