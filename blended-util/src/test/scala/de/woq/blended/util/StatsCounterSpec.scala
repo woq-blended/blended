@@ -107,7 +107,7 @@ class StatsCounterSpec extends TestKit(ActorSystem("StatsCounter"))
       fishForMessage(3.seconds) {
         case info : CounterInfo => {
           system.log.info(s"Speed is [${info.speed(SECONDS)} / s]")
-          info.count == 2 && info.interval.length > 0 && (info.speed(SECONDS) > 1.9) && (info.speed(SECONDS) < 2.1)
+          info.count == 2 && info.interval.length > 0 && (info.speed(SECONDS) > 1.5) && (info.speed(SECONDS) < 2.5)
         }
         case _ => false
       }
