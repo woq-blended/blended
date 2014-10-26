@@ -17,14 +17,14 @@
 package de.woq.blended.samples.tracker.internal
 
 import javax.jms.ConnectionFactory
-import javax.management.MBeanServer
 
 import akka.actor.ActorRef
 import akka.event.LoggingReceive
 import com.typesafe.config.Config
 import de.woq.blended.akka.{BundleName, InitializingActor}
-import de.woq.blended.modules.toSimpleOpBuilder
 import org.osgi.framework.BundleContext
+
+import de.woq.blended.modules._
 
 object TrackingActor {
   def apply() = new TrackingActor with TrackerBundleName
@@ -32,13 +32,10 @@ object TrackingActor {
 
 class TrackingActor extends InitializingActor { this: BundleName =>
 
-  var tracker : Option[ActorRef] = None
-
   override def receive = LoggingReceive { initializing orElse(logging) }
 
   override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
-    createTracker(classOf[MBeanServer]).mapTo[ActorRef].map { t =>
-      tracker = Some(t)
+    createTracker(classOf[ConnectionFactory], Some("provider" === "activemq")) onSuccess  { case _ =>
       self ! Initialized
     }
   }
