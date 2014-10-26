@@ -45,7 +45,7 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
 
   override def receive = initializing orElse(stashing)
 
-  override def initialize(config: Config) : Unit = {
+  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
     invokeService(classOf[ContainerContext]) {
       ctx => ctx.getContainerDirectory
     }.mapTo[ServiceResult[String]].map { svcResult =>

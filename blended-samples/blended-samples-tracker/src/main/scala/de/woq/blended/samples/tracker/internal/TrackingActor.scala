@@ -16,16 +16,36 @@
 
 package de.woq.blended.samples.tracker.internal
 
-import akka.actor.{Actor, ActorLogging}
-import de.woq.blended.akka.{BundleName, OSGIActor}
+import javax.jms.ConnectionFactory
+import javax.management.MBeanServer
+
+import akka.actor.ActorRef
+import akka.event.LoggingReceive
+import com.typesafe.config.Config
+import de.woq.blended.akka.{BundleName, InitializingActor}
+import de.woq.blended.modules.toSimpleOpBuilder
+import org.osgi.framework.BundleContext
 
 object TrackingActor {
-  def apply() = new TrackingActor with OSGIActor with TrackerBundleName
+  def apply() = new TrackingActor with TrackerBundleName
 }
 
-class TrackingActor extends Actor with ActorLogging { this: OSGIActor with BundleName =>
+class TrackingActor extends InitializingActor { this: BundleName =>
 
-  def receive = {
+  var tracker : Option[ActorRef] = None
+
+  override def receive = LoggingReceive { initializing orElse(logging) }
+
+  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
+    createTracker(classOf[MBeanServer]).mapTo[ActorRef].map { t =>
+      tracker = Some(t)
+      self ! Initialized
+    }
+  }
+
+  override def working = LoggingReceive { logging }
+
+  def logging : Receive = {
     case m => log.info(s"${m}")
   }
 }

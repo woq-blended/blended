@@ -41,6 +41,7 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
 
   var configLocator : ActorRef = context.system.deadLetters
   var references : ActorRef = context.system.deadLetters
+  var trackers : ActorRef = context.system.deadLetters
 
   override def preStart() {
 
@@ -49,11 +50,15 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
 
     logger info "Creating OSGI References handler"
     references = context.actorOf(Props(OSGIReferences()(bundleContext)), referencesPath)
+
+    logger info "Creating OSGI Tracker handler"
+    trackers = context.actorOf(Props(OSGIServiceTrackers(bundleContext)), trackersPath)
   }
 
   override def receive = LoggingReceive {
 
     case GetService(clazz) => references forward CreateReference(clazz)
+    case createTracker : CreateTracker[_] => trackers forward(createTracker)
     case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
     case GetBundleActor(bundleId) =>
       (for {

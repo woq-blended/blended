@@ -56,7 +56,7 @@ class OSGIDummyListener extends InitializingActor with BundleName { this : OSGIE
 
   override def bundleSymbolicName = "listener"
 
-  override def initialize(config: Config): Unit = {
+  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
 
     publisherName = Some(config.getString("publisher"))
     setupListener(publisherName.get)

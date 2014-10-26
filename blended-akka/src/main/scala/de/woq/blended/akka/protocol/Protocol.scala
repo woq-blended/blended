@@ -19,6 +19,7 @@ package de.woq.blended.akka {
   import akka.actor.ActorRef
   import org.osgi.framework.{BundleContext, ServiceReference}
   import com.typesafe.config.Config
+  import de.woq.blended.modules.FilterComponent
 
   package object protocol {
     type InvocationType[I <: AnyRef, T <: AnyRef] = (I => T)
@@ -26,7 +27,8 @@ package de.woq.blended.akka {
 
   package protocol {
 
-    // Kick off the BundleInitialization
+
+  // Kick off the BundleInitialization
     case class InitializeBundle(context: BundleContext)
 
     // A bundle has been started via ActorSystemAware
@@ -55,6 +57,11 @@ package de.woq.blended.akka {
 
     // Release
     case object UngetServiceReference
+
+    // Create a Service Tracking Actor
+    case class CreateTracker[I <: AnyRef](clazz: Class[I], observer: ActorRef, filter: Option[FilterComponent] = None)
+    // This encapsulates a Service Tracker within an Actor
+    case class Tracker(tracker: ActorRef)
 
     // Notifiactions from a ServiceTracker
     case class TrackerAddingService[I <: AnyRef](svcRef : ServiceReference[I], service : I)

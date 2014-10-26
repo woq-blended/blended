@@ -18,7 +18,8 @@ package de.woq.blended.akka
 
 object BlendedAkkaConstants {
 
-  val referencesPath = "References"
-  val osgiFacadePath = "OSGI"
+  val trackersPath      = "OSGITrackers"
+  val referencesPath    = "OSGIReferences"
+  val osgiFacadePath    = "OSGI"
   val configLocatorPath = "ConfigLocator"
 }

@@ -18,6 +18,7 @@ package de.woq.blended.akka
 
 import akka.actor.{ActorRef, ActorSystem, Props, Terminated}
 import akka.event.Logging.Info
+import akka.event.LoggingAdapter
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import de.woq.blended.akka.internal.{OSGIServiceTracker, TrackerAdapter}
 import de.woq.blended.akka.protocol._
@@ -40,13 +41,14 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
     def testTrackerAdapter[I <: AnyRef](observer: ActorRef) =
       new TrackerAdapter[I] {
         override val trackerObserver: ActorRef = observer
+        override val log: LoggingAdapter = system.log
       }
 
     "allow to setup an OSGI Servicetracker" in new TestActorSys() {
 
       system.eventStream.subscribe(self, classOf[Info])
 
-      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self, testTrackerAdapter(self))), "Tracker")
+      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self)), "Tracker")
 
       fishForMessage() {
         case Info(_,_,m) => m.toString.startsWith("Initialized Service Tracker")
@@ -58,7 +60,7 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
 
       val adapter = testTrackerAdapter[TestInterface1](self)
 
-      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self, testTrackerAdapter(self))), "Tracker")
+      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self)), "Tracker")
 
       adapter.addingService(svcRef) should be (service)
 
@@ -71,7 +73,7 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
     "notify the observer when a service reference is removed" in new TestActorSys() {
 
       val adapter = testTrackerAdapter[TestInterface1](self)
-      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self, testTrackerAdapter(self))), "Tracker")
+      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self)), "Tracker")
 
       adapter.removedService(svcRef, service)
 
@@ -84,7 +86,7 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
     "notify the observer when a service reference is modified" in new TestActorSys() {
 
       val adapter = testTrackerAdapter[TestInterface1](self)
-      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self, testTrackerAdapter(self))), "Tracker")
+      TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self)), "Tracker")
 
       adapter.modifiedService(svcRef, service)
 
@@ -96,7 +98,7 @@ class OSGIServiceTrackerSpec extends TestKit(ActorSystem("OSGITracker"))
 
     "die when the tracker is closed" in {
 
-      val tracker = TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self, testTrackerAdapter(self))), "Tracker")
+      val tracker = TestActorRef(Props(OSGIServiceTracker(classOf[TestInterface1], self)), "Tracker")
       watch(tracker)
 
       tracker ! TrackerClose

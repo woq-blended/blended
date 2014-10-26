@@ -24,6 +24,8 @@ import com.typesafe.config.Config
 import de.woq.blended.akka.protocol._
 
 import akka.pattern.pipe
+import de.woq.blended.modules.FilterComponent
+import org.osgi.framework.BundleContext
 
 import scala.concurrent.duration._
 import scala.concurrent.Future
@@ -39,6 +41,11 @@ trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
   }
 
   def osgiFacade = bundleActor(BlendedAkkaConstants.osgiFacadePath)
+
+  def createTracker[I <: AnyRef](clazz : Class[I], filter: Option[FilterComponent] = None) = for {
+    facade <- osgiFacade.mapTo[ActorRef]
+    tracker <- (facade ? CreateTracker(clazz, self, filter)).mapTo[ActorRef]
+  } yield tracker
 
   def getActorConfig(id: String) = for {
       facade <- osgiFacade.mapTo[ActorRef]
@@ -70,17 +77,19 @@ trait InitializingActor extends OSGIActor { this: BundleName =>
 
   case object Initialized
 
-  def initialize(config: Config) : Unit
+  def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit
 
   def working : Receive
 
-  def initializing : Receive = LoggingReceive {
-    case InitializeBundle(_) => {
+  def initializing : Receive = {
+    case InitializeBundle(context) => {
       log.debug(s"Initializing bundle actor [${bundleSymbolicName}]")
-      getActorConfig(bundleSymbolicName) pipeTo (self)
+      getActorConfig(bundleSymbolicName).mapTo[ConfigLocatorResponse].map { response =>
+        self ! (context, response)
+      }
     }
-    case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
-      initialize(cfg)
+    case (bc: BundleContext, ConfigLocatorResponse(id, cfg)) if id == bundleSymbolicName => {
+      initialize(cfg)(bc)
     }
     case Initialized => context.become(working)
   }

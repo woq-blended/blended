@@ -102,7 +102,7 @@ class StatsCounterSpec extends TestKit(ActorSystem("StatsCounter"))
 
       counterActor ! new IncrementCounter
       system.scheduler.scheduleOnce(1.second, counterActor, new IncrementCounter)
-      system.scheduler.scheduleOnce(1.01.seconds, counterActor, QueryCounter)
+      system.scheduler.scheduleOnce(1.1.seconds, counterActor, QueryCounter)
 
       fishForMessage(3.seconds) {
         case info : CounterInfo => {

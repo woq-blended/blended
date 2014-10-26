@@ -41,7 +41,7 @@ class OSGIActorDummy extends InitializingActor with BundleName { this: MemorySta
 
   override def bundleSymbolicName = "foo"
 
-  override def initialize(config: Config) : Unit = {
+  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
     self ! Initialized
     unstash()
   }
@@ -59,7 +59,7 @@ class OSGIActorSpec extends WordSpec
   with Matchers
   with AssertionsForJUnit {
 
-  "OSGIActor" should {
+  "An OSGIActor" should {
 
     implicit val timeout = Timeout(1.second)
 

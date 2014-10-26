@@ -16,12 +16,12 @@
 
 package de.woq.blended.akka.internal
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
+import akka.actor.{Terminated, ActorRef, ActorLogging, Actor}
 import de.woq.blended.modules.Filter
 import de.woq.blended.modules.FilterComponent._
 import org.osgi.framework.{ServiceReference, BundleContext}
 import org.osgi.util.tracker.{ServiceTracker, ServiceTrackerCustomizer}
-import akka.event.LoggingReceive
+import akka.event.{LoggingAdapter, LoggingReceive}
 import de.woq.blended.modules._
 
 import de.woq.blended.akka.protocol._
@@ -32,47 +32,50 @@ trait TrackerAdapterProvider[I <: AnyRef] {
 
 trait TrackerAdapter[I <: AnyRef] extends ServiceTrackerCustomizer[I, I] {
 
+  val log : LoggingAdapter
   val trackerObserver : ActorRef
 
   override def modifiedService(svcRef: ServiceReference[I], svc: I) {
-    trackerObserver ! TrackerModifiedService(svcRef, svc)
+    val msg = TrackerModifiedService(svcRef, svc)
+    log.debug(s"Notifying [${trackerObserver}] with [${msg}]")
+    trackerObserver ! msg
   }
 
   override def removedService(svcRef: ServiceReference[I], svc: I) {
-    trackerObserver ! TrackerRemovedService(svcRef, svc)
+    val msg = TrackerRemovedService(svcRef, svc)
+    log.debug(s"Notifying [${trackerObserver}] with [${msg}]")
+    trackerObserver ! msg
   }
 
   override def addingService(svcRef: ServiceReference[I]) = {
     val svc = svcRef.getBundle.getBundleContext.getService(svcRef)
-    trackerObserver ! TrackerAddingService(svcRef, svc)
+    val msg = TrackerAddingService(svcRef, svc)
+    log.debug(s"Notifying [${trackerObserver}] with [${msg}]")
+    trackerObserver ! msg
     svc
   }
 }
 
 object OSGIServiceTracker {
-  def apply[I <: AnyRef](
-    clazz : Class[I],
-    observer: ActorRef
-  )(implicit osgiContext : BundleContext) : OSGIServiceTracker[I] = {
-    apply[I](clazz, observer, new TrackerAdapter[I] with BundleContextProvider {
-      override implicit val bundleContext: BundleContext = osgiContext
-      override val trackerObserver: ActorRef = observer
-    })
-  }
 
   def apply[I <: AnyRef] (
     clazz: Class[I],
     observer: ActorRef,
-    adapter: TrackerAdapter[I]
+    filter: Option[FilterComponent] = None
   )(implicit osgiContext: BundleContext) : OSGIServiceTracker[I] = {
-    new OSGIServiceTracker(clazz, observer) with BundleContextProvider with TrackerAdapterProvider[I] {
+    new OSGIServiceTracker(clazz, observer, filter) with BundleContextProvider with TrackerAdapterProvider[I] {
       override implicit val bundleContext: BundleContext = osgiContext
-      override def trackerAdapter(observer: ActorRef)(implicit osgiContext: BundleContext) = adapter
+      override def trackerAdapter(observer: ActorRef)(implicit osgiContext: BundleContext) =
+        new TrackerAdapter[I] {
+          override val trackerObserver: ActorRef = observer
+          override val log: LoggingAdapter = context.system.log
+        }
     }
   }
 }
 
-class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filter: Option[FilterComponent] = None) extends Actor with ActorLogging {
+class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filter: Option[FilterComponent] = None)
+  extends Actor with ActorLogging {
   this : BundleContextProvider with TrackerAdapterProvider[I] =>
 
   case object Initialize
@@ -85,30 +88,34 @@ class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filt
         )
         case Some(f) =>
           val realFilter : Filter = ("objectClass" === clazz.getName) && f
-          log.debug(s"Creating Service tracker with filter [${realFilter}]")
+          log.debug(s"Creating Service tracker with filter [${realFilter}] for [${observer}]")
           new ServiceTracker[I, I](
             bundleContext, bundleContext.createFilter(realFilter.toString), trackerAdapter(observer)
           )
       }
 
+      context.watch(observer)
       tracker.open()
       log info s"Initialized Service Tracker for [${clazz.getName}]."
-      context.become(tracking(tracker))
+      context.become(tracking(tracker, observer))
     }
     case TrackerClose => context.stop(self)
   }
 
-  def tracking(tracker: ServiceTracker[I, I]) : Receive = {
-    case TrackerClose => {
-      tracker.close()
-      context.stop(self)
-    }
+  def tracking(tracker: ServiceTracker[I, I], observer: ActorRef) : Receive = {
+    case TrackerClose => stopTracker(tracker)
+    case Terminated(actor) if actor == observer => stopTracker(tracker)
   }
 
   def receive = initializing
 
   override def preStart() {
     self ! Initialize
+  }
+
+  private def stopTracker(tracker: ServiceTracker[I, I]) : Unit = {
+    tracker.close()
+    context.stop(self)
   }
 
 }
