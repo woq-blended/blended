@@ -55,7 +55,10 @@ class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with Acto
 
   def checking(checkingFor: ActorRef) : Receive = {
     case ParallelCheckerResults(results) => {
-      checkingFor ! ConditionCheckResult(results.asInstanceOf[List[ConditionCheckResult]])
+      log.debug(s"Received ParallelCheckerResults [${results}]")
+      val combinedResult = ConditionCheckResult(results.asInstanceOf[List[ConditionCheckResult]])
+      log.debug(s"Answering to [${checkingFor}] : [${combinedResult}]")
+      checkingFor ! combinedResult
       context stop self
     }
   }

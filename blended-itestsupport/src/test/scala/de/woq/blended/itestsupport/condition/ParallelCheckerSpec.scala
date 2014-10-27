@@ -47,7 +47,7 @@ class ParallelCheckerSpec extends TestActorSys
     }
 
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
-      val conditions = (1 to 1).map { i => new AlwaysTrue() }.toList
+      val conditions = (1 to 5).map { i => new AlwaysTrue() }.toList
       val condition = new ParallelComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
