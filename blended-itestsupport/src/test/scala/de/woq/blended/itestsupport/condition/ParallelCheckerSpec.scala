@@ -31,14 +31,14 @@ class ParallelCheckerSpec extends TestActorSys
 
     "respond with a satisfied message on an empty list of conditions" in {
 
-      val checker = TestActorRef(Props(ConditionActor(new ParallelComposedCondition())))
+      val checker = TestActorRef(Props(ConditionActor(ParallelComposedCondition())))
       checker ! CheckCondition
       expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
     }
 
     "respond with a satisfied message after a single wrapped condition has been satisfied" in {
       val conditions = (1 to 1).map { i => new AlwaysTrue() }.toList
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
@@ -48,7 +48,7 @@ class ParallelCheckerSpec extends TestActorSys
 
     "respond with a satisfied message after some wrapped conditions have been satisfied" in {
       val conditions = (1 to 5).map { i => new AlwaysTrue() }.toList
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
@@ -58,7 +58,7 @@ class ParallelCheckerSpec extends TestActorSys
 
     "respond with a timeout message after a single wrapped condition has timed out" in {
       val conditions = (1 to 1).map { i => new NeverTrue() }.toList
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition
@@ -75,7 +75,7 @@ class ParallelCheckerSpec extends TestActorSys
         new AlwaysTrue(),
         new AlwaysTrue()
       )
-      val condition = new ParallelComposedCondition(conditions.toSeq:_*)
+      val condition = ParallelComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
       checker ! CheckCondition

@@ -41,28 +41,25 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
   def initializing : Receive = {
     case CheckCondition =>
       timer = Some(context.system.scheduler.scheduleOnce(cond.timeout, self, Tick))
-      checkCondition(sender)
+      context.become(checking(sender))
+      self ! Check
   }
 
   def checking(checkingFor: ActorRef) : Receive = {
-    case Check => checkCondition(checkingFor)
-    case Tick  =>
-      log.info(s"Condition [${cond}] hast timed out.")
-      checkingFor ! ConditionCheckResult(List.empty[Condition], List(cond))
-      context.stop(self)
-  }
-
-  private def checkCondition(checkingFor: ActorRef) {
-    cond.satisfied match {
+    case Check => cond.satisfied match {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
         timer.foreach(_.cancel())
         log.debug(s"Answering to [${checkingFor}]")
         checkingFor ! ConditionCheckResult(List(cond), List.empty[Condition])
         context.stop(self)
-      case _ =>
+      case false =>
         context.system.scheduler.scheduleOnce(cond.interval, self, Check)
-        context.become(checking(checkingFor))
     }
+    case Tick  =>
+      log.info(s"Condition [${cond}] hast timed out.")
+      log.debug(s"Answering to [${checkingFor}]")
+      checkingFor ! ConditionCheckResult(List.empty[Condition], List(cond))
+      context.stop(self)
   }
 }
