@@ -49,12 +49,9 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-
-    SequentialComposedCondition(
-      ParallelComposedCondition(
-        AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))), t),
-        AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
-      )
+    ParallelComposedCondition(
+      AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))), t),
+      AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
     )
 
 //    new SequentialComposedCondition(
@@ -79,7 +76,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
     BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, url.get).asInstanceOf[String]
   }
 
-  lazy val amqConnectionFactory = {
+  private lazy val amqConnectionFactory = {
     val ctInfo = Await.result(containerInfo("blended_demo_0"), 3.seconds)
     val address = ctInfo.getNetworkSettings.getIpAddress
     BlendedTestContext.set(
