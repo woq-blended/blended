@@ -19,7 +19,7 @@ package de.woq.blended.akka.itest
 import javax.jms.ConnectionFactory
 
 import akka.actor.Props
-import de.woq.blended.itestsupport.condition.AsyncCondition
+import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, AsyncCondition}
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
 import de.woq.blended.itestsupport.jms.JMSChecker
 import de.woq.blended.itestsupport.jolokia.JolokiaAvailableChecker
@@ -31,6 +31,11 @@ import org.scalatest.SpecLike
 import scala.collection.immutable.IndexedSeq
 import scala.concurrent.Await
 import scala.concurrent.duration._
+
+object BlendedDemoIntegrationSpec {
+  val amqConnectionFactory = "amqConnectionFactory"
+  val jmxRest = "jmxRest"
+}
 
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
@@ -44,8 +49,13 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-    //AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
-    AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))),t)
+
+    SequentialComposedCondition(
+      ParallelComposedCondition(
+        AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))), t),
+        AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
+      )
+    )
 
 //    new SequentialComposedCondition(
 //      new ParallelComposedCondition(
@@ -66,12 +76,15 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   private lazy val jmxRest = {
     val url = Await.result(jolokiaUrl(ctName = "blended_demo_0", port = 8181), 3.seconds)
     url should not be (None)
-    url.get
+    BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, url.get).asInstanceOf[String]
   }
 
   lazy val amqConnectionFactory = {
     val ctInfo = Await.result(containerInfo("blended_demo_0"), 3.seconds)
     val address = ctInfo.getNetworkSettings.getIpAddress
-    BlendedTestContext.set("amqConnectionFactory", new ActiveMQConnectionFactory(s"tcp://${address}:1883")).asInstanceOf[ConnectionFactory]
+    BlendedTestContext.set(
+      BlendedDemoIntegrationSpec.amqConnectionFactory,
+      new ActiveMQConnectionFactory(s"tcp://${address}:1883")
+    ).asInstanceOf[ConnectionFactory]
   }
 }
