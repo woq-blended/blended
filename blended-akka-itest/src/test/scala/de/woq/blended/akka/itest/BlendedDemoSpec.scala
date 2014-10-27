@@ -41,7 +41,11 @@ class BlendedDemoSpec extends TestActorSys
 
   private def testContext = {
     val result = new TestCamelContext()
-    result.withComponent("jms", JmsComponent.jmsComponent(BlendedTestContext("amqConnectionFactory").asInstanceOf[ConnectionFactory]))
+    result.withComponent(
+      "jms", JmsComponent.jmsComponent(
+        BlendedTestContext(BlendedDemoIntegrationSpec.amqConnectionFactory).asInstanceOf[ConnectionFactory]
+      )
+    )
     result
   }
 
