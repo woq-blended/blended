@@ -36,7 +36,7 @@ class JolokiaConditionSpec extends TestActorSys
 
       val t = 10.seconds
 
-      val condition = JolokiaAvailableCondition("http://localhost:7777/jolokia", t)
+      val condition = JolokiaAvailableCondition("http://localhost:7777/jolokia", Some(t))
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
@@ -48,7 +48,7 @@ class JolokiaConditionSpec extends TestActorSys
 
       val t = 10.seconds
 
-      val condition = JolokiaAvailableCondition("http://localhost:8888/jolokia", t)
+      val condition = JolokiaAvailableCondition("http://localhost:8888/jolokia", Some(t))
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition

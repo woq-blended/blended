@@ -21,8 +21,8 @@ import javax.jms.ConnectionFactory
 import akka.actor.Props
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, AsyncCondition}
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
-import de.woq.blended.itestsupport.jms.JMSChecker
-import de.woq.blended.itestsupport.jolokia.JolokiaAvailableChecker
+import de.woq.blended.itestsupport.jms.{JMSAvailableCondition, JMSChecker}
+import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, JolokiaAvailableChecker}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -50,8 +50,8 @@ class BlendedDemoIntegrationSpec extends TestActorSys
     val t = 30.seconds
 
     ParallelComposedCondition(
-      AsyncCondition(Props(JolokiaAvailableChecker(jmxRest, Some("blended"), Some("blended"))), t),
-      AsyncCondition(Props(JMSChecker(amqConnectionFactory)), t)
+      JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
+      JMSAvailableCondition(amqConnectionFactory, Some(t))
     )
 
 //    new SequentialComposedCondition(

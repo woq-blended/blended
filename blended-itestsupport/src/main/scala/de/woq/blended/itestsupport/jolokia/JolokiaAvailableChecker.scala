@@ -26,11 +26,11 @@ import scala.concurrent.duration.FiniteDuration
 object JolokiaAvailableCondition {
   def apply(
     url: String,
-    t: FiniteDuration,
+    t: Option[FiniteDuration] = None,
     user: Option[String] = None,
     pwd: Option[String] = None
   )(implicit actorSys: ActorSystem) =
-    AsyncCondition(Props(JolokiaAvailableChecker(url, user, pwd)), s"JolokiaAvailableCondition(${url})", Some(t))
+    AsyncCondition(Props(JolokiaAvailableChecker(url, user, pwd)), s"JolokiaAvailableCondition(${url})", t)
 }
 
 private[jolokia] object JolokiaAvailableChecker {
