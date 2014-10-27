@@ -28,7 +28,8 @@ import scala.concurrent.duration._
 trait Condition {
 
   /** Is the condition satisfied ? */
-  def satisfied : Boolean
+  def satisfied   : Boolean
+  val description : String
 
   /** The timeout a ConditionWaiter waits for this particular condition */
   def timeout   : FiniteDuration = defaultTimeout
@@ -38,6 +39,8 @@ trait Condition {
     val config = ConfigFactory.load()
     config.getConfig("de.woq.blended.itestsupport.condition")
   }
+
+  override def toString = s"Condition(${description}, ${timeout})"
 
   private def defaultTimeout = config.getLong("defaultTimeout").millis
   private def defaultInterval = config.getLong("checkfrequency").millis

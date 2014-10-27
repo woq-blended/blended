@@ -16,13 +16,24 @@
 
 package de.woq.blended.itestsupport.jolokia
 
-import akka.actor.ActorSystem
+import akka.actor.{Props, ActorSystem}
+import de.woq.blended.itestsupport.condition.AsyncCondition
 import de.woq.blended.jolokia.model.JolokiaVersion
 import de.woq.blended.jolokia.protocol._
 
 import scala.concurrent.duration.FiniteDuration
 
-object JolokiaAvailableChecker {
+object JolokiaAvailableCondition {
+  def apply(
+    url: String,
+    t: FiniteDuration,
+    user: Option[String] = None,
+    pwd: Option[String] = None
+  )(implicit actorSys: ActorSystem) =
+    AsyncCondition(Props(JolokiaAvailableChecker(url, user, pwd)), s"JolokiaAvailableCondition(${url})", Some(t))
+}
+
+private[jolokia] object JolokiaAvailableChecker {
   def apply(
     url: String,
     userName: Option[String] = None,
@@ -30,7 +41,7 @@ object JolokiaAvailableChecker {
   )(implicit actorSys: ActorSystem) = new JolokiaAvailableChecker(url, userName, userPwd)
 }
 
-class JolokiaAvailableChecker(
+private[jolokia] class JolokiaAvailableChecker(
   url: String,
   userName: Option[String] = None,
   userPwd: Option[String] = None

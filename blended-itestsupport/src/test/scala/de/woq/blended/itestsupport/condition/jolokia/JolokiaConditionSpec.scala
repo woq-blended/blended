@@ -19,7 +19,7 @@ package de.woq.blended.itestsupport.condition.jolokia
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.condition.{Condition, AsyncCondition, ConditionActor}
-import de.woq.blended.itestsupport.jolokia.JolokiaAvailableChecker
+import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, JolokiaAvailableChecker}
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
 
@@ -36,14 +36,11 @@ class JolokiaConditionSpec extends TestActorSys
 
       val t = 10.seconds
 
-      val condition = new AsyncCondition(Props(
-        JolokiaAvailableChecker("http://localhost:7777/jolokia")
-      )) {
-        override def timeout: FiniteDuration = t
-      }
+      val condition = JolokiaAvailableCondition("http://localhost:7777/jolokia", t)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
+
       expectMsg(t, ConditionCheckResult(List(condition), List.empty[Condition]))
     }
 
@@ -51,11 +48,7 @@ class JolokiaConditionSpec extends TestActorSys
 
       val t = 10.seconds
 
-      val condition = new AsyncCondition(Props(
-        JolokiaAvailableChecker("http://localhost:8888/jolokia")
-      )) {
-        override def timeout: FiniteDuration = t
-      }
+      val condition = JolokiaAvailableCondition("http://localhost:8888/jolokia", t)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition

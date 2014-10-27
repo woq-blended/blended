@@ -14,7 +14,7 @@ class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
     "fail if no connection can be made" in {
       val cf = new ActiveMQConnectionFactory("vm://foo?create=false")
-      val condition = new AsyncCondition(Props(JMSChecker(cf)))
+      val condition = JMSAvailableCondition(cf)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
@@ -24,7 +24,7 @@ class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
     "succeed if a connection can be made" in {
       val cf = new ActiveMQConnectionFactory("vm://blended?create=false")
-      val condition = new AsyncCondition(Props(JMSChecker(cf)))
+      val condition = JMSAvailableCondition(cf)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition

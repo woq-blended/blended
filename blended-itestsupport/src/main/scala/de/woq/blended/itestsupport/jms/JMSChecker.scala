@@ -28,11 +28,16 @@ import scala.concurrent.duration._
 
 import scala.concurrent.Future
 
-object JMSChecker {
+object JMSAvailableCondition{
+  def apply(cf: ConnectionFactory, t: Option[FiniteDuration] = None)(implicit system: ActorSystem) =
+    AsyncCondition(Props(JMSChecker(cf)), s"JMSAvailableCondition(${cf})", t)
+}
+
+private[jms] object JMSChecker {
   def apply(cf: ConnectionFactory) = new JMSChecker(cf)
 }
 
-class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
+private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
 
   override def supervisorStrategy = OneForOneStrategy() {
     case _ => SupervisorStrategy.Stop
