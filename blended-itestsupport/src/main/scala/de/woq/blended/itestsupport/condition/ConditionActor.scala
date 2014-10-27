@@ -57,6 +57,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
         timer.foreach(_.cancel())
+        log.debug(s"Answering to [${checkingFor}]")
         checkingFor ! ConditionCheckResult(List(cond), List.empty[Condition])
         context.stop(self)
       case _ =>
