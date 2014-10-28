@@ -24,7 +24,7 @@ package object protocol {
 
     def pattern = searchProperties match {
       case m if m.isEmpty => ""
-      case m => m.keys.map( k => s"${k}=${m.get(k).get}" ).mkString("", "," , ",")
+      case m => m.keys.map( k => s"${k}=${m.get(k).get}" ).mkString(",")
     }
   }
 
