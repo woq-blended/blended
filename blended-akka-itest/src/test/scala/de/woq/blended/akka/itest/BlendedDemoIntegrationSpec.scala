@@ -46,9 +46,11 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def preCondition = {
     val t = 30.seconds
 
-    ParallelComposedCondition(
-      JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
-      JMSAvailableCondition(amqConnectionFactory, Some(t))
+    SequentialComposedCondition(
+      ParallelComposedCondition(
+        JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
+        JMSAvailableCondition(amqConnectionFactory, Some(t))
+      )
     )
 
 //    new SequentialComposedCondition(
