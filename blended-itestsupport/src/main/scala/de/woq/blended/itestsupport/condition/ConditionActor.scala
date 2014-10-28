@@ -48,6 +48,14 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
   }
 
   def checking(checkingFor: ActorRef) : Receive = LoggingReceive {
+    case CheckCondition =>
+      log.warning(
+        s"""
+           |
+           |You have sent another CheckCondition message from [${sender}],
+           |but this actor is already checking on behalf of [${checkingFor}].
+           |
+         """)
     case Check => cond.satisfied match {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
