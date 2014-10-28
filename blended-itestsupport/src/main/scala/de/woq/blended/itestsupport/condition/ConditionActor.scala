@@ -23,8 +23,8 @@ import de.woq.blended.itestsupport.protocol._
 
 object ConditionActor {
   def apply(cond: Condition) = cond match {
-    case pc : ParallelComposedCondition => new ParallelConditionActor(pc.conditions)
-    case sc : SequentialComposedCondition => new SequentialConditionActor(sc.conditions)
+    case pc : ParallelComposedCondition => new ParallelConditionActor(pc)
+    case sc : SequentialComposedCondition => new SequentialConditionActor(sc)
     case _ => new ConditionActor(cond)
   }
 }
@@ -39,7 +39,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
 
   def receive = initializing
 
-  def initializing : Receive = LoggingReceive {
+  def initializing : Receive = {
     case CheckCondition =>
       log.debug(s"Checking condition [${cond.description}] on behalf of [${sender}]")
       timer = Some(context.system.scheduler.scheduleOnce(cond.timeout, self, Tick))
@@ -47,7 +47,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
       self ! Check
   }
 
-  def checking(checkingFor: ActorRef) : Receive = LoggingReceive {
+  def checking(checkingFor: ActorRef) : Receive = {
     case CheckCondition =>
       log.warning(
         s"""
@@ -60,8 +60,9 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
         timer.foreach(_.cancel())
-        log.debug(s"Answering to [${checkingFor}]")
-        checkingFor ! ConditionCheckResult(List(cond), List.empty[Condition])
+        val response = ConditionCheckResult(List(cond), List.empty[Condition])
+        log.debug(s"Answering [${response}] to [${checkingFor}]")
+        checkingFor ! response
         context.stop(self)
       case false =>
         context.system.scheduler.scheduleOnce(cond.interval, self, Check)

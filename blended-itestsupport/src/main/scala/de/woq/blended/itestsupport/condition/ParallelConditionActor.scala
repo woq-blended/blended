@@ -25,10 +25,10 @@ import scala.language.postfixOps
 
 object ParallelConditionActor {
   def apply(condition: ParallelComposedCondition) =
-    new ParallelConditionActor(condition.conditions)
+    new ParallelConditionActor(condition)
 }
 
-class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with ActorLogging {
+class ParallelConditionActor(condition: ParallelComposedCondition) extends Actor with ActorLogging {
 
   case class ParallelCheckerResults(results : List[Any])
 
@@ -38,15 +38,15 @@ class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with Acto
 
   def initializing : Receive = {
     case CheckCondition => {
-      conditions match {
+      condition.conditions.toSeq match {
         case Nil => sender ! ConditionCheckResult(List.empty[Condition], List.empty[Condition])
         case _ => {
           context become checking(sender)
           // Create a single future that terminates when all condition checkers are done
           // The list will be a mix of ConditionSatisfied / ConditionTimeout messages
           Future.sequence(checker)
-            .mapTo[List[Any]]
-            .map(new ParallelCheckerResults(_))
+            .mapTo[Seq[Any]]
+            .map(seq => new ParallelCheckerResults(seq.toList))
             .pipeTo(self)
         }
       }
@@ -64,7 +64,7 @@ class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with Acto
   }
 
   // Create a list of Future that execute in parallel
-  private def checker : Seq[Future[Any]] = conditions.toSeq.map { c =>
+  private def checker : Seq[Future[Any]] = condition.conditions.toSeq.map { c =>
     (
       c,                                         // Keep the condition under check in the context
       context.actorOf(Props(ConditionActor(c)))  // The actor checking a single condition
@@ -74,4 +74,6 @@ class ParallelConditionActor(conditions: Seq[Condition]) extends Actor with Acto
       case _ => ConditionCheckResult(List.empty[Condition], List(p._1))
     }
   }
+
+  override def toString = s"ParallelConditionActor(${condition})"
 }

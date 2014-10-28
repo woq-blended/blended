@@ -44,5 +44,14 @@ class ConditionActorSpec extends TestActorSys
       checker ! CheckCondition
       expectMsg(ConditionCheckResult(List.empty[Condition],List(c)))
     }
+
+    "respond with a satisfied message if a nested parallel condition is satisfied" in {
+
+      val pc = ParallelComposedCondition(alwaysTrue, alwaysTrue)
+      val checker = TestActorRef(Props(ConditionActor(pc)))
+
+      checker ! CheckCondition
+      expectMsg(ConditionCheckResult(pc.conditions.toList, List.empty[Condition]))
+    }
   }
 }

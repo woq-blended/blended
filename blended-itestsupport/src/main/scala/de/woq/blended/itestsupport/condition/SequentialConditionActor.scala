@@ -24,10 +24,10 @@ import scala.concurrent.duration.FiniteDuration
 
 object SequentialConditionActor {
   def apply(cond: SequentialComposedCondition) =
-    new SequentialConditionActor(cond.conditions)
+    new SequentialConditionActor(cond)
 }
 
-class SequentialConditionActor(conditions: Seq[Condition]) extends Actor with ActorLogging {
+class SequentialConditionActor(condition: SequentialComposedCondition) extends Actor with ActorLogging {
 
   case object SequentialCheck
 
@@ -40,7 +40,7 @@ class SequentialConditionActor(conditions: Seq[Condition]) extends Actor with Ac
 
   def initializing : Receive = {
     case CheckCondition => {
-      remaining = conditions.toList
+      remaining = condition.conditions.toList
       self ! SequentialCheck
       context become checking(sender)
     }
@@ -74,4 +74,6 @@ class SequentialConditionActor(conditions: Seq[Condition]) extends Actor with Ac
       }
     }
   }
+
+  override def toString = s"SequentialConditionActor(${condition}]"
 }
