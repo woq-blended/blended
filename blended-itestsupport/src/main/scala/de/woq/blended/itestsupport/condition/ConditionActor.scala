@@ -17,6 +17,7 @@
 package de.woq.blended.itestsupport.condition
 
 import akka.actor.{Cancellable, ActorRef, Actor, ActorLogging}
+import akka.event.LoggingReceive
 
 import de.woq.blended.itestsupport.protocol._
 
@@ -38,7 +39,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
 
   def receive = initializing
 
-  def initializing : Receive = {
+  def initializing : Receive = LoggingReceive {
     case CheckCondition =>
       log.debug(s"Checking condition [${cond.description}] on behalf of [${sender}]")
       timer = Some(context.system.scheduler.scheduleOnce(cond.timeout, self, Tick))
@@ -46,7 +47,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
       self ! Check
   }
 
-  def checking(checkingFor: ActorRef) : Receive = {
+  def checking(checkingFor: ActorRef) : Receive = LoggingReceive {
     case Check => cond.satisfied match {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
