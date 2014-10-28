@@ -22,8 +22,9 @@ import akka.actor.Props
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, AsyncCondition}
 import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
 import de.woq.blended.itestsupport.jms.{JMSAvailableCondition, JMSChecker}
-import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, JolokiaAvailableChecker}
+import de.woq.blended.itestsupport.jolokia.{MBeanExistsCondition, JolokiaAvailableCondition, JolokiaAvailableChecker}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
+import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.SpecLike
@@ -50,23 +51,16 @@ class BlendedDemoIntegrationSpec extends TestActorSys
       ParallelComposedCondition(
         JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
         JMSAvailableCondition(amqConnectionFactory, Some(t))
-      )
-    )
+      ),
+      MBeanExistsCondition(jmxRest, Some("blended"), Some("blended"), new MBeanSearchDef {
+        override def jmxDomain = "org.apache.camel"
 
-//    new SequentialComposedCondition(
-//      new ParallelComposedCondition(
-//        //new JolokiaAvailableCondition(jmxRest, t, Some("blended"), Some("blended")),
-//        new JMSAvailableCondition(amqConnectionFactory, t)
-//      )
-////      new MbeanExistsCondition(jmxRest, t, Some("blended"), Some("blended")) with MBeanSearchDef {
-////        override def jmxDomain = "org.apache.camel"
-////
-////        override def searchProperties = Map(
-////          "name" -> "\"BlendedSample\"",
-////          "type" -> "context"
-////        )
-////      }
-//    )
+        override def searchProperties = Map(
+          "name" -> "\"BlendedSample\"",
+          "type" -> "context"
+        )
+      })
+    )
   }
 
   private lazy val jmxRest = {

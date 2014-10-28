@@ -16,22 +16,48 @@
 
 package de.woq.blended.itestsupport.jolokia
 
-import akka.actor.ActorSystem
+import akka.actor.{Props, ActorSystem}
+import de.woq.blended.itestsupport.condition.AsyncCondition
 import de.woq.blended.jolokia.model.JolokiaSearchResult
 import de.woq.blended.jolokia.protocol._
 
 import scala.concurrent.duration.FiniteDuration
 
-class MBeanExistsChecker(
+object MBeanExistsCondition {
+
+  def apply(
+    url: String,
+    user: Option[String] = None,
+    pwd: Option[String] = None,
+    searchDef: MBeanSearchDef,
+    t : Option[FiniteDuration] = None
+  )(implicit system: ActorSystem) =
+    AsyncCondition(
+      Props(MBeanExistsChecker(url, user, pwd, searchDef)),
+      s"MbeanExistsCondition(${url}, ${searchDef.pattern}})",
+      t
+    )
+}
+
+private[jolokia] object MBeanExistsChecker {
+  def apply(
+    url: String,
+    user: Option[String] = None,
+    pwd: Option[String] = None,
+    searchDef: MBeanSearchDef
+  )(implicit system: ActorSystem) = new MBeanExistsChecker(url, user, pwd, searchDef)
+}
+
+private[jolokia] class MBeanExistsChecker(
   url: String,
   userName: Option[String] = None,
-  userPwd: Option[String] = None
+  userPwd: Option[String] = None,
+  searchDef : MBeanSearchDef
 )(implicit system:ActorSystem) extends JolokiaChecker(url, userName, userPwd) with JolokiaAssertion {
-  this: MBeanSearchDef =>
 
-  override def toString = s"MbeanExistsCondition(${url}, ${pattern}})"
+  override def toString = s"MbeanExistsCondition(${url}, ${searchDef.pattern}})"
 
-  override def jolokiaRequest = SearchJolokia(this)
+  override def jolokiaRequest = SearchJolokia(searchDef)
 
   override def assertJolokia = { msg =>
     msg match {
