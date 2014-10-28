@@ -51,7 +51,7 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
 
   override def performCheck(cond: AsyncCondition) : Future[Boolean] = {
 
-    implicit val t = Timeout(1.second)
+    implicit val t = Timeout(10.seconds)
     log.debug("Checking JMS connection...")
     (jmsConnector.get ? Connect("test")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
       result match {
