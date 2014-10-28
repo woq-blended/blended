@@ -34,7 +34,7 @@ object MBeanExistsCondition {
   )(implicit system: ActorSystem) =
     AsyncCondition(
       Props(MBeanExistsChecker(url, user, pwd, searchDef)),
-      s"MbeanExistsCondition(${url}, ${searchDef.pattern}})",
+      s"MBeanExistsCondition(${url}, ${searchDef.pattern}})",
       t
     )
 }

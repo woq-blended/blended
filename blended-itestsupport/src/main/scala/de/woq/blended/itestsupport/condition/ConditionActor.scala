@@ -16,9 +16,7 @@
 
 package de.woq.blended.itestsupport.condition
 
-import akka.actor.{Cancellable, ActorRef, Actor, ActorLogging}
-import akka.event.LoggingReceive
-
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import de.woq.blended.itestsupport.protocol._
 
 object ConditionActor {

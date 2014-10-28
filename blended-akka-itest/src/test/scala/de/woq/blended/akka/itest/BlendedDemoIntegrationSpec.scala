@@ -59,7 +59,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
           "name" -> "\"BlendedSample\"",
           "type" -> "context"
         )
-      })
+      }, Some(t))
     )
   }
 

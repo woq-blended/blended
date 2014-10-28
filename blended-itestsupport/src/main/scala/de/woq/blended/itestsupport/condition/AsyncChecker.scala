@@ -36,25 +36,20 @@ abstract class AsyncChecker extends Actor with ActorLogging {
     case CheckAsyncCondition(condition) =>
       log.debug("Starting asynchronous condition checker")
       self ! Tick
-      val timer = context.system.scheduler.scheduleOnce(condition.timeout, self, Stop)
-      context.become(checking(condition, timer))
+      context.become(checking(condition))
   }
 
-  def checking(condition: AsyncCondition, timer: Cancellable) : Receive = {
+  def checking(condition: AsyncCondition) : Receive = {
     case Tick =>
       log.debug(s"Checking asynchronous [${condition.description}] condition ....")
       performCheck(condition).map(_ match {
         case true =>
           log.debug(s"Asynchronous condition [${condition.description}] is now satisfied.")
-          timer.cancel()
           condition.isSatisfied.set(true)
           context.stop(self)
         case false =>
           log.debug(s"Scheduling next condition check in [${condition.interval}]")
           context.system.scheduler.scheduleOnce(condition.interval, self, Tick)
       })
-    case Stop =>
-      log.info("Asynchronous condition timed out")
-      context.stop(self)
   }
 }
