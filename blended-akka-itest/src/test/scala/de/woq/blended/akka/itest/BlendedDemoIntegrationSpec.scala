@@ -18,16 +18,14 @@ package de.woq.blended.akka.itest
 
 import javax.jms.ConnectionFactory
 
-import akka.actor.Props
-import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition, AsyncCondition}
-import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStarted
-import de.woq.blended.itestsupport.jms.{JMSAvailableCondition, JMSChecker}
-import de.woq.blended.itestsupport.jolokia.{MBeanExistsCondition, JolokiaAvailableCondition, JolokiaAvailableChecker}
-import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
+import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
+import de.woq.blended.itestsupport.jms.JMSAvailableCondition
+import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, MBeanExistsCondition}
+import de.woq.blended.itestsupport.{AroundSuite, BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.{BeforeAndAfterAll, SpecLike}
+import org.scalatest.SpecLike
 
 import scala.collection.immutable.IndexedSeq
 import scala.concurrent.Await
@@ -41,7 +39,7 @@ object BlendedDemoIntegrationSpec {
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport
-  with BeforeAndAfterAll {
+  with AroundSuite {
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
@@ -63,10 +61,6 @@ class BlendedDemoIntegrationSpec extends TestActorSys
       }, Some(t))
     )
   }
-
-  override protected def beforeAll(): Unit = beforeSuite()
-
-  override protected def afterAll(): Unit = afterSuite()
 
   private lazy val jmxRest = {
     val url = Await.result(jolokiaUrl(ctName = "blended_demo_0", port = 8181), 3.seconds)

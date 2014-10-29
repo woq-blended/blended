@@ -45,6 +45,8 @@ trait BlendedIntegrationTestSupport
   import de.woq.blended.itestsupport.condition.ConditionProvider._
 
   implicit val system: ActorSystem
+  private val log = system.log
+
   private val mgrName = "ContainerManager"
 
   def preCondition : Condition = alwaysTrue()
@@ -128,5 +130,9 @@ trait BlendedIntegrationTestSupport
   }
 
   def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
+}
 
+trait AroundSuite extends BeforeAndAfterAll { this: BlendedIntegrationTestSupport =>
+  override protected def beforeAll(): Unit = beforeSuite()
+  override protected def afterAll(): Unit = afterSuite()
 }
