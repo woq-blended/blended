@@ -53,7 +53,7 @@ trait BlendedIntegrationTestSupport
 
   def postCondition : Condition = alwaysTrue()
 
-  def startContainer(timeout : FiniteDuration) = {
+  final def startContainer(timeout : FiniteDuration) = {
 
     implicit val eCtxt = system.dispatcher
 
@@ -63,24 +63,27 @@ trait BlendedIntegrationTestSupport
     Await.result(call, timeout)
   }
 
-  def stopContainer(timeout : FiniteDuration) = {
+  final def stopContainer(timeout : FiniteDuration) = {
     implicit val eCtxt = system.dispatcher
 
     val call = (containerMgr ? StopContainerManager)(new Timeout(timeout))
     Await.result(call, timeout)
   }
 
-  def beforeSuite() {
+  final def beforeSuite() {
     startContainer(30.seconds) should be (ContainerManagerStarted)
     assertCondition(preCondition) should be (true)
+    initTestContext()
   }
 
-  def afterSuite() {
+  final def afterSuite() {
     assertCondition(postCondition) should be (true)
     stopContainer(30.seconds) should be (ContainerManagerStopped)
   }
 
-  def containerMgr : ActorRef = {
+  def initTestContext() : Unit = {}
+
+  final def containerMgr : ActorRef = {
     Await.result(system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
   }
 
