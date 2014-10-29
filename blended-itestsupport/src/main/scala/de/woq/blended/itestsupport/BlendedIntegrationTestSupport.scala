@@ -40,7 +40,8 @@ class TestContainerManager extends ContainerManager with DockerClientProvider {
 
 trait BlendedIntegrationTestSupport
   extends Suite
-  with Matchers { this: TestKit =>
+  with Matchers
+  with BeforeAndAfterAll { this: TestKit =>
 
   import de.woq.blended.itestsupport.condition.ConditionProvider._
 
@@ -85,6 +86,8 @@ trait BlendedIntegrationTestSupport
     log.info("Shutting down Test Suite ...")
     stopContainer(30.seconds) should be (ContainerManagerStopped)
   }
+
+  override protected def afterAll(): Unit = afterSuite()
 
   def initTestContext() : Unit = {}
 
