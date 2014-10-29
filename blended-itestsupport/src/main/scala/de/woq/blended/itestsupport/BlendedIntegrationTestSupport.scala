@@ -71,13 +71,18 @@ trait BlendedIntegrationTestSupport
   }
 
   final def beforeSuite() {
+    log.info("Preparing Test Suite ...")
     startContainer(30.seconds) should be (ContainerManagerStarted)
+    log.info(s"Verifying precondition [${preCondition}]")
     assertCondition(preCondition) should be (true)
+    log.info("Initializing BlendedTestContext ...")
     initTestContext()
   }
 
   final def afterSuite() {
+    log.info(s"Verifying postcondition [${postCondition}]")
     assertCondition(postCondition) should be (true)
+    log.info("Shutting down Test Suite ...")
     stopContainer(30.seconds) should be (ContainerManagerStopped)
   }
 
