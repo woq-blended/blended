@@ -139,8 +139,3 @@ trait BlendedIntegrationTestSupport
 
   def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
 }
-
-trait AroundSuite extends BeforeAndAfterAll { this: BlendedIntegrationTestSupport =>
-  override protected def beforeAll(): Unit = beforeSuite()
-  override protected def afterAll(): Unit = afterSuite()
-}

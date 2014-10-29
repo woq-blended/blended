@@ -21,11 +21,11 @@ import javax.jms.ConnectionFactory
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, MBeanExistsCondition}
-import de.woq.blended.itestsupport.{AroundSuite, BlendedIntegrationTestSupport, BlendedTestContext}
+import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.SpecLike
+import org.scalatest.{BeforeAndAfterAll, SpecLike}
 
 import scala.collection.immutable.IndexedSeq
 import scala.concurrent.Await
@@ -39,7 +39,11 @@ object BlendedDemoIntegrationSpec {
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport
-  with AroundSuite {
+  with BeforeAndAfterAll {
+
+  beforeSuite()
+
+  override protected def afterAll(): Unit = afterSuite()
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
