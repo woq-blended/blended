@@ -59,7 +59,10 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
           log.debug(s"Couldn't connect to JMS [${e.inner.getMessage}]")
           false
         }
-        case Right(_) => true
+        case Right(Connected) => {
+          jmsConnector.get ! Disconnect
+          true
+        }
       }
     }
   }
