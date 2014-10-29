@@ -38,12 +38,9 @@ object BlendedDemoIntegrationSpec {
 
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
-  with BlendedIntegrationTestSupport
-  with BeforeAndAfterAll {
+  with BlendedIntegrationTestSupport {
 
   beforeSuite()
-
-  override protected def afterAll(): Unit = afterSuite()
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
