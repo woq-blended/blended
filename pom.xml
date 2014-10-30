@@ -79,6 +79,8 @@
         <module>blended-akka</module>
         <module>blended-mgmt-agent</module>
         <module>blended-mgmt-rest</module>
+
+        <module>blended-spray-api</module>
         <module>blended-spray</module>
 
         <module>blended-neo4j-api</module>

@@ -47,31 +47,31 @@
 
     <dependency>
       <groupId>io.spray</groupId>
-      <artifactId>spray-http</artifactId>
+      <artifactId>spray-http_${scala.version}</artifactId>
       <version>${spray.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.spray</groupId>
-      <artifactId>spray-httpx</artifactId>
+      <artifactId>spray-httpx_${scala.version}</artifactId>
       <version>${spray.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.spray</groupId>
-      <artifactId>spray-util</artifactId>
+      <artifactId>spray-util_${scala.version}</artifactId>
       <version>${spray.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.spray</groupId>
-      <artifactId>spray-io</artifactId>
+      <artifactId>spray-io_${scala.version}</artifactId>
       <version>${spray.version}</version>
     </dependency>
 
     <dependency>
       <groupId>io.spray</groupId>
-      <artifactId>spray-client</artifactId>
+      <artifactId>spray-client_${scala.version}</artifactId>
       <version>${spray.version}</version>
     </dependency>
 
@@ -100,6 +100,13 @@
     </dependency>
 
     <!-- Test dependencies -->
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.jolokia</groupId>

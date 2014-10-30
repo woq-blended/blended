@@ -57,9 +57,9 @@
     </dependency>
 
     <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-client</artifactId>
-      <version>${spray.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-spray-api</artifactId>
+      <version>${blended.version}</version>
     </dependency>
 
     <dependency>

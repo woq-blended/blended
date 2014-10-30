@@ -40,65 +40,15 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-spray</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-core</artifactId>
+      <version>${camel.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-servlet</artifactId>
-      <version>${spray.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-routing</artifactId>
-      <version>${spray.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-jmx</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-akka</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-modules</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}.${scala.micro.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <version>${osgi.core.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <version>${osgi.core.version}</version>
-      <scope>provided</scope>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-jms</artifactId>
+      <version>${camel.version}</version>
     </dependency>
 
     <dependency>
@@ -112,13 +62,6 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
       <version>${scalatest.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-testkit</artifactId>
-      <version>${spray.version}</version>
       <scope>test</scope>
     </dependency>
 

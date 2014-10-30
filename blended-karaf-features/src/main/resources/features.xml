@@ -178,20 +178,8 @@
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
     <bundle>mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}/jar/woq</bundle>
     <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
-    <bundle>mvn:org.parboiled/parboiled-core/${parboiled.version}</bundle>
-    <bundle>mvn:org.parboiled/parboiled-scala_${scala.version}/${parboiled.version}</bundle>
-    <bundle>wrap:mvn:com.chuusai/shapeless_${scala.version}/${shapeless.version}</bundle>
-    <bundle>mvn:io.spray/spray-util/${spray.version}/jar/woq</bundle>
-    <bundle>mvn:io.spray/spray-http/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-httpx/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-servlet/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-caching/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-io/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-can/${spray.version}/jar/woq</bundle>
-    <bundle>mvn:io.spray/spray-routing/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-client/${spray.version}</bundle>
-    <bundle>mvn:io.spray/spray-json_${scala.version}/${spray-json.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-spray/${project.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-spray-api/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-spray/${blended.version}</bundle>
   </feature>
 
   <feature name="blended-samples" description="Sample bundles" version="${blended.version}" resolver="(obr)">

@@ -107,6 +107,12 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
+      <artifactId>blended-spray-api</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
       <artifactId>blended-spray</artifactId>
       <version>${blended.version}</version>
     </dependency>

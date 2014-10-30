@@ -34,16 +34,17 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
 
     <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-client</artifactId>
-      <version>${activemq.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>de.woq.blended</groupId>
       <artifactId>blended-docker-demo</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-client</artifactId>
+      <version>${activemq.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
