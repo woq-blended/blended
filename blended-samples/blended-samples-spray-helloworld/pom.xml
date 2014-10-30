@@ -41,15 +41,14 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>blended-spray</artifactId>
+      <artifactId>blended-spray-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>io.spray</groupId>
-      <artifactId>spray-routing_${scala.version}</artifactId>
-      <version>${spray.version}</version>
-      <scope>provided</scope>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-spray</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
