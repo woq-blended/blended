@@ -1,6 +1,6 @@
 language: java
 
-script: mvn install -P parent,build,assembly
+script: ./blended-build/build.sh
 
 jdk:
   - oraclejdk7
