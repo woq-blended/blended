@@ -1,4 +1,4 @@
-![Building with Travis](https://api.travis-ci.org/woq-blended/blended.svg?branch=master)
+<a href="https://travis-ci.org/woq-blended/blended">![Building with Travis][1]</a>
 
 # Project Blended (formerly de.woq.osgi.java)
 
@@ -15,3 +15,5 @@ Feedback
 ---------
 
 We are developing on top of OSGi for quite some time, but Akka is a new technology for us. If you spot somethings that makes you want to pull your hair, [let us know](https://github.com/woq/de.woq.osgi.java/issues) ;)
+
+[1]: https://api.travis-ci.org/woq-blended/blended.svg?branch=master
