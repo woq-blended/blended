@@ -1,3 +1,5 @@
+![Building with Travis](https://api.travis-ci.org/woq-blended/blended.svg?branch=master)
+
 # Project Blended (formerly de.woq.osgi.java)
 
 This project is dedicated to provide reusable components for developing OSGI based application. It builds on top of Karaf, Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray. 
