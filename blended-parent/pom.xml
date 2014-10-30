@@ -40,6 +40,9 @@
     <!-- plugin versions -->
     <compiler-plugin.version>2.5.1</compiler-plugin.version>
 
+    <!-- Log level for tests -->
+    <loglevel.test>INFO</loglevel.test>
+
     <!-- library versions -->
 
     <activemq.version>5.10.0</activemq.version>
