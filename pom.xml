@@ -40,9 +40,9 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/atooni/de.woq.osgi.java.git</developerConnection>
-    <url>https://github.com/atooni/de.woq.osgi.java</url>
+    <connection>scm:git:ssh://git@github.com/woq-blended/blended.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
+    <url>https://github.com/woq-blended/blended</url>
   </scm>
 
   <profiles>
@@ -92,6 +92,13 @@
         <module>blended-archetypes-project</module>
 
         <module>blended-samples</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>testing</id>
+      <modules>
+        <module>blended-testing</module>
       </modules>
     </profile>
 

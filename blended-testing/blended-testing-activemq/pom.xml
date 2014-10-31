@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
   ~ Copyright 2014ff, WoQ - Way of Quality GmbH
   ~
@@ -14,11 +15,7 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-
-<project
-xmlns="http://maven.apache.org/POM/4.0.0"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
@@ -28,36 +25,40 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <version>1.0.7-M6-SNAPSHOT</version>
   </parent>
 
-  <artifactId>blended-akka-itest</artifactId>
+  <artifactId>blended-testing-activemq</artifactId>
   <packaging>jar</packaging>
+
+  <properties>
+    <loglevel.test>INFO</loglevel.test>
+  </properties>
 
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-docker-demo</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-broker</artifactId>
+      <version>${activemq.version}</version>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-client</artifactId>
+      <artifactId>activemq-kahadb-store</artifactId>
       <version>${activemq.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>de.woq.blended</groupId>
-      <artifactId>blended-itestsupport</artifactId>
-      <version>${project.version}</version>
+      <artifactId>blended-testsupport</artifactId>
+      <version>${blended.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-      <version>${scalatest.version}</version>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-itestsupport</artifactId>
+      <version>${blended.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -69,9 +70,23 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-slf4j_${scala.version}</artifactId>
       <version>${akka.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -97,4 +112,3 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </build>
 
 </project>
-

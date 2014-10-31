@@ -78,6 +78,10 @@ object Consumer {
     subscriberName: Option[String],
     msgCounter : Option[ActorRef] = None
   ) = new Consumer(connection, destName, subscriberName, msgCounter)
+
+  case object MsgTimeout
+  case object ConsumerCreated
+
 }
 
 class Consumer(
@@ -87,6 +91,8 @@ class Consumer(
   msgCounter: Option[ActorRef]
 ) extends Actor with ActorLogging {
 
+  import Consumer.{MsgTimeout, ConsumerCreated}
+
   implicit val eCtxt = context.dispatcher
 
   val idleTimeout = FiniteDuration(
@@ -95,8 +101,6 @@ class Consumer(
 
   var jmsConsumer : AkkaConsumer = _
   var idleTimer : Option[Cancellable] = None
-
-  case object MsgTimeout
 
   override def preStart() {
     super.preStart()
@@ -108,6 +112,8 @@ class Consumer(
   }
 
   override def receive = LoggingReceive {
+    case ConsumerCreated =>
+      sender ! ConsumerActor(self)
     case msg : Message => {
       log.debug(s"Received message ...")
       msgCounter.foreach { counter => counter ! new IncrementCounter() }

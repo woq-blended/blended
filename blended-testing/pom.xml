@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>de.woq.blended.samples</groupId>
-  <artifactId>blended-samples-reactor</artifactId>
+  <artifactId>blended-testing-reactor</artifactId>
   <version>1.0.7-M6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -48,11 +48,9 @@
   <profiles>
 
     <profile>
-      <id>build</id>
+      <id>testing</id>
       <modules>
-        <module>blended-samples-camel</module>
-        <module>blended-samples-spray-helloworld</module>
-        <module>blended-samples-tracker</module>
+        <module>blended-testing-activemq</module>
       </modules>
     </profile>
 
