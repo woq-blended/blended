@@ -17,12 +17,13 @@
 package de.woq.blended.testing.activemq
 
 import java.net.URI
+import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import javax.jms.ConnectionFactory
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
-import akka.testkit.{TestActorRef, TestKit}
+import akka.testkit.{TestProbe, TestActorRef, TestKit}
 import akka.util.Timeout
 import de.woq.blended.itestsupport.jms.{TextMessageFactory, JMSConnectorActor}
 import de.woq.blended.itestsupport.jms.protocol._
@@ -36,7 +37,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 import org.slf4j.LoggerFactory
 import scala.concurrent.duration._
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 
 /**
  * This specification shall help to investigate the duplicate delivery of messages for durable subscribers
@@ -184,7 +185,7 @@ class DurableSubscriberSpec extends WordSpec
     }
 
     // Create a durable sbscriber and optionally link it to a tracking counter
-    def durableSubscriber(connector: ActorRef, dest: String, subscriberName: String, counter: Option[ActorRef])(implicit testkit : TestKit) : Future[ActorRef] = {
+    def durableSubscriber(connector: ActorRef, dest: String, subscriberName: String, counter: Option[ActorRef] = None)(implicit testkit : TestKit) : Future[ActorRef] = {
       implicit val ctxt = testkit.system.dispatcher
       (connector ? CreateDurableSubscriber(dest, subscriberName, counter)).mapTo[ConsumerActor].map(_.consumer)
     }
@@ -201,55 +202,129 @@ class DurableSubscriberSpec extends WordSpec
       ))
     }
 
+    def checkCounter(probe: TestProbe, count: Int)(implicit testkit: TestKit) : Unit = {
+      probe.fishForMessage() {
+        case info: CounterInfo => info.count == count
+        case _ => false
+      }
+    }
+
+    def produceAndCount(producerConnector: ActorRef, dest: String)(implicit testkit: TestKit) : Future[TestProbe] = {
+      implicit val ctxt = testkit.system.dispatcher
+      implicit val system = testkit.system
+
+      val probe = TestProbe()
+
+      // Create a TrackingCounter for the produced messages reporting back to the probe
+      val producedCounter = TestActorRef(Props(TrackingCounter(1.seconds, probe.ref)))
+
+      for {
+        p <- producer(producerConnector, destination, Some(producedCounter)).mapTo[ActorRef]
+        msg <- produceMessageBatch(p)
+      } yield probe
+    }
+
+    def consumeAndCount(consumerConnector: ActorRef, dest: String, subscriberName: String)(implicit testkit: TestKit) : Future[TestProbe] = {
+      implicit val ctxt = testkit.system.dispatcher
+      implicit val system = testkit.system
+
+      log info s"Setting up consumer [${subscriberName}]"
+
+      val probe = TestProbe()
+
+      // Create a TrackingCounter for the consumed messages reporting back to the probe
+      val consumedCounter = TestActorRef(Props(TrackingCounter(1.seconds, probe.ref)))
+
+      for {
+        s <- durableSubscriber(consumerConnector, destination, subscriberName, Some(consumedCounter)).mapTo[ActorRef]
+      } yield probe
+
+    }
+
     // produce and consume some messages and check the message counts
     def produceAndConsume(
       consumerConnector : ActorRef,
       producerConnector : ActorRef,
       dest: String,
       subscribername: String
-    )(implicit testkit: TestKit) : Unit = {
+    )(implicit testkit: TestKit) : Future[(TestProbe, TestProbe)] = {
 
       implicit val ctxt = testkit.system.dispatcher
       implicit val system = testkit.system
 
-      val latch = new CountDownLatch(1)
-
-      // Create TrackingCounters for produced and consumed messages reporting back to the testActor
-      val consumedCounter = TestActorRef(Props(TrackingCounter(1.seconds, testkit.testActor)))
-      val producedCounter = TestActorRef(Props(TrackingCounter(1.seconds, testkit.testActor)))
-
-      // First create a Durable Subscriber, then create a Producer and produce a message batch
-      (for {
-        c <- durableSubscriber(consumerConnector, destination, subscribername, Some(consumedCounter)).mapTo[ActorRef]
-        p <- producer(producerConnector, destination, Some(producedCounter)).mapTo[ActorRef]
-        msg <- produceMessageBatch(p)
-      } yield msg).onSuccess { case _ =>
-        // We should have a complete message batch produced and consumed
-        testkit.fishForMessage(5.seconds) {
-          case info: CounterInfo => info.count == numMessages
-          case _ => false
-        }
-
-        testkit.fishForMessage(5.seconds) {
-          case info: CounterInfo => info.count == numMessages
-          case _ => false
-        }
-
-        latch.countDown()
-      }
-
-      latch.await(5, SECONDS)
+      for {
+        consumerProbe <- consumeAndCount(consumerConnector, dest, subscribername)
+        producerProbe <- produceAndCount(producerConnector, dest)
+      } yield (consumerProbe, producerProbe)
     }
 
-    "do stuff" in new TestActorSys {
+    "consume messages that have been produced on the same broker instance" in new TestActorSys {
+
+      log.info("=" * 80)
 
       implicit val kit = this
       implicit val ctxt = system.dispatcher
 
+      val subscriberName = UUID.randomUUID.toString
+
       val connA = jmsConnector("broker1")
       connect(connA, "clientA")
 
-      produceAndConsume(connA, connA, destination, "testSub")
+      val (cp, pp) = Await.result(produceAndConsume(connA, connA, destination, subscriberName), 10.seconds)
+
+      checkCounter(cp, numMessages)
+      checkCounter(pp, numMessages)
+
+      disconnect(connA)
+    }
+
+    "consume messages that have been produced on the peer broker instance" in new TestActorSys {
+
+      log.info("=" * 80)
+
+      implicit val kit = this
+      implicit val ctxt = system.dispatcher
+
+      val subscriberName = UUID.randomUUID.toString
+
+      val connA = jmsConnector("broker1")
+      connect(connA, "clientA")
+
+      val connB = jmsConnector("broker2")
+      connect(connB, "clientB")
+
+      val (cp, pp) = Await.result(produceAndConsume(connA, connB, destination, subscriberName), 10.seconds)
+
+      checkCounter(cp, numMessages)
+      checkCounter(pp, numMessages)
+
+      disconnect(connA)
+      disconnect(connB)
+    }
+
+    "consume messages that have been produced while the durable subscriber was offline" in new TestActorSys {
+
+      log.info("=" * 80)
+
+      implicit val kit = this
+      implicit val ctxt = system.dispatcher
+
+      val subscriberName = UUID.randomUUID.toString
+
+      val connA = jmsConnector("broker1")
+      connect(connA, "clientA")
+
+      val stopProbe = TestProbe()
+      system.eventStream.subscribe(stopProbe.ref, classOf[ConsumerStopped])
+
+      durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
+      stopProbe.expectMsg(ConsumerStopped(destination))
+
+      val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
+      checkCounter(pp, numMessages)
+
+      val cp = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
+      checkCounter(cp, numMessages)
 
       disconnect(connA)
     }
