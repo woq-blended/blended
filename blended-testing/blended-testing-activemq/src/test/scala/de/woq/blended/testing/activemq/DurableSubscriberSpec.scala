@@ -167,31 +167,31 @@ class DurableSubscriberSpec extends WordSpec
       TestActorRef(Props(JMSConnectorActor(brokers(brokerName).connectionFactory)))
 
     // Connecting to a broker and verifying it
-    def connect(connector: ActorRef, clientId: String)(implicit testkit : TestKit) : Unit = {
+    def connect(connector: ActorRef, clientId: String)(implicit testkit: TestKit): Unit = {
       connector.tell(Connect(clientId), testkit.testActor)
       testkit.expectMsg(Right(Connected(clientId)))
     }
 
     // Disconnecting from a broker and verifying it
-    def disconnect(connector: ActorRef)(implicit testkit : TestKit) : Unit = {
+    def disconnect(connector: ActorRef)(implicit testkit: TestKit): Unit = {
       connector.tell(Disconnect, testkit.testActor)
       testkit.expectMsg(Right(Disconnected))
     }
 
     // Create a producer and optionally link it to a TrackingCounter
-    def producer(connector: ActorRef, dest: String, counter: Option[ActorRef] = None)(implicit testkit : TestKit) : Future[ActorRef] = {
+    def producer(connector: ActorRef, dest: String, counter: Option[ActorRef] = None)(implicit testkit: TestKit): Future[ActorRef] = {
       implicit val ctxt = testkit.system.dispatcher
       (connector ? CreateProducer(dest, counter)).mapTo[ProducerActor].map(_.producer)
     }
 
     // Create a durable sbscriber and optionally link it to a tracking counter
-    def durableSubscriber(connector: ActorRef, dest: String, subscriberName: String, counter: Option[ActorRef] = None)(implicit testkit : TestKit) : Future[ActorRef] = {
+    def durableSubscriber(connector: ActorRef, dest: String, subscriberName: String, counter: Option[ActorRef] = None)(implicit testkit: TestKit): Future[ActorRef] = {
       implicit val ctxt = testkit.system.dispatcher
       (connector ? CreateDurableSubscriber(dest, subscriberName, counter)).mapTo[ConsumerActor].map(_.consumer)
     }
 
     // Produce a batch of messages for a given Producer
-    def produceMessageBatch(producer: ActorRef)(implicit testkit: TestKit) : Future[Any] = {
+    def produceMessageBatch(producer: ActorRef)(implicit testkit: TestKit): Future[Any] = {
 
       implicit val ctxt = testkit.system.dispatcher
 
@@ -202,14 +202,14 @@ class DurableSubscriberSpec extends WordSpec
       ))
     }
 
-    def checkCounter(probe: TestProbe, count: Int)(implicit testkit: TestKit) : Unit = {
+    def checkCounter(probe: TestProbe, count: Int)(implicit testkit: TestKit): Unit = {
       probe.fishForMessage() {
         case info: CounterInfo => info.count == count
         case _ => false
       }
     }
 
-    def produceAndCount(producerConnector: ActorRef, dest: String)(implicit testkit: TestKit) : Future[TestProbe] = {
+    def produceAndCount(producerConnector: ActorRef, dest: String)(implicit testkit: TestKit): Future[TestProbe] = {
       implicit val ctxt = testkit.system.dispatcher
       implicit val system = testkit.system
 
@@ -224,7 +224,7 @@ class DurableSubscriberSpec extends WordSpec
       } yield probe
     }
 
-    def consumeAndCount(consumerConnector: ActorRef, dest: String, subscriberName: String)(implicit testkit: TestKit) : Future[TestProbe] = {
+    def consumeAndCount(consumerConnector: ActorRef, dest: String, subscriberName: String)(implicit testkit: TestKit): Future[TestProbe] = {
       implicit val ctxt = testkit.system.dispatcher
       implicit val system = testkit.system
 
@@ -243,11 +243,11 @@ class DurableSubscriberSpec extends WordSpec
 
     // produce and consume some messages and check the message counts
     def produceAndConsume(
-      consumerConnector : ActorRef,
-      producerConnector : ActorRef,
+      consumerConnector: ActorRef,
+      producerConnector: ActorRef,
       dest: String,
       subscribername: String
-    )(implicit testkit: TestKit) : Future[(TestProbe, TestProbe)] = {
+    )(implicit testkit: TestKit): Future[(TestProbe, TestProbe)] = {
 
       implicit val ctxt = testkit.system.dispatcher
       implicit val system = testkit.system
@@ -258,75 +258,168 @@ class DurableSubscriberSpec extends WordSpec
       } yield (consumerProbe, producerProbe)
     }
 
+    // Provide a frame for running a test and make sure thaht everything is cleaned up afterwards
+    def runNWOBTest( f : ((ActorRef, ActorRef) => Unit))(implicit testkit : TestKit): Boolean = {
+
+      implicit val system = testkit.system
+
+      val connA = jmsConnector("broker1")
+      val connB = jmsConnector("broker2")
+
+      try {
+        connect(connA, "clientA")
+        connect(connB, "clientB")
+        f(connA, connB)
+        true
+      } catch {
+        case t : Throwable =>
+          testkit.system.log.error(s"Exception caught executing test [${t.getMessage}]")
+          false
+      } finally {
+        disconnect(connA)
+        disconnect(connB)
+      }
+    }
+
     "consume messages that have been produced on the same broker instance" in new TestActorSys {
 
+      /* Simply create a producer and a consumer on the same broker instance and check that an
+       * equal number of messages has been produced / consumed.
+       */
       log.info("=" * 80)
 
       implicit val kit = this
       implicit val ctxt = system.dispatcher
 
-      val subscriberName = UUID.randomUUID.toString
+      runNWOBTest { (connA, connB) =>
+        val subscriberName = UUID.randomUUID.toString
 
-      val connA = jmsConnector("broker1")
-      connect(connA, "clientA")
+        val (cp, pp) = Await.result(produceAndConsume(connA, connA, destination, subscriberName), 10.seconds)
 
-      val (cp, pp) = Await.result(produceAndConsume(connA, connA, destination, subscriberName), 10.seconds)
-
-      checkCounter(cp, numMessages)
-      checkCounter(pp, numMessages)
-
-      disconnect(connA)
+        checkCounter(cp, numMessages)
+        checkCounter(pp, numMessages)
+      }
     }
 
     "consume messages that have been produced on the peer broker instance" in new TestActorSys {
 
+      /* Simply create a producer on broker1 and a consumer on broker2 and check that an
+       * equal number of messages has been produced / consumed.
+       */
       log.info("=" * 80)
 
       implicit val kit = this
       implicit val ctxt = system.dispatcher
 
-      val subscriberName = UUID.randomUUID.toString
+      runNWOBTest { (connA, connB) =>
+        val subscriberName = UUID.randomUUID.toString
 
-      val connA = jmsConnector("broker1")
-      connect(connA, "clientA")
+        val (cp, pp) = Await.result(produceAndConsume(connA, connB, destination, subscriberName), 10.seconds)
 
-      val connB = jmsConnector("broker2")
-      connect(connB, "clientB")
-
-      val (cp, pp) = Await.result(produceAndConsume(connA, connB, destination, subscriberName), 10.seconds)
-
-      checkCounter(cp, numMessages)
-      checkCounter(pp, numMessages)
-
-      disconnect(connA)
-      disconnect(connB)
+        checkCounter(cp, numMessages)
+        checkCounter(pp, numMessages)
+      }
     }
 
-    "consume messages that have been produced while the durable subscriber was offline" in new TestActorSys {
+    "consume messages from the same broker that have been produced while the durable subscriber was offline" in new TestActorSys {
+
+      /* 1. Create a durable subscriber on broker1 and immediately stop it
+       * 2. Create a producer on broker 1 and produce n messages
+       * 3. Reconnect the durable subscriber
+       * 4. Check that an equal number of messages has been produced / consumed
+       */
 
       log.info("=" * 80)
 
       implicit val kit = this
       implicit val ctxt = system.dispatcher
 
-      val subscriberName = UUID.randomUUID.toString
+      runNWOBTest { (connA, connB) =>
+        val subscriberName = UUID.randomUUID.toString
 
-      val connA = jmsConnector("broker1")
-      connect(connA, "clientA")
+        val stopProbe = TestProbe()
+        system.eventStream.subscribe(stopProbe.ref, classOf[ConsumerStopped])
 
-      val stopProbe = TestProbe()
-      system.eventStream.subscribe(stopProbe.ref, classOf[ConsumerStopped])
+        durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
+        stopProbe.expectMsg(ConsumerStopped(destination))
 
-      durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
-      stopProbe.expectMsg(ConsumerStopped(destination))
+        val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
+        checkCounter(pp, numMessages)
 
-      val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
-      checkCounter(pp, numMessages)
-
-      val cp = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
-      checkCounter(cp, numMessages)
-
-      disconnect(connA)
+        val cp = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
+        checkCounter(cp, numMessages)
+      }
     }
+
+    "consume messages from the peer broker that have been produced while the subscriber was offline" in new TestActorSys {
+
+      /* 1. Create a durable subscriber on broker1 and immediately stop it
+       * 2. Create a producer on broker 1 and produce n messages
+       * 3. Reconnect the durable subscriber on broker 2
+       * 4. Check that an equal number of messages has been produced / consumed
+       */
+
+      log.info("=" * 80)
+
+      implicit val kit = this
+      implicit val ctxt = system.dispatcher
+
+      runNWOBTest { (connA, connB) =>
+        val subscriberName = UUID.randomUUID.toString
+
+        val stopProbe = TestProbe()
+        system.eventStream.subscribe(stopProbe.ref, classOf[ConsumerStopped])
+
+        durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
+        stopProbe.expectMsg(ConsumerStopped(destination))
+
+        val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
+        checkCounter(pp, numMessages)
+
+        val cp = Await.result(consumeAndCount(connB, destination, subscriberName), 10.seconds)
+        checkCounter(cp, numMessages)
+      }
+    }
+
+    "avoid duplicate delivery of messages" in new TestActorSys {
+
+      /* 1. Create a durable subscriber on broker 1 and immediate stop it.
+       * 2. Reconnect the subscriber to broker 2
+       * 3. Create a producer on broke 1 and produce n messages
+       * 4. The connected subscriber should have received n messages
+       * 5. Stop the subscriber and reconnect to broker 1
+       * 6. The reconnected subscriber should have received no more messages.
+       */
+
+      log.info("=" * 80)
+
+      implicit val kit = this
+      implicit val ctxt = system.dispatcher
+
+      runNWOBTest { (connA, connB) =>
+        val subscriberName = UUID.randomUUID.toString
+
+        val stopProbe = TestProbe()
+        system.eventStream.subscribe(stopProbe.ref, classOf[ConsumerStopped])
+
+        durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
+        stopProbe.expectMsg(ConsumerStopped(destination))
+
+        val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
+        checkCounter(pp, numMessages)
+
+        val cp1 = Await.result(consumeAndCount(connB, destination, subscriberName), 10.seconds)
+        checkCounter(cp1, numMessages)
+
+        stopProbe.fishForMessage() {
+          case s : ConsumerStopped => true
+          case _ => false
+        }
+
+        val cp2 = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
+        checkCounter(cp2, 0)
+      }
+    }
+
   }
 }
