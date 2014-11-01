@@ -64,14 +64,17 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
       sender ! Right(Disconnected)
     }
     case CreateProducer(destName, msgCounter) => {
+      log.info(s"Creating a producer for [${destName}] with clientId [${connection.getClientID}]")
       val producer = context.actorOf(Props(Producer(connection, destName, msgCounter)))
       sender ! ProducerActor(producer)
     }
     case CreateConsumer(destName, msgCounter) => {
+      log.info(s"Creating a consumer for [${destName}] with clientId [${connection.getClientID}]")
       val consumer = context.actorOf(Props(Consumer(connection, destName, None, msgCounter)))
       consumer.forward(Consumer.ConsumerCreated)
     }
     case CreateDurableSubscriber(destName,subscriberName,msgCounter) => {
+      log.info(s"Creating a durable subscriber for [${destName}] with clientId [${connection.getClientID}] and subscriberName")
       val consumer = context.actorOf(Props(Consumer(connection, destName, Some(subscriberName), msgCounter)))
       consumer.forward(Consumer.ConsumerCreated)
     }

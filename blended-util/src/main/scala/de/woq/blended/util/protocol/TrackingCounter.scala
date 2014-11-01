@@ -56,7 +56,7 @@ class TrackingCounter(idleTimeout: FiniteDuration, counterFor: ActorRef)
     case StopCounter => {
       timer.foreach(_.cancel())
       (counter ? QueryCounter).mapTo[CounterInfo].map { info =>
-        log.debug(s"Tracking counter ending with [${info}] for [${counterFor}]")
+        log.info(s"Tracking counter ending with [${info}] for [${counterFor}]")
         counterFor ! info
         context.stop(self)
       }

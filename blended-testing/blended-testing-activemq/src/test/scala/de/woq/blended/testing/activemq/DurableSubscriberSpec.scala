@@ -58,9 +58,23 @@ import scala.concurrent.{Await, Future}
  *
  * According to Tim Bain on Oct., 20th 2014 this indicates a bug rather than a missing feature in ActiveMQ
  * and this Spec shall pinpoint the behavior.
- *
+ * *
  * The test is based on ActiveMQ 5.10
+ *
+ * Observations:
+ * -------------
+ * Depending on when the durable subscriber is known to the members of the NWOB, messages can be either lost
+ * or delivered repeatedly (see the last 2 test cases). Message loss can happen, if the DS has only connected
+ * to one broker so far. If the DS then disconnects and after a while reconnects to the other broker it wasn't
+ * connected to so far, it will not see the messages that have been produced while it was offline (it will see
+ * those messages after reconnecting to broker 1).
+ *
+ * Dupilcate delivery will happen if the DS was already connected to both brokers. From the broker's perspective
+ * it seems that those DS are handled as two distinct subscribers, so effectively all messages that are published
+ * will eventually be delivered to both subscribers.
  */
+
+/************************************************************************************************/
 
 /**
  * Encapsulate the setup of an ActiveMQ broker with a given name and connector URI. The connector
@@ -204,7 +218,10 @@ class DurableSubscriberSpec extends WordSpec
 
     def checkCounter(probe: TestProbe, count: Int)(implicit testkit: TestKit): Unit = {
       probe.fishForMessage() {
-        case info: CounterInfo => info.count == count
+        case info: CounterInfo => {
+          log.info(s"Received counter info of [${info.count}], expecting [${count}]")
+          info.count == count
+        }
         case _ => false
       }
     }
@@ -267,13 +284,13 @@ class DurableSubscriberSpec extends WordSpec
       val connB = jmsConnector("broker2")
 
       try {
-        connect(connA, "clientA")
-        connect(connB, "clientB")
+        connect(connA, "myclient")
+        connect(connB, "myclient")
         f(connA, connB)
         true
       } catch {
         case t : Throwable =>
-          testkit.system.log.error(s"Exception caught executing test [${t.getMessage}]")
+          testkit.system.log.error(s"Exception caught executing test [${t.getStackTraceString}]")
           false
       } finally {
         disconnect(connA)
@@ -298,7 +315,7 @@ class DurableSubscriberSpec extends WordSpec
 
         checkCounter(cp, numMessages)
         checkCounter(pp, numMessages)
-      }
+      } should be (true)
     }
 
     "consume messages that have been produced on the peer broker instance" in new TestActorSys {
@@ -318,7 +335,7 @@ class DurableSubscriberSpec extends WordSpec
 
         checkCounter(cp, numMessages)
         checkCounter(pp, numMessages)
-      }
+      } should be (true)
     }
 
     "consume messages from the same broker that have been produced while the durable subscriber was offline" in new TestActorSys {
@@ -348,7 +365,7 @@ class DurableSubscriberSpec extends WordSpec
 
         val cp = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
         checkCounter(cp, numMessages)
-      }
+      } should be (true)
     }
 
     "consume messages from the peer broker that have been produced while the subscriber was offline" in new TestActorSys {
@@ -378,7 +395,7 @@ class DurableSubscriberSpec extends WordSpec
 
         val cp = Await.result(consumeAndCount(connB, destination, subscriberName), 10.seconds)
         checkCounter(cp, numMessages)
-      }
+      } should be (true)
     }
 
     "avoid duplicate delivery of messages" in new TestActorSys {
@@ -405,10 +422,10 @@ class DurableSubscriberSpec extends WordSpec
         durableSubscriber(connA, destination, subscriberName).map(_ ! StopConsumer)
         stopProbe.expectMsg(ConsumerStopped(destination))
 
-        val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
-        checkCounter(pp, numMessages)
-
         val cp1 = Await.result(consumeAndCount(connB, destination, subscriberName), 10.seconds)
+        val pp = Await.result(produceAndCount(connA, destination), 10.seconds)
+
+        checkCounter(pp, numMessages)
         checkCounter(cp1, numMessages)
 
         stopProbe.fishForMessage() {
@@ -418,7 +435,7 @@ class DurableSubscriberSpec extends WordSpec
 
         val cp2 = Await.result(consumeAndCount(connA, destination, subscriberName), 10.seconds)
         checkCounter(cp2, 0)
-      }
+      } should be (true)
     }
 
   }

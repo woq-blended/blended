@@ -68,7 +68,9 @@ class AkkaConsumer(
     consumerFor ! ConsumerStopped(destName)
   }
 
-  override def onMessage(msg: Message) { consumerFor ! msg }
+  override def onMessage(msg: Message) {
+    consumerFor ! msg
+  }
 }
 
 object Consumer {
@@ -115,8 +117,8 @@ class Consumer(
     case ConsumerCreated =>
       sender ! ConsumerActor(self)
     case msg : Message => {
-      log.debug(s"Received message ...")
-      msgCounter.foreach { counter => counter ! new IncrementCounter() }
+      log.info(s"Received message ... [${msg.toString}]")
+      msgCounter.foreach { counter => counter ! IncrementCounter(1) }
       resetTimer()
     }
     case Unsubscribe => {
