@@ -60,7 +60,6 @@ class OSGIDummyListener extends InitializingActor with BundleName { this : OSGIE
 
     publisherName = Some(config.getString("publisher"))
     setupListener(publisherName.get)
-    context.system.eventStream.publish(BundleActorInitialized(bundleSymbolicName))
     self ! Initialized
   }
 

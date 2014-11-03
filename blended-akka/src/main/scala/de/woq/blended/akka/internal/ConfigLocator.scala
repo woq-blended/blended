@@ -16,11 +16,13 @@
 
 package de.woq.blended.akka.internal
 
-import akka.actor.{Stash, ActorLogging, Actor}
-import de.woq.blended.akka.protocol._
-import com.typesafe.config.{ConfigException, ConfigFactory}
 import java.io.File
+
+import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
+import com.typesafe.config.{ConfigException, ConfigFactory}
+import de.woq.blended.akka.MemoryStash
+import de.woq.blended.akka.protocol._
 
 trait ConfigDirectoryProvider {
   def configDirectory : String
@@ -32,21 +34,20 @@ object ConfigLocator {
   }
 }
 
-class ConfigLocator extends Actor with ActorLogging with Stash { this: ConfigDirectoryProvider =>
+class ConfigLocator extends Actor with ActorLogging with MemoryStash { this: ConfigDirectoryProvider =>
 
   case object Initialize
 
   override def preStart() { self ! Initialize }
 
-  def receive = initializing
+  def receive = initializing orElse(stashing)
 
   def initializing : Receive = LoggingReceive {
     case Initialize => {
       log info s"Initializing ConfigLocator with directory [${configDirectory}]."
-      unstashAll()
+      unstash()
       context.become(working)
     }
-    case _ => stash()
   }
 
   def working: Actor.Receive = LoggingReceive {

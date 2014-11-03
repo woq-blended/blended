@@ -83,12 +83,14 @@ class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filt
   def initializing : Receive = LoggingReceive {
     case Initialize => {
       val tracker = filter match {
-        case None => new ServiceTracker[I, I](
-          bundleContext, clazz, trackerAdapter(observer)
-        )
+        case None =>
+          log.info(s"Creating Service tracker for class [${clazz}] for [${observer}]")
+          new ServiceTracker[I, I](
+            bundleContext, clazz, trackerAdapter(observer)
+          )
         case Some(f) =>
           val realFilter : Filter = ("objectClass" === clazz.getName) && f
-          log.debug(s"Creating Service tracker with filter [${realFilter}] for [${observer}]")
+          log.info(s"Creating Service tracker with filter [${realFilter}] for [${observer}]")
           new ServiceTracker[I, I](
             bundleContext, bundleContext.createFilter(realFilter.toString), trackerAdapter(observer)
           )

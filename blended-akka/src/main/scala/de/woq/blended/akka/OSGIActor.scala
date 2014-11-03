@@ -91,6 +91,10 @@ trait InitializingActor extends OSGIActor { this: BundleName =>
     case (bc: BundleContext, ConfigLocatorResponse(id, cfg)) if id == bundleSymbolicName => {
       initialize(cfg)(bc)
     }
-    case Initialized => context.become(working)
+    case Initialized => {
+      log.debug(s"Initialized bundle actor [${bundleSymbolicName}]")
+      context.system.eventStream.publish(BundleActorInitialized(bundleSymbolicName))
+      context.become(working)
+    }
   }
 }
