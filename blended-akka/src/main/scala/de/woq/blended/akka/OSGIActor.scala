@@ -16,6 +16,8 @@
 
 package de.woq.blended.akka
 
+import java.util.Properties
+
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
 import akka.pattern.ask
@@ -71,6 +73,7 @@ trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
       }
     }
   }
+
 }
 
 trait InitializingActor extends OSGIActor { this: BundleName =>
