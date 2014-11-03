@@ -30,9 +30,15 @@ object TrackingActor {
   def apply() = new TrackingActor with TrackerBundleName
 }
 
+/**
+ * Demonstrate how to create an OSGIActor that uses a tracker to monitor service instances
+ * it depends on. In the example we are listening to the instance of an JMS ConnectionFactory,
+ * which is further qualified with 'activemq' as the provider property. All we do in the
+ * example is print out a message when the service instance is added, removed or modified.
+ */
 class TrackingActor extends InitializingActor { this: BundleName =>
 
-  override def receive = LoggingReceive { initializing orElse(logging) }
+  override def receive = LoggingReceive { initializing }
 
   override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
     createTracker(classOf[ConnectionFactory], Some("provider" === "activemq")) onSuccess  { case _ =>
