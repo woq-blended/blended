@@ -45,7 +45,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
   override def preCondition = {
-    val t = 30.seconds
+    val t = 60.seconds
 
     SequentialComposedCondition(
       ParallelComposedCondition(
@@ -70,11 +70,14 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   }
 
   private lazy val amqConnectionFactory = {
-    val ctInfo = Await.result(containerInfo("blended_demo_0"), 3.seconds)
+    val ctInfo  = Await.result(containerInfo("blended_demo_0"), 3.seconds)
     val address = ctInfo.getNetworkSettings.getIpAddress
+    val jmsPort = Await.result(containerPort("blended_demo_0", "jms"), 3.seconds)
+    jmsPort should not be (None)
+
     BlendedTestContext.set(
       BlendedDemoIntegrationSpec.amqConnectionFactory,
-      new ActiveMQConnectionFactory(s"tcp://${address}:1883")
+      new ActiveMQConnectionFactory(s"tcp://${address}:${jmsPort.get}")
     ).asInstanceOf[ConnectionFactory]
   }
 }
