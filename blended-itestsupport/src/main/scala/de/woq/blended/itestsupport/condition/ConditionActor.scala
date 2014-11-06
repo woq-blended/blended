@@ -33,19 +33,18 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
   case object Check
 
   implicit val ctxt = context.system.dispatcher
-  var timer : Option[Cancellable] = None
 
   def receive = initializing
 
   def initializing : Receive = {
     case CheckCondition =>
       log.debug(s"Checking condition [${cond.description}] on behalf of [${sender}]")
-      timer = Some(context.system.scheduler.scheduleOnce(cond.timeout, self, Tick))
-      context.become(checking(sender))
+      val timer = context.system.scheduler.scheduleOnce(cond.timeout, self, Tick)
+      context.become(checking(sender, timer))
       self ! Check
   }
 
-  def checking(checkingFor: ActorRef) : Receive = {
+  def checking(checkingFor: ActorRef, timer: Cancellable) : Receive = {
     case CheckCondition =>
       log.warning(
         s"""
@@ -57,7 +56,7 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
     case Check => cond.satisfied match {
       case true =>
         log.info(s"Condition [${cond}] is now satisfied.")
-        timer.foreach(_.cancel())
+        timer.cancel()
         val response = ConditionCheckResult(List(cond), List.empty[Condition])
         log.debug(s"Answering [${response}] to [${checkingFor}]")
         checkingFor ! response
