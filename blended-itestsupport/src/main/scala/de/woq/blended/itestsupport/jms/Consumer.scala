@@ -118,9 +118,9 @@ class Consumer(
       sender ! ConsumerActor(self)
     case msg : Message => {
       if (msg.isInstanceOf[TextMessage])
-        log.info(s"Received message ... [${msg.asInstanceOf[TextMessage].getText}]")
+        log.debug(s"Received message ... [${msg.asInstanceOf[TextMessage].getText}]")
       else
-        log.info(s"Received message ... [${msg}]")
+        log.debug(s"Received message ... [${msg}]")
       msgCounter.foreach { counter => counter ! IncrementCounter(1) }
       resetTimer()
     }
