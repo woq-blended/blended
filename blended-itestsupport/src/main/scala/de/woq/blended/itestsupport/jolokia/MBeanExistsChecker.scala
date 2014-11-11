@@ -39,6 +39,27 @@ object MBeanExistsCondition {
     )
 }
 
+object CamelContextExistsCondition {
+  def apply(
+    url: String,
+    user: Option[String] = None,
+    pwd: Option[String] = None,
+    contextName : String,
+    t : Option[FiniteDuration] = None
+  )(implicit system: ActorSystem) = MBeanExistsCondition(
+    url,
+    user,
+    pwd, new MBeanSearchDef {
+      override def jmxDomain = "org.apache.camel"
+      override def searchProperties = Map(
+        "type" -> "context",
+        "name" -> s""""${contextName}""""
+      )
+    },
+    t
+  )
+}
+
 private[jolokia] object MBeanExistsChecker {
   def apply(
     url: String,
