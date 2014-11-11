@@ -60,6 +60,27 @@ object CamelContextExistsCondition {
   )
 }
 
+object JmsBrokerExistsCondition {
+  def apply(
+    url: String,
+    user: Option[String] = None,
+    pwd: Option[String] = None,
+    brokerName : String,
+    t : Option[FiniteDuration] = None
+  )(implicit system: ActorSystem) = MBeanExistsCondition(
+    url,
+    user,
+    pwd, new MBeanSearchDef {
+      override def jmxDomain = "org.apache.activemq"
+      override def searchProperties = Map(
+        "type" -> "Broker",
+        "brokerName" -> s"${brokerName}"
+      )
+    },
+    t
+  )
+}
+
 private[jolokia] object MBeanExistsChecker {
   def apply(
     url: String,

@@ -20,7 +20,7 @@ import javax.jms.ConnectionFactory
 
 import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition, MBeanExistsCondition}
+import de.woq.blended.itestsupport.jolokia.{JmsBrokerExistsCondition, CamelContextExistsCondition, JolokiaAvailableCondition, MBeanExistsCondition}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
 import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
@@ -52,6 +52,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
         JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
         JMSAvailableCondition(amqConnectionFactory, Some(t))
       ),
+      JmsBrokerExistsCondition(jmxRest, Some("blended"), Some("blended"), "blended", Some(t)),
       CamelContextExistsCondition(jmxRest, Some("blended"), Some("blended"), "BlendedSample", Some(t))
     )
   }
