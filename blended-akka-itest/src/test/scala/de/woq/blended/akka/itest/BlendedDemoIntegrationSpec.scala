@@ -82,4 +82,5 @@ class BlendedDemoIntegrationSpec extends TestActorSys
       new ActiveMQConnectionFactory(brokerUrl)
     ).asInstanceOf[ConnectionFactory]
   }
+
 }

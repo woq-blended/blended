@@ -43,7 +43,9 @@ class BlendedDemoSpec extends TestActorSys
     val result = new TestCamelContext()
     result.withComponent(
       "jms", JmsComponent.jmsComponent(
-        BlendedTestContext(BlendedDemoIntegrationSpec.amqConnectionFactory).asInstanceOf[ConnectionFactory]
+        BlendedTestContext(
+          BlendedDemoIntegrationSpec.amqConnectionFactory)
+            .asInstanceOf[ConnectionFactory]
       )
     )
     result
@@ -65,8 +67,9 @@ class BlendedDemoSpec extends TestActorSys
 
         ctxt.sendTestMessage("Hello Blended!", "jms:queue:SampleIn")
         mock.assertIsSatisfied(2000l)
-      }
 
+        None
+      }
     }
   }
 

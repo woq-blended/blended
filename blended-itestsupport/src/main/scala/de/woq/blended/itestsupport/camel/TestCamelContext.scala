@@ -23,7 +23,7 @@ import org.apache.camel.impl.DefaultCamelContext
 import org.slf4j.LoggerFactory
 
 object TestCamelContext {
-  def withTestContext(body: TestCamelContext => AnyRef)(implicit testContext: TestCamelContext) {
+  def withTestContext(body: TestCamelContext => Option[Any])(implicit testContext: TestCamelContext) {
 
     try {
       body(testContext)
