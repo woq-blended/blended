@@ -30,7 +30,7 @@ class DockerSpec extends TestActorSys
 
   private def docker = {
     System.setProperty("docker.io.version", "1.12")
-    new Docker {
+    new Docker with VolumeBaseDir {
       override implicit val logger: LoggingAdapter = system.log
       override implicit val config: Config = system.settings.config
       override implicit val client = mockClient

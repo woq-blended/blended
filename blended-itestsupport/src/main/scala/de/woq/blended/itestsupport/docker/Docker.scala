@@ -63,17 +63,21 @@ object DockerClientFactory {
   }
 }
 
-trait Docker {
-
-  implicit val logger  : LoggingAdapter
-  implicit val config  : Config
-  implicit val client  : DockerClient
+trait VolumeBaseDir {
 
   val volumeBaseDir = {
     val dirName = System.getProperty("user.dir") + "/target/volumes"
     new File(dirName).mkdirs()
     dirName
   }
+}
+
+trait Docker { this: VolumeBaseDir =>
+
+  implicit val logger  : LoggingAdapter
+  implicit val config  : Config
+  implicit val client  : DockerClient
+
 
   lazy val configuredContainers : Map[String, DockerContainer] = {
 

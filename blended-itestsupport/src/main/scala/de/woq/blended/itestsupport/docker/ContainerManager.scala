@@ -32,7 +32,7 @@ trait DockerClientProvider {
   def getClient : DockerClient
 }
 
-class ContainerManager extends Actor with ActorLogging with Docker { this:  DockerClientProvider =>
+class ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
 
   implicit val timeout = Timeout(30.seconds)
   implicit val eCtxt   = context.dispatcher
