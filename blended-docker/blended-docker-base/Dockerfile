@@ -1,7 +1,7 @@
 # The basic image to run Blended containers
 FROM centos:6.4
 
-MAINTAINER Andreas Gies version: 1.0.7-M3-SNAPSHOT
+MAINTAINER Andreas Gies version: 1.0.7-M6-SNAPSHOT
 
 # Installation section
 RUN groupadd blended
