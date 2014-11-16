@@ -104,7 +104,7 @@ class Consumer(
   var jmsConsumer : AkkaConsumer = _
   var idleTimer : Option[Cancellable] = None
 
-  override def preStart() {
+  override def preStart() : Unit = {
     super.preStart()
 
     jmsConsumer = new AkkaConsumer(self, connection, destName, subscriberName)
@@ -139,7 +139,7 @@ class Consumer(
     case StopConsumer => jmsConsumer.stop()
   }
 
-  private def resetTimer() {
+  private def resetTimer() : Unit = {
     idleTimer.foreach { _.cancel() }
     idleTimer = Some(context.system.scheduler.scheduleOnce(idleTimeout, self, MsgTimeout))
   }

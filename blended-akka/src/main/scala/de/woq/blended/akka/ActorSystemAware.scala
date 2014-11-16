@@ -35,7 +35,7 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
 
   def prepareBundleActor() : Props
 
-  final def start(osgiBundleContext: BundleContext) {
+  final def start(osgiBundleContext: BundleContext) : Unit = {
     this.bundleContextRef = osgiBundleContext
 
     bundleContext.findService(classOf[ActorSystem]) match {
@@ -53,11 +53,11 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
     }
   }
 
-  def postStartBundleActor() {
+  def postStartBundleActor() : Unit = {
 
   }
 
-  final def stop(osgiBundleContext: BundleContext) {
+  final def stop(osgiBundleContext: BundleContext) : Unit = {
 
     implicit val bc = osgiBundleContext
 
@@ -70,5 +70,5 @@ trait ActorSystemAware extends BundleActivator { this : BundleName =>
     }
   }
 
-  def preStopBundleActor() {}
+  def preStopBundleActor() : Unit = {}
 }

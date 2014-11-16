@@ -31,9 +31,9 @@ class TestActorSys(name : String)
 
   def this() = this("TestSystem%05d".format(TestActorSys.uniqueId.incrementAndGet()))
 
-  def shutdown() { system.shutdown() }
+  def shutdown() : Unit = { system.shutdown() }
 
-  def apply(block : Unit) {
+  def apply(block : Unit) : Unit = {
     try block
     finally shutdown()
   }

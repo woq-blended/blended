@@ -21,17 +21,17 @@ abstract class AbstractJMSSpec extends TestActorSys
   protected var broker : Option[BrokerService] = None
   protected val cf : ConnectionFactory = new ActiveMQConnectionFactory("vm://blended")
 
-  protected def connect(connector: ActorRef) {
+  protected def connect(connector: ActorRef) : Unit = {
     connector ! Connect("test")
     expectMsg(Right(Connected("test")))
   }
 
-  protected def disconnect(connector: ActorRef) {
+  protected def disconnect(connector: ActorRef) : Unit = {
     connector ! Disconnect
     expectMsg(Right(Disconnected))
   }
 
-  override protected def beforeAll() {
+  override protected def beforeAll() : Unit = {
     super.beforeAll()
 
     broker = {
@@ -47,7 +47,7 @@ abstract class AbstractJMSSpec extends TestActorSys
     }
   }
 
-  override protected def afterAll() {
+  override protected def afterAll() : Unit = {
     super.afterAll()
 
     broker.foreach { b =>
