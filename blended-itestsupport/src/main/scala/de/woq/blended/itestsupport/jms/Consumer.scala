@@ -36,13 +36,13 @@ class AkkaConsumer(
   var session : Option[Session] = None
   var consumer : Option[MessageConsumer] = None
 
-  def start() {
+  def start() : Unit = {
 
     session = Some(connection.createSession(false, Session.AUTO_ACKNOWLEDGE))
 
     session.foreach { s =>
       val dest = destination(s, destName)
-      consumer = Some((subscriberName.isDefined && dest.isInstanceOf[Topic]) match {
+      consumer = Some(subscriberName.isDefined && dest.isInstanceOf[Topic] match {
         case true => s.createDurableSubscriber(dest.asInstanceOf[Topic], subscriberName.get)
         case _ => s.createConsumer(dest)
       })
@@ -50,7 +50,7 @@ class AkkaConsumer(
     }
   }
 
-  def unsubscribe() {
+  def unsubscribe() : Unit = {
     consumer.foreach { c => c.close() }
 
     for (
@@ -63,7 +63,7 @@ class AkkaConsumer(
     stop()
   }
 
-  def stop() {
+  def stop() : Unit = {
     session.foreach { _.close() }
     consumerFor ! ConsumerStopped(destName)
   }
@@ -116,26 +116,22 @@ class Consumer(
   override def receive = LoggingReceive {
     case ConsumerCreated =>
       sender ! ConsumerActor(self)
-    case msg : Message => {
-      if (msg.isInstanceOf[TextMessage])
-        log.debug(s"Received message ... [${msg.asInstanceOf[TextMessage].getText}]")
-      else
-        log.debug(s"Received message ... [${msg}]")
+    case msg : Message =>
+      msg match {
+        case txtMsg : TextMessage => log.debug(s"Received message ... [${msg.asInstanceOf[TextMessage].getText}]")
+        case jmsMsg => log.debug(s"Received message ... [$jmsMsg]")
+      }
       msgCounter.foreach { counter => counter ! IncrementCounter(1) }
       resetTimer()
-    }
-    case Unsubscribe => {
-      log.info(s"Unsubscribing [${subscriberName}]")
+    case Unsubscribe =>
+      log.info(s"Unsubscribing [$subscriberName]")
       jmsConsumer.unsubscribe()
-    }
-    case stopped : ConsumerStopped => {
+    case stopped : ConsumerStopped =>
       context.system.eventStream.publish(stopped)
       idleTimer.foreach { _.cancel() }
-    }
-    case MsgTimeout => {
-      log.info(s"No message received in [${idleTimeout}]. Stopping subscriber.")
+    case MsgTimeout =>
+      log.info(s"No message received in [$idleTimeout]. Stopping subscriber.")
       jmsConsumer.stop()
-    }
     case StopConsumer => jmsConsumer.stop()
   }
 

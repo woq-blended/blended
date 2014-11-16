@@ -49,7 +49,7 @@ trait BlendedJMXConnector extends Actor with ActorLogging{ this : JMXUrlProvider
 
   def receive = disconnected
 
-  override def postStop() {
+  override def postStop() : Unit = {
     connector.foreach(_.close())
   }
 }

@@ -71,7 +71,7 @@ trait BlendedIntegrationTestSupport
     Await.result(call, timeout)
   }
 
-  final def beforeSuite() {
+  final def beforeSuite() : Unit = {
     log.info("Preparing Test Suite ...")
     startContainer(30.seconds) should be (ContainerManagerStarted)
     log.info(s"Verifying precondition [${preCondition}]")
@@ -80,7 +80,7 @@ trait BlendedIntegrationTestSupport
     initTestContext()
   }
 
-  final def afterSuite() {
+  final def afterSuite() : Unit = {
     log.info(s"Verifying postcondition [${postCondition}]")
     assertCondition(postCondition) should be (true)
     log.info("Shutting down Test Suite ...")

@@ -82,7 +82,7 @@ class PortScanner extends Actor with ActorLogging { this : PortRange with PortCh
     }
   }
 
-  override def preStart() {
+  override def preStart() : Unit = {
     minPortNumber = fromPort
   }
 }

@@ -43,7 +43,7 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
   var references : ActorRef = context.system.deadLetters
   var trackers : ActorRef = context.system.deadLetters
 
-  override def preStart() {
+  override def preStart() :  Unit = {
 
     logger info "Creating Config Locator actor"
     configLocator = context.actorOf(Props(ConfigLocator(configDir)), configLocatorPath)

@@ -135,7 +135,7 @@ trait CamelTestSupport {
 
     LOGGER.debug(s"Creating Route from [${uri}] to [${mockUri}].")
     context.addRoutes(new RouteBuilder {
-      def configure {
+      def configure : Unit = {
         from(uri).id(mockName).to(mockUri)
       }
     })
@@ -143,7 +143,7 @@ trait CamelTestSupport {
     result
   }
 
-  final def resetMockEndpoints(implicit context: CamelContext) {
+  final def resetMockEndpoints(implicit context: CamelContext) : Unit = {
     JCollectionWrapper(context.getEndpoints)
       .filter(_.isInstanceOf[MockEndpoint])
       .foreach( ep => ep.asInstanceOf[MockEndpoint].reset())
