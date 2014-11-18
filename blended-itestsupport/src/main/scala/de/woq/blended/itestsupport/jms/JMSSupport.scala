@@ -24,7 +24,7 @@ trait JMSSupport {
 
   def jmsConnection : Connection
 
-  def withSession(f: (Session => Unit)) {
+  def withSession(f: (Session => Unit)) : Unit = {
 
     var session : Option[Session] = None
     try {

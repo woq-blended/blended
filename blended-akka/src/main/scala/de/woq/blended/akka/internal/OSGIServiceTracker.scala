@@ -35,13 +35,13 @@ trait TrackerAdapter[I <: AnyRef] extends ServiceTrackerCustomizer[I, I] {
   val log : LoggingAdapter
   val trackerObserver : ActorRef
 
-  override def modifiedService(svcRef: ServiceReference[I], svc: I) {
+  override def modifiedService(svcRef: ServiceReference[I], svc: I) : Unit = {
     val msg = TrackerModifiedService(svcRef, svc)
     log.debug(s"Notifying [${trackerObserver}] with [${msg}]")
     trackerObserver ! msg
   }
 
-  override def removedService(svcRef: ServiceReference[I], svc: I) {
+  override def removedService(svcRef: ServiceReference[I], svc: I) : Unit = {
     val msg = TrackerRemovedService(svcRef, svc)
     log.debug(s"Notifying [${trackerObserver}] with [${msg}]")
     trackerObserver ! msg
@@ -111,7 +111,7 @@ class OSGIServiceTracker[I <: AnyRef](clazz : Class[I], observer: ActorRef, filt
 
   def receive = initializing
 
-  override def preStart() {
+  override def preStart() : Unit = {
     self ! Initialize
   }
 

@@ -23,7 +23,7 @@ import org.apache.camel.impl.DefaultCamelContext
 import org.slf4j.LoggerFactory
 
 object TestCamelContext {
-  def withTestContext(body: TestCamelContext => Option[Any])(implicit testContext: TestCamelContext) {
+  def withTestContext(body: TestCamelContext => Option[Any])(implicit testContext: TestCamelContext) : Unit = {
 
     try {
       body(testContext)
@@ -48,7 +48,7 @@ class TestCamelContext() extends DefaultCamelContext with CamelTestSupport {
     log.debug(s"Adding mock endpoint and route [${mockName}] to TestCamelContext.")
 
     addRoutes( new RouteBuilder() {
-      override def configure() {
+      override def configure() : Unit = {
         from(mockUri).id(mockName).to(s"mock://${mockName}")
       }
     })

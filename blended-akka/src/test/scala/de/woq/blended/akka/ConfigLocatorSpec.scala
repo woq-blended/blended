@@ -69,7 +69,7 @@ class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFacto
     }
   }
 
-  override protected def afterAll() {
+  override protected def afterAll() : Unit = {
     system.shutdown()
   }
 }

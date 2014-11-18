@@ -41,7 +41,7 @@ class JolokiaChecker(url: String, userName: Option[String], password: Option[Str
       }
   }
 
-  override def preStart() {
+  override def preStart() : Unit = {
     jolokiaConnector = Some(context.actorOf(Props(JolokiaConnector(url, userName, password))))
   }
 

@@ -43,23 +43,20 @@ class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this 
   private [MgmtReporter] var ticker : Option[Cancellable] = None
 
   def initializing = LoggingReceive {
-    case InitializeBundle(bundleContext) => {
+    case InitializeBundle(bundleContext) =>
       log info "Initializing Management Reporter"
       ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
       context.become(working(bundleContext))
-    }
   }
 
   def working(implicit osgiContext: BundleContext) = LoggingReceive {
 
-    case Tick => {
-
+    case Tick =>
       invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
         new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap)
-      } pipeTo(self)
-    }
+      } pipeTo self
 
-    case ServiceResult(Some(info : ContainerInfo))  => {
+    case ServiceResult(Some(info : ContainerInfo))  =>
       log info s"Performing report [${info.toString}]."
 
       val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
@@ -67,14 +64,13 @@ class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this 
       }
 
       (pipeline{ Post("http://localhost:8181/woq/container", info) }).mapTo[ContainerRegistryResponseOK].pipeTo(self)
-    }
 
     case response : ContainerRegistryResponseOK => log info(s"Reported [${response.id}] to management node")
   }
 
   def receive = initializing
 
-  override def postStop() {
+  override def postStop() : Unit = {
     ticker.foreach(_.cancel())
   }
 }

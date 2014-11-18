@@ -45,7 +45,7 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
 
   var jmsConnector: Option[ActorRef] = None
 
-  override def preStart() {
+  override def preStart() : Unit = {
     jmsConnector = Some(context.actorOf(Props(JMSConnectorActor(cf))))
   }
 

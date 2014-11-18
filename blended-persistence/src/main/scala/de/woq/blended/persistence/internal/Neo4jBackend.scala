@@ -92,7 +92,7 @@ class Neo4jBackend extends PersistenceBackend {
     }
   }
 
-  override def initBackend(dir: String, config: Config)(implicit log: LoggingAdapter) {
+  override def initBackend(dir: String, config: Config)(implicit log: LoggingAdapter) : Unit = {
     dbServiceRef match {
       case Some(ref) => throw new Exception("Backend already initialized.")
       case _ => {
@@ -123,7 +123,7 @@ class Neo4jBackend extends PersistenceBackend {
     }
   }
 
-  override def shutdownBackend()(implicit log: LoggingAdapter) {
+  override def shutdownBackend()(implicit log: LoggingAdapter) : Unit = {
     dbServiceRef foreach {
       log.info(s"Shutting down embedded Neo4j for path [$dbPath].")
       _.shutdown()
