@@ -68,7 +68,7 @@ class AkkaConsumer(
     consumerFor ! ConsumerStopped(destName)
   }
 
-  override def onMessage(msg: Message) {
+  override def onMessage(msg: Message) : Unit = {
     consumerFor ! msg
   }
 }

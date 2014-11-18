@@ -38,7 +38,7 @@ class ConfigLocator extends Actor with ActorLogging with MemoryStash { this: Con
 
   case object Initialize
 
-  override def preStart() { self ! Initialize }
+  override def preStart() : Unit = { self ! Initialize }
 
   def receive = initializing orElse(stashing)
 

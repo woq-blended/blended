@@ -48,7 +48,7 @@ class PersistenceManagerSpec
   implicit val timeout = Timeout(3.seconds)
   implicit val ctxt = system.dispatcher
 
-  override protected def beforeAll() {
+  override protected def beforeAll() : Unit = {
     facade = TestActorRef(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
     dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor), "person")
@@ -58,7 +58,7 @@ class PersistenceManagerSpec
     activator.start(osgiContext)
   }
 
-  override protected def afterAll() {
+  override protected def afterAll() : Unit = {
     activator.stop(osgiContext)
   }
 
@@ -103,5 +103,4 @@ class PersistenceManagerSpec
       }
     }
   }
-
 }

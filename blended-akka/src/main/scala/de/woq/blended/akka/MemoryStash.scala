@@ -28,7 +28,7 @@ trait MemoryStash { this : Actor with ActorLogging =>
       requests = (sender, msg) :: requests
   }
 
-  def unstash() {
+  def unstash() : Unit = {
     log.debug(s"Unstashing [${requests.size}] messages.")
     requests.reverse.foreach { case (requestor, msg) =>
       self.tell(msg, requestor)

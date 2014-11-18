@@ -16,11 +16,11 @@
 
 package de.woq.blended.persistence.protocol
 
-import akka.actor.{ActorRef, Terminated, ActorLogging, Actor}
-import de.woq.blended.persistence.internal.PersistenceBundleName
-import de.woq.blended.akka.{MemoryStash, OSGIActor}
-import de.woq.blended.akka.protocol._
+import akka.actor.{ActorRef, Terminated}
 import akka.event.LoggingReceive
+import de.woq.blended.akka.protocol._
+import de.woq.blended.akka.{MemoryStash, OSGIActor}
+import de.woq.blended.persistence.internal.PersistenceBundleName
 
 trait DataObjectFactory {
   def createObject(props: PersistenceProperties) : Option[DataObject]
@@ -46,28 +46,25 @@ class DataObjectCreator(factory: DataObjectFactory) extends OSGIActor with Persi
   }
 
   def working : Receive = LoggingReceive {
-    case CreateObjectFromProperties(props) => {
+    case CreateObjectFromProperties(props) =>
       createObject(props) match {
-        case Some(dataObject) => {
+        case Some(dataObject) =>
           log.debug(s"Created data object [${dataObject.toString}].")
           sender ! QueryResult(List(dataObject))
-        }
         case _ =>
       }
-    }
     case Terminated(actor) => context.become(registering)
   }
 
-  def setupFactory() {
+  def setupFactory() : Unit = {
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
     (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
       _ match {
-        case actor : ActorRef => {
+        case actor : ActorRef =>
           log.debug("Registering data factory with persistence manager")
           actor ! RegisterDataFactory(self)
           context.watch(actor)
-        }
         case dlq if dlq == context.system.deadLetters =>
       }
     }

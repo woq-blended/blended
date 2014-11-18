@@ -106,7 +106,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
   def receive = LoggingReceive(stopped)
 
-  private def portBindings(requestor: ActorRef) {
+  private def portBindings(requestor: ActorRef) : Unit = {
     val bindings = new Ports()
 
     // We create a Future for each port. The Future uses the underlying PortScanner

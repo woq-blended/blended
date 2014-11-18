@@ -62,7 +62,7 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
     }
   }
 
-  private def jolokiaGet[T](requestor: ActorRef, operation: String)(extract : JsValue => T) {
+  private def jolokiaGet[T](requestor: ActorRef, operation: String)(extract : JsValue => T) : Unit = {
 
     val pipeline : HttpRequest => Future[String] = (
       (if (user.isDefined && password.isDefined)

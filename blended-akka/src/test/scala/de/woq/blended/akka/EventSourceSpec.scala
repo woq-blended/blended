@@ -66,7 +66,7 @@ class EventSourceSpec extends TestKit(ActorSystem("EventSource"))
 
   }
 
-  override protected def afterAll() {
+  override protected def afterAll() : Unit = {
     system.shutdown()
   }
 }
