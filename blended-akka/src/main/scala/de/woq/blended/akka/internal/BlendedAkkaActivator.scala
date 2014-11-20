@@ -30,7 +30,7 @@ import org.osgi.framework.BundleContext
 
 class BlendedAkkaActivator extends ActorSystemActivator {
 
-  def configure(osgiContext: BundleContext, system: ActorSystem) {
+  def configure(osgiContext: BundleContext, system: ActorSystem) : Unit = {
     val log = system.log
 
     log info "Creating Akka OSGi Facade"
@@ -52,7 +52,7 @@ class BlendedAkkaActivator extends ActorSystemActivator {
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
 
-    (osgiContext findService(classOf[ContainerContext])) match {
+    osgiContext findService classOf[ContainerContext] match {
       case Some(svcRef) => svcRef invokeService { ctx => ctx.getContainerConfigDirectory } match {
         case Some(s)  => s
         case _ => defaultConfigDir

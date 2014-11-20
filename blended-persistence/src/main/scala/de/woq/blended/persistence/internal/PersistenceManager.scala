@@ -93,7 +93,7 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
     }
   }
 
-  override def postStop() {
+  override def postStop() : Unit = {
     backend.shutdownBackend()
   }
 }

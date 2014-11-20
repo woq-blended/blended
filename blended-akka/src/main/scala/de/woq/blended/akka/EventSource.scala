@@ -49,7 +49,7 @@ trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
 
   var publisher = context.system.deadLetters
 
-  def setupListener(publisherBundleName : String) {
+  def setupListener(publisherBundleName : String) : Unit = {
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
     (for(actor <- bundleActor(publisherBundleName).mapTo[ActorRef]) yield actor) map  {

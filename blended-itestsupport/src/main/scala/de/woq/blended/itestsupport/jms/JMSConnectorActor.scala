@@ -34,11 +34,11 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
   implicit val ctxt = context.dispatcher
   var postStopActions = List.empty[() => Unit]
 
-  private def addPostStopAction(f : () => Unit) {
+  private def addPostStopAction(f : () => Unit) : Unit = {
     postStopActions = f :: postStopActions
   }
 
-  private def clearPostStopActions() {
+  private def clearPostStopActions() : Unit = {
     postStopActions = List.empty[() => Unit]
   }
 
