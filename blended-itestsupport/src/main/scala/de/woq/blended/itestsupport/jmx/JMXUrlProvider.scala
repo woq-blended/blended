@@ -22,14 +22,11 @@ trait JMXUrlProvider {
   def serviceUrl : JMXServiceURL
 }
 
-trait KarafJMXUrlProvider extends JMXUrlProvider {
+case class KarafJMXUrlProvider(host: String = "localhost", port: Integer = 1099) extends JMXUrlProvider {
 
-  private var host = "localhost"
-  private var port = 1099
-
-  def withHost(h: String) = { host = h; this }
-  def withHost(p: Int)    = { port = p; this }
+  def withHost(h: String) = copy( host = h )
+  def withHost(p: Int)    = copy( port = p )
 
   override def serviceUrl =
-    new JMXServiceURL(s"service:jmx:rmi:///jndi/rmi://${host}:${port}/jmxrmi")
+    new JMXServiceURL(s"service:jmx:rmi:///jndi/rmi://$host:$port/jmxrmi")
 }
