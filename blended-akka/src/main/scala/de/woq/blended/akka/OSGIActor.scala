@@ -16,21 +16,16 @@
 
 package de.woq.blended.akka
 
-import java.util.Properties
-
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.woq.blended.akka.protocol._
-
-import akka.pattern.pipe
 import de.woq.blended.modules.FilterComponent
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
 

@@ -69,6 +69,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-camel_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>de.woq.blended</groupId>
       <artifactId>blended-testsupport</artifactId>
       <version>${project.version}</version>

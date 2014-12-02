@@ -19,6 +19,7 @@ package de.woq.blended.akka.internal
 import java.io.File
 
 import akka.actor.{ActorSystem, Props}
+import akka.camel.CamelExtension
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
@@ -39,6 +40,9 @@ class BlendedAkkaActivator extends ActorSystemActivator {
     log info "Registering Actor System as Service."
     registerService(osgiContext, system)
 
+    log info "Creating Camel Akka Extension."
+    val camel = CamelExtension(system)
+
     log info s"ActorSystem [${system.name}] initialized."
   }
 
@@ -47,7 +51,7 @@ class BlendedAkkaActivator extends ActorSystemActivator {
   override def getActorSystemConfiguration(context: BundleContext): Config = {
     ConfigFactory.parseFile(new File(configDir(context), "application.conf"))
   }
-  
+
   private[BlendedAkkaActivator] def configDir(implicit osgiContext : BundleContext) = {
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
