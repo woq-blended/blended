@@ -48,7 +48,7 @@
     <activemq.version>5.10.0</activemq.version>
     <camel.version>2.14.0</camel.version>
     <karaf.version>2.3.6</karaf.version>
-    <hawtio.version>1.4.21</hawtio.version>
+    <hawtio.version>1.4.37</hawtio.version>
 
     <activeio.version>3.1.4</activeio.version>
     <akka.version>2.3.6</akka.version>
@@ -136,7 +136,7 @@
     <system>jenkins</system>
     <url>http://ci.wayofquality.de:8081/jenkins/job</url>
   </ciManagement>
-    
+
   <distributionManagement>
     <repository>
       <id>WoQDeploy</id>
