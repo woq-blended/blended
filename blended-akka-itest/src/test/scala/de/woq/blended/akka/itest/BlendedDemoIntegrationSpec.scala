@@ -18,14 +18,13 @@ package de.woq.blended.akka.itest
 
 import javax.jms.ConnectionFactory
 
-import de.woq.blended.itestsupport.condition.{ParallelComposedCondition, SequentialComposedCondition}
+import de.woq.blended.itestsupport.condition.SequentialComposedCondition
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition, MBeanExistsCondition}
+import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition}
 import de.woq.blended.itestsupport.{BlendedIntegrationTestSupport, BlendedTestContext}
-import de.woq.blended.jolokia.protocol.MBeanSearchDef
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.{BeforeAndAfterAll, SpecLike}
+import org.scalatest.SpecLike
 
 import scala.collection.immutable.IndexedSeq
 import scala.concurrent.Await
@@ -48,10 +47,8 @@ class BlendedDemoIntegrationSpec extends TestActorSys
     val t = 60.seconds
 
     SequentialComposedCondition(
-      ParallelComposedCondition(
-        JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
-        JMSAvailableCondition(amqConnectionFactory, Some(t))
-      ),
+      JMSAvailableCondition(amqConnectionFactory, Some(t)),
+      JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
       CamelContextExistsCondition(
         jmxRest, Some("blended"), Some("blended"), "BlendedSample", Some(t)
       )
@@ -60,7 +57,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
 
   private lazy val jmxRest = {
     val url = Await.result(jolokiaUrl(ctName = "blended_demo_0", port = 8181), 3.seconds)
-    url should not be (None)
+    url should not be None
     BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, url.get).asInstanceOf[String]
   }
 
@@ -68,9 +65,9 @@ class BlendedDemoIntegrationSpec extends TestActorSys
     val ctInfo  = Await.result(containerInfo("blended_demo_0"), 3.seconds)
     val address = ctInfo.getNetworkSettings.getIpAddress
 
-    val brokerUrl = s"tcp://${address}:1883"
+    val brokerUrl = s"tcp://$address:1883"
 
-    system.log.info(s"Using AMQ connection url [${brokerUrl}]")
+    system.log.info(s"Using AMQ connection url [$brokerUrl]")
 
     BlendedTestContext.set(
       BlendedDemoIntegrationSpec.amqConnectionFactory,

@@ -53,7 +53,9 @@ private[jolokia] class JolokiaAvailableChecker(
 
   override def assertJolokia = { msg =>
     msg match {
-      case v : JolokiaVersion => true
+      case v : JolokiaVersion =>
+        log.info(s"Jolokia [$v] discovered.")
+        true
       case _ => false
     }
   }

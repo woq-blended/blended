@@ -35,7 +35,7 @@
 
     <!-- Where is our docker for building the images and running the itests -->
     <docker.host>localhost</docker.host>
-    <docker.port>2375</docker.port>
+    <docker.port>4243</docker.port>
 
     <!-- plugin versions -->
     <compiler-plugin.version>2.5.1</compiler-plugin.version>
@@ -48,7 +48,7 @@
     <activemq.version>5.10.0</activemq.version>
     <camel.version>2.14.0</camel.version>
     <karaf.version>2.3.6</karaf.version>
-    <hawtio.version>1.4.37</hawtio.version>
+    <hawtio.version>1.4.22</hawtio.version>
 
     <activeio.version>3.1.4</activeio.version>
     <akka.version>2.3.7</akka.version>

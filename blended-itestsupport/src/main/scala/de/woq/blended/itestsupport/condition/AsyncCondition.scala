@@ -18,7 +18,7 @@ package de.woq.blended.itestsupport.condition
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import de.woq.blended.itestsupport.protocol.CheckAsyncCondition
 
 import scala.concurrent.duration.FiniteDuration
@@ -34,11 +34,19 @@ object AsyncCondition{
 
 class AsyncCondition(asyncChecker: Props, desc: String)(implicit val system: ActorSystem) extends Condition {
 
-  val isSatisfied = new AtomicBoolean(false)
-  override def satisfied = isSatisfied.get()
+  var checker : Option[ActorRef] = None
 
-  val checker = system.actorOf(asyncChecker)
-  checker ! CheckAsyncCondition(this)
+  val isSatisfied = new AtomicBoolean(false)
+
+  override def satisfied = {
+    checker match {
+      case None =>
+        checker = Some(system.actorOf(asyncChecker))
+        checker.get ! CheckAsyncCondition(this)
+      case _ =>
+    }
+    isSatisfied.get()
+  }
 
   override val description: String = desc
 }
