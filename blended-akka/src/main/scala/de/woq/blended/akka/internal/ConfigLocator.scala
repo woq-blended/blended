@@ -40,20 +40,19 @@ class ConfigLocator extends Actor with ActorLogging with MemoryStash { this: Con
 
   override def preStart() : Unit = { self ! Initialize }
 
-  def receive = initializing orElse(stashing)
+  def receive = initializing orElse stashing
 
   def initializing : Receive = LoggingReceive {
-    case Initialize => {
-      log info s"Initializing ConfigLocator with directory [${configDirectory}]."
+    case Initialize =>
+      log info s"Initializing ConfigLocator with directory [$configDirectory]."
       unstash()
       context.become(working)
-    }
   }
 
   def working: Actor.Receive = LoggingReceive {
 
-    case ConfigLocatorRequest(id) => {
-      
+    case ConfigLocatorRequest(id) =>
+
       val file = new File(configDirectory, s"$id.conf")
 
       val config =
@@ -67,7 +66,6 @@ class ConfigLocator extends Actor with ActorLogging with MemoryStash { this: Con
           }
 
       sender ! ConfigLocatorResponse(id, config)
-    }
   }
 }
 

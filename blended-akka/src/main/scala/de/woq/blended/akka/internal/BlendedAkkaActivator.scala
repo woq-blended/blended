@@ -42,6 +42,7 @@ class BlendedAkkaActivator extends ActorSystemActivator {
 
     log info "Creating Camel Akka Extension."
     val camel = CamelExtension(system)
+    camel.context
 
     log info s"ActorSystem [${system.name}] initialized."
   }

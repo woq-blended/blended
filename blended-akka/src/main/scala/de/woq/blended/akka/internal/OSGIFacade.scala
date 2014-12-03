@@ -58,8 +58,8 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
   override def receive = LoggingReceive {
 
     case GetService(clazz) => references forward CreateReference(clazz)
-    case createTracker : CreateTracker[_] => trackers forward(createTracker)
-    case cfgRequest : ConfigLocatorRequest => configLocator forward(cfgRequest)
+    case createTracker : CreateTracker[_] => trackers forward createTracker
+    case cfgRequest : ConfigLocatorRequest => configLocator forward cfgRequest
     case GetBundleActor(bundleId) =>
       (for {
         ref <- context.actorSelection(s"/user/$bundleId").resolveOne().mapTo[ActorRef]
@@ -70,7 +70,7 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
 
-    (bundleContext findService(classOf[ContainerContext])) match {
+    bundleContext findService classOf[ContainerContext] match {
       case Some(svcRef) => svcRef invokeService { ctx => ctx.getContainerConfigDirectory } match {
         case Some(s)  => s
         case _ => defaultConfigDir

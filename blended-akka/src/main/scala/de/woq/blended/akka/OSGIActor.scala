@@ -17,7 +17,7 @@
 package de.woq.blended.akka
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.ask
+import akka.pattern.{ask,pipe}
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.woq.blended.akka.protocol._
@@ -62,16 +62,14 @@ trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
       s <- getServiceRef[I](iface).mapTo[Service]
       r <- (s.service ? InvokeService(f)).mapTo[ServiceResult[Option[T]]]
     } yield (s,r) match {
-      case (svc, result) => {
+      case (svc, result) =>
         svc.service ! UngetServiceReference
         result
-      }
     }
   }
-
 }
 
-trait InitializingActor extends OSGIActor { this: BundleName =>
+trait InitializingActor extends OSGIActor{ this: BundleName =>
 
   case object Initialized
 
@@ -80,19 +78,18 @@ trait InitializingActor extends OSGIActor { this: BundleName =>
   def working : Receive
 
   def initializing : Receive = {
-    case InitializeBundle(context) => {
-      log.debug(s"Initializing bundle actor [${bundleSymbolicName}]")
+    case InitializeBundle(bc) =>
+      log.debug(s"Initializing bundle actor [$bundleSymbolicName]")
       getActorConfig(bundleSymbolicName).mapTo[ConfigLocatorResponse].map { response =>
-        self ! (context, response)
+        self ! (bc, response)
       }
-    }
-    case (bc: BundleContext, ConfigLocatorResponse(id, cfg)) if id == bundleSymbolicName => {
+    case (bc: BundleContext, ConfigLocatorResponse(id, cfg)) if id == bundleSymbolicName =>
+      log.debug(s"Initializing [$self] with [$cfg]")
       initialize(cfg)(bc)
-    }
-    case Initialized => {
-      log.debug(s"Initialized bundle actor [${bundleSymbolicName}]")
+    case Initialized =>
+      log.debug(s"Initialized bundle actor [$bundleSymbolicName]")
       context.system.eventStream.publish(BundleActorInitialized(bundleSymbolicName))
       context.become(working)
-    }
   }
 }
+

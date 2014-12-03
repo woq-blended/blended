@@ -83,7 +83,7 @@ class OSGIReferences extends Actor with ActorLogging { this : BundleContextProvi
 
   override def receive = LoggingReceive {
     case CreateReference(clazz) => {
-      bundleContext findService(clazz) match {
+      bundleContext findService clazz match {
         case Some(ref) => {
           logger info s"Creating Service reference actor..."
           logger info s"Responding to [${sender.toString()}"
