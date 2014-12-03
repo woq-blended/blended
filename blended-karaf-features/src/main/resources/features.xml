@@ -167,7 +167,7 @@
     <bundle>mvn:com.typesafe.akka/akka-cluster_${scala.version}/${akka.version}</bundle>
   </feature>
 
-  <feature name="blended-akka-camel" description="Blended - Bundles for Akka-Camel integration" version="${akka.version}" resolver="(obr)" start-level="20">
+  <feature name="blended-akka-camel" description="Blended - Bundles for Akka-Camel integration" version="${blended.version}" resolver="(obr)" start-level="20">
     <feature version="${project.version}">blended-camel</feature>
     <feature version="${akka.version}">blended-akka</feature>
     <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
@@ -183,7 +183,7 @@
   </feature>
 
   <feature name="blended-samples" description="Sample bundles" version="${blended.version}" resolver="(obr)">
-    <feature version="${akka.version}">blended-akka-camel</feature>
+    <feature version="${blended.version}">blended-akka-camel</feature>
     <feature version="${activemq.version}">blended-activemq-blueprint</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
     <bundle>blueprint:file:etc/amq-broker.xml</bundle>
