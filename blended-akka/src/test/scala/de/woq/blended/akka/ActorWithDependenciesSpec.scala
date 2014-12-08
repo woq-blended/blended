@@ -24,7 +24,7 @@ import de.woq.blended.akka.protocol.{ServiceResult, InitializeBundle}
 import de.woq.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{WordSpec, BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest._
 import scala.concurrent.duration._
 import de.woq.blended.modules._
 
@@ -45,6 +45,7 @@ class DummyWithDependencies extends ActorWithDependencies with BundleName {
   def receive = initializing
 }
 
+@DoNotDiscover
 class ActorWithDependenciesSpec extends WordSpec
   with Matchers {
   "An Actor with Dependencies" should {
