@@ -84,7 +84,7 @@
         <module>blended-spray</module>
 
         <module>blended-neo4j-api</module>
-        <module>blended-persistence</module>
+        <!--module>blended-persistence</module-->
 
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>

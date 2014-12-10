@@ -46,9 +46,9 @@
     <bundle>mvn:de.woq.blended/blended-container-context/${blended.version}</bundle>
     <bundle>mvn:de.woq.blended/blended-container-id/${blended.version}</bundle>
     <bundle>mvn:de.woq.blended/blended-jmx/${blended.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-persistence/${blended.version}</bundle>
+    <!--bundle>mvn:de.woq.blended/blended-persistence/${blended.version}</bundle>
     <bundle>mvn:de.woq.blended/blended-neo4j-api/${blended.version}</bundle>
-    <bundle>mvn:de.woq.blended/blended-container-registry/${blended.version}</bundle>
+    <bundle>mvn:de.woq.blended/blended-container-registry/${blended.version}</bundle-->
   </feature>
 
   <feature name="blended-camel" description="Blended - Camel" version="${project.version}" resolver="(obr)">
