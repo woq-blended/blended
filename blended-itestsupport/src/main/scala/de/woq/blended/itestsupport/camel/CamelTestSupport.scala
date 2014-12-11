@@ -43,8 +43,8 @@ trait CamelTestSupport {
     val exchange = createExchange(message, properties, evaluteXML)
     exchange.setPattern(ExchangePattern.InOnly)
 
-    val producer = context.createProducerTemplate
-    val response = producer.send(uri, exchange)
+    val producer : ProducerTemplate = context.createProducerTemplate
+    val response : Exchange = producer.send(uri, exchange)
 
     if (response.getException != null) {
       LOGGER.warn(s"Message not sent to [$uri]")
