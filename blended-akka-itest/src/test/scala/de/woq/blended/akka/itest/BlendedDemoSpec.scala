@@ -66,10 +66,13 @@ class BlendedDemoSpec extends TestActorSys
         mock.setExpectedMessageCount(1)
         mock.expectedBodyReceived().constant("Hello Blended!")
 
-        val exchange = ctxt.sendTestMessage("Hello Blended!", "jms:queue:SampleIn")
-        exchange should be (Right(_:Exchange))
-
-        mock.assertIsSatisfied(2000l)
+        ctxt.sendTestMessage("Hello Blended!", "jms:queue:SampleIn") match {
+          case Right(exchange) => 
+            mock.assertIsSatisfied(2000l)
+            exchange.getIn.getBody should be ("Hello Blended!")
+          case Left(e) => fail(e)
+        }
+        
         None
       }
     }

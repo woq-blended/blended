@@ -9,8 +9,8 @@ RUN ln -s /opt/blended-karaf-demo-${project.version} /opt/blended
 RUN mkdir -p /opt/blended/data
 RUN chown -R blended.blended /opt/blended*
 
-# End of Installation section
 USER blended
+# End of Installation section
 
 ENV JAVA_HOME /opt/java
 ENV PATH ${PATH}:${JAVA_HOME}/bin
