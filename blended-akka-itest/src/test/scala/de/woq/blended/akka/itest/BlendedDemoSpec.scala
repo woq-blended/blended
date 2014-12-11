@@ -23,6 +23,7 @@ import de.woq.blended.itestsupport.BlendedTestContext
 import de.woq.blended.itestsupport.camel.TestCamelContext.withTestContext
 import de.woq.blended.itestsupport.camel.{CamelTestSupport, TestCamelContext}
 import de.woq.blended.testsupport.TestActorSys
+import org.apache.camel.Exchange
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
@@ -66,7 +67,7 @@ class BlendedDemoSpec extends TestActorSys
         mock.expectedBodyReceived().constant("Hello Blended!")
 
         val exchange = ctxt.sendTestMessage("Hello Blended!", "jms:queue:SampleIn")
-        exchange should be (Right(_))
+        exchange should be (Right(_:Exchange))
 
         mock.assertIsSatisfied(2000l)
         None
