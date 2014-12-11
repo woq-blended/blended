@@ -30,15 +30,15 @@ trait CamelTestSupport {
 
   private final val LOGGER: Logger = LoggerFactory.getLogger(classOf[CamelTestSupport])
 
-  def sendTestMessage(message: String, uri: String)(implicit context: CamelContext) : Boolean = {
+  def sendTestMessage(message: String, uri: String)(implicit context: CamelContext) : Either[Exception, Exchange] = {
     sendTestMessage(message, Map.empty, uri)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String)(implicit context: CamelContext) : Boolean = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String)(implicit context: CamelContext) : Either[Exception, Exchange] = {
     sendTestMessage(message, properties, uri, true)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean)(implicit context: CamelContext) : Boolean = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
 
     val exchange = createExchange(message, properties, evaluteXML)
     exchange.setPattern(ExchangePattern.InOnly)
@@ -47,12 +47,12 @@ trait CamelTestSupport {
     val response = producer.send(uri, exchange)
 
     if (response.getException != null) {
-      LOGGER.warn(s"Message not sent to [${uri}]")
-      false
+      LOGGER.warn(s"Message not sent to [$uri]")
+      Left(response.getException())
     }
     else {
-      LOGGER.info(s"Sent test message to [${uri}]")
-      true
+      LOGGER.info(s"Sent test message to [$uri]")
+      Right(response)
     }
   }
 
@@ -80,7 +80,7 @@ trait CamelTestSupport {
     }
 
     if (msg == None) {
-      LOGGER.info(s"Using text as msg body: [${message}]")
+      LOGGER.info(s"Using text as msg body: [$message]")
       msg = Some(new DefaultMessage)
       msg.get.setBody(message)
       addMessageProperties(msg, properties)
@@ -120,7 +120,7 @@ trait CamelTestSupport {
     message.foreach { msg =>
       props.keys.foreach { propName =>
         val propValue = props(propName)
-        LOGGER.info(s"Setting property [${propName}] = [${propValue}]")
+        LOGGER.info(s"Setting property [$propName] = [$propValue]")
         msg.setHeader(propName, propValue)
       }
     }
@@ -129,13 +129,13 @@ trait CamelTestSupport {
 
   def wireMock(mockName: String, uri: String)(implicit context: CamelContext) : MockEndpoint = {
 
-    val mockUri = s"mock://${mockName}"
+    val mockUri = s"mock://$mockName"
 
     val result = context.getEndpoint(mockUri).asInstanceOf[MockEndpoint]
 
-    LOGGER.debug(s"Creating Route from [${uri}] to [${mockUri}].")
+    LOGGER.debug(s"Creating Route from [$uri] to [$mockUri].")
     context.addRoutes(new RouteBuilder {
-      def configure : Unit = {
+      def configure() : Unit = {
         from(uri).id(mockName).to(mockUri)
       }
     })
