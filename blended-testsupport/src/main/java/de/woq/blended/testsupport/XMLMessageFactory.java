@@ -103,7 +103,7 @@ public class XMLMessageFactory implements MessageFactory {
     if (textElements.getLength() > 0) {
       String base64 = ((Element)(textElements.item(0))).getTextContent();
       byte[] decoded = DatatypeConverter.parseBase64Binary(base64);
-      message.setBody(new String(decoded));
+      message.setBody(new String(decoded, "UTF-8"));
       LOGGER.debug("Set message body to [{}]", message.getBody(String.class));
     }
   }
