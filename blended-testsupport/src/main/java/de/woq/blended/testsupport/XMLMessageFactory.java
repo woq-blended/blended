@@ -44,7 +44,16 @@ public class XMLMessageFactory implements MessageFactory {
   }
 
   @Override
-  public Message createMessage() throws Exception {
+  public Message createTextMessage() throws Exception {
+    return createMessage(false);
+  }
+
+  @Override
+  public Message createBinaryMessage() throws Exception {
+    return createMessage(true);
+  }
+
+  private Message createMessage(final boolean binary) throws Exception {
 
     final Message result = new DefaultMessage();
     LOGGER.debug("Creating message from file [{}]", resourceName);
@@ -52,7 +61,7 @@ public class XMLMessageFactory implements MessageFactory {
     Document doc = readMessageFile();
 
     populateHeader(result, doc);
-    populateBody(result, doc);
+    populateBody(result, doc, binary);
 
     return result;
   }
@@ -97,14 +106,19 @@ public class XMLMessageFactory implements MessageFactory {
     }
   }
 
-  private void populateBody(final Message message, final Document doc) throws Exception {
+  private void populateBody(final Message message, final Document doc, final boolean binary) throws Exception {
 
     NodeList textElements = doc.getElementsByTagName("text");
     if (textElements.getLength() > 0) {
       String base64 = ((Element)(textElements.item(0))).getTextContent();
       byte[] decoded = DatatypeConverter.parseBase64Binary(base64);
-      message.setBody(new String(decoded, "UTF-8"));
-      LOGGER.debug("Set message body to [{}]", message.getBody(String.class));
+      if (binary) {
+        message.setBody(base64);
+        LOGGER.debug("Set message body to byte Array of length[{}]", base64.length());
+      } else {
+        message.setBody(new String(decoded, "UTF-8"));
+        LOGGER.debug("Set message body to [{}]", message.getBody(String.class));
+      }
     }
   }
 }

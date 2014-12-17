@@ -27,7 +27,7 @@ public class XMLMessageFactoryTest {
   @Test
   public void createMessageTest() throws Exception{
 
-    Message msg = new XMLMessageFactory(FILE).createMessage();
+    Message msg = new XMLMessageFactory(FILE).createTextMessage();
     Assert.assertNotNull(msg);
 
     Assert.assertTrue(msg.getHeaders().size() > 0);

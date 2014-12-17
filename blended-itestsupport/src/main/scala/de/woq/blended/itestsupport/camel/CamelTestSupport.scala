@@ -30,17 +30,17 @@ trait CamelTestSupport {
 
   private final val LOGGER: Logger = LoggerFactory.getLogger(classOf[CamelTestSupport])
 
-  def sendTestMessage(message: String, uri: String)(implicit context: CamelContext) : Either[Exception, Exchange] = {
-    sendTestMessage(message, Map.empty, uri)
+  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+    sendTestMessage(message, Map.empty, uri, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String)(implicit context: CamelContext) : Either[Exception, Exchange] = {
-    sendTestMessage(message, properties, uri, true)
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+    sendTestMessage(message, properties, uri, true, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
 
-    val exchange = createExchange(message, properties, evaluteXML)
+    val exchange = createExchange(message, properties, evaluteXML, binary)
     exchange.setPattern(ExchangePattern.InOnly)
 
     val producer : ProducerTemplate = context.createProducerTemplate
@@ -56,12 +56,12 @@ trait CamelTestSupport {
     }
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String)(implicit context: CamelContext) : Exchange = {
-    executeRequest(message, properties, uri, true)
+  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Exchange = {
+    executeRequest(message, properties, uri, true, binary)
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean)(implicit context: CamelContext) : Exchange = {
-    val exchange = createExchange(message, properties, evaluateXML)
+  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Exchange = {
+    val exchange = createExchange(message, properties, evaluateXML, binary)
     exchange.setPattern(ExchangePattern.InOut)
 
     val producer = context.createProducerTemplate
@@ -73,9 +73,9 @@ trait CamelTestSupport {
   def missingHeaderNames(exchange: Exchange, mandatoryHeaders: List[String]) =
     mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
 
-  private def createExchange(message: String, properties: Map[String, String], evaluateXML: Boolean)(implicit context: CamelContext) = {
+  private def createExchange(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) = {
     var msg: Option[Message] =  evaluateXML match {
-      case true => createMessageFromXML(message)
+      case true => createMessageFromXML(message, binary)
       case false => createMessageFromFile(message, properties)
     }
 
@@ -106,10 +106,13 @@ trait CamelTestSupport {
     }
   }
 
-  private def createMessageFromXML(message: String): Option[Message] = {
+  private def createMessageFromXML(message: String, binary: Boolean): Option[Message] = {
 
     try {
-      Some(new XMLMessageFactory(message).createMessage)
+      binary match {
+        case true  => Some(new XMLMessageFactory(message).createBinaryMessage())
+        case false => Some(new XMLMessageFactory(message).createTextMessage())
+      }
     } catch {
       case e: Exception => None
     }
