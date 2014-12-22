@@ -25,7 +25,7 @@
 
   <groupId>de.woq.blended.samples</groupId>
   <artifactId>blended-testing-reactor</artifactId>
-  <version>1.1</version>
+  <version>1.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <distributionManagement>
