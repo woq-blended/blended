@@ -19,6 +19,8 @@ package de.woq.blended.activemq.brokerstarter;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.camel.Component;
+import org.apache.camel.component.jms.JmsComponent;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +51,11 @@ public class BrokerStarter {
       props.put("provider", "activemq");
       props.put("brokername", brokerService.getBrokerName());
 
-      bundleContext.registerService(ConnectionFactory.class, createConnectionFactory(brokerService), props);
+      ConnectionFactory cf = createConnectionFactory(brokerService);
+      bundleContext.registerService(ConnectionFactory.class, cf, props);
+      
+      props.put("CamelComponentId", "activemq");
+      bundleContext.registerService(Component.class, JmsComponent.jmsComponent(cf), props);
     } catch (Exception e) {
       LOGGER.error("Failed to start Active MQ broker", e);
     }

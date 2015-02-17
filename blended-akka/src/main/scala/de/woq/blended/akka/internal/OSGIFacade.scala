@@ -39,10 +39,11 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
   implicit val timeout = Timeout(1.second)
   implicit val ec = context.dispatcher
 
-  var configLocator : ActorRef = context.system.deadLetters
-  var references : ActorRef = context.system.deadLetters
-  var trackers : ActorRef = context.system.deadLetters
-
+  var configLocator : ActorRef    = context.system.deadLetters
+  var references : ActorRef       = context.system.deadLetters
+  var trackers : ActorRef         = context.system.deadLetters
+  var componentTracker : ActorRef = context.system.deadLetters
+  
   override def preStart() :  Unit = {
 
     logger info "Creating Config Locator actor"
@@ -53,6 +54,9 @@ class OSGIFacade(implicit bundleContext : BundleContext) extends Actor with Acto
 
     logger info "Creating OSGI Tracker handler"
     trackers = context.actorOf(Props(OSGIServiceTrackers(bundleContext)), trackersPath)
+    
+    logger info "Creating Camel Component Tracker"
+    componentTracker = context.actorOf(Props[CamelComponentTracker], componentTrackerPath)
   }
 
   override def receive = LoggingReceive {

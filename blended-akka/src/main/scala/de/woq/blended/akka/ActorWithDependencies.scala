@@ -16,38 +16,9 @@
 
 package de.woq.blended.akka
 
-import akka.actor.Actor
-import com.typesafe.config.Config
-import de.woq.blended.modules.FilterComponent
-import org.osgi.framework.BundleContext
+import akka.actor.{Actor, ActorLogging}
 
-import scala.annotation.{StaticAnnotation, Annotation}
-import scala.reflect.runtime.{universe => ru}
-
-class ServiceDependency(filter: Option[FilterComponent] = None) extends StaticAnnotation
-
-trait ActorWithDependencies extends InitializingActor { this :  BundleName =>
-
-  def servicesAvailable : Receive = Actor.emptyBehavior
-
-  def servicesUnavailable : Receive = Actor.emptyBehavior
-
-  override def initialize(config: Config)(implicit bundleContext: BundleContext): Unit = {
-    dependentFields
-    self ! Initialized
-  }
-
-  override def working: Receive = Actor.emptyBehavior
-
-  def dependentFields : Unit = {
-
-    val mirror = ru.runtimeMirror(getClass.getClassLoader)
-    val members = mirror.classSymbol(getClass).asType.typeSignature.members
-
-    members.foreach { m => log.info(m.name.toString)
-      m.annotations.foreach { a=>
-        log.info(s"--${a.tpe.members}")
-      }
-    }
-  }
+class ServiceDependencyActor[T] extends Actor with ActorLogging {
+  override def receive = Actor.emptyBehavior
 }
+

@@ -26,8 +26,7 @@ package de.woq.blended.akka {
   }
 
   package protocol {
-
-
+    
   // Kick off the BundleInitialization
     case class InitializeBundle(context: BundleContext)
 
