@@ -73,11 +73,13 @@ trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
 
 trait InitializingActor[T <: BundleActorState] extends OSGIActor { this: BundleName =>
   
+  type StateCleanup = T => Unit
+  
   case class Initialized(state: T)
 
   def initialize(state : T) : Future[Try[Initialized]] = Future(Success(Initialized(state)))
-  def cleanup(state : T) : Unit = {}
-
+  
+  def cleanup() : () => Unit = { () => {} }
   def working(state : T) : Receive
   
   def becomeWorking(state : T) : Unit = {
@@ -111,7 +113,7 @@ trait InitializingActor[T <: BundleActorState] extends OSGIActor { this: BundleN
   }
 
   override def postStop(): Unit = {
-    
+    cleanup()
     super.postStop()
   }
 }

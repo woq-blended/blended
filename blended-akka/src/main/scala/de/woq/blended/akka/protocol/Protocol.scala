@@ -36,7 +36,6 @@ package de.woq.blended.akka {
       def bundleContext = bc
     }
     
-    
     // Kick off the BundleInitialization
     case class InitializeBundle(context: BundleContext)
 
