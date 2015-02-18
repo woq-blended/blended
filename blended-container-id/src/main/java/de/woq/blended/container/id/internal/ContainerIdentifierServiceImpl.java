@@ -68,7 +68,7 @@ public class ContainerIdentifierServiceImpl
   }
 
   @Override
-  protected ServiceRegistration registerService(Dictionary<String, ?> incomingProperties) {
+  protected ServiceRegistration[] registerServices(Dictionary<String, ?> incomingProperties) {
 
     Properties incoming = new Properties();
 
@@ -94,7 +94,9 @@ public class ContainerIdentifierServiceImpl
       svcProps.put(key, getProperties().getProperty(key));
     }
 
-    return getBundleContext().registerService(classes, this, svcProps);
+    return new ServiceRegistration[] {
+      getBundleContext().registerService(classes, this, svcProps)
+    };
   }
 
   @Override

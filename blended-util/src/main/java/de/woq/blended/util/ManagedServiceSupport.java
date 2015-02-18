@@ -33,13 +33,13 @@ public abstract class ManagedServiceSupport implements ManagedService
   private final BundleContext bundleContext;
 
   private ServiceRegistration managedService;
-  private ServiceRegistration serviceRegistration;
+  private ServiceRegistration[] serviceRegistration = new ServiceRegistration[0];
 
   private static final Logger LOGGER = LoggerFactory.getLogger(ManagedServiceSupport.class);
 
   protected abstract String getServicePid();
 
-  protected abstract ServiceRegistration registerService(Dictionary<String, ?> properties);
+  protected abstract ServiceRegistration[] registerServices(Dictionary<String, ?> properties);
 
   public ManagedServiceSupport(final BundleContext context)
   {
@@ -50,11 +50,11 @@ public abstract class ManagedServiceSupport implements ManagedService
     return bundleContext;
   }
 
-  public final ServiceRegistration getServiceRegistration() {
+  public final ServiceRegistration[] getServiceRegistration() {
     return serviceRegistration;
   }
 
-  public final void setServiceRegistration(ServiceRegistration serviceRegistration) {
+  public final void setServiceRegistration(ServiceRegistration...serviceRegistration) {
     this.serviceRegistration = serviceRegistration;
   }
 
@@ -66,7 +66,7 @@ public abstract class ManagedServiceSupport implements ManagedService
   public void destroy()
   {
     managedService.unregister();
-    deregisterService();
+    deregisterServices();
   }
 
   protected final Dictionary<String, Object> getDefaultConfig()
@@ -76,20 +76,22 @@ public abstract class ManagedServiceSupport implements ManagedService
     return result;
   }
 
-  synchronized protected void deregisterService()
+  synchronized protected void deregisterServices()
   {
     if (serviceRegistration != null)
     {
       LOGGER.debug("Deregistering Service for [" + getServicePid() + "]");
-      serviceRegistration.unregister();
-      serviceRegistration = null;
+      for(final ServiceRegistration sr : serviceRegistration) {
+        sr.unregister();
+      }
+      serviceRegistration = new ServiceRegistration[0];
     }
   }
 
   public final void updated(Dictionary properties) throws ConfigurationException
   {
     LOGGER.info("Updating configuration for [" + getServicePid() + "]");
-    deregisterService();
-    serviceRegistration = registerService(properties);
+    deregisterServices();
+    serviceRegistration = registerServices(properties);
   }
 }
