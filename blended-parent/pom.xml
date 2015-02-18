@@ -338,9 +338,9 @@
         <plugin>
           <groupId>com.alexecollins.docker</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>1.4.0</version>
+          <version>2.4.0</version>
           <configuration>
-            <version>1.12</version>
+            <version>1.15</version>
             <username>atooni</username>
             <email>andreas@wayofquality.de</email>
             <!-- This is not the real password - the real password is required when pushing to docker. -->
