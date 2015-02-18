@@ -340,7 +340,7 @@
           <artifactId>docker-maven-plugin</artifactId>
           <version>2.4.0</version>
           <configuration>
-            <version>1.15</version>
+            <version>1.16</version>
             <username>atooni</username>
             <email>andreas@wayofquality.de</email>
             <!-- This is not the real password - the real password is required when pushing to docker. -->
