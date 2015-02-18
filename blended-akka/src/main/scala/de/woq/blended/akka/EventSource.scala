@@ -20,6 +20,9 @@ import akka.actor.Actor.Receive
 import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
 import de.woq.blended.akka.protocol._
 
+import scala.concurrent.Future
+import scala.util.{Failure, Try, Success}
+
 trait EventSource {
   def sendEvent[T](event : T) : Unit
   def eventSourceReceive : Receive
@@ -41,7 +44,6 @@ trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging 
       listeners = listeners filter { _ != l }
     case SendEvent(event) => sendEvent(event)
     case Terminated(l) => self ! DeregisterListener(l)
-    case msg => log warning (msg.toString)
   }
 }
 
@@ -49,17 +51,16 @@ trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
 
   var publisher = context.system.deadLetters
 
-  def setupListener(publisherBundleName : String) : Unit = {
-    context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
+  def setupListener(publisherBundleName : String) : Future[ActorRef] = {
+    context.system.eventStream.subscribe(self, classOf[BundleActorInitialized])
 
-    (for(actor <- bundleActor(publisherBundleName).mapTo[ActorRef]) yield actor) map  {
-      _ match {
-        case dlq if dlq == context.system.deadLetters => publisher = dlq
-        case actor : ActorRef =>
-          actor ! RegisterListener(self)
-          context.watch(actor)
-          publisher = actor
+    bundleActor(publisherBundleName).map { actor : ActorRef => 
+      if (actor != context.system.deadLetters) {
+        actor ! RegisterListener(self)
+        context.watch(actor)
       }
+      publisher = actor
+      publisher
     }
   }
 
@@ -71,6 +72,6 @@ trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
     case Terminated(p) if p == publisher =>
       context.unwatch(p)
       publisher = context.system.deadLetters
-    case BundleActorStarted(name) if name == publisherBundleName => setupListener(publisherBundleName)
+    case BundleActorInitialized(name) if name == publisherBundleName => setupListener(publisherBundleName)
   }
 }

@@ -27,7 +27,17 @@ package de.woq.blended.akka {
 
   package protocol {
     
-  // Kick off the BundleInitialization
+    object BundleActorState {
+      def apply(config: Config, bundleContext: BundleContext) = new BundleActorState(config, bundleContext)
+    }
+    
+    class BundleActorState(cfg: Config, bc: BundleContext) {
+      def config = cfg
+      def bundleContext = bc
+    }
+    
+    
+    // Kick off the BundleInitialization
     case class InitializeBundle(context: BundleContext)
 
     // A bundle has been started via ActorSystemAware

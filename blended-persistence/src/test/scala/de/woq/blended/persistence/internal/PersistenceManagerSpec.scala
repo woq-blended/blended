@@ -66,17 +66,13 @@ class PersistenceManagerSpec
 
     "Initialize correctly" in {
 
-      system.eventStream.subscribe(self,classOf[Info])
-
-      fishForMessage(10.seconds) {
-        case Info(_, _, m : String) => m.startsWith("Initializing embedded Neo4j with path")
-        case _ => false
-      }
+      system.eventStream.subscribe(self,classOf[BundleActorInitialized])
+      expectMsgType[BundleActorInitialized]
     }
 
     "Store a data object correctly" in {
       val info = new Person(firstName = "Andreas", name = "Gies")
-      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
+      system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(info)) => true
@@ -86,14 +82,14 @@ class PersistenceManagerSpec
 
     "Retrieve a data object by its uuid" in {
       val info = new Person(firstName = "Andreas", name = "Gies")
-      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
+      system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(info)) => true
         case _ => false
       }
 
-      system.actorSelection(s"/user/${bundleSymbolicName}").resolveOne().map( _ ! StoreObject(info) )
+      system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(person)) => person == info

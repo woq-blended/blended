@@ -16,15 +16,14 @@
 
 package de.woq.blended.akka
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.event.LoggingReceive
+import akka.actor.Props
 import akka.pattern.{ask, pipe}
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import com.typesafe.config.Config
-import de.woq.blended.akka.protocol.{InitializeBundle, ServiceResult}
-import de.woq.blended.testsupport.TestActorSys
 import de.woq.blended.akka.internal.OSGIFacade
+import de.woq.blended.akka.protocol.{BundleActorState, InitializeBundle, ServiceResult}
+import de.woq.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
@@ -34,21 +33,25 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object OSGIActorDummy {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with InitializingActor with MemoryStash
+  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with InitializingActor[BundleActorState] with MemoryStash
 }
 
-class OSGIActorDummy extends InitializingActor with BundleName { this: MemoryStash =>
+class OSGIActorDummy extends InitializingActor[BundleActorState] with BundleName { this: MemoryStash =>
 
   override def bundleSymbolicName = "foo"
 
-  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
-    self ! Initialized
+
+  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
+    BundleActorState(cfg, bundleContext)
+
+  override def becomeWorking(state: BundleActorState): Unit = {
     unstash()
+    super.becomeWorking(state)
   }
 
-  def working : Receive = {
+  def working(state: BundleActorState) : Receive = {
     case "invoke" => {
-      invokeService[TestInterface1, String](classOf[TestInterface1]) { svc => svc.name } pipeTo(sender)
+      invokeService[TestInterface1, String](classOf[TestInterface1]) { svc => svc.name } pipeTo sender
     }
   }
 
@@ -70,7 +73,7 @@ class OSGIActorSpec extends WordSpec
 
       probe ! InitializeBundle(osgiContext)
 
-      Await.result(probe ?  "invoke", 1.second) match {
+      Await.result(probe ?  "invoke", 3.seconds) match {
         case ServiceResult(Some(s)) => s should be("Andreas")
       }
     }

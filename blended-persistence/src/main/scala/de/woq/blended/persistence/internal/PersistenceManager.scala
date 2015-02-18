@@ -25,59 +25,64 @@ import de.woq.blended.container.context.ContainerContext
 import de.woq.blended.persistence.protocol._
 import org.osgi.framework.BundleContext
 
-trait PersistenceProvider {
-  val backend : PersistenceBackend
-}
+import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 object PersistenceManager {
 
   def apply(impl: PersistenceBackend)(implicit osgiContext : BundleContext) =
-    new PersistenceManager() with OSGIActor with PersistenceBundleName with PersistenceProvider {
-      override val backend = impl
-    }
+    new PersistenceManager(impl) with PersistenceBundleName
 }
 
-class PersistenceManager()(implicit osgiContext : BundleContext)
-  extends InitializingActor with PersistenceBundleName with MemoryStash { this : OSGIActor with PersistenceProvider =>
+private[persistence] case class PersistenceManagerBundleState(
+  override val config : Config,
+  override val bundleContext: BundleContext,
+  factories: List[ActorRef] = List.empty
+) extends BundleActorState(config, bundleContext)
+
+class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : BundleContext)
+  extends InitializingActor[PersistenceManagerBundleState] with PersistenceBundleName with MemoryStash {
 
   implicit val logging = context.system.log
-  private var factories : List[ActorRef] = List.empty
+  
+  override def receive = initializing orElse stashing
+  
+  override def createState(cfg: Config, bundleContext: BundleContext): PersistenceManagerBundleState = 
+    PersistenceManagerBundleState(cfg, bundleContext, List.empty)
 
-  override def receive = initializing orElse(stashing)
+  override def becomeWorking(state: PersistenceManagerBundleState): Unit = 
+    super.becomeWorking(state)
 
-  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
+  override def initialize(state : PersistenceManagerBundleState) : Future[Try[Initialized]] = {
     invokeService(classOf[ContainerContext]) {
       ctx => ctx.getContainerDirectory
     }.mapTo[ServiceResult[String]].map { svcResult =>
-      log.info(svcResult.toString)
       svcResult match {
         case ServiceResult(r) => {
           log.debug(r.toString)
           r match {
             case Some(dir) =>
-              backend.initBackend(dir, config)
-              self ! Initialized
+              backend.initBackend(dir, state.config)
               unstash()
+              Success(Initialized(state))
             case _ =>
               log.error(s"No container directory configured")
-              context.stop(self)
+              Failure(new Exception(s"No container directory configured."))
           }
         }
       }
     }
   }
 
-  def working = LoggingReceive {
-    case RegisterDataFactory(factory: ActorRef) => {
-      if (!factories.contains(factory)) {
-        factories = factory :: factories
+  def working(state: PersistenceManagerBundleState) = LoggingReceive {
+    case RegisterDataFactory(factory: ActorRef) =>
+      if (!state.factories.contains(factory)) {
         context.watch(factory)
+        becomeWorking(state.copy(factories = factory :: state.factories))
       }
       sender ! DataFactoryRegistered(factory)
-    }
-    case Terminated(factory) => {
-      factories = factories.filter(_ != factory)
-    }
+    case Terminated(factory) =>
+      becomeWorking(state.copy(factories = state.factories.filter(_ != factory)))
     case StoreObject(dataObject) => {
       backend.store(dataObject)
       sender ! QueryResult(List(dataObject))
@@ -86,8 +91,8 @@ class PersistenceManager()(implicit osgiContext : BundleContext)
       backend.get(uuid, objectType) match {
         case None => sender ! QueryResult(List.empty)
         case Some(props) => {
-          log.debug(s"Asking [${factories.size}] factories to create the dataObject.")
-          factories.foreach { f => f.forward(CreateObjectFromProperties(props)) }
+          log.debug(s"Asking [${state.factories.size}] factories to create the dataObject.")
+          state.factories.foreach { f => f.forward(CreateObjectFromProperties(props)) }
         }
       }
     }

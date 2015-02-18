@@ -112,8 +112,8 @@
     <scala.version>2.10</scala.version>
     <scala.micro.version>4</scala.micro.version>
     <scalacheck.version>1.11.4</scalacheck.version>
-    <scalactic.version>2.2.0</scalactic.version>
-    <scalatest.version>2.2.0</scalatest.version>
+    <scalactic.version>2.2.4</scalactic.version>
+    <scalatest.version>2.2.4</scalatest.version>
     <shapeless.version>1.2.4</shapeless.version>
     <slf4j.version>1.7.2</slf4j.version>
     <spray.version>1.3.2</spray.version>

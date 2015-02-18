@@ -16,40 +16,40 @@
 
 package de.woq.blended.mgmt.agent.internal
 
-
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.ActorLogging
+import akka.event.LoggingReceive
+import akka.pattern.pipe
+import com.typesafe.config.Config
 import de.woq.blended.akka.protocol._
-import de.woq.blended.akka.{OSGIActor, BundleName}
+import de.woq.blended.akka.{BundleName, InitializingActor, OSGIActor}
 import de.woq.blended.container.id.ContainerIdentifierService
 import de.woq.blended.container.registry.protocol._
 import org.osgi.framework.BundleContext
-import akka.event.LoggingReceive
-import akka.pattern.pipe
-import scala.concurrent.duration._
-import spray.httpx.SprayJsonSupport
-import scala.concurrent.Future
 import spray.client.pipelining._
 import spray.http.HttpRequest
+import spray.httpx.SprayJsonSupport
+
 import scala.collection.JavaConversions._
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.Try
 
 object MgmtReporter {
-  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with OSGIActor with MgmtAgentBundleName
+  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with MgmtAgentBundleName
 }
 
-class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this : OSGIActor with BundleName =>
+class MgmtReporter extends InitializingActor[BundleActorState] with ActorLogging with SprayJsonSupport { this : OSGIActor with BundleName =>
 
   case object Tick
+  
+  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = BundleActorState(cfg, bundleContext)
 
-  private [MgmtReporter] var ticker : Option[Cancellable] = None
-
-  def initializing = LoggingReceive {
-    case InitializeBundle(bundleContext) =>
-      log info "Initializing Management Reporter"
-      ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
-      context.become(working(bundleContext))
+  override def becomeWorking(state: BundleActorState): Unit = {
+    context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick)
+    super.becomeWorking(state)
   }
 
-  def working(implicit osgiContext: BundleContext) = LoggingReceive {
+  def working(state: BundleActorState) = LoggingReceive {
 
     case Tick =>
       invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
@@ -69,8 +69,4 @@ class MgmtReporter extends Actor with ActorLogging with SprayJsonSupport { this 
   }
 
   def receive = initializing
-
-  override def postStop() : Unit = {
-    ticker.foreach(_.cancel())
-  }
 }

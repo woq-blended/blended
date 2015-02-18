@@ -18,13 +18,15 @@ package de.woq.blended.samples.tracker.internal
 
 import javax.jms.ConnectionFactory
 
-import akka.actor.ActorRef
 import akka.event.LoggingReceive
 import com.typesafe.config.Config
+import de.woq.blended.akka.protocol.BundleActorState
 import de.woq.blended.akka.{BundleName, InitializingActor}
+import de.woq.blended.modules._
 import org.osgi.framework.BundleContext
 
-import de.woq.blended.modules._
+import scala.concurrent.Future
+import scala.util.{Success, Try}
 
 object TrackingActor {
   def apply() = new TrackingActor with TrackerBundleName
@@ -36,19 +38,20 @@ object TrackingActor {
  * which is further qualified with 'activemq' as the provider property. All we do in the
  * example is print out a message when the service instance is added, removed or modified.
  */
-class TrackingActor extends InitializingActor { this: BundleName =>
+class TrackingActor extends InitializingActor[BundleActorState] { this: BundleName =>
 
   override def receive = LoggingReceive { initializing }
+  
+  override def createState(cfg: Config, bundleContext: BundleContext) = 
+    BundleActorState(cfg, bundleContext)
 
-  override def initialize(config: Config)(implicit bundleContext: BundleContext) : Unit = {
-    createTracker(classOf[ConnectionFactory], Some("provider" === "activemq")) onSuccess  { case _ =>
-      self ! Initialized
-    }
+  override def initialize(state: BundleActorState) : Future[Try[Initialized]] = {
+    createTracker(classOf[ConnectionFactory], Some("provider" === "activemq")).map { _ => Success(Initialized(state)) }
   }
 
-  override def working = LoggingReceive { logging }
+  override def working(state: BundleActorState) = LoggingReceive { logging }
 
   def logging : Receive = {
-    case m => log.info(s"${m}")
+    case m => log.info(s"$m")
   }
 }

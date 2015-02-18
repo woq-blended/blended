@@ -98,8 +98,6 @@ class Neo4jBackend extends PersistenceBackend {
       case _ => {
         baseDir = Some(dir)
         dbConfig = Some(config)
-        log.info(s"Initializing embedded Neo4j with path [$dbPath].")
-
         dbServiceRef = Some(new GraphDatabaseFactory().newEmbeddedDatabase(dbPath))
 
         withDb[Boolean] { db =>
@@ -118,7 +116,7 @@ class Neo4jBackend extends PersistenceBackend {
           db.schema().awaitIndexesOnline(30, TimeUnit.SECONDS)
           true
         }
-
+        log.info(s"Initialized embedded Neo4j with path [$dbPath].")
       }
     }
   }
