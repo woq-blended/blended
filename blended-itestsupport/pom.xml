@@ -22,7 +22,7 @@
   <parent>
     <groupId>de.woq.blended</groupId>
     <artifactId>blended-parent</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.1</version>
   </parent>
 
   <artifactId>blended-itestsupport</artifactId>
@@ -106,13 +106,6 @@
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-slf4j_${scala.version}</artifactId>
       <version>${akka.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-docker-demo</artifactId>
-      <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
 
