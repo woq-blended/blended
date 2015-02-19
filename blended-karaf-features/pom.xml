@@ -83,6 +83,24 @@
 
     <dependency>
       <groupId>de.woq.blended</groupId>
+      <artifactId>blended-mgmt-agent</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-mgmt-rest</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
+      <artifactId>blended-jolokia</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.woq.blended</groupId>
       <artifactId>blended-jaxrs</artifactId>
       <version>${blended.version}</version>
     </dependency>
