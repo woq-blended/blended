@@ -78,9 +78,8 @@ public abstract class ManagedServiceSupport implements ManagedService
 
   synchronized protected void deregisterServices()
   {
-    if (serviceRegistration != null)
-    {
-      LOGGER.debug("Deregistering Service for [" + getServicePid() + "]");
+    if (serviceRegistration != null) {
+      LOGGER.debug("Deregistering [" + serviceRegistration.length + "] Service Registrations for [" + getServicePid() + "]");
       for(final ServiceRegistration sr : serviceRegistration) {
         sr.unregister();
       }
