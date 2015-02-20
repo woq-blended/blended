@@ -37,9 +37,12 @@ object DockerClientFactory {
   def apply(config : Config)(implicit logger: LoggingAdapter) = client match {
     case Some(dockerClient) => dockerClient
     case _ => {
+      
+      val dockerHost = config.getString("docker.host")
+      val dockerPort = config.getString("docker.port")
 
       val dockerConfig =  DockerClientConfig.createDefaultConfigBuilder()
-        .withUri(config.getString("docker.url"))
+        .withUri(s"http://$dockerHost:$dockerPort")
         .withUsername(config.getString("docker.user"))
         .withPassword(config.getString("docker.password"))
         .withEmail(config.getString("docker.eMail"))
@@ -159,7 +162,7 @@ trait Docker { this: VolumeBaseDir =>
       new JListWrapper(cfg.getConfigList("ports")).toList foreach { cfg =>
         val name = cfg.getString("name")
         val port = cfg.getInt("value")
-        result = new NamedContainerPort(name, port) :: result
+        result = new NamedContainerPort(name, port, port) :: result
       }
     }
 

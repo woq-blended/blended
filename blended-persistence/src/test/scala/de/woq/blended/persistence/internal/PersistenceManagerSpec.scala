@@ -52,7 +52,8 @@ class PersistenceManagerSpec
     facade = TestActorRef(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
     dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor), "person")
-    system.eventStream.subscribe(dataCreator, classOf[BundleActorStarted])
+    system.eventStream.subscribe(dataCreator, classOf[BundleActorInitialized])
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
 
     activator = new PersistenceActivator
     activator.start(osgiContext)
@@ -65,9 +66,7 @@ class PersistenceManagerSpec
   "The PersistenceManager" should {
 
     "Initialize correctly" in {
-
-      system.eventStream.subscribe(self,classOf[BundleActorInitialized])
-      expectMsgType[BundleActorInitialized]
+      expectMsgType[BundleActorInitialized](30.seconds)
     }
 
     "Store a data object correctly" in {

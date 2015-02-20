@@ -17,7 +17,6 @@
 package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
-import de.woq.blended.itestsupport.PortScanner
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -41,7 +40,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
 
-  var portScanner : ActorRef = _
   var pendingContainer : Map [String, ActorRef] = Map.empty
   var runningContainer : Map [String, ActorRef] = Map.empty
   var requestor : Option[ActorRef] = _
@@ -51,10 +49,9 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       log info s"Initializing Container manager"
 
       requestor = Some(sender)
-      portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
       configuredContainers.foreach{ case(name, ct) =>
         if (ct.links.isEmpty) {
-          val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), name)
+          val actor = context.actorOf(Props(ContainerActor(ct)), name)
           actor ! StartContainer(name)
         } else {
           val actor = context.actorOf(Props(DependentContainerActor(ct)))
@@ -65,7 +62,7 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
     }
     case DependenciesStarted(ct) => {
       pendingContainer -= ct.containerName
-      val actor = context.actorOf(Props(ContainerActor(ct, portScanner)), ct.containerName)
+      val actor = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
       actor ! StartContainer(ct.containerName)
     }
     case ContainerStarted(name) => {

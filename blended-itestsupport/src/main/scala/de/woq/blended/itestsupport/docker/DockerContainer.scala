@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory
  * integration tests.
  */
 
-case class NamedContainerPort(name: String, sourcePort: Int)
+case class NamedContainerPort(name: String, privatePort: Int, publicPort: Int)
 
 private[docker] class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
 
@@ -59,11 +59,10 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
    * OS. The mapping can be injected while starting the container as the port mapping is usually calculated
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
-  def startContainer(exposedPorts: Ports) = {
+  def startContainer = {
     logger info s"Starting container [${name}] with port bindings and container links [$linkedContainers]."
 
     val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
-    //if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
     //if (!mappedVolumes.isEmpty) cmd.withBinds(binds:_*)
     

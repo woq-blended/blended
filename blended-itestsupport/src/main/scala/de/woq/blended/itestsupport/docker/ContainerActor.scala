@@ -16,26 +16,21 @@
 
 package de.woq.blended.itestsupport.docker
 
-import akka.actor.{Props, ActorLogging, Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
-import akka.pattern.ask
-import com.github.dockerjava.api.model.Ports.Binding
-import com.github.dockerjava.api.model.{ExposedPort, Ports}
+import com.github.dockerjava.api.model.ExposedPort
+import de.woq.blended.itestsupport.docker.protocol._
+
 import scala.concurrent.duration._
 
-import de.woq.blended.itestsupport.docker.protocol._
-import de.woq.blended.itestsupport.protocol._
-
-import scala.concurrent.Future
-
 object ContainerActor {
-  def apply(container: DockerContainer, portScanner: ActorRef) = new ContainerActor(container, portScanner)
+  def apply(container: DockerContainer) = new ContainerActor(container)
 }
 
-class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends Actor with ActorLogging {
+class ContainerActor(container: DockerContainer) extends Actor with ActorLogging {
 
-  case class PerformStart(container: DockerContainer, ports: Ports)
+  case class PerformStart(container: DockerContainer)
 
   object ContainerStartActor {
     def apply() = new ContainerStartActor
@@ -44,8 +39,8 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
   class ContainerStartActor extends Actor with ActorLogging {
 
     def receive = LoggingReceive {
-      case PerformStart(container, ports) =>
-        container.startContainer(ports)
+      case PerformStart(container) =>
+        container.startContainer
         sender ! ContainerStarted(container.containerName)
     }
   }
@@ -57,12 +52,9 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
 
   def stopped : Receive = {
     case StartContainer(n) if container.containerName == n  => {
-      portBindings(sender)
-    }
-    case (p : Ports, requestor: ActorRef) => {
       val starter = context.actorOf(Props(ContainerStartActor()))
-      context become LoggingReceive(starting(requestor) orElse getPorts )
-      starter ! PerformStart(container, p)
+      starter ! PerformStart(container)
+      context become LoggingReceive(starting(sender()) orElse getPorts )
     }
     case cmd => pendingCommands ::= (sender, cmd)
   }
@@ -94,9 +86,9 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     case GetContainerPorts(n) if container.containerName == n => {
       val ports : Map[String, NamedContainerPort] =
         container.ports.mapValues { namedPort =>
-          val exposedPort = new ExposedPort(namedPort.sourcePort)
+          val exposedPort = new ExposedPort(namedPort.privatePort)
           val realPort = exposedPort.getPort
-          NamedContainerPort(namedPort.name, realPort)
+          NamedContainerPort(namedPort.name, realPort, realPort)
         }
       log.debug(s"Sending [${ContainerPorts(ports)}] to [$sender]")
       sender ! ContainerPorts(ports)
@@ -104,25 +96,4 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
   }
 
   def receive = LoggingReceive(stopped)
-
-  private def portBindings(requestor: ActorRef) : Unit = {
-    val bindings = new Ports()
-
-    // We create a Future for each port. The Future uses the underlying PortScanner
-    // to retreive the next port number
-    val portRequests : Iterable[Future[(NamedContainerPort, FreePort)]] =
-      container.ports.values.map { case namedPort =>
-        (portScanner ? GetPort).mapTo[FreePort].collect { case fp =>
-          (namedPort, fp)
-        }
-    }
-
-    // We create a single Future from the list of futures created before, collect the result
-    // and then pass on the Bindings to ourselves.
-    Future.sequence(portRequests).mapTo[Iterable[(NamedContainerPort, FreePort)]].collect { case ports =>
-      ports.foreach { case (namedPort, freeport) =>
-        bindings.bind(new ExposedPort(namedPort.sourcePort), new Binding(freeport.p))
-      }
-    } onSuccess { case _ => self ! (bindings, requestor) }
-  }
 }

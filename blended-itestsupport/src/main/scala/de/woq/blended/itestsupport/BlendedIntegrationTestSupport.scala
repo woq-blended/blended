@@ -111,7 +111,7 @@ trait BlendedIntegrationTestSupport
     (containerMgr ? GetContainerPorts(ctName))(new Timeout(3.seconds))
       .mapTo[ContainerPorts].map { ctPorts =>
         ctPorts.ports.get(portName) match {
-          case Some(namedPort) => Some(namedPort.sourcePort)
+          case Some(namedPort) => Some(namedPort.privatePort)
           case _ => None
         }
       }
