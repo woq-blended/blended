@@ -49,7 +49,7 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   def starting : Receive = LoggingReceive {
     case StartContainerManager => {
       log info s"Initializing Container manager"
-      shutDownContainers()
+
       requestor = Some(sender)
       portScanner = context.actorOf(Props(PortScanner()), "PortScanner")
       configuredContainers.foreach{ case(name, ct) =>

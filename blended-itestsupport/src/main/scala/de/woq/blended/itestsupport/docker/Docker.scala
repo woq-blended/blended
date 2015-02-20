@@ -22,7 +22,7 @@ import akka.event.LoggingAdapter
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.{Image, Volume}
 import com.github.dockerjava.core.DockerClientConfig.DockerClientConfigBuilder
-import com.github.dockerjava.core.{DockerClientConfig, DockerClientImpl}
+import com.github.dockerjava.core.{DockerClientBuilder, DockerClientConfig, DockerClientImpl}
 import de.woq.blended.itestsupport.ShellExecutor
 
 import scala.collection.convert.Wrappers.JListWrapper
@@ -38,14 +38,16 @@ object DockerClientFactory {
     case Some(dockerClient) => dockerClient
     case _ => {
 
-      val dockerConfig =  new DockerClientConfigBuilder()
+      val dockerConfig =  DockerClientConfig.createDefaultConfigBuilder()
         .withUri(config.getString("docker.url"))
         .withUsername(config.getString("docker.user"))
         .withPassword(config.getString("docker.password"))
         .withEmail(config.getString("docker.eMail"))
         .build()
 
-      val dockerClient = new DockerClientImpl(dockerConfig)
+      logger info s"Trying to connect to docker at [${dockerConfig.getUri}]"
+
+      val dockerClient = DockerClientBuilder.getInstance(dockerConfig).build()
 
       val version = dockerClient.versionCmd().exec()
 
@@ -104,10 +106,9 @@ trait Docker { this: VolumeBaseDir =>
         val name = if (cfg.hasPath("name")) cfg.getString("name") + "_" + idx else img.getId
         val ct = container(img, name).withNamedPorts(namedPorts(cfg))
 
-
         ctLinks.foreach(link => ct.withLink(link))
         ctVolumes.foreach{volume =>
-          val dirName = s"${volumeBaseDir}/${name}/${volume._1}"
+          val dirName = s"$volumeBaseDir/$name/${volume._1}"
           ct.withVolume(dirName, volume._2, volume._3)
           new File(dirName).mkdirs()
           ShellExecutor.excute(s"chmod -R 777 ${dirName}")
@@ -162,18 +163,8 @@ trait Docker { this: VolumeBaseDir =>
       }
     }
 
-    logger info s"Found named ports for container [${result}]"
+    logger info s"Found named ports for container [$result]"
     result.seq
-  }
-
-  def exitingContainers() =
-    new JListWrapper(client.listContainersCmd().withShowAll(true).exec()).toList
-
-  def shutDownContainers() = {
-    exitingContainers().foreach { ct =>
-      logger.info(s"Removing container [${ct.getId}]")
-      client.removeContainerCmd(ct.getId).withRemoveVolumes(true).withForce(true).exec()
-    }
   }
 
   private[Docker] def searchByTag(s: String) = { img: Image =>

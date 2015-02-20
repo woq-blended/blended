@@ -112,6 +112,7 @@
     <profile>
       <id>itest</id>
       <modules>
+        <module>blended-itestsupport</module>
         <module>blended-akka-itest</module>
       </modules>
     </profile>

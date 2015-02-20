@@ -39,7 +39,7 @@ trait DockerTestSetup { this : MockitoSugar =>
 
   ctNames.foreach { name =>
     when(images.get(name).get.getId) thenReturn(imageIds.get(name).get)
-    when(images.get(name).get.getRepoTags).thenReturn(Array(s"atooni/${name}"))
+    when(images.get(name).get.getRepoTags).thenReturn(Array(s"atooni/$name"))
   }
 
   val createResp = mock[CreateContainerResponse]
@@ -51,13 +51,14 @@ trait DockerTestSetup { this : MockitoSugar =>
   val imgList = new util.ArrayList[Image]
   images.values.foreach(imgList.add(_))
   when(listImgCmd.exec()) thenReturn(imgList)
-  when(mockClient.listImagesCmd()) thenReturn(listImgCmd)
+  when(mockClient.listImagesCmd()) thenReturn listImgCmd
 
   val waitCmd = mock[WaitContainerCmd]
   val stopCmd = mock[StopContainerCmd]
   val startCmd = mock[StartContainerCmd]
-  when(startCmd.withPortBindings(portBindings)) thenReturn(startCmd)
-  when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn(startCmd)
+  when(startCmd.withPortBindings(portBindings)) thenReturn startCmd
+  when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn startCmd
+  when(startCmd.withPublishAllPorts(true)) thenReturn startCmd
 
   val inspectCmd = mock[InspectContainerCmd]
   val containerInfo = mock[InspectContainerResponse]

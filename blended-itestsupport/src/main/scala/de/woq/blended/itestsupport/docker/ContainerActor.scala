@@ -61,7 +61,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     }
     case (p : Ports, requestor: ActorRef) => {
       val starter = context.actorOf(Props(ContainerStartActor()))
-      context become LoggingReceive(starting(requestor) orElse(getPorts))
+      context become LoggingReceive(starting(requestor) orElse getPorts )
       starter ! PerformStart(container, p)
     }
     case cmd => pendingCommands ::= (sender, cmd)
@@ -94,12 +94,11 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     case GetContainerPorts(n) if container.containerName == n => {
       val ports : Map[String, NamedContainerPort] =
         container.ports.mapValues { namedPort =>
-          val exposedPort = new ExposedPort("tcp", namedPort.sourcePort)
-          val mapped = container.exposedPorts.get.getBindings.get(exposedPort)
-          val realPort = mapped.getHostPort
+          val exposedPort = new ExposedPort(namedPort.sourcePort)
+          val realPort = exposedPort.getPort
           NamedContainerPort(namedPort.name, realPort)
         }
-      log.debug(s"Sending [${ContainerPorts(ports)}] to [${sender}]")
+      log.debug(s"Sending [${ContainerPorts(ports)}] to [$sender]")
       sender ! ContainerPorts(ports)
     }
   }
@@ -122,7 +121,7 @@ class ContainerActor(container: DockerContainer, portScanner: ActorRef) extends 
     // and then pass on the Bindings to ourselves.
     Future.sequence(portRequests).mapTo[Iterable[(NamedContainerPort, FreePort)]].collect { case ports =>
       ports.foreach { case (namedPort, freeport) =>
-        bindings.bind(new ExposedPort("tcp", namedPort.sourcePort), new Binding(freeport.p))
+        bindings.bind(new ExposedPort(namedPort.sourcePort), new Binding(freeport.p))
       }
     } onSuccess { case _ => self ! (bindings, requestor) }
   }

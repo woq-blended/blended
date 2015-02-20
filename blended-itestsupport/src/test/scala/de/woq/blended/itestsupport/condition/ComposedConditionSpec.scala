@@ -38,7 +38,7 @@ class ComposedConditionSpec extends TestActorSys
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
       checker ! CheckCondition
-      expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
+      expectMsg(ConditionCheckResult(List.empty, List.empty))
     }
 
     "be satisfied with a list of conditions that eventually satisfy" in {

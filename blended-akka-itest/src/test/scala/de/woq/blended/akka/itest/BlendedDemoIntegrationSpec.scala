@@ -44,7 +44,7 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
   override def preCondition = {
-    val t = 60.seconds
+    val t = 3600.seconds
 
     SequentialComposedCondition(
       JMSAvailableCondition(amqConnectionFactory, Some(t)),

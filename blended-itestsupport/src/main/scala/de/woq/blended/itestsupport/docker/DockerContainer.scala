@@ -32,7 +32,6 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
   var linkedContainers : List[Link] = List.empty
   var mappedVolumes : List[Bind] = List.empty
   var ports : Map[String, NamedContainerPort] = Map.empty
-  var exposedPorts : Option[Ports] = None
 
   private[DockerContainer] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
   private[DockerContainer] val container  = client.createContainerCmd(id).withName(name).withTty(true).exec()
@@ -61,14 +60,13 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer(exposedPorts: Ports) = {
-    logger info s"Starting container [${name}] with port bindings [${exposedPorts}] and container links [${linkedContainers}]."
-    this.exposedPorts = Some(exposedPorts)
+    logger info s"Starting container [${name}] with port bindings and container links [$linkedContainers]."
 
-    val cmd = client.startContainerCmd(containerName)
-    if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
+    val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
+    //if (!exposedPorts.getBindings.isEmpty) cmd.withPortBindings(exposedPorts)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
-    if (!mappedVolumes.isEmpty) cmd.withBinds(binds:_*)
-
+    //if (!mappedVolumes.isEmpty) cmd.withBinds(binds:_*)
+    
     cmd.exec()
 
     this
@@ -76,12 +74,13 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
 
   def containerInfo = client.inspectContainerCmd(containerName).exec()
 
-  /**
-   * Simply expose the stop operation of the container.
-   */
+  def removeContainer = {
+    logger info s"Removing container [$containerName] from Docker."
+    client.removeContainerCmd(containerName).withForce(true).withRemoveVolumes(true).exec()
+  }
+  
   def stopContainer = {
     logger info s"Stopping container [${name}]"
-    this.exposedPorts = None
     client.stopContainerCmd(containerName).exec()
     this
   }
@@ -92,7 +91,7 @@ private[docker] class DockerContainer(containerId: String, name: String)(implici
   }
 
   def withNamedPorts(ports : Seq[NamedContainerPort]) = {
-    ports.foreach(withNamedPort _)
+    ports.foreach(withNamedPort)
     this
   }
 

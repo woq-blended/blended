@@ -29,7 +29,7 @@ class DockerSpec extends TestActorSys
   with MockitoSugar {
 
   private def docker = {
-    System.setProperty("docker.io.version", "1.12")
+    System.setProperty("docker.io.version", "1.17")
     new Docker with VolumeBaseDir {
       override implicit val logger: LoggingAdapter = system.log
       override implicit val config: Config = system.settings.config
