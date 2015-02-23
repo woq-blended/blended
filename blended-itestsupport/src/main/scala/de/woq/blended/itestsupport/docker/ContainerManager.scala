@@ -17,6 +17,7 @@
 package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
+import de.woq.blended.itestsupport.ContainerUnderTest
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -40,78 +41,105 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
 
-  var pendingContainer : Map [String, ActorRef] = Map.empty
-  var runningContainer : Map [String, ActorRef] = Map.empty
-  var requestor : Option[ActorRef] = _
+  def starting(
+    startingContainers  : List[ContainerUnderTest],
+    runningContainers   : List[ContainerUnderTest],
+    pendingContainers   : List[ContainerUnderTest]
+  ) : Receive = Actor.emptyBehavior
+//    case DependenciesStarted(ct) => {
+//      pendingContainer -= ct.containerName
+//      val actor = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
+//      actor ! StartContainer(ct.containerName)
+//    }
+//    case ContainerStarted(name) => {
+//      runningContainer += (name -> sender)
+//      pendingContainer.values.foreach { _ ! ContainerStarted(name) }
+//      if (checkPending) context.become(running)
+//    }
+//  }
+//
+//  def running : Receive = LoggingReceive {
+//    case ContainerStarted(name) => {
+//      runningContainer += (name -> sender)
+//    }
+//    case GetContainerPorts(name) => {
+//      val requestor = sender
+//      containerActor(name).mapTo[ActorRef].onSuccess { case ct =>
+//        ct.tell(GetContainerPorts(name), requestor)
+//      }
+//    }
+//    case InspectContainer(name) => {
+//      val requestor = sender
+//      containerActor(name).mapTo[ActorRef].onSuccess{ case ct =>
+//        ct.tell(InspectContainer(name), requestor)
+//      }
+//    }
+//    case StopContainerManager => {
+//      val requestor = sender
+//
+//      log debug s"Stopping container [${runningContainer}]"
+//
+//      val stopFutures = runningContainer.collect {
+//        case (name, ctActor) => (ctActor ? StopContainer(name)).mapTo[ContainerStopped]
+//      }
+//
+//      val stopped = Future.sequence(stopFutures).map( _ => requestor ! ContainerManagerStopped )
+//
+//      context stop(self)
+//    }
+//  }
 
-  def starting : Receive = LoggingReceive {
-    case StartContainerManager => {
-      log info s"Initializing Container manager"
+  def receive : Receive = {
+    case StartContainerManager(containers) => 
+      log info s"Initializing Container manager with [$containers]"
 
-      requestor = Some(sender)
-      configuredContainers.foreach{ case(name, ct) =>
-        if (ct.links.isEmpty) {
-          val actor = context.actorOf(Props(ContainerActor(ct)), name)
-          actor ! StartContainer(name)
-        } else {
-          val actor = context.actorOf(Props(DependentContainerActor(ct)))
-          pendingContainer += (ct.containerName -> actor)
-        }
+      val cuts   = configureDockerContainer(containers)
+      log info s"$cuts"
+//
+//      val noDeps = cuts.filter( _.links.isEmpty)
+//      val withDeps = cuts.filter( _.links.nonEmpty)
+//
+//      noDeps.foreach{ cut =>
+//        val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer)), cut.ctName)
+//        actor ! StartContainer(cut.ctName)
+//      }
+//
+//      containers.foreach { ct =>
+//        dockerContainer(ct).zipWithIndex.foreach { case (dc, idx) =>
+//
+//          val ctName = s"${ct.ctName}_$idx"
+//
+//          val runningContainers = containers
+//            .filter(_.links.isEmpty)
+//            .map{ cut =>
+//
+//            }
+//
+//          if (ct.links.isEmpty) {
+//          } else {
+//            val actor = context.actorOf(Props(DependentContainerActor(dc)))
+//          }
+//        }
+//      }
+//      if (checkPending) context become running
+  }
+  
+  private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
+    cut.map { ct => 
+      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
+        val ctName = s"${ct.ctName}_$idx"
+        ct.copy(ctName = ctName, dockerContainer = Some(new DockerContainer(img.getId, ctName)))
       }
-      if (checkPending) context become running
-    }
-    case DependenciesStarted(ct) => {
-      pendingContainer -= ct.containerName
-      val actor = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
-      actor ! StartContainer(ct.containerName)
-    }
-    case ContainerStarted(name) => {
-      runningContainer += (name -> sender)
-      pendingContainer.values.foreach { _ ! ContainerStarted(name) }
-      if (checkPending) context.become(running)
-    }
+    }.flatten
   }
 
-  def running : Receive = LoggingReceive {
-    case ContainerStarted(name) => {
-      runningContainer += (name -> sender)
-    }
-    case GetContainerPorts(name) => {
-      val requestor = sender
-      containerActor(name).mapTo[ActorRef].onSuccess { case ct =>
-        ct.tell(GetContainerPorts(name), requestor)
-      }
-    }
-    case InspectContainer(name) => {
-      val requestor = sender
-      containerActor(name).mapTo[ActorRef].onSuccess{ case ct =>
-        ct.tell(InspectContainer(name), requestor)
-      }
-    }
-    case StopContainerManager => {
-      val requestor = sender
+  private[this] def containerActor(name: String) = context.actorSelection(name).resolveOne().mapTo[ActorRef]
 
-      log debug s"Stopping container [${runningContainer}]"
-
-      val stopFutures = runningContainer.collect {
-        case (name, ctActor) => (ctActor ? StopContainer(name)).mapTo[ContainerStopped]
-      }
-
-      val stopped = Future.sequence(stopFutures).map( _ => requestor ! ContainerManagerStopped )
-
-      context stop(self)
-    }
-  }
-
-  def receive = starting
-
-  private def containerActor(name: String) = context.actorSelection(name).resolveOne()
-
-  private def checkPending = {
-    if (pendingContainer.isEmpty) {
-      log info "Container Manager started."
-      requestor.foreach { _ ! ContainerManagerStarted }
-      true
-    } else false
-  }
+//  private def checkPending = {
+//    if (pendingContainer.isEmpty) {
+//      log info "Container Manager started."
+//      requestor.foreach { _ ! ContainerManagerStarted }
+//      true
+//    } else false
+//  }
 }

@@ -18,11 +18,14 @@ package de.woq.blended.itestsupport.docker
 
 import akka.event.LoggingAdapter
 import com.typesafe.config.Config
+import de.woq.blended.itestsupport.ContainerUnderTest
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
 
-class DockerSpec extends TestActorSys
+import scala.collection.convert.Wrappers.JListWrapper
+
+class ContainerUnderTestSpec extends TestActorSys
   with WordSpecLike
   with Matchers
   with DockerTestSetup
@@ -39,13 +42,13 @@ class DockerSpec extends TestActorSys
 
   "The Docker trait" should {
 
-    "Read initialize from the configuration" in {
-      docker.configuredContainers should have size(ctNames.size)
-
-      ctNames.foreach { name =>
-        val container = docker.configuredContainers.get(name).get
-        container.containerName should be (name)
-      }
+    "Read the CuT's from the configuration" in {
+      
+      val cuts = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
+        ContainerUnderTest(cfg)
+      }.toList
+      
+      cuts should have size(ctNames.size)
     }
   }
 }

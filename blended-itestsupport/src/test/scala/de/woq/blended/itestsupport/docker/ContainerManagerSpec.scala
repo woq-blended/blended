@@ -18,9 +18,12 @@ package de.woq.blended.itestsupport.docker
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
+import com.typesafe.config.Config
+import de.woq.blended.itestsupport.ContainerUnderTest
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{WordSpecLike, Matchers}
+import scala.collection.convert.Wrappers.JListWrapper
 import scala.concurrent.duration._
 
 import de.woq.blended.itestsupport.docker.protocol._
@@ -40,9 +43,13 @@ class ContainerManagerSpec extends TestActorSys
   "The ContainerManager" should {
 
     "Respond with an event after all containers have been started" in {
-
+      
+      val cuts = JListWrapper(config.getConfigList("docker.containers")).map { cfg : Config =>
+        ContainerUnderTest(cfg)
+      }.toList
+      
       val mgr = TestActorRef(Props(TestContainerManager()), "mgr")
-      mgr ! StartContainerManager
+      mgr ! StartContainerManager(cuts)
       expectMsg(30.seconds, ContainerManagerStarted)
     }
   }

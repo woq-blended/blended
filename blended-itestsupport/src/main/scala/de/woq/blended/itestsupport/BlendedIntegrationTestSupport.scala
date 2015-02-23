@@ -20,7 +20,9 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.TestKit
 import akka.util.Timeout
+import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command.InspectContainerResponse
+import com.github.dockerjava.api.model.ExposedPort
 import com.typesafe.config.{Config, ConfigFactory}
 import de.woq.blended.itestsupport.condition.{ConditionActor, Condition}
 import de.woq.blended.itestsupport.docker._
@@ -31,8 +33,12 @@ import org.scalatest.{BeforeAndAfterAll, Matchers, Suite}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
+trait ContainerUnderTestProvider {
+  val containerUnderTest : List[ContainerUnderTest]
+}
+
 class TestContainerManager extends ContainerManager with DockerClientProvider {
-  override def getClient = {
+  override def getClient : DockerClient = {
     implicit val logger = context.system.log
     DockerClientFactory(context.system.settings.config)
   }
@@ -92,7 +98,7 @@ trait BlendedIntegrationTestSupport
   def initTestContext() : Unit = {}
 
   final def containerMgr : ActorRef = {
-    Await.result(system.actorSelection(s"/user/${mgrName}").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
+    Await.result(system.actorSelection(s"/user/$mgrName").resolveOne(1.second).mapTo[ActorRef], 3.seconds)
   }
 
   def jolokiaUrl(ctName : String, port: Int, path : String = "/hawtio/jolokia") : Future[Option[String]] = {
@@ -118,9 +124,7 @@ trait BlendedIntegrationTestSupport
   }
 
   def containerInfo(ctName: String) : Future[InspectContainerResponse] = {
-
     implicit val eCtxt = system.dispatcher
-
     (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
   }
 

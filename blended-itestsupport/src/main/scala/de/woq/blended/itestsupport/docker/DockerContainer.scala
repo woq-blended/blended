@@ -18,6 +18,7 @@ package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
+import de.woq.blended.itestsupport.NamedContainerPort
 import org.slf4j.LoggerFactory
 
 /*
@@ -25,9 +26,7 @@ import org.slf4j.LoggerFactory
  * integration tests.
  */
 
-case class NamedContainerPort(name: String, privatePort: Int, publicPort: Int)
-
-private[docker] class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
+class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
 
   var linkedContainers : List[Link] = List.empty
   var mappedVolumes : List[Bind] = List.empty

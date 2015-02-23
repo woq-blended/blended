@@ -20,6 +20,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import com.github.dockerjava.api.model.ExposedPort
+import de.woq.blended.itestsupport.NamedContainerPort
 import de.woq.blended.itestsupport.docker.protocol._
 
 import scala.concurrent.duration._
@@ -88,7 +89,7 @@ class ContainerActor(container: DockerContainer) extends Actor with ActorLogging
         container.ports.mapValues { namedPort =>
           val exposedPort = new ExposedPort(namedPort.privatePort)
           val realPort = exposedPort.getPort
-          NamedContainerPort(namedPort.name, realPort, realPort)
+          NamedContainerPort(namedPort.name, realPort, None)
         }
       log.debug(s"Sending [${ContainerPorts(ports)}] to [$sender]")
       sender ! ContainerPorts(ports)

@@ -16,11 +16,13 @@
 
 package de.woq.blended.itestsupport.docker
 
+import de.woq.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
+
 package object protocol {
 
-  case object StartContainerManager
+  case class StartContainerManager(containerUnderTest : List[ContainerUnderTest])
   case object StopContainerManager
-  case object ContainerManagerStarted
+  case class ContainerManagerStarted(containerUnderTest : List[ContainerUnderTest])
   case object ContainerManagerStopped
 
   case class StartContainer(name: String)

@@ -22,12 +22,15 @@ import java.util.UUID
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._
 import com.github.dockerjava.api.model._
+import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 
 trait DockerTestSetup { this : MockitoSugar =>
 
   implicit val mockClient = mock[DockerClient]
+  
+  val config = ConfigFactory.load()
 
   val portBindings = new Ports()
   val ctNames  = Seq("blended_demo_0", "jms_demo_0")

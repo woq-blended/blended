@@ -27,8 +27,9 @@ object TestCamelContext {
 
     try {
       body(testContext)
+    } catch {
+      case t : Throwable => throw t
     } finally testContext.stop()
-
   }
 }
 
