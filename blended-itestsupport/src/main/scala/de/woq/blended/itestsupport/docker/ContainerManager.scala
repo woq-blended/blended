@@ -42,23 +42,35 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   override val logger: LoggingAdapter = context.system.log
 
   def starting(
+    requestor           : ActorRef,              
+    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
     startingContainers  : List[ContainerUnderTest],
-    runningContainers   : List[ContainerUnderTest],
-    pendingContainers   : List[ContainerUnderTest]
-  ) : Receive = Actor.emptyBehavior
-//    case DependenciesStarted(ct) => {
-//      pendingContainer -= ct.containerName
-//      val actor = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
-//      actor ! StartContainer(ct.containerName)
-//    }
-//    case ContainerStarted(name) => {
-//      runningContainer += (name -> sender)
-//      pendingContainer.values.foreach { _ ! ContainerStarted(name) }
-//      if (checkPending) context.become(running)
-//    }
-//  }
-//
-//  def running : Receive = LoggingReceive {
+    runningContainers   : List[ContainerUnderTest]
+  ) : Receive = LoggingReceive {
+    case ContainerStarted(name) =>
+      pendingContainers.foreach { _._1 ! ContainerStarted(name) }
+      val startedCt = startingContainers.filter(_.ctName == name).head
+      val remaining = startingContainers.filter(_ != startedCt)
+      val started = startedCt :: runningContainers
+
+      if (pendingContainers.isEmpty && remaining.isEmpty) {
+        log.info(s"Container Manager started [$started]")
+        context.become(running(started))
+        requestor ! ContainerManagerStarted(started)
+      } else {
+        context.become(starting(requestor, pendingContainers, remaining, started))
+      }
+    case DependenciesStarted(ct) =>
+      val pending  = pendingContainers.filter(_._1 != sender())
+      val ctActor  = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
+      ctActor ! StartContainer(ct.containerName)
+      val cut = pendingContainers.filter(_._1 == sender()).head._2
+      context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
+  }
+  
+  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
+  
+//  def running(runningContainers : List[Cont : Receive = LoggingReceive {
 //    case ContainerStarted(name) => {
 //      runningContainer += (name -> sender)
 //    }
@@ -94,34 +106,22 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       log info s"Initializing Container manager with [$containers]"
 
       val cuts   = configureDockerContainer(containers)
-      log info s"$cuts"
-//
-//      val noDeps = cuts.filter( _.links.isEmpty)
-//      val withDeps = cuts.filter( _.links.nonEmpty)
-//
-//      noDeps.foreach{ cut =>
-//        val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer)), cut.ctName)
-//        actor ! StartContainer(cut.ctName)
-//      }
-//
-//      containers.foreach { ct =>
-//        dockerContainer(ct).zipWithIndex.foreach { case (dc, idx) =>
-//
-//          val ctName = s"${ct.ctName}_$idx"
-//
-//          val runningContainers = containers
-//            .filter(_.links.isEmpty)
-//            .map{ cut =>
-//
-//            }
-//
-//          if (ct.links.isEmpty) {
-//          } else {
-//            val actor = context.actorOf(Props(DependentContainerActor(dc)))
-//          }
-//        }
-//      }
-//      if (checkPending) context become running
+
+      val noDeps   = cuts.filter( _.links.isEmpty)
+      val withDeps = cuts.filter( _.links.nonEmpty)
+      val pending  = withDeps.map { cut =>
+        ( context.actorOf(Props(DependentContainerActor(cut.dockerContainer.get))), cut )
+      }
+
+      log.info(s"$noDeps")
+      log.info(s"$withDeps")
+
+      noDeps.foreach{ cut =>
+        val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer.get)))
+        actor ! StartContainer(cut.ctName)
+      }
+
+      context.become(starting(sender, pending, noDeps, List.empty))
   }
   
   private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
@@ -135,11 +135,4 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 
   private[this] def containerActor(name: String) = context.actorSelection(name).resolveOne().mapTo[ActorRef]
 
-//  private def checkPending = {
-//    if (pendingContainer.isEmpty) {
-//      log info "Container Manager started."
-//      requestor.foreach { _ ! ContainerManagerStarted }
-//      true
-//    } else false
-//  }
 }

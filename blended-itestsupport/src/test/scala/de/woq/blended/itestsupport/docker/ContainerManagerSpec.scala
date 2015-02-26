@@ -50,7 +50,11 @@ class ContainerManagerSpec extends TestActorSys
       
       val mgr = TestActorRef(Props(TestContainerManager()), "mgr")
       mgr ! StartContainerManager(cuts)
-      expectMsg(30.seconds, ContainerManagerStarted)
+      
+      fishForMessage() {
+        case cms : ContainerManagerStarted => cms.containerUnderTest.size == 2
+        case _ => false
+      }
     }
   }
 }
