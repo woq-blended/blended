@@ -128,7 +128,13 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
     cut.map { ct => 
       search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
         val ctName = s"${ct.ctName}_$idx"
-        ct.copy(ctName = ctName, dockerContainer = Some(new DockerContainer(img.getId, ctName)))
+        
+        val dc = new DockerContainer(img.getId, ctName)
+        
+        ct.links.foreach { cl => dc.withLink(s"${cl.container}:${cl.hostname}")}
+        dc.withNamedPorts(ct.ports.values.toSeq)
+
+        ct.copy(ctName = ctName, dockerContainer = Some(dc))
       }
     }.flatten
   }

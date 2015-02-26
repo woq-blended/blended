@@ -18,7 +18,7 @@ package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
-import de.woq.blended.itestsupport.NamedContainerPort
+import de.woq.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 import org.slf4j.LoggerFactory
 
 /*
@@ -59,7 +59,7 @@ class DockerContainer(containerId: String, name: String)(implicit client: Docker
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer = {
-    logger info s"Starting container [${name}] with port bindings and container links [$linkedContainers]."
+    logger info s"Starting container [$name] with port bindings [$ports] and container links [$linkedContainers]."
 
     val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
