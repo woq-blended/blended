@@ -16,8 +16,9 @@
 
 package de.woq.blended.itestsupport.docker
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{ActorRef, Actor, ActorLogging}
 import akka.event.LoggingReceive
+import de.woq.blended.itestsupport.ContainerUnderTest
 
 import de.woq.blended.itestsupport.docker.protocol._
 
@@ -32,24 +33,27 @@ import de.woq.blended.itestsupport.docker.protocol._
  * an DependenciesStarted message to the ContainerManager, so the he can start
  * the container afterwards.
  */
-class DependentContainerActor(container: DockerContainer) extends Actor with ActorLogging {
+class DependentContainerActor(container: ContainerUnderTest) extends Actor with ActorLogging {
 
-  // Initialize the
-  var pendingContainers : List[String] = container.links.map(_.getName)
+  def receive : Receive = waiting(container.dockerContainer.get.links.map(_.getName))
 
-  def receive = LoggingReceive {
-    case ContainerStarted(n) => {
-      pendingContainers = pendingContainers.filter(_ != n)
-      if (pendingContainers.isEmpty) {
-        log info s"Dependencies for container [${container.id}] started."
-        sender ! DependenciesStarted(container)
+  def waiting(pendingContainers : List[String]) : Receive = {
+    case ContainerStarted(ct) => ct match {
+      case Right(n) =>
+        pendingContainers.filter(_ != n) match {
+          case l if l.isEmpty =>
+            log info s"Dependencies for container [${container.dockerContainer.get.id}] started."
+            sender ! DependenciesStarted(Right(container))
+            context.stop(self)
+          case l => context.become(waiting(l))
+        }
+      case Left(e) => 
+        sender ! DependenciesStarted(Left(e))
         context.stop(self)
       }
-    }
   }
-
 }
 
 object DependentContainerActor {
-  def apply(container : DockerContainer) = new DependentContainerActor(container)
+  def apply(container : ContainerUnderTest) = new DependentContainerActor(container)
 }

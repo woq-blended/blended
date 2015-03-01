@@ -42,7 +42,7 @@ class ContainerActor(container: DockerContainer) extends Actor with ActorLogging
     def receive = LoggingReceive {
       case PerformStart(container) =>
         container.startContainer
-        sender ! ContainerStarted(container.containerName)
+        sender ! ContainerStarted(Right(container.containerName))
     }
   }
 
@@ -75,7 +75,7 @@ class ContainerActor(container: DockerContainer) extends Actor with ActorLogging
       val requestor = sender
       container.stopContainer
       context become stopped
-      requestor ! ContainerStopped(container.containerName)
+      requestor ! ContainerStopped(Right(container.containerName))
     }
     case InspectContainer(n) if container.containerName == n => {
       val requestor = sender
@@ -91,8 +91,8 @@ class ContainerActor(container: DockerContainer) extends Actor with ActorLogging
           val realPort = exposedPort.getPort
           NamedContainerPort(namedPort.name, realPort, None)
         }
-      log.debug(s"Sending [${ContainerPorts(ports)}] to [$sender]")
-      sender ! ContainerPorts(ports)
+      log.debug(s"Sending [${ContainerPorts(Right(ports))}] to [$sender]")
+      sender ! ContainerPorts(Right(ports))
     }
   }
 

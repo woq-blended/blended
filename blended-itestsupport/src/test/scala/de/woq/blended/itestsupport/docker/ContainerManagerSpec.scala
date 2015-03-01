@@ -35,7 +35,7 @@ class ContainerManagerSpec extends TestActorSys
   with MockitoSugar {
 
   object TestContainerManager {
-    def apply() = new  ContainerManager with DockerClientProvider {
+    def apply() = new  EmbeddedContainerManager with DockerClientProvider {
       override def getClient = mockClient
     }
   }
@@ -52,7 +52,10 @@ class ContainerManagerSpec extends TestActorSys
       mgr ! StartContainerManager(cuts)
       
       fishForMessage() {
-        case cms : ContainerManagerStarted => cms.containerUnderTest.size == 2
+        case DockerContainerAvailable(cuts) => cuts match {
+          case Right(l) => l.size == 2
+          case _ => false
+        }
         case _ => false
       }
     }

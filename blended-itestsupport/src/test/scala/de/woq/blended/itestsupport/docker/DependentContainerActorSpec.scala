@@ -32,30 +32,14 @@ class DependentContainerActorSpec extends TestActorSys
 
   "the DependentContainerActor" should {
 
-    "Initialize itself with the links from the container config" in {
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
-
-      val depActor = TestActorRef(Props(DependentContainerActor(container)))
-      val realActor = depActor.underlyingActor.asInstanceOf[DependentContainerActor]
-      realActor.pendingContainers should contain theSameElementsAs Vector("blended_demo_0")
-    }
-
-    "Ignore Container starts that are not of any interest" in {
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
-      val depActor = TestActorRef(Props(DependentContainerActor(container)))
-      depActor ! ContainerStarted("foo")
-      val realActor = depActor.underlyingActor.asInstanceOf[DependentContainerActor]
-      realActor.pendingContainers should contain theSameElementsAs Vector("blended_demo_0")
-    }
-
     "Respond with a DependenciesStarted message after the last dependant container was started" in {
       val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
       val depActor = TestActorRef(Props(DependentContainerActor(container)))
 
       watch(depActor)
 
-      depActor ! ContainerStarted("blended_demo_0")
-      expectMsg( DependenciesStarted(container) )
+      depActor ! ContainerStarted(Right("blended_demo_0"))
+      expectMsg( DependenciesStarted(Right(container)) )
 
       fishForMessage(3.seconds) {
         case m : Terminated => true

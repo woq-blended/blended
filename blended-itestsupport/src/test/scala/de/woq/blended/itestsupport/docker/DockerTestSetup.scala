@@ -41,19 +41,19 @@ trait DockerTestSetup { this : MockitoSugar =>
   val imageId = imageIds.get(ctName).get
 
   ctNames.foreach { name =>
-    when(images.get(name).get.getId) thenReturn(imageIds.get(name).get)
+    when(images.get(name).get.getId) thenReturn imageIds.get(name).get
     when(images.get(name).get.getRepoTags).thenReturn(Array(s"atooni/$name"))
   }
 
   val createResp = mock[CreateContainerResponse]
   val createCmd = mock[CreateContainerCmd]
-  when(createCmd.exec()) thenReturn(createResp)
-  when(createCmd.withTty(true)) thenReturn(createCmd)
+  when(createCmd.exec()) thenReturn createResp
+  when(createCmd.withTty(true)) thenReturn createCmd
 
   val listImgCmd = mock[ListImagesCmd]
   val imgList = new util.ArrayList[Image]
-  images.values.foreach(imgList.add(_))
-  when(listImgCmd.exec()) thenReturn(imgList)
+  images.values.foreach(imgList.add)
+  when(listImgCmd.exec()) thenReturn imgList
   when(mockClient.listImagesCmd()) thenReturn listImgCmd
 
   val waitCmd = mock[WaitContainerCmd]
@@ -65,19 +65,19 @@ trait DockerTestSetup { this : MockitoSugar =>
 
   val inspectCmd = mock[InspectContainerCmd]
   val containerInfo = mock[InspectContainerResponse]
-  when(inspectCmd.exec()) thenReturn(containerInfo)
+  when(inspectCmd.exec()) thenReturn containerInfo
 
   ctNames.foreach { name =>
-    when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn(createCmd)
-    when(createCmd.withName(name)) thenReturn(createCmd)
-    when(mockClient.waitContainerCmd(name)).thenReturn(waitCmd)
-    when(mockClient.stopContainerCmd(name)).thenReturn(stopCmd)
-    when(mockClient.startContainerCmd(name)).thenReturn(startCmd)
-    when(mockClient.inspectContainerCmd(name)).thenReturn(inspectCmd)
+    when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn createCmd
+    when(createCmd.withName(name)) thenReturn createCmd
+    when(mockClient.waitContainerCmd(name)) thenReturn waitCmd
+    when(mockClient.stopContainerCmd(name)) thenReturn stopCmd
+    when(mockClient.startContainerCmd(name)) thenReturn startCmd
+    when(mockClient.inspectContainerCmd(name)) thenReturn inspectCmd
   }
 
   val listContainersCmd = mock[ListContainersCmd]
-  when(mockClient.listContainersCmd()) thenReturn(listContainersCmd)
-  when(listContainersCmd.withShowAll(true)) thenReturn(listContainersCmd)
-  when(listContainersCmd.exec()) thenReturn(new util.ArrayList[Container]())
+  when(mockClient.listContainersCmd()) thenReturn listContainersCmd
+  when(listContainersCmd.withShowAll(true)) thenReturn listContainersCmd
+  when(listContainersCmd.exec()) thenReturn new util.ArrayList[Container]()
 }

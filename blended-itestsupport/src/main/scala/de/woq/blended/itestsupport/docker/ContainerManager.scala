@@ -32,7 +32,7 @@ trait DockerClientProvider {
   def getClient : DockerClient
 }
 
-class ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
+trait ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
 
   implicit val timeout = Timeout(30.seconds)
   implicit val eCtxt   = context.dispatcher
@@ -41,34 +41,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
 
-  def starting(
-    requestor           : ActorRef,              
-    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
-    startingContainers  : List[ContainerUnderTest],
-    runningContainers   : List[ContainerUnderTest]
-  ) : Receive = LoggingReceive {
-    case ContainerStarted(name) =>
-      pendingContainers.foreach { _._1 ! ContainerStarted(name) }
-      val startedCt = startingContainers.filter(_.ctName == name).head
-      val remaining = startingContainers.filter(_ != startedCt)
-      val started = startedCt :: runningContainers
-
-      if (pendingContainers.isEmpty && remaining.isEmpty) {
-        log.info(s"Container Manager started [$started]")
-        context.become(running(started))
-        requestor ! ContainerManagerStarted(started)
-      } else {
-        context.become(starting(requestor, pendingContainers, remaining, started))
-      }
-    case DependenciesStarted(ct) =>
-      val pending  = pendingContainers.filter(_._1 != sender())
-      val ctActor  = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
-      ctActor ! StartContainer(ct.containerName)
-      val cut = pendingContainers.filter(_._1 == sender()).head._2
-      context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
-  }
-  
-  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
   
 //  def running(runningContainers : List[Cont : Receive = LoggingReceive {
 //    case ContainerStarted(name) => {
@@ -101,8 +73,59 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 //    }
 //  }
 
+
+  private def containerActor(name: String) = context.actorSelection(name).resolveOne().mapTo[ActorRef]
+
+}
+
+class EmbeddedContainerManager extends ContainerManager with DockerClientProvider {
+  override def getClient : DockerClient = {
+    implicit val logger = context.system.log
+    DockerClientFactory(context.system.settings.config)
+  }
+
+  def starting(
+    requestor           : ActorRef,
+    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
+    startingContainers  : List[ContainerUnderTest],
+    runningContainers   : List[ContainerUnderTest]
+  ) : Receive = LoggingReceive {
+    case ContainerStarted(result) => result match {
+      case Right(name) =>
+        pendingContainers.foreach { _._1 ! ContainerStarted(Right(name)) }
+        val startedCt = startingContainers.filter(_.ctName == name).head
+        val remaining = startingContainers.filter(_ != startedCt)
+        val started = startedCt :: runningContainers
+
+        if (pendingContainers.isEmpty && remaining.isEmpty) {
+          log.info(s"Container Manager started [$started]")
+          context.become(running(started))
+          requestor ! DockerContainerAvailable(Right(started))
+        } else {
+          context.become(starting(requestor, pendingContainers, remaining, started))
+        }
+      case Left(e) => 
+        log error s"Errot in starting docker containers [${e.getMessage}]"
+        requestor ! Left(e)
+        context.stop(self)
+    }
+    case DependenciesStarted(result) => result match {
+      case Right(ct) =>
+        val pending  = pendingContainers.filter(_._1 != sender())
+        val ctActor  = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
+        ctActor ! StartContainer(ct.containerName)
+        val cut = pendingContainers.filter(_._1 == sender()).head._2
+        context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
+      case Left(e) => 
+        requestor ! DockerContainerAvailable(Left(e))
+        context.stop(self)
+    } 
+  }
+
+  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
+
   def receive : Receive = {
-    case StartContainerManager(containers) => 
+    case StartContainerManager(containers) =>
       log info s"Initializing Container manager with [$containers]"
 
       val cuts   = configureDockerContainer(containers)
@@ -116,21 +139,18 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       log.info(s"$noDeps")
       log.info(s"$withDeps")
 
-      noDeps.foreach{ cut =>
-        val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer.get)))
-        actor ! StartContainer(cut.ctName)
-      }
+      noDeps.foreach{ startContainer }
 
       context.become(starting(sender, pending, noDeps, List.empty))
   }
   
   private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
-    cut.map { ct => 
+    cut.map { ct =>
       search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
         val ctName = s"${ct.ctName}_$idx"
-        
+
         val dc = new DockerContainer(img.getId, ctName)
-        
+
         ct.links.foreach { cl => dc.withLink(s"${cl.container}:${cl.hostname}")}
         dc.withNamedPorts(ct.ports.values.toSeq)
 
@@ -138,7 +158,23 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       }
     }.flatten
   }
+  
+  private[this] def startContainer(cut : ContainerUnderTest) : Unit = {
 
-  private[this] def containerActor(name: String) = context.actorSelection(name).resolveOne().mapTo[ActorRef]
+    val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer.get)), cut.ctName)
+    actor ! StartContainer(cut.ctName)
 
+  }
 }
+
+class ExternalContainerManager extends ContainerManager with DockerClientProvider {
+  
+  override def getClient : DockerClient = {
+    implicit val logger = context.system.log
+    DockerClientFactory(context.system.settings.config)
+  }
+ 
+  def receive = Actor.emptyBehavior
+}
+
+

@@ -20,20 +20,26 @@ import de.woq.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 
 package object protocol {
 
+  type DockerResult[T] = Either[Exception, T]
+  
+  case object StartContainerProxy
+  case class ContainerProxyStarted(cuts: DockerResult[List[ContainerUnderTest]])
+  
   case class StartContainerManager(containerUnderTest : List[ContainerUnderTest])
   case object StopContainerManager
-  case class ContainerManagerStarted(containerUnderTest : List[ContainerUnderTest])
+  
+  case class DockerContainerAvailable(containerUnderTest : DockerResult[List[ContainerUnderTest]])
   case object ContainerManagerStopped
 
   case class StartContainer(name: String)
-  case class ContainerStarted(name: String)
-  case class DependenciesStarted(container: DockerContainer)
+  case class ContainerStarted(name: DockerResult[String])
+  case class DependenciesStarted(container: DockerResult[ContainerUnderTest])
 
   case class StopContainer(name: String)
-  case class ContainerStopped(name: String)
+  case class ContainerStopped(name: DockerResult[String])
 
   case class GetContainerPorts(name: String)
-  case class ContainerPorts(ports: Map[String, NamedContainerPort])
+  case class ContainerPorts(ports: DockerResult[Map[String, NamedContainerPort]])
 
   case class InspectContainer(name: String)
 }
