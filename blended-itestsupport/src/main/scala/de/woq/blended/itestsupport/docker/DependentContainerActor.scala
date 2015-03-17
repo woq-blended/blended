@@ -35,14 +35,14 @@ import de.woq.blended.itestsupport.docker.protocol._
  */
 class DependentContainerActor(container: ContainerUnderTest) extends Actor with ActorLogging {
 
-  def receive : Receive = waiting(container.dockerContainer.get.links.map(_.getName))
+  def receive : Receive = waiting(container.links.map(_.container))
 
   def waiting(pendingContainers : List[String]) : Receive = {
     case ContainerStarted(ct) => ct match {
       case Right(n) =>
         pendingContainers.filter(_ != n) match {
           case l if l.isEmpty =>
-            log info s"Dependencies for container [${container.dockerContainer.get.id}] started."
+            log info s"Dependencies for container [${container.dockerName}] started."
             sender ! DependenciesStarted(Right(container))
             context.stop(self)
           case l => context.become(waiting(l))

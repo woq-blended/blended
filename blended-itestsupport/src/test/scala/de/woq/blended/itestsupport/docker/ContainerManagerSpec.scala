@@ -22,12 +22,13 @@ import com.typesafe.config.Config
 import de.woq.blended.itestsupport.ContainerUnderTest
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{WordSpecLike, Matchers}
+import org.scalatest.{DoNotDiscover, WordSpecLike, Matchers}
 import scala.collection.convert.Wrappers.JListWrapper
 import scala.concurrent.duration._
 
 import de.woq.blended.itestsupport.docker.protocol._
 
+@DoNotDiscover
 class ContainerManagerSpec extends TestActorSys
   with WordSpecLike
   with Matchers

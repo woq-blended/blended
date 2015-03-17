@@ -17,23 +17,20 @@
 package de.woq.blended.itestsupport
 
 import com.typesafe.config.Config
-import de.woq.blended.itestsupport.docker.DockerContainer
 
 import scala.collection.convert.Wrappers.JListWrapper
 
 object NamedContainerPort {
   def apply(config : Config) : NamedContainerPort = NamedContainerPort(
     config.getString("name"),
-    config.getInt("private"),
-    if (config.hasPath("public"))
-      Some(config.getInt("public"))
-    else 
-      None
+    config.getInt("private")
   )
+
+  def apply(name: String, privatePort: Int) : NamedContainerPort = NamedContainerPort(name, privatePort, privatePort)
 }
 
 case class NamedContainerPort(
-  name: String, privatePort: Int, publicPort: Option[Int]
+  name: String, privatePort: Int, publicPort: Int
 )
 
 object VolumeConfig {
@@ -78,11 +75,13 @@ object ContainerUnderTest {
     else 
       List.empty
     
-    val dockerName : Option[String] = if (config.hasPath("dockerName")) 
-      Some(config.getString("dockerName"))
-    else 
-      None
+    val ctName = config.getString("name")
     
+    val dockerName : String = if (config.hasPath("dockerName")) 
+      config.getString("dockerName")
+    else 
+      s"${ctName}_${System.currentTimeMillis}"
+
     ContainerUnderTest(
       config.getString("name"),
       config.getString("image"), 
@@ -97,10 +96,9 @@ object ContainerUnderTest {
 case class ContainerUnderTest(
   ctName          : String,
   imgPattern      : String,
-  dockerName      : Option[String],
+  dockerName      : String,
   volumes         : List[VolumeConfig] = List.empty,
   links           : List[ContainerLink],                             
-  ports           : Map[String, NamedContainerPort] = Map.empty, 
-  dockerContainer : Option[DockerContainer] = None
+  ports           : Map[String, NamedContainerPort] = Map.empty
 )
 

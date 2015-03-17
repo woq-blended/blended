@@ -65,7 +65,10 @@ trait DockerTestSetup { this : MockitoSugar =>
 
   val inspectCmd = mock[InspectContainerCmd]
   val containerInfo = mock[InspectContainerResponse]
+  val nwSettings = mock[InspectContainerResponse#NetworkSettings]
+
   when(inspectCmd.exec()) thenReturn containerInfo
+  when(containerInfo.getNetworkSettings) thenReturn nwSettings
 
   ctNames.foreach { name =>
     when(mockClient.createContainerCmd(imageIds.get(name).get)) thenReturn createCmd

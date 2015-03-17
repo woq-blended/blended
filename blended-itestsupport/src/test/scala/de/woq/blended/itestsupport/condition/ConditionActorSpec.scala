@@ -19,11 +19,12 @@ package de.woq.blended.itestsupport.condition
 import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import de.woq.blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import ConditionProvider._
 
 import de.woq.blended.itestsupport.protocol._
 
+@DoNotDiscover
 class ConditionActorSpec extends TestActorSys
   with WordSpecLike
   with Matchers

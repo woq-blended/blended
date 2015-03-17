@@ -32,8 +32,8 @@ class DockerContainer(containerId: String, name: String)(implicit client: Docker
   var mappedVolumes : List[Bind] = List.empty
   var ports : Map[String, NamedContainerPort] = Map.empty
 
-  private[DockerContainer] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
-  private[DockerContainer] val container  = client.createContainerCmd(id).withName(name).withTty(true).exec()
+  private[this] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
+  private[this] val container  = client.createContainerCmd(id).withName(name).withTty(true).exec()
 
   /**
    * @return The docker image id of the container.

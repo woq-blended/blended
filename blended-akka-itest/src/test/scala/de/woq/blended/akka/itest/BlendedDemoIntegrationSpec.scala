@@ -16,9 +16,16 @@
 
 package de.woq.blended.akka.itest
 
-import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
+import javax.jms.ConnectionFactory
+
+import de.woq.blended.itestsupport.condition.SequentialComposedCondition
+import de.woq.blended.itestsupport.jms.JMSAvailableCondition
+import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition}
+import de.woq.blended.itestsupport.{BlendedTestContext, BlendedIntegrationTestSupport}
 import de.woq.blended.testsupport.TestActorSys
+import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.SpecLike
+import scala.concurrent.duration._
 
 import scala.collection.immutable.IndexedSeq
 
@@ -33,36 +40,14 @@ class BlendedDemoIntegrationSpec extends TestActorSys
 
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 
-//  override def preCondition = {
-//    val t = 3600.seconds
 //
-//    SequentialComposedCondition(
-//      JMSAvailableCondition(amqConnectionFactory, Some(t)),
-//      JolokiaAvailableCondition(jmxRest, Some(t), Some("blended"), Some("blended")),
-//      CamelContextExistsCondition(
-//        jmxRest, Some("blended"), Some("blended"), "BlendedSample", Some(t)
-//      )
-//    )
-//  }
-//
-//  private lazy val jmxRest = {
-//    val url = Await.result(jolokiaUrl(ctName = "blended_demo_0", port = 8181), 3.seconds)
-//    url should not be None
-//    BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, url.get).asInstanceOf[String]
-//  }
-//
-//  private lazy val amqConnectionFactory = {
-//    val ctInfo  = Await.result(containerInfo("blended_demo_0"), 3.seconds)
-//    val address = ctInfo.getNetworkSettings.getIpAddress
-//
-//    val brokerUrl = s"tcp://$address:1883"
-//
-//    system.log.info(s"Using AMQ connection url [$brokerUrl]")
-//
-//    BlendedTestContext.set(
-//      BlendedDemoIntegrationSpec.amqConnectionFactory,
-//      new ActiveMQConnectionFactory(brokerUrl)
-//    ).asInstanceOf[ConnectionFactory]
-//  }
+
+  private lazy val jmxRest =
+    BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, "http://192.168.59.103:49157").asInstanceOf[String]
+
+  private lazy val amqConnectionFactory = BlendedTestContext.set(
+      BlendedDemoIntegrationSpec.amqConnectionFactory,
+      new ActiveMQConnectionFactory("tcp:192.168.59.103:1883")
+    ).asInstanceOf[ConnectionFactory]
 
 }

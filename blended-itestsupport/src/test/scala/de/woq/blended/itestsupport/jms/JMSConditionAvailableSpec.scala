@@ -5,9 +5,11 @@ import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.condition.{Condition, AsyncCondition, ConditionActor, ParallelComposedCondition}
 import de.woq.blended.itestsupport.protocol._
 import org.apache.activemq.ActiveMQConnectionFactory
+import org.scalatest.DoNotDiscover
 
 import scala.concurrent.duration._
 
+@DoNotDiscover
 class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
   "The JMS Available Condition" should {

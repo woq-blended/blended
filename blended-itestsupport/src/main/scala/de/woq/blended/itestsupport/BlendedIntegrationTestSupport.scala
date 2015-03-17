@@ -16,29 +16,23 @@
 
 package de.woq.blended.itestsupport
 
-import akka.actor.Props
-import akka.testkit.{TestProbe, TestKit}
-import de.woq.blended.itestsupport.docker.DockerContainerProxy
-import de.woq.blended.itestsupport.docker.protocol._
-import org.scalatest.{BeforeAndAfterAll, Matchers, Suite}
+import akka.testkit.TestKit
+import org.scalatest.Matchers
 
 trait BlendedIntegrationTestSupport
-  extends Suite
-  with Matchers
-  with BeforeAndAfterAll { this: TestKit =>
+  extends Matchers { this: TestKit =>
   
-  val dockerProxyProbe = new TestProbe(system)
-  
-  def dockerConnect : Unit = {
-    system.eventStream.subscribe(dockerProxyProbe.ref, classOf[ContainerProxyStarted])
-    system.actorOf(Props[DockerContainerProxy]) ! StartContainerProxy
-    
-    dockerProxyProbe.expectMsgType[ContainerProxyStarted]
-  }
-  
-  dockerConnect
+//  val dockerProxyProbe = new TestProbe(system)
+//
+//  def dockerConnect : Unit = {
+//    system.eventStream.subscribe(dockerProxyProbe.ref, classOf[ContainerProxyStarted])
+//    system.actorOf(Props[DockerContainerProxy]) ! StartContainerProxy
+//
+//    dockerProxyProbe.expectMsgType[ContainerProxyStarted]
+//  }
+//
+//  dockerConnect
 
-//  import de.woq.blended.itestsupport.condition.ConditionProvider._
 //
 //  implicit val system: ActorSystem
 //  private val log = system.log

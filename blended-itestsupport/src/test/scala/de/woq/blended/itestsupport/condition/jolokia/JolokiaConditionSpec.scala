@@ -21,11 +21,12 @@ import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.condition.{Condition, AsyncCondition, ConditionActor}
 import de.woq.blended.itestsupport.jolokia.{JolokiaAvailableCondition, JolokiaAvailableChecker}
 import de.woq.blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
 import de.woq.blended.itestsupport.protocol._
 import scala.concurrent.duration._
 
+@DoNotDiscover
 class JolokiaConditionSpec extends TestActorSys
   with WordSpecLike
   with Matchers {

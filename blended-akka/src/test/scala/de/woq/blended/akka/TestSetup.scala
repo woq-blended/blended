@@ -33,7 +33,7 @@ trait TestSetup { this : MockitoSugar =>
 
   when(osgiContext.getServiceReference(classOf[ContainerContext])) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
-  when(ctContext.getContainerConfigDirectory) thenReturn (getClass.getResource("/").getPath)
+  when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
   when(svcRef.getBundle) thenReturn (bundle)
   when(bundle.getBundleContext) thenReturn (osgiContext)
   when(osgiContext.getServiceReference(classOf[TestInterface1])) thenReturn(svcRef)

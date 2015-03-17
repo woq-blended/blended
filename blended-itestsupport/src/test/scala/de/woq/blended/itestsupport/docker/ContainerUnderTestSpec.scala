@@ -21,10 +21,11 @@ import com.typesafe.config.Config
 import de.woq.blended.itestsupport.ContainerUnderTest
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
 import scala.collection.convert.Wrappers.JListWrapper
 
+@DoNotDiscover
 class ContainerUnderTestSpec extends TestActorSys
   with WordSpecLike
   with Matchers

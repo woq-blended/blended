@@ -25,7 +25,7 @@ import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
-  override def configDirectory: String = getClass.getResource("/").getPath
+  override def configDirectory: String = "./target/test-classes"
 }
 
 class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFactory.parseString(

@@ -17,7 +17,6 @@
 package de.woq.blended.itestsupport.condition
 
 import com.typesafe.config.ConfigFactory
-
 import scala.concurrent.duration._
 
 /**
@@ -40,8 +39,8 @@ trait Condition {
     config.getConfig("de.woq.blended.itestsupport.condition")
   }
 
-  override def toString = s"Condition(${description}, ${timeout})"
+  override def toString = s"Condition($description, $timeout)"
 
-  private def defaultTimeout = config.getLong("defaultTimeout").millis
-  private def defaultInterval = config.getLong("checkfrequency").millis
+  private[this] def defaultTimeout = config.getLong("defaultTimeout").millis
+  private[this] def defaultInterval = config.getLong("checkfrequency").millis
 }

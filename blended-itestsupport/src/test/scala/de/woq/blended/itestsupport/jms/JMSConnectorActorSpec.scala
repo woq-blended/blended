@@ -23,11 +23,13 @@ import akka.util.Timeout
 import de.woq.blended.itestsupport.jms.protocol._
 import de.woq.blended.util.protocol._
 import org.apache.activemq.ActiveMQConnectionFactory
+import org.scalatest.DoNotDiscover
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
 
+@DoNotDiscover
 class JMSConnectorActorSpec extends AbstractJMSSpec {
 
   "The JMSConnectorActor" should {

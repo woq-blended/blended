@@ -21,8 +21,9 @@ import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.testsupport.TestActorSys
 
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
+@DoNotDiscover
 class SequentialCheckerSpec extends TestActorSys
   with WordSpecLike
   with Matchers {

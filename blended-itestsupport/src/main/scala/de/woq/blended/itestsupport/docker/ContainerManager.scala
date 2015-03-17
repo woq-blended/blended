@@ -83,88 +83,90 @@ class EmbeddedContainerManager extends ContainerManager with DockerClientProvide
     implicit val logger = context.system.log
     DockerClientFactory(context.system.settings.config)
   }
-
-  def starting(
-    requestor           : ActorRef,
-    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
-    startingContainers  : List[ContainerUnderTest],
-    runningContainers   : List[ContainerUnderTest]
-  ) : Receive = LoggingReceive {
-    case ContainerStarted(result) => result match {
-      case Right(name) =>
-        pendingContainers.foreach { _._1 ! ContainerStarted(Right(name)) }
-        val startedCt = startingContainers.filter(_.ctName == name).head
-        val remaining = startingContainers.filter(_ != startedCt)
-        val started = startedCt :: runningContainers
-
-        if (pendingContainers.isEmpty && remaining.isEmpty) {
-          log.info(s"Container Manager started [$started]")
-          context.become(running(started))
-          requestor ! DockerContainerAvailable(Right(started))
-        } else {
-          context.become(starting(requestor, pendingContainers, remaining, started))
-        }
-      case Left(e) => 
-        log error s"Errot in starting docker containers [${e.getMessage}]"
-        requestor ! Left(e)
-        context.stop(self)
-    }
-    case DependenciesStarted(result) => result match {
-      case Right(ct) =>
-        val pending  = pendingContainers.filter(_._1 != sender())
-        val ctActor  = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
-        ctActor ! StartContainer(ct.containerName)
-        val cut = pendingContainers.filter(_._1 == sender()).head._2
-        context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
-      case Left(e) => 
-        requestor ! DockerContainerAvailable(Left(e))
-        context.stop(self)
-    } 
-  }
-
-  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
-
-  def receive : Receive = {
-    case StartContainerManager(containers) =>
-      log info s"Initializing Container manager with [$containers]"
-
-      val cuts   = configureDockerContainer(containers)
-
-      val noDeps   = cuts.filter( _.links.isEmpty)
-      val withDeps = cuts.filter( _.links.nonEmpty)
-      val pending  = withDeps.map { cut =>
-        ( context.actorOf(Props(DependentContainerActor(cut.dockerContainer.get))), cut )
-      }
-
-      log.info(s"$noDeps")
-      log.info(s"$withDeps")
-
-      noDeps.foreach{ startContainer }
-
-      context.become(starting(sender, pending, noDeps, List.empty))
-  }
   
-  private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
-    cut.map { ct =>
-      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
-        val ctName = s"${ct.ctName}_$idx"
+  def receive = Actor.emptyBehavior
 
-        val dc = new DockerContainer(img.getId, ctName)
-
-        ct.links.foreach { cl => dc.withLink(s"${cl.container}:${cl.hostname}")}
-        dc.withNamedPorts(ct.ports.values.toSeq)
-
-        ct.copy(ctName = ctName, dockerContainer = Some(dc))
-      }
-    }.flatten
-  }
-  
-  private[this] def startContainer(cut : ContainerUnderTest) : Unit = {
-
-    val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer.get)), cut.ctName)
-    actor ! StartContainer(cut.ctName)
-
-  }
+//  def starting(
+//    requestor           : ActorRef,
+//    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
+//    startingContainers  : List[ContainerUnderTest],
+//    runningContainers   : List[ContainerUnderTest]
+//  ) : Receive = LoggingReceive {
+//    case ContainerStarted(result) => result match {
+//      case Right(name) =>
+//        pendingContainers.foreach { _._1 ! ContainerStarted(Right(name)) }
+//        val startedCt = startingContainers.filter(_.ctName == name).head
+//        val remaining = startingContainers.filter(_ != startedCt)
+//        val started = startedCt :: runningContainers
+//
+//        if (pendingContainers.isEmpty && remaining.isEmpty) {
+//          log.info(s"Container Manager started [$started]")
+//          context.become(running(started))
+//          requestor ! DockerContainerAvailable(Right(started))
+//        } else {
+//          context.become(starting(requestor, pendingContainers, remaining, started))
+//        }
+//      case Left(e) => 
+//        log error s"Errot in starting docker containers [${e.getMessage}]"
+//        requestor ! Left(e)
+//        context.stop(self)
+//    }
+//    case DependenciesStarted(result) => result match {
+//      case Right(ct) =>
+//        val pending  = pendingContainers.filter(_._1 != sender())
+//        val ctActor  = context.actorOf(Props(ContainerActor(ct)), ct.containerName)
+//        ctActor ! StartContainer(ct.containerName)
+//        val cut = pendingContainers.filter(_._1 == sender()).head._2
+//        context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
+//      case Left(e) => 
+//        requestor ! DockerContainerAvailable(Left(e))
+//        context.stop(self)
+//    } 
+//  }
+//
+//  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
+//
+//  def receive : Receive = {
+//    case StartContainerManager(containers) =>
+//      log info s"Initializing Container manager with [$containers]"
+//
+//      val cuts   = configureDockerContainer(containers)
+//
+//      val noDeps   = cuts.filter( _.links.isEmpty)
+//      val withDeps = cuts.filter( _.links.nonEmpty)
+//      val pending  = withDeps.map { cut =>
+//        ( context.actorOf(Props(DependentContainerActor(cut.dockerContainer.get))), cut )
+//      }
+//
+//      log.info(s"$noDeps")
+//      log.info(s"$withDeps")
+//
+//      noDeps.foreach{ startContainer }
+//
+//      context.become(starting(sender, pending, noDeps, List.empty))
+//  }
+//  
+//  private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
+//    cut.map { ct =>
+//      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
+//        val ctName = s"${ct.ctName}_$idx"
+//
+//        val dc = new DockerContainer(img.getId, ctName)
+//
+//        ct.links.foreach { cl => dc.withLink(s"${cl.container}:${cl.hostname}")}
+//        dc.withNamedPorts(ct.ports.values.toSeq)
+//
+//        ct.copy(ctName = ctName, dockerContainer = Some(dc))
+//      }
+//    }.flatten
+//  }
+//  
+//  private[this] def startContainer(cut : ContainerUnderTest) : Unit = {
+//
+//    val actor = context.actorOf(Props(ContainerActor(cut.dockerContainer.get)), cut.ctName)
+//    actor ! StartContainer(cut.ctName)
+//
+//  }
 }
 
 class ExternalContainerManager extends ContainerManager with DockerClientProvider {

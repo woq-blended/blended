@@ -10,4 +10,7 @@ de.woq.osgi.java.itest/common/
 *.backup
 *~
 *.pdf
-
+.settings
+.cache
+.project
+.classpath

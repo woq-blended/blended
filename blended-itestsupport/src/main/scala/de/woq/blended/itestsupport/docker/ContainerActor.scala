@@ -20,16 +20,16 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import com.github.dockerjava.api.model.ExposedPort
-import de.woq.blended.itestsupport.NamedContainerPort
+import de.woq.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 import de.woq.blended.itestsupport.docker.protocol._
 
 import scala.concurrent.duration._
 
 object ContainerActor {
-  def apply(container: DockerContainer) = new ContainerActor(container)
+  def apply(container: ContainerUnderTest) = new ContainerActor(container)
 }
 
-class ContainerActor(container: DockerContainer) extends Actor with ActorLogging {
+class ContainerActor(container: ContainerUnderTest) extends Actor with ActorLogging {
 
   case class PerformStart(container: DockerContainer)
 
@@ -51,50 +51,54 @@ class ContainerActor(container: DockerContainer) extends Actor with ActorLogging
 
   var pendingCommands : List[(ActorRef, Any)] = List.empty
 
-  def stopped : Receive = {
-    case StartContainer(n) if container.containerName == n  => {
-      val starter = context.actorOf(Props(ContainerStartActor()))
-      starter ! PerformStart(container)
-      context become LoggingReceive(starting(sender()) orElse getPorts )
-    }
-    case cmd => pendingCommands ::= (sender, cmd)
-  }
+//  def stopped : Receive = {
+//    case StartContainer(n) if container.ctName == n  => {
+//      container.dockerContainer match {
+//        case Some(dockerContainer) =>
+//          val starter = context.actorOf(Props(ContainerStartActor()))
+//          starter ! PerformStart(dockerContainer)
+//          context become LoggingReceive(starting(sender()) orElse getPorts )
+//        case None =>
+//      }
+//    }
+//    case cmd => pendingCommands ::= (sender, cmd)
+//  }
+//
+//  def starting(requestor : ActorRef) : Receive = {
+//    case msg : ContainerStarted =>
+//      requestor ! msg
+//      pendingCommands.reverse.map {
+//        case (requestor: ActorRef, cmd: Any) => self.tell(cmd, requestor)
+//      }
+//      context become LoggingReceive(started orElse getPorts)
+//    case cmd => pendingCommands ::= (sender, cmd)
+//  }
+//
+//  def started : Receive = {
+//    case StopContainer(n) if container.containerName == n  => {
+//      val requestor = sender
+//      container.stopContainer
+//      context become stopped
+//      requestor ! ContainerStopped(Right(container.containerName))
+//    }
+//    case InspectContainer(n) if container.containerName == n => {
+//      val requestor = sender
+//      requestor ! container.containerInfo
+//    }
+//  }
+//
+//  def getPorts : Receive = {
+//    case GetContainerPorts(n) if container.containerName == n => {
+//      val ports : Map[String, NamedContainerPort] =
+//        container.ports.mapValues { namedPort =>
+//          val exposedPort = new ExposedPort(namedPort.privatePort)
+//          val realPort = exposedPort.getPort
+//          NamedContainerPort(namedPort.name, realPort, None)
+//        }
+//      log.debug(s"Sending [${ContainerPorts(Right(ports))}] to [$sender]")
+//      sender ! ContainerPorts(Right(ports))
+//    }
+//  }
 
-  def starting(requestor : ActorRef) : Receive = {
-    case msg : ContainerStarted =>
-      requestor ! msg
-      pendingCommands.reverse.map {
-        case (requestor: ActorRef, cmd: Any) => self.tell(cmd, requestor)
-      }
-      context become LoggingReceive(started orElse getPorts)
-    case cmd => pendingCommands ::= (sender, cmd)
-  }
-
-  def started : Receive = {
-    case StopContainer(n) if container.containerName == n  => {
-      val requestor = sender
-      container.stopContainer
-      context become stopped
-      requestor ! ContainerStopped(Right(container.containerName))
-    }
-    case InspectContainer(n) if container.containerName == n => {
-      val requestor = sender
-      requestor ! container.containerInfo
-    }
-  }
-
-  def getPorts : Receive = {
-    case GetContainerPorts(n) if container.containerName == n => {
-      val ports : Map[String, NamedContainerPort] =
-        container.ports.mapValues { namedPort =>
-          val exposedPort = new ExposedPort(namedPort.privatePort)
-          val realPort = exposedPort.getPort
-          NamedContainerPort(namedPort.name, realPort, None)
-        }
-      log.debug(s"Sending [${ContainerPorts(Right(ports))}] to [$sender]")
-      sender ! ContainerPorts(Right(ports))
-    }
-  }
-
-  def receive = LoggingReceive(stopped)
+  def receive = LoggingReceive(Actor.emptyBehavior)
 }
