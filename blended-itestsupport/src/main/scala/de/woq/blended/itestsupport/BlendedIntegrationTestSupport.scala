@@ -18,9 +18,37 @@ package de.woq.blended.itestsupport
 
 import akka.testkit.TestKit
 import org.scalatest.Matchers
+import de.woq.blended.itestsupport.condition.{Condition, ConditionActor}
+import akka.actor.Props
+import akka.pattern.ask
+import scala.concurrent.Await
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import scala.concurrent.Future
+import de.woq.blended.itestsupport.camel.TestCamelContext
+import akka.actor.ActorSystem
+import scala.collection.convert.Wrappers.JListWrapper
+import scala.concurrent.duration._
+import akka.actor.ActorRef
+import de.woq.blended.itestsupport.protocol._
+import akka.util.Timeout
 
 trait BlendedIntegrationTestSupport
   extends Matchers { this: TestKit =>
+    
+  implicit val system: ActorSystem 
+  private val log = system.log
+
+    def testContext(ctProxy : ActorRef) : Future[BlendedTestContext] = {
+    
+      implicit val timeout = Timeout(1.second)
+      
+      val cuts = JListWrapper(system.settings.config.getConfigList("docker.containers")).map { cfg =>
+        ContainerUnderTest(cfg)
+      }.toList.map( ct => (ct.ctName, ct)).toMap
+      
+      (ctProxy ? TestContextRequest(cuts)).mapTo[BlendedTestContext] 
+    }
   
 //  val dockerProxyProbe = new TestProbe(system)
 //
@@ -34,8 +62,6 @@ trait BlendedIntegrationTestSupport
 //  dockerConnect
 
 //
-//  implicit val system: ActorSystem
-//  private val log = system.log
 //
 //  private val mgrName = "ContainerManager"
 //
@@ -111,21 +137,21 @@ trait BlendedIntegrationTestSupport
 //    (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
 //  }
 //
-//  def assertCondition(condition: Condition) : Boolean = {
-//
-//    implicit val eCtxt = system.dispatcher
-//
-//    val checker = system.actorOf(Props(ConditionActor(condition)))
-//
-//    val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
-//      result match {
-//        case cr: ConditionCheckResult => cr.allSatisfied
-//        case _ => false
-//      }
-//    }
-//
-//    Await.result(checkFuture, condition.timeout)
-//  }
-//
-//  def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
+  def assertCondition(condition: Condition) : Boolean = {
+
+    implicit val eCtxt = system.dispatcher
+
+    val checker = system.actorOf(Props(ConditionActor(condition)))
+
+    val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
+      result match {
+        case cr: ConditionCheckResult => cr.allSatisfied
+        case _ => false
+      }
+    }
+
+    Await.result(checkFuture, condition.timeout)
+  }
+
+  def testProperties(configKey: String) : Config = ConfigFactory.load().getConfig(configKey)
 }

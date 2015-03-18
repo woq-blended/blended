@@ -23,7 +23,6 @@ import de.woq.blended.testsupport.TestActorSys
 
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
-@DoNotDiscover
 class SequentialCheckerSpec extends TestActorSys
   with WordSpecLike
   with Matchers {

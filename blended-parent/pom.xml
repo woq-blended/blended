@@ -45,10 +45,10 @@
 
     <!-- library versions -->
 
-    <activemq.version>5.11.1</activemq.version>
+    <activemq.version>5.10.1</activemq.version>
     <camel.version>2.14.0</camel.version>
     <karaf.version>2.3.6</karaf.version>
-    <hawtio.version>1.4.22</hawtio.version>
+    <hawtio.version>1.4.45</hawtio.version>
 
     <activeio.version>3.1.4</activeio.version>
     <akka.version>2.3.7</akka.version>

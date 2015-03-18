@@ -21,12 +21,15 @@ import com.typesafe.config.Config
 import scala.collection.convert.Wrappers.JListWrapper
 
 object NamedContainerPort {
-  def apply(config : Config) : NamedContainerPort = NamedContainerPort(
-    config.getString("name"),
-    config.getInt("private")
-  )
+  def apply(config : Config) : NamedContainerPort = {
+    val privatePort = config.getInt("private")
+    val publicPort = if (config.hasPath("public")) 
+      config.getInt("public")
+    else
+      privatePort
 
-  def apply(name: String, privatePort: Int) : NamedContainerPort = NamedContainerPort(name, privatePort, privatePort)
+    NamedContainerPort(config.getString("name"), privatePort, publicPort)
+  }   
 }
 
 case class NamedContainerPort(
@@ -58,6 +61,10 @@ case class ContainerLink(
 )
 
 object ContainerUnderTest {
+  def containerMap(config: Config) = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
+      ContainerUnderTest(cfg)
+    }.toList.map( ct => (ct.ctName, ct)).toMap
+      
   def apply(config : Config) : ContainerUnderTest = {
     
     val volumes : List[VolumeConfig] = if (config.hasPath("volumes"))
@@ -100,5 +107,14 @@ case class ContainerUnderTest(
   volumes         : List[VolumeConfig] = List.empty,
   links           : List[ContainerLink],                             
   ports           : Map[String, NamedContainerPort] = Map.empty
-)
+) {
+  
+  val DEFAULT_PROTOCOL = "tcp"
+  
+  def url(portName: String, host: String = "127.0.0.1", protocol: String = DEFAULT_PROTOCOL) : Option[String] = 
+    ports.get(portName) match {
+      case None => None
+      case Some(p) => Some(s"$protocol://$host:${p.publicPort}")
+    }
+}
 

@@ -29,7 +29,6 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Random
 
-@DoNotDiscover
 class JMSConnectorActorSpec extends AbstractJMSSpec {
 
   "The JMSConnectorActor" should {

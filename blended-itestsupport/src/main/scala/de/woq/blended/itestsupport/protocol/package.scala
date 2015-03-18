@@ -17,12 +17,11 @@
 package de.woq.blended.itestsupport
 
 import de.woq.blended.itestsupport.condition.{AsyncCondition, Condition}
+import de.woq.blended.itestsupport.camel.TestCamelContext
 
 package object protocol {
 
-  case object ResetPortRange
-  case object GetPort
-  case class FreePort(p: Int)
+  type IntegrationTest[T] = TestCamelContext => Option[T] 
 
   // Use this object to query an actor that encapsulates a condition.
   case object CheckCondition
@@ -30,6 +29,7 @@ package object protocol {
   // Use this object to kick off an Asynchronous checker
   case class CheckAsyncCondition(condition: AsyncCondition)
 
+  // This message collects the results of nested Conditions
   object ConditionCheckResult {
     def apply(results: List[ConditionCheckResult]) = {
       new ConditionCheckResult(
@@ -38,6 +38,7 @@ package object protocol {
       )
     }
   }
+  
   case class ConditionCheckResult(satisfied: List[Condition], timedOut: List[Condition]) {
     def allSatisfied = timedOut.isEmpty
 
@@ -46,5 +47,12 @@ package object protocol {
         s"\nA total of [${timedOut.size}] conditions have timed out", "\n", ""
       )
   }
+  
+  // Use this to kick off the creation of a TestContext based on configured Containers under Test
+  case class TestContextRequest(cuts: Map[String, ContainerUnderTest])
+  
+  // This class returns a TestCamelContext that can be used for the integration tests or an Exception if 
+  // the context cannot be created
+  case class TestContextResponse(context: Either[Throwable, TestCamelContext])
 
 }

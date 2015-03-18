@@ -24,7 +24,6 @@ import ConditionProvider._
 
 import de.woq.blended.itestsupport.protocol._
 
-@DoNotDiscover
 class ConditionActorSpec extends TestActorSys
   with WordSpecLike
   with Matchers

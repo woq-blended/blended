@@ -25,7 +25,6 @@ import ConditionProvider._
 
 import de.woq.blended.itestsupport.protocol._
 
-@DoNotDiscover
 class ComposedConditionSpec extends TestActorSys
   with WordSpecLike
   with Matchers {

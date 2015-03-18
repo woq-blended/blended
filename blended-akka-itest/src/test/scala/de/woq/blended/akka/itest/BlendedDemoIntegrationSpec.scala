@@ -17,7 +17,6 @@
 package de.woq.blended.akka.itest
 
 import javax.jms.ConnectionFactory
-
 import de.woq.blended.itestsupport.condition.SequentialComposedCondition
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition}
@@ -26,28 +25,18 @@ import de.woq.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.scalatest.SpecLike
 import scala.concurrent.duration._
-
 import scala.collection.immutable.IndexedSeq
+import de.woq.blended.itestsupport.TestContextProvider
+import de.woq.blended.itestsupport.BlendedTestContextManager
+import de.woq.blended.itestsupport.camel.TestCamelContext
 
-object BlendedDemoIntegrationSpec {
-  val amqConnectionFactory = "amqConnectionFactory"
-  val jmxRest = "jmxRest"
-}
+import de.woq.blended.itestsupport.ContainerUnderTest
+import org.apache.camel.component.jms.JmsComponent
 
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport {
-
+  
+  
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
-
-//
-
-  private lazy val jmxRest =
-    BlendedTestContext.set(BlendedDemoIntegrationSpec.jmxRest, "http://192.168.59.103:49157").asInstanceOf[String]
-
-  private lazy val amqConnectionFactory = BlendedTestContext.set(
-      BlendedDemoIntegrationSpec.amqConnectionFactory,
-      new ActiveMQConnectionFactory("tcp:192.168.59.103:1883")
-    ).asInstanceOf[ConnectionFactory]
-
 }

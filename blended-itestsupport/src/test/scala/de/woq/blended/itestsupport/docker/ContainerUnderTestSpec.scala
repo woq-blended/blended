@@ -25,7 +25,6 @@ import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
 import scala.collection.convert.Wrappers.JListWrapper
 
-@DoNotDiscover
 class ContainerUnderTestSpec extends TestActorSys
   with WordSpecLike
   with Matchers
@@ -41,15 +40,23 @@ class ContainerUnderTestSpec extends TestActorSys
     }
   }
 
-  "The Docker trait" should {
+  "The Container Under Test" should {
 
-    "Read the CuT's from the configuration" in {
+    "be configurable from the configuration" in {
       
-      val cuts = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
-        ContainerUnderTest(cfg)
-      }.toList
+      val cuts = ContainerUnderTest.containerMap(config)
+      
+      system.log.info(s"$cuts")
       
       cuts should have size(ctNames.size)
+      
+      cuts.get("jms_demo") should not be None
+      cuts.get("blended_demo") should not be None
+      
+      cuts("jms_demo").url("http") should be(Some("tcp://127.0.0.1:49172"))
+      cuts("jms_demo").url("http", "192.168.59.103") should be(Some("tcp://192.168.59.103:49172"))
+      cuts("jms_demo").url("http", "192.168.59.103", "http") should be (Some("http://192.168.59.103:49172"))
+      
     }
   }
 }

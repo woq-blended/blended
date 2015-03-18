@@ -22,7 +22,6 @@ import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 
-@DoNotDiscover
 class ParallelCheckerSpec extends TestActorSys
   with WordSpecLike
   with Matchers

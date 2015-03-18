@@ -24,7 +24,6 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
 
-@DoNotDiscover
 class DependentContainerActorSpec extends TestActorSys
   with WordSpecLike
   with Matchers

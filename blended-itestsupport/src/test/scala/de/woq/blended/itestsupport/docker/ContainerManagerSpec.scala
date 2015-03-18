@@ -28,7 +28,6 @@ import scala.concurrent.duration._
 
 import de.woq.blended.itestsupport.docker.protocol._
 
-@DoNotDiscover
 class ContainerManagerSpec extends TestActorSys
   with WordSpecLike
   with Matchers

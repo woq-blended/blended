@@ -22,7 +22,6 @@ import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
-@DoNotDiscover
 class DockerContainerSpec extends WordSpec
   with Matchers
   with DockerTestSetup

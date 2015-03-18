@@ -16,20 +16,33 @@
 
 package de.woq.blended.itestsupport.camel
 
+import akka.actor.{Actor, ActorLogging}
 import org.apache.camel.Component
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.mock.MockEndpoint
 import org.apache.camel.impl.DefaultCamelContext
 import org.slf4j.LoggerFactory
+import akka.event.LoggingReceive
+import de.woq.blended.itestsupport.protocol.IntegrationTest
 
-object TestCamelContext {
-  def withTestContext(body: TestCamelContext => Option[Any])(implicit testContext: TestCamelContext) : Unit = {
-
-    try {
-      body(testContext)
-    } catch {
-      case t : Throwable => throw t
-    } finally testContext.stop()
+trait TestExecutor[T] extends Actor with ActorLogging {
+  
+  def test : IntegrationTest[T]
+  
+  final def receive: Actor.Receive = LoggingReceive {
+    case (tc: TestCamelContext) => 
+      log.info("-" * 80)
+      
+      val result = try {
+        Right(test(tc))
+      } catch {
+        case t : Throwable => Left(t)
+      } finally {
+        //tc.stop()
+      }
+      
+      log.info(s"YYYY : $result")
+      sender ! result
   }
 }
 
@@ -37,15 +50,16 @@ class TestCamelContext() extends DefaultCamelContext with CamelTestSupport {
 
   private val log = LoggerFactory.getLogger(classOf[TestCamelContext])
 
+  @throws[Exception]
   def mockEndpoint(name: String) = getEndpoint(s"mock://${name}").asInstanceOf[MockEndpoint]
 
-  def withComponent(compName: String, component: Component) = {
+  def withComponent(compName: String, component: Component) : TestCamelContext = {
     log.debug(s"Adding component [${compName}] to TestCamelContext")
     addComponent(compName, component)
     this
   }
 
-  def withMock(mockName: String, mockUri: String) = {
+  def withMock(mockName: String, mockUri: String) : TestCamelContext = {
     log.debug(s"Adding mock endpoint and route [${mockName}] to TestCamelContext.")
 
     addRoutes( new RouteBuilder() {

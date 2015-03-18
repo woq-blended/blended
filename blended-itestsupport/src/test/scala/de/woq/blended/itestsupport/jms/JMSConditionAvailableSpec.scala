@@ -9,7 +9,6 @@ import org.scalatest.DoNotDiscover
 
 import scala.concurrent.duration._
 
-@DoNotDiscover
 class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
   "The JMS Available Condition" should {
