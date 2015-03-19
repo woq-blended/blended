@@ -18,28 +18,26 @@ package de.woq.blended.itestsupport
 
 import akka.actor.Actor
 import akka.actor.ActorLogging
-import de.woq.blended.itestsupport.camel.TestCamelContext
 import de.woq.blended.akka.MemoryStash
 import akka.event.LoggingReceive
 import akka.actor.PoisonPill
 import de.woq.blended.itestsupport.protocol.TestContextRequest
+import akka.camel.CamelExtension
+import org.apache.camel.CamelContext
 
-case class BlendedTestContext(
-  testCamelContext : TestCamelContext, 
-  cuts : Map[String, ContainerUnderTest]
-)
-
-class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextProvider =>
+class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
+  
+  val camel = CamelExtension(context.system)
   
   def initializing : Receive = LoggingReceive {
     case req : TestContextRequest => 
-      val blendedTestContext = BlendedTestContext(testContext(req.cuts), req.cuts)
-      context.become(working(blendedTestContext))
-      sender ! blendedTestContext
+      val camelCtxt = configure(req.cuts, camel.context)
+      context.become(working(camelCtxt))
+      sender ! camelCtxt
       unstash()
   } 
   
-  def working(testContext: BlendedTestContext) = LoggingReceive {
+  def working(testContext: CamelContext) = LoggingReceive {
     case m => log info s"$m"
   } 
     

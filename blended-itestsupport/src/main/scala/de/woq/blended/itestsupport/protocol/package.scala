@@ -17,11 +17,9 @@
 package de.woq.blended.itestsupport
 
 import de.woq.blended.itestsupport.condition.{AsyncCondition, Condition}
-import de.woq.blended.itestsupport.camel.TestCamelContext
+import org.apache.camel.CamelContext
 
 package object protocol {
-
-  type IntegrationTest[T] = TestCamelContext => Option[T] 
 
   // Use this object to query an actor that encapsulates a condition.
   case object CheckCondition
@@ -53,6 +51,6 @@ package object protocol {
   
   // This class returns a TestCamelContext that can be used for the integration tests or an Exception if 
   // the context cannot be created
-  case class TestContextResponse(context: Either[Throwable, TestCamelContext])
+  case class TestContextResponse(context: Either[Throwable, CamelContext])
 
 }

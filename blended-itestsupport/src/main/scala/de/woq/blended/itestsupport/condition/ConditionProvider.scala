@@ -40,7 +40,7 @@ class DelayedTrue(d: FiniteDuration) extends Condition {
   private val created = System.currentTimeMillis()
 
   override def satisfied(): Boolean = (System.currentTimeMillis() - created) >= d.toMillis
-  override val description = s"DelayedTrue[${id}]"
+  override val description = s"DelayedTrue[$id]"
 }
 
 object ConditionProvider {

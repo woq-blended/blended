@@ -16,27 +16,17 @@
 
 package de.woq.blended.akka.itest
 
-import javax.jms.ConnectionFactory
-import de.woq.blended.itestsupport.condition.SequentialComposedCondition
-import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition}
-import de.woq.blended.itestsupport.{BlendedTestContext, BlendedIntegrationTestSupport}
-import de.woq.blended.testsupport.TestActorSys
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.SpecLike
-import scala.concurrent.duration._
-import scala.collection.immutable.IndexedSeq
-import de.woq.blended.itestsupport.TestContextProvider
-import de.woq.blended.itestsupport.BlendedTestContextManager
-import de.woq.blended.itestsupport.camel.TestCamelContext
+
 
 import de.woq.blended.itestsupport.ContainerUnderTest
 import org.apache.camel.component.jms.JmsComponent
+import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
+import de.woq.blended.testsupport.TestActorSys
+import org.scalatest.SpecLike
 
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport {
   
-  
-  override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
+  //override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
 }

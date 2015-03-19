@@ -16,25 +16,27 @@
 
 package de.woq.blended.itestsupport
 
-import de.woq.blended.itestsupport.camel.TestCamelContext
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import de.woq.blended.itestsupport.protocol._
+import akka.camel.CamelExtension
+import org.apache.camel.CamelContext
 
-trait TestContextProvider {
-
-  def testContext(cuts : Map[String, ContainerUnderTest]) : TestCamelContext
+trait TestContextConfigurator {
+  def configure(cuts : Map[String, ContainerUnderTest], context: CamelContext) : CamelContext
 }
 
-class TestContextCreator extends Actor with ActorLogging { this : TestContextProvider =>
+class TestContextCreator extends Actor with ActorLogging { this : TestContextConfigurator =>
+  
+  val camel = CamelExtension(context.system)
   
   def receive = LoggingReceive {
     case r : TestContextRequest => 
       log debug s"Creating TestCamelContext for CUT's [${r.cuts}]"
       
       val result = try 
-        Right(testContext(r.cuts)) 
+        Right(configure(r.cuts, camel.context)) 
       catch {
         case t : Throwable => Left(t)
       }

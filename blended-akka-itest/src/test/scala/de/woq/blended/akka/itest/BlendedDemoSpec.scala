@@ -18,23 +18,29 @@ package de.woq.blended.akka.itest
 
 import javax.jms.ConnectionFactory
 import akka.util.Timeout
-import de.woq.blended.itestsupport.BlendedTestContext
-import de.woq.blended.itestsupport.camel.{CamelTestSupport, TestCamelContext}
 import de.woq.blended.testsupport.TestActorSys
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.itestsupport.BlendedTestContextManager
-import de.woq.blended.itestsupport.TestContextProvider
 import de.woq.blended.itestsupport.ContainerUnderTest
 import org.apache.activemq.ActiveMQConnectionFactory
 import akka.actor.Props
 import scala.util.{Success, Failure}
-import de.woq.blended.itestsupport.camel.TestExecutor
-import de.woq.blended.itestsupport.protocol.IntegrationTest
 import akka.pattern.{pipe, ask}
 import scala.concurrent.Await
+import akka.testkit.TestActorRef
+import de.woq.blended.itestsupport.camel.CamelMockActor
+import de.woq.blended.itestsupport.camel.CamelTestSupport
+import de.woq.blended.itestsupport.ContainerUnderTest
+import de.woq.blended.itestsupport.BlendedTestContextManager
+import de.woq.blended.itestsupport.camel.CamelMockActor
+import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
+import de.woq.blended.itestsupport.TestContextConfigurator
+import org.apache.camel.CamelContext
+import de.woq.blended.itestsupport.camel.MockAssertions._
+import de.woq.blended.itestsupport.camel.protocol._
 
 @DoNotDiscover
 class BlendedDemoSpec extends TestActorSys
@@ -46,18 +52,15 @@ class BlendedDemoSpec extends TestActorSys
   implicit val timeOut = new Timeout(3.seconds)
   implicit val eCtxt = system.dispatcher
 
-  class TestContainerProxy extends BlendedTestContextManager with TestContextProvider {
-    def testContext(cuts: Map[String, ContainerUnderTest]): TestCamelContext = {
+  class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
+    def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
       
       val dockerHost = context.system.settings.config.getString("docker.host")
       
       val jmxRest = cuts("blended_demo").url("http", dockerHost, "http")
       val amqUrl = cuts("blended_demo").url("jms", dockerHost, "tcp")
-      
-      val testContext = new TestCamelContext()
-        .withComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl.get)))
-        
-      testContext
+      camelCtxt.addComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl.get)))
+      camelCtxt
     }
   }
 
@@ -68,41 +71,22 @@ class BlendedDemoSpec extends TestActorSys
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
       
-      val test = system.actorOf(Props(new TestExecutor[Int]() {
-        
-        @throws[Exception]
-        override def test : IntegrationTest[Int]= { ctxt =>
-          implicit val camelContext = ctxt
+      Await.result(testContext(ctProxy), 3.seconds)
+      
+      val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
  
-          ctxt.withMock("sampleOut", "jms:queue:SampleOut")
-          ctxt.start()
-  
-          val mock = ctxt.mockEndpoint("sampleOut")
-          mock.reset()
-          mock.setExpectedMessageCount(100)
-          mock.expectedBodyReceived().constant("Hello Blended!")
-  
-          ctxt.sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {
-            case Right(exchange) =>
-              log.info(s"XXXX --- ${mock.getExchanges.size()}")
-              mock.assertIsSatisfied(2000l)
-              log.info(s"XXXX --- ${mock.getExchanges.size()}")
-              exchange.getIn.getBody should be ("Hello Blended!")
-            case Left(e) => fail(e)
-          }
-
-          Some(0)
-        }
-        
-      }))
-      
-      val result = (for(
-        tc <- testContext(ctProxy);
-        r <- (test ? tc.testCamelContext).mapTo[Either[Throwable, Option[Int]]]
-      ) yield r)
-      
-      Await.result(result, 30.seconds) should be (Right(Some(0)))
+      sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {
+        case Right(msg) =>
+          // make sure the message reaches the mock actors before we start assertions
+          mockProbe.receiveN(1)
+          mock ! CheckAssertions(expectedMessageCount(2))
+          // Eventually the mock will answer with the checkresults
+          val r = receiveN(1).toList.head.asInstanceOf[CheckResults]
+          errors(r) should be (List.empty)        
+        case Left(e) => 
+          log.error(e.getMessage, e)
+          fail(e.getMessage)
+      }
     }
   }
-
 }

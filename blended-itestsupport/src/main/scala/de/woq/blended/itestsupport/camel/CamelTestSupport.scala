@@ -16,140 +16,117 @@
 
 package de.woq.blended.itestsupport.camel
 
+import scala.Left
+import scala.Right
+import scala.collection.convert.Wrappers.JMapWrapper
+
+import org.apache.camel.CamelContext
+import org.apache.camel.Exchange
+import org.apache.camel.ExchangePattern
+import org.apache.camel.Message
+import org.apache.camel.impl.DefaultExchange
+
+import akka.camel.CamelMessage
+import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.testsupport.XMLMessageFactory
 import de.woq.blended.util.FileReader
-import org.apache.camel._
-import org.apache.camel.builder.RouteBuilder
-import org.apache.camel.component.mock.MockEndpoint
-import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
-import org.slf4j.{Logger, LoggerFactory}
 
-import scala.collection.convert.Wrappers.JCollectionWrapper
+trait CamelTestSupport { this : BlendedIntegrationTestSupport =>
 
-trait CamelTestSupport {
-
-  private final val LOGGER: Logger = LoggerFactory.getLogger(classOf[CamelTestSupport])
-
-  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+  private [CamelTestSupport] val log = system.log
+  
+  def sendTestMessage(message: String, uri: String, binary: Boolean): Either[Exception, CamelMessage] = {
     sendTestMessage(message, Map.empty, uri, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean) : Either[Exception, CamelMessage] = {
     sendTestMessage(message, properties, uri, true, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluteXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, Exchange] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean) : Either[Exception, CamelMessage] = {
 
-    val exchange = createExchange(message, properties, evaluteXML, binary)
+    val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOnly)
 
-    val producer : ProducerTemplate = context.createProducerTemplate
+    val producer = camel.template
     val response : Exchange = producer.send(uri, exchange)
 
     if (response.getException != null) {
-      LOGGER.warn(s"Message not sent to [$uri]")
+      log.warning(s"Message not sent to [$uri]")
       Left(response.getException())
     }
     else {
-      LOGGER.info(s"Sent test message to [$uri]")
-      Right(response)
+      log.info(s"Sent test message to [$uri]")
+      Right(camelMessage(exchange.getIn))
     }
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Exchange = {
+  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean) : Either[Exception, CamelMessage] = {
     executeRequest(message, properties, uri, true, binary)
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Exchange = {
-    val exchange = createExchange(message, properties, evaluateXML, binary)
+  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean) : Either[Exception, CamelMessage] = {
+    val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOut)
 
-    val producer = context.createProducerTemplate
-    producer.send(uri, exchange)
+    val producer = camel.template
+    val response = producer.send(uri, exchange)
+    
+    if (response.getException != null) {
+      log.warning(s"Executing request on [$uri] failed")
+      Left(response.getException)
+    } else {
+      Right(camelMessage(response.getOut))
+    }
   }
 
-  def headerExists(exchange: Exchange, headerName: String) = exchange.getIn.getHeader(headerName) != null
+  def headerExists(msg: CamelMessage, headerName: String) = msg.getHeaders.containsKey(headerName)
 
-  def missingHeaderNames(exchange: Exchange, mandatoryHeaders: List[String]) =
+  def missingHeaderNames(exchange: CamelMessage, mandatoryHeaders: List[String]) =
     mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
 
-  private def createExchange(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) = {
-    var msg: Option[Message] =  evaluateXML match {
+  def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean) : CamelMessage = 
+    (evaluateXML match {
       case true => createMessageFromXML(message, binary)
       case false => createMessageFromFile(message, properties)
+    }) match {
+      case None =>
+        log.info(s"Using text as msg body: [$message]")
+        CamelMessage(message, properties)
+      case Some(m) => m
     }
 
-    if (msg == None) {
-      LOGGER.info(s"Using text as msg body: [$message]")
-      msg = Some(new DefaultMessage)
-      msg.get.setBody(message)
-      addMessageProperties(msg, properties)
-    }
-
-    val sent = new DefaultExchange(context)
-    sent.setIn(msg.get)
-
-    sent
-  }
-
-  private def createMessageFromFile(message: String, props: Map[String, String]) : Option[Message] = {
-
+  private[this] def createMessageFromFile(message: String, props: Map[String, String]) : Option[CamelMessage] = {
     try {
       val content: Array[Byte] = FileReader.readFile(message)
-      val result = Some(new DefaultMessage)
-      result.get.setBody(content)
-      LOGGER.info("Body length is [" + content.length + "]")
-      addMessageProperties(result, props)
-      result
+      log.info("Body length is [" + content.length + "]")
+      Some(CamelMessage(content, props.mapValues { _.asInstanceOf[Any] } ))
     } catch {
       case e: Exception => None
     }
   }
 
-  private def createMessageFromXML(message: String, binary: Boolean): Option[Message] = {
-
+  private[this] def createMessageFromXML(message: String, binary: Boolean): Option[CamelMessage] = {
     try {
       binary match {
-        case true  => Some(new XMLMessageFactory(message).createBinaryMessage())
-        case false => Some(new XMLMessageFactory(message).createTextMessage())
+        case true  => Some(camelMessage(new XMLMessageFactory(message).createBinaryMessage()))
+        case false => Some(camelMessage(new XMLMessageFactory(message).createTextMessage()))
       }
     } catch {
       case e: Exception => None
     }
   }
 
-  private def addMessageProperties(message: Option[Message], props: Map[String, String]) : Option[Message] = {
-
-    message.foreach { msg =>
-      props.keys.foreach { propName =>
-        val propValue = props(propName)
-        LOGGER.info(s"Setting property [$propName] = [$propValue]")
-        msg.setHeader(propName, propValue)
-      }
-    }
-    message
+  private[this] def camelMessage(msg: Message) : CamelMessage = 
+    CamelMessage(msg.getBody, JMapWrapper(msg.getHeaders).mapValues { _.asInstanceOf[Any] }.toMap)
+    
+  private[this] def camelExchange(msg: CamelMessage) : Exchange = {
+    val exchange = new DefaultExchange(camel.context)
+    
+    exchange.getIn.setBody(msg.body)
+    msg.headers.foreach { case (k, v) => exchange.getIn.setHeader(k, v) }
+    
+    exchange
   }
-
-  def wireMock(mockName: String, uri: String)(implicit context: CamelContext) : MockEndpoint = {
-
-    val mockUri = s"mock://$mockName"
-
-    val result = context.getEndpoint(mockUri).asInstanceOf[MockEndpoint]
-
-    LOGGER.debug(s"Creating Route from [$uri] to [$mockUri].")
-    context.addRoutes(new RouteBuilder {
-      def configure() : Unit = {
-        from(uri).id(mockName).to(mockUri)
-      }
-    })
-
-    result
-  }
-
-  final def resetMockEndpoints(implicit context: CamelContext) : Unit = {
-    JCollectionWrapper(context.getEndpoints)
-      .filter(_.isInstanceOf[MockEndpoint])
-      .foreach( ep => ep.asInstanceOf[MockEndpoint].reset())
-  }
-
+  
 }

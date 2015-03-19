@@ -25,30 +25,38 @@ import scala.concurrent.Await
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.Future
-import de.woq.blended.itestsupport.camel.TestCamelContext
 import akka.actor.ActorSystem
 import scala.collection.convert.Wrappers.JListWrapper
 import scala.concurrent.duration._
 import akka.actor.ActorRef
 import de.woq.blended.itestsupport.protocol._
 import akka.util.Timeout
+import akka.camel.CamelExtension
+import org.apache.camel.CamelContext
+import akka.testkit.TestProbe
+import de.woq.blended.itestsupport.camel.protocol.MockMessageReceived
+import scala.concurrent.duration._
 
 trait BlendedIntegrationTestSupport
   extends Matchers { this: TestKit =>
     
   implicit val system: ActorSystem 
-  private val log = system.log
+  private[this] val log = system.log
+  
+  lazy val camel = CamelExtension(system)
+  lazy val mockProbe = new TestProbe(system)
+  system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
 
-    def testContext(ctProxy : ActorRef) : Future[BlendedTestContext] = {
+  def testContext(ctProxy : ActorRef) : Future[CamelContext] = {
+  
+    implicit val timeout = Timeout(1.second)
     
-      implicit val timeout = Timeout(1.second)
-      
-      val cuts = JListWrapper(system.settings.config.getConfigList("docker.containers")).map { cfg =>
-        ContainerUnderTest(cfg)
-      }.toList.map( ct => (ct.ctName, ct)).toMap
-      
-      (ctProxy ? TestContextRequest(cuts)).mapTo[BlendedTestContext] 
-    }
+    val cuts = JListWrapper(system.settings.config.getConfigList("docker.containers")).map { cfg =>
+      ContainerUnderTest(cfg)
+    }.toList.map( ct => (ct.ctName, ct)).toMap
+    
+    (ctProxy ? TestContextRequest(cuts)).mapTo[CamelContext] 
+  }
   
 //  val dockerProxyProbe = new TestProbe(system)
 //
