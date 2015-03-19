@@ -17,6 +17,10 @@ import akka.camel.Producer
 import akka.camel.Oneway
 import akka.testkit.TestProbe
 import de.woq.blended.itestsupport.camel.MockAssertions._
+import akka.testkit.TestKit
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import akka.util.Timeout
 
 class CamelMockActorSpec extends TestActorSys
   with WordSpecLike
@@ -24,6 +28,8 @@ class CamelMockActorSpec extends TestActorSys
   with DockerTestSetup
   with MockitoSugar {
 
+  implicit val timeout = Timeout(3.seconds)
+  
   val camel = CamelExtension(system)
   private[this] val log = system.log
   
@@ -90,11 +96,7 @@ class CamelMockActorSpec extends TestActorSys
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:d"))
 
-      mock ! CheckAssertions(expectedMessageCount(2))
-
-      val r = receiveN(1).toList.head.asInstanceOf[CheckResults]
-      
-      errors(r) should have size 1
+      checkAssertions(mock, expectedMessageCount(2)) should have size 1
     }  
 
     "Allow execute a list of assertions" in {
@@ -108,12 +110,7 @@ class CamelMockActorSpec extends TestActorSys
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:e"))
 
-      mock ! CheckAssertions(expectedMessageCount(1))
-
-      val r = receiveN(1).toList.head.asInstanceOf[CheckResults]
-      
-      errors(r) should be (List.empty)
-        
+      checkAssertions(mock, expectedMessageCount(1)) should have size 0
     }  
   }
 }

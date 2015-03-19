@@ -51,6 +51,7 @@ class BlendedDemoSpec extends TestActorSys
 
   implicit val timeOut = new Timeout(3.seconds)
   implicit val eCtxt = system.dispatcher
+  implicit val tk = this
 
   class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
     def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
@@ -72,18 +73,16 @@ class BlendedDemoSpec extends TestActorSys
     "Define the sample Camel Route from SampleIn to SampleOut" in {
       
       Await.result(testContext(ctProxy), 3.seconds)
-      
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
  
       sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {
+        // We have successfully sent the message 
         case Right(msg) =>
           // make sure the message reaches the mock actors before we start assertions
           mockProbe.receiveN(1)
-          mock ! CheckAssertions(expectedMessageCount(1))
-          // Eventually the mock will answer with the checkresults
-          val r = errors(receiveN(1).toList.head.asInstanceOf[CheckResults])
-          log.info(prettyPrint(r))
-          r should be (List.empty)        
+          
+          checkAssertions(mock, expectedMessageCount(2), expectedBodies("Hello Blended!")) should have size 0 
+        // The message has not been sent
         case Left(e) => 
           log.error(e.getMessage, e)
           fail(e.getMessage)

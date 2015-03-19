@@ -8,12 +8,13 @@ import de.woq.blended.itestsupport.camel.protocol.ReceivedMessages
 import de.woq.blended.itestsupport.camel.protocol.MockMessageReceived
 import de.woq.blended.itestsupport.camel.protocol.CheckAssertions
 import de.woq.blended.itestsupport.camel.protocol.CheckResults
+import akka.actor.ActorLogging
 
 object CamelMockActor {
   def apply(uri: String) = new CamelMockActor(uri)
 }
 
-class CamelMockActor(uri: String) extends Consumer {
+class CamelMockActor(uri: String) extends Consumer with ActorLogging {
   
   def endpointUri: String = uri
 
@@ -28,6 +29,23 @@ class CamelMockActor(uri: String) extends Consumer {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
     
     case ca : CheckAssertions => 
-      sender ! CheckResults(ca.assertions.toList.map { a => a(messages) })
-  }  
+      val results = CheckResults(ca.assertions.toList.map { a => a(messages) })
+      errors(results) match {
+        case e if e.isEmpty => 
+        case l => log.error(prettyPrint(l))
+      }
+      sender ! results
+  }
+  
+  private[this] def prettyPrint(errors : List[String]) : String = 
+    errors match {
+      case e if e.isEmpty => s"All assertions were satisfied for mock actor [$uri]"
+      case l => l.map(msg => s"  $msg").mkString(s"\n----------\nGot Assertion errors for mock actor [$uri]:\n", "\n", "\n----------")
+    }
+  
+    
+  private[this] def errors(r : CheckResults) : List[String] = r.results.collect {
+    case Left(t) => t.getMessage 
+  }
+
 }
