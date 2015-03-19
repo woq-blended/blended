@@ -6,6 +6,13 @@ import de.woq.blended.itestsupport.camel.protocol.CheckResults
 
 object MockAssertions {
   
+  def prettyPrint(errors : List[String]) : String = 
+    errors match {
+      case e if e.isEmpty => "All assertions were satisfied"
+      case l => l.map(msg => s"  $msg").mkString("\n----------\nGot Assertion errors:\n", "\n", "\n----------")
+    }
+  
+    
   def errors(r : CheckResults) : List[String] = r.results.collect {
     case Left(t) => t.getMessage 
   }

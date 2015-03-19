@@ -79,10 +79,11 @@ class BlendedDemoSpec extends TestActorSys
         case Right(msg) =>
           // make sure the message reaches the mock actors before we start assertions
           mockProbe.receiveN(1)
-          mock ! CheckAssertions(expectedMessageCount(2))
+          mock ! CheckAssertions(expectedMessageCount(1))
           // Eventually the mock will answer with the checkresults
-          val r = receiveN(1).toList.head.asInstanceOf[CheckResults]
-          errors(r) should be (List.empty)        
+          val r = errors(receiveN(1).toList.head.asInstanceOf[CheckResults])
+          log.info(prettyPrint(r))
+          r should be (List.empty)        
         case Left(e) => 
           log.error(e.getMessage, e)
           fail(e.getMessage)
