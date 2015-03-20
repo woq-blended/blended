@@ -22,13 +22,10 @@ package object protocol {
 
   type DockerResult[T] = Either[Exception, T]
   
-  case object StartContainerProxy
-  case class ContainerProxyStarted(cuts: DockerResult[List[ContainerUnderTest]])
-  
-  case class StartContainerManager(containerUnderTest : List[ContainerUnderTest])
+  case class StartContainerManager(containerUnderTest : Map[String, ContainerUnderTest])
   case object StopContainerManager
   
-  case class DockerContainerAvailable(containerUnderTest : DockerResult[List[ContainerUnderTest]])
+  case class ContainerManagerStarted(containerUnderTest : DockerResult[Map[String, ContainerUnderTest]])
   case object ContainerManagerStopped
 
   case class StartContainer(name: String)

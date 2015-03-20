@@ -18,7 +18,6 @@ package de.woq.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
 import de.woq.blended.itestsupport.ContainerUnderTest
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import akka.actor._
@@ -28,19 +27,47 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import de.woq.blended.itestsupport.docker.protocol._
 
+private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest])
+private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
+private[docker] case class InternalStartContainers(requestor: ActorRef, cuts : Map[String, ContainerUnderTest])
+private[docker] case class InternalContainersStarted(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
+
 trait DockerClientProvider {
   def getClient : DockerClient
 }
 
-trait ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
+class ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
 
-  implicit val timeout = Timeout(30.seconds)
   implicit val eCtxt   = context.dispatcher
-  implicit val client  = getClient
+  implicit lazy val client  = getClient
 
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log
+  
+  def mapper = context.actorOf(Props(new DockerContainerMapper))
+  def starter = context.actorOf(Props(new DockerContainerStarter))
+  
+  def receive = LoggingReceive {
+    
+    case StartContainerManager(containers) => 
+      val externalCt = config.getBoolean("docker.external")
+      log.info(s"Starting container manager with Containers [$containers]")
+      log.info(s"Containers have been started externally: [$externalCt]")
 
+      externalCt match {
+        case true => mapper ! InternalMapDockerContainers(sender, containers)
+        case _ => starter ! InternalStartContainers(sender, containers)
+      }
+      
+    case r : InternalDockerContainersMapped => r.requestor ! ContainerManagerStarted(r.result)
+    
+    case r : InternalContainersStarted => r.result match {
+      case Right(cuts) => mapper ! InternalMapDockerContainers(r.requestor, cuts)
+      case _ => r.requestor ! r.result
+    }  
+  }
+  
+  def starting(requestor: ActorRef, cuts: Map[String, ContainerUnderTest]) = Actor.emptyBehavior
   
 //  def running(runningContainers : List[Cont : Receive = LoggingReceive {
 //    case ContainerStarted(name) => {
@@ -73,19 +100,17 @@ trait ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 //    }
 //  }
 
-
-  private def containerActor(name: String) = context.actorSelection(name).resolveOne().mapTo[ActorRef]
-
 }
 
-class EmbeddedContainerManager extends ContainerManager with DockerClientProvider {
-  override def getClient : DockerClient = {
-    implicit val logger = context.system.log
-    DockerClientFactory(context.system.settings.config)
-  }
-  
-  def receive = Actor.emptyBehavior
 
+//class EmbeddedContainerManager extends ContainerManager with DockerClientProvider {
+//  override def getClient : DockerClient = {
+//    implicit val logger = context.system.log
+//    DockerClientFactory(context.system.settings.config)
+//  }
+//  
+//  def receive = Actor.emptyBehavior
+//
 //  def starting(
 //    requestor           : ActorRef,
 //    pendingContainers   : List[(ActorRef, ContainerUnderTest)],
@@ -167,16 +192,23 @@ class EmbeddedContainerManager extends ContainerManager with DockerClientProvide
 //    actor ! StartContainer(cut.ctName)
 //
 //  }
-}
+//}
+//
 
-class ExternalContainerManager extends ContainerManager with DockerClientProvider {
-  
-  override def getClient : DockerClient = {
-    implicit val logger = context.system.log
-    DockerClientFactory(context.system.settings.config)
+class DockerContainerMapper extends Actor with ActorLogging {
+   
+  def receive = LoggingReceive {
+    case InternalMapDockerContainers(requestor, cuts) => 
+      log.info(s"Mapping docker containers $cuts")
+      sender ! InternalDockerContainersMapped(requestor, Right(cuts))
   }
- 
-  def receive = Actor.emptyBehavior
 }
 
-
+class DockerContainerStarter extends Actor with ActorLogging {
+  
+  def receive = LoggingReceive {
+    case InternalStartContainers(requestor, cuts) =>
+      log.info(s"Starting docker containers $cuts")
+      sender ! InternalContainersStarted(requestor, Right(cuts))
+  }
+}

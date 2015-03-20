@@ -24,22 +24,69 @@ import akka.actor.PoisonPill
 import de.woq.blended.itestsupport.protocol.TestContextRequest
 import akka.camel.CamelExtension
 import org.apache.camel.CamelContext
+import com.github.dockerjava.api.command.InspectContainerResponse
+import akka.actor.Props
+import akka.util.Timeout
+import scala.concurrent.Future
+import de.woq.blended.itestsupport.docker.ContainerManager
+import de.woq.blended.itestsupport.docker.DockerClientProvider
+import com.github.dockerjava.api.DockerClient
+import de.woq.blended.itestsupport.docker.DockerClientFactory
+import akka.actor.ActorRef
+import de.woq.blended.itestsupport.docker.protocol._
 
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   
-  val camel = CamelExtension(context.system)
+  private[this] val camel = CamelExtension(context.system)
+  private[this] val config = context.system.settings.config
   
   def initializing : Receive = LoggingReceive {
     case req : TestContextRequest => 
-      val camelCtxt = configure(req.cuts, camel.context)
-      context.become(working(camelCtxt))
-      sender ! camelCtxt
-      unstash()
+      val containerMgr = context.actorOf(Props(new ContainerManager with DockerClientProvider {
+          override def getClient : DockerClient = {
+            implicit val logger = context.system.log
+            DockerClientFactory(config)
+          }
+        }))
+
+      containerMgr ! StartContainerManager(req.cuts)
+      context.become(starting(sender, containerMgr) orElse stashing)
   } 
   
-  def working(testContext: CamelContext) = LoggingReceive {
+  def starting(requestor: ActorRef, containerMgr: ActorRef) : Receive = LoggingReceive {
+    case ContainerManagerStarted(result) => 
+      result match {
+        case Right(cuts) => 
+          val camelCtxt = configure(cuts, camel.context)
+          context.become(working(camelCtxt, containerMgr))
+        case m => requestor ! m
+      }
+  }
+  
+  def working(testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
     case m => log info s"$m"
   } 
     
   def receive = initializing orElse stashing
+  
+//  private[this] def setupDocker : Unit = {
+//    
+//  }
+//  
+//    def containerInfo(cut: ContainerUnderTest) : Future[InspectContainerResponse] = {
+//    implicit val eCtxt = system.dispatcher
+//    (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
+//  }
+
+//  val dockerProxyProbe = new TestProbe(system)
+//
+//  def dockerConnect : Unit = {
+//    system.eventStream.subscribe(dockerProxyProbe.ref, classOf[ContainerProxyStarted])
+//    system.actorOf(Props[DockerContainerProxy]) ! StartContainerProxy
+//
+//    dockerProxyProbe.expectMsgType[ContainerProxyStarted]
+//  }
+//
+//  dockerConnect
+
 }

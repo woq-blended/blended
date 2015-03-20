@@ -16,11 +16,8 @@
 
 package de.woq.blended.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
+import java.io.InputStream;
+import java.util.Iterator;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -34,8 +31,10 @@ import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
-import java.io.InputStream;
-import java.util.Iterator;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 public class XMLSupport {
 
@@ -43,8 +42,6 @@ public class XMLSupport {
   private final ClassLoader loader;
 
   private Document document = null;
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(XMLSupport.class);
 
   private static final XPathFactory XPATH_FACTORY = XPathFactory.newInstance();
   private static final DocumentBuilderFactory DOC_BUILDER_FACTORY;

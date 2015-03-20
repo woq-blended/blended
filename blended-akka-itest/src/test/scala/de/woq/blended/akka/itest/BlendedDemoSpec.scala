@@ -81,7 +81,7 @@ class BlendedDemoSpec extends TestActorSys
           // make sure the message reaches the mock actors before we start assertions
           mockProbe.receiveN(1)
           
-          checkAssertions(mock, expectedMessageCount(2), expectedBodies("Hello Blended!")) should have size 0 
+          checkAssertions(mock, expectedMessageCount(1), expectedBodies("Hello Blended!")) should have size 0 
         // The message has not been sent
         case Left(e) => 
           log.error(e.getMessage, e)

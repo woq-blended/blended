@@ -67,8 +67,6 @@
     <feature version="${project.version}">blended-base</feature>
   </feature>
 
-  <!-- Active MQ 5.9.0 Feature Fix : Obsolete with upcoming fix ( see https://issues.apache.org/jira/browse/AMQ-4833 ) -->
-
   <!-- Bundles needed if only client will be deployed in the container -->
   <feature name="blended-activemq-client" description="Blended - ActiveMQ client libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
     <feature version="[3.1,4)">spring</feature>
@@ -104,8 +102,6 @@
     <bundle>mvn:com.sun.jersey/jersey-client/${jersey.version}</bundle>
 
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
-
-    <bundle>mvn:de.woq.blended/blended-jaxrs/${project.version}</bundle>
   </feature>
 
   <feature name="blended-hawtio" description="Blended - HawtIO bundles" version="${project.version}" resolver="(obr)" start-level="50">

@@ -23,6 +23,7 @@ import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
+import de.woq.blended.itestsupport.ContainerUnderTest
 
 class DependentContainerActorSpec extends TestActorSys
   with WordSpecLike
@@ -33,18 +34,25 @@ class DependentContainerActorSpec extends TestActorSys
   "the DependentContainerActor" should {
 
     "Respond with a DependenciesStarted message after the last dependant container was started" in {
-//      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
-//      val depActor = TestActorRef(Props(DependentContainerActor(container)))
-//
-//      watch(depActor)
-//
-//      depActor ! ContainerStarted(Right("blended_demo_0"))
-//      expectMsg( DependenciesStarted(Right(container)) )
-//
-//      fishForMessage(3.seconds) {
-//        case m : Terminated => true
-//        case _ => false
-//      }
+      
+      val cut = ContainerUnderTest(
+        ctName = "foo", 
+        imgPattern = "^atooni/bar:latest",
+        dockerName = "foobar"
+      )
+      
+      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
+      val depActor = TestActorRef(Props(DependentContainerActor(cut)))
+
+      watch(depActor)
+
+      depActor ! ContainerStarted(Right("blended_demo_0"))
+      expectMsg( DependenciesStarted(Right(cut)) )
+
+      fishForMessage() {
+        case m : Terminated => true
+        case _ => false
+      }
     }
 
   }

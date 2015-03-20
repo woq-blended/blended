@@ -16,9 +16,6 @@
 
 package de.woq.blended.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -26,8 +23,6 @@ import java.io.InputStream;
 import java.net.URL;
 
 public class ResourceResolver {
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(ResourceResolver.class);
 
   private ResourceResolver() {}
 
@@ -68,7 +63,6 @@ public class ResourceResolver {
     }
 
     if (is == null) {
-      final String logString = location.length() < 50 ? location : (location.substring(0, 50) + "...");
       is = new ByteArrayInputStream(location.getBytes());
     }
 

@@ -67,7 +67,6 @@
         <module>blended-container-registry</module>
         <module>blended-util</module>
         <module>blended-jmx</module>
-        <module>blended-jaxrs</module>
         <module>blended-camel-utils</module>
 
         <module>blended-testsupport</module>

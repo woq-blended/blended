@@ -88,6 +88,7 @@ class PersistenceManagerSpec
         case _ => false
       }
 
+      // TODO : Should be a get object message ???
       system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {

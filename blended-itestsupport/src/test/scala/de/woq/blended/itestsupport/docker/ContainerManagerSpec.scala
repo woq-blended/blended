@@ -33,9 +33,11 @@ class ContainerManagerSpec extends TestActorSys
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
+  
+  private[this] val log = system.log
 
   object TestContainerManager {
-    def apply() = new  EmbeddedContainerManager with DockerClientProvider {
+    def apply() = new  ContainerManager with DockerClientProvider {
       override def getClient = mockClient
     }
   }
@@ -46,18 +48,14 @@ class ContainerManagerSpec extends TestActorSys
       
       val cuts = JListWrapper(config.getConfigList("docker.containers")).map { cfg : Config =>
         ContainerUnderTest(cfg)
-      }.toList
+      }.map { cut => (cut.ctName, cut) }.toMap
+      
+      log.info(s"$cuts")
       
       val mgr = TestActorRef(Props(TestContainerManager()), "mgr")
       mgr ! StartContainerManager(cuts)
       
-      fishForMessage() {
-        case DockerContainerAvailable(cuts) => cuts match {
-          case Right(l) => l.size == 2
-          case _ => false
-        }
-        case _ => false
-      }
+      expectMsgType[ContainerManagerStarted]
     }
   }
 }

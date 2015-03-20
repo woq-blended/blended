@@ -105,7 +105,7 @@ case class ContainerUnderTest(
   imgPattern      : String,
   dockerName      : String,
   volumes         : List[VolumeConfig] = List.empty,
-  links           : List[ContainerLink],                             
+  links           : List[ContainerLink] = List.empty,                             
   ports           : Map[String, NamedContainerPort] = Map.empty
 ) {
   

@@ -16,16 +16,11 @@
 
 package de.woq.blended.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 public class FileReader {
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(FileReader.class);
 
   public static byte[] readFile(final String location) throws Exception {
 

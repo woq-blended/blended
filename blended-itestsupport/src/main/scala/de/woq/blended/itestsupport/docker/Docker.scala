@@ -17,14 +17,14 @@
 package de.woq.blended.itestsupport.docker
 
 import java.io.File
-
 import akka.event.LoggingAdapter
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.Image
 import com.github.dockerjava.core.{DockerClientBuilder, DockerClientConfig}
 import com.typesafe.config.Config
-
 import scala.collection.convert.Wrappers.JListWrapper
+import scala.collection.convert.Wrappers.JListWrapper
+import com.github.dockerjava.api.model.Container
 
 object DockerClientFactory {
 
@@ -81,8 +81,11 @@ trait Docker { this: VolumeBaseDir =>
     img.getRepoTags.exists(_ matches s)
   }
 
-  def images =
-    new JListWrapper(client.listImagesCmd().exec()).toList
+  def images : List[Image] =
+    JListWrapper(client.listImagesCmd().exec()).toList
+    
+  def running : List[Container] =
+    JListWrapper(client.listContainersCmd().exec()).toList
 
   def search(f : Image => Boolean) =
     images.filter(f)
