@@ -20,7 +20,7 @@ class DockerContainerMapperSpec extends TestActorSys
       val cuts = ContainerUnderTest.containerMap(system.settings.config)
       val mapper = system.actorOf(Props(new DockerContainerMapper))
       
-      mapper ! InternalMapDockerContainers(testActor, cuts)
+      mapper ! InternalMapDockerContainers(testActor, cuts, mockClient)
       expectMsgType[InternalDockerContainersMapped]
     }
   }

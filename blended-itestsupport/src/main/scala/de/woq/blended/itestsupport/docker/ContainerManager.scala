@@ -26,8 +26,9 @@ import akka.event.{LoggingAdapter, LoggingReceive}
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.woq.blended.itestsupport.docker.protocol._
+import scala.collection.convert.Wrappers.JListWrapper
 
-private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest])
+private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
 private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
 private[docker] case class InternalStartContainers(requestor: ActorRef, cuts : Map[String, ContainerUnderTest])
 private[docker] case class InternalContainersStarted(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
@@ -55,14 +56,14 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       log.info(s"Containers have been started externally: [$externalCt]")
 
       externalCt match {
-        case true => mapper ! InternalMapDockerContainers(sender, containers)
+        case true => mapper ! InternalMapDockerContainers(sender, containers, client)
         case _ => starter ! InternalStartContainers(sender, containers)
       }
       
     case r : InternalDockerContainersMapped => r.requestor ! ContainerManagerStarted(r.result)
     
     case r : InternalContainersStarted => r.result match {
-      case Right(cuts) => mapper ! InternalMapDockerContainers(r.requestor, cuts)
+      case Right(cuts) => mapper ! InternalMapDockerContainers(r.requestor, cuts, client)
       case _ => r.requestor ! r.result
     }  
   }
@@ -198,8 +199,9 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 class DockerContainerMapper extends Actor with ActorLogging {
    
   def receive = LoggingReceive {
-    case InternalMapDockerContainers(requestor, cuts) => 
+    case InternalMapDockerContainers(requestor, cuts, client) => 
       log.info(s"Mapping docker containers $cuts")
+      val container = JListWrapper(client.listContainersCmd().exec()).toList
       sender ! InternalDockerContainersMapped(requestor, Right(cuts))
   }
 }

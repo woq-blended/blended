@@ -21,18 +21,26 @@ import de.woq.blended.itestsupport.NamedContainerPort
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
+import org.slf4j.LoggerFactory
 
 class DockerContainerSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
+  
+  private[this] val log = LoggerFactory.getLogger(classOf[DockerContainerSpec])
 
   "A Docker Container should" should {
+    
+    val ctName = "blended_demo_0"
+    val imageId = ctImageNames(ctName)
+    
+    log.info(s"$ctImageNames")
 
     "be created from the image id and a name" in {
       val container = new DockerContainer(imageId, ctName)
 
-      verify(mockClient).createContainerCmd(imageId)
+      val createCmd = mockClient.createContainerCmd(imageId)
       verify(createCmd).withName(ctName)
     }
 

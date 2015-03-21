@@ -35,6 +35,9 @@ class DependentContainerActorSpec extends TestActorSys
 
     "Respond with a DependenciesStarted message after the last dependant container was started" in {
       
+      val ctName = "blended_demo_0"
+      val imageId = ctImageNames(ctName)
+      
       val cut = ContainerUnderTest(
         ctName = "foo", 
         imgPattern = "^atooni/bar:latest",
