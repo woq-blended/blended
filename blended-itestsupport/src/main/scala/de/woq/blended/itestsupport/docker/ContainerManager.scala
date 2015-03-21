@@ -202,6 +202,7 @@ class DockerContainerMapper extends Actor with ActorLogging {
     case InternalMapDockerContainers(requestor, cuts, client) => 
       log.info(s"Mapping docker containers $cuts")
       val container = JListWrapper(client.listContainersCmd().exec()).toList
+      log.info(s"$container")
       sender ! InternalDockerContainersMapped(requestor, Right(cuts))
   }
 }

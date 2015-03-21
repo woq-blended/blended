@@ -29,6 +29,9 @@ import scala.collection.convert.Wrappers.JListWrapper
 import scala.collection.convert.Wrappers.JListWrapper
 import scala.collection.convert.Wrappers.JListWrapper
 import java.util.ArrayList
+import java.util.concurrent.atomic.AtomicInteger
+import com.github.dockerjava.api.model.Container.Port
+import com.github.dockerjava.api.model.Ports.Binding
 
 trait DockerTestSetup { this : MockitoSugar =>
   
@@ -40,6 +43,8 @@ trait DockerTestSetup { this : MockitoSugar =>
   val ctNames      = Seq("blended_demo_0", "jms_demo_0")
   val ctImageNames = ctNames.map( name => (name, configureMockContainer(name)) ).toMap
   
+  val portNumber = new AtomicInteger(45000)
+  
   val listImgCmd = mock[ListImagesCmd]
   
   //when(listImgCmd.exec()) thenReturn (imageList(ctImageNames))
@@ -48,23 +53,21 @@ trait DockerTestSetup { this : MockitoSugar =>
   val listContainersCmd = mock[ListContainersCmd]
   when(mockClient.listContainersCmd()) thenReturn listContainersCmd
   when(listContainersCmd.withShowAll(true)) thenReturn listContainersCmd
-  when(listContainersCmd.exec()) thenReturn new util.ArrayList[Container]()
   
-  // Create the proper image lists for the mock 
-//  def imageList(ctImageNames : Map[String, String]) : java.util.List[Image] = {
-//    val result = new java.util.ArrayList[Image]()
-//    
-//    ctImageNames.map { 
-//      case (ctName, imageId) =>
-//        val image = mock[Image]
-//        when(image.getId) thenReturn imageId
-//        when(image.getRepoTags) thenReturn (Array(s"atooni/$ctName:latest"))
-//        result.add(image)
-//      }
-//    
-//    result
-//  }
-//  
+  val running = new util.ArrayList[Container]()
+  ctNames.foreach { ctName => 
+    val ct = mock[Container]
+    when(ct.getImage) thenReturn s"atooni/$ctName:latest"
+    when(ct.getNames) thenReturn Array[String] {s"/$ctName"}
+    
+    val p1 = new ExposedPort(1883)
+    val b = new Ports.Binding("0.0.0.0", portNumber.getAndIncrement)
+    
+    running.add(ct)
+  }
+  
+  when(listContainersCmd.exec()) thenReturn running
+  
   // Set up a mock for an individual container
   def configureMockContainer(ctName : String) : String = {
     
