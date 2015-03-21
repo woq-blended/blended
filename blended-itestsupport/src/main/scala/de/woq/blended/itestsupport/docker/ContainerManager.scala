@@ -39,7 +39,7 @@ trait DockerClientProvider {
 class ContainerManager extends Actor with ActorLogging with Docker with VolumeBaseDir { this:  DockerClientProvider =>
 
   implicit val eCtxt   = context.dispatcher
-  implicit lazy val client  = getClient
+  val client : DockerClient = getClient  
 
   override val config: Config = context.system.settings.config
   override val logger: LoggingAdapter = context.system.log

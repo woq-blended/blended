@@ -42,7 +42,6 @@ import org.apache.camel.CamelContext
 import de.woq.blended.itestsupport.camel.MockAssertions._
 import de.woq.blended.itestsupport.camel.protocol._
 
-@DoNotDiscover
 class BlendedDemoSpec extends TestActorSys
   with WordSpecLike
   with Matchers
@@ -65,14 +64,14 @@ class BlendedDemoSpec extends TestActorSys
     }
   }
 
-  private[this] lazy val log = system.log
-  private[this] lazy val ctProxy = system.actorOf(Props(new TestContainerProxy))
+  private[this] val log = system.log
+  private[this] val ctProxy = system.actorOf(Props(new TestContainerProxy), "ContainerProxy")
 
   "The demo container" should {
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
       
-      Await.result(testContext(ctProxy), 3.seconds)
+      Await.result(testContext(ctProxy), 1200.seconds)
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
  
       sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {

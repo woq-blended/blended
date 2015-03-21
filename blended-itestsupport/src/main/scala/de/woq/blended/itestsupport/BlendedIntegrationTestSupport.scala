@@ -50,12 +50,9 @@ trait BlendedIntegrationTestSupport
 
   def testContext(ctProxy : ActorRef) : Future[CamelContext] = {
   
-    implicit val timeout = Timeout(1.second)
+    implicit val timeout = Timeout(1200.seconds)
     
-    val cuts = JListWrapper(system.settings.config.getConfigList("docker.containers")).map { cfg =>
-      ContainerUnderTest(cfg)
-    }.toList.map( ct => (ct.ctName, ct)).toMap
-    
+    val cuts = ContainerUnderTest.containerMap(system.settings.config)
     (ctProxy ? TestContextRequest(cuts)).mapTo[CamelContext] 
   }
   

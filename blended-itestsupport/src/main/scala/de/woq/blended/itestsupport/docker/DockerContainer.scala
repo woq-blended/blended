@@ -98,7 +98,7 @@ class DockerContainer(containerId: String, name: String)(implicit client: Docker
     this
   }
 
-  def withVolume(mappedDir : String, volume: Volume, rw: Boolean) = {
+  def withVolume(mappedDir : String, volume: Volume, rw: AccessMode) = {
     this.mappedVolumes = new Bind(mappedDir, volume, rw) :: mappedVolumes
     this
   }

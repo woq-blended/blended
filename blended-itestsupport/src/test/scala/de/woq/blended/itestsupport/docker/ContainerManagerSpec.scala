@@ -16,17 +16,15 @@
 
 package de.woq.blended.itestsupport.docker
 
+import org.scalatest.Matchers
+import org.scalatest.WordSpecLike
+import org.scalatest.mock.MockitoSugar
+
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import com.typesafe.config.Config
 import de.woq.blended.itestsupport.ContainerUnderTest
-import de.woq.blended.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{DoNotDiscover, WordSpecLike, Matchers}
-import scala.collection.convert.Wrappers.JListWrapper
-import scala.concurrent.duration._
-
 import de.woq.blended.itestsupport.docker.protocol._
+import de.woq.blended.testsupport.TestActorSys
 
 class ContainerManagerSpec extends TestActorSys
   with WordSpecLike
@@ -46,9 +44,7 @@ class ContainerManagerSpec extends TestActorSys
 
     "Respond with an event after all containers have been started" in {
       
-      val cuts = JListWrapper(config.getConfigList("docker.containers")).map { cfg : Config =>
-        ContainerUnderTest(cfg)
-      }.map { cut => (cut.ctName, cut) }.toMap
+      val cuts = ContainerUnderTest.containerMap(system.settings.config)
       
       log.info(s"$cuts")
       

@@ -37,15 +37,15 @@ import de.woq.blended.itestsupport.docker.protocol._
 
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   
-  private[this] val camel = CamelExtension(context.system)
-  private[this] val config = context.system.settings.config
+  val camel = CamelExtension(context.system)
   
   def initializing : Receive = LoggingReceive {
     case req : TestContextRequest => 
+      log.debug("Configuring Camel Extension for the test...")
       val containerMgr = context.actorOf(Props(new ContainerManager with DockerClientProvider {
           override def getClient : DockerClient = {
             implicit val logger = context.system.log
-            DockerClientFactory(config)
+            DockerClientFactory(context.system.settings.config)
           }
         }))
 
@@ -59,6 +59,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
         case Right(cuts) => 
           val camelCtxt = configure(cuts, camel.context)
           context.become(working(camelCtxt, containerMgr))
+          requestor ! camelCtxt
         case m => requestor ! m
       }
   }

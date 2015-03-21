@@ -18,16 +18,16 @@ package de.woq.blended.itestsupport.docker
 
 import java.util
 import java.util.UUID
-
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._
 import com.github.dockerjava.api.model._
 import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
+import org.slf4j.LoggerFactory
 
 trait DockerTestSetup { this : MockitoSugar =>
-
+  
   implicit val mockClient = mock[DockerClient]
   
   val config = ConfigFactory.load()

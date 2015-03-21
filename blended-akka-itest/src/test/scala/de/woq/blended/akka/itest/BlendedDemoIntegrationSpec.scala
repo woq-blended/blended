@@ -16,14 +16,14 @@
 
 package de.woq.blended.akka.itest
 
-
-
 import de.woq.blended.itestsupport.ContainerUnderTest
 import org.apache.camel.component.jms.JmsComponent
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.testsupport.TestActorSys
 import org.scalatest.SpecLike
+import org.scalatest.DoNotDiscover
 
+@DoNotDiscover
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
   with BlendedIntegrationTestSupport {

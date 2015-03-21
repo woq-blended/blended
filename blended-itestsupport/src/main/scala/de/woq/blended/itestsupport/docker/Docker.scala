@@ -33,6 +33,7 @@ object DockerClientFactory {
   def apply(config : Config)(implicit logger: LoggingAdapter) = client match {
     case Some(dockerClient) => dockerClient
     case _ =>
+      logger.info(s"$config")
       val dockerHost = config.getString("docker.host")
       val dockerPort = config.getString("docker.port")
 
