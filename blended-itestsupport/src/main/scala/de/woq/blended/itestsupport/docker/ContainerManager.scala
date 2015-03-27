@@ -54,7 +54,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
     
     case StartContainerManager(containers) => 
       val externalCt = config.getBoolean("docker.external")
-      log.info(s"Starting container manager with Containers [$containers]")
       log.info(s"Containers have been started externally: [$externalCt]")
 
       externalCt match {
@@ -62,12 +61,15 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
         case _ => starter ! InternalStartContainers(sender, containers)
       }
       
-    case r : InternalDockerContainersMapped => r.requestor ! ContainerManagerStarted(r.result)
-    
     case r : InternalContainersStarted => r.result match {
       case Right(cuts) => mapper ! InternalMapDockerContainers(r.requestor, cuts, client)
       case _ => r.requestor ! r.result
     }  
+
+    case r : InternalDockerContainersMapped => 
+      log.info(s"Container Manager started with docker attached docker containers: [${r.result}]")
+      r.requestor ! ContainerManagerStarted(r.result)
+    
   }
   
   def starting(requestor: ActorRef, cuts: Map[String, ContainerUnderTest]) = Actor.emptyBehavior
@@ -202,7 +204,7 @@ class DockerContainerMapper extends Actor with ActorLogging {
    
   def receive = LoggingReceive {
     case InternalMapDockerContainers(requestor, cuts, client) => 
-      log.info(s"Mapping docker containers $cuts")
+      log.debug(s"Mapping docker containers $cuts")
       
       val mapped : Map[String, Either[Throwable, ContainerUnderTest]] = cuts.map { case (name, cut) =>
         dockerContainer(cut, client) match {
@@ -220,6 +222,7 @@ class DockerContainerMapper extends Actor with ActorLogging {
         case l => InternalDockerContainersMapped(requestor, Left(new Exception(errors.mkString(","))))
       }
       
+      log.debug(s"$result")
       sender ! result
   }
   
@@ -243,20 +246,23 @@ class DockerContainerMapper extends Actor with ActorLogging {
   }
   
   private[docker] def dockerContainer(cut: ContainerUnderTest, client: DockerClient) : List[Container] = {
-    dockerContainerByName(cut, client) match {
-      case e if e.isEmpty => dockerContainerByImage(cut, client)
+    
+    val dc = JListWrapper(client.listContainersCmd().exec()).toList
+    
+    dockerContainerByName(cut, dc) match {
+      case e if e.isEmpty => dockerContainerByImage(cut, dc)
       case l => l
     }
   } 
   
-  private[docker] def dockerContainerByName(cut: ContainerUnderTest, client: DockerClient) : List[Container] = {
+  private[docker] def dockerContainerByName(cut: ContainerUnderTest, dc: List[Container]) : List[Container] = {
     log.debug(s"Matching Docker Container by name: [${cut.dockerName}]")
-    JListWrapper(client.listContainersCmd().exec()).toList.filter(_.getNames.contains(s"/${cut.dockerName}"))
+    dc.filter(_.getNames.contains(s"/${cut.dockerName}"))
   }
 
-  private[docker] def dockerContainerByImage(cut: ContainerUnderTest, client: DockerClient) : List[Container] = {
+  private[docker] def dockerContainerByImage(cut: ContainerUnderTest, dc: List[Container]) : List[Container] = {
     log.debug(s"Matching Docker Container by Image: [${cut.imgPattern}]")
-    JListWrapper(client.listContainersCmd().exec()).toList.filter(_.getImage.matches(cut.imgPattern))
+    dc.filter(_.getImage.matches(cut.imgPattern))
   }
 }
 

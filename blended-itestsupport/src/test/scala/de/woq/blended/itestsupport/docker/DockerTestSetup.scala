@@ -58,7 +58,7 @@ trait DockerTestSetup { this : MockitoSugar =>
   ctNames.foreach { ctName => 
     val ct = mock[Container]
     when(ct.getImage) thenReturn s"atooni/$ctName:latest"
-    when(ct.getNames) thenReturn Array[String] ( s"/$ctName", s"/foo/$ctName" )
+    when(ct.getNames) thenReturn Array ( s"/$ctName", s"/foo/$ctName" )
     
     val ports = configurePorts(ct)
     when(ct.getPorts) thenReturn ports
@@ -70,6 +70,7 @@ trait DockerTestSetup { this : MockitoSugar =>
   
   def configurePorts(ct: Container) : Array[Container.Port] = {
   
+    // Expose 3 ports per mocked docker container 
     val ports : List[Int] = List( 1099, 1883, 8181 )
     
     val ctPorts = ports.map { p => 

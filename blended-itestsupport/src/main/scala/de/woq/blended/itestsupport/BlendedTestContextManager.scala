@@ -70,24 +70,4 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
     
   def receive = initializing orElse stashing
   
-//  private[this] def setupDocker : Unit = {
-//    
-//  }
-//  
-//    def containerInfo(cut: ContainerUnderTest) : Future[InspectContainerResponse] = {
-//    implicit val eCtxt = system.dispatcher
-//    (containerMgr ? InspectContainer(ctName))(new Timeout(3.seconds)).mapTo[InspectContainerResponse]
-//  }
-
-//  val dockerProxyProbe = new TestProbe(system)
-//
-//  def dockerConnect : Unit = {
-//    system.eventStream.subscribe(dockerProxyProbe.ref, classOf[ContainerProxyStarted])
-//    system.actorOf(Props[DockerContainerProxy]) ! StartContainerProxy
-//
-//    dockerProxyProbe.expectMsgType[ContainerProxyStarted]
-//  }
-//
-//  dockerConnect
-
 }

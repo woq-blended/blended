@@ -46,7 +46,8 @@ class DockerContainerMapperSpec extends TestActorSys
           jmsDemo.dockerName should be("jms_demo_0")
           
           val blendedDemo = cuts("blended_demo")
-
+          blendedDemo.ports should have size(2)
+          
           blendedDemo.ports("jmx").privatePort should be(1099)
           blendedDemo.ports("jmx").publicPort should be(45000)
           
