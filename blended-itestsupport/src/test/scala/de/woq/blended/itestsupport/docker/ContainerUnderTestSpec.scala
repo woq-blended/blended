@@ -53,9 +53,9 @@ class ContainerUnderTestSpec extends TestActorSys
       cuts.get("jms_demo") should not be None
       cuts.get("blended_demo") should not be None
       
-      cuts("jms_demo").url("http") should be(Some("tcp://127.0.0.1:49172"))
-      cuts("jms_demo").url("http", "192.168.59.103") should be(Some("tcp://192.168.59.103:49172"))
-      cuts("jms_demo").url("http", "192.168.59.103", "http") should be (Some("http://192.168.59.103:49172"))
+      cuts("jms_demo").url("http") should be(Some("tcp://127.0.0.1:8181"))
+      cuts("jms_demo").url("http", "192.168.59.103") should be(Some("tcp://192.168.59.103:8181"))
+      cuts("jms_demo").url("http", "192.168.59.103", "http") should be (Some("http://192.168.59.103:8181"))
       
     }
   }
