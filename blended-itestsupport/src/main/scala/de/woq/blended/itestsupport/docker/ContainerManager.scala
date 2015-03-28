@@ -29,6 +29,7 @@ import com.typesafe.config.Config
 import de.woq.blended.itestsupport.docker.protocol._
 import scala.collection.convert.Wrappers.JListWrapper
 import de.woq.blended.itestsupport.NamedContainerPort
+import de.woq.blended.itestsupport.ContainerLink
 
 private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
 private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
@@ -58,7 +59,7 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 
       externalCt match {
         case true => mapper ! InternalMapDockerContainers(sender, containers, client)
-        case _ => starter ! InternalStartContainers(sender, containers)
+        case _ => starter ! InternalStartContainers(sender, configureDockerContainer(containers))
       }
       
     case r : InternalContainersStarted => r.result match {
@@ -70,6 +71,18 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       log.info(s"Container Manager started with docker attached docker containers: [${r.result}]")
       r.requestor ! ContainerManagerStarted(r.result)
     
+  }
+
+  private[this] def configureDockerContainer(cut : Map[String, ContainerUnderTest]) : Map[String, ContainerUnderTest] = {
+    val cuts = cut.values.map { ct =>
+      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
+        val ctName = s"${ct.ctName}_$idx"
+        val links = ct.links.map { l => ContainerLink(ctName, l.hostname) }
+        ct.copy(ctName = ctName, dockerName = s"${ctName}_${System.currentTimeMillis}", links = links)
+      }
+    }.flatten
+    
+    cuts.map { ct => (ct.ctName, ct) }.toMap
   }
   
   def starting(requestor: ActorRef, cuts: Map[String, ContainerUnderTest]) = Actor.emptyBehavior
@@ -176,20 +189,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
 //      context.become(starting(sender, pending, noDeps, List.empty))
 //  }
 //  
-//  private[this] def configureDockerContainer(cut : List[ContainerUnderTest]) : List[ContainerUnderTest] = {
-//    cut.map { ct =>
-//      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
-//        val ctName = s"${ct.ctName}_$idx"
-//
-//        val dc = new DockerContainer(img.getId, ctName)
-//
-//        ct.links.foreach { cl => dc.withLink(s"${cl.container}:${cl.hostname}")}
-//        dc.withNamedPorts(ct.ports.values.toSeq)
-//
-//        ct.copy(ctName = ctName, dockerContainer = Some(dc))
-//      }
-//    }.flatten
-//  }
 //  
 //  private[this] def startContainer(cut : ContainerUnderTest) : Unit = {
 //

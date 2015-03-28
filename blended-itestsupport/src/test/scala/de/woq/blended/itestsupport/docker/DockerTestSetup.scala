@@ -17,21 +17,20 @@
 package de.woq.blended.itestsupport.docker
 
 import java.util
+import java.util.ArrayList
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._
 import com.github.dockerjava.api.model._
-import com.typesafe.config.ConfigFactory
-import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
-import org.slf4j.LoggerFactory
-import scala.collection.convert.Wrappers.JListWrapper
-import scala.collection.convert.Wrappers.JListWrapper
-import scala.collection.convert.Wrappers.JListWrapper
-import java.util.ArrayList
-import java.util.concurrent.atomic.AtomicInteger
 import com.github.dockerjava.api.model.Container.Port
 import com.github.dockerjava.api.model.Ports.Binding
+import com.typesafe.config.ConfigFactory
+import scala.collection.convert.WrapAsJava._
 
 trait DockerTestSetup { this : MockitoSugar =>
   
@@ -42,13 +41,19 @@ trait DockerTestSetup { this : MockitoSugar =>
   // Mock some containers for the docker API 
   val ctNames      = Seq("blended_demo_0", "jms_demo_0")
   val ctImageNames = ctNames.map( name => (name, configureMockContainer(name)) ).toMap
+  val imgList : java.util.List[Image] = ctImageNames.map { case (ctName, id) =>
+    val img = mock[Image]
+    when(img.getId) thenReturn(id)
+    when(img.getRepoTags) thenReturn Array ( s"atooni/$ctName:latest" )
+    img
+  }.toSeq 
   
   val portNumber = new AtomicInteger(45000)
   
   val listImgCmd = mock[ListImagesCmd]
   
-  //when(listImgCmd.exec()) thenReturn (imageList(ctImageNames))
   when(mockClient.listImagesCmd()) thenReturn listImgCmd
+  when(listImgCmd.exec()) thenReturn (imgList)
 
   val listContainersCmd = mock[ListContainersCmd]
   when(mockClient.listContainersCmd()) thenReturn listContainersCmd
