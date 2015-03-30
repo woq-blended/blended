@@ -66,8 +66,10 @@ class BlendedDemoSpec extends TestActorSys
     
     override def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = {
       val t = 60.seconds
-      SequentialComposedCondition(
-        JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t))
+      ParallelComposedCondition(
+        JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t)),
+        JolokiaAvailableCondition(jmxRest(cuts), Some(t), Some("blended"), Some("blended")),
+        CamelContextExistsCondition(jmxRest(cuts), Some("blended"), Some("blended"),  "BlendedSample", Some(t))
       )      
     }
   }

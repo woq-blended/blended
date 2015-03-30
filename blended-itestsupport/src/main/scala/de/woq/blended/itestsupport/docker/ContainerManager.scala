@@ -232,7 +232,7 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
       log.info(s"Stopping Docker Container handler [$managedContainers]")
       log.debug(s"${context.children.toList}")
       
-      implicit val timeout = new Timeout(3.seconds)
+      implicit val timeout = new Timeout(10.seconds)
       implicit val eCtxt = context.system.dispatcher
       val requestor = sender
 
@@ -244,9 +244,6 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
       }
       
       Future.sequence(stopFutures).collect{ case _ => requestor ! ContainerManagerStopped }
-      
-      context stop(self)
-
   }
 
   private[this] def startContainer(cut : ContainerUnderTest) : ActorRef = {
