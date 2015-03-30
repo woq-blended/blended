@@ -20,7 +20,6 @@ import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.Container
 import de.woq.blended.itestsupport.ContainerUnderTest
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import akka.actor._
 import akka.pattern._
 import akka.event.{LoggingAdapter, LoggingReceive}
@@ -30,6 +29,8 @@ import de.woq.blended.itestsupport.docker.protocol._
 import scala.collection.convert.Wrappers.JListWrapper
 import de.woq.blended.itestsupport.NamedContainerPort
 import de.woq.blended.itestsupport.ContainerLink
+import scala.util.Success
+import scala.concurrent.duration._
 
 private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
 private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
@@ -50,7 +51,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   override val logger: LoggingAdapter = context.system.log
   
   def mapper = context.actorOf(Props(new DockerContainerMapper))
-  def starter = context.actorOf(Props(new DockerContainerStarter()(client)))
   
   def receive = LoggingReceive {
     
@@ -61,15 +61,17 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
       val externalCt = config.getBoolean("docker.external")
       log.info(s"Containers have been started externally: [$externalCt]")
 
+      val dockerHandler = context.actorOf(Props(new DockerContainerHandler()(client)), "DockerHandler")
+      
       externalCt match {
-        case true => self ! InternalContainersStarted(Right(containers))
-        case _ => (starter ? InternalStartContainers(configureDockerContainer(containers))) pipeTo self
+        case true => self ! InternalContainersStarted(Right(configureDockerContainer(containers)))
+        case _ => (dockerHandler ? InternalStartContainers(configureDockerContainer(containers))) pipeTo self
       }
       
-      context.become(starting(sender))
+      context.become(starting(dockerHandler, sender))
   }
   
-  def starting(requestor: ActorRef) : Receive = LoggingReceive {
+  def starting(dockerHandler: ActorRef, requestor: ActorRef) : Receive = LoggingReceive {
     case r : InternalContainersStarted => r.result match {
       case Right(cuts) => mapper ! InternalMapDockerContainers(self, cuts, client)
       case _ => requestor ! r.result
@@ -77,6 +79,16 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
     case r : InternalDockerContainersMapped => 
       log.info(s"Container Manager started with docker attached docker containers: [${r.result}]")
       requestor ! ContainerManagerStarted(r.result)
+      r.result match {
+        case Right(cuts) => context.become(running(dockerHandler, cuts))
+        case _ => context.stop(self)
+      }
+  }
+  
+  def running(dockerHandler: ActorRef, cuts: Map[String, ContainerUnderTest]) : Receive = LoggingReceive {
+    case StopContainerManager => 
+      log.info("Stopping Test Container Manager")
+      dockerHandler.forward(StopContainerManager)
   }
 
   private[this] def configureDockerContainer(cut : Map[String, ContainerUnderTest]) : Map[String, ContainerUnderTest] = {
@@ -89,38 +101,6 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
     
     cuts.map { ct => (ct.ctName, ct) }.toMap
   }
-  
-//  def running(runningContainers : List[Cont : Receive = LoggingReceive {
-//    case ContainerStarted(name) => {
-//      runningContainer += (name -> sender)
-//    }
-//    case GetContainerPorts(name) => {
-//      val requestor = sender
-//      containerActor(name).mapTo[ActorRef].onSuccess { case ct =>
-//        ct.tell(GetContainerPorts(name), requestor)
-//      }
-//    }
-//    case InspectContainer(name) => {
-//      val requestor = sender
-//      containerActor(name).mapTo[ActorRef].onSuccess{ case ct =>
-//        ct.tell(InspectContainer(name), requestor)
-//      }
-//    }
-//    case StopContainerManager => {
-//      val requestor = sender
-//
-//      log debug s"Stopping container [${runningContainer}]"
-//
-//      val stopFutures = runningContainer.collect {
-//        case (name, ctActor) => (ctActor ? StopContainer(name)).mapTo[ContainerStopped]
-//      }
-//
-//      val stopped = Future.sequence(stopFutures).map( _ => requestor ! ContainerManagerStopped )
-//
-//      context stop(self)
-//    }
-//  }
-
 }
 
 class DockerContainerMapper extends Actor with ActorLogging {
@@ -189,7 +169,7 @@ class DockerContainerMapper extends Actor with ActorLogging {
   }
 }
 
-class DockerContainerStarter(implicit client: DockerClient) extends Actor with ActorLogging {
+class DockerContainerHandler(implicit client: DockerClient) extends Actor with ActorLogging {
   
   def receive = LoggingReceive {
     case InternalStartContainers(cuts) =>
@@ -205,6 +185,9 @@ class DockerContainerStarter(implicit client: DockerClient) extends Actor with A
       noDeps.foreach{ startContainer }
 
       context.become(starting(sender, pending, noDeps, List.empty))
+    case StopContainerManager => 
+      sender ! ContainerManagerStopped
+      context.stop(self)
   }
   
   def starting(
@@ -240,15 +223,40 @@ class DockerContainerStarter(implicit client: DockerClient) extends Actor with A
         context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
       case Left(e) => 
         context.stop(self)
-    } 
+    }
   }
 
-  def running(runningContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { Actor.emptyBehavior }
+  def running(managedContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { 
+    case StopContainerManager => 
+      
+      log.info(s"Stopping Docker Container handler [$managedContainers]")
+      log.debug(s"${context.children.toList}")
+      
+      implicit val timeout = new Timeout(3.seconds)
+      implicit val eCtxt = context.system.dispatcher
+      val requestor = sender
 
-  private[this] def startContainer(cut : ContainerUnderTest) : Unit = {
+      val stopFutures : Seq[Future[ContainerStopped]] = managedContainers.map { cut => 
+        for{
+          actor <- context.actorSelection(cut.ctName).resolveOne();
+          stopped <- (actor ? StopContainer).mapTo[ContainerStopped]
+        } yield stopped
+      }
+      
+      Future.sequence(stopFutures).collect{ case _ => requestor ! ContainerManagerStopped }
+      
+      context stop(self)
+
+  }
+
+  private[this] def startContainer(cut : ContainerUnderTest) : ActorRef = {
 
     val actor = context.actorOf(Props(ContainerActor(cut)), cut.ctName)
     actor ! StartContainer(cut.ctName)
+    
+    log.debug(s"Container Actor is [$actor]")
+    
+    actor
   }
 
 }

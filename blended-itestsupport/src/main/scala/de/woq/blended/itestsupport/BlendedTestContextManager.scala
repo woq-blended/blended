@@ -53,7 +53,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
             implicit val logger = context.system.log
             DockerClientFactory(context.system.settings.config)
           }
-        }))
+        }), "ContainerMgr")
 
       containerMgr ! StartContainerManager(req.cuts)
       context.become(starting(sender, containerMgr) orElse stashing)
@@ -85,7 +85,9 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
         }
       }).pipeTo(sender)
       
-    case m => log info s"$m"
+    case StopContainerManager => 
+      camel.context.stop()
+      containerMgr forward(StopContainerManager)
   } 
    
   def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = ConditionProvider.alwaysTrue()

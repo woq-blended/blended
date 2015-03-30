@@ -36,9 +36,12 @@ import de.woq.blended.itestsupport.condition.Condition
 import de.woq.blended.itestsupport.condition.ConditionActor
 import de.woq.blended.itestsupport.protocol._
 import de.woq.blended.itestsupport.condition.ConditionProvider
+import akka.testkit.ImplicitSender
+import scala.concurrent.duration.FiniteDuration
+import de.woq.blended.itestsupport.docker.protocol._
 
 trait BlendedIntegrationTestSupport
-  extends Matchers { this: TestKit =>
+  extends Matchers { this: TestKit with ImplicitSender =>
     
   implicit val system: ActorSystem 
   private[this] val log = system.log
@@ -47,14 +50,21 @@ trait BlendedIntegrationTestSupport
   lazy val mockProbe = new TestProbe(system)
   system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
 
-  def testContext(ctProxy : ActorRef)(implicit timeout: Timeout) : Future[CamelContext] = {
+  def testContext(ctProxy : ActorRef)(implicit timeout: FiniteDuration) : CamelContext = {
     val cuts = ContainerUnderTest.containerMap(system.settings.config)
-    (ctProxy ? TestContextRequest(cuts)).mapTo[CamelContext] 
+    ctProxy ! TestContextRequest(cuts)
+    receiveN(1,timeout).head.asInstanceOf[CamelContext] 
   }
   
-  def containerReady(ctProxy: ActorRef)(implicit timeout: Timeout) : Future[ContainerReady] = 
-    (ctProxy ? ContainerReady_?).mapTo[ContainerReady]
- 
+  def containerReady(ctProxy: ActorRef)(implicit timeout: FiniteDuration) : Unit = {
+    ctProxy ! ContainerReady_?
+    expectMsg(timeout, ContainerReady(true))
+  } 
+  
+  def stopContainers(ctProxy: ActorRef)(implicit timeout: FiniteDuration) : Unit = {
+    ctProxy ! StopContainerManager
+    expectMsg(timeout, ContainerManagerStopped)
+  }
   
   def assertCondition(condition: Condition) : Boolean = {
 

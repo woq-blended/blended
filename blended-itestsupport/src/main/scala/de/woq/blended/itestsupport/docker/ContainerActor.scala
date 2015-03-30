@@ -65,7 +65,7 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
   }
 
   def started(cut: ContainerUnderTest) : Receive = LoggingReceive {
-    case StopContainer(n) if container.ctName == n  => {
+    case StopContainer => {
       val requestor = sender
       new DockerContainer(cut).stopContainer
       context become stopped

@@ -33,7 +33,6 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
   var ports : Map[String, NamedContainerPort] = Map.empty
 
   private[this] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
-  private[this] val container  = client.createContainerCmd(id).withName(cut.dockerName).withTty(true).exec()
 
   /**
    * @return The docker image id of the container.
@@ -59,8 +58,9 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer = {
-    logger info s"Starting container [cut.docker] with container links [$linkedContainers]."
-
+    logger info s"Starting container [${cut.dockerName}] with container links [$linkedContainers]."
+    
+    val container  = client.createContainerCmd(id).withName(cut.dockerName).withTty(true).exec()
     val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
     

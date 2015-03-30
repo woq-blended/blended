@@ -32,8 +32,6 @@ package object protocol {
   case class ContainerStarted(name: DockerResult[String])
   case class DependenciesStarted(container: DockerResult[ContainerUnderTest])
 
-  case class StopContainer(name: String)
+  case object StopContainer
   case class ContainerStopped(name: DockerResult[String])
-
-  case class InspectContainer(name: String)
 }

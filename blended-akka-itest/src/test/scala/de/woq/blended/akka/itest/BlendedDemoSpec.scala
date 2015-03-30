@@ -38,6 +38,9 @@ import protocol._
 import camel.protocol._
 import de.woq.blended.itestsupport.condition._
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
+import de.woq.blended.itestsupport.docker.protocol._
+import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
+import de.woq.blended.itestsupport.jolokia.CamelContextExistsCondition
 
 class BlendedDemoSpec extends TestActorSys
   with WordSpecLike
@@ -54,7 +57,7 @@ class BlendedDemoSpec extends TestActorSys
     val dockerHost = context.system.settings.config.getString("docker.host")
 
     private[this] def amqUrl(cuts: Map[String, ContainerUnderTest]) : String = cuts("blended_demo_0").url("jms", dockerHost, "tcp")
-    private[this] def jmxRest(cuts: Map[String, ContainerUnderTest]) : String = cuts("blended_demo_0").url("http", dockerHost, "http")
+    private[this] def jmxRest(cuts: Map[String, ContainerUnderTest]) : String = s"${cuts("blended_demo_0").url("http", dockerHost, "http")}/hawtio/jolokia"
     
     override def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
       camelCtxt.addComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl(cuts))))
@@ -63,7 +66,9 @@ class BlendedDemoSpec extends TestActorSys
     
     override def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = {
       val t = 60.seconds
-      JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t))
+      SequentialComposedCondition(
+        JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t))
+      )      
     }
   }
 
@@ -76,11 +81,8 @@ class BlendedDemoSpec extends TestActorSys
       
       implicit val timeout : FiniteDuration = 1200.seconds
       
-      ctProxy ! TestContextRequest(ContainerUnderTest.containerMap(system.settings.config))
-      val camelCtx = receiveN(1).head.asInstanceOf[CamelContext]
-      
-      ctProxy ! ContainerReady_?
-      expectMsg(timeout, ContainerReady(true))
+      val camelCtx = testContext(ctProxy)
+      containerReady(ctProxy)
       
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
  
@@ -99,6 +101,9 @@ class BlendedDemoSpec extends TestActorSys
           log.error(e.getMessage, e)
           fail(e.getMessage)
       }
+      
+      ctProxy ! StopContainerManager
+      expectMsg(timeout, ContainerManagerStopped)
     }
   }
 }

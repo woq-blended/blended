@@ -40,9 +40,6 @@ class DockerContainerSpec extends WordSpec
 
     "be created from the image id and a name" in {
       val container = new DockerContainer(cut)
-
-      val createCmd = mockClient.createContainerCmd(cut.imgId)
-      verify(createCmd).withName(cut.dockerName)
     }
 
     "issue the stop command with the correct id" in {
@@ -57,6 +54,8 @@ class DockerContainerSpec extends WordSpec
       container.startContainer
 
       verify(mockClient).startContainerCmd(cut.dockerName)
+      val createCmd = mockClient.createContainerCmd(cut.imgId)
+      verify(createCmd).withName(cut.dockerName)
     }
 
     "issue the InspectContainerCommand with the correct id" in {
