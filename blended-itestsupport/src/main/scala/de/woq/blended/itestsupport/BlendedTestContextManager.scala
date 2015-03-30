@@ -34,6 +34,12 @@ import com.github.dockerjava.api.DockerClient
 import de.woq.blended.itestsupport.docker.DockerClientFactory
 import akka.actor.ActorRef
 import de.woq.blended.itestsupport.docker.protocol._
+import de.woq.blended.itestsupport.condition.ConditionProvider
+import de.woq.blended.itestsupport.condition.Condition
+import de.woq.blended.itestsupport.protocol._
+import de.woq.blended.itestsupport.condition.ConditionActor
+import scala.concurrent.Await
+import akka.pattern._
 
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   
@@ -58,16 +64,32 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
       result match {
         case Right(cuts) => 
           val camelCtxt = configure(cuts, camel.context)
-          context.become(working(camelCtxt, containerMgr))
+          context.become(working(cuts, camelCtxt, containerMgr))
           requestor ! camelCtxt
         case m => requestor ! m
       }
   }
   
-  def working(testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
+  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
+    case ContainerReady_? => 
+      implicit val eCtxt = context.system.dispatcher
+
+      val condition = containerReady(cuts)
+      
+      val checker = context.system.actorOf(Props(ConditionActor(condition)))
+
+      ((checker ? CheckCondition)(condition.timeout).map { result =>
+        result match {
+          case cr: ConditionCheckResult => ContainerReady(cr.allSatisfied)
+          case _ => ContainerReady(false)
+        }
+      }).pipeTo(sender)
+      
     case m => log info s"$m"
   } 
-    
+   
+  def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = ConditionProvider.alwaysTrue()
+
   def receive = initializing orElse stashing
   
 }

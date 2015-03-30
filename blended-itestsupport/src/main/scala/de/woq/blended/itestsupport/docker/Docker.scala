@@ -91,7 +91,4 @@ trait Docker { this: VolumeBaseDir =>
   def search(f : Image => Boolean) =
     images.filter(f)
 
-  def container(i : Image, name: String)  =
-    new DockerContainer(i.getId, name)
-
 }

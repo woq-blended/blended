@@ -24,6 +24,7 @@ import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
 import de.woq.blended.itestsupport.ContainerUnderTest
+import java.util.UUID
 
 class DependentContainerActorSpec extends TestActorSys
   with WordSpecLike
@@ -41,10 +42,11 @@ class DependentContainerActorSpec extends TestActorSys
       val cut = ContainerUnderTest(
         ctName = "foo", 
         imgPattern = "^atooni/bar:latest",
-        dockerName = "foobar"
+        dockerName = "foobar",
+        imgId = UUID.randomUUID().toString
       )
       
-      val container = new DockerContainer(imageId, ctNames(0)).withLink("blended_demo_0:demo")
+      val container = new DockerContainer(cut).withLink("blended_demo_0:demo")
       val depActor = TestActorRef(Props(DependentContainerActor(cut)))
 
       watch(depActor)

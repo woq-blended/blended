@@ -35,8 +35,5 @@ package object protocol {
   case class StopContainer(name: String)
   case class ContainerStopped(name: DockerResult[String])
 
-  case class GetContainerPorts(name: String)
-  case class ContainerPorts(ports: DockerResult[Map[String, NamedContainerPort]])
-
   case class InspectContainer(name: String)
 }

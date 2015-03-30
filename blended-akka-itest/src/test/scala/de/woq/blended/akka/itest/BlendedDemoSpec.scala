@@ -22,9 +22,7 @@ import de.woq.blended.testsupport.TestActorSys
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
-import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
-import de.woq.blended.itestsupport.BlendedTestContextManager
-import de.woq.blended.itestsupport.ContainerUnderTest
+import de.woq.blended.itestsupport._
 import org.apache.activemq.ActiveMQConnectionFactory
 import akka.actor.Props
 import scala.util.{Success, Failure}
@@ -33,14 +31,13 @@ import scala.concurrent.Await
 import akka.testkit.TestActorRef
 import de.woq.blended.itestsupport.camel.CamelMockActor
 import de.woq.blended.itestsupport.camel.CamelTestSupport
-import de.woq.blended.itestsupport.ContainerUnderTest
-import de.woq.blended.itestsupport.BlendedTestContextManager
 import de.woq.blended.itestsupport.camel.CamelMockActor
-import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
-import de.woq.blended.itestsupport.TestContextConfigurator
 import org.apache.camel.CamelContext
 import de.woq.blended.itestsupport.camel.MockAssertions._
-import de.woq.blended.itestsupport.camel.protocol._
+import protocol._
+import camel.protocol._
+import de.woq.blended.itestsupport.condition._
+import de.woq.blended.itestsupport.jms.JMSAvailableCondition
 
 class BlendedDemoSpec extends TestActorSys
   with WordSpecLike
@@ -53,14 +50,20 @@ class BlendedDemoSpec extends TestActorSys
   implicit val tk = this
 
   class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
-    def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
-      
-      val dockerHost = context.system.settings.config.getString("docker.host")
-      
-      val jmxRest = cuts("blended_demo").url("http", dockerHost, "http")
-      val amqUrl = cuts("blended_demo").url("jms", dockerHost, "tcp")
-      camelCtxt.addComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl.get)))
+    
+    val dockerHost = context.system.settings.config.getString("docker.host")
+
+    private[this] def amqUrl(cuts: Map[String, ContainerUnderTest]) : String = cuts("blended_demo_0").url("jms", dockerHost, "tcp")
+    private[this] def jmxRest(cuts: Map[String, ContainerUnderTest]) : String = cuts("blended_demo_0").url("http", dockerHost, "http")
+    
+    override def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
+      camelCtxt.addComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl(cuts))))
       camelCtxt
+    }
+    
+    override def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = {
+      val t = 60.seconds
+      JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t))
     }
   }
 
@@ -71,7 +74,14 @@ class BlendedDemoSpec extends TestActorSys
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
       
-      Await.result(testContext(ctProxy), 1200.seconds)
+      implicit val timeout : FiniteDuration = 1200.seconds
+      
+      ctProxy ! TestContextRequest(ContainerUnderTest.containerMap(system.settings.config))
+      val camelCtx = receiveN(1).head.asInstanceOf[CamelContext]
+      
+      ctProxy ! ContainerReady_?
+      expectMsg(timeout, ContainerReady(true))
+      
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
  
       sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {

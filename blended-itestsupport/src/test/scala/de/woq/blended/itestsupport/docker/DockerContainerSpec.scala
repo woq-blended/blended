@@ -22,6 +22,7 @@ import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 import org.slf4j.LoggerFactory
+import de.woq.blended.itestsupport.ContainerUnderTest
 
 class DockerContainerSpec extends WordSpec
   with Matchers
@@ -31,42 +32,42 @@ class DockerContainerSpec extends WordSpec
   private[this] val log = LoggerFactory.getLogger(classOf[DockerContainerSpec])
 
   "A Docker Container should" should {
+
+    val cuts = ContainerUnderTest.containerMap(config)
+    val cut = cuts("blended_demo")
     
-    val ctName = "blended_demo_0"
-    val imageId = ctImageNames(ctName)
-    
-    log.info(s"$ctImageNames")
+    log.info(s"$cut")
 
     "be created from the image id and a name" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
 
-      val createCmd = mockClient.createContainerCmd(imageId)
-      verify(createCmd).withName(ctName)
+      val createCmd = mockClient.createContainerCmd(cut.imgId)
+      verify(createCmd).withName(cut.dockerName)
     }
 
     "issue the stop command with the correct id" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       container.stopContainer
 
-      verify(mockClient).stopContainerCmd(ctName)
+      verify(mockClient).stopContainerCmd(cut.dockerName)
     }
 
     "issue the start command with the correct id" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       container.startContainer
 
-      verify(mockClient).startContainerCmd(ctName)
+      verify(mockClient).startContainerCmd(cut.dockerName)
     }
 
     "issue the InspectContainerCommand with the correct id" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       container.containerInfo
 
-      verify(mockClient).inspectContainerCmd(ctName)
+      verify(mockClient).inspectContainerCmd(cut.dockerName)
     }
 
     "allow to set the linked containers" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       container
         .withLink("foo_0:foo")
         .withLink("bar_0:bar")
@@ -80,7 +81,7 @@ class DockerContainerSpec extends WordSpec
     }
 
     "allow to set single exposed ports" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       val namedPort : NamedContainerPort = ("jmx", 1099, 1099)
       container.withNamedPort(namedPort)
 
@@ -88,7 +89,7 @@ class DockerContainerSpec extends WordSpec
     }
 
     "allow to set multiple exposed ports" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       val port1 : NamedContainerPort = ("jmx", 1099, 1099)
       val port2 : NamedContainerPort = ("http", 8181, 8181)
       container.withNamedPort(port1).withNamedPort(port2)
@@ -97,7 +98,7 @@ class DockerContainerSpec extends WordSpec
     }
 
     "allow to set multiple exposed ports at once" in {
-      val container = new DockerContainer(imageId, ctName)
+      val container = new DockerContainer(cut)
       val port1 : NamedContainerPort = ("jmx", 1099, 1099)
       val port2 : NamedContainerPort = ("http", 8181, 8181)
       container.withNamedPorts(Seq(port1, port2))

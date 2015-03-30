@@ -37,7 +37,7 @@ class DependentContainerActor(container: ContainerUnderTest) extends Actor with 
 
   def receive : Receive = waiting(container.links.map(_.container))
 
-  def waiting(pendingContainers : List[String]) : Receive = {
+  def waiting(pendingContainers : List[String]) : Receive = LoggingReceive {
     case ContainerStarted(ct) => ct match {
       case Right(n) =>
         pendingContainers.filter(_ != n) match {
@@ -45,7 +45,9 @@ class DependentContainerActor(container: ContainerUnderTest) extends Actor with 
             log info s"Dependencies for container [${container.dockerName}] started."
             sender ! DependenciesStarted(Right(container))
             context.stop(self)
-          case l => context.become(waiting(l))
+          case l => 
+            log.debug(s"$pendingContainers")
+            context.become(waiting(l))
         }
       case Left(e) => 
         sender ! DependenciesStarted(Left(e))

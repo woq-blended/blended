@@ -22,6 +22,8 @@ import akka.event.LoggingReceive
 import de.woq.blended.itestsupport.protocol._
 import akka.camel.CamelExtension
 import org.apache.camel.CamelContext
+import de.woq.blended.itestsupport.condition.Condition
+import de.woq.blended.itestsupport.condition.ConditionProvider._
 
 trait TestContextConfigurator {
   def configure(cuts : Map[String, ContainerUnderTest], context: CamelContext) : CamelContext
@@ -33,7 +35,7 @@ class TestContextCreator extends Actor with ActorLogging { this : TestContextCon
   
   def receive = LoggingReceive {
     case r : TestContextRequest => 
-      log debug s"Creating TestCamelContext for CUT's [${r.cuts}]"
+      log info s"Creating TestCamelContext for CUT's [${r.cuts}]"
       
       val result = try 
         Right(configure(r.cuts, camel.context)) 

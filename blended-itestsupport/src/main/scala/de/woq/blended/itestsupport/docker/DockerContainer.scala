@@ -26,24 +26,24 @@ import org.slf4j.LoggerFactory
  * integration tests.
  */
 
-class DockerContainer(containerId: String, name: String)(implicit client: DockerClient) {
+class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
 
   var linkedContainers : List[Link] = List.empty
   var mappedVolumes : List[Bind] = List.empty
   var ports : Map[String, NamedContainerPort] = Map.empty
 
   private[this] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
-  private[this] val container  = client.createContainerCmd(id).withName(name).withTty(true).exec()
+  private[this] val container  = client.createContainerCmd(id).withName(cut.dockerName).withTty(true).exec()
 
   /**
    * @return The docker image id of the container.
    */
-  def id = containerId
+  def id = cut.imgId
 
   /**
    * @return The docker runtime name of the container.
    */
-  def containerName = name
+  def containerName = cut.dockerName
 
   /**
    * @return A list of runtime names that the container relies on in terms of docker links.
@@ -59,11 +59,10 @@ class DockerContainer(containerId: String, name: String)(implicit client: Docker
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer = {
-    logger info s"Starting container [$name] with port bindings [$ports] and container links [$linkedContainers]."
+    logger info s"Starting container [cut.docker] with container links [$linkedContainers]."
 
     val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
     if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
-    //if (!mappedVolumes.isEmpty) cmd.withBinds(binds:_*)
     
     cmd.exec()
 
@@ -78,7 +77,7 @@ class DockerContainer(containerId: String, name: String)(implicit client: Docker
   }
   
   def stopContainer = {
-    logger info s"Stopping container [${name}]"
+    logger info s"Stopping container [$containerName]"
     client.stopContainerCmd(containerName).exec()
     this
   }

@@ -20,10 +20,9 @@ import java.util
 import java.util.ArrayList
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-
 import org.mockito.Mockito._
+import org.mockito.Matchers._
 import org.scalatest.mock.MockitoSugar
-
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._
 import com.github.dockerjava.api.model._
@@ -31,6 +30,7 @@ import com.github.dockerjava.api.model.Container.Port
 import com.github.dockerjava.api.model.Ports.Binding
 import com.typesafe.config.ConfigFactory
 import scala.collection.convert.WrapAsJava._
+import org.scalatest.Matchers
 
 trait DockerTestSetup { this : MockitoSugar =>
   
@@ -108,12 +108,12 @@ trait DockerTestSetup { this : MockitoSugar =>
     val inspectCmd = mock[InspectContainerCmd]
     val containerInfo = mock[InspectContainerResponse]
 
-    when(mockClient.createContainerCmd(imageId)) thenReturn createCmd
-    when(createCmd.withName(ctName)) thenReturn createCmd
-    when(mockClient.waitContainerCmd(ctName)) thenReturn waitCmd
-    when(mockClient.stopContainerCmd(ctName)) thenReturn stopCmd
-    when(mockClient.startContainerCmd(ctName)) thenReturn startCmd
-    when(mockClient.inspectContainerCmd(ctName)) thenReturn inspectCmd
+    when(mockClient.createContainerCmd(anyString)) thenReturn createCmd
+    when(createCmd.withName(anyString())) thenReturn createCmd
+    when(mockClient.waitContainerCmd(anyString())) thenReturn waitCmd
+    when(mockClient.stopContainerCmd(anyString())) thenReturn stopCmd
+    when(mockClient.startContainerCmd(anyString())) thenReturn startCmd
+    when(mockClient.inspectContainerCmd(anyString())) thenReturn inspectCmd
 
     when(startCmd.withPortBindings(portBindings)) thenReturn startCmd
     when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn startCmd

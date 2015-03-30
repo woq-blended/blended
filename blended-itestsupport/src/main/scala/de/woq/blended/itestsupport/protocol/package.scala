@@ -52,5 +52,8 @@ package object protocol {
   // This class returns a TestCamelContext that can be used for the integration tests or an Exception if 
   // the context cannot be created
   case class TestContextResponse(context: Either[Throwable, CamelContext])
+  
+  case object ContainerReady_?
+  case class ContainerReady(ready: Boolean)
 
 }

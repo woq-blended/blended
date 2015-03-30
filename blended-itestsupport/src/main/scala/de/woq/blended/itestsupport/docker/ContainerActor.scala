@@ -22,83 +22,56 @@ import akka.util.Timeout
 import com.github.dockerjava.api.model.ExposedPort
 import de.woq.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 import de.woq.blended.itestsupport.docker.protocol._
-
 import scala.concurrent.duration._
+import com.github.dockerjava.api.DockerClient
 
 object ContainerActor {
-  def apply(container: ContainerUnderTest) = new ContainerActor(container)
+  def apply(container: ContainerUnderTest)(implicit client: DockerClient) = new ContainerActor(container)
 }
 
-class ContainerActor(container: ContainerUnderTest) extends Actor with ActorLogging {
+class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClient) extends Actor with ActorLogging {
 
-  case class PerformStart(container: DockerContainer)
+  case object PerformStart
 
   object ContainerStartActor {
-    def apply() = new ContainerStartActor
+    def apply(cut: ContainerUnderTest) = new ContainerStartActor(cut)
   }
 
-  class ContainerStartActor extends Actor with ActorLogging {
+  class ContainerStartActor(cut: ContainerUnderTest) extends Actor with ActorLogging {
 
     def receive = LoggingReceive {
-      case PerformStart(container) =>
-        container.startContainer
-        sender ! ContainerStarted(Right(container.containerName))
+      case PerformStart =>
+        val dc = new DockerContainer(cut)
+        dc.startContainer
+        sender ! ContainerStarted(Right(cut.ctName))
     }
   }
 
   implicit val timeout = new Timeout(5.seconds)
   implicit val eCtxt   = context.dispatcher
 
-  var pendingCommands : List[(ActorRef, Any)] = List.empty
+  def stopped : Receive = LoggingReceive {
+    case StartContainer(n) if container.ctName == n  => {
+      val starter = context.actorOf(Props(ContainerStartActor(container)))
+      starter ! PerformStart
+      context.become(starting(sender, container))
+    }
+  }
 
-//  def stopped : Receive = {
-//    case StartContainer(n) if container.ctName == n  => {
-//      container.dockerContainer match {
-//        case Some(dockerContainer) =>
-//          val starter = context.actorOf(Props(ContainerStartActor()))
-//          starter ! PerformStart(dockerContainer)
-//          context become LoggingReceive(starting(sender()) orElse getPorts )
-//        case None =>
-//      }
-//    }
-//    case cmd => pendingCommands ::= (sender, cmd)
-//  }
-//
-//  def starting(requestor : ActorRef) : Receive = {
-//    case msg : ContainerStarted =>
-//      requestor ! msg
-//      pendingCommands.reverse.map {
-//        case (requestor: ActorRef, cmd: Any) => self.tell(cmd, requestor)
-//      }
-//      context become LoggingReceive(started orElse getPorts)
-//    case cmd => pendingCommands ::= (sender, cmd)
-//  }
-//
-//  def started : Receive = {
-//    case StopContainer(n) if container.containerName == n  => {
-//      val requestor = sender
-//      container.stopContainer
-//      context become stopped
-//      requestor ! ContainerStopped(Right(container.containerName))
-//    }
-//    case InspectContainer(n) if container.containerName == n => {
-//      val requestor = sender
-//      requestor ! container.containerInfo
-//    }
-//  }
-//
-//  def getPorts : Receive = {
-//    case GetContainerPorts(n) if container.containerName == n => {
-//      val ports : Map[String, NamedContainerPort] =
-//        container.ports.mapValues { namedPort =>
-//          val exposedPort = new ExposedPort(namedPort.privatePort)
-//          val realPort = exposedPort.getPort
-//          NamedContainerPort(namedPort.name, realPort, None)
-//        }
-//      log.debug(s"Sending [${ContainerPorts(Right(ports))}] to [$sender]")
-//      sender ! ContainerPorts(Right(ports))
-//    }
-//  }
+  def starting(requestor : ActorRef, cut: ContainerUnderTest) : Receive = LoggingReceive {
+    case msg : ContainerStarted =>
+      requestor ! msg
+      context become LoggingReceive(started(cut))
+  }
 
-  def receive = LoggingReceive(Actor.emptyBehavior)
+  def started(cut: ContainerUnderTest) : Receive = LoggingReceive {
+    case StopContainer(n) if container.ctName == n  => {
+      val requestor = sender
+      new DockerContainer(cut).stopContainer
+      context become stopped
+      requestor ! ContainerStopped(Right(container.ctName))
+    }
+  }
+
+  def receive = stopped
 }

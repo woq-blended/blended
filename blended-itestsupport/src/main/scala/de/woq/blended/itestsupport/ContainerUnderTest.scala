@@ -93,6 +93,7 @@ object ContainerUnderTest {
       config.getString("name"),
       config.getString("image"), 
       dockerName,
+      dockerName,
       volumes,
       links,
       ports.map { p => (p.name, p) }.toMap
@@ -103,6 +104,7 @@ object ContainerUnderTest {
 case class ContainerUnderTest(
   ctName          : String,
   imgPattern      : String,
+  imgId           : String,
   dockerName      : String,
   volumes         : List[VolumeConfig] = List.empty,
   links           : List[ContainerLink] = List.empty,                             
@@ -111,10 +113,10 @@ case class ContainerUnderTest(
   
   val DEFAULT_PROTOCOL = "tcp"
   
-  def url(portName: String, host: String = "127.0.0.1", protocol: String = DEFAULT_PROTOCOL) : Option[String] = 
+  def url(portName: String, host: String = "127.0.0.1", protocol: String = DEFAULT_PROTOCOL) : String = 
     ports.get(portName) match {
-      case None => None
-      case Some(p) => Some(s"$protocol://$host:${p.publicPort}")
+      case None => s"$protocol://$host:65000"
+      case Some(p) => s"$protocol://$host:${p.publicPort}"
     }
 }
 

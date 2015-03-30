@@ -20,10 +20,8 @@ import scala.collection.convert.Wrappers.JListWrapper
 import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationInt
-
 import org.apache.camel.CamelContext
 import org.scalatest.Matchers
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.actor.Props
@@ -37,6 +35,7 @@ import de.woq.blended.itestsupport.camel.protocol.MockMessageReceived
 import de.woq.blended.itestsupport.condition.Condition
 import de.woq.blended.itestsupport.condition.ConditionActor
 import de.woq.blended.itestsupport.protocol._
+import de.woq.blended.itestsupport.condition.ConditionProvider
 
 trait BlendedIntegrationTestSupport
   extends Matchers { this: TestKit =>
@@ -48,13 +47,14 @@ trait BlendedIntegrationTestSupport
   lazy val mockProbe = new TestProbe(system)
   system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
 
-  def testContext(ctProxy : ActorRef) : Future[CamelContext] = {
-  
-    implicit val timeout = Timeout(1200.seconds)
-    
+  def testContext(ctProxy : ActorRef)(implicit timeout: Timeout) : Future[CamelContext] = {
     val cuts = ContainerUnderTest.containerMap(system.settings.config)
     (ctProxy ? TestContextRequest(cuts)).mapTo[CamelContext] 
   }
+  
+  def containerReady(ctProxy: ActorRef)(implicit timeout: Timeout) : Future[ContainerReady] = 
+    (ctProxy ? ContainerReady_?).mapTo[ContainerReady]
+ 
   
   def assertCondition(condition: Condition) : Boolean = {
 
