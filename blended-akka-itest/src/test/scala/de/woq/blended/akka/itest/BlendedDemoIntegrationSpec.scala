@@ -16,17 +16,28 @@
 
 package de.woq.blended.akka.itest
 
-import de.woq.blended.itestsupport.ContainerUnderTest
-import org.apache.camel.component.jms.JmsComponent
+import org.scalatest.SpecLike
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.testsupport.TestActorSys
-import org.scalatest.SpecLike
-import org.scalatest.DoNotDiscover
+import scala.collection.immutable.IndexedSeq
+import org.scalatest.BeforeAndAfterAll
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
+import akka.actor.Props
+import de.woq.blended.itestsupport.docker.protocol._
 
-@DoNotDiscover
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike
+  with BeforeAndAfterAll
   with BlendedIntegrationTestSupport {
   
-  //override def nestedSuites = IndexedSeq(new BlendedDemoSpec)
+  override def nestedSuites = IndexedSeq(new BlendedDemoSpec()(this))
+  
+  override def beforeAll() {
+    system.actorOf(Props(new TestContainerProxy()), ctProxyName)
+  }
+  
+  override def afterAll() {
+    stopContainers(1200.seconds, this)
+  }
 }

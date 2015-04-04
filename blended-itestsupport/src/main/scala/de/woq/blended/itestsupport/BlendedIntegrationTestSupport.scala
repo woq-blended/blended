@@ -39,38 +39,45 @@ import de.woq.blended.itestsupport.condition.ConditionProvider
 import akka.testkit.ImplicitSender
 import scala.concurrent.duration.FiniteDuration
 import de.woq.blended.itestsupport.docker.protocol._
+import scala.concurrent.duration._
 
-trait BlendedIntegrationTestSupport
-  extends Matchers { this: TestKit with ImplicitSender =>
-    
-  implicit val system: ActorSystem 
-  private[this] val log = system.log
+trait BlendedIntegrationTestSupport { 
   
-  lazy val camel = CamelExtension(system)
-  lazy val mockProbe = new TestProbe(system)
-  system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
-
-  def testContext(ctProxy : ActorRef)(implicit timeout: FiniteDuration) : CamelContext = {
-    val cuts = ContainerUnderTest.containerMap(system.settings.config)
-    ctProxy ! TestContextRequest(cuts)
-    receiveN(1,timeout).head.asInstanceOf[CamelContext] 
+  val ctProxyName = "ContainerProxy"
+  val ctProxyPath = s"/user/$ctProxyName"
+  
+  def actorByName(name: String)(implicit testKit: TestKit) : ActorRef = {    
+    implicit val timeout = Timeout(3.seconds)
+    Await.result(testKit.system.actorSelection(name).resolveOne(), 3.seconds)
   }
   
-  def containerReady(ctProxy: ActorRef)(implicit timeout: FiniteDuration) : Unit = {
-    ctProxy ! ContainerReady_?
-    expectMsg(timeout, ContainerReady(true))
+  def testContext(implicit timeout: FiniteDuration, testKit: TestKit) : CamelContext = {
+    val ctProxy = actorByName(ctProxyPath)
+    val probe = new TestProbe(testKit.system)
+    val cuts = ContainerUnderTest.containerMap(testKit.system.settings.config)    
+    ctProxy.tell(TestContextRequest(cuts), probe.ref)
+    probe.receiveN(1,timeout).head.asInstanceOf[CamelContext] 
+  }
+  
+  def containerReady(implicit timeout: FiniteDuration, testKit : TestKit) : Unit = {
+    val ctProxy = actorByName(ctProxyPath)
+    val probe = new TestProbe(testKit.system)
+    ctProxy.tell(ContainerReady_?, probe.ref)
+    probe.expectMsg(timeout, ContainerReady(true))
   } 
   
-  def stopContainers(ctProxy: ActorRef)(implicit timeout: FiniteDuration) : Unit = {
-    ctProxy ! StopContainerManager
-    expectMsg(timeout, ContainerManagerStopped)
+  def stopContainers(implicit timeout: FiniteDuration, testKit: TestKit) : Unit = {
+    val ctProxy = actorByName(ctProxyPath)
+    val probe = new TestProbe(testKit.system)
+    ctProxy.tell(StopContainerManager, probe.ref)
+    probe.expectMsg(timeout, ContainerManagerStopped)
   }
   
-  def assertCondition(condition: Condition) : Boolean = {
+  def assertCondition(condition: Condition)(implicit testKit: TestKit) : Boolean = {
 
-    implicit val eCtxt = system.dispatcher
+    implicit val eCtxt = testKit.system.dispatcher
 
-    val checker = system.actorOf(Props(ConditionActor(condition)))
+    val checker = testKit.system.actorOf(Props(ConditionActor(condition)))
 
     val checkFuture = (checker ? CheckCondition)(condition.timeout).map { result =>
       result match {

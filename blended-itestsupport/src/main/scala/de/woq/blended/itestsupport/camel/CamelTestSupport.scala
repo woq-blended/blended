@@ -19,32 +19,34 @@ package de.woq.blended.itestsupport.camel
 import scala.Left
 import scala.Right
 import scala.collection.convert.Wrappers.JMapWrapper
-
 import org.apache.camel.CamelContext
 import org.apache.camel.Exchange
 import org.apache.camel.ExchangePattern
 import org.apache.camel.Message
 import org.apache.camel.impl.DefaultExchange
-
 import akka.camel.CamelMessage
 import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
 import de.woq.blended.testsupport.XMLMessageFactory
 import de.woq.blended.util.FileReader
+import akka.actor.ActorSystem
+import akka.camel.CamelExtension
+import akka.event.LoggingAdapter
 
-trait CamelTestSupport { this : BlendedIntegrationTestSupport =>
-
-  private [CamelTestSupport] val log = system.log
+trait CamelTestSupport { 
   
-  def sendTestMessage(message: String, uri: String, binary: Boolean): Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit system: ActorSystem): Either[Exception, CamelMessage] = {
     sendTestMessage(message, Map.empty, uri, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean) : Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit system: ActorSystem) : Either[Exception, CamelMessage] = {
     sendTestMessage(message, properties, uri, true, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean) : Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit system: ActorSystem) : Either[Exception, CamelMessage] = {
 
+    val camel = CamelExtension(system)
+    val log = system.log
+    
     val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOnly)
 
@@ -61,11 +63,15 @@ trait CamelTestSupport { this : BlendedIntegrationTestSupport =>
     }
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean) : Either[Exception, CamelMessage] = {
+  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit system: ActorSystem) : Either[Exception, CamelMessage] = {
     executeRequest(message, properties, uri, true, binary)
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean) : Either[Exception, CamelMessage] = {
+  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit system: ActorSystem) : Either[Exception, CamelMessage] = {
+
+    implicit val camel = CamelExtension(system)
+    implicit val log = system.log
+
     val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOut)
 
@@ -85,28 +91,28 @@ trait CamelTestSupport { this : BlendedIntegrationTestSupport =>
   def missingHeaderNames(exchange: CamelMessage, mandatoryHeaders: List[String]) =
     mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
 
-  def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean) : CamelMessage = 
+  private [CamelTestSupport] def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit system: ActorSystem) : CamelMessage = 
     (evaluateXML match {
       case true => createMessageFromXML(message, binary)
       case false => createMessageFromFile(message, properties)
     }) match {
       case None =>
-        log.info(s"Using text as msg body: [$message]")
+        system.log.info(s"Using text as msg body: [$message]")
         CamelMessage(message, properties)
       case Some(m) => m
     }
 
-  private[this] def createMessageFromFile(message: String, props: Map[String, String]) : Option[CamelMessage] = {
+  private[CamelTestSupport] def createMessageFromFile(message: String, props: Map[String, String])(implicit system: ActorSystem) : Option[CamelMessage] = {
     try {
       val content: Array[Byte] = FileReader.readFile(message)
-      log.info("Body length is [" + content.length + "]")
+      system.log.info("Body length is [" + content.length + "]")
       Some(CamelMessage(content, props.mapValues { _.asInstanceOf[Any] } ))
     } catch {
       case e: Exception => None
     }
   }
 
-  private[this] def createMessageFromXML(message: String, binary: Boolean): Option[CamelMessage] = {
+  private[CamelTestSupport] def createMessageFromXML(message: String, binary: Boolean)(implicit system: ActorSystem): Option[CamelMessage] = {
     try {
       binary match {
         case true  => Some(camelMessage(new XMLMessageFactory(message).createBinaryMessage()))
@@ -117,10 +123,11 @@ trait CamelTestSupport { this : BlendedIntegrationTestSupport =>
     }
   }
 
-  private[this] def camelMessage(msg: Message) : CamelMessage = 
+  private[CamelTestSupport] def camelMessage(msg: Message)(implicit system: ActorSystem) : CamelMessage = 
     CamelMessage(msg.getBody, JMapWrapper(msg.getHeaders).mapValues { _.asInstanceOf[Any] }.toMap)
     
-  private[this] def camelExchange(msg: CamelMessage) : Exchange = {
+  private[this] def camelExchange(msg: CamelMessage)(implicit system: ActorSystem) : Exchange = {
+    val camel = CamelExtension(system)
     val exchange = new DefaultExchange(camel.context)
     
     exchange.getIn.setBody(msg.body)

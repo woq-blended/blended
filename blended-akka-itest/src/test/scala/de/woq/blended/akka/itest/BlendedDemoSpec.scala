@@ -16,66 +16,53 @@
 
 package de.woq.blended.akka.itest
 
-import javax.jms.ConnectionFactory
-import akka.util.Timeout
-import de.woq.blended.testsupport.TestActorSys
-import org.apache.camel.component.jms.JmsComponent
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
-import scala.concurrent.duration._
-import de.woq.blended.itestsupport._
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.FiniteDuration
 import org.apache.activemq.ActiveMQConnectionFactory
+import org.apache.camel.CamelContext
+import org.apache.camel.component.jms.JmsComponent
+import org.scalatest.Matchers
+import org.scalatest.WordSpecLike
 import akka.actor.Props
-import scala.util.{Success, Failure}
-import akka.pattern.{pipe, ask}
-import scala.concurrent.Await
+import akka.actor.actorRef2Scala
 import akka.testkit.TestActorRef
+import akka.util.Timeout
+import de.woq.blended.itestsupport.BlendedIntegrationTestSupport
+import de.woq.blended.itestsupport.BlendedTestContextManager
+import de.woq.blended.itestsupport.ContainerUnderTest
+import de.woq.blended.itestsupport.TestContextConfigurator
 import de.woq.blended.itestsupport.camel.CamelMockActor
 import de.woq.blended.itestsupport.camel.CamelTestSupport
-import de.woq.blended.itestsupport.camel.CamelMockActor
-import org.apache.camel.CamelContext
-import de.woq.blended.itestsupport.camel.MockAssertions._
-import protocol._
-import camel.protocol._
-import de.woq.blended.itestsupport.condition._
+import de.woq.blended.itestsupport.camel.MockAssertions.checkAssertions
+import de.woq.blended.itestsupport.camel.MockAssertions.expectedBodies
+import de.woq.blended.itestsupport.camel.MockAssertions.expectedMessageCount
+import de.woq.blended.itestsupport.condition.Condition
+import de.woq.blended.itestsupport.condition.ParallelComposedCondition
+import de.woq.blended.itestsupport.docker.protocol.ContainerManagerStopped
+import de.woq.blended.itestsupport.docker.protocol.StopContainerManager
 import de.woq.blended.itestsupport.jms.JMSAvailableCondition
-import de.woq.blended.itestsupport.docker.protocol._
-import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
 import de.woq.blended.itestsupport.jolokia.CamelContextExistsCondition
+import de.woq.blended.itestsupport.jolokia.JolokiaAvailableCondition
+import de.woq.blended.testsupport.TestActorSys
+import akka.testkit.TestKit
+import org.scalatest.WordSpec
+import akka.testkit.ImplicitSender
+import akka.testkit.TestProbe
+import de.woq.blended.itestsupport.camel.protocol._
+import org.scalatest.DoNotDiscover
+import scala.concurrent.duration._
 
-class BlendedDemoSpec extends TestActorSys
-  with WordSpecLike
+@DoNotDiscover
+class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
   with Matchers
-  with CamelTestSupport
-  with BlendedIntegrationTestSupport {
+  with BlendedIntegrationTestSupport 
+  with CamelTestSupport {
 
+  implicit val system = testKit.system
   implicit val timeOut = new Timeout(3.seconds)
-  implicit val eCtxt = system.dispatcher
-  implicit val tk = this
+  implicit val eCtxt = testKit.system.dispatcher
 
-  class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
-    
-    val dockerHost = context.system.settings.config.getString("docker.host")
-
-    private[this] def amqUrl(cuts: Map[String, ContainerUnderTest]) : String = cuts("blended_demo_0").url("jms", dockerHost, "tcp")
-    private[this] def jmxRest(cuts: Map[String, ContainerUnderTest]) : String = s"${cuts("blended_demo_0").url("http", dockerHost, "http")}/hawtio/jolokia"
-    
-    override def configure(cuts: Map[String, ContainerUnderTest], camelCtxt : CamelContext): CamelContext = {
-      camelCtxt.addComponent("jms", JmsComponent.jmsComponent(new ActiveMQConnectionFactory(amqUrl(cuts))))
-      camelCtxt
-    }
-    
-    override def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = {
-      val t = 60.seconds
-      ParallelComposedCondition(
-        JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t)),
-        JolokiaAvailableCondition(jmxRest(cuts), Some(t), Some("blended"), Some("blended")),
-        CamelContextExistsCondition(jmxRest(cuts), Some("blended"), Some("blended"),  "BlendedSample", Some(t))
-      )      
-    }
-  }
-
-  private[this] val log = system.log
-  private[this] val ctProxy = system.actorOf(Props(new TestContainerProxy), "ContainerProxy")
+  private[this] val log = testKit.system.log
 
   "The demo container" should {
 
@@ -83,10 +70,12 @@ class BlendedDemoSpec extends TestActorSys
       
       implicit val timeout : FiniteDuration = 1200.seconds
       
-      val camelCtx = testContext(ctProxy)
-      containerReady(ctProxy)
+      testContext
+      containerReady
       
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
+      val mockProbe = new TestProbe(system)
+      testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
  
       sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {
         // We have successfully sent the message 
@@ -103,9 +92,6 @@ class BlendedDemoSpec extends TestActorSys
           log.error(e.getMessage, e)
           fail(e.getMessage)
       }
-      
-      ctProxy ! StopContainerManager
-      expectMsg(timeout, ContainerManagerStopped)
     }
   }
 }
