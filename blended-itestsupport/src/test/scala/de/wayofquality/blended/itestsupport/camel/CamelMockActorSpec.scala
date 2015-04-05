@@ -1,26 +1,17 @@
 package de.wayofquality.blended.itestsupport.camel
 
-import akka.camel.Consumer
-import akka.camel.CamelMessage
-import akka.testkit.TestActors
-import org.scalatest.Matchers
-import akka.camel.CamelExtension
-import akka.actor.ActorSystem
-import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.WordSpecLike
-import de.wayofquality.blended.itestsupport.docker.DockerTestSetup
-import org.scalatest.mock.MockitoSugar
-import akka.testkit.TestActorRef
 import akka.actor.Props
-import de.wayofquality.blended.itestsupport.camel.protocol._
-import akka.camel.Producer
-import akka.camel.Oneway
-import akka.testkit.TestProbe
-import de.wayofquality.blended.itestsupport.camel.MockAssertions._
-import akka.testkit.TestKit
-import scala.concurrent.Await
-import scala.concurrent.duration._
+import akka.camel.{CamelExtension, Oneway, Producer}
+import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
+import de.wayofquality.blended.itestsupport.camel.MockAssertions._
+import de.wayofquality.blended.itestsupport.camel.protocol._
+import de.wayofquality.blended.itestsupport.docker.DockerTestSetup
+import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.mock.MockitoSugar
+
+import scala.concurrent.duration._
 
 class CamelMockActorSpec extends TestActorSys
   with WordSpecLike
@@ -62,7 +53,6 @@ class CamelMockActorSpec extends TestActorSys
 
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:b"))
-      
     }
   
     "Track the received messages" in {
