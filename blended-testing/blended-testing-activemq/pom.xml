@@ -50,14 +50,14 @@
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-testsupport</artifactId>
       <version>${blended.version}</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-itestsupport</artifactId>
       <version>${blended.version}</version>
       <scope>test</scope>

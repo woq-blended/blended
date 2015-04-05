@@ -19,12 +19,12 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
 
   <bean
-    id="identifier" class="de.woq.blended.container.id.internal.ContainerIdentifierServiceImpl"
+    id="identifier" class="de.wayofquality.blended.container.id.internal.ContainerIdentifierServiceImpl"
     init-method="init" destroy-method="destroy" scope="singleton">
 
     <argument index="0" ref="blueprintBundleContext" />
     <argument index="1">
-      <reference interface="de.woq.blended.container.context.ContainerContext" timeout="1000" />
+      <reference interface="de.wayofquality.blended.container.context.ContainerContext" timeout="1000" />
     </argument>
   </bean>
 

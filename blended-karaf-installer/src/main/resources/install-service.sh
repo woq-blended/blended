@@ -19,6 +19,6 @@ do
   APPCP="${APPCP}:${jar}"
 done
 
-${KARAF_JAVA_HOME}/bin/java -cp ${APPCP} -DKARAF_JAVA_HOME=${KARAF_JAVA_HOME} de.woq.blended.karaf.installer.ServiceInstaller -b ${KARAF_HOME} -n ${SERVICE_NAME} ${KARAF_SVC_PARAMS}
+${KARAF_JAVA_HOME}/bin/java -cp ${APPCP} -DKARAF_JAVA_HOME=${KARAF_JAVA_HOME} de.wayofquality.blended.karaf.installer.ServiceInstaller -b ${KARAF_HOME} -n ${SERVICE_NAME} ${KARAF_SVC_PARAMS}
 
 cd ${OLD_DIR}

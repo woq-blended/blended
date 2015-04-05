@@ -8,4 +8,4 @@ Import-Package: \
   *
 
 Private-Package:\
-  de.woq.blended.*.internal.*
+  de.wayofquality.blended.*.internal.*

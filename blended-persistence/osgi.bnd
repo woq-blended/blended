@@ -7,7 +7,7 @@ Bundle-SymbolicName:\
 Import-Package: *
 
 Bundle-Activator: \
-  de.woq.blended.persistence.internal.PersistenceActivator
+  de.wayofquality.blended.persistence.internal.PersistenceActivator
 
 Private-Package:\
-  de.woq.blended.*.internal.*
+  de.wayofquality.blended.*.internal.*

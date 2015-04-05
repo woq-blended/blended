@@ -7,6 +7,6 @@ Bundle-SymbolicName:\
 Import-Package: *
 
 Private-Package:\
-  de.woq.blended.*.internal.*
+  de.wayofquality.blended.*.internal.*
 
-Bundle-Activator: de.woq.blended.container.registry.internal.RegistryActivator
+Bundle-Activator: de.wayofquality.blended.container.registry.internal.RegistryActivator
