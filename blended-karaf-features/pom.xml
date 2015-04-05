@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
@@ -34,121 +34,115 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-util</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-context</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-id</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-jmx</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-persistence</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-neo4j-api</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-registry</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-camel-utils</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-mgmt-agent</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-mgmt-rest</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-jolokia</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
-      <artifactId>blended-jaxrs</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-activemq-brokerstarter</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-modules</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-spray-api</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-spray</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended.samples</groupId>
+      <groupId>${project.groupId}.samples</groupId>
       <artifactId>blended-samples-spray-helloworld</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended.samples</groupId>
+      <groupId>${project.groupId}.samples</groupId>
       <artifactId>blended-samples-camel</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended.samples</groupId>
+      <groupId>${project.groupId}.samples</groupId>
       <artifactId>blended-samples-tracker</artifactId>
       <version>${blended.version}</version>
     </dependency>

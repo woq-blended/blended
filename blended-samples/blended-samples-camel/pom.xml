@@ -23,12 +23,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
 
-  <groupId>de.woq.blended.samples</groupId>
+  <groupId>de.wayofquality.blended.samples</groupId>
   <artifactId>blended-samples-camel</artifactId>
   <packaging>bundle</packaging>
 

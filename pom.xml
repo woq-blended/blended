@@ -23,7 +23,7 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.woq.blended</groupId>
+  <groupId>de.wayofquality.blended</groupId>
   <artifactId>blended-reactor</artifactId>
   <version>1.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
@@ -87,8 +87,6 @@
 
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>
-
-        <module>blended-archetypes-project</module>
 
         <module>blended-samples</module>
       </modules>

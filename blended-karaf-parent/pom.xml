@@ -24,10 +24,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
   </parent>
 
   <artifactId>blended-karaf-parent</artifactId>
@@ -87,7 +86,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-util</artifactId>
       <version>${blended.version}</version>
       <exclusions>
@@ -99,13 +98,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-karaf-installer</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-karaf-installer</artifactId>
       <version>${blended.version}</version>
       <type>linux</type>
@@ -119,7 +118,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>de.wayofquality.blended</groupId>
       <artifactId>blended-karaf-installer</artifactId>
       <version>${blended.version}</version>
       <type>windows</type>

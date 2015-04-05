@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
     <relativePath>../../blended-parent</relativePath>
@@ -32,7 +32,7 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-karaf-demo</artifactId>
       <version>${project.version}</version>
       <classifier>nojre</classifier>

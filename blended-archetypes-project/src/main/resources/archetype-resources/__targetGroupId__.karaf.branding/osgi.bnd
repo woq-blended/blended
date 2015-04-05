@@ -1,9 +1,0 @@
-#set( $symbol_dollar = '$' )
-
-Bundle-Version:\
-  ${symbol_dollar}{project.version}
-
-Bundle-SymbolicName:\
-  ${bundle.symbolicName}; singleton:=true
-
-Import-Package: *

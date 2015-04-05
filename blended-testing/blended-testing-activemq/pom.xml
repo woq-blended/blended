@@ -20,11 +20,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
 
+  <groupId>de.wayofquality.blended.testing</groupId>
   <artifactId>blended-testing-activemq</artifactId>
   <packaging>jar</packaging>
 

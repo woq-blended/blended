@@ -23,7 +23,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
@@ -34,7 +34,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-docker-demo</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
@@ -48,7 +48,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-itestsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>

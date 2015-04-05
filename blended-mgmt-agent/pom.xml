@@ -23,7 +23,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
@@ -39,25 +39,25 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-id</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-registry</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-spray-api</artifactId>
       <version>${blended.version}</version>
     </dependency>

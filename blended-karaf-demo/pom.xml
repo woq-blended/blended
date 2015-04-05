@@ -24,7 +24,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>de.woq.blended</groupId>
+    <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-karaf-parent</artifactId>
     <version>1.1.2-SNAPSHOT</version>
   </parent>
@@ -42,7 +42,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <dependencies>
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-karaf-features</artifactId>
       <version>${blended.version}</version>
       <classifier>features</classifier>
@@ -50,7 +50,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-karaf-parent</artifactId>
       <version>${blended.version}</version>
       <classifier>assembly</classifier>
@@ -58,7 +58,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     </dependency>
 
     <dependency>
-      <groupId>de.woq.blended</groupId>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended-karaf-parent</artifactId>
       <version>${blended.version}</version>
       <classifier>assembly</classifier>
