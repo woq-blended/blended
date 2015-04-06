@@ -23,7 +23,7 @@ import scala.collection.immutable.IndexedSeq
 import org.scalatest.BeforeAndAfterAll
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 import de.wayofquality.blended.itestsupport.docker.protocol._
 
 class BlendedDemoIntegrationSpec extends TestActorSys
@@ -31,17 +31,17 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   with BeforeAndAfterAll
   with BlendedIntegrationTestSupport {
   
+  private[this] val ctProxy = system.actorOf(Props(new TestContainerProxy()))
   private[this] val timeout = 1200.seconds
   
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec()(this))
   
   override def beforeAll() {
-    system.actorOf(Props(new TestContainerProxy()), ctProxyName)
-    testContext(timeout, this)
-    containerReady(timeout, this)
+    testContext(ctProxy)(timeout, this)
+    containerReady(ctProxy)(timeout, this)
   }
   
   override def afterAll() {
-    stopContainers(1200.seconds, this)
+    stopContainers(ctProxy)(1200.seconds, this)
   }
 }
