@@ -67,12 +67,7 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
   "The demo container" should {
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
-      
-      implicit val timeout : FiniteDuration = 1200.seconds
-      
-      testContext
-      containerReady
-      
+
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
       val mockProbe = new TestProbe(system)
       testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])

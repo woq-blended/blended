@@ -27,7 +27,7 @@ import de.wayofquality.blended.itestsupport.condition.ConditionProvider._
 
 trait TestContextConfigurator {
   def configure(cuts : Map[String, ContainerUnderTest], context: CamelContext) : CamelContext
-  def testConfig(cuts: Map[String, ContainerUnderTest]) : Map[String, AnyRef] = Map.empty
+  def testConfig(cuts: Map[String, ContainerUnderTest]) : Map[String, Any] = Map.empty
 }
 
 class TestContextCreator extends Actor with ActorLogging { this : TestContextConfigurator =>

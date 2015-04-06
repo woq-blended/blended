@@ -71,7 +71,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
     case req : TestContextRequest => context.become(starting(sender :: requestors, containerMgr))
   }
   
-  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef, testConfig: Map[String, AnyRef]) = LoggingReceive {
+  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef, testConfig: Map[String, Any]) = LoggingReceive {
     case req : TestContextRequest => sender ! testContext
     
     case ContainerReady_? => 

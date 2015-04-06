@@ -31,10 +31,14 @@ class BlendedDemoIntegrationSpec extends TestActorSys
   with BeforeAndAfterAll
   with BlendedIntegrationTestSupport {
   
+  private[this] val timeout = 1200.seconds
+  
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec()(this))
   
   override def beforeAll() {
     system.actorOf(Props(new TestContainerProxy()), ctProxyName)
+    testContext(timeout, this)
+    containerReady(timeout, this)
   }
   
   override def afterAll() {

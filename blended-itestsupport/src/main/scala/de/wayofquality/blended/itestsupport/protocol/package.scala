@@ -57,6 +57,6 @@ package object protocol {
   case class ContainerReady(ready: Boolean)
   
   case object TestConfiguration_?
-  case class TestConfiguration(configuration: Map[String, AnyRef])
+  case class TestConfiguration(configuration: Map[String, Any])
 
 }
