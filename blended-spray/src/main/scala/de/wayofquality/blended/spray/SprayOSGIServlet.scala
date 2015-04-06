@@ -33,9 +33,9 @@ class SprayOSGIServlet extends Servlet30ConnectorServlet { this : SprayOSGIBridg
     system = actorSystem
     serviceActor = routeActor
     settings = connectorSettings
-    require(system != null, "No ActorSystem configured")
-    require(serviceActor != null, "No ServiceActor configured")
-    require(settings != null, "No ConnectorSettings configured")
+    require(Option(system) != None, "No ActorSystem configured")
+    require(Option(serviceActor) != None, "No ServiceActor configured")
+    require(Option(settings) != None, "No ConnectorSettings configured")
     require(RefUtils.isLocal(serviceActor), "The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
     timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
     require(RefUtils.isLocal(timeoutHandler), "The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
