@@ -16,18 +16,14 @@
 
 package de.wayofquality.blended.itestsupport
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
+import akka.actor.{Actor, ActorLogging}
+import akka.camel.CamelExtension
 import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.protocol._
-import akka.camel.CamelExtension
 import org.apache.camel.CamelContext
-import de.wayofquality.blended.itestsupport.condition.Condition
-import de.wayofquality.blended.itestsupport.condition.ConditionProvider._
 
 trait TestContextConfigurator {
   def configure(cuts : Map[String, ContainerUnderTest], context: CamelContext) : CamelContext
-  def testConfig(cuts: Map[String, ContainerUnderTest]) : Map[String, Any] = Map.empty
 }
 
 class TestContextCreator extends Actor with ActorLogging { this : TestContextConfigurator =>

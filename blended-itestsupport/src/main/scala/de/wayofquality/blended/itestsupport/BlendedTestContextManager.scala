@@ -64,20 +64,22 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
       result match {
         case Right(cuts) => 
           val camelCtxt = configure(cuts, camel.context)
-          context.become(working(cuts, camelCtxt, containerMgr, testConfig(cuts)))
+          context.become(working(cuts, camelCtxt, containerMgr))
           requestors.foreach(_ ! camelCtxt)
         case m => requestors.foreach(_ ! m)
       }
     case req : TestContextRequest => context.become(starting(sender :: requestors, containerMgr))
   }
   
-  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef, testConfig: Map[String, Any]) = LoggingReceive {
+  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
     case req : TestContextRequest => sender ! testContext
     
     case ContainerReady_? => 
       implicit val eCtxt = context.system.dispatcher
 
       val condition = containerReady(cuts)
+      
+      log.info(s"Waiting for container condition(s) [$condition}]")
       
       val checker = context.system.actorOf(Props(ConditionActor(condition)))
 
@@ -88,7 +90,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
         }
       }).pipeTo(sender)
 
-    case TestConfiguration_? => sender ! TestConfiguration(testConfig)
+    case ConfiguredContainers_? => sender ! ConfiguredContainers(cuts)
       
     case StopContainerManager => 
       camel.context.stop()

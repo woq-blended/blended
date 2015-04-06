@@ -25,7 +25,7 @@ import de.wayofquality.blended.itestsupport.docker.protocol._
 import de.wayofquality.blended.itestsupport.protocol._
 import org.apache.camel.CamelContext
 
-import scala.concurrent.Await
+import scala.concurrent.{Future, Await}
 import scala.concurrent.duration.FiniteDuration
 
 trait BlendedIntegrationTestSupport { 
@@ -41,7 +41,7 @@ trait BlendedIntegrationTestSupport {
     val probe = new TestProbe(testKit.system)
     ctProxy.tell(ContainerReady_?, probe.ref)
     probe.expectMsg(timeout, ContainerReady(true))
-  } 
+  }
   
   def stopContainers(ctProxy: ActorRef)(implicit timeout: FiniteDuration, testKit: TestKit) : Unit = {
     val probe = new TestProbe(testKit.system)
