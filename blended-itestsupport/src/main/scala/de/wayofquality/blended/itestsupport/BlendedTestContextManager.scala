@@ -56,21 +56,22 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
         }), "ContainerMgr")
 
       containerMgr ! StartContainerManager(req.cuts)
-      context.become(starting(sender, containerMgr) orElse stashing)
+      context.become(starting(List(sender), containerMgr) orElse stashing)
   } 
   
-  def starting(requestor: ActorRef, containerMgr: ActorRef) : Receive = LoggingReceive {
+  def starting(requestors: List[ActorRef], containerMgr: ActorRef) : Receive = LoggingReceive {
     case ContainerManagerStarted(result) => 
       result match {
         case Right(cuts) => 
           val camelCtxt = configure(cuts, camel.context)
-          context.become(working(cuts, camelCtxt, containerMgr))
-          requestor ! camelCtxt
-        case m => requestor ! m
+          context.become(working(cuts, camelCtxt, containerMgr, testConfig(cuts)))
+          requestors.foreach(_ ! camelCtxt)
+        case m => requestors.foreach(_ ! m)
       }
+    case req : TestContextRequest => context.become(starting(sender :: requestors, containerMgr))
   }
   
-  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
+  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef, testConfig: Map[String, AnyRef]) = LoggingReceive {
     case req : TestContextRequest => sender ! testContext
     
     case ContainerReady_? => 
@@ -86,6 +87,8 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
           case _ => ContainerReady(false)
         }
       }).pipeTo(sender)
+
+    case TestConfiguration_? => sender ! TestConfiguration(testConfig)
       
     case StopContainerManager => 
       camel.context.stop()
