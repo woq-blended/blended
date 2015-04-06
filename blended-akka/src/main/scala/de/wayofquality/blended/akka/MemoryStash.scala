@@ -17,22 +17,25 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.{ActorLogging, Actor, ActorRef}
+import scala.collection.mutable.ListBuffer
 
 trait MemoryStash { this : Actor with ActorLogging =>
 
-  var requests = List.empty[(ActorRef, Any)]
+  val requests = ListBuffer.empty[(ActorRef, Any)]
 
   def stashing : Receive = {
     case msg =>
       log.debug(s"Stashing [${msg}]")
-      requests = (sender, msg) :: requests
+      requests.prepend((sender, msg))
   }
 
   def unstash() : Unit = {
     log.debug(s"Unstashing [${requests.size}] messages.")
-    requests.reverse.foreach { case (requestor, msg) =>
+    val r = requests.reverse.toList
+    requests.clear()
+    r.foreach { case (requestor, msg) =>
       self.tell(msg, requestor)
     }
-    requests = List.empty[(ActorRef, Any)]
+    requests.clear()
   }
 }
