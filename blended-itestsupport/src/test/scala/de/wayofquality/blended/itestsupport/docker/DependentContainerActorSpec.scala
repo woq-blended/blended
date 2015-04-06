@@ -23,7 +23,7 @@ import de.wayofquality.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
 import scala.concurrent.duration._
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
+import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
 import java.util.UUID
 
 class DependentContainerActorSpec extends TestActorSys
@@ -43,10 +43,11 @@ class DependentContainerActorSpec extends TestActorSys
         ctName = "foo", 
         imgPattern = "^atooni/bar:latest",
         dockerName = "foobar",
-        imgId = UUID.randomUUID().toString
+        imgId = UUID.randomUUID().toString,
+        links = List(ContainerLink("blended_demo_0", "blended_demo"))
       )
       
-      val container = new DockerContainer(cut).withLink("blended_demo_0:demo")
+      val container = new DockerContainer(cut)
       val depActor = TestActorRef(Props(DependentContainerActor(cut)))
 
       watch(depActor)

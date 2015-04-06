@@ -64,45 +64,5 @@ class DockerContainerSpec extends WordSpec
 
       verify(mockClient).inspectContainerCmd(cut.dockerName)
     }
-
-    "allow to set the linked containers" in {
-      val container = new DockerContainer(cut)
-      container
-        .withLink("foo_0:foo")
-        .withLink("bar_0:bar")
-
-      val links = container.links
-
-      links should contain theSameElementsAs Vector(
-        Link.parse("foo_0:foo"),
-        Link.parse("bar_0:bar")
-      )
-    }
-
-    "allow to set single exposed ports" in {
-      val container = new DockerContainer(cut)
-      val namedPort : NamedContainerPort = ("jmx", 1099, 1099)
-      container.withNamedPort(namedPort)
-
-      val ports = container.ports should be (Map("jmx" -> namedPort))
-    }
-
-    "allow to set multiple exposed ports" in {
-      val container = new DockerContainer(cut)
-      val port1 : NamedContainerPort = ("jmx", 1099, 1099)
-      val port2 : NamedContainerPort = ("http", 8181, 8181)
-      container.withNamedPort(port1).withNamedPort(port2)
-
-      val ports = container.ports should be (Map("jmx" -> port1, "http" -> port2))
-    }
-
-    "allow to set multiple exposed ports at once" in {
-      val container = new DockerContainer(cut)
-      val port1 : NamedContainerPort = ("jmx", 1099, 1099)
-      val port2 : NamedContainerPort = ("http", 8181, 8181)
-      container.withNamedPorts(Seq(port1, port2))
-
-      val ports = container.ports should be (Map("jmx" -> port1, "http" -> port2))
-    }
   }
 }

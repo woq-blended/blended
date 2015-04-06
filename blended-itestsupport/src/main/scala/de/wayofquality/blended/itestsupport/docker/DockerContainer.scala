@@ -28,28 +28,17 @@ import org.slf4j.LoggerFactory
 
 class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
 
-  var linkedContainers : List[Link] = List.empty
-  var mappedVolumes : List[Bind] = List.empty
-  var ports : Map[String, NamedContainerPort] = Map.empty
-
   private[this] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
 
   /**
    * @return The docker image id of the container.
    */
-  def id = cut.imgId
+  private[this] def id = cut.imgId
 
   /**
    * @return The docker runtime name of the container.
    */
-  def containerName = cut.dockerName
-
-  /**
-   * @return A list of runtime names that the container relies on in terms of docker links.
-   */
-  def links = linkedContainers
-
-  def binds = mappedVolumes
+  private[this] def containerName = cut.dockerName
 
   /**
    * Start the container with a given set of exposed ports. Exposed ports are defined in terms of docker
@@ -58,11 +47,13 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
    * by some manager object that knows about available ports or can determine available ports upon request.
    */
   def startContainer = {
-    logger info s"Starting container [${cut.dockerName}] with container links [$linkedContainers]."
+    
+    val links : List[Link] = cut.links.map { l => Link.parse(s"${l.container}:${l.hostname}") }
+    logger info s"Starting container [${cut.dockerName}] with container links [$links]."
     
     val container  = client.createContainerCmd(id).withName(cut.dockerName).withTty(true).exec()
     val cmd = client.startContainerCmd(containerName).withPublishAllPorts(true)
-    if (!linkedContainers.isEmpty) cmd.withLinks(links:_*)
+    if (!links.isEmpty) cmd.withLinks(links:_*)
     
     cmd.exec()
 
@@ -81,25 +72,4 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
     client.stopContainerCmd(containerName).exec()
     this
   }
-
-  def withNamedPort(port: NamedContainerPort) = {
-    this.ports += (port.name -> port)
-    this
-  }
-
-  def withNamedPorts(ports : Seq[NamedContainerPort]) = {
-    ports.foreach(withNamedPort)
-    this
-  }
-
-  def withLink(link : String) = {
-    this.linkedContainers = Link.parse(link) :: this.linkedContainers
-    this
-  }
-
-  def withVolume(mappedDir : String, volume: Volume, rw: AccessMode) = {
-    this.mappedVolumes = new Bind(mappedDir, volume, rw) :: mappedVolumes
-    this
-  }
-
 }
