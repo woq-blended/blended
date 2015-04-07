@@ -31,6 +31,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <artifactId>blended-karaf-parent</artifactId>
   <packaging>pom</packaging>
+  
+  <description>Parent pom file for all modules that define a Karaf container packaging.</description>
 
   <properties>
     <blended.branding.groupId>${project.groupId}</blended.branding.groupId>

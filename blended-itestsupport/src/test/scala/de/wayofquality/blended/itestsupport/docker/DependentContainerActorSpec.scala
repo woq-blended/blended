@@ -52,8 +52,8 @@ class DependentContainerActorSpec extends TestActorSys
 
       watch(depActor)
 
-      depActor ! ContainerStarted(Right("blended_demo_0"))
-      expectMsg( DependenciesStarted(Right(cut)) )
+      depActor ! ContainerStarted(Right(cut.copy(ctName = "blended_demo_0")))
+      expectMsg( DependenciesStarted(Right(cut.copy(links = List(ContainerLink("foobar", "blended_demo"))))) )
 
       fishForMessage() {
         case m : Terminated => true

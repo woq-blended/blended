@@ -32,6 +32,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <artifactId>blended-samples-tracker</artifactId>
   <packaging>bundle</packaging>
 
+  <description>
+    Using an Actor based OSGI Service tracker.
+  </description>
+  
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>

@@ -32,6 +32,10 @@
 
   <artifactId>blended-karaf-branding</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    A sample custom branding bundle for the blended demo container.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

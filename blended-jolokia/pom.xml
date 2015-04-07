@@ -31,6 +31,10 @@
 
   <artifactId>blended-jolokia</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    Provide an Actor based Jolokia Client to access JMX resources of a container via REST.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

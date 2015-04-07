@@ -28,6 +28,12 @@
 
   <artifactId>blended-container-registry</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    The container registry serves as the centerpiece for collecting container information. Individual containers 
+    regularly post their monitoring information associated with their UUID and the container registry will keep 
+    track of that information relying on the persistence services defined in other bundles.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

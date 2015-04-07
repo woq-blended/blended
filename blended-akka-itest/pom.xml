@@ -30,6 +30,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <artifactId>blended-akka-itest</artifactId>
   <packaging>jar</packaging>
+  
+  <description>
+    A sample integration test what uses docker to fire up the container(s) under test,
+    execute the test suite and shutdown the container(s) afterwards.
+  </description>
 
   <dependencies>
 

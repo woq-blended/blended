@@ -28,6 +28,12 @@
 
   <artifactId>blended-container-id</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    A container identifier service that assigns (and keeps) a UUID for each configured container. 
+    Container wide properties can be accessed within this service as well. This shall be extended 
+    to the main interface to a container configuratin database.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

@@ -18,7 +18,7 @@ package de.wayofquality.blended.itestsupport.docker
 
 import akka.actor.{ActorRef, Actor, ActorLogging}
 import akka.event.LoggingReceive
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
+import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
 
 import de.wayofquality.blended.itestsupport.docker.protocol._
 
@@ -35,19 +35,28 @@ import de.wayofquality.blended.itestsupport.docker.protocol._
  */
 class DependentContainerActor(container: ContainerUnderTest) extends Actor with ActorLogging {
 
-  def receive : Receive = waiting(container.links.map(_.container))
+  def receive : Receive = waiting(container.links.map(_.container), container.links)
 
-  def waiting(pendingContainers : List[String]) : Receive = LoggingReceive {
+  def waiting(pendingContainers : List[String], links: List[ContainerLink]) : Receive = LoggingReceive {
     case ContainerStarted(ct) => ct match {
-      case Right(n) =>
-        pendingContainers.filter(_ != n) match {
+      case Right(cut) =>
+        
+        val newLinks = links.map { l => 
+          if (l.container == cut.ctName) 
+            ContainerLink(cut.dockerName, l.hostname)
+          else 
+            l
+        }
+        
+        pendingContainers.filter(_ != cut.ctName) match {
           case l if l.isEmpty =>
-            log info s"Dependencies for container [${container.dockerName}] started."
-            sender ! DependenciesStarted(Right(container))
+            val newCut = container.copy(links = newLinks)
+            log info s"Dependencies for container [$newCut] started."
+            sender ! DependenciesStarted(Right(newCut))
             context.stop(self)
           case l => 
             log.debug(s"$pendingContainers")
-            context.become(waiting(l))
+            context.become(waiting(l, newLinks))
         }
       case Left(e) => 
         sender ! DependenciesStarted(Left(e))

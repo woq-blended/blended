@@ -26,7 +26,9 @@
   </parent>
 
   <artifactId>blended-testsupport</artifactId>
-  <packaging>bundle</packaging>
+  <description>
+    Some test helper classes.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

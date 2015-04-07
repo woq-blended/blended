@@ -30,6 +30,11 @@
 
   <artifactId>blended-activemq-brokerstarter</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    A simple wrapper around an Active MQ broker that makes sure that the broker
+    is completely started before exposing a connection factory OSGi service.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

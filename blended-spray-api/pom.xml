@@ -28,6 +28,10 @@
 
   <artifactId>blended-spray-api</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    Package the complete Spray API into a bundle.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

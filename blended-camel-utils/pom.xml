@@ -28,6 +28,11 @@
   <artifactId>blended-camel-utils</artifactId>
   <packaging>bundle</packaging>
 
+  <description>
+    A bundle to create a more OSGI-like solution when using the Camel Servlet Component on top 
+    of an HTTP OSGI Service. Also see http://www.wayofquality.de/open%20source/camel/using-camel-servlets-within-osgi/
+  </description>
+  
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>

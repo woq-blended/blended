@@ -30,6 +30,9 @@
   </parent>
 
   <artifactId>blended-karaf-features</artifactId>
+  <description>
+    Karaf Feature definitions for useful bundle groups.
+  </description>
 
   <dependencies>
 

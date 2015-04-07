@@ -27,6 +27,48 @@
 
   <version>1.1.2-SNAPSHOT</version>
 
+  <url>https://github.com/woq-blended/blended</url>
+  <description>Common Settings and configurations for all blended modules.</description>
+  
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>WoQ - Way of Quality GmbH</name>
+    <url>http://www.wayofquality.de</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>Andreas Gies</name>
+      <email>andreas@wayofquality.de</email>
+      <organization>WoQ - Way of Quality GmbH</organization>
+      <organizationUrl>http://www.wayofquality.de</organizationUrl>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <repository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <scm>
+    <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
+    <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
+    <url>https://github.com/woq-blended/blended</url>
+  </scm>
+
+
   <properties>
     <blended.version>1.1.2-SNAPSHOT</blended.version>
 
@@ -132,37 +174,6 @@
     <xstream.version>1.3_3</xstream.version>
   </properties>
 
-  <ciManagement>
-    <system>jenkins</system>
-    <url>http://ci.wayofquality.de:8081/jenkins/job</url>
-  </ciManagement>
-
-  <distributionManagement>
-    <repository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-release-local</url>
-    </repository>
-    <snapshotRepository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-snapshot-local</url>
-    </snapshotRepository>
-  </distributionManagement>
-
-  <scm>
-    <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
-    <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
-    <url>https://github.com/woq-blended/blended</url>
-  </scm>
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
   <build>
     <testResources>
       <testResource>
@@ -191,10 +202,24 @@
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-archetype-plugin</artifactId>
-          <version>2.2</version>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.4</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+              <configuration>
+                <includes>
+                  <include>**/*.java</include>
+                  <include>**/*.scala</include>
+                </includes>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
-
+    
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -408,19 +433,55 @@
       </plugins>
     </pluginManagement>
 
+    <plugins>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals><goal>add-source</goal></goals>
+            <configuration>
+              <sources>
+                <source>src/main/scala</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-doc</id>
+            <goals>
+              <goal>doc-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+   </plugins>
+
   </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
   <repositories>
-    <repository>
-      <id>WoQ</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/complete</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
 
     <repository>
       <id>FUSEStaging</id>
@@ -459,18 +520,6 @@
 
   <profiles>
     <profile>
-      <id>ntest</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-
-      <properties>
-        <test>0</test>
-        <failIfNoTests>false</failIfNoTests>
-      </properties>
-    </profile>
-    
-    <profile>
       <id>sign</id>
       <activation>
         <activeByDefault>false</activeByDefault>
@@ -485,6 +534,7 @@
       </build>
     </profile>
   </profiles>
+
 </project>
 
 

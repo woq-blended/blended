@@ -28,6 +28,9 @@
   </parent>
 
   <artifactId>blended-docker-demo</artifactId>
+  <description>
+    Packaging the sample container into a docker image.
+  </description>
 
   <dependencies>
 

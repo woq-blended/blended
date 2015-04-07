@@ -30,6 +30,11 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <artifactId>blended-mgmt-rest</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    REST interface to accept POST's from distributed containers. These will be delegated to the 
+    container registry. 
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

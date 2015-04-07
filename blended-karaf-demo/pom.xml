@@ -39,6 +39,9 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </properties>
 
   <artifactId>blended-karaf-demo</artifactId>
+  <description>
+    A sample Karaf container with some services installed.
+  </description>
 
   <dependencies>
     <dependency>

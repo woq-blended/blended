@@ -28,6 +28,10 @@
 
   <artifactId>blended-jmx</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    Helper bundle to expose the platform's MBeanServer as OSGI Service.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

@@ -197,11 +197,10 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
     runningContainers   : List[ContainerUnderTest]
   ) : Receive = LoggingReceive {
     case ContainerStarted(result) => result match {
-      case Right(name) =>
-        pendingContainers.foreach { _._1 ! ContainerStarted(Right(name)) }
-        val startedCt = startingContainers.filter(_.ctName == name).head
-        val remaining = startingContainers.filter(_ != startedCt)
-        val started = startedCt :: runningContainers
+      case Right(cut) =>
+        pendingContainers.foreach { _._1 ! ContainerStarted(Right(cut)) }
+        val remaining = startingContainers.filter(_ != cut)
+        val started = cut :: runningContainers
 
         if (pendingContainers.isEmpty && remaining.isEmpty) {
           log.info(s"Container Manager started [$started]")
@@ -216,10 +215,9 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
         context.stop(self)
     }
     case DependenciesStarted(result) => result match {
-      case Right(ct) =>
+      case Right(cut) =>
         val pending  = pendingContainers.filter(_._1 != sender())
-        startContainer(ct)
-        val cut = pendingContainers.filter(_._1 == sender()).head._2
+        startContainer(cut)
         context.become(starting(requestor, pending, cut :: startingContainers, runningContainers))
       case Left(e) => 
         context.stop(self)

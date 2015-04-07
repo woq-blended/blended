@@ -28,6 +28,11 @@
 
   <artifactId>blended-spray</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    Define a Servlet bridge tapping into an OSGI HTTP service as one way to publish Spray 
+    based HTTP endpoints.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>

@@ -26,12 +26,13 @@
   </parent>
 
   <artifactId>blended-itestsupport</artifactId>
-
-  <properties>
-    <bundle.namespace>${project.artifactId}</bundle.namespace>
-    <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
-  </properties>
-
+  <description>
+    Define an integration test API for collaborating blended container(s) using docker as a runtime 
+    for the container(s) under test and an Akka based Camel framework to perform the integration tests 
+    as pure blackbox tests. Container(s) may be prestarted and discovered (for execution speed) or 
+    started by the integration test (for reproducability).
+  </description>
+  
   <dependencies>
 
     <dependency>

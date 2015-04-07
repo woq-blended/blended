@@ -43,7 +43,7 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
       case PerformStart =>
         val dc = new DockerContainer(cut)
         dc.startContainer
-        sender ! ContainerStarted(Right(cut.ctName))
+        sender ! ContainerStarted(Right(cut))
     }
   }
 

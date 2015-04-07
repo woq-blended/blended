@@ -27,7 +27,10 @@
 
   <groupId>de.wayofquality.blended.testing</groupId>
   <artifactId>blended-testing-activemq</artifactId>
-  <packaging>jar</packaging>
+  
+  <description>
+    Some Additional Active MQ tests.
+  </description>
 
   <properties>
     <loglevel.test>INFO</loglevel.test>

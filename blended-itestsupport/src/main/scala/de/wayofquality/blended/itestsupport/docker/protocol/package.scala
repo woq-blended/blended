@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import de.wayofquality.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
+import de.wayofquality.blended.itestsupport.ContainerUnderTest
 
 package object protocol {
 
@@ -29,7 +29,7 @@ package object protocol {
   case object ContainerManagerStopped
 
   case class StartContainer(name: String)
-  case class ContainerStarted(name: DockerResult[String])
+  case class ContainerStarted(cut: DockerResult[ContainerUnderTest])
   case class DependenciesStarted(container: DockerResult[ContainerUnderTest])
 
   case object StopContainer

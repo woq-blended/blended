@@ -28,14 +28,37 @@
   <version>1.1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+  <description>A collection of bundles to develop OSGi application on top of Apache Karaf, Scala and Akka.</description>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>WoQ - Way of Quality GmbH</name>
+    <url>http://www.wayofquality.de</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>Andreas Gies</name>
+      <email>andreas@wayofquality.de</email>
+      <organization>WoQ - Way of Quality GmbH</organization>
+      <organizationUrl>http://www.wayofquality.de</organizationUrl>
+    </developer>
+  </developers>
+
   <distributionManagement>
     <repository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-release-local</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
     <snapshotRepository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-snapshot-local</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 

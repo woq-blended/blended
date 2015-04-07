@@ -28,6 +28,10 @@
 
   <artifactId>blended-container-context</artifactId>
   <packaging>bundle</packaging>
+  
+  <description>
+    A simple OSGI service to provide access to the container's config directory.
+  </description>
 
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
