@@ -134,7 +134,7 @@
     <jsch.version>0.1.48_1</jsch.version>
     <json-lenses.version>0.5.4</json-lenses.version>
     <junit.version>4.11</junit.version>
-    <linkedhashmap.version>1.4</linkedhashmap.version>
+    <linkedhashmap.version>1.4.2</linkedhashmap.version>
     <log4j.version>1.2.15</log4j.version>
     <logback.version>1.0.1</logback.version>
     <mimepull.version>1.9.4</mimepull.version>

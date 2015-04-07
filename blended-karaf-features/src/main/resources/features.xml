@@ -172,7 +172,7 @@
   <feature name="blended-akka-spray" description="Blended - Bundles for the Spray support" version="${project.version}" resolver="(obr)" start-level="50">
     <feature version="${akka.version}">blended-akka</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
-    <bundle>mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}/jar/woq</bundle>
+    <bundle>wrap:mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}</bundle>
     <bundle>mvn:org.jvnet.mimepull/mimepull/${mimepull.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-spray-api/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-spray/${blended.version}</bundle>
