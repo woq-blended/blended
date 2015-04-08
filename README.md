@@ -4,6 +4,8 @@
 
 # Project Blended (formerly de.woq.osgi.java)
 
+[![Join the chat at https://gitter.im/woq-blended/blended](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/woq-blended/blended?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This project is dedicated to provide reusable components for developing OSGI based application. It builds on top of Karaf, Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray. 
 
 The project documentation has moved to its own [github pages repository](https://github.com/woq/woq.github.io) and is live at [http://www.wayofquality.de/projects/blended](http://www.wayofquality.de/projects/blended). We are currently busy getting the initial use cases documented. Stay tuned for more to come ...
