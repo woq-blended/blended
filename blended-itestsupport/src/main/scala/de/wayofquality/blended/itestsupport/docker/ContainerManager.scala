@@ -31,6 +31,7 @@ import de.wayofquality.blended.itestsupport.NamedContainerPort
 import de.wayofquality.blended.itestsupport.ContainerLink
 import scala.util.Success
 import scala.concurrent.duration._
+import scala.concurrent.Await
 
 private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
 private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])
@@ -228,7 +229,6 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
     case StopContainerManager => 
       
       log.info(s"Stopping Docker Container handler [$managedContainers]")
-      log.debug(s"${context.children.toList}")
       
       implicit val timeout = new Timeout(10.seconds)
       implicit val eCtxt = context.system.dispatcher
@@ -241,7 +241,10 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
         } yield stopped
       }
       
-      Future.sequence(stopFutures).collect{ case _ => requestor ! ContainerManagerStopped }
+      Future.sequence(stopFutures).onSuccess{ case r => 
+        log.debug(s"[$r], [$requestor]")
+        requestor ! ContainerManagerStopped 
+      }
   }
 
   private[this] def startContainer(cut : ContainerUnderTest) : ActorRef = {

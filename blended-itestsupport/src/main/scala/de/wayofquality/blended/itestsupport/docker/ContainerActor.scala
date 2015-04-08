@@ -24,6 +24,7 @@ import de.wayofquality.blended.itestsupport.{ContainerUnderTest, NamedContainerP
 import de.wayofquality.blended.itestsupport.docker.protocol._
 import scala.concurrent.duration._
 import com.github.dockerjava.api.DockerClient
+import akka.actor.PoisonPill
 
 object ContainerActor {
   def apply(container: ContainerUnderTest)(implicit client: DockerClient) = new ContainerActor(container)
@@ -44,6 +45,7 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
         val dc = new DockerContainer(cut)
         dc.startContainer
         sender ! ContainerStarted(Right(cut))
+        self ! PoisonPill
     }
   }
 
@@ -61,15 +63,15 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
   def starting(requestor : ActorRef, cut: ContainerUnderTest) : Receive = LoggingReceive {
     case msg : ContainerStarted =>
       requestor ! msg
-      context become LoggingReceive(started(cut))
+      context become started(cut)
   }
 
   def started(cut: ContainerUnderTest) : Receive = LoggingReceive {
     case StopContainer => {
-      val requestor = sender
       new DockerContainer(cut).stopContainer
       context become stopped
-      requestor ! ContainerStopped(Right(container.ctName))
+      log.debug(s"Sending stopped message to [$sender]")
+      sender ! ContainerStopped(Right(container.ctName))
     }
   }
 

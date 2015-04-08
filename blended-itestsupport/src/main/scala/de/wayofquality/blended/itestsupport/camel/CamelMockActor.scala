@@ -3,11 +3,7 @@ package de.wayofquality.blended.itestsupport.camel
 import akka.camel.Consumer
 import akka.camel.CamelMessage
 import akka.event.LoggingReceive
-import de.wayofquality.blended.itestsupport.camel.protocol.GetReceivedMessages
-import de.wayofquality.blended.itestsupport.camel.protocol.ReceivedMessages
-import de.wayofquality.blended.itestsupport.camel.protocol.MockMessageReceived
-import de.wayofquality.blended.itestsupport.camel.protocol.CheckAssertions
-import de.wayofquality.blended.itestsupport.camel.protocol.CheckResults
+import de.wayofquality.blended.itestsupport.camel.protocol._
 import akka.actor.ActorLogging
 
 object CamelMockActor {

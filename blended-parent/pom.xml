@@ -433,42 +433,6 @@
       </plugins>
     </pluginManagement>
 
-    <plugins>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals><goal>add-source</goal></goals>
-            <configuration>
-              <sources>
-                <source>src/main/scala</source>
-              </sources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>attach-doc</id>
-            <goals>
-              <goal>doc-jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-   </plugins>
 
   </build>
   
@@ -531,6 +495,51 @@
             <artifactId>maven-gpg-plugin</artifactId>
           </plugin>        
         </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>docs</id>
+      <activation> 
+        <activeByDefault>false</activeByDefault>
+      </activation>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>generate-sources</phase>
+                <goals><goal>add-source</goal></goals>
+                <configuration>
+                  <sources>
+                    <source>src/main/scala</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>net.alchim31.maven</groupId>
+            <artifactId>scala-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-doc</id>
+                <goals>
+                  <goal>doc-jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+       </plugins>
       </build>
     </profile>
   </profiles>
