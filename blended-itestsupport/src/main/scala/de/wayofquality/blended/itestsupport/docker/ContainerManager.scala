@@ -87,9 +87,9 @@ class ContainerManager extends Actor with ActorLogging with Docker with VolumeBa
   }
   
   def running(dockerHandler: ActorRef, cuts: Map[String, ContainerUnderTest]) : Receive = LoggingReceive {
-    case StopContainerManager => 
+    case scm : StopContainerManager =>
       log.info("Stopping Test Container Manager")
-      dockerHandler.forward(StopContainerManager)
+      dockerHandler.forward(scm)
   }
 
   private[this] def configureDockerContainer(cut : Map[String, ContainerUnderTest]) : Map[String, ContainerUnderTest] = {
@@ -186,7 +186,7 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
       noDeps.foreach{ startContainer }
 
       context.become(starting(sender, pending, noDeps, List.empty))
-    case StopContainerManager => 
+    case scm : StopContainerManager =>
       sender ! ContainerManagerStopped
       context.stop(self)
   }
@@ -226,25 +226,23 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
   }
 
   def running(managedContainers: List[ContainerUnderTest]) : Receive = LoggingReceive { 
-    case StopContainerManager => 
+    case scm : StopContainerManager =>
       
       log.info(s"Stopping Docker Container handler [$managedContainers]")
       
-      implicit val timeout = new Timeout(10.seconds)
+      implicit val timeout = new Timeout(scm.timeout)
       implicit val eCtxt = context.system.dispatcher
       val requestor = sender
 
       val stopFutures : Seq[Future[ContainerStopped]] = managedContainers.map { cut => 
         for{
-          actor <- context.actorSelection(cut.ctName).resolveOne();
+          actor <- context.actorSelection(cut.ctName).resolveOne()
           stopped <- (actor ? StopContainer).mapTo[ContainerStopped]
         } yield stopped
       }
       
-      Future.sequence(stopFutures).onSuccess{ case r => 
-        log.debug(s"[$r], [$requestor]")
-        requestor ! ContainerManagerStopped 
-      }
+      Await.result(Future.sequence(stopFutures), scm.timeout) 
+      requestor ! ContainerManagerStopped
   }
 
   private[this] def startContainer(cut : ContainerUnderTest) : ActorRef = {

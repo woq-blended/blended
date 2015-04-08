@@ -17,13 +17,14 @@
 package de.wayofquality.blended.itestsupport.docker
 
 import de.wayofquality.blended.itestsupport.ContainerUnderTest
+import scala.concurrent.duration.FiniteDuration
 
 package object protocol {
 
   type DockerResult[T] = Either[Exception, T]
   
   case class StartContainerManager(containerUnderTest : Map[String, ContainerUnderTest])
-  case object StopContainerManager
+  case class StopContainerManager(timeout: FiniteDuration)
   
   case class ContainerManagerStarted(containerUnderTest : DockerResult[Map[String, ContainerUnderTest]])
   case object ContainerManagerStopped

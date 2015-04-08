@@ -92,9 +92,9 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
 
     case ConfiguredContainers_? => sender ! ConfiguredContainers(cuts)
       
-    case StopContainerManager => 
+    case scm : StopContainerManager =>
       camel.context.stop()
-      containerMgr forward(StopContainerManager)
+      containerMgr.forward(scm)
   } 
    
   def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = ConditionProvider.alwaysTrue()

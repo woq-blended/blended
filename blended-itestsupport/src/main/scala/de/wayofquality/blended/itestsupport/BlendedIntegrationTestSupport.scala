@@ -46,7 +46,7 @@ trait BlendedIntegrationTestSupport {
   def stopContainers(ctProxy: ActorRef)(implicit timeout: FiniteDuration, testKit: TestKit) : Unit = {
     val probe = new TestProbe(testKit.system)
     testKit.system.log.debug(s"stopProbe [${probe.ref}]")
-    ctProxy.tell(StopContainerManager, probe.ref)
+    ctProxy.tell(new StopContainerManager(timeout), probe.ref)
     probe.expectMsg(timeout, ContainerManagerStopped)
   }
   
