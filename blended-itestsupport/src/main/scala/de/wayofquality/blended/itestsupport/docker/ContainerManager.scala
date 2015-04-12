@@ -241,8 +241,11 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
         } yield stopped
       }
       
-      Await.result(Future.sequence(stopFutures), scm.timeout) 
+      val r = Await.result(Future.sequence(stopFutures), scm.timeout) 
+      log.debug(s"Stopped Containers [$r]")
       requestor ! ContainerManagerStopped
+      
+      context.stop(self)
   }
 
   private[this] def startContainer(cut : ContainerUnderTest) : ActorRef = {

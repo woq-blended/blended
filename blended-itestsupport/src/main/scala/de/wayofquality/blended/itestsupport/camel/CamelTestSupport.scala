@@ -16,21 +16,14 @@
 
 package de.wayofquality.blended.itestsupport.camel
 
-import scala.Left
-import scala.Right
-import scala.collection.convert.Wrappers.JMapWrapper
-import org.apache.camel.CamelContext
-import org.apache.camel.Exchange
-import org.apache.camel.ExchangePattern
-import org.apache.camel.Message
-import org.apache.camel.impl.DefaultExchange
-import akka.camel.CamelMessage
-import de.wayofquality.blended.itestsupport.BlendedIntegrationTestSupport
+import akka.actor.ActorSystem
+import akka.camel.{CamelExtension, CamelMessage}
 import de.wayofquality.blended.testsupport.XMLMessageFactory
 import de.wayofquality.blended.util.FileReader
-import akka.actor.ActorSystem
-import akka.camel.CamelExtension
-import akka.event.LoggingAdapter
+import org.apache.camel.{Exchange, ExchangePattern, Message}
+import org.apache.camel.impl.DefaultExchange
+
+import scala.collection.convert.Wrappers.JMapWrapper
 
 trait CamelTestSupport { 
   

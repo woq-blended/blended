@@ -16,41 +16,16 @@
 
 package de.wayofquality.blended.akka.itest
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.duration.FiniteDuration
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.camel.CamelContext
-import org.apache.camel.component.jms.JmsComponent
-import org.scalatest.Matchers
-import org.scalatest.WordSpecLike
 import akka.actor.Props
-import akka.actor.actorRef2Scala
-import akka.testkit.TestActorRef
+import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import de.wayofquality.blended.itestsupport.BlendedIntegrationTestSupport
-import de.wayofquality.blended.itestsupport.BlendedTestContextManager
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
-import de.wayofquality.blended.itestsupport.TestContextConfigurator
-import de.wayofquality.blended.itestsupport.camel.CamelMockActor
-import de.wayofquality.blended.itestsupport.camel.CamelTestSupport
-import de.wayofquality.blended.itestsupport.camel.MockAssertions.checkAssertions
-import de.wayofquality.blended.itestsupport.camel.MockAssertions.expectedBodies
-import de.wayofquality.blended.itestsupport.camel.MockAssertions.expectedMessageCount
-import de.wayofquality.blended.itestsupport.condition.Condition
-import de.wayofquality.blended.itestsupport.condition.ParallelComposedCondition
-import de.wayofquality.blended.itestsupport.docker.protocol.ContainerManagerStopped
-import de.wayofquality.blended.itestsupport.docker.protocol.StopContainerManager
-import de.wayofquality.blended.itestsupport.jms.JMSAvailableCondition
-import de.wayofquality.blended.itestsupport.jolokia.CamelContextExistsCondition
-import de.wayofquality.blended.itestsupport.jolokia.JolokiaAvailableCondition
-import de.wayofquality.blended.testsupport.TestActorSys
-import akka.testkit.TestKit
-import org.scalatest.WordSpec
-import akka.testkit.ImplicitSender
-import akka.testkit.TestProbe
+import de.wayofquality.blended.itestsupport.camel.{CamelMockActor, CamelTestSupport}
+import de.wayofquality.blended.itestsupport.camel.MockAssertions._
 import de.wayofquality.blended.itestsupport.camel.protocol._
-import org.scalatest.DoNotDiscover
-import scala.concurrent.duration._
+import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
+
+import scala.concurrent.duration.DurationInt
 
 @DoNotDiscover
 class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
@@ -72,7 +47,7 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
       val mockProbe = new TestProbe(system)
       testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
  
-      sendTestMessage("Hello Blended!", "jms:queue:SampleIn", false) match {
+      sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", false) match {
         // We have successfully sent the message 
         case Right(msg) =>
           // make sure the message reaches the mock actors before we start assertions
@@ -80,7 +55,8 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
           
           checkAssertions(mock, 
             expectedMessageCount(1), 
-            expectedBodies("Hello Blended!")
+            expectedBodies("Hello Blended!"),
+            expectedHeaders(Map("foo" -> "bar"))
           ) should be(List.empty) 
         // The message has not been sent
         case Left(e) => 
