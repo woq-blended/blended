@@ -18,7 +18,7 @@ package de.wayofquality.blended.akka
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.testkit.{TestActorRef, TestLatch}
+import akka.testkit.{TestProbe, TestActorRef, TestLatch}
 import com.typesafe.config.Config
 import de.wayofquality.blended.testsupport.TestActorSys
 import de.wayofquality.blended.akka.internal.OSGIFacade
@@ -168,12 +168,15 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
     system.eventStream.publish(BundleActorInitialized("publisher"))
-    publisher.watch(testActor)
-    
+
+    val watcher = new TestProbe(system)
+    watcher.watch(publisher)
+
     val listenerReal = listener.underlyingActor.asInstanceOf[OSGIEventSourceListener]
     listenerReal.publisher should be(publisher)
 
-    publisher ! PoisonPill
+    system.stop(publisher)
+    watcher.expectMsgType[Terminated]
 
     listenerReal.publisher should be (system.deadLetters)
   }
