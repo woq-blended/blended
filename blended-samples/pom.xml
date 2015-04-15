@@ -23,25 +23,51 @@
 
   <modelVersion>4.0.0</modelVersion>
 
+  <parent>
+    <groupId>de.wayofquality.blended</groupId>
+    <artifactId>blended-parent</artifactId>
+    <version>1.1.2</version>
+  </parent>
+  
   <groupId>de.wayofquality.blended.samples</groupId>
   <artifactId>blended-samples-reactor</artifactId>
-  <version>1.1.2</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
 
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>WoQ - Way of Quality GmbH</name>
+    <url>http://www.wayofquality.de</url>
+  </organization>
+
+  <developers>
+    <developer>
+      <name>Andreas Gies</name>
+      <email>andreas@wayofquality.de</email>
+      <organization>WoQ - Way of Quality GmbH</organization>
+      <organizationUrl>http://www.wayofquality.de</organizationUrl>
+    </developer>
+  </developers>
+
   <distributionManagement>
     <repository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-release-local</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
     <snapshotRepository>
-      <id>WoQDeploy</id>
-      <url>http://ci.wayofquality.de:8085/artifactory/pub-snapshot-local</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </snapshotRepository>
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:ssh://git@github.com/woq-blended/blended.git</connection>
+    <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
     <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
     <url>https://github.com/woq-blended/blended</url>
   </scm>
