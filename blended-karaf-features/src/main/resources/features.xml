@@ -164,12 +164,12 @@
   </feature>
 
   <feature name="blended-akka-camel" description="Blended - Bundles for Akka-Camel integration" version="${blended.version}" resolver="(obr)" start-level="20">
-    <feature version="${project.version}">blended-camel</feature>
+    <feature version="${blended.version}">blended-camel</feature>
     <feature version="${akka.version}">blended-akka</feature>
     <bundle>mvn:com.typesafe.akka/akka-camel_${scala.version}/${akka.version}</bundle>
   </feature>
 
-  <feature name="blended-akka-spray" description="Blended - Bundles for the Spray support" version="${project.version}" resolver="(obr)" start-level="50">
+  <feature name="blended-akka-spray" description="Blended - Bundles for the Spray support" version="${blended.version}" resolver="(obr)" start-level="50">
     <feature version="${akka.version}">blended-akka</feature>
     <bundle>mvn:org.apache.geronimo.specs/geronimo-servlet_3.0_spec/1.0</bundle>
     <bundle>wrap:mvn:com.googlecode.concurrentlinkedhashmap/concurrentlinkedhashmap-lru/${linkedhashmap.version}</bundle>
