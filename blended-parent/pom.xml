@@ -27,6 +27,7 @@
 
   <version>1.1.2</version>
 
+  <name>${project.artifactId}</name>
   <url>https://github.com/woq-blended/blended</url>
   <description>Common Settings and configurations for all blended modules.</description>
   
