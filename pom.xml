@@ -27,6 +27,7 @@
   <artifactId>blended-reactor</artifactId>
   <version>1.1.2</version>
   <packaging>pom</packaging>
+  <name>${project.artifactId}</name>
 
   <description>A collection of bundles to develop OSGi application on top of Apache Karaf, Scala and Akka.</description>
 

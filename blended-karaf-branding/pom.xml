@@ -30,6 +30,7 @@
     <relativePath>../blended-parent</relativePath>
   </parent>
 
+  <name>${project.artifactId}</name>
   <artifactId>blended-karaf-branding</artifactId>
   <packaging>bundle</packaging>
   

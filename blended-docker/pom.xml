@@ -27,6 +27,7 @@
   <artifactId>blended-docker-reactor</artifactId>
   <version>1.1.2</version>
   <packaging>pom</packaging>
+  <name>${project.artifactId}</name>
 
   <description>
     A collection of docker definitions to demonstrate how docker can be used for 

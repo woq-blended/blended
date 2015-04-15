@@ -27,6 +27,7 @@
   <artifactId>blended-testing-reactor</artifactId>
   <version>1.1.2</version>
   <packaging>pom</packaging>
+  <name>${project.artifactId}</name>
 
   <description>A collection of additional tests to analyze certain isolated behaviors.</description>
 

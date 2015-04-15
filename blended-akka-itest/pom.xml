@@ -28,6 +28,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <version>1.1.2</version>
   </parent>
 
+  <name>${project.artifactId}</name>
   <artifactId>blended-akka-itest</artifactId>
   <packaging>jar</packaging>
   

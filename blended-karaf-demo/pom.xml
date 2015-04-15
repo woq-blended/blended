@@ -38,6 +38,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <karaf.max.memory>1024</karaf.max.memory>
   </properties>
 
+  <name>${project.artifactId}</name>
   <artifactId>blended-karaf-demo</artifactId>
   <description>
     A sample Karaf container with some services installed.
