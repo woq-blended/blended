@@ -25,7 +25,7 @@
   <artifactId>blended-parent</artifactId>
   <packaging>pom</packaging>
 
-  <version>1.1.2-SNAPSHOT</version>
+  <version>1.1.2</version>
 
   <url>https://github.com/woq-blended/blended</url>
   <description>Common Settings and configurations for all blended modules.</description>
@@ -70,7 +70,7 @@
 
 
   <properties>
-    <blended.version>1.1.2-SNAPSHOT</blended.version>
+    <blended.version>1.1.2</blended.version>
 
     <java.version>1.7</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
