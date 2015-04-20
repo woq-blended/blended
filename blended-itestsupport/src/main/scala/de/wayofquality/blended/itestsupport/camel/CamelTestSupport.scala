@@ -90,7 +90,6 @@ trait CamelTestSupport {
       case false => createMessageFromFile(message, properties)
     }) match {
       case None =>
-        system.log.info(s"Using text as msg body: [$message]")
         CamelMessage(message, properties)
       case Some(m) => m
     }
@@ -98,7 +97,6 @@ trait CamelTestSupport {
   private[CamelTestSupport] def createMessageFromFile(message: String, props: Map[String, String])(implicit system: ActorSystem) : Option[CamelMessage] = {
     try {
       val content: Array[Byte] = FileReader.readFile(message)
-      system.log.info("Body length is [" + content.length + "]")
       Some(CamelMessage(content, props.mapValues { _.asInstanceOf[Any] } ))
     } catch {
       case e: Exception => None

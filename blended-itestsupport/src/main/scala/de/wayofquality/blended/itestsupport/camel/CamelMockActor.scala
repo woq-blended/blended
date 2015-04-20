@@ -5,22 +5,26 @@ import akka.camel.CamelMessage
 import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.camel.protocol._
 import akka.actor.ActorLogging
+import akka.camel.Ack
 
 object CamelMockActor {
-  def apply(uri: String) = new CamelMockActor(uri)
+  def apply(uri: String, ack: Boolean = true) = new CamelMockActor(uri)
 }
 
-class CamelMockActor(uri: String) extends Consumer with ActorLogging {
+class CamelMockActor(uri: String, ack: Boolean = true) extends Consumer with ActorLogging {
   
-  def endpointUri: String = uri
+  override def endpointUri: String = uri
 
-  def receive = receiving()
+  override def receive = receiving()
+  
+  override def autoAck = false
   
   def receiving(messages: List[CamelMessage] = List.empty) : Receive = LoggingReceive {
     
     case msg : CamelMessage => 
       context.become(receiving(msg :: messages))
       context.system.eventStream.publish(MockMessageReceived(uri))
+      if (ack) sender ! Ack
     
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
     
