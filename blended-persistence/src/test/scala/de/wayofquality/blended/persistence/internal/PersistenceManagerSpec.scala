@@ -51,7 +51,7 @@ class PersistenceManagerSpec
     facade = TestActorRef(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
     dataCreator = system.actorOf(Props(new DataObjectCreator(new PersonCreator()) with OSGIActor), "person")
-    system.eventStream.subscribe(dataCreator, classOf[BundleActorInitialized])
+    system.eventStream.subscribe(dataCreator, classOf[BundleActorStarted])
     system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
 
     activator = new PersistenceActivator
@@ -87,8 +87,7 @@ class PersistenceManagerSpec
         case _ => false
       }
 
-      // TODO : Should be a get object message ???
-      system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
+      system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! FindObjectByID(info.uuid, info.persistenceType) )
 
       fishForMessage(10.seconds) {
         case QueryResult(List(person)) => person == info

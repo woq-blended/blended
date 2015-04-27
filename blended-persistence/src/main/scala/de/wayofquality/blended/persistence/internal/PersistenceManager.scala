@@ -50,8 +50,10 @@ class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : Bun
   override def createState(cfg: Config, bundleContext: BundleContext): PersistenceManagerBundleState = 
     PersistenceManagerBundleState(cfg, bundleContext, List.empty)
 
-  override def becomeWorking(state: PersistenceManagerBundleState): Unit = 
+  override def becomeWorking(state: PersistenceManagerBundleState): Unit = {
     super.becomeWorking(state)
+    unstash()
+  }
 
   override def initialize(state : PersistenceManagerBundleState) : Future[Try[Initialized]] = {
     invokeService(classOf[ContainerContext]) {
@@ -63,7 +65,6 @@ class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : Bun
           r match {
             case Some(dir) =>
               backend.initBackend(dir, state.config)
-              unstash()
               Success(Initialized(state))
             case _ =>
               log.error(s"No container directory configured")

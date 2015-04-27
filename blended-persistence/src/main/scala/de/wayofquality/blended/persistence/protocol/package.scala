@@ -26,7 +26,7 @@ import spray.json._
     // This type is the in memory representation of a persistable object
     type PersistenceProperties = (String, Map[String, PersistenceProperty[_]])
 
-    // The QueryHolder is the tuple consisting og the Query to be executed as a String and the parameters that will be
+    // The QueryHolder is the tuple consisting of the Query to be executed as a String and the parameters that will be
     // used within the query as normal key / value pairs
     type QueryHolder = (String, Option[Map[String, PersistenceProperty[_]]])
 
@@ -97,7 +97,7 @@ import spray.json._
       // properties. The type tag is used to determine which data object factory is capable of creating a properly
       // typed object from a given PersistenceProperties instance.
       def persistenceProperties : PersistenceProperties = (persistenceType, Map(PROP_UUID -> uuid))
-      def persistenceType = getClass.getSimpleName
+      def persistenceType = getClass.getName.replaceAll("\\.", "_")
     }
 
 

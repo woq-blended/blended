@@ -44,7 +44,7 @@ case class Person(uuid: String = UUID.randomUUID().toString, name: String, first
 
   override def persistenceProperties: PersistenceProperties = {
 
-    var builder =
+    val builder =
       new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
 
     val fields = this.toJson.asJsObject.fields
@@ -59,7 +59,7 @@ case class Person(uuid: String = UUID.randomUUID().toString, name: String, first
 class PersonCreator extends DataObjectFactory {
 
   override def createObject(props: PersistenceProperties): Option[DataObject] = props._1 match {
-    case "Person" => Some(PersonFactory.create(props))
+    case cn if (cn.equals(classOf[Person].getName.replaceAll("\\.", "_"))) => Some(PersonFactory.create(props))
     case _ => None
   }
 }

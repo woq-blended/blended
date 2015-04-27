@@ -40,7 +40,6 @@ class DataObjectCreator(factory: DataObjectFactory) extends OSGIActor with Persi
   def registering : Receive = LoggingReceive {
     case BundleActorStarted(name) if name == bundleSymbolicName =>
       setupFactory()
-    case RegisterDataFactory(f) if f == self =>
       unstash()
       context.become(working)
   }
