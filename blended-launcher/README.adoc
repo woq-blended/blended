@@ -2,3 +2,15 @@
 
 Launch an OSGi Framework.
 
+== Invocation
+
+----
+java -cp launcher.jar:org.osgi.core-5.0.0.jar:com.typesafe.config-1.2.1.jar de.wayofquality.blended.launcher.Launcher configfile
+----
+
+== Configuration
+
+[source,conf]
+----
+include:src/main/binaryResources/de/wayofquality/blended/launcher/LauncherConfig-reference.conf[]
+----
