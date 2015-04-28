@@ -24,5 +24,10 @@ trait PersistenceBundleName extends BundleName {
 }
 
 class PersistenceActivator extends ActorSystemAware with PersistenceBundleName {
+
+  whenBundleActive {
+    
+    
+  }
   override def prepareBundleActor() = Props(PersistenceManager(new Neo4jBackend()))
 }

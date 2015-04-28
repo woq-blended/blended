@@ -34,11 +34,13 @@ object PersistenceManager {
     new PersistenceManager(impl) with PersistenceBundleName
 }
 
+
 private[persistence] case class PersistenceManagerBundleState(
   override val config : Config,
   override val bundleContext: BundleContext,
   factories: List[ActorRef] = List.empty
 ) extends BundleActorState(config, bundleContext)
+
 
 class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : BundleContext)
   extends InitializingActor[PersistenceManagerBundleState] with PersistenceBundleName with MemoryStash {

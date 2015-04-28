@@ -16,35 +16,28 @@
 
 package de.wayofquality.blended.container.id
 
-import java.util.Properties
-
 import de.wayofquality.blended.akka.OSGIActor
-import de.wayofquality.blended.akka.protocol.ServiceResult
 import de.wayofquality.blended.container.context.ContainerContext
 
 import scala.collection.convert.Wrappers.JPropertiesWrapper
-import scala.concurrent.Future
 
 trait ContainerIdentityAware { this : OSGIActor =>
 
-  def containerProperties : Future[Map[String, String]] = {
-    (for {
-      result <- invokeService(classOf[ContainerIdentifierService])(_.getProperties).mapTo[ServiceResult[Properties]]
-    } yield (result.result)).map { _ match {
-      case None => Map.empty[String, String]
-      case Some(p) => JPropertiesWrapper(p).toMap
-    }}
-  }
+  def containerProperties : Map[String, String] =
+    invokeService[ContainerIdentifierService, Map[String, String]] {
+      case Some(idSvc) => JPropertiesWrapper(idSvc.getProperties).toMap
+      case _ => Map.empty
+    }
 
-  def containerUUID : Future[Option[String]] = {
-    for {
-      result <- invokeService(classOf[ContainerIdentifierService])(_.getUUID).mapTo[ServiceResult[String]]
-    } yield (result.result)
-  }
+  def containerUUID : Option[String] = 
+    invokeService[ContainerIdentifierService, Option[String]] {
+      case Some(idSvc) => Some(idSvc.getUUID)
+      case None => None
+    }
 
-  def containerContext : Future[Option[ContainerContext]] = {
-    for {
-      result <- invokeService(classOf[ContainerIdentifierService])(_.getContainerContext).mapTo[ServiceResult[ContainerContext]]
-    } yield (result.result)
-  }
+  def containerContext : Option[ContainerContext] =
+    invokeService[ContainerIdentifierService, Option[ContainerContext]] {
+      case Some(idSvc) => Some(idSvc.getContainerContext)
+      case None => None
+    }
 }

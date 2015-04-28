@@ -17,55 +17,39 @@
 package de.wayofquality.blended.akka.internal
 
 import java.io.File
-
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import de.wayofquality.blended.akka.MemoryStash
 import de.wayofquality.blended.akka.protocol._
+import com.typesafe.config.Config
+import org.slf4j.LoggerFactory
 
 trait ConfigDirectoryProvider {
   def configDirectory : String
 }
 
-object ConfigLocator {
-  def apply(configDir : String) = new ConfigLocator with ConfigDirectoryProvider {
-    override def configDirectory = configDir
-  }
-}
+trait ConfigLocator { this: ConfigDirectoryProvider =>
+  
+  private[ConfigLocator] val logger = LoggerFactory.getLogger(classOf[ConfigLocator])
+  
+  def fallback : Option[Config]
 
-class ConfigLocator extends Actor with ActorLogging with MemoryStash { this: ConfigDirectoryProvider =>
-
-  case object Initialize
-
-  override def preStart() : Unit = { self ! Initialize }
-
-  def receive = initializing orElse stashing
-
-  def initializing : Receive = LoggingReceive {
-    case Initialize =>
-      log info s"Initializing ConfigLocator with directory [$configDirectory]."
-      unstash()
-      context.become(working)
-  }
-
-  def working: Actor.Receive = LoggingReceive {
-
-    case ConfigLocatorRequest(id) =>
-
+  def getConfig(id: String) : Config = {
       val file = new File(configDirectory, s"$id.conf")
+      logger.debug(s"Retreiving config from [${file.getAbsolutePath}]")
 
-      val config =
-        if (file.exists && file.isFile && file.canRead)
-          ConfigFactory.parseFile(file)
-        else
-          try
-            context.system.settings.config.getConfig(id)
-          catch {
-            case me : ConfigException.Missing  => ConfigFactory.empty()
+      if (file.exists && file.isFile && file.canRead)
+        ConfigFactory.parseFile(file)
+      else
+        fallback match {
+          case Some(cfg) => try {
+            cfg.getConfig(id)
+          } catch {
+            case t: Throwable => ConfigFactory.empty()
           }
-
-      sender ! ConfigLocatorResponse(id, config)
+          case _ => ConfigFactory.empty()
+        }
   }
 }
 

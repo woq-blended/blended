@@ -30,13 +30,16 @@ trait TestSetup { this : MockitoSugar =>
   val ctContext = mock[ContainerContext]
   val ctContextRef = mock[ServiceReference[ContainerContext]]
   val bundle = mock[Bundle]
+  
+  val ccName : String = classOf[ContainerContext].getName
+  val tiName : String = classOf[TestInterface1].getName
 
-  when(osgiContext.getServiceReference(classOf[ContainerContext])) thenReturn (ctContextRef)
+  when[ServiceReference[_]](osgiContext.getServiceReference(ccName)) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
   when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
   when(svcRef.getBundle) thenReturn (bundle)
   when(bundle.getBundleContext) thenReturn (osgiContext)
-  when(osgiContext.getServiceReference(classOf[TestInterface1])) thenReturn(svcRef)
+  when[ServiceReference[_]](osgiContext.getServiceReference(tiName)) thenReturn(svcRef)
   when(osgiContext.getService(svcRef)) thenReturn(service)
   when(service.name) thenReturn("Andreas")
 }

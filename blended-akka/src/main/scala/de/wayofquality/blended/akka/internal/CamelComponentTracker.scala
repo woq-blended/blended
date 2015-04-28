@@ -16,60 +16,53 @@
 
 package de.wayofquality.blended.akka.internal
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.ActorSystem
 import akka.camel.CamelExtension
-import de.wayofquality.blended.akka.protocol.{TrackerModifiedService, TrackerRemovedService, TrackerAddingService}
-import de.wayofquality.blended.akka.{BundleName, OSGIActor}
 import org.apache.camel.Component
+import org.helgoboss.domino.DominoActivator
+import org.helgoboss.domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
+import org.slf4j.LoggerFactory
 
-class CamelComponentTracker extends OSGIActor with ActorLogging with BundleName {
+class CamelComponentTracker(da: DominoActivator) {
+  
+  private[CamelComponentTracker] val log = LoggerFactory.getLogger(classOf[CamelComponentTracker])
   
   val idProperty = "CamelComponentId"
   var components : Map[String, Component] = Map.empty
 
-  override def bundleSymbolicName = "de.wayofquality.blended.akka"
-
-  override def preStart(): Unit = {
-    super.preStart()
-    log info "Starting Camel component Tracker"
-    createTracker[Component](classOf[Component])
+  da.whenBundleActive {
+    da.whenServicePresent[ActorSystem] { system =>
+      da.watchServices[Component] {
+        case AddingService(s, context) =>
+          if (context.ref.getPropertyKeys.contains(idProperty)) {
+            val id = context.ref.getProperty(idProperty).asInstanceOf[String]
+            addComponent(system, id, s)
+          }
+        case ModifiedService(s, context) =>
+          if (context.ref.getPropertyKeys.contains(idProperty)) {
+            val id = context.ref.getProperty(idProperty).asInstanceOf[String]
+            removeComponent(system, id)
+            addComponent(system, id, s)
+          }
+        case RemovedService(s, context) =>
+          if (context.ref.getPropertyKeys.contains(idProperty)) {
+            val id = context.ref.getProperty(idProperty).asInstanceOf[String]
+            removeComponent(system, id)
+          }
+      }
+    }
   }
-
-  def receive = {
-
-    case TrackerAddingService(svcRef, svc) => 
-      if (svcRef.getPropertyKeys.contains("CamelComponentId")) {
-        val component = svc.asInstanceOf[Component]
-        val id = svcRef.getProperty(idProperty).asInstanceOf[String]
-        addComponent(id, component)
-      }
-      
-    case TrackerRemovedService(svcRef, svc) =>
-      if (svcRef.getPropertyKeys.contains("CamelComponentId")) {
-        val component = svc.asInstanceOf[Component]
-        val id = svcRef.getProperty(idProperty).asInstanceOf[String]
-        removeComponent(id, component)
-      }
-
-    case TrackerModifiedService(svcRef, svc) =>
-      if (svcRef.getPropertyKeys.contains("CamelComponentId")) {
-        val component = svc.asInstanceOf[Component]
-        val id = svcRef.getProperty(idProperty).asInstanceOf[String]
-        removeComponent(id, component)
-        addComponent(id, component)
-      }
-  }
-
-  private[this] def addComponent(id: String, component: Component) : Unit = {
+  
+  private[CamelComponentTracker] def addComponent(system: ActorSystem, id: String, component: Component) : Unit = {
     log info s"Adding Component of type [${component.getClass.getName}] with component Id [$id]."
-    CamelExtension(context.system).context.addComponent(id, component)
+    CamelExtension(system).context.addComponent(id, component)
     components += (id -> component)
   }
 
-  private[this] def removeComponent(id: String, component: Component) : Unit = {
+  private[CamelComponentTracker] def removeComponent(system: ActorSystem, id: String) : Unit = {
     if (components.get(id).isDefined) {
-      log info s"Removing Component of type [${component.getClass.getName}] with component Id [$id]."
-      CamelExtension(context.system).context.addComponent(id, component)
+      log info s"Removing Component with component Id [$id]."
+      CamelExtension(system).context.removeComponent(id)
       components = components.filter { case (k, v) => k != id }
     }
   }

@@ -18,9 +18,6 @@ package de.wayofquality.blended.akka
 
 object BlendedAkkaConstants {
 
-  val componentTrackerPath = "ComponentTracker"
-  val trackersPath         = "OSGITrackers"
-  val referencesPath       = "OSGIReferences"
   val osgiFacadePath       = "OSGI"
   val configLocatorPath    = "ConfigLocator"
 }

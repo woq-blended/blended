@@ -23,19 +23,26 @@ import akka.camel.CamelExtension
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
-import de.wayofquality.blended.akka.BlendedAkkaConstants
+import de.wayofquality.blended.akka.BlendedAkkaConstants._
 import de.wayofquality.blended.container.context.ContainerContext
-import de.wayofquality.blended.modules._
-import BlendedAkkaConstants._
+import org.helgoboss.capsule.Capsule
+import org.helgoboss.domino.DominoActivator
 import org.osgi.framework.BundleContext
 
-class BlendedAkkaActivator extends ActorSystemActivator {
+class BlendedAkkaActivator extends DominoActivator {
+  whenBundleActive {
+    addCapsule(new AkkaCapsule(this, bundleContext))
+  }
+}
+  
+private [internal] class AkkaCapsule(da: DominoActivator, osgiContext: BundleContext) extends ActorSystemActivator with Capsule {
+
+  override def start(): Unit = start(osgiContext)
+
+  override def stop(): Unit = stop(osgiContext)
 
   def configure(osgiContext: BundleContext, system: ActorSystem) : Unit = {
     val log = system.log
-
-    log info "Creating Akka OSGi Facade"
-    system.actorOf(Props(OSGIFacade()(osgiContext)), osgiFacadePath)
 
     log info "Registering Actor System as Service."
     registerService(osgiContext, system)
@@ -49,18 +56,15 @@ class BlendedAkkaActivator extends ActorSystemActivator {
   override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
 
   override def getActorSystemConfiguration(context: BundleContext): Config = {
-    ConfigFactory.parseFile(new File(configDir(context), "application.conf"))
+    ConfigFactory.parseFile(new File(configDir, "application.conf"))
   }
 
-  private[BlendedAkkaActivator] def configDir(implicit osgiContext : BundleContext) = {
+  private[AkkaCapsule] def configDir = {
 
     val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
-
-    osgiContext findService classOf[ContainerContext] match {
-      case Some(svcRef) => svcRef invokeService { ctx => ctx.getContainerConfigDirectory } match {
-        case Some(s)  => s
-        case _ => defaultConfigDir
-      }
+    
+    da.withService[ContainerContext, String] {
+      case Some(ctxt) => ctxt.getContainerConfigDirectory
       case _ => defaultConfigDir
     }
   }

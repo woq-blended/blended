@@ -17,58 +17,35 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
-import de.wayofquality.blended.modules._
 import de.wayofquality.blended.akka.protocol._
-import org.osgi.framework.{BundleActivator, BundleContext}
+import org.helgoboss.domino.DominoActivator
 
 trait BundleName {
   def bundleSymbolicName : String
 }
 
-trait ActorSystemAware extends BundleActivator { this : BundleName =>
+trait ActorSystemAware extends DominoActivator { this : BundleName =>
 
-  var bundleContextRef : BundleContext = _
-  var actorRef         : ActorRef = _
+  def startBundleActor(system: ActorSystem, name: String) : ActorRef
 
-  implicit def bundleContext = bundleContextRef
-  def bundleActor   = actorRef
+  whenBundleActive {
+    whenServicePresent[ActorSystem] { system =>
+      log debug s"Preparing bundle actor for [$bundleSymbolicName]."
 
-  def prepareBundleActor() : Props
+      val actorRef = startBundleActor(system, bundleSymbolicName)
+      actorRef ! InitializeBundle(bundleContext)
 
-  final def start(osgiBundleContext: BundleContext) : Unit = {
-    this.bundleContextRef = osgiBundleContext
+      system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
+      postStartBundleActor()
 
-    bundleContext.findService(classOf[ActorSystem]) match {
-      case Some(svcReference) => svcReference invokeService { system =>
-        system.log debug s"Preparing bundle actor for [$bundleSymbolicName]."
-
-        actorRef = system.actorOf(prepareBundleActor(), bundleSymbolicName)
-        actorRef ! InitializeBundle(bundleContext)
-
-        system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
-        postStartBundleActor()
-      }
-      // TODO : handle this
-      case _ =>
-    }
-  }
-
-  def postStartBundleActor() : Unit = {
-
-  }
-
-  final def stop(osgiBundleContext: BundleContext) : Unit = {
-
-    implicit val bc = osgiBundleContext
-
-    bundleActor match {
-      case a : ActorRef => {
+      onStop {
         preStopBundleActor()
-        bundleActor ! PoisonPill
+        actorRef ! PoisonPill
       }
-      case _ =>
     }
   }
+
+  def postStartBundleActor() : Unit = {}
 
   def preStopBundleActor() : Unit = {}
 }

@@ -17,22 +17,34 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.{pipe,ask}
+import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.modules.FilterComponent
-import org.osgi.framework.BundleContext
-
+import org.helgoboss.domino.service_consuming.ServiceConsuming
+import de.wayofquality.blended.akka.internal.ConfigLocator
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.reflect.runtime.universe._
-import scala.util.{Failure, Success, Try}
+import scala.reflect.ClassTag
+import de.wayofquality.blended.akka.internal.ConfigDirectoryProvider
+import de.wayofquality.blended.container.context.ContainerContext
+import com.typesafe.config.Config
 
-trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
+trait OSGIActor extends Actor 
+  with ActorLogging 
+  with ServiceConsuming
+  with ConfigLocator
+  with ConfigDirectoryProvider { this: BundleName =>
 
   implicit val timeout = new Timeout(500.millis)
   implicit val ec = context.dispatcher
+  
+  override def fallback : Option[Config] = Some(context.system.settings.config)
+  
+  override def configDirectory = 
+    withService[ContainerContext, String] { 
+      case Some(ctxt) => ctxt.getContainerConfigDirectory
+      case _ => s"${System.getProperty("karaf.home")}/etc"
+    }
 
   def bundleActor(bundleName : String) : Future[ActorRef] = {
     log debug s"Trying to resolve bundle actor [$bundleName]"
@@ -41,81 +53,5 @@ trait OSGIActor extends Actor with ActorLogging { this: BundleName =>
 
   def osgiFacade = bundleActor(BlendedAkkaConstants.osgiFacadePath)
 
-  def createTracker[I <: AnyRef](clazz : Class[I], filter: Option[FilterComponent] = None) = for {
-    facade <- osgiFacade.mapTo[ActorRef]
-    tracker <- (facade ? CreateTracker(clazz, self, filter)).mapTo[ActorRef]
-  } yield tracker
-
-  def getActorConfig(id: String) = for {
-      facade <- osgiFacade.mapTo[ActorRef]
-      config <- (facade ? ConfigLocatorRequest(id)).mapTo[ConfigLocatorResponse]
-    } yield config
-
-  def getServiceRef[I <: AnyRef](clazz : Class[I]) = {
-    for {
-      facade <- osgiFacade.mapTo[ActorRef]
-      service <- (facade ? GetService(clazz)).mapTo[Service]
-    } yield service
-  }
-
-  def invokeService[I <: AnyRef, T <: AnyRef](iface: Class[I])(f: InvocationType[I,T]) : Future[ServiceResult[Option[T]]] = {
-
-    for {
-      s <- getServiceRef[I](iface).mapTo[Service]
-      r <- (s.service ? InvokeService(f)).mapTo[ServiceResult[Option[T]]]
-    } yield (s,r) match {
-      case (svc, result) =>
-        svc.service ! UngetServiceReference
-        result
-    }
-  }
+  def invokeService[I <: AnyRef : ClassTag, T](f: Option[I] => T) : T = withService[I,T] { service => f(service) }
 }
-
-trait InitializingActor[T <: BundleActorState] extends OSGIActor { this: BundleName =>
-  
-  type CleanupState = T => Unit
-  
-  case class Initialized(state: T)
-
-  def initialize(state : T) : Future[Try[Initialized]] = Future(Success(Initialized(state)))
-  
-  var cleanup : () => Unit = { () => {} }
-
-  def working(state : T) : Receive
-  
-  def becomeWorking(state : T) : Unit = {
-    context.become(working(state))
-  }
-  
-  def createState(cfg: Config, bundleContext: BundleContext) : T
-
-  def initializing[T](implicit tag : TypeTag[T]) : Receive = {
-    
-    case InitializeBundle(bc) =>
-      log.info(s"Retrieving config for [$bundleSymbolicName]")
-      getActorConfig(bundleSymbolicName).mapTo[ConfigLocatorResponse].map { response =>
-        self ! (bc, response)
-      }
-    
-    case (bc: BundleContext, ConfigLocatorResponse(id, cfg)) if id == bundleSymbolicName =>
-      log.info(s"Initializing bundle actor [$bundleSymbolicName]")
-      val state = createState(cfg, bc)
-      
-      initialize(state).mapTo[Try[Initialized]].pipeTo(self)
-      
-    case Success(initialized) =>
-      log.debug(s"Bundle actor [$bundleSymbolicName] initialized")
-      context.system.eventStream.publish(BundleActorInitialized(bundleSymbolicName))
-      becomeWorking(initialized.asInstanceOf[Initialized].state)
-      
-    case Failure(e) => 
-      log.error(s"Error initializing bundle actor [$bundleSymbolicName].", e)
-      context.stop(self)
-  }
-
-  override def postStop(): Unit = {
-    cleanup()
-    super.postStop()
-  }
-}
-

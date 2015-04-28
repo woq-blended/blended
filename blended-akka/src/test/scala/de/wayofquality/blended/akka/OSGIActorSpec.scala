@@ -17,12 +17,11 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.Props
-import akka.pattern.{ask, pipe}
+import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import com.typesafe.config.Config
-import de.wayofquality.blended.akka.internal.OSGIFacade
-import de.wayofquality.blended.akka.protocol.{BundleActorState, InitializeBundle, ServiceResult}
+import de.wayofquality.blended.akka.protocol.{BundleActorState, InitializeBundle}
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.junit.AssertionsForJUnit
@@ -33,13 +32,14 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object OSGIActorDummy {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy() with InitializingActor[BundleActorState] with MemoryStash
+  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy(bundleContext) with InitializingActor[BundleActorState] with MemoryStash
 }
 
-class OSGIActorDummy extends InitializingActor[BundleActorState] with BundleName { this: MemoryStash =>
+class OSGIActorDummy(ctxt: BundleContext) extends InitializingActor[BundleActorState] with BundleName { this: MemoryStash =>
+
+  override protected def bundleContext: BundleContext = ctxt
 
   override def bundleSymbolicName = "foo"
-
 
   override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
     BundleActorState(cfg, bundleContext)
@@ -51,7 +51,10 @@ class OSGIActorDummy extends InitializingActor[BundleActorState] with BundleName
 
   def working(state: BundleActorState) : Receive = {
     case "invoke" => {
-      invokeService[TestInterface1, String](classOf[TestInterface1]) { svc => svc.name } pipeTo sender
+      sender ! invokeService[TestInterface1, String] { _ match {
+        case Some(svc) => svc.name
+        case _ => ""
+      }}
     }
   }
 
@@ -67,15 +70,12 @@ class OSGIActorSpec extends WordSpec
     implicit val timeout = Timeout(1.second)
 
     "allow to invoke a service" in new TestActorSys with TestSetup with MockitoSugar {
-      val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
 
       val probe = TestActorRef(Props(OSGIActorDummy()), "testActor")
 
       probe ! InitializeBundle(osgiContext)
 
-      Await.result(probe ?  "invoke", 3.seconds) match {
-        case ServiceResult(Some(s)) => s should be("Andreas")
-      }
+      Await.result(probe ?  "invoke", 3.seconds) should be ("Andreas")
     }
   }
 
