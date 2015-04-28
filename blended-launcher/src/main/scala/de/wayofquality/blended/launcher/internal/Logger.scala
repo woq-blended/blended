@@ -4,11 +4,11 @@ import scala.reflect.ClassTag
 import scala.reflect.classTag
 
 trait Logger extends Serializable {
-  def error(msg: => String, throwable: Throwable = null)
-  def warn(msg: => String, throwable: Throwable = null)
-  def info(msg: => String, throwable: Throwable = null)
-  def debug(msg: => String, throwable: Throwable = null)
-  def trace(msg: => String, throwable: Throwable = null)
+  def error(msg: => String, throwable: Throwable = null): Unit
+  def warn(msg: => String, throwable: Throwable = null): Unit
+  def info(msg: => String, throwable: Throwable = null): Unit
+  def debug(msg: => String, throwable: Throwable = null): Unit
+  def trace(msg: => String, throwable: Throwable = null): Unit
 }
 
 object Logger {
@@ -16,11 +16,11 @@ object Logger {
   private[this] var cachedLoggerFactory: Option[String => Logger] = None
 
   private[this] lazy val noOpLogger = new Logger {
-    override def error(msg: => String, throwable: Throwable) {}
-    override def warn(msg: => String, throwable: Throwable) {}
-    override def info(msg: => String, throwable: Throwable) {}
-    override def debug(msg: => String, throwable: Throwable) {}
-    override def trace(msg: => String, throwable: Throwable) {}
+    override def error(msg: => String, throwable: Throwable): Unit = {}
+    override def warn(msg: => String, throwable: Throwable): Unit = {}
+    override def info(msg: => String, throwable: Throwable): Unit = {}
+    override def debug(msg: => String, throwable: Throwable): Unit = {}
+    override def trace(msg: => String, throwable: Throwable): Unit = {}
     override def toString = "Noop Logger"
   }
   private[this] lazy val noOpLoggerFactory: String => Logger = _ => noOpLogger

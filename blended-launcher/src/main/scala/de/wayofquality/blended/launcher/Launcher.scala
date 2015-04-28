@@ -21,7 +21,7 @@ import com.typesafe.config.ConfigParseOptions
 
 object Launcher {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
     val configFile = args match {
       case Array(configFile) => new File(configFile).getAbsoluteFile()
@@ -48,15 +48,15 @@ case class LauncherConfig(
   bundles: Seq[BundleConfig])
 
 object LauncherConfig {
-  
+
   private[this] val log = Logger[LauncherConfig.type]
 
   def read(file: File): LauncherConfig = {
 
     val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher").resolve()
 
-    val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf", 
-        ConfigParseOptions.defaults().setAllowMissing(false))
+    val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf",
+      ConfigParseOptions.defaults().setAllowMissing(false))
     log.debug(s"Checking config with reference: ${reference}")
     config.checkValid(reference)
 
@@ -94,7 +94,7 @@ class Launcher(config: LauncherConfig) {
 
   case class InstalledBundle(jarBundle: BundleConfig, bundle: Bundle)
 
-  def run() {
+  def run(): Unit = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
@@ -132,7 +132,7 @@ class Launcher(config: LauncherConfig) {
 
     1.to(config.startLevel).map { startLevel =>
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
-        override def frameworkEvent(event: FrameworkEvent) {
+        override def frameworkEvent(event: FrameworkEvent): Unit = {
           log.debug(s"Active start level ${startLevel} reached")
         }
       })
