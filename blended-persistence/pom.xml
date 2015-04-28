@@ -52,6 +52,12 @@
       <artifactId>domino</artifactId>
       <version>${domino.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-json_${scala.version}</artifactId>
+      <version>${spray-json.version}</version>
+    </dependency>
     
     <dependency>
       <groupId>org.scala-lang</groupId>

@@ -163,7 +163,6 @@
         <module>blended-karaf-features</module>
         <module>blended-karaf-branding</module>
 
-        <module>blended-modules</module>
         <module>blended-akka</module>
         <module>blended-mgmt-agent</module>
         <module>blended-mgmt-rest</module>
@@ -173,8 +172,8 @@
 
         <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
-        <module>blended-persistence-neo4j</module>
-        <module>blended-persistence-h2</module>
+        <!--module>blended-persistence-neo4j</module>
+        <module>blended-persistence-h2</module-->
 
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>
