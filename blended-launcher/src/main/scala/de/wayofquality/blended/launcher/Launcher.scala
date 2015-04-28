@@ -54,7 +54,7 @@ object LauncherConfig {
 
   def read(file: File): LauncherConfig = {
 
-    val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher")
+    val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher").resolve()
 
     LauncherConfig(
       frameworkJar = config.getString("frameworkBundle"),
