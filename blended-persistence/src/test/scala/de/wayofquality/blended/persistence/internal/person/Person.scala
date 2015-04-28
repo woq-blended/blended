@@ -29,30 +29,32 @@ object PersonFactory {
     require(props._2.isDefinedAt("uuid"))
     require(props._2.isDefinedAt("name"))
     require(props._2.isDefinedAt("firstName"))
+    require(props._2.isDefinedAt("age"))
 
     new Person(
       uuid      = props._2("uuid").value.asInstanceOf[String],
       name      = props._2("name").value.asInstanceOf[String],
-      firstName = props._2("firstName").value.asInstanceOf[String]
+      firstName = props._2("firstName").value.asInstanceOf[String],
+      age       = props._2("age").value.asInstanceOf[Int]
     )
   }
 }
 
-case class Person(uuid: String = UUID.randomUUID().toString, name: String, firstName: String) extends DataObject(uuid) {
-
-  import spray.json._
+case class Person(
+  uuid: String = UUID.randomUUID().toString, 
+  name: String, 
+  firstName: String,
+  age: Int                 
+) extends DataObject(uuid) {
 
   override def persistenceProperties: PersistenceProperties = {
 
-    val builder =
-      new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
-
-    val fields = this.toJson.asJsObject.fields
-    fields.map { case (k: String, v: JsValue) =>
-     (k, jsValue2Property(v))
-    } foreach { case (k: String, v: PersistenceProperty[_]) => builder += (k -> v) }
-
-    (super.persistenceProperties._1, builder.result().toMap)
+    (super.persistenceProperties._1, Map(
+      "uuid" -> uuid,
+      "name" -> name,
+      "firstName" -> firstName, 
+      "age" -> age
+    ))
   }
 }
 

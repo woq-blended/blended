@@ -19,6 +19,7 @@ package de.wayofquality.blended.persistence {
 import scala.language.implicitConversions
 import akka.actor.ActorRef
 import spray.json._
+import scala.reflect.runtime.universe._
 
   package object protocol {
 
@@ -32,23 +33,23 @@ import spray.json._
 
     // helper function to turn jsValues as they are used within Spray into Persistence Properties
     implicit def jsValue2Property(v: JsValue) : PersistenceProperty[_] = v match {
-      case JsBoolean(b)            => PersistenceProperty[Boolean](b)
-      case JsString(s)             => PersistenceProperty[String](s)
-      case JsNumber(d: BigDecimal) => PersistenceProperty[Double](d.toDouble)
+      case JsBoolean(b)            => PersistenceProperty(b)
+      case JsString(s)             => PersistenceProperty(s)
+      case JsNumber(d: BigDecimal) => PersistenceProperty(d.toDouble)
     }
 
     // These definitions are jsut there to restrict the portential property types to primitives
-    implicit def bool2Property(b: Boolean)  = PersistenceProperty[Boolean](b)
-    implicit def byte2Property(b: Byte)     = PersistenceProperty[Byte](b)
-    implicit def short2Property(s: Short)   = PersistenceProperty[Short](s)
-    implicit def int2Property(i: Int)       = PersistenceProperty[Int](i)
-    implicit def long2Property(l: Long)     = PersistenceProperty[Long](l)
-    implicit def float2Property(f: Float)   = PersistenceProperty[Float](f)
-    implicit def double2Property(d: Double) = PersistenceProperty[Double](d)
-    implicit def char2Property(c: Char)     = PersistenceProperty[Char](c)
-    implicit def string2Property(s: String) = PersistenceProperty[String](s)
+    implicit def bool2Property(b: Boolean)  = PersistenceProperty(b)
+    implicit def byte2Property(b: Byte)     = PersistenceProperty(b)
+    implicit def short2Property(s: Short)   = PersistenceProperty(s)
+    implicit def int2Property(i: Int)       = PersistenceProperty(i)
+    implicit def long2Property(l: Long)     = PersistenceProperty(l)
+    implicit def float2Property(f: Float)   = PersistenceProperty(f)
+    implicit def double2Property(d: Double) = PersistenceProperty(d)
+    implicit def char2Property(c: Char)     = PersistenceProperty(c)
+    implicit def string2Property(s: String) = PersistenceProperty(s)
 
-    implicit def object2Property(obj: Any) : PersistenceProperty[_] = obj match {
+    implicit def object2Property[T <: AnyRef](obj: Any) : PersistenceProperty[_] = obj match {
       case b: Boolean      => bool2Property(b)
       case b: Byte         => byte2Property(b: Byte)
       case s: Short        => short2Property(s)
@@ -67,7 +68,7 @@ import spray.json._
 
   package protocol {
 
-    sealed case class PersistenceProperty[T](v : T) {
+  sealed case class PersistenceProperty[T](v : T)(implicit t: TypeTag[T]) {
       require(
         v.isInstanceOf[Boolean] || v.isInstanceOf[Byte] || v.isInstanceOf[Short] ||
         v.isInstanceOf[Int]     || v.isInstanceOf[Long] || v.isInstanceOf[Float] ||

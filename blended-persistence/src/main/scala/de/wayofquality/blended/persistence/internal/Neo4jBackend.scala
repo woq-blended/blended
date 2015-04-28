@@ -200,7 +200,7 @@ class Neo4jBackend extends PersistenceBackend {
 
     node.getPropertyKeys.asScala.foreach { k =>
       val v = node.getProperty(k)
-      builder += (k -> object2Property(v))
+      builder += (k -> v)
     }
 
     builder.result().toMap

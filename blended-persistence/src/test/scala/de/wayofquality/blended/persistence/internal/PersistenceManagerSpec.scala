@@ -69,7 +69,7 @@ class PersistenceManagerSpec
     }
 
     "Store a data object correctly" in {
-      val info = new Person(firstName = "Andreas", name = "Gies")
+      val info = new Person(firstName = "Andreas", name = "Gies", age = 46)
       system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {
@@ -79,7 +79,7 @@ class PersistenceManagerSpec
     }
 
     "Retrieve a data object by its uuid" in {
-      val info = new Person(firstName = "Andreas", name = "Gies")
+      val info = new Person(firstName = "Andreas", name = "Gies", age = 46)
       system.actorSelection(s"/user/$bundleSymbolicName").resolveOne().map( _ ! StoreObject(info) )
 
       fishForMessage(10.seconds) {

@@ -50,7 +50,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
       val props = info.persistenceProperties
 
-      props._1 should be (info.getClass.getSimpleName)
+      props._1 should be (info.getClass.getName.replaceAll("\\.", "_"))
       props._2.size should be (2)
       props._2(PROP_UUID) should be (PersistenceProperty[String]("uuid"))
       props._2("fooo") should be (PersistenceProperty[String]("bar"))
