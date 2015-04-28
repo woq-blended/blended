@@ -82,6 +82,8 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       import scala.concurrent.duration._
 
+      system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
+
       val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
       val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
@@ -89,7 +91,6 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
       listener ! InitializeBundle(osgiContext)
 
       // We need to wait for the Actor bundle to finish it's initialization
-      system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
       fishForMessage() {
         case BundleActorInitialized(s) if s == "listener" => true
         case _ => false
@@ -110,10 +111,10 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false
@@ -129,10 +130,10 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false
@@ -154,10 +155,10 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false
