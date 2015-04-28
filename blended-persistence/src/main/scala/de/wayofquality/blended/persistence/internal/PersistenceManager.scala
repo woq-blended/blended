@@ -22,6 +22,7 @@ import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
 import de.wayofquality.blended.akka.{InitializingActor, MemoryStash, OSGIActor}
 import de.wayofquality.blended.container.context.ContainerContext
+import de.wayofquality.blended.persistence.PersistenceBackend
 import de.wayofquality.blended.persistence.protocol._
 import org.osgi.framework.BundleContext
 
@@ -30,10 +31,9 @@ import scala.util.{Failure, Success, Try}
 
 object PersistenceManager {
 
-  def apply(impl: PersistenceBackend)(implicit osgiContext : BundleContext) =
-    new PersistenceManager(impl) with PersistenceBundleName
+  def apply(impl: PersistenceBackend, bc: BundleContext) =
+    new PersistenceManager(impl, bc) with PersistenceBundleName
 }
-
 
 private[persistence] case class PersistenceManagerBundleState(
   override val config : Config,
@@ -42,11 +42,11 @@ private[persistence] case class PersistenceManagerBundleState(
 ) extends BundleActorState(config, bundleContext)
 
 
-class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : BundleContext)
+class PersistenceManager(backend: PersistenceBackend, bc: BundleContext)
   extends InitializingActor[PersistenceManagerBundleState] with PersistenceBundleName with MemoryStash {
 
-  implicit val logging = context.system.log
-  
+  override protected def bundleContext: BundleContext = bc
+
   override def receive = initializing orElse stashing
   
   override def createState(cfg: Config, bundleContext: BundleContext): PersistenceManagerBundleState = 
@@ -57,23 +57,15 @@ class PersistenceManager(backend: PersistenceBackend)(implicit osgiContext : Bun
     unstash()
   }
 
-  override def initialize(state : PersistenceManagerBundleState) : Future[Try[Initialized]] = {
-    invokeService(classOf[ContainerContext]) {
-      ctx => ctx.getContainerDirectory
-    }.mapTo[ServiceResult[String]].map { svcResult =>
-      svcResult match {
-        case ServiceResult(r) => {
-          log.debug(r.toString)
-          r match {
-            case Some(dir) =>
-              backend.initBackend(dir, state.config)
-              Success(Initialized(state))
-            case _ =>
-              log.error(s"No container directory configured")
-              Failure(new Exception(s"No container directory configured."))
-          }
-        }
-      }
+  override def initialize(state : PersistenceManagerBundleState) : Try[Initialized] = {
+    
+    withService[ContainerContext, Try[Initialized]] {
+      case Some(ctxt) =>
+        backend.initBackend(ctxt.getContainerDirectory, state.config)
+        Success(Initialized(state))
+      case None =>
+        log.error(s"No container directory configured")
+        Failure(new Exception(s"No container directory configured."))
     }
   }
 

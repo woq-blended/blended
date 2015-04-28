@@ -21,14 +21,17 @@ import akka.event.LoggingReceive
 import de.wayofquality.blended.akka.protocol._
 import de.wayofquality.blended.akka.{MemoryStash, OSGIActor}
 import de.wayofquality.blended.persistence.internal.PersistenceBundleName
+import org.osgi.framework.BundleContext
 
 trait DataObjectFactory {
   def createObject(props: PersistenceProperties) : Option[DataObject]
 }
 
-class DataObjectCreator(factory: DataObjectFactory) extends OSGIActor with PersistenceBundleName with MemoryStash {
+class DataObjectCreator(factory: DataObjectFactory, bc: BundleContext) extends OSGIActor with PersistenceBundleName with MemoryStash {
 
   def createObject(props: PersistenceProperties) : Option[DataObject] = factory.createObject(props)
+
+  override protected def bundleContext: BundleContext = bc
 
   override def preStart(): Unit = {
     super.preStart()

@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.event.LoggingAdapter
 import com.typesafe.config.Config
-import de.wayofquality.blended.persistence.internal.PersistenceBackend
+import de.wayofquality.blended.persistence.PersistenceBackend
 import de.wayofquality.blended.persistence.protocol._
 import org.neo4j.cypher.{ExecutionEngine, ExecutionResult}
 import org.neo4j.graphdb.factory.GraphDatabaseFactory

@@ -17,7 +17,9 @@
 package de.wayofquality.blended.persistence.internal
 
 import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
+import de.wayofquality.blended.persistence.PersistenceBackend
+import org.osgi.framework.BundleContext
 
 trait PersistenceBundleName extends BundleName {
   override def bundleSymbolicName = "de.wayofquality.blended.persistence"
@@ -26,8 +28,10 @@ trait PersistenceBundleName extends BundleName {
 class PersistenceActivator extends ActorSystemAware with PersistenceBundleName {
 
   whenBundleActive {
-    
-    
+    whenServicePresent[PersistenceBackend] { svc =>
+      manageBundleActor{ () =>
+        Props(PersistenceManager(svc, bundleContext))
+      }
+    }
   }
-  override def prepareBundleActor() = Props(PersistenceManager(new Neo4jBackend()))
 }

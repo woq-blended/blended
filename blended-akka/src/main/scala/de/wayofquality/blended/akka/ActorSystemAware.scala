@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.akka
 
-import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorSystem, PoisonPill, Props}
 import de.wayofquality.blended.akka.protocol._
 import org.helgoboss.domino.DominoActivator
 
@@ -26,13 +26,12 @@ trait BundleName {
 
 trait ActorSystemAware extends DominoActivator { this : BundleName =>
 
-  def startBundleActor(system: ActorSystem, name: String) : ActorRef
+  def manageBundleActor(f : () => Props) : Unit = {
 
-  whenBundleActive {
     whenServicePresent[ActorSystem] { system =>
       log debug s"Preparing bundle actor for [$bundleSymbolicName]."
 
-      val actorRef = startBundleActor(system, bundleSymbolicName)
+      val actorRef = system.actorOf(f(), bundleSymbolicName)
       actorRef ! InitializeBundle(bundleContext)
 
       system.eventStream.publish(BundleActorStarted(bundleSymbolicName))

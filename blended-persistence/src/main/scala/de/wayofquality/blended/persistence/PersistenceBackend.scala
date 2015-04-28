@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal
+package de.wayofquality.blended.persistence
 
-import de.wayofquality.blended.persistence.protocol.{PersistenceProperties, DataObject}
 import com.typesafe.config.Config
-import akka.event.LoggingAdapter
+import de.wayofquality.blended.persistence.protocol.{DataObject, PersistenceProperties}
 
 trait PersistenceBackend {
-  def initBackend(baseDir: String, config: Config)(implicit log: LoggingAdapter) : Unit
-  def store(obj : DataObject)(implicit log: LoggingAdapter) : Long
-  def get(uuid: String, objectType: String)(implicit log: LoggingAdapter) : Option[PersistenceProperties]
-  def shutdownBackend()(implicit log: LoggingAdapter) : Unit
+  def initBackend(baseDir: String, config: Config) : Unit
+  def store(obj : DataObject) : Long
+  def get(uuid: String, objectType: String) : Option[PersistenceProperties]
+  def shutdownBackend() : Unit
 }
