@@ -18,7 +18,6 @@ package de.wayofquality.blended.persistence.internal
 
 import de.wayofquality.blended.persistence.protocol.{PersistenceProperties, DataObject}
 import com.typesafe.config.Config
-import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 
 trait PersistenceBackend {

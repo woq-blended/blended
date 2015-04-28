@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal
+package de.wayofquality.blended.persistence.neo4j.internal
 
-import org.neo4j.graphdb.{Node, DynamicLabel, GraphDatabaseService}
-import org.neo4j.graphdb.factory.GraphDatabaseFactory
-import com.typesafe.config.Config
-import de.wayofquality.blended.persistence.protocol._
-import akka.event.LoggingAdapter
 import java.io.File
 import java.util.concurrent.TimeUnit
-import org.neo4j.cypher.{ExecutionResult, ExecutionEngine}
+
+import akka.event.LoggingAdapter
+import com.typesafe.config.Config
+import de.wayofquality.blended.persistence.internal.PersistenceBackend
+import de.wayofquality.blended.persistence.protocol._
+import org.neo4j.cypher.{ExecutionEngine, ExecutionResult}
+import org.neo4j.graphdb.factory.GraphDatabaseFactory
+import org.neo4j.graphdb.{DynamicLabel, GraphDatabaseService, Node}
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 

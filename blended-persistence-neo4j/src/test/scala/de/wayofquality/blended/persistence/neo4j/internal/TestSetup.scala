@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal
+package de.wayofquality.blended.persistence.neo4j.internal
 
 import akka.actor.ActorSystem
 import de.wayofquality.blended.container.context.ContainerContext
 import de.wayofquality.blended.testsupport.TestActorSys
-import org.osgi.framework.{Bundle, ServiceReference, BundleContext}
 import org.mockito.Mockito._
+import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
 
+/**
+ * Created by andreas on 28/04/15.
+ */
 trait TestSetup { this : TestActorSys with MockitoSugar =>
 
   implicit val osgiContext = mock[BundleContext]

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal.person
+package de.wayofquality.blended.persistence.neo4j.internal.person
 
 import de.wayofquality.blended.persistence.protocol._
 import java.util.UUID

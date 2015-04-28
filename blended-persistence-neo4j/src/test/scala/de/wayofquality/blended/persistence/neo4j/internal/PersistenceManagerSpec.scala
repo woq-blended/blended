@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal
+package de.wayofquality.blended.persistence.neo4j.internal
 
 import akka.actor.{ActorRef, Props}
 import akka.testkit.TestActorRef
@@ -22,7 +22,8 @@ import akka.util.Timeout
 import de.wayofquality.blended.akka.internal.OSGIFacade
 import de.wayofquality.blended.akka.protocol._
 import de.wayofquality.blended.akka.{BlendedAkkaConstants, OSGIActor}
-import de.wayofquality.blended.persistence.internal.person.{Person, PersonCreator}
+import de.wayofquality.blended.persistence.internal.{PersistenceActivator, PersistenceBundleName}
+import de.wayofquality.blended.persistence.neo4j.internal.person.{Person, PersonCreator}
 import de.wayofquality.blended.persistence.protocol.{QueryResult, StoreObject, _}
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleActivator

@@ -27,11 +27,11 @@
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-persistence</artifactId>
-  <packaging>bundle</packaging>
+  <artifactId>blended-persistence-test</artifactId>
+  <packaging>jar</packaging>
   
   <description>
-    Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles.
+    A Persistence Manager test suite. All implementations should use this test suite to check their compatibilty with blended.
   </description>
 
   <properties>
@@ -48,15 +48,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.helgoboss</groupId>
-      <artifactId>domino</artifactId>
-      <version>${domino.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-      <version>${scala.version}.${scala.micro.version}</version>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended-persistence</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -66,6 +60,14 @@
     </dependency>
 
     <!-- Test dependencies -->
+
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-kernel</artifactId>
+      <version>${neo4j.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>

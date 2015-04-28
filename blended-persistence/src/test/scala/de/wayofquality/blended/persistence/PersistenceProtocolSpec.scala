@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.persistence.internal
+package de.wayofquality.blended.persistence
 
 import org.scalatest.{Matchers, WordSpec}
 

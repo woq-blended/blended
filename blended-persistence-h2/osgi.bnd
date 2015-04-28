@@ -1,0 +1,13 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: *
+
+Bundle-Activator: \
+  de.wayofquality.blended.persistence.internal.PersistenceActivator
+
+Private-Package:\
+  de.wayofquality.blended.*.internal.*

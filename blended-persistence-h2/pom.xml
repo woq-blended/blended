@@ -27,11 +27,11 @@
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-persistence</artifactId>
+  <artifactId>blended-persistence-h2</artifactId>
   <packaging>bundle</packaging>
   
   <description>
-    Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles.
+    Implement a persistence backend with H2.
   </description>
 
   <properties>
@@ -48,11 +48,17 @@
     </dependency>
 
     <dependency>
-      <groupId>org.helgoboss</groupId>
-      <artifactId>domino</artifactId>
-      <version>${domino.version}</version>
+      <groupId>io.spray</groupId>
+      <artifactId>spray-json_${scala.version}</artifactId>
+      <version>${spray-json.version}</version>
     </dependency>
-    
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended-neo4j-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -66,6 +72,14 @@
     </dependency>
 
     <!-- Test dependencies -->
+
+    <dependency>
+      <groupId>org.neo4j</groupId>
+      <artifactId>neo4j-kernel</artifactId>
+      <version>${neo4j.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>
