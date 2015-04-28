@@ -48,7 +48,7 @@ case class LauncherConfig(
   bundles: Seq[BundleConfig])
 
 object LauncherConfig {
-
+  
   private[this] val log = Logger[LauncherConfig.type]
 
   def read(file: File): LauncherConfig = {
