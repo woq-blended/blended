@@ -3,12 +3,10 @@ package de.wayofquality.blended.launcher
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
-
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
-
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -17,10 +15,9 @@ import org.osgi.framework.launch.Framework
 import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
-
 import de.wayofquality.blended.launcher.internal.Logger
-
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
 
 object Launcher {
 
@@ -52,9 +49,16 @@ case class LauncherConfig(
 
 object LauncherConfig {
 
+  private[this] val log = Logger[LauncherConfig.type]
+
   def read(file: File): LauncherConfig = {
 
     val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher").resolve()
+
+    val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf", 
+        ConfigParseOptions.defaults().setAllowMissing(false))
+    log.debug(s"Checking config with reference: ${reference}")
+    config.checkValid(reference)
 
     LauncherConfig(
       frameworkJar = config.getString("frameworkBundle"),
