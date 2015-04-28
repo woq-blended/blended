@@ -30,9 +30,9 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
   "Container registry" should {
 
     "Respond with a OK message upon an container update message" in new TestActorSys {
-      implicit val osgiContext = mock[BundleContext]
+      val osgiContext = mock[BundleContext]
 
-      val registry = TestActorRef(Props(ContainerRegistryImpl()))
+      val registry = TestActorRef(Props(ContainerRegistryImpl(osgiContext)))
       registry ! UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas")))
 
       expectMsg(ContainerRegistryResponseOK("foo"))

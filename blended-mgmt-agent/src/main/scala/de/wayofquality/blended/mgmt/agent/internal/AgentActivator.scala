@@ -27,5 +27,9 @@ trait MgmtAgentBundleName extends BundleName {
 
 // The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
 class AgentActivator extends ActorSystemAware with BundleActivator with MgmtAgentBundleName {
-  def prepareBundleActor(): Props = Props(MgmtReporter())
+  
+  whenBundleActive {
+    manageBundleActor { () => Props(MgmtReporter(bundleContext))
+    }
+  }
 }

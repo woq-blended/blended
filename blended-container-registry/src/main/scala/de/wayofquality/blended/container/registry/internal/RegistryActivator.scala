@@ -21,5 +21,11 @@ import akka.actor.Props
 import de.wayofquality.blended.container.registry.RegistryBundleName
 
 class RegistryActivator extends ActorSystemAware with RegistryBundleName {
-  override def prepareBundleActor() = Props(ContainerRegistryImpl())
+  
+  whenBundleActive {
+    manageBundleActor { () =>
+      Props(ContainerRegistryImpl(bundleContext))
+    }
+    
+  }
 }

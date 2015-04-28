@@ -25,11 +25,13 @@ import de.wayofquality.blended.container.registry.protocol._
 
 
 object ContainerRegistryImpl {
-  def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName
+  def apply(bc: BundleContext) = new ContainerRegistryImpl(bc) with OSGIActor with RegistryBundleName
 }
 
-class ContainerRegistryImpl(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
-  this : OSGIActor with BundleName =>
+class ContainerRegistryImpl(bc: BundleContext) extends OSGIActor with ActorLogging with RegistryBundleName {
+
+
+  override protected def bundleContext: BundleContext = bc
 
   def receive = {
     case UpdateContainerInfo(info) => {
