@@ -19,4 +19,5 @@ Please refer to the full config reference at
 link:src/main/binaryResources/de/wayofquality/blended/launcher/LauncherConfig-reference.conf[]
 
 Example(s):
+
 * link:src/test/binaryResources/example-config[]
