@@ -74,6 +74,12 @@
       <version>${slf4j.version}</version>
     </dependency>
 
+    <dependency>
+    	<groupId>org.scala-lang</groupId>
+    	<artifactId>scala-library</artifactId>
+    	<version>${scala.version}.${scala.micro.version}</version>
+    </dependency>
+
     <!-- Test dependencies -->
 
     <dependency>
