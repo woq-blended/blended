@@ -17,17 +17,14 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
-import akka.pattern.ask
 import akka.util.Timeout
-import de.wayofquality.blended.akka.protocol._
+import com.typesafe.config.Config
+import de.wayofquality.blended.container.context.ContainerContext
 import org.helgoboss.domino.service_consuming.ServiceConsuming
-import de.wayofquality.blended.akka.internal.ConfigLocator
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
-import de.wayofquality.blended.akka.internal.ConfigDirectoryProvider
-import de.wayofquality.blended.container.context.ContainerContext
-import com.typesafe.config.Config
 
 trait OSGIActor extends Actor 
   with ActorLogging 

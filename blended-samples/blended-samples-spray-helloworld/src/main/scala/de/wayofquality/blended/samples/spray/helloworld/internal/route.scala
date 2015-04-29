@@ -17,21 +17,18 @@
 package de.wayofquality.blended.samples.spray.helloworld.internal
 
 import akka.actor.{Actor, ActorLogging}
-import com.typesafe.config.Config
-import de.wayofquality.blended.akka.{InitializingActor, BundleName, OSGIActor}
-import de.wayofquality.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
-import spray.http.MediaTypes._
-import org.osgi.framework.BundleContext
-import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
-import spray.util.LoggingContext
-import spray.http.Uri.Path
-
-import spray.routing._
-import akka.pattern._
-
-import de.wayofquality.blended.modules._
+import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
+import de.wayofquality.blended.akka.{InitializingActor, OSGIActor}
+import de.wayofquality.blended.modules._
+import de.wayofquality.blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import org.osgi.framework.BundleContext
+import spray.http.MediaTypes._
+import spray.http.Uri.Path
+import spray.routing._
+import spray.servlet.ConnectorSettings
+import spray.util.LoggingContext
 
 import scala.util.{Success, Try}
 

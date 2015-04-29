@@ -1,13 +1,13 @@
 package de.wayofquality.blended.itestsupport.docker
 
-import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.Matchers
-import org.scalatest.WordSpecLike
 import akka.actor.Props
 import de.wayofquality.blended.itestsupport.ContainerUnderTest
-import scala.concurrent.duration._
+import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.mock.MockitoSugar
 import org.slf4j.LoggerFactory
+
+import scala.concurrent.duration._
 
 class DockerContainerMapperSpec extends TestActorSys
   with WordSpecLike

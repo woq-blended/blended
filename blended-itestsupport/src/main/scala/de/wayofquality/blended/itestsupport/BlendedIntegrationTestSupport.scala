@@ -25,7 +25,7 @@ import de.wayofquality.blended.itestsupport.docker.protocol._
 import de.wayofquality.blended.itestsupport.protocol._
 import org.apache.camel.CamelContext
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 
 trait BlendedIntegrationTestSupport { 

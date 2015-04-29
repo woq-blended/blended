@@ -1,16 +1,13 @@
 package de.wayofquality.blended.akka.itest
 
-import de.wayofquality.blended.itestsupport.jolokia.JolokiaAvailableCondition
-import de.wayofquality.blended.itestsupport.condition.ParallelComposedCondition
-import de.wayofquality.blended.itestsupport.jolokia.CamelContextExistsCondition
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
+import de.wayofquality.blended.itestsupport.{BlendedTestContextManager, ContainerUnderTest, TestContextConfigurator}
+import de.wayofquality.blended.itestsupport.condition.{Condition, ParallelComposedCondition}
 import de.wayofquality.blended.itestsupport.jms.JMSAvailableCondition
-import de.wayofquality.blended.itestsupport.BlendedTestContextManager
+import de.wayofquality.blended.itestsupport.jolokia.{CamelContextExistsCondition, JolokiaAvailableCondition}
 import org.apache.activemq.ActiveMQConnectionFactory
-import de.wayofquality.blended.itestsupport.TestContextConfigurator
-import de.wayofquality.blended.itestsupport.condition.Condition
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
+
 import scala.concurrent.duration._
 
 class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {

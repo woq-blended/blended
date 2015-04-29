@@ -22,7 +22,6 @@ import akka.actor.{Actor, ActorLogging, Props}
 import de.wayofquality.blended.itestsupport.jms.protocol._
 
 import scala.concurrent.duration._
-
 import scala.concurrent.{Await, Future}
 
 object JMSConnectorActor {

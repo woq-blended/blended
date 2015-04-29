@@ -16,10 +16,9 @@
 
 package de.wayofquality.blended.persistence.internal
 
+import akka.actor.Props
 import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
-import akka.actor.{ActorSystem, Props}
 import de.wayofquality.blended.persistence.PersistenceBackend
-import org.osgi.framework.BundleContext
 
 trait PersistenceBundleName extends BundleName {
   override def bundleSymbolicName = "de.wayofquality.blended.persistence"

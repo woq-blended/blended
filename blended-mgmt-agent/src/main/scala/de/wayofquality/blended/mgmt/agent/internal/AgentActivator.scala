@@ -16,9 +16,9 @@
 
 package de.wayofquality.blended.mgmt.agent.internal
 
-import de.wayofquality.blended.akka.{BundleName, ActorSystemAware}
-import org.osgi.framework.BundleActivator
 import akka.actor.Props
+import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
+import org.osgi.framework.BundleActivator
 
 // Simply expose the bundle's symbolic name so that it can be mixed in where required
 trait MgmtAgentBundleName extends BundleName {

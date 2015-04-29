@@ -35,13 +35,23 @@
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.httpclient/${commons.httpclient.version}</bundle>
     <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.commons-beanutils/${commons.beanutils.version}</bundle>
   </feature>
+  
+  <feature name="blended-domino" version="${project.version}" resolver="(obr)" start-level="15">
+    <bundle>mvn:org.apache.felix/org.apache.felix.metatype/${felix.metatype.version}</bundle>
+    <bundle>mvn:org.helgoboss/capsule/${capsule.version}</bundle>
+    <bundle>mvn:org.helgoboss/scala-logging/${domino.version}</bundle>
+    <bundle>mvn:org.helgoboss/scala-osgi-metatype/${domino.version}</bundle>
+    <bundle>mvn:org.helgoboss/domino/${domino.version}</bundle>
+  </feature>
 
   <feature name="blended-base" description="Blended - Base bundles" version="${project.version}" resolver="(obr)" start-level="20">
     <feature version="${akka.version}">blended-akka</feature>
     <feature version="${project.version}">blended-commons</feature>
     <feature version="${karaf.version}">wrapper</feature>
+    <feature version="${project.version}">blended-domino</feature>
     <bundle>mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
     <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
+    <bundle>mvn:org.helgoboss/domino/${domino.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-util/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-container-context/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-container-id/${blended.version}</bundle>
@@ -185,7 +195,6 @@
     <bundle>blueprint:file:etc/amq-broker.xml</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended-samples-spray-helloworld/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended-samples-camel/${blended.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended.samples/blended-samples-tracker/${blended.version}</bundle>
   </feature>
 
 </features>

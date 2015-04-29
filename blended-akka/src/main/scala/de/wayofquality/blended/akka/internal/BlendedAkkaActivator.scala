@@ -18,12 +18,11 @@ package de.wayofquality.blended.akka.internal
 
 import java.io.File
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.camel.CamelExtension
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
-import de.wayofquality.blended.akka.BlendedAkkaConstants._
 import de.wayofquality.blended.container.context.ContainerContext
 import org.helgoboss.capsule.Capsule
 import org.helgoboss.domino.DominoActivator

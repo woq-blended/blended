@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.akka.internal
+package de.wayofquality.blended.akka
 
 import java.io.File
-import akka.actor.{Actor, ActorLogging}
-import akka.event.LoggingReceive
-import com.typesafe.config.{ConfigException, ConfigFactory}
-import de.wayofquality.blended.akka.MemoryStash
-import de.wayofquality.blended.akka.protocol._
-import com.typesafe.config.Config
+
+import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
 trait ConfigDirectoryProvider {

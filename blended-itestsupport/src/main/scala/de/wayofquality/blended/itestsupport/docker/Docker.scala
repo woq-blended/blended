@@ -17,14 +17,14 @@
 package de.wayofquality.blended.itestsupport.docker
 
 import java.io.File
+
 import akka.event.LoggingAdapter
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.model.Image
+import com.github.dockerjava.api.model.{Container, Image}
 import com.github.dockerjava.core.{DockerClientBuilder, DockerClientConfig}
 import com.typesafe.config.Config
+
 import scala.collection.convert.Wrappers.JListWrapper
-import scala.collection.convert.Wrappers.JListWrapper
-import com.github.dockerjava.api.model.Container
 
 object DockerClientFactory {
 

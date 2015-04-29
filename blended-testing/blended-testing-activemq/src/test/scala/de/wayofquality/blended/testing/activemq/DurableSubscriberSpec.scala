@@ -18,26 +18,6 @@ package de.wayofquality.blended.testing.activemq
 
 import java.net.URI
 import java.util.UUID
-import java.util.concurrent.CountDownLatch
-import javax.jms.ConnectionFactory
-
-import akka.actor.{ActorRef, ActorSystem, Props}
-import akka.pattern.ask
-import akka.testkit.{TestProbe, TestActorRef, TestKit}
-import akka.util.Timeout
-import de.wayofquality.blended.itestsupport.jms.{TextMessageFactory, JMSConnectorActor}
-import de.wayofquality.blended.itestsupport.jms.protocol._
-import de.wayofquality.blended.testsupport.TestActorSys
-import de.wayofquality.blended.util.protocol.{CounterInfo, TrackingCounter}
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.{BrokerService, TransportConnector}
-import org.apache.activemq.network.{DiscoveryNetworkConnector, NetworkConnector}
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
-import org.slf4j.LoggerFactory
-import scala.concurrent.duration._
-
-import scala.concurrent.{Await, Future}
 
 /**
  * This specification shall help to investigate the duplicate delivery of messages for durable subscribers

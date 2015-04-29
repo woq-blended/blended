@@ -17,10 +17,7 @@
 package de.wayofquality.blended.itestsupport.condition
 
 import akka.actor._
-import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.protocol._
-
-import scala.concurrent.duration.FiniteDuration
 
 object SequentialConditionActor {
   def apply(cond: SequentialComposedCondition) =

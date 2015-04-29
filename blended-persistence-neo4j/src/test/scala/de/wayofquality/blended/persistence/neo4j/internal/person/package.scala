@@ -16,8 +16,6 @@
 
 package de.wayofquality.blended.persistence.internal
 
-import spray.json.DefaultJsonProtocol
-
 package object person extends DefaultJsonProtocol {
   implicit val personFormat = jsonFormat4(Person)
 }

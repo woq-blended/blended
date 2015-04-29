@@ -18,14 +18,15 @@ package de.wayofquality.blended.akka
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.testkit.{TestProbe, TestActorRef, TestLatch}
+import akka.testkit.{TestActorRef, TestLatch, TestProbe}
 import com.typesafe.config.Config
-import de.wayofquality.blended.testsupport.TestActorSys
 import de.wayofquality.blended.akka.protocol._
+import de.wayofquality.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import scala.concurrent.{Future, Await}
+
+import scala.concurrent.Await
 import scala.util.{Success, Try}
 
 object OSGIActorDummyPublisher {

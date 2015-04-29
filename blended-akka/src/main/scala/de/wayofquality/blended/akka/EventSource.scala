@@ -21,7 +21,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Terminated}
 import de.wayofquality.blended.akka.protocol._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Try, Success}
 
 trait EventSource {
   def sendEvent[T](event : T) : Unit

@@ -16,8 +16,8 @@
 
 package de.wayofquality.blended.samples.spray.helloworld.internal
 
-import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
+import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
 
 trait HelloBundleName extends BundleName {
   def bundleSymbolicName = "de.wayofquality.blended.samples.spray.helloworld"
@@ -27,6 +27,5 @@ class HelloActivator extends ActorSystemAware with HelloBundleName {
   
   whenBundleActive {
     manageBundleActor { () =>  Props(HelloRoute("blended", bundleContext)) }
-    
   }
 }

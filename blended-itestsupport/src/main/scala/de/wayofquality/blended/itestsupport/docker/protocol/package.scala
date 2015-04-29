@@ -17,6 +17,7 @@
 package de.wayofquality.blended.itestsupport.docker
 
 import de.wayofquality.blended.itestsupport.ContainerUnderTest
+
 import scala.concurrent.duration.FiniteDuration
 
 package object protocol {

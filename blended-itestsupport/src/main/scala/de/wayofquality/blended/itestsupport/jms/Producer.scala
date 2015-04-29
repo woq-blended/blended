@@ -17,9 +17,9 @@
 package de.wayofquality.blended.itestsupport.jms
 
 import javax.jms._
+
 import akka.actor._
 import akka.event.LoggingReceive
-
 import de.wayofquality.blended.itestsupport.jms.protocol._
 import de.wayofquality.blended.util.protocol._
 

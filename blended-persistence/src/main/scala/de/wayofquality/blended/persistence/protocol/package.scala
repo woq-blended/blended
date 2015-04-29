@@ -16,9 +16,10 @@
 
 package de.wayofquality.blended.persistence {
 
-import scala.language.implicitConversions
 import akka.actor.ActorRef
 import spray.json._
+
+import scala.language.implicitConversions
 import scala.reflect.runtime.universe._
 
   package object protocol {

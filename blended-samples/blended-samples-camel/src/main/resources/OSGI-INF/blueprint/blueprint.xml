@@ -19,7 +19,6 @@
 <blueprint
   xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
   xmlns:camel="http://camel.apache.org/schema/blueprint"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   >
 
   <!-- Use the Active MQ connection factory exposed in another bundle as Connection Factory. -->

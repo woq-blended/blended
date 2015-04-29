@@ -17,8 +17,8 @@
 package de.wayofquality.blended.samples.spray.helloworld.internal
 
 import org.scalatest.{Matchers, WordSpec}
-import spray.testkit.ScalatestRouteTest
 import org.slf4j.LoggerFactory
+import spray.testkit.ScalatestRouteTest
 
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 

@@ -18,7 +18,7 @@ package de.wayofquality.blended.itestsupport.docker
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
-import de.wayofquality.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
+import de.wayofquality.blended.itestsupport.ContainerUnderTest
 import org.slf4j.LoggerFactory
 
 /*

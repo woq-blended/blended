@@ -20,13 +20,12 @@ import akka.actor._
 import akka.event.LoggingReceive
 import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{InitializingActor, MemoryStash, OSGIActor}
+import de.wayofquality.blended.akka.{InitializingActor, MemoryStash}
 import de.wayofquality.blended.container.context.ContainerContext
 import de.wayofquality.blended.persistence.PersistenceBackend
 import de.wayofquality.blended.persistence.protocol._
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 object PersistenceManager {

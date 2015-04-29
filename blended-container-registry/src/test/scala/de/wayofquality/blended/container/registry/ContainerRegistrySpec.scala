@@ -19,11 +19,11 @@ package de.wayofquality.blended.karaf.container.registry
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import de.wayofquality.blended.container.registry.internal.ContainerRegistryImpl
+import de.wayofquality.blended.container.registry.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
-import de.wayofquality.blended.container.registry.protocol._
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 

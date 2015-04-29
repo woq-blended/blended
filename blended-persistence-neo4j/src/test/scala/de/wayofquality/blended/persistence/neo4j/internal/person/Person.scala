@@ -16,9 +16,9 @@
 
 package de.wayofquality.blended.persistence.neo4j.internal.person
 
-import de.wayofquality.blended.persistence.protocol._
 import java.util.UUID
-import scala.collection.mutable
+
+import de.wayofquality.blended.persistence.protocol._
 
 object PersonFactory {
 

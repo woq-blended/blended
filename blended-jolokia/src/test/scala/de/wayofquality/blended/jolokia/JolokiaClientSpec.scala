@@ -20,12 +20,11 @@ import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.util.Timeout
 import de.wayofquality.blended.jolokia.model._
+import de.wayofquality.blended.jolokia.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
-
-import de.wayofquality.blended.jolokia.protocol._
-
 import scala.util.Failure
 
 class JolokiaJVM extends JolokiaClient with JolokiaAddress {

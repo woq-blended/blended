@@ -19,7 +19,6 @@ package de.wayofquality.blended.persistence.neo4j.internal
 import akka.actor.{ActorRef, Props}
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import de.wayofquality.blended.akka.internal.OSGIFacade
 import de.wayofquality.blended.akka.protocol._
 import de.wayofquality.blended.akka.{BlendedAkkaConstants, OSGIActor}
 import de.wayofquality.blended.persistence.internal.{PersistenceActivator, PersistenceBundleName}

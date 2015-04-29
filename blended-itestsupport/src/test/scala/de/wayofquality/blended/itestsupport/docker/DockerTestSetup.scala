@@ -17,20 +17,18 @@
 package de.wayofquality.blended.itestsupport.docker
 
 import java.util
-import java.util.ArrayList
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-import org.mockito.Mockito._
-import org.mockito.Matchers._
-import org.scalatest.mock.MockitoSugar
+
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.command._
 import com.github.dockerjava.api.model._
-import com.github.dockerjava.api.model.Container.Port
-import com.github.dockerjava.api.model.Ports.Binding
 import com.typesafe.config.ConfigFactory
+import org.mockito.Matchers._
+import org.mockito.Mockito._
+import org.scalatest.mock.MockitoSugar
+
 import scala.collection.convert.WrapAsJava._
-import org.scalatest.Matchers
 
 trait DockerTestSetup { this : MockitoSugar =>
   

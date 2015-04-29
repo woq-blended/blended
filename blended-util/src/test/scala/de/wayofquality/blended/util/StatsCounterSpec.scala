@@ -16,16 +16,15 @@
 
 package de.wayofquality.blended.util
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
+import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
-import org.scalatest.{WordSpecLike, Matchers}
-import akka.pattern.ask
-import scala.concurrent.duration._
-
 import de.wayofquality.blended.util.protocol._
+import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class StatsCounterSpec extends TestKit(ActorSystem("StatsCounter"))
   with WordSpecLike

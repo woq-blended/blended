@@ -16,12 +16,12 @@
 
 package de.wayofquality.blended.container.registry.internal
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
-import de.wayofquality.blended.akka.{BundleName, OSGIActor}
-import de.wayofquality.blended.persistence.protocol.StoreObject
-import org.osgi.framework.BundleContext
+import akka.actor.{ActorLogging, ActorRef}
+import de.wayofquality.blended.akka.OSGIActor
 import de.wayofquality.blended.container.registry.RegistryBundleName
 import de.wayofquality.blended.container.registry.protocol._
+import de.wayofquality.blended.persistence.protocol.StoreObject
+import org.osgi.framework.BundleContext
 
 
 object ContainerRegistryImpl {

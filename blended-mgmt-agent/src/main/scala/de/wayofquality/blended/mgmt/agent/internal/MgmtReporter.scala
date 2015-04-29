@@ -20,8 +20,8 @@ import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import com.typesafe.config.Config
+import de.wayofquality.blended.akka.InitializingActor
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{BundleName, InitializingActor, OSGIActor}
 import de.wayofquality.blended.container.id.ContainerIdentifierService
 import de.wayofquality.blended.container.registry.protocol._
 import org.osgi.framework.BundleContext
@@ -32,7 +32,6 @@ import spray.httpx.SprayJsonSupport
 import scala.collection.JavaConversions._
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Try
 
 object MgmtReporter {
   def apply(bc: BundleContext) = new MgmtReporter(bc)

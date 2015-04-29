@@ -16,15 +16,13 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import org.scalatest.Matchers
-import org.scalatest.WordSpecLike
-import org.scalatest.mock.MockitoSugar
-
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import de.wayofquality.blended.itestsupport.ContainerUnderTest
 import de.wayofquality.blended.itestsupport.docker.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.mock.MockitoSugar
 
 class ContainerManagerSpec extends TestActorSys
   with WordSpecLike

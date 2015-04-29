@@ -16,30 +16,17 @@
 
 package de.wayofquality.blended.itestsupport
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import de.wayofquality.blended.akka.MemoryStash
-import akka.event.LoggingReceive
-import akka.actor.PoisonPill
-import de.wayofquality.blended.itestsupport.protocol.TestContextRequest
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.camel.CamelExtension
-import org.apache.camel.CamelContext
-import com.github.dockerjava.api.command.InspectContainerResponse
-import akka.actor.Props
-import akka.util.Timeout
-import scala.concurrent.Future
-import de.wayofquality.blended.itestsupport.docker.ContainerManager
-import de.wayofquality.blended.itestsupport.docker.DockerClientProvider
-import com.github.dockerjava.api.DockerClient
-import de.wayofquality.blended.itestsupport.docker.DockerClientFactory
-import akka.actor.ActorRef
-import de.wayofquality.blended.itestsupport.docker.protocol._
-import de.wayofquality.blended.itestsupport.condition.ConditionProvider
-import de.wayofquality.blended.itestsupport.condition.Condition
-import de.wayofquality.blended.itestsupport.protocol._
-import de.wayofquality.blended.itestsupport.condition.ConditionActor
-import scala.concurrent.Await
+import akka.event.LoggingReceive
 import akka.pattern._
+import com.github.dockerjava.api.DockerClient
+import de.wayofquality.blended.akka.MemoryStash
+import de.wayofquality.blended.itestsupport.condition.{Condition, ConditionActor, ConditionProvider}
+import de.wayofquality.blended.itestsupport.docker.{ContainerManager, DockerClientFactory, DockerClientProvider}
+import de.wayofquality.blended.itestsupport.docker.protocol._
+import de.wayofquality.blended.itestsupport.protocol.{TestContextRequest, _}
+import org.apache.camel.CamelContext
 
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   

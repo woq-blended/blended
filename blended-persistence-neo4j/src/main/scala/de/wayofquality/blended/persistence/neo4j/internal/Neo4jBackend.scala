@@ -23,11 +23,7 @@ import akka.event.LoggingAdapter
 import com.typesafe.config.Config
 import de.wayofquality.blended.persistence.PersistenceBackend
 import de.wayofquality.blended.persistence.protocol._
-import org.neo4j.cypher.{ExecutionEngine, ExecutionResult}
-import org.neo4j.graphdb.factory.GraphDatabaseFactory
-import org.neo4j.graphdb.{DynamicLabel, GraphDatabaseService, Node}
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 class Neo4jBackend extends PersistenceBackend {

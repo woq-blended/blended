@@ -16,15 +16,14 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
-import com.github.dockerjava.api.model.ExposedPort
-import de.wayofquality.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
-import de.wayofquality.blended.itestsupport.docker.protocol._
-import scala.concurrent.duration._
 import com.github.dockerjava.api.DockerClient
-import akka.actor.PoisonPill
+import de.wayofquality.blended.itestsupport.ContainerUnderTest
+import de.wayofquality.blended.itestsupport.docker.protocol._
+
+import scala.concurrent.duration._
 
 object ContainerActor {
   def apply(container: ContainerUnderTest)(implicit client: DockerClient) = new ContainerActor(container)

@@ -17,9 +17,8 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.ConfigFactory
-import de.wayofquality.blended.akka.internal.{ConfigDirectoryProvider, ConfigLocator}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 

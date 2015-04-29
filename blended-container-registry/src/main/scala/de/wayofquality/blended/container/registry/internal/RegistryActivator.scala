@@ -16,8 +16,8 @@
 
 package de.wayofquality.blended.container.registry.internal
 
-import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
+import de.wayofquality.blended.akka.ActorSystemAware
 import de.wayofquality.blended.container.registry.RegistryBundleName
 
 class RegistryActivator extends ActorSystemAware with RegistryBundleName {

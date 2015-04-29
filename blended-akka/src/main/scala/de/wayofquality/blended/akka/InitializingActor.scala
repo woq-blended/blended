@@ -17,12 +17,11 @@
 package de.wayofquality.blended.akka
 
 import com.typesafe.config.Config
+import de.wayofquality.blended.akka.protocol.{BundleActorInitialized, BundleActorState, InitializeBundle}
 import org.osgi.framework.BundleContext
-import scala.util.{Failure, Success, Try}
+
 import scala.reflect.runtime.universe._
-import de.wayofquality.blended.akka.protocol.BundleActorState
-import de.wayofquality.blended.akka.protocol.BundleActorInitialized
-import de.wayofquality.blended.akka.protocol.InitializeBundle
+import scala.util.{Failure, Success, Try}
 
 trait InitializingActor[T <: BundleActorState] extends OSGIActor { this: BundleName =>
 

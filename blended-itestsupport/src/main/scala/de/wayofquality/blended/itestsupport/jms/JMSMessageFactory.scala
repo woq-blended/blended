@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.itestsupport.jms
 
-import javax.jms.{Session, Message}
+import javax.jms.{Message, Session}
 
 import scala.util.Random
 

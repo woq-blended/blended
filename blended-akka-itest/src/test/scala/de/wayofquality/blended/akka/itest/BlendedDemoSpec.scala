@@ -20,9 +20,9 @@ import akka.actor.Props
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import de.wayofquality.blended.itestsupport.BlendedIntegrationTestSupport
-import de.wayofquality.blended.itestsupport.camel.{CamelMockActor, CamelTestSupport}
 import de.wayofquality.blended.itestsupport.camel.MockAssertions._
 import de.wayofquality.blended.itestsupport.camel.protocol._
+import de.wayofquality.blended.itestsupport.camel.{CamelMockActor, CamelTestSupport}
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
 import scala.concurrent.duration.DurationInt

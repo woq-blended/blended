@@ -16,7 +16,8 @@
 
 package de.wayofquality.blended.akka
 
-import akka.actor.{ActorLogging, Actor, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef}
+
 import scala.collection.mutable.ListBuffer
 
 trait MemoryStash { this : Actor with ActorLogging =>
