@@ -201,6 +201,34 @@
       <plugins>
 
         <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.9.1</version>
+          <executions>
+            <execution>
+              <id>add-scala-sources</id>
+              <phase>generate-sources</phase>
+              <goals><goal>add-source</goal></goals>
+              <configuration>
+                <sources>
+                  <source>src/main/scala</source>
+                </sources>
+              </configuration>
+            </execution>
+            <execution>
+              <id>add-scala-test-sources</id>
+              <phase>generate-sources</phase>
+              <goals><goal>add-test-source</goal></goals>
+              <configuration>
+                <sources>
+                  <source>src/test/scala</source>
+                </sources>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
           <version>2.4</version>
@@ -210,14 +238,14 @@
               <goals>
                 <goal>jar-no-fork</goal>
               </goals>
-              <configuration>
-                <includes>
-                  <include>**/*.java</include>
-                  <include>**/*.scala</include>
-                </includes>
-              </configuration>
             </execution>
           </executions>
+          <configuration>
+            <includes>
+              <include>**/*.java</include>
+              <include>**/*.scala</include>
+            </includes>
+          </configuration>
         </plugin>
     
         <plugin>
@@ -451,6 +479,21 @@
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.9.1</version>
+      </plugin>
+
+<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
+-->
+
     </plugins>
 
   </build>
@@ -525,23 +568,6 @@
 
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <version>1.9.1</version>
-            <executions>
-              <execution>
-                <phase>generate-sources</phase>
-                <goals><goal>add-source</goal></goals>
-                <configuration>
-                  <sources>
-                    <source>src/main/scala</source>
-                  </sources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
