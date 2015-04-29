@@ -24,5 +24,9 @@ trait HelloBundleName extends BundleName {
 }
 
 class HelloActivator extends ActorSystemAware with HelloBundleName {
-  override def prepareBundleActor() = Props(HelloRoute("blended"))
+  
+  whenBundleActive {
+    manageBundleActor { () =>  Props(HelloRoute("blended", bundleContext)) }
+    
+  }
 }

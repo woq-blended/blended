@@ -24,5 +24,10 @@ trait CollectorBundleName extends BundleName {
 }
 
 class CollectorActivator extends ActorSystemAware with CollectorBundleName {
-  override def prepareBundleActor() = Props(ManagementCollector("wayofquality"))
+  
+  whenBundleActive {
+    manageBundleActor { () =>
+      Props(ManagementCollector("wayofquality", bundleContext))
+    }
+  }
 }

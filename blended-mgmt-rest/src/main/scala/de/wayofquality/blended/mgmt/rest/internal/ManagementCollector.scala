@@ -16,23 +16,23 @@
 
 package de.wayofquality.blended.mgmt.rest.internal
 
-import de.wayofquality.blended.akka.{ProductionEventSource, OSGIActor}
-import de.wayofquality.blended.spray.{SprayOSGIServlet, SprayOSGIBridge}
-import spray.routing._
-import akka.actor._
-import org.osgi.framework.BundleContext
-import akka.pattern._
-import spray.servlet.ConnectorSettings
 import akka.event.LoggingReceive
-import spray.util.LoggingContext
-import spray.http.Uri.Path
-import scala.concurrent.duration._
 import akka.util.Timeout
-import spray.httpx.SprayJsonSupport
-
-import de.wayofquality.blended.container.registry.protocol._
+import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
+import de.wayofquality.blended.akka.{InitializingActor, OSGIActor, ProductionEventSource}
+import de.wayofquality.blended.container.registry.protocol._
 import de.wayofquality.blended.modules._
+import de.wayofquality.blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import org.osgi.framework.BundleContext
+import spray.http.Uri.Path
+import spray.httpx.SprayJsonSupport
+import spray.routing._
+import spray.servlet.ConnectorSettings
+import spray.util.LoggingContext
+
+import scala.concurrent.duration._
+import scala.util.{Success, Try}
 
 trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
@@ -52,13 +52,15 @@ trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
 object ManagementCollector {
 
-  def apply(contextPath: String)(implicit bundleContext: BundleContext) =
-    new ManagementCollector(contextPath) with OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource
+  def apply(contextPath: String, bc: BundleContext) =
+    new ManagementCollector(contextPath, bc) with SprayJsonSupport with ProductionEventSource
 }
 
-class ManagementCollector(contextPath: String)(implicit bundleContext: BundleContext)
-  extends CollectorService with Actor with ActorLogging {
+class ManagementCollector(contextPath: String, bc: BundleContext)
+  extends CollectorService with InitializingActor[BundleActorState] with CollectorBundleName {
   this : OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource =>
+  
+  override protected def bundleContext: BundleContext = bc
 
   override implicit def actorRefFactory = context
 
@@ -66,38 +68,39 @@ class ManagementCollector(contextPath: String)(implicit bundleContext: BundleCon
     sendEvent(UpdateContainerInfo(info))
     ContainerRegistryResponseOK(info.containerId)
   }
+  
+  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
+    BundleActorState(cfg, bundleContext)
 
   def receive = LoggingReceive { initializing orElse eventSourceReceive }
 
-  def initializing : Receive = {
-    case InitializeBundle(_) => getActorConfig(bundleSymbolicName) pipeTo (self)
-    case ConfigLocatorResponse(id, cfg) if id == bundleSymbolicName => {
 
-      implicit val servletSettings = ConnectorSettings(cfg).copy(rootPath = Path(s"/$contextPath"))
-      implicit val routingSettings = RoutingSettings(cfg)
-      implicit val routeLogger = LoggingContext.fromAdapter(log)
-      implicit val exceptionHandler = ExceptionHandler.default
-      implicit val rejectionHandler = RejectionHandler.Default
+  override def initialize(state: BundleActorState): Try[Initialized] = {
+    implicit val servletSettings = ConnectorSettings(state.config).copy(rootPath = Path(s"/$contextPath"))
+    implicit val routingSettings = RoutingSettings(state.config)
+    implicit val routeLogger = LoggingContext.fromAdapter(log)
+    implicit val exceptionHandler = ExceptionHandler.default
+    implicit val rejectionHandler = RejectionHandler.Default
 
-      val actorSys = context.system
-      val routingActor = self
+    val actorSys = context.system
+    val routingActor = self
 
-      val servlet = new SprayOSGIServlet with SprayOSGIBridge {
-        override def routeActor = routingActor
-        override def connectorSettings = servletSettings
-        override def actorSystem = actorSys
-      }
-
-      bundleContext.createService(
-        servlet, Map(
-          "urlPatterns" -> "/",
-          "Webapp-Context" -> contextPath,
-          "Web-ContextPath" -> s"/$contextPath"
-        ))
-
-      context.become(
-        LoggingReceive { runRoute(collectorRoute) orElse eventSourceReceive}
-      )
+    val servlet = new SprayOSGIServlet with SprayOSGIBridge {
+      override def routeActor = routingActor
+      override def connectorSettings = servletSettings
+      override def actorSystem = actorSys
     }
+
+    bundleContext.createService(
+      servlet, Map(
+        "urlPatterns" -> "/",
+        "Webapp-Context" -> contextPath,
+        "Web-ContextPath" -> s"/$contextPath"
+      )
+    )
+    Success(Initialized(state))
   }
+
+  override def working(state: BundleActorState): Receive = 
+    LoggingReceive { runRoute(collectorRoute) orElse eventSourceReceive}
 }
