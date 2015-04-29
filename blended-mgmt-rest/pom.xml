@@ -26,6 +26,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended-parent</artifactId>
     <version>1.1.4-SNAPSHOT</version>
+    <relativePath>../blended-parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
