@@ -16,13 +16,11 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import com.github.dockerjava.api.model.Link
-import de.wayofquality.blended.itestsupport.NamedContainerPort
+import de.wayofquality.blended.itestsupport.ContainerUnderTest
 import org.mockito.Mockito._
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
 
 class DockerContainerSpec extends WordSpec
   with Matchers

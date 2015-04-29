@@ -16,22 +16,19 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
+import akka.actor._
+import akka.event.{LoggingAdapter, LoggingReceive}
+import akka.pattern._
+import akka.util.Timeout
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.Container
-import de.wayofquality.blended.itestsupport.ContainerUnderTest
-import scala.concurrent.Future
-import akka.actor._
-import akka.pattern._
-import akka.event.{LoggingAdapter, LoggingReceive}
-import akka.util.Timeout
 import com.typesafe.config.Config
+import de.wayofquality.blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 import de.wayofquality.blended.itestsupport.docker.protocol._
+
 import scala.collection.convert.Wrappers.JListWrapper
-import de.wayofquality.blended.itestsupport.NamedContainerPort
-import de.wayofquality.blended.itestsupport.ContainerLink
-import scala.util.Success
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
-import scala.concurrent.Await
 
 private[docker] case class InternalMapDockerContainers(requestor: ActorRef, cuts: Map[String, ContainerUnderTest], client: DockerClient)
 private[docker] case class InternalDockerContainersMapped(requestor: ActorRef, result : DockerResult[Map[String, ContainerUnderTest]])

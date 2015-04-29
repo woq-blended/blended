@@ -16,8 +16,9 @@
 
 package de.wayofquality.blended.util;
 
-import java.io.InputStream;
-import java.util.Iterator;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
@@ -31,10 +32,8 @@ import javax.xml.validation.Validator;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.InputSource;
+import java.io.InputStream;
+import java.util.Iterator;
 
 public class XMLSupport {
 

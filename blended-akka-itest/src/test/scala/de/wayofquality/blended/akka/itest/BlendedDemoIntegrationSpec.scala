@@ -16,15 +16,13 @@
 
 package de.wayofquality.blended.akka.itest
 
-import org.scalatest.SpecLike
+import akka.actor.Props
 import de.wayofquality.blended.itestsupport.BlendedIntegrationTestSupport
 import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{BeforeAndAfterAll, SpecLike}
+
 import scala.collection.immutable.IndexedSeq
-import org.scalatest.BeforeAndAfterAll
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.duration._
-import akka.actor.{ActorRef, Props}
-import de.wayofquality.blended.itestsupport.docker.protocol._
 
 class BlendedDemoIntegrationSpec extends TestActorSys
   with SpecLike

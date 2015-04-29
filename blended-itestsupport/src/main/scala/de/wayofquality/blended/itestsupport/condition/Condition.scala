@@ -17,6 +17,7 @@
 package de.wayofquality.blended.itestsupport.condition
 
 import com.typesafe.config.ConfigFactory
+
 import scala.concurrent.duration._
 
 /**

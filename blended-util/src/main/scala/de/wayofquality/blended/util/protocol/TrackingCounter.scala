@@ -18,9 +18,10 @@ package de.wayofquality.blended.util.protocol
 
 import akka.actor._
 import akka.event.LoggingReceive
+import akka.pattern.ask
 import akka.util.Timeout
 import de.wayofquality.blended.util.StatsCounter
-import akka.pattern.{ask, pipe}
+
 import scala.concurrent.duration._
 
 object TrackingCounter {

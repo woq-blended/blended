@@ -16,9 +16,6 @@
 
 package de.wayofquality.blended.util;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceRegistration;
@@ -26,6 +23,9 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 public abstract class ManagedServiceSupport implements ManagedService
 {

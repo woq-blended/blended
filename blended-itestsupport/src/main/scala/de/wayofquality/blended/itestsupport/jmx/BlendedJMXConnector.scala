@@ -16,9 +16,9 @@
 
 package de.wayofquality.blended.itestsupport.jmx
 
-import javax.management.remote.{JMXConnectorFactory, JMXConnector}
+import javax.management.remote.{JMXConnector, JMXConnectorFactory}
 
-import akka.actor.{ActorRef, Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.jmx.protocol._
 

@@ -24,9 +24,8 @@ import akka.util.Timeout
 import de.wayofquality.blended.itestsupport.condition.{AsyncChecker, AsyncCondition}
 import de.wayofquality.blended.itestsupport.jms.protocol._
 
-import scala.concurrent.duration._
-
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object JMSAvailableCondition{
   def apply(cf: ConnectionFactory, t: Option[FiniteDuration] = None)(implicit system: ActorSystem) =

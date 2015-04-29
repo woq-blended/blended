@@ -21,9 +21,7 @@ import com.typesafe.config.Config
 import de.wayofquality.blended.itestsupport.ContainerUnderTest
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
-
-import scala.collection.convert.Wrappers.JListWrapper
+import org.scalatest.{Matchers, WordSpecLike}
 
 class ContainerUnderTestSpec extends TestActorSys
   with WordSpecLike

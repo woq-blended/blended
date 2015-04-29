@@ -16,13 +16,18 @@
 
 package de.wayofquality.blended.mgmt.rest.internal
 
-import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
 import akka.actor.Props
+import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
 
 trait CollectorBundleName extends BundleName {
   def bundleSymbolicName = "de.wayofquality.osgi.akka.mgmt.rest"
 }
 
 class CollectorActivator extends ActorSystemAware with CollectorBundleName {
-  override def prepareBundleActor() = Props(ManagementCollector("wayofquality"))
+  
+  whenBundleActive {
+    manageBundleActor { () =>
+      Props(ManagementCollector("wayofquality", bundleContext))
+    }
+  }
 }

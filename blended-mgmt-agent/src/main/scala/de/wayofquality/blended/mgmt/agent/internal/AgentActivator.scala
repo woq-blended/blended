@@ -16,9 +16,9 @@
 
 package de.wayofquality.blended.mgmt.agent.internal
 
-import de.wayofquality.blended.akka.{BundleName, ActorSystemAware}
-import org.osgi.framework.BundleActivator
 import akka.actor.Props
+import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
+import org.osgi.framework.BundleActivator
 
 // Simply expose the bundle's symbolic name so that it can be mixed in where required
 trait MgmtAgentBundleName extends BundleName {
@@ -27,5 +27,9 @@ trait MgmtAgentBundleName extends BundleName {
 
 // The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
 class AgentActivator extends ActorSystemAware with BundleActivator with MgmtAgentBundleName {
-  def prepareBundleActor(): Props = Props(MgmtReporter())
+  
+  whenBundleActive {
+    manageBundleActor { () => Props(MgmtReporter(bundleContext))
+    }
+  }
 }

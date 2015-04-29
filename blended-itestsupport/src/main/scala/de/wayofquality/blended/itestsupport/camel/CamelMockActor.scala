@@ -1,11 +1,9 @@
 package de.wayofquality.blended.itestsupport.camel
 
-import akka.camel.Consumer
-import akka.camel.CamelMessage
+import akka.actor.ActorLogging
+import akka.camel.{Ack, CamelMessage, Consumer}
 import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.camel.protocol._
-import akka.actor.ActorLogging
-import akka.camel.Ack
 
 object CamelMockActor {
   def apply(uri: String, ack: Boolean = true) = new CamelMockActor(uri)

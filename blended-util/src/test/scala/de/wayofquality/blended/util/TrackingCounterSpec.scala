@@ -16,10 +16,11 @@
 
 package de.wayofquality.blended.util
 
-import akka.actor.{Props, ActorSystem}
-import akka.testkit.{TestActorRef, ImplicitSender, TestKit}
+import akka.actor.{ActorSystem, Props}
+import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import de.wayofquality.blended.util.protocol._
 import org.scalatest.{Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
 class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))

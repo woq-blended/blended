@@ -16,13 +16,12 @@
 
 package de.wayofquality.blended.mgmt.rest.internal
 
-import org.scalatest.{Matchers, WordSpec}
-import spray.testkit.ScalatestRouteTest
-import spray.httpx.SprayJsonSupport
-import org.scalatest.mock.MockitoSugar
 import akka.testkit.TestLatch
-
 import de.wayofquality.blended.container.registry.protocol._
+import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
+import spray.httpx.SprayJsonSupport
+import spray.testkit.ScalatestRouteTest
 
 class ManagementCollectorSpec
   extends WordSpec

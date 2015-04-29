@@ -16,8 +16,8 @@
 
 package de.wayofquality.blended.jolokia.model
 
+import spray.json.DefaultJsonProtocol._
 import spray.json._
-import DefaultJsonProtocol._
 import spray.json.lenses.JsonLenses._
 
 object JolokiaVersion {

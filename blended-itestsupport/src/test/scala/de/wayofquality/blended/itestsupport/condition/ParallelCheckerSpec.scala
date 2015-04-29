@@ -20,7 +20,7 @@ import akka.actor.Props
 import akka.testkit.{ImplicitSender, TestActorRef}
 import de.wayofquality.blended.itestsupport.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpecLike}
 
 class ParallelCheckerSpec extends TestActorSys
   with WordSpecLike

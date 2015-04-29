@@ -8,8 +8,8 @@ import de.wayofquality.blended.itestsupport.camel.MockAssertions._
 import de.wayofquality.blended.itestsupport.camel.protocol._
 import de.wayofquality.blended.itestsupport.docker.DockerTestSetup
 import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 

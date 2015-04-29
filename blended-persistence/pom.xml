@@ -49,17 +49,17 @@
     </dependency>
 
     <dependency>
+      <groupId>org.helgoboss</groupId>
+      <artifactId>domino</artifactId>
+      <version>${domino.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.spray</groupId>
       <artifactId>spray-json_${scala.version}</artifactId>
       <version>${spray-json.version}</version>
     </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended-neo4j-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
+    
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -73,14 +73,6 @@
     </dependency>
 
     <!-- Test dependencies -->
-
-    <dependency>
-      <groupId>org.neo4j</groupId>
-      <artifactId>neo4j-kernel</artifactId>
-      <version>${neo4j.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.scalatest</groupId>

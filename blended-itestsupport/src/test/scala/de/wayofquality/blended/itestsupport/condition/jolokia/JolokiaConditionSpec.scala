@@ -18,12 +18,12 @@ package de.wayofquality.blended.itestsupport.condition.jolokia
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.wayofquality.blended.itestsupport.condition.{Condition, AsyncCondition, ConditionActor}
-import de.wayofquality.blended.itestsupport.jolokia.{JolokiaAvailableCondition, JolokiaAvailableChecker}
-import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
-
+import de.wayofquality.blended.itestsupport.condition.{Condition, ConditionActor}
+import de.wayofquality.blended.itestsupport.jolokia.JolokiaAvailableCondition
 import de.wayofquality.blended.itestsupport.protocol._
+import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+
 import scala.concurrent.duration._
 
 class JolokiaConditionSpec extends TestActorSys

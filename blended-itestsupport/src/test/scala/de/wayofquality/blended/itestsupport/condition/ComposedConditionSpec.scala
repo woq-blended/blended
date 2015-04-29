@@ -18,12 +18,12 @@ package de.wayofquality.blended.itestsupport.condition
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
-import de.wayofquality.blended.testsupport.TestActorSys
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
-import scala.concurrent.duration._
-import ConditionProvider._
-
+import de.wayofquality.blended.itestsupport.condition.ConditionProvider._
 import de.wayofquality.blended.itestsupport.protocol._
+import de.wayofquality.blended.testsupport.TestActorSys
+import org.scalatest.{Matchers, WordSpecLike}
+
+import scala.concurrent.duration._
 
 class ComposedConditionSpec extends TestActorSys
   with WordSpecLike

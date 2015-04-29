@@ -51,9 +51,9 @@
     </dependency>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended-modules</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.helgoboss</groupId>
+      <artifactId>domino</artifactId>
+      <version>${domino.version}</version>
     </dependency>
 
     <dependency>

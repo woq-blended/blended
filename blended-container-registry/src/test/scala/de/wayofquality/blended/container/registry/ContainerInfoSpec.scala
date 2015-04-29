@@ -16,10 +16,10 @@
 
 package de.wayofquality.blended.karaf.container.registry
 
+import de.wayofquality.blended.container.registry.protocol._
+import de.wayofquality.blended.persistence.protocol._
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-import de.wayofquality.blended.persistence.protocol._
-import de.wayofquality.blended.container.registry.protocol._
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
@@ -44,7 +44,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
     "create the Persistence Properties correctly" in {
 
-      import DataObject._
+      import de.wayofquality.blended.persistence.protocol.DataObject._
 
       val info = ContainerInfo("uuid", Map("fooo" -> "bar"))
 

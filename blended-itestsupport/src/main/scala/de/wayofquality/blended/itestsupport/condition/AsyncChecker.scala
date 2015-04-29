@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.itestsupport.condition
 
-import akka.actor.{Cancellable, Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging}
 import de.wayofquality.blended.itestsupport.protocol.CheckAsyncCondition
 
 import scala.concurrent.Future

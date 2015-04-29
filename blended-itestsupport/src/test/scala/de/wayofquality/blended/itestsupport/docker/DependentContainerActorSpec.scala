@@ -16,15 +16,15 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import akka.actor.{Terminated, Props}
+import java.util.UUID
+
+import akka.actor.{Props, Terminated}
 import akka.testkit.TestActorRef
 import de.wayofquality.blended.itestsupport.docker.protocol._
+import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{DoNotDiscover, Matchers, WordSpecLike}
-import scala.concurrent.duration._
-import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
-import java.util.UUID
+import org.scalatest.{Matchers, WordSpecLike}
 
 class DependentContainerActorSpec extends TestActorSys
   with WordSpecLike

@@ -17,11 +17,12 @@
 package de.wayofquality.blended.itestsupport.jms
 
 import javax.jms._
-import akka.actor.{Cancellable, ActorRef, ActorLogging, Actor}
-import akka.event.LoggingReceive
 
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import akka.event.LoggingReceive
 import de.wayofquality.blended.itestsupport.jms.protocol._
 import de.wayofquality.blended.util.protocol.IncrementCounter
+
 import scala.concurrent.duration._
 
 class AkkaConsumer(
@@ -93,7 +94,7 @@ class Consumer(
   msgCounter: Option[ActorRef]
 ) extends Actor with ActorLogging {
 
-  import Consumer.{MsgTimeout, ConsumerCreated}
+  import de.wayofquality.blended.itestsupport.jms.Consumer.{ConsumerCreated, MsgTimeout}
 
   implicit val eCtxt = context.dispatcher
 

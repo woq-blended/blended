@@ -18,23 +18,24 @@ package de.wayofquality.blended.akka
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.testkit.{TestProbe, TestActorRef, TestLatch}
+import akka.testkit.{TestActorRef, TestLatch, TestProbe}
 import com.typesafe.config.Config
-import de.wayofquality.blended.testsupport.TestActorSys
-import de.wayofquality.blended.akka.internal.OSGIFacade
 import de.wayofquality.blended.akka.protocol._
+import de.wayofquality.blended.testsupport.TestActorSys
 import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
-import scala.concurrent.{Future, Await}
+import scala.concurrent.Await
 import scala.util.{Success, Try}
 
 object OSGIActorDummyPublisher {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummyPublisher() with OSGIActor
+  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummyPublisher(bundleContext) with OSGIActor
 }
 
-class OSGIActorDummyPublisher extends OSGIActor with ProductionEventSource with BundleName {
+class OSGIActorDummyPublisher(ctxt: BundleContext) extends OSGIActor with ProductionEventSource with BundleName {
+
+  override protected def bundleContext: BundleContext = ctxt
 
   override def bundleSymbolicName = "publisher"
 
@@ -42,10 +43,12 @@ class OSGIActorDummyPublisher extends OSGIActor with ProductionEventSource with 
 }
 
 object OSGIDummyListener {
-  def apply()(implicit bundleContext : BundleContext) = new OSGIDummyListener() with OSGIEventSourceListener
+  def apply()(implicit bundleContext : BundleContext) = new OSGIDummyListener(bundleContext) with OSGIEventSourceListener
 }
 
-class OSGIDummyListener extends InitializingActor[BundleActorState] with ActorLogging with BundleName { this : OSGIEventSourceListener =>
+class OSGIDummyListener(ctxt: BundleContext) extends InitializingActor[BundleActorState] with ActorLogging with BundleName { this : OSGIEventSourceListener =>
+
+  override protected def bundleContext: BundleContext = ctxt
 
   var publisherName : Option[String] = None
 
@@ -59,11 +62,10 @@ class OSGIDummyListener extends InitializingActor[BundleActorState] with ActorLo
 
   override def bundleSymbolicName = "listener"
 
-  override def initialize(state: BundleActorState) : Future[Try[Initialized]] = {
+  override def initialize(state: BundleActorState) : Try[Initialized] = {
     publisherName = Some(state.config.getString("publisher"))
-    setupListener(publisherName.get).mapTo[ActorRef].map { a =>
-      Success(Initialized(state))
-    }
+    setupListener(publisherName.get)
+    Success(Initialized(state))
   }
 
   def working(state: BundleActorState) = testing orElse eventListenerReceive(publisherName.get)
@@ -81,7 +83,8 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       import scala.concurrent.duration._
 
-      val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
+      system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
+
       val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
       val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
@@ -89,7 +92,6 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
       listener ! InitializeBundle(osgiContext)
 
       // We need to wait for the Actor bundle to finish it's initialization
-      system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
       fishForMessage() {
         case BundleActorInitialized(s) if s == "listener" => true
         case _ => false
@@ -108,13 +110,12 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "start referring to the dlc when the publisher is unavailbale" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false
@@ -128,13 +129,12 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     import scala.concurrent.duration._
 
-    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false
@@ -154,13 +154,12 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "fallback to system.dlc when the publisher becomes unavailable" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val facade = system.actorOf(Props(OSGIFacade()), BlendedAkkaConstants.osgiFacadePath)
     val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
 
+    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     listener ! InitializeBundle(osgiContext)
 
     // We need to wait for the Actor bundle to finish it's initialization
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
     fishForMessage() {
       case BundleActorInitialized(s) if s == "listener" => true
       case _ => false

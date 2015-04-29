@@ -80,7 +80,6 @@
       <modules>
         <module>blended-samples-camel</module>
         <module>blended-samples-spray-helloworld</module>
-        <module>blended-samples-tracker</module>
       </modules>
     </profile>
 

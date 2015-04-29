@@ -17,6 +17,7 @@
 package de.wayofquality.blended.container.registry.protocol
 
 import de.wayofquality.blended.persistence.protocol._
+
 import scala.collection.mutable
 
 case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId) {

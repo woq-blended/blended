@@ -20,8 +20,8 @@ import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import com.typesafe.config.Config
+import de.wayofquality.blended.akka.InitializingActor
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{BundleName, InitializingActor, OSGIActor}
 import de.wayofquality.blended.container.id.ContainerIdentifierService
 import de.wayofquality.blended.container.registry.protocol._
 import org.osgi.framework.BundleContext
@@ -32,13 +32,14 @@ import spray.httpx.SprayJsonSupport
 import scala.collection.JavaConversions._
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.Try
 
 object MgmtReporter {
-  def apply()(implicit bundleContext: BundleContext) = new MgmtReporter with MgmtAgentBundleName
+  def apply(bc: BundleContext) = new MgmtReporter(bc)
 }
 
-class MgmtReporter extends InitializingActor[BundleActorState] with ActorLogging with SprayJsonSupport { this : OSGIActor with BundleName =>
+class MgmtReporter(bc: BundleContext) extends InitializingActor[BundleActorState] with ActorLogging with SprayJsonSupport with MgmtAgentBundleName {
+
+  override protected def bundleContext: BundleContext = bc
 
   case object Tick
   
@@ -52,18 +53,17 @@ class MgmtReporter extends InitializingActor[BundleActorState] with ActorLogging
   def working(state: BundleActorState) = LoggingReceive {
 
     case Tick =>
-      invokeService[ContainerIdentifierService, ContainerInfo](classOf[ContainerIdentifierService]) { idSvc =>
-        new ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap)
-      } pipeTo self
-
-    case ServiceResult(Some(info : ContainerInfo))  =>
-      log info s"Performing report [${info.toString}]."
-
-      val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
-        sendReceive ~> unmarshal[ContainerRegistryResponseOK]
+      withService[ContainerIdentifierService, Option[ContainerInfo]] { 
+        case Some(idSvc) => Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap))
+        case _ => None
+      } match {
+        case Some(info) =>
+          log info s"Performing report [${info.toString}]."
+          val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
+            sendReceive ~> unmarshal[ContainerRegistryResponseOK]
+          }
+          (pipeline{ Post("http://localhost:8181/wayofquality/container", info) }).mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
-
-      (pipeline{ Post("http://localhost:8181/wayofquality/container", info) }).mapTo[ContainerRegistryResponseOK].pipeTo(self)
 
     case response : ContainerRegistryResponseOK => log info(s"Reported [${response.id}] to management node")
   }

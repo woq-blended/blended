@@ -4,13 +4,12 @@ import javax.jms.ConnectionFactory
 
 import akka.actor.ActorRef
 import akka.testkit.ImplicitSender
+import de.wayofquality.blended.itestsupport.jms.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
-
-import de.wayofquality.blended.itestsupport.jms.protocol._
 
 abstract class AbstractJMSSpec extends TestActorSys
   with WordSpecLike

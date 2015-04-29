@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.itestsupport.jolokia
 
-import akka.actor.{Props, ActorSystem}
+import akka.actor.{ActorSystem, Props}
 import de.wayofquality.blended.itestsupport.condition.AsyncCondition
 import de.wayofquality.blended.jolokia.model.JolokiaVersion
 import de.wayofquality.blended.jolokia.protocol._

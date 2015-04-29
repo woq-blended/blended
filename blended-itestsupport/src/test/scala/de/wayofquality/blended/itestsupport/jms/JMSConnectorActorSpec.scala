@@ -23,7 +23,6 @@ import akka.util.Timeout
 import de.wayofquality.blended.itestsupport.jms.protocol._
 import de.wayofquality.blended.util.protocol._
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.scalatest.DoNotDiscover
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

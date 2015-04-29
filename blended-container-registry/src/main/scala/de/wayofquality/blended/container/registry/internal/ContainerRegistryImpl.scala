@@ -16,20 +16,22 @@
 
 package de.wayofquality.blended.container.registry.internal
 
-import akka.actor.{ActorRef, ActorLogging, Actor}
-import de.wayofquality.blended.akka.{BundleName, OSGIActor}
-import de.wayofquality.blended.persistence.protocol.StoreObject
-import org.osgi.framework.BundleContext
+import akka.actor.{ActorLogging, ActorRef}
+import de.wayofquality.blended.akka.OSGIActor
 import de.wayofquality.blended.container.registry.RegistryBundleName
 import de.wayofquality.blended.container.registry.protocol._
+import de.wayofquality.blended.persistence.protocol.StoreObject
+import org.osgi.framework.BundleContext
 
 
 object ContainerRegistryImpl {
-  def apply()(implicit bundleContext: BundleContext) = new ContainerRegistryImpl() with OSGIActor with RegistryBundleName
+  def apply(bc: BundleContext) = new ContainerRegistryImpl(bc) with OSGIActor with RegistryBundleName
 }
 
-class ContainerRegistryImpl(implicit bundleContext : BundleContext) extends Actor with ActorLogging {
-  this : OSGIActor with BundleName =>
+class ContainerRegistryImpl(bc: BundleContext) extends OSGIActor with ActorLogging with RegistryBundleName {
+
+
+  override protected def bundleContext: BundleContext = bc
 
   def receive = {
     case UpdateContainerInfo(info) => {

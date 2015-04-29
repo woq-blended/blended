@@ -17,16 +17,11 @@
 package de.wayofquality.blended.akka
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
+import akka.testkit.{ImplicitSender, TestKit}
 import com.typesafe.config.ConfigFactory
-import de.wayofquality.blended.akka.internal.{ConfigDirectoryProvider, ConfigLocator}
-import de.wayofquality.blended.akka.protocol.{ConfigLocatorResponse, ConfigLocatorRequest}
 import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
-  override def configDirectory: String = "./target/test-classes"
-}
 
 class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFactory.parseString(
   """
@@ -41,31 +36,30 @@ class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFacto
   with BeforeAndAfterAll
   with ImplicitSender {
 
-  trait TestSetup {
-    def locator = TestActorRef[TestConfigLocator]
+  class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
+  
+    override def fallback = Some(system.settings.config)
+    override def configDirectory: String = "./target/test-classes" 
   }
 
   "ConfigLocator" should {
 
-    "respond with a config object read from a file" in new TestSetup {
-      locator ! ConfigLocatorRequest("foo")
-      expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
-        m.config.getString("bar") should be ("YES")
-      }
+    "retreive a config object from an existing file" in {
+      val locator = new TestConfigLocator
+      val cfg = locator.getConfig("foo")
+      cfg.getString("bar") should be ("YES")
     }
 
-    "fall back to the actor system config if no file is found" in new TestSetup {
-      locator ! ConfigLocatorRequest("bar")
-      expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
-        m.config.getString("bar") should be ("NO")
-      }
+    "fall back to the actor system config if no file is found" in {
+      val locator = new TestConfigLocator
+      val cfg = locator.getConfig("bar")
+      cfg.getString("bar") should be ("NO")
     }
 
-    "respond with an empty config object if no file is found and the actor sys doesn't contain the config" in new TestSetup {
-      locator ! ConfigLocatorRequest("nonsense")
-      expectMsgAllClassOf(classOf[ConfigLocatorResponse]) foreach { m =>
-        m.config.entrySet should have size(0)
-      }
+    "respond with an empty config object if no file is found and the actor sys doesn't contain the config" in {
+      val locator = new TestConfigLocator
+      val cfg = locator.getConfig("nonsense")
+      cfg.entrySet() should have size(0)
     }
   }
 

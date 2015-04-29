@@ -16,11 +16,10 @@
 
 package de.wayofquality.blended.itestsupport.docker
 
-import akka.actor.{ActorRef, Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
-import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
-
 import de.wayofquality.blended.itestsupport.docker.protocol._
+import de.wayofquality.blended.itestsupport.{ContainerLink, ContainerUnderTest}
 
 /**
  * This is a helper Actor that works on behalf of the #ContainerManager to delay

@@ -18,16 +18,12 @@ package de.wayofquality.blended.jolokia
 
 import java.net.URI
 
-import akka.actor.{ActorRef, Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.event.LoggingReceive
-import akka.pattern.pipe
-import spray.client.pipelining._
-import spray.http.{BasicHttpCredentials, HttpRequest}
-import scala.collection.convert.Wrappers._
-
 import de.wayofquality.blended.jolokia.model._
 import de.wayofquality.blended.jolokia.protocol._
-
+import spray.client.pipelining._
+import spray.http.{BasicHttpCredentials, HttpRequest}
 import spray.json._
 
 import scala.concurrent.Future
