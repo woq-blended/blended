@@ -9,7 +9,8 @@ felix-cache
 *.backup
 *~
 *.pdf
-.settings
+.settings/
 .cache
 .project
 .classpath
+libs/
