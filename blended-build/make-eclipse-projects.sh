@@ -2,15 +2,15 @@
 
 set -e
 
+blendedVersion="1.1.4-SNAPSHOT"
+
 projects="blended-activemq-brokerstarter \
 blended-akka \
 blended-akka-itest \
-blended-build \
 blended-camel-utils \
 blended-container-context \
 blended-container-id \
 blended-container-registry \
-blended-docker \
 blended-itestsupport \
 blended-jaxrs \
 blended-jmx \
@@ -40,10 +40,9 @@ blended-util"
 for project in $projects; do
 
   echo ""
-  echo "*******************************"
-  echo "Project: $project"
-  echo "*******************************"
-  echo ""
+  echo "*******************************************************"
+  echo "* Project: $project"
+  echo "* "
 
   cd "$project"
 
@@ -166,8 +165,25 @@ EOF
 
   for lib in $(ls libs/*); do
 
+    foundInReactor=""
+    for p in $projects; do
+      if [ "libs/${p}-${blendedVersion}.jar" = "$lib" ]; then
+        foundInReactor="$p"
+        break
+      fi
+    done
+
+    if [ -n "$foundInReactor" ]; then
+      echo "Found in reactor: $foundInReactor"
+      cat >> .classpath << EOF
+        <classpathentry combineaccessrules="false" kind="src" path="/${foundInReactor}" optional="true"/>
+EOF
+    else
+      echo "Not found in reactor: $lib"
+    fi
+
     cat >> .classpath << EOF
-        <classpathentry kind="lib" path="$lib" sourcepath="libs/$(basename -s .jar $lib)-sources.jar"/>
+      <classpathentry kind="lib" path="$lib" sourcepath="libs/$(basename -s .jar $lib)-sources.jar"/>
 EOF
 
   done

@@ -51,6 +51,12 @@
     </dependency>
 
     <dependency>
+    	<groupId>org.scala-lang</groupId>
+    	<artifactId>scala-library</artifactId>
+    	<version>${scala.version}.${scala.micro.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>io.spray</groupId>
       <artifactId>spray-http_${scala.version}</artifactId>
       <version>${spray.version}</version>
