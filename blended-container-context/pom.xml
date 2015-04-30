@@ -36,7 +36,7 @@
   </description>
 
   <properties>
-    <bundle.namespace>${project.artifactId}</bundle.namespace>
+    <bundle.namespace>de.wayofquality.blended.container.context</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
   </properties>
 
@@ -61,6 +61,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.helgoboss</groupId>
+      <artifactId>domino</artifactId>
+      <version>${domino.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
@@ -73,6 +79,11 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

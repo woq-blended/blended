@@ -24,8 +24,7 @@ public interface ContainerContext {
   public String getContainerConfigDirectory();
   public String getContainerHostname();
 
-  public Properties readConfig(final String configId);
-  public void writeConfig(final String configId, final Properties props);
+  public Properties readConfig(String configId);
+  public void writeConfig(String configId, Properties props);
 
-  public void shutdown();
 }

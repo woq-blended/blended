@@ -4,7 +4,14 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Bundle-Activator: ${bundle.namespace}.internal.ContainerContextActivator
 
-Private-Package:\
-  *.internal.*
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
+
+Export-Package: \
+  ${bundle.namespace}
+
+Private-Package: \
+  ${bundle.namespace}.internal

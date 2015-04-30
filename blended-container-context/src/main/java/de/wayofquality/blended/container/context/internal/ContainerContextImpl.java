@@ -16,22 +16,25 @@
 
 package de.wayofquality.blended.container.context.internal;
 
-import de.wayofquality.blended.container.context.ContainerContext;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.InetAddress;
-import java.util.Properties;
+import de.wayofquality.blended.container.context.ContainerContext;
 
 public class ContainerContextImpl implements ContainerContext {
 
   private final static String PROP_WOQ_HOME = "woq.home";
   private final static String CONFIG_DIR = "etc";
 
-  private final static Logger LOGGER = LoggerFactory.getLogger(ContainerContextImpl.class);
-
-  private ContainerShutdown containerShutdown = null;
+  private final Logger log = LoggerFactory.getLogger(ContainerContextImpl.class);
 
   @Override
   public String getContainerHostname() {
@@ -39,9 +42,9 @@ public class ContainerContextImpl implements ContainerContext {
     String result = "UNKNOWN";
 
     try {
-      InetAddress localMachine = java.net.InetAddress.getLocalHost();
+      final InetAddress localMachine = java.net.InetAddress.getLocalHost();
       result = localMachine.getCanonicalHostName();
-    } catch (java.net.UnknownHostException uhe) {
+    } catch (final java.net.UnknownHostException uhe) {
       // ignore
     }
     return result;
@@ -59,12 +62,12 @@ public class ContainerContextImpl implements ContainerContext {
     File configDir = new File(dir);
 
     if (!configDir.exists()) {
-      LOGGER.error("Directory [" + dir + "] does not exist.");
+      log.error("Directory [{}] does not exist.", dir);
       configDir = null;
     }
 
     if (configDir != null && (!configDir.isDirectory() || !configDir.canRead())) {
-      LOGGER.error("Directory [" + dir + "] is not readable.");
+      log.error("Directory [{}] is not readable.", dir);
       configDir = null;
     }
 
@@ -77,14 +80,14 @@ public class ContainerContextImpl implements ContainerContext {
   }
 
   @Override
-  public Properties readConfig(String configId) {
+  public Properties readConfig(final String configId) {
 
-    Properties props = new Properties();
+    final Properties props = new Properties();
 
-    File f = new File(getConfigFile(configId));
+    final File f = new File(getConfigFile(configId));
 
     if (!f.exists() || f.isDirectory() || !f.canRead()) {
-      LOGGER.warn("Cannot open [" + f.getAbsolutePath() + "]");
+      log.warn("Cannot open [{}]", f.getAbsolutePath());
       return props;
     }
 
@@ -92,17 +95,18 @@ public class ContainerContextImpl implements ContainerContext {
     try {
       is = new FileInputStream(f);
       props.load(is);
-    } catch(Exception e) {
-      LOGGER.warn("Error reading config file.", e);
+    } catch (final Exception e) {
+      log.warn("Error reading config file.", e);
     } finally {
       if (is != null) {
         try {
           is.close();
-        } catch (Exception e) {}
+        } catch (final Exception e) {
+        }
       }
     }
 
-    LOGGER.info(String.format("Read [%d] properties from [%s]", props.size(), f.getAbsolutePath()));
+    log.info("Read [{}] properties from [{}]", props.size(), f.getAbsolutePath());
     return props;
   }
 
@@ -111,36 +115,24 @@ public class ContainerContextImpl implements ContainerContext {
 
     final String configFile = getConfigFile(configId);
 
-    LOGGER.debug("Wrting config for [" + configId + "] to [" + configFile + "].");
+    log.debug("Wrting config for [{}] to [{}].", configId, configFile);
 
     OutputStream os = null;
     try {
       os = new FileOutputStream(configFile);
       props.store(os, "");
-    } catch (Exception e) {
-      LOGGER.warn("Error writing config file.", e);
+    } catch (final Exception e) {
+      log.warn("Error writing config file.", e);
     } finally {
       try {
         if (os != null) {
           os.close();
         }
-      } catch (Exception e) {}
+      } catch (final Exception e) {
+      }
     }
 
-    LOGGER.info("Exported configuration [{}]", configFile);
-  }
-
-  @Override
-  public void shutdown() {
-    getContainerShutdown().shutdown();
-  }
-
-  public ContainerShutdown getContainerShutdown() {
-    return containerShutdown;
-  }
-
-  public void setContainerShutdown(ContainerShutdown containerShutdown) {
-    this.containerShutdown = containerShutdown;
+    log.info("Exported configuration [{}]", configFile);
   }
 
   private String getConfigFile(final String configId) {
