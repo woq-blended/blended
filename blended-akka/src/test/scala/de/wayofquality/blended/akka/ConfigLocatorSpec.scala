@@ -38,7 +38,7 @@ class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFacto
 
   class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
   
-    override def fallback = Some(system.settings.config)
+    override def fallbackConfig = system.settings.config
     override def configDirectory: String = "./target/test-classes" 
   }
 

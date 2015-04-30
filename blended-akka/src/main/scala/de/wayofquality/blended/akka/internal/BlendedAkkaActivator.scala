@@ -28,50 +28,45 @@ import org.helgoboss.capsule.Capsule
 import org.helgoboss.domino.DominoActivator
 import org.osgi.framework.BundleContext
 
-class BlendedAkkaActivator extends DominoActivator {
-  whenBundleActive {
-    addCapsule(new AkkaCapsule(this, bundleContext))
-  }
-}
-  
-private [internal] class AkkaCapsule(da: DominoActivator, osgiContext: BundleContext) extends ActorSystemActivator with Capsule {
-
-  override def start(): Unit = start(osgiContext)
-
-  override def stop(): Unit = stop(osgiContext)
-
-  def configure(osgiContext: BundleContext, system: ActorSystem) : Unit = {
-    val log = system.log
-
-    log info "Registering Actor System as Service."
-    registerService(osgiContext, system)
-
-    log info "Creating Camel Akka Extension."
-    val camel = CamelExtension(system)
-
-    log info s"ActorSystem [${system.name}] initialized."
-  }
-
-  override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
-
-  override def getActorSystemConfiguration(context: BundleContext): Config = {
-    ConfigFactory.parseFile(new File(configDir, "application.conf"))
-  }
-
-  private[AkkaCapsule] def configDir = {
-
-    val defaultConfigDir = System.getProperty("karaf.home") + "/etc"
-    
-    da.withService[ContainerContext, String] {
-      case Some(ctxt) => ctxt.getContainerConfigDirectory
-      case _ => defaultConfigDir
-    }
-  }
-}
-
 object BlendedAkkaActivator {
   implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
     def genString(o: AnyRef): String = o.getClass.getName
     override def getClazz(o: AnyRef): Class[_] = o.getClass
   }
 }
+
+class BlendedAkkaActivator extends DominoActivator {
+
+  private class AkkaCapsule(bundleContext: BundleContext, containerContext: ContainerContext)
+    extends ActorSystemActivator with Capsule {
+
+    override def start(): Unit = start(bundleContext)
+
+    override def stop(): Unit = stop(bundleContext)
+
+    def configure(osgiContext: BundleContext, system: ActorSystem) : Unit = {
+      val log = system.log
+
+      log info "Registering Actor System as Service."
+      registerService(osgiContext, system)
+      
+      log info "Creating Camel Akka Extension."
+      val camel = CamelExtension(system)
+
+      log info s"ActorSystem [${system.name}] initialized."
+    }
+
+    override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
+
+    override def getActorSystemConfiguration(context: BundleContext): Config = {
+      ConfigFactory.parseFile(new File(containerContext.getContainerConfigDirectory, "application.conf"))
+    }
+  }
+
+  whenBundleActive {
+    whenServicePresent[ContainerContext] { svc =>
+      addCapsule(new AkkaCapsule(bundleContext, svc))
+    }
+  }
+}
+  

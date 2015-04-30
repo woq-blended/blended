@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.akka {
+package de.wayofquality.blended.akka
 
-  import akka.actor.ActorRef
-  import com.typesafe.config.Config
-  import org.osgi.framework.BundleContext
+import com.typesafe.config.Config
+import de.wayofquality.blended.container.id.ContainerIdentifierService
+import org.osgi.framework.BundleContext
 
-  package protocol {
-    
-    // A bundle has been started via ActorSystemAware
-    case class BundleActorStarted(bundleId: String)
-
-    //
-    // Protocol for the EvenSource trait
-    //
-    case class RegisterListener(listener: ActorRef)
-    case class DeregisterListener(listener: ActorRef)
-    case class SendEvent[T](event : T)
-  }
-}
+case class OSGIActorConfig (
+  bundleContext: BundleContext,
+  config: Config,
+  idSvc: ContainerIdentifierService
+)

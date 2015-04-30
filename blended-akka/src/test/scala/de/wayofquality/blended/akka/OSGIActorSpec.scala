@@ -32,12 +32,10 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object OSGIActorDummy {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummy(bundleContext) with InitializingActor[BundleActorState] with MemoryStash
+  def apply(actorConfig: OSGIActorConfig)= new OSGIActorDummy(bundleContext) with InitializingActor[BundleActorState] with MemoryStash
 }
 
-class OSGIActorDummy(ctxt: BundleContext) extends InitializingActor[BundleActorState] with BundleName { this: MemoryStash =>
-
-  override protected def bundleContext: BundleContext = ctxt
+class OSGIActorDummy(actorConfig: OSGIActorConfig) extends OSGIActor(actorConfig) with BundleName { this: MemoryStash =>
 
   override def bundleSymbolicName = "foo"
 
@@ -61,9 +59,24 @@ class OSGIActorDummy(ctxt: BundleContext) extends InitializingActor[BundleActorS
   override def receive : Receive = initializing orElse stashing
 }
 
-class OSGIActorSpec extends WordSpec
-  with Matchers
-  with AssertionsForJUnit {
+class OSGIActorSpec extends TestActorSys 
+  with WordSpec
+  with Matchers 
+  with TestSetup 
+  with MockitoSugar {
+
+  def createActor() : TestActorRef = {
+    
+    val actorConfig = OSGIActorConfig(
+      bundleContext = osgiContext,
+      config =
+      
+    
+    ) 
+    
+  }
+
+
 
   "An OSGIActor" should {
 

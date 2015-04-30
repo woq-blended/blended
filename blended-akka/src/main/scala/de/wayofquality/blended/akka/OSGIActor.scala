@@ -20,35 +20,36 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.wayofquality.blended.container.context.ContainerContext
+import de.wayofquality.blended.container.id.ContainerIdentifierService
 import org.helgoboss.domino.service_consuming.ServiceConsuming
+import org.osgi.framework.BundleContext
 
+import scala.collection.convert.Wrappers.JPropertiesWrapper
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.reflect.ClassTag
 
-trait OSGIActor extends Actor 
+abstract class OSGIActor(actorConfig: OSGIActorConfig) 
+  extends Actor
   with ActorLogging 
-  with ServiceConsuming
-  with ConfigLocator
-  with ConfigDirectoryProvider { this: BundleName =>
+  with ServiceConsuming { this : BundleName =>
 
-  implicit val timeout = new Timeout(500.millis)
-  implicit val ec = context.dispatcher
-  
-  override def fallback : Option[Config] = Some(context.system.settings.config)
-  
-  override def configDirectory = 
-    withService[ContainerContext, String] { 
-      case Some(ctxt) => ctxt.getContainerConfigDirectory
-      case _ => s"${System.getProperty("karaf.home")}/etc"
-    }
+  private[this] implicit val timeout = new Timeout(500.millis)
+  private[this] implicit val ec = context.dispatcher
+
+  override protected def bundleContext: BundleContext = actorConfig.bundleContext
 
   def bundleActor(bundleName : String) : Future[ActorRef] = {
     log debug s"Trying to resolve bundle actor [$bundleName]"
     context.actorSelection(s"/user/$bundleName").resolveOne().fallbackTo(Future(context.system.deadLetters))
   }
 
-  def osgiFacade = bundleActor(BlendedAkkaConstants.osgiFacadePath)
+  // Returns application.conf merged with the bundle specific config object
+  protected def bundleActorConfig : Config = 
+    context.system.settings.config.withValue(bundleSymbolicName, actorConfig.config.root())
 
-  def invokeService[I <: AnyRef : ClassTag, T](f: Option[I] => T) : T = withService[I,T] { service => f(service) }
+  protected def containerProperties : Map[String, String] = JPropertiesWrapper(actorConfig.idSvc.getProperties()).toMap
+
+  protected def containerUUID : String = actorConfig.idSvc.getUUID()
+
+  protected def containerContext : ContainerContext = actorConfig.idSvc.getContainerContext()
 }

@@ -17,6 +17,7 @@
 package de.wayofquality.blended.akka
 
 import de.wayofquality.blended.container.context.ContainerContext
+import de.wayofquality.blended.container.id.ContainerIdentifierService
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
@@ -30,16 +31,25 @@ trait TestSetup { this : MockitoSugar =>
   val ctContext = mock[ContainerContext]
   val ctContextRef = mock[ServiceReference[ContainerContext]]
   val bundle = mock[Bundle]
-  
-  val ccName : String = classOf[ContainerContext].getName
-  val tiName : String = classOf[TestInterface1].getName
+  val idSvc = mock[ContainerIdentifierService]
+  val idSvcRef = mock[ServiceReference[ContainerIdentifierService]]
+
+  val idName : String = classOf[ContainerIdentifierService].getName()
+  val ccName : String = classOf[ContainerContext].getName()
+  val tiName : String = classOf[TestInterface1].getName()
 
   when[ServiceReference[_]](osgiContext.getServiceReference(ccName)) thenReturn (ctContextRef)
   when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
   when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
-  when(svcRef.getBundle) thenReturn (bundle)
-  when(bundle.getBundleContext) thenReturn (osgiContext)
+  
   when[ServiceReference[_]](osgiContext.getServiceReference(tiName)) thenReturn(svcRef)
   when(osgiContext.getService(svcRef)) thenReturn(service)
   when(service.name) thenReturn("Andreas")
+
+  when[ServiceReference[_]](osgiContext.getServiceReference(idName)) thenReturn(idSvcRef)
+  when(osgiContext.getService(idSvcRef)) thenReturn(idSvc)
+  when(idSvc.getContainerContext()) thenReturn(ctContext)
+
+  when(bundle.getBundleContext) thenReturn (osgiContext)
+  when(svcRef.getBundle) thenReturn (bundle)
 }

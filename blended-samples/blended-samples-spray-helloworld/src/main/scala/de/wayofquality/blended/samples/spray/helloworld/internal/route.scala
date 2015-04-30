@@ -62,8 +62,7 @@ class HelloRoute(contextPath: String, bc: BundleContext)
 
   override implicit def actorRefFactory = context
 
-  override def receive: Actor.Receive = initializing
-
+  override def receive: Actor.Receive = initializingx
 
   override def initialize(state: BundleActorState): Try[Initialized] = {
     implicit val servletSettings = ConnectorSettings(state.config).copy(rootPath = Path(s"/$contextPath"))

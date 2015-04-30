@@ -5,11 +5,13 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  de.wayofquality.blended.akka.internal.BlendedAkkaActivator
+  ${bundle.namespace}.internal.BlendedAkkaActivator
 
-Import-Package: \
-  akka.event.slf4j,\
-  *
+Export-Package: \
+  ${bundle.namespace}, \
+  ${bundle.namespace}.protocol
+  
+Import-Package: *
 
 Private-Package:\
-  de.wayofquality.blended.*.internal.*
+  ${bundle.namespace}.internal.*

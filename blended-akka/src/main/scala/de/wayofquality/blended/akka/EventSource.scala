@@ -47,11 +47,13 @@ trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging 
 }
 
 trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
+  
+  implicit val eCtxt = context.system.dispatcher
 
   var publisher = context.system.deadLetters
 
   def setupListener(publisherBundleName : String) : Future[ActorRef] = {
-    context.system.eventStream.subscribe(self, classOf[BundleActorInitialized])
+    context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
     bundleActor(publisherBundleName).map { actor : ActorRef => 
       if (actor != context.system.deadLetters) {
@@ -71,6 +73,6 @@ trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
     case Terminated(p) if p == publisher =>
       context.unwatch(p)
       publisher = context.system.deadLetters
-    case BundleActorInitialized(name) if name == publisherBundleName => setupListener(publisherBundleName)
+    case BundleActorStarted(`publisherBundleName`) => setupListener(publisherBundleName)
   }
 }

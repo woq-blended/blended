@@ -21,31 +21,26 @@ import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
-trait ConfigDirectoryProvider {
-  def configDirectory : String
-}
+import scala.util.control.NonFatal
 
-trait ConfigLocator { this: ConfigDirectoryProvider =>
-  
+class ConfigLocator(configDirectory: String) {
+
   private[ConfigLocator] val logger = LoggerFactory.getLogger(classOf[ConfigLocator])
-  
-  def fallback : Option[Config]
 
-  def getConfig(id: String) : Config = {
-      val file = new File(configDirectory, s"$id.conf")
-      logger.debug(s"Retreiving config from [${file.getAbsolutePath}]")
+  protected def fallbackConfig: Config = ConfigFactory.empty()
 
-      if (file.exists && file.isFile && file.canRead)
-        ConfigFactory.parseFile(file)
-      else
-        fallback match {
-          case Some(cfg) => try {
-            cfg.getConfig(id)
-          } catch {
-            case t: Throwable => ConfigFactory.empty()
-          }
-          case _ => ConfigFactory.empty()
-        }
+  def getConfig(id: String): Config = {
+    val file = new File(configDirectory, s"$id.conf")
+    logger.debug(s"Retreiving config from [${file.getAbsolutePath}]")
+
+    if (file.exists && file.isFile && file.canRead)
+      ConfigFactory.parseFile(file)
+    else
+      try {
+        fallbackConfig.getConfig(id)
+      } catch {
+        case NonFatal(e) => ConfigFactory.empty()
+      }
   }
 }
 

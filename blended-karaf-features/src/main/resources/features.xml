@@ -54,7 +54,6 @@
     <bundle>mvn:org.helgoboss/domino/${domino.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-util/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-container-context/${blended.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended/blended-container-id/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-jmx/${blended.version}</bundle>
     <!--bundle>mvn:de.wayofquality.blended/blended-persistence/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-neo4j-api/${blended.version}</bundle>
@@ -160,7 +159,6 @@
     <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-slf4j_${scala.version}/${akka.version}</bundle>
     <bundle>mvn:com.typesafe.akka/akka-osgi_${scala.version}/${akka.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended/blended-modules/${project.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended-akka/${project.version}</bundle>
   </feature>
 
