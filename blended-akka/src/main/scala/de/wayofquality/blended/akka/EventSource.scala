@@ -27,7 +27,7 @@ trait EventSource {
   def eventSourceReceive : Receive
 }
 
-trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging =>
+trait ProductionEventSource extends EventSource { this: Actor with ActorLogging =>
 
   var listeners = Vector.empty[ActorRef]
 
@@ -46,7 +46,7 @@ trait ProductionEventSource extends EventSource{ this : Actor with ActorLogging 
   }
 }
 
-trait OSGIEventSourceListener extends OSGIActor { this : BundleName =>
+trait OSGIEventSourceListener extends OSGIActor {
   
   implicit val eCtxt = context.system.dispatcher
 

@@ -36,10 +36,8 @@ class ConfigLocatorSpec extends TestKit(ActorSystem("ConfigLocator", ConfigFacto
   with BeforeAndAfterAll
   with ImplicitSender {
 
-  class TestConfigLocator extends ConfigLocator with ConfigDirectoryProvider {
-  
+  class TestConfigLocator extends ConfigLocator("./target/test-classes" ) {
     override def fallbackConfig = system.settings.config
-    override def configDirectory: String = "./target/test-classes" 
   }
 
   "ConfigLocator" should {

@@ -19,30 +19,21 @@ package de.wayofquality.blended.akka
 import akka.actor.{ActorSystem, PoisonPill, Props}
 import de.wayofquality.blended.akka.protocol.BundleActorStarted
 import de.wayofquality.blended.container.context.ContainerIdentifierService
-import de.wayofquality.blended.container.id.ContainerIdentifierService
 import org.helgoboss.domino.DominoActivator
 
-trait BundleName {
-  def bundleSymbolicName : String
-}
+trait ActorSystemAware
+  extends DominoActivator { 
 
-trait ActorSystemAware[T <: OSGIActor] 
-  extends DominoActivator { this : BundleName =>
-
-  def configDir : String
-  
-  val configLocator = new ConfigLocator(configDir)
-  
-  def manageBundleActor(f : () => Props) : Unit = {
+  def manageBundleActor(f : OSGIActorConfig => Props) : Unit = {
 
     whenServicesPresent[ActorSystem, ContainerIdentifierService] { (system, idSvc) =>
+      val bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
+      
       log debug s"Preparing bundle actor for [$bundleSymbolicName]."
 
-      val actorConfig = OSGIActorConfig(
-        bundleContext, configLocator.getConfig(bundleContext.getBundle().getSymbolicName()), idSvc
-      )
+      val actorConfig = OSGIActorConfig(bundleContext, idSvc)
 
-      val actorRef = system.actorOf(f(), bundleSymbolicName)
+      val actorRef = system.actorOf(f(actorConfig), bundleSymbolicName)
 
       system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
       postStartBundleActor()

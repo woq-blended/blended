@@ -16,8 +16,7 @@
 
 package de.wayofquality.blended.akka
 
-import de.wayofquality.blended.container.context.ContainerContext
-import de.wayofquality.blended.container.id.ContainerIdentifierService
+import de.wayofquality.blended.container.context.{ContainerIdentifierService, ContainerContext}
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
@@ -50,6 +49,18 @@ trait TestSetup { this : MockitoSugar =>
   when(osgiContext.getService(idSvcRef)) thenReturn(idSvc)
   when(idSvc.getContainerContext()) thenReturn(ctContext)
 
+  when(bundle.getSymbolicName()) thenReturn("foo")
   when(bundle.getBundleContext) thenReturn (osgiContext)
   when(svcRef.getBundle) thenReturn (bundle)
+  
+  def testActorConfig(symbolicName : String) : OSGIActorConfig = {
+    val bCtxt = mock[BundleContext]
+    val b = mock[Bundle]
+    
+    when(bCtxt.getBundle()) thenReturn(bundle)
+    when(bundle.getBundleContext()) thenReturn(osgiContext)
+    when(bundle.getSymbolicName()) thenReturn(symbolicName)
+    
+    OSGIActorConfig(bCtxt, idSvc)
+  }
 }

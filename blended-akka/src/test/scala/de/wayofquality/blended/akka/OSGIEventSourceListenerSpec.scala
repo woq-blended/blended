@@ -30,45 +30,28 @@ import scala.concurrent.Await
 import scala.util.{Success, Try}
 
 object OSGIActorDummyPublisher {
-  def apply()(implicit bundleContext: BundleContext) = new OSGIActorDummyPublisher(bundleContext) with OSGIActor
+  def apply(actorConfig: OSGIActorConfig) = new OSGIActorDummyPublisher(actorConfig)
 }
 
-class OSGIActorDummyPublisher(ctxt: BundleContext) extends OSGIActor with ProductionEventSource with BundleName {
-
-  override protected def bundleContext: BundleContext = ctxt
-
-  override def bundleSymbolicName = "publisher"
+class OSGIActorDummyPublisher(actorConfig: OSGIActorConfig) extends OSGIActor(actorConfig) with ProductionEventSource {
 
   def receive = LoggingReceive { eventSourceReceive }
 }
 
+//----------
+
 object OSGIDummyListener {
-  def apply()(implicit bundleContext : BundleContext) = new OSGIDummyListener(bundleContext) with OSGIEventSourceListener
+  def apply(cfg : OSGIActorConfig) = new OSGIDummyListener(cfg) with OSGIEventSourceListener
 }
 
-class OSGIDummyListener(ctxt: BundleContext) extends InitializingActor[BundleActorState] with ActorLogging with BundleName { this : OSGIEventSourceListener =>
-
-  override protected def bundleContext: BundleContext = ctxt
-
-  var publisherName : Option[String] = None
+class OSGIDummyListener(cfg: OSGIActorConfig) extends OSGIActor(cfg) { this : OSGIEventSourceListener =>
 
   implicit val actorSys = context.system
   val latch = TestLatch(1)
-
-  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
-    BundleActorState(cfg, bundleContext)
-
-  def receive = initializing
-
-  override def bundleSymbolicName = "listener"
-
-  override def initialize(state: BundleActorState) : Try[Initialized] = {
-    publisherName = Some(state.config.getString("publisher"))
-    setupListener(publisherName.get)
-    Success(Initialized(state))
-  }
-
-  def working(state: BundleActorState) = testing orElse eventListenerReceive(publisherName.get)
+  
+  val publisherName = bundleActorConfig.getString("listener.publisher")
+  
+  def receive =  testing orElse eventListenerReceive(publisherName)
 
   def testing : Receive = {
     case "Andreas" => latch.countDown()
@@ -83,17 +66,14 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       import scala.concurrent.duration._
 
-      system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
+      system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
-      val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
-      val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
-
-      publisher ! InitializeBundle(osgiContext)
-      listener ! InitializeBundle(osgiContext)
+      val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
+      val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
       // We need to wait for the Actor bundle to finish it's initialization
       fishForMessage() {
-        case BundleActorInitialized(s) if s == "listener" => true
+        case BundleActorStarted(s) if s == "listener" => true
         case _ => false
       }
 
@@ -110,14 +90,13 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "start referring to the dlc when the publisher is unavailbale" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
-    listener ! InitializeBundle(osgiContext)
+    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {
-      case BundleActorInitialized(s) if s == "listener" => true
+      case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }
 
@@ -129,19 +108,18 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     import scala.concurrent.duration._
 
-    val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
-    listener ! InitializeBundle(osgiContext)
+    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {
-      case BundleActorInitialized(s) if s == "listener" => true
+      case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }
 
-    val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
-    system.eventStream.publish(BundleActorInitialized("publisher"))
+    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
+    system.eventStream.publish(BundleActorStarted("publisher"))
 
     val listenerReal = listener.underlyingActor.asInstanceOf[OSGIEventSourceListener]
     listenerReal.publisher should be(publisher)
@@ -154,19 +132,18 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "fallback to system.dlc when the publisher becomes unavailable" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val listener = TestActorRef(Props(OSGIDummyListener()), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorInitialized])
-    listener ! InitializeBundle(osgiContext)
+    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {
-      case BundleActorInitialized(s) if s == "listener" => true
+      case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }
 
-    val publisher = TestActorRef(Props(OSGIActorDummyPublisher()), "publisher")
-    system.eventStream.publish(BundleActorInitialized("publisher"))
+    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
+    system.eventStream.publish(BundleActorStarted("publisher"))
 
     val watcher = new TestProbe(system)
     watcher.watch(publisher)

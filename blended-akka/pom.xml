@@ -46,7 +46,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-id</artifactId>
+      <artifactId>blended-container-context</artifactId>
       <version>${project.version}</version>
     </dependency>
 

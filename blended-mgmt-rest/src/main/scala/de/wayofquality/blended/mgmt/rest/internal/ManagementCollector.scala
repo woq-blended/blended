@@ -20,7 +20,7 @@ import akka.event.LoggingReceive
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{InitializingActor, OSGIActor, ProductionEventSource}
+import de.wayofquality.blended.akka.{InitializingActor, OSGIActor, OSGIEventSource}
 import de.wayofquality.blended.container.registry.protocol._
 import de.wayofquality.blended.modules._
 import de.wayofquality.blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
@@ -53,12 +53,12 @@ trait CollectorService extends HttpService { this : SprayJsonSupport =>
 object ManagementCollector {
 
   def apply(contextPath: String, bc: BundleContext) =
-    new ManagementCollector(contextPath, bc) with SprayJsonSupport with ProductionEventSource
+    new ManagementCollector(contextPath, bc) with SprayJsonSupport with OSGIEventSource
 }
 
 class ManagementCollector(contextPath: String, bc: BundleContext)
   extends CollectorService with InitializingActor[BundleActorState] with CollectorBundleName {
-  this : OSGIActor with CollectorBundleName with SprayJsonSupport with ProductionEventSource =>
+  this : OSGIActor with CollectorBundleName with SprayJsonSupport with OSGIEventSource =>
   
   override protected def bundleContext: BundleContext = bc
 

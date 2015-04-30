@@ -20,73 +20,42 @@ import akka.actor.Props
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
-import com.typesafe.config.Config
-import de.wayofquality.blended.akka.protocol.{BundleActorState, InitializeBundle}
 import de.wayofquality.blended.testsupport.TestActorSys
-import org.osgi.framework.BundleContext
-import org.scalatest.junit.AssertionsForJUnit
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object OSGIActorDummy {
-  def apply(actorConfig: OSGIActorConfig)= new OSGIActorDummy(bundleContext) with InitializingActor[BundleActorState] with MemoryStash
+  def apply(actorConfig: OSGIActorConfig)= new OSGIActorDummy(actorConfig)
 }
 
-class OSGIActorDummy(actorConfig: OSGIActorConfig) extends OSGIActor(actorConfig) with BundleName { this: MemoryStash =>
-
-  override def bundleSymbolicName = "foo"
-
-  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
-    BundleActorState(cfg, bundleContext)
-
-  override def becomeWorking(state: BundleActorState): Unit = {
-    unstash()
-    super.becomeWorking(state)
-  }
-
-  def working(state: BundleActorState) : Receive = {
-    case "invoke" => {
-      sender ! invokeService[TestInterface1, String] { _ match {
+class OSGIActorDummy(actorConfig: OSGIActorConfig) extends OSGIActor(actorConfig) {
+  
+  def receive = {
+    case "invoke" =>
+      sender ! withService[TestInterface1, String] {
         case Some(svc) => svc.name
         case _ => ""
-      }}
-    }
+      }
   }
-
-  override def receive : Receive = initializing orElse stashing
 }
 
 class OSGIActorSpec extends TestActorSys 
-  with WordSpec
+  with WordSpecLike
   with Matchers 
   with TestSetup 
   with MockitoSugar {
-
-  def createActor() : TestActorRef = {
-    
-    val actorConfig = OSGIActorConfig(
-      bundleContext = osgiContext,
-      config =
-      
-    
-    ) 
-    
-  }
-
 
 
   "An OSGIActor" should {
 
     implicit val timeout = Timeout(1.second)
 
-    "allow to invoke a service" in new TestActorSys with TestSetup with MockitoSugar {
+    "allow to invoke a service" in {
 
-      val probe = TestActorRef(Props(OSGIActorDummy()), "testActor")
-
-      probe ! InitializeBundle(osgiContext)
+      val probe = TestActorRef(Props(OSGIActorDummy(testActorConfig("foo"))), "testActor")
 
       Await.result(probe ?  "invoke", 3.seconds) should be ("Andreas")
     }

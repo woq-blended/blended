@@ -17,11 +17,13 @@
 package de.wayofquality.blended.akka
 
 import com.typesafe.config.Config
-import de.wayofquality.blended.container.id.ContainerIdentifierService
+import de.wayofquality.blended.container.context.ContainerIdentifierService
 import org.osgi.framework.BundleContext
 
 case class OSGIActorConfig (
   bundleContext: BundleContext,
-  config: Config,
   idSvc: ContainerIdentifierService
-)
+) {
+  val config : Config =
+    new ConfigLocator(idSvc.getContainerContext().getContainerConfigDirectory()).getConfig(bundleContext.getBundle().getSymbolicName())
+} 

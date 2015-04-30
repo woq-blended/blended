@@ -61,9 +61,6 @@ class EventSourceSpec extends TestKit(ActorSystem("EventSource"))
       testActor ! PoisonPill
       real.listeners should have size(0)
     }
-
-
-
   }
 
   override protected def afterAll() : Unit = {
