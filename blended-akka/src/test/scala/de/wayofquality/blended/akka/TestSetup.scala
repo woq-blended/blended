@@ -23,43 +23,50 @@ import org.scalatest.mock.MockitoSugar
 
 trait TestSetup { this : MockitoSugar =>
 
-  implicit val osgiContext = mock[BundleContext]
-
-  val service = mock[TestInterface1]
-  val svcRef = mock[ServiceReference[TestInterface1]]
-  val ctContext = mock[ContainerContext]
-  val ctContextRef = mock[ServiceReference[ContainerContext]]
-  val bundle = mock[Bundle]
   val idSvc = mock[ContainerIdentifierService]
-  val idSvcRef = mock[ServiceReference[ContainerIdentifierService]]
+  val ctContext = mock[ContainerContext]
 
-  val idName : String = classOf[ContainerIdentifierService].getName()
-  val ccName : String = classOf[ContainerContext].getName()
-  val tiName : String = classOf[TestInterface1].getName()
-
-  when[ServiceReference[_]](osgiContext.getServiceReference(ccName)) thenReturn (ctContextRef)
-  when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
-  when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
-  
-  when[ServiceReference[_]](osgiContext.getServiceReference(tiName)) thenReturn(svcRef)
-  when(osgiContext.getService(svcRef)) thenReturn(service)
-  when(service.name) thenReturn("Andreas")
-
-  when[ServiceReference[_]](osgiContext.getServiceReference(idName)) thenReturn(idSvcRef)
-  when(osgiContext.getService(idSvcRef)) thenReturn(idSvc)
   when(idSvc.getContainerContext()) thenReturn(ctContext)
+  when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
 
-  when(bundle.getSymbolicName()) thenReturn("foo")
-  when(bundle.getBundleContext) thenReturn (osgiContext)
-  when(svcRef.getBundle) thenReturn (bundle)
+  def bundleContext(b: Bundle): BundleContext = {
+    
+    val osgiContext = mock[BundleContext]
+    
+    val service = mock[TestInterface1]
+    val svcRef = mock[ServiceReference[TestInterface1]]
+    val ctContextRef = mock[ServiceReference[ContainerContext]]
+    val svcBundle = mock[Bundle]
+    val idSvcRef = mock[ServiceReference[ContainerIdentifierService]]
+
+    val idName : String = classOf[ContainerIdentifierService].getName()
+    val ccName : String = classOf[ContainerContext].getName()
+    val tiName : String = classOf[TestInterface1].getName()
+
+    when[ServiceReference[_]](osgiContext.getServiceReference(ccName)) thenReturn (ctContextRef)
+    when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
+
+    when[ServiceReference[_]](osgiContext.getServiceReference(tiName)) thenReturn(svcRef)
+    when(osgiContext.getService(svcRef)) thenReturn(service)
+    when(service.name) thenReturn("Andreas")
+
+    when[ServiceReference[_]](osgiContext.getServiceReference(idName)) thenReturn(idSvcRef)
+    when(osgiContext.getService(idSvcRef)) thenReturn(idSvc)
+
+    when(svcBundle.getSymbolicName()) thenReturn("foo")
+    when(svcBundle.getBundleContext) thenReturn (osgiContext)
+    when(svcRef.getBundle) thenReturn (svcBundle)
+    
+    osgiContext
+  }
   
   def testActorConfig(symbolicName : String) : OSGIActorConfig = {
-    val bCtxt = mock[BundleContext]
     val b = mock[Bundle]
+    val bCtxt = bundleContext(b)
     
-    when(bCtxt.getBundle()) thenReturn(bundle)
-    when(bundle.getBundleContext()) thenReturn(osgiContext)
-    when(bundle.getSymbolicName()) thenReturn(symbolicName)
+    when(bCtxt.getBundle()) thenReturn(b)
+    when(b.getBundleContext()) thenReturn(bCtxt)
+    when(b.getSymbolicName()) thenReturn(symbolicName)
     
     OSGIActorConfig(bCtxt, idSvc)
   }
