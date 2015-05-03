@@ -37,7 +37,13 @@ blended-testsupport \
 blended-updater \
 blended-util"
 
-for project in $projects; do
+genForProjects="$projects"
+
+if [ -n "$@" ]; then
+  genForProjects="$@"
+fi
+
+for project in $genForProjects; do
 
   echo ""
   echo "*******************************************************"
