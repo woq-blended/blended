@@ -5,11 +5,12 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  de.wayofquality.blended.akka.internal.BlendedAkkaActivator
+  ${bundle.namespace}.internal.BlendedAkkaActivator
 
 Import-Package: \
-  akka.event.slf4j,\
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  akka.event.slf4j, \
   *
 
-Private-Package:\
-  de.wayofquality.blended.*.internal.*
+Private-Package: \
+  ${bundle.namespace}.internal
