@@ -3,10 +3,14 @@ package de.wayofquality.blended.launcher
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
-import scala.collection.JavaConverters._
+
+import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.asScalaSetConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
+
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -15,27 +19,12 @@ import org.osgi.framework.launch.Framework
 import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
-import de.wayofquality.blended.launcher.internal.Logger
+import org.osgi.framework.wiring.FrameworkWiring
+
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
-object Launcher {
-
-  def main(args: Array[String]): Unit = {
-
-    val configFile = args match {
-      case Array(configFile) => new File(configFile).getAbsoluteFile()
-      case _ =>
-        Console.err.println("Usage: main configfile")
-        sys.exit(1)
-    }
-
-    new Launcher(LauncherConfig.read(configFile)).run()
-    sys.exit(0)
-
-  }
-
-}
+import de.wayofquality.blended.launcher.internal.Logger
 
 case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
 
@@ -82,6 +71,24 @@ object LauncherConfig {
           )
         }.toList
     )
+
+  }
+
+}
+
+object Launcher {
+
+  def main(args: Array[String]): Unit = {
+
+    val configFile = args match {
+      case Array(configFile) => new File(configFile).getAbsoluteFile()
+      case _ =>
+        Console.err.println("Usage: main configfile")
+        sys.exit(1)
+    }
+
+    new Launcher(LauncherConfig.read(configFile)).run()
+    sys.exit(0)
 
   }
 
@@ -158,7 +165,16 @@ class Launcher(config: LauncherConfig) {
           failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
         }")
       }
+    }
 
+    val bundlesInInstalledState = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
+    if (!bundlesInInstalledState.isEmpty) {
+      log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
+      log.info("Resolving installed bundles")
+      val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
+      frameworkWiring.resolveBundles(null /* all bundles */ )
+      val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
+      log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
     }
 
     log.info("Laucher finished starting of framework and bundles. Awaiting framework termination now.")
