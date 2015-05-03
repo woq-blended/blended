@@ -92,6 +92,12 @@
 			<version>${felix.fileinstall.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.metatype</artifactId>
+			<version>${felix.metatype.version}</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
