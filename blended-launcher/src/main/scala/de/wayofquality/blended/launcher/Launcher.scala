@@ -87,20 +87,46 @@ object Launcher {
         sys.exit(1)
     }
 
-    new Launcher(LauncherConfig.read(configFile)).run()
+    val launcher = Launcher(configFile)
+    val errors = launcher.validate()
+    if (!errors.isEmpty) {
+      Console.err.println("Could not starrt the OSGi Framework. Details:\n" + errors.mkString("\n"))
+      sys.exit(1)
+    }
+    launcher.run()
     sys.exit(0)
 
   }
 
+  def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
+
 }
 
-class Launcher(config: LauncherConfig) {
+class Launcher private (config: LauncherConfig) {
   import Launcher._
 
   private[this] val log = Logger[Launcher]
 
   case class InstalledBundle(jarBundle: BundleConfig, bundle: Bundle)
 
+  /**
+   * Validate this Launcher's configuration and return the issues if any found.
+   */
+  def validate(): Seq[String] = {
+    val files = ("Framework JAR", config.frameworkJar) :: config.bundles.toList.map(b => "Bundle JAR" -> b.location)
+    files.flatMap { case (kind, file) =>
+      val f = new File(file).getAbsoluteFile()
+      if (!f.exists()) Some(s"${kind} ${f} does not exists")
+      else if (!f.isFile()) Some(s"${kind} ${f} is not a file")
+      else if (!f.canRead()) Some(s"${kind} ${f} is not readable")
+      else None
+    }
+
+  }
+
+  /**
+   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
+   */
   def run(): Unit = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
