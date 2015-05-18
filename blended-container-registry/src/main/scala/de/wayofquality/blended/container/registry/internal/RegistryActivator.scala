@@ -17,15 +17,11 @@
 package de.wayofquality.blended.container.registry.internal
 
 import akka.actor.Props
-import de.wayofquality.blended.akka.ActorSystemAware
-import de.wayofquality.blended.container.registry.RegistryBundleName
+import de.wayofquality.blended.akka.{OSGIActorConfig, ActorSystemAware}
 
-class RegistryActivator extends ActorSystemAware with RegistryBundleName {
+class RegistryActivator extends ActorSystemAware {
   
   whenBundleActive {
-    manageBundleActor { () =>
-      Props(ContainerRegistryImpl(bundleContext))
-    }
-    
+    manageBundleActor { cfg: OSGIActorConfig =>  Props(ContainerRegistryImpl(cfg)) }
   }
 }

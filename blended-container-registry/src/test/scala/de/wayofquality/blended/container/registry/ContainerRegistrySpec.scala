@@ -18,21 +18,34 @@ package de.wayofquality.blended.karaf.container.registry
 
 import akka.actor.Props
 import akka.testkit.TestActorRef
+import de.wayofquality.blended.akka.OSGIActorConfig
+import de.wayofquality.blended.container.context.{ContainerContext, ContainerIdentifierService}
 import de.wayofquality.blended.container.registry.internal.ContainerRegistryImpl
 import de.wayofquality.blended.container.registry.protocol._
 import de.wayofquality.blended.testsupport.TestActorSys
-import org.osgi.framework.BundleContext
+import org.mockito.Mockito._
+import org.osgi.framework.{Bundle, BundleContext}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 
+  val osgiContext = mock[BundleContext]
+  val idSvc = mock[ContainerIdentifierService]
+  val ctContext = mock[ContainerContext]
+  val bundle = mock[Bundle]
+
+  when(idSvc.getContainerContext()) thenReturn(ctContext)
+  when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
+  when(osgiContext.getBundle()) thenReturn(bundle)
+  when(bundle.getBundleContext) thenReturn(osgiContext)
+  when(bundle.getSymbolicName) thenReturn("foo")
+
   "Container registry" should {
 
     "Respond with a OK message upon an container update message" in new TestActorSys {
-      val osgiContext = mock[BundleContext]
 
-      val registry = TestActorRef(Props(ContainerRegistryImpl(osgiContext)))
+      val registry = TestActorRef(Props(ContainerRegistryImpl(OSGIActorConfig(osgiContext, idSvc))))
       registry ! UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas")))
 
       expectMsg(ContainerRegistryResponseOK("foo"))

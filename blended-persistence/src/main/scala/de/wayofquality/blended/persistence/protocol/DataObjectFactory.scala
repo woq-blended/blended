@@ -56,7 +56,7 @@ class DataObjectCreator(cfg: OSGIActorConfig, factory: DataObjectFactory) extend
 
   def setupFactory() : Unit = {
     implicit val eCtxt = context.system.dispatcher
-    
+
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
     bundleActor(bundleSymbolicName).map {

@@ -16,37 +16,31 @@
 
 package de.wayofquality.blended.container.registry.internal
 
-import akka.actor.{ActorLogging, ActorRef}
-import de.wayofquality.blended.akka.OSGIActor
-import de.wayofquality.blended.container.registry.RegistryBundleName
+import akka.actor.ActorRef
+import de.wayofquality.blended.akka.{OSGIActor, OSGIActorConfig}
 import de.wayofquality.blended.container.registry.protocol._
 import de.wayofquality.blended.persistence.protocol.StoreObject
-import org.osgi.framework.BundleContext
 
 
 object ContainerRegistryImpl {
-  def apply(bc: BundleContext) = new ContainerRegistryImpl(bc) with OSGIActor with RegistryBundleName
+  def apply(cfg: OSGIActorConfig) = new ContainerRegistryImpl(cfg)
 }
 
-class ContainerRegistryImpl(bc: BundleContext) extends OSGIActor with ActorLogging with RegistryBundleName {
+class ContainerRegistryImpl(cfg: OSGIActorConfig) extends OSGIActor(cfg) {
 
-
-  override protected def bundleContext: BundleContext = bc
+  implicit private val eCtxt = context.system.dispatcher
 
   def receive = {
-    case UpdateContainerInfo(info) => {
-      log debug(s"Received ${info.toString}")
+    case UpdateContainerInfo(info) =>
+      log debug s"Received ${info.toString}"
 
-      (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
-        _ match {
-          case actor : ActorRef => {
-            log.debug("Storing Container Information")
-            actor ! StoreObject(info)
-          }
-          case dlq if dlq == context.system.deadLetters => log.debug("Persistence manager not available")
-        }
+      bundleActor("de.wayofquality.blended.persistence").map {
+        case actor : ActorRef =>
+          log.debug("Storing Container Information")
+          actor ! StoreObject(info)
+        case dlq if dlq == context.system.deadLetters => log.debug("Persistence manager not available")
       }
+
       sender ! ContainerRegistryResponseOK(info.containerId)
-    }
   }
 }
