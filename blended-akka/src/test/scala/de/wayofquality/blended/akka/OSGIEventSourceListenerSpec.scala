@@ -58,7 +58,10 @@ class OSGIDummyListener(cfg: OSGIActorConfig) extends OSGIActor(cfg) { this : OS
   }
 }
 
+//----------
+
 class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
+
 
   "The OSGI Event source listener" should {
 
@@ -70,6 +73,9 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
       val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+
+      system.eventStream.publish(BundleActorStarted("publisher"))
+      system.eventStream.publish(BundleActorStarted("listener"))
 
       // We need to wait for the Actor bundle to finish it's initialization
       fishForMessage() {
@@ -93,6 +99,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+    system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {
@@ -108,9 +115,10 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     import scala.concurrent.duration._
 
-    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
-
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+    system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {
@@ -121,6 +129,8 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
     system.eventStream.publish(BundleActorStarted("publisher"))
 
+    //TODO: This is a test only hack to give the listener some time to finish its registration
+    Thread.sleep(100)
     val listenerReal = listener.underlyingActor.asInstanceOf[OSGIEventSourceListener]
     listenerReal.publisher should be(publisher)
 
@@ -135,6 +145,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
 
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+    system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
     fishForMessage() {

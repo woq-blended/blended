@@ -52,11 +52,16 @@ trait OSGIEventSourceListener extends OSGIActor {
 
   var publisher = context.system.deadLetters
 
-  def setupListener(publisherBundleName : String) : Future[ActorRef] = {
-    context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
-    bundleActor(publisherBundleName).map { actor : ActorRef => 
+  override def preStart(): Unit = {
+    context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
+    super.preStart()
+  }
+
+  def setupListener(publisherBundleName : String) : Future[ActorRef] = {
+    bundleActor(publisherBundleName).map { actor : ActorRef =>
       if (actor != context.system.deadLetters) {
+        log.debug(s"Subscribing to Publisher [$publisherBundleName]")
         actor ! RegisterListener(self)
         context.watch(actor)
       }
@@ -65,14 +70,16 @@ trait OSGIEventSourceListener extends OSGIActor {
     }
   }
 
-  def cleanUp() : Unit = {
+  override def postStop(): Unit = {
     context.system.eventStream.unsubscribe(self)
+    super.postStop()
   }
 
   def eventListenerReceive(publisherBundleName: String) : Receive = {
     case Terminated(p) if p == publisher =>
       context.unwatch(p)
       publisher = context.system.deadLetters
-    case BundleActorStarted(`publisherBundleName`) => setupListener(publisherBundleName)
+    case BundleActorStarted(`publisherBundleName`) =>
+      setupListener(publisherBundleName)
   }
 }
