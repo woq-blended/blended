@@ -24,6 +24,9 @@ case class OSGIActorConfig (
   bundleContext: BundleContext,
   idSvc: ContainerIdentifierService
 ) {
+
+  private lazy val configLocator = new ConfigLocator(idSvc.getContainerContext().getContainerConfigDirectory())
+
   val config : Config =
-    new ConfigLocator(idSvc.getContainerContext().getContainerConfigDirectory()).getConfig(bundleContext.getBundle().getSymbolicName())
+    configLocator.getConfig(bundleContext.getBundle().getSymbolicName())
 } 

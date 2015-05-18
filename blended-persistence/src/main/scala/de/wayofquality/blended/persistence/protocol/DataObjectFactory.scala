@@ -19,19 +19,15 @@ package de.wayofquality.blended.persistence.protocol
 import akka.actor.{ActorRef, Terminated}
 import akka.event.LoggingReceive
 import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{MemoryStash, OSGIActor}
-import de.wayofquality.blended.persistence.internal.PersistenceBundleName
-import org.osgi.framework.BundleContext
+import de.wayofquality.blended.akka.{MemoryStash, OSGIActor, OSGIActorConfig}
 
 trait DataObjectFactory {
   def createObject(props: PersistenceProperties) : Option[DataObject]
 }
 
-class DataObjectCreator(factory: DataObjectFactory, bc: BundleContext) extends OSGIActor with PersistenceBundleName with MemoryStash {
+class DataObjectCreator(cfg: OSGIActorConfig, factory: DataObjectFactory) extends OSGIActor(cfg) with MemoryStash {
 
   def createObject(props: PersistenceProperties) : Option[DataObject] = factory.createObject(props)
-
-  override protected def bundleContext: BundleContext = bc
 
   override def preStart(): Unit = {
     super.preStart()
@@ -59,16 +55,16 @@ class DataObjectCreator(factory: DataObjectFactory, bc: BundleContext) extends O
   }
 
   def setupFactory() : Unit = {
+    implicit val eCtxt = context.system.dispatcher
+    
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
 
-    (for(actor <- bundleActor(bundleSymbolicName).mapTo[ActorRef]) yield actor) map  {
-      _ match {
-        case actor : ActorRef =>
-          log.debug("Registering data factory with persistence manager")
-          actor ! RegisterDataFactory(self)
-          context.watch(actor)
-        case dlq if dlq == context.system.deadLetters =>
-      }
+    bundleActor(bundleSymbolicName).map {
+      case actor : ActorRef =>
+        log.debug("Registering data factory with persistence manager")
+        actor ! RegisterDataFactory(self)
+        context.watch(actor)
+      case dlq if dlq == context.system.deadLetters =>
     }
   }
 }

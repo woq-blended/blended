@@ -18,78 +18,38 @@ package de.wayofquality.blended.persistence.internal
 
 import akka.actor._
 import akka.event.LoggingReceive
-import com.typesafe.config.Config
-import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{InitializingActor, MemoryStash}
-import de.wayofquality.blended.container.context.ContainerContext
+import de.wayofquality.blended.akka.{MemoryStash, OSGIActor, OSGIActorConfig}
 import de.wayofquality.blended.persistence.PersistenceBackend
 import de.wayofquality.blended.persistence.protocol._
-import org.osgi.framework.BundleContext
-
-import scala.util.{Failure, Success, Try}
 
 object PersistenceManager {
 
-  def apply(impl: PersistenceBackend, bc: BundleContext) =
-    new PersistenceManager(impl, bc) with PersistenceBundleName
+  def apply(cfg: OSGIActorConfig, impl: PersistenceBackend) = new PersistenceManager(cfg, impl)
 }
 
-private[persistence] case class PersistenceManagerBundleState(
-  override val config : Config,
-  override val bundleContext: BundleContext,
-  factories: List[ActorRef] = List.empty
-) extends BundleActorState(config, bundleContext)
+class PersistenceManager(cfg: OSGIActorConfig, backend: PersistenceBackend) extends OSGIActor(cfg) with MemoryStash {
 
-
-class PersistenceManager(backend: PersistenceBackend, bc: BundleContext)
-  extends InitializingActor[PersistenceManagerBundleState] with PersistenceBundleName with MemoryStash {
-
-  override protected def bundleContext: BundleContext = bc
-
-  override def receive = initializing orElse stashing
+  override def receive = working(List.empty)
   
-  override def createState(cfg: Config, bundleContext: BundleContext): PersistenceManagerBundleState = 
-    PersistenceManagerBundleState(cfg, bundleContext, List.empty)
-
-  override def becomeWorking(state: PersistenceManagerBundleState): Unit = {
-    super.becomeWorking(state)
-    unstash()
-  }
-
-  override def initialize(state : PersistenceManagerBundleState) : Try[Initialized] = {
-    
-    withService[ContainerContext, Try[Initialized]] {
-      case Some(ctxt) =>
-        backend.initBackend(ctxt.getContainerDirectory, state.config)
-        Success(Initialized(state))
-      case None =>
-        log.error(s"No container directory configured")
-        Failure(new Exception(s"No container directory configured."))
-    }
-  }
-
-  def working(state: PersistenceManagerBundleState) = LoggingReceive {
+  def working(factories: List[ActorRef]) : Receive = LoggingReceive {
     case RegisterDataFactory(factory: ActorRef) =>
-      if (!state.factories.contains(factory)) {
+      if (factories.contains(factory)) {
         context.watch(factory)
-        becomeWorking(state.copy(factories = factory :: state.factories))
+        context.become(working(factory :: factories))
       }
       sender ! DataFactoryRegistered(factory)
     case Terminated(factory) =>
-      becomeWorking(state.copy(factories = state.factories.filter(_ != factory)))
-    case StoreObject(dataObject) => {
+      context.become( working(factories.filter(_ != factory)) )
+    case StoreObject(dataObject) =>
       backend.store(dataObject)
       sender ! QueryResult(List(dataObject))
-    }
-    case FindObjectByID(uuid, objectType) => {
+    case FindObjectByID(uuid, objectType) =>
       backend.get(uuid, objectType) match {
         case None => sender ! QueryResult(List.empty)
-        case Some(props) => {
-          log.debug(s"Asking [${state.factories.size}] factories to create the dataObject.")
-          state.factories.foreach { f => f.forward(CreateObjectFromProperties(props)) }
-        }
+        case Some(props) =>
+          log.debug(s"Asking [${factories.size}] factories to create the dataObject.")
+          factories.foreach { _.forward(CreateObjectFromProperties(props)) }
       }
-    }
   }
 
   override def postStop() : Unit = {
