@@ -23,7 +23,7 @@ import akka.camel.CamelExtension
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
-import de.wayofquality.blended.container.context.ContainerContext
+import de.wayofquality.blended.container.context.{ContainerIdentifierService, ContainerContext}
 import org.helgoboss.capsule.Capsule
 import org.helgoboss.domino.DominoActivator
 import org.osgi.framework.BundleContext
@@ -64,8 +64,8 @@ class BlendedAkkaActivator extends DominoActivator {
   }
 
   whenBundleActive {
-    whenServicePresent[ContainerContext] { svc =>
-      addCapsule(new AkkaCapsule(bundleContext, svc))
+    whenServicePresent[ContainerIdentifierService] { svc =>
+      addCapsule(new AkkaCapsule(bundleContext, svc.getContainerContext()))
     }
   }
 }

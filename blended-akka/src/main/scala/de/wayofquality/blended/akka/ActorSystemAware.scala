@@ -29,13 +29,13 @@ trait ActorSystemAware
     whenServicesPresent[ActorSystem, ContainerIdentifierService] { (system, idSvc) =>
       val bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
       
-      log debug s"Preparing bundle actor for [$bundleSymbolicName]."
-
       val actorConfig = OSGIActorConfig(bundleContext, idSvc)
 
       val actorRef = system.actorOf(f(actorConfig), bundleSymbolicName)
 
       system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
+      log info s"Bundle actor started [$bundleSymbolicName]."
+
       postStartBundleActor()
 
       onStop {

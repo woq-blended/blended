@@ -159,7 +159,7 @@
     <bundle dependency="true">mvn:com.typesafe.akka/akka-actor_${scala.version}/${akka.version}</bundle>
     <bundle dependency="true">mvn:com.typesafe.akka/akka-slf4j_${scala.version}/${akka.version}</bundle>
     <bundle>mvn:com.typesafe.akka/akka-osgi_${scala.version}/${akka.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended/blended-akka/${project.version}</bundle>
+    <bundle>mvn:de.wayofquality.blended/${project.groupId}.akka/${project.version}</bundle>
   </feature>
 
   <feature name="blended-akka-cluster" description="Blended - Bundles for Akka clustering" version="${akka.version}" resolver="(obr)" start-level="20" >
@@ -191,7 +191,7 @@
     <feature version="${activemq.version}">blended-activemq-blueprint</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
     <bundle>blueprint:file:etc/amq-broker.xml</bundle>
-    <bundle>mvn:de.wayofquality.blended.samples/blended-samples-spray-helloworld/${blended.version}</bundle>
+    <bundle>mvn:de.wayofquality.blended.samples/${project.groupId}.samples.spray.helloworld/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended-samples-camel/${blended.version}</bundle>
   </feature>
 

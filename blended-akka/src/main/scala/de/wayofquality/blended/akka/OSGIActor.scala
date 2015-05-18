@@ -48,8 +48,9 @@ abstract class OSGIActor(actorConfig: OSGIActorConfig)
   }
 
   // Returns application.conf merged with the bundle specific config object
-  protected def bundleActorConfig : Config = 
+  protected def bundleActorConfig : Config =
     context.system.settings.config.withValue(bundleSymbolicName, actorConfig.config.root())
+
 
   val bundleSymbolicName: String = actorConfig.bundleContext.getBundle().getSymbolicName()
 

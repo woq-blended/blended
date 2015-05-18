@@ -8,7 +8,6 @@ class ContainerContextActivator extends DominoActivator {
 
   whenBundleActive {
     val containerContext = new ContainerContextImpl()
-    // containerContext.providesService[ContainerContext]
 
     val idService = new ContainerIdentifierServiceImpl(bundleContext, containerContext)
     idService.providesService[ContainerIdentifierService]

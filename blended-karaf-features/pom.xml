@@ -106,7 +106,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-akka</artifactId>
+      <artifactId>${project.groupId}.akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
@@ -124,7 +124,7 @@
 
     <dependency>
       <groupId>${project.groupId}.samples</groupId>
-      <artifactId>blended-samples-spray-helloworld</artifactId>
+      <artifactId>${project.groupId}.samples.spray.helloworld</artifactId>
       <version>${blended.version}</version>
     </dependency>
 

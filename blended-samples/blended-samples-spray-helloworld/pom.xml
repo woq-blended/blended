@@ -30,7 +30,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </parent>
 
   <groupId>de.wayofquality.blended.samples</groupId>
-  <artifactId>blended-samples-spray-helloworld</artifactId>
+  <artifactId>${project.groupId}.spray.helloworld</artifactId>
   <packaging>bundle</packaging>
   <name>${project.artifactId}</name>
 

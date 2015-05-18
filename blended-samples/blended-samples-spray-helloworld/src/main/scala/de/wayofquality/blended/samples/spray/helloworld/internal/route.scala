@@ -52,8 +52,12 @@ class HelloRoute(cfg: OSGIActorConfig, contextPath: String) extends OSGIActor(cf
   override implicit def actorRefFactory : ActorRefFactory = context
 
   override def preStart(): Unit = {
-    implicit val servletSettings = ConnectorSettings(cfg.config).copy(rootPath = Path(s"/$contextPath"))
-    implicit val routingSettings = RoutingSettings(cfg.config)
+
+    // We need the full config including settings from application.conf here
+    val bundleConfig = bundleActorConfig
+
+    implicit val servletSettings = ConnectorSettings(bundleConfig).copy(rootPath = Path(s"/$contextPath"))
+    implicit val routingSettings = RoutingSettings(bundleConfig)
     implicit val routeLogger = LoggingContext.fromAdapter(log)
     implicit val exceptionHandler = ExceptionHandler.default
     implicit val rejectionHandler = RejectionHandler.Default

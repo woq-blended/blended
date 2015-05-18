@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  de.wayofquality.blended.samples.spray.helloworld.internal.HelloActivator
+  ${bundle.namespace}.internal.HelloActivator
 
 Import-Package: \
   spray.routing,\
@@ -14,6 +14,10 @@ Import-Package: \
   shapeless,\
   de.wayofquality.blended.spray,\
   *
+
+Private-Package:\
+  ${bundle.namespace}.internal.*
+
 
 
 
