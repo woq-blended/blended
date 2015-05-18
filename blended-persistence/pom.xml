@@ -36,7 +36,7 @@
   </description>
 
   <properties>
-    <bundle.namespace>${project.artifactId}</bundle.namespace>
+    <bundle.namespace>de.wayofquality.blended.persistence</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
   </properties>
 

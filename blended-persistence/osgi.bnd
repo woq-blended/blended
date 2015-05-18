@@ -1,13 +1,19 @@
-Bundle-Version:\
+Bundle-Version: \
   ${project.version}
 
-Bundle-SymbolicName:\
+Bundle-SymbolicName: \
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
 
 Bundle-Activator: \
-  de.wayofquality.blended.persistence.internal.PersistenceActivator
+  ${namespace}.internal.PersistenceActivator
 
-Private-Package:\
-  de.wayofquality.blended.*.internal.*
+Private-Package: \
+  ${namespace}.internal
+
+Export-Package: \
+  ${namespace}, \
+  ${namespace}.protocol
