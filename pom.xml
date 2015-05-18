@@ -151,6 +151,7 @@
         <module>blended-karaf-installer</module>
 
 	<module>blended-launcher</module>
+	<module>blended-updater</module>
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>

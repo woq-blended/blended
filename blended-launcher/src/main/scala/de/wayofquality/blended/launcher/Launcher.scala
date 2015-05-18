@@ -4,8 +4,6 @@ import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
 import scala.util.Try
@@ -21,60 +19,7 @@ import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
 
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-
 import de.wayofquality.blended.launcher.internal.Logger
-
-case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
-
-case class LauncherConfig(
-  frameworkJar: String,
-  systemProperties: Map[String, String],
-  frameworkProperties: Map[String, String],
-  startLevel: Int,
-  defaultStartLevel: Int,
-  bundles: Seq[BundleConfig])
-
-object LauncherConfig {
-
-  private[this] val log = Logger[LauncherConfig.type]
-
-  def read(file: File): LauncherConfig = {
-
-    val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher").resolve()
-
-    val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf",
-      ConfigParseOptions.defaults().setAllowMissing(false))
-    log.debug(s"Checking config with reference: ${reference}")
-    config.checkValid(reference)
-
-    LauncherConfig(
-      frameworkJar = config.getString("frameworkBundle"),
-      systemProperties = config.getConfig("systemProperties")
-        .entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap,
-      frameworkProperties = config.getConfig("frameworkProperties")
-        .entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap,
-      startLevel = config.getInt("startLevel"),
-      defaultStartLevel = config.getInt("defaultStartLevel"),
-      bundles = config.getObjectList("bundles")
-        .asScala.map { b =>
-          val c = b.toConfig()
-          BundleConfig(
-            location = c.getString("location"),
-            start = if (c.hasPath("start")) c.getBoolean("start") else false,
-            startLevel = if (c.hasPath("startLevel")) c.getInt("startLevel") else config.getInt("defaultStartLevel")
-          )
-        }.toList
-    )
-
-  }
-
-}
 
 object Launcher {
 
@@ -114,12 +59,13 @@ class Launcher private (config: LauncherConfig) {
    */
   def validate(): Seq[String] = {
     val files = ("Framework JAR", config.frameworkJar) :: config.bundles.toList.map(b => "Bundle JAR" -> b.location)
-    files.flatMap { case (kind, file) =>
-      val f = new File(file).getAbsoluteFile()
-      if (!f.exists()) Some(s"${kind} ${f} does not exists")
-      else if (!f.isFile()) Some(s"${kind} ${f} is not a file")
-      else if (!f.canRead()) Some(s"${kind} ${f} is not readable")
-      else None
+    files.flatMap {
+      case (kind, file) =>
+        val f = new File(file).getAbsoluteFile()
+        if (!f.exists()) Some(s"${kind} ${f} does not exists")
+        else if (!f.isFile()) Some(s"${kind} ${f} is not a file")
+        else if (!f.canRead()) Some(s"${kind} ${f} is not readable")
+        else None
     }
 
   }
