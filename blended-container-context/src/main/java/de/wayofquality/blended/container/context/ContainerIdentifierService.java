@@ -16,8 +16,6 @@
 
 package de.wayofquality.blended.container.context;
 
-import de.wayofquality.blended.container.context.ContainerContext;
-
 import java.util.Properties;
 
 /**

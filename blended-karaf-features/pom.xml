@@ -52,12 +52,6 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-id</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>blended-jmx</artifactId>
       <version>${blended.version}</version>
     </dependency>
@@ -112,12 +106,6 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-modules</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>blended-akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
@@ -143,12 +131,6 @@
     <dependency>
       <groupId>${project.groupId}.samples</groupId>
       <artifactId>blended-samples-camel</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}.samples</groupId>
-      <artifactId>blended-samples-tracker</artifactId>
       <version>${blended.version}</version>
     </dependency>
 

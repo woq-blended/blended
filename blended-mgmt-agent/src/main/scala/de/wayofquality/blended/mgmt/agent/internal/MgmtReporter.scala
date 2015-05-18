@@ -16,45 +16,49 @@
 
 package de.wayofquality.blended.mgmt.agent.internal
 
-import akka.actor.ActorLogging
+import akka.actor.Cancellable
 import akka.event.LoggingReceive
-import akka.pattern.pipe
-import com.typesafe.config.Config
-import de.wayofquality.blended.akka.InitializingActor
-import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.container.id.ContainerIdentifierService
+import de.wayofquality.blended.akka.{OSGIActor, OSGIActorConfig}
+import de.wayofquality.blended.container.context.ContainerIdentifierService
 import de.wayofquality.blended.container.registry.protocol._
-import org.osgi.framework.BundleContext
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
-
 import scala.collection.JavaConversions._
+import akka.pattern.pipe
+
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 object MgmtReporter {
-  def apply(bc: BundleContext) = new MgmtReporter(bc)
+  def apply(cfg: OSGIActorConfig) = new MgmtReporter(cfg)
 }
 
-class MgmtReporter(bc: BundleContext) extends InitializingActor[BundleActorState] with ActorLogging with SprayJsonSupport with MgmtAgentBundleName {
+class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSupport {
 
-  override protected def bundleContext: BundleContext = bc
+  implicit private[this] val eCtxt = context.system.dispatcher
+  private[this] var ticker : Option[Cancellable] = None
 
   case object Tick
-  
-  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = BundleActorState(cfg, bundleContext)
 
-  override def becomeWorking(state: BundleActorState): Unit = {
-    context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick)
-    super.becomeWorking(state)
+  override def preStart(): Unit = {
+    ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
+    super.preStart()
   }
 
-  def working(state: BundleActorState) = LoggingReceive {
+  override def postStop(): Unit = {
+    ticker.foreach(_.cancel())
+    ticker = None
+    super.postStop()
+  }
+
+  def receive : Receive = LoggingReceive {
 
     case Tick =>
       withService[ContainerIdentifierService, Option[ContainerInfo]] { 
-        case Some(idSvc) => Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap))
+        case Some(idSvc) =>
+          Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties().toMap))
         case _ => None
       } match {
         case Some(info) =>
@@ -62,11 +66,10 @@ class MgmtReporter(bc: BundleContext) extends InitializingActor[BundleActorState
           val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
             sendReceive ~> unmarshal[ContainerRegistryResponseOK]
           }
-          (pipeline{ Post("http://localhost:8181/wayofquality/container", info) }).mapTo[ContainerRegistryResponseOK].pipeTo(self)
+          pipeline{ Post("http://localhost:8181/wayofquality/container", info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
 
     case response : ContainerRegistryResponseOK => log info(s"Reported [${response.id}] to management node")
   }
 
-  def receive = initializing
 }

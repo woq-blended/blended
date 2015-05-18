@@ -52,7 +52,6 @@ trait OSGIEventSourceListener extends OSGIActor {
 
   var publisher = context.system.deadLetters
 
-
   override def preStart(): Unit = {
     context.system.eventStream.subscribe(self, classOf[BundleActorStarted])
     super.preStart()

@@ -17,17 +17,20 @@
 package de.wayofquality.blended.mgmt.rest.internal
 
 import akka.actor.Props
-import de.wayofquality.blended.akka.{ActorSystemAware, BundleName}
+import de.wayofquality.blended.akka.{ActorSystemAware, OSGIActorConfig}
+import org.osgi.service.http.HttpService
 
-trait CollectorBundleName extends BundleName {
-  def bundleSymbolicName = "de.wayofquality.osgi.akka.mgmt.rest"
-}
-
-class CollectorActivator extends ActorSystemAware with CollectorBundleName {
+class CollectorActivator extends ActorSystemAware {
   
   whenBundleActive {
-    manageBundleActor { () =>
-      Props(ManagementCollector("wayofquality", bundleContext))
+    whenServicePresent[HttpService] { httpSvc =>
+
+      manageBundleActor { cfg : OSGIActorConfig =>
+
+        Props(ManagementCollector(cfg, "wayofquality"))
+      }
+
     }
   }
 }
+

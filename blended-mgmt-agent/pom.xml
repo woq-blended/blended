@@ -53,12 +53,6 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-id</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>blended-container-registry</artifactId>
       <version>${project.version}</version>
     </dependency>

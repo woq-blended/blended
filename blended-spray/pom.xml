@@ -57,12 +57,6 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-modules</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>blended-spray-api</artifactId>
       <version>${blended.version}</version>
     </dependency>

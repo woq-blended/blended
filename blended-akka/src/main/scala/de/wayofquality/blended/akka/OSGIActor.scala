@@ -20,7 +20,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import com.typesafe.config.Config
 import de.wayofquality.blended.container.context.ContainerContext
+import org.helgoboss.capsule.{SimpleDynamicCapsuleContext, CapsuleContext}
 import org.helgoboss.domino.service_consuming.ServiceConsuming
+import org.helgoboss.domino.service_providing.ServiceProviding
 import org.osgi.framework.BundleContext
 
 import scala.collection.convert.Wrappers.JPropertiesWrapper
@@ -30,10 +32,13 @@ import scala.concurrent.duration._
 abstract class OSGIActor(actorConfig: OSGIActorConfig) 
   extends Actor
   with ActorLogging 
-  with ServiceConsuming {
+  with ServiceConsuming
+  with ServiceProviding {
 
   private[this] implicit val timeout = new Timeout(500.millis)
   private[this] implicit val ec = context.dispatcher
+
+  override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
 
   override protected def bundleContext: BundleContext = actorConfig.bundleContext
   

@@ -16,21 +16,16 @@
 
 package de.wayofquality.blended.samples.spray.helloworld.internal
 
-import akka.actor.{Actor, ActorLogging}
-import akka.event.LoggingReceive
-import com.typesafe.config.Config
-import de.wayofquality.blended.akka.protocol._
-import de.wayofquality.blended.akka.{InitializingActor, OSGIActor}
-import de.wayofquality.blended.modules._
+import javax.servlet.Servlet
+
+import akka.actor.{ActorRefFactory, Actor}
+import de.wayofquality.blended.akka.{OSGIActor, OSGIActorConfig}
 import de.wayofquality.blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
-import org.osgi.framework.BundleContext
 import spray.http.MediaTypes._
 import spray.http.Uri.Path
 import spray.routing._
 import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
-
-import scala.util.{Success, Try}
 
 trait HelloService extends HttpService {
 
@@ -48,25 +43,17 @@ trait HelloService extends HttpService {
 }
 
 object HelloRoute {
-  def apply(contextPath: String, bc: BundleContext) =
-    new HelloRoute(contextPath, bc) with OSGIActor with HelloBundleName
+  def apply(cfg: OSGIActorConfig, contextPath: String) =
+    new HelloRoute(cfg, contextPath)
 }
 
-class HelloRoute(contextPath: String, bc: BundleContext)
-  extends HelloService with InitializingActor[BundleActorState] with ActorLogging with HelloBundleName{
+class HelloRoute(cfg: OSGIActorConfig, contextPath: String) extends OSGIActor(cfg) with HelloService {
   
-  override protected def bundleContext: BundleContext = bc
+  override implicit def actorRefFactory : ActorRefFactory = context
 
-  override def createState(cfg: Config, bundleContext: BundleContext): BundleActorState = 
-    BundleActorState(cfg, bundleContext)
-
-  override implicit def actorRefFactory = context
-
-  override def receive: Actor.Receive = initializingx
-
-  override def initialize(state: BundleActorState): Try[Initialized] = {
-    implicit val servletSettings = ConnectorSettings(state.config).copy(rootPath = Path(s"/$contextPath"))
-    implicit val routingSettings = RoutingSettings(state.config)
+  override def preStart(): Unit = {
+    implicit val servletSettings = ConnectorSettings(cfg.config).copy(rootPath = Path(s"/$contextPath"))
+    implicit val routingSettings = RoutingSettings(cfg.config)
     implicit val routeLogger = LoggingContext.fromAdapter(log)
     implicit val exceptionHandler = ExceptionHandler.default
     implicit val rejectionHandler = RejectionHandler.Default
@@ -80,16 +67,14 @@ class HelloRoute(contextPath: String, bc: BundleContext)
       override def actorSystem = actorSys
     }
 
-    bundleContext.createService(
-      servlet, Map(
-        "urlPatterns" -> "/",
-        "Webapp-Context" -> contextPath,
-        "Web-ContextPath" -> s"/$contextPath",
-        "servlet-name" -> "hello"
-      ))
-  
-    Success(Initialized(state))
+    servlet.providesService[Servlet] ( Map(
+      "urlPatterns" -> "/",
+      "Webapp-Context" -> contextPath,
+      "Web-ContextPath" -> s"/$contextPath"
+    ))
+
+    context.become(runRoute(helloRoute))
   }
-  
-  override def working(state: BundleActorState): Receive = LoggingReceive { runRoute(helloRoute) }
+
+  def receive : Receive = Actor.emptyBehavior
 }
