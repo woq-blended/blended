@@ -4,7 +4,9 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Export-Package:
+Export-Package: \
+  ${bundle.namespace},\
+  ${bundle.namespace}.protocol
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \

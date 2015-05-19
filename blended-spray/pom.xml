@@ -56,7 +56,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray-api</artifactId>
+      <artifactId>blended.spray.api</artifactId>
       <version>${blended.version}</version>
     </dependency>
 

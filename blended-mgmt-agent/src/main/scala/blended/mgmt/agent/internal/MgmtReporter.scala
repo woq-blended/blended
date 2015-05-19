@@ -21,13 +21,11 @@ import akka.event.LoggingReceive
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.container.context.ContainerIdentifierService
 import blended.container.registry.protocol._
-import blended.container.registry.protocol.{ContainerRegistryResponseOK, ContainerInfo}
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
 import scala.collection.JavaConversions._
 import akka.pattern.pipe
-
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -59,7 +57,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
     case Tick =>
       withService[ContainerIdentifierService, Option[ContainerInfo]] { 
         case Some(idSvc) =>
-          Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties().toMap))
+          Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap))
         case _ => None
       } match {
         case Some(info) =>
@@ -70,7 +68,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
           pipeline{ Post("http://localhost:8181/wayofquality/container", info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
 
-    case response : ContainerRegistryResponseOK => log info(s"Reported [${response.id}] to management node")
+    case response : ContainerRegistryResponseOK => log.info("Reported [{}] to management node", response.id)
   }
 
 }

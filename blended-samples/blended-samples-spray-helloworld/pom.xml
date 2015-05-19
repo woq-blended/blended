@@ -46,7 +46,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>de.wayofquality.blended</groupId>
-      <artifactId>blended-spray-api</artifactId>
+      <artifactId>blended.spray.api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
