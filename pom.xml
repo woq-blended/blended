@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>de.wayofquality.blended</groupId>
-  <artifactId>blended-reactor</artifactId>
+  <artifactId>blended.reactor</artifactId>
   <version>1.2-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
@@ -40,8 +40,8 @@
   </licenses>
 
   <organization>
-    <name>WoQ - Way of Quality GmbH</name>
-    <url>http://www.wayofquality.de</url>
+    <name>https://github.com/woq-blended</name>
+    <url>https://github.com/woq-blended/blended</url>
   </organization>
 
   <developers>
@@ -50,6 +50,12 @@
       <email>andreas@wayofquality.de</email>
       <organization>WoQ - Way of Quality GmbH</organization>
       <organizationUrl>http://www.wayofquality.de</organizationUrl>
+    </developer>
+
+    <developer>
+      <name>Tobias Roeser</name>
+      <email>tobias.roeser@tototec.de</email>
+      <organization>ToToTec GbR</organization>
     </developer>
   </developers>
 

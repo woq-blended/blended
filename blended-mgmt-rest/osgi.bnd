@@ -5,15 +5,18 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  de.wayofquality.blended.mgmt.rest.internal.CollectorActivator
+  ${bundle.namespace}.internal.CollectorActivator
 
 Import-Package: \
   spray.routing,\
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  de.wayofquality.blended.spray.servlet,\
+  blended.spray.servlet,\
   *
+
+Private-Package: \
+  ${bundle.namespace}.internal
 
 
 

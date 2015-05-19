@@ -4,8 +4,8 @@ FROM atooni/blended-base:latest
 MAINTAINER Andreas Gies version: ${project.version}
 
 # Installation section
-ADD blended-karaf-demo-${project.version}-nojre.tar.gz /opt
-RUN ln -s /opt/blended-karaf-demo-${project.version} /opt/blended
+ADD blended.karaf.demo-${project.version}-nojre.tar.gz /opt
+RUN ln -s /opt/blended.karaf.demo-${project.version} /opt/blended
 RUN mkdir -p /opt/blended/data
 RUN chown -R blended.blended /opt/blended*
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -22,11 +22,11 @@
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
+    <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>blended-docker-demo</artifactId>
+  <artifactId>blended.docker.demo</artifactId>
   <description>
     Packaging the sample container into a docker image.
   </description>
@@ -35,7 +35,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-karaf-demo</artifactId>
+      <artifactId>blended.karaf.demo</artifactId>
       <version>${project.version}</version>
       <classifier>nojre</classifier>
       <type>tar.gz</type>

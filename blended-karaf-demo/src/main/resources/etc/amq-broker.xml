@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:amq="http://activemq.apache.org/schema/core">
 
-  <bean id="brokerStarter" class="de.wayofquality.blended.activemq.brokerstarter.BrokerStarter" init-method="init"
+  <bean id="brokerStarter" class="blended.activemq.brokerstarter.BrokerStarter" init-method="init"
         destroy-method="destroy">
     <argument index="0">
       <amq:broker

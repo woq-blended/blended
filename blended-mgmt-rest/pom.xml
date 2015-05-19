@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -24,13 +24,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
+    <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-mgmt-rest</artifactId>
+  <artifactId>blended.mgmt.rest</artifactId>
   <packaging>bundle</packaging>
   
   <description>
@@ -47,28 +46,26 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray</artifactId>
+      <artifactId>blended.spray</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray-api</artifactId>
+      <artifactId>blended.spray.api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-registry</artifactId>
+      <artifactId>blended.container.registry</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-akka</artifactId>
+      <artifactId>blended.akka</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
