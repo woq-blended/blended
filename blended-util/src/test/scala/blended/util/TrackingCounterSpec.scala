@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality GmbH
+ * Copyright 2014ff,  https://github.com/woq-blended
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.util
+package blended.util
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
-import de.wayofquality.blended.util.protocol._
+import blended.util.protocol._
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
@@ -37,10 +37,8 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
       val counter = TestActorRef(Props(TrackingCounter(10.millis, testActor)))
 
       fishForMessage() {
-        case info : CounterInfo => {
+        case info : CounterInfo =>
           info.count == 0 && !info.firstCount.isDefined && !info.lastCount.isDefined
-        }
-        case _ => false
       }
     }
 
@@ -50,10 +48,8 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
       counter ! StopCounter
 
       fishForMessage() {
-        case info : CounterInfo => {
+        case info : CounterInfo =>
           info.count == 0 && !info.firstCount.isDefined && !info.lastCount.isDefined
-        }
-        case _ => false
       }
     }
 
@@ -64,10 +60,8 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
       counter ! StopCounter
 
       fishForMessage() {
-        case info : CounterInfo => {
+        case info : CounterInfo =>
           info.count == 1 && info.interval.length == 0
-        }
-        case _ => false
       }
     }
 
@@ -79,11 +73,9 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
       system.scheduler.scheduleOnce(1.01.seconds, counter, StopCounter)
 
       fishForMessage(5.seconds) {
-        case info : CounterInfo => {
+        case info : CounterInfo =>
           system.log.info(s"speed is [${info.speed(SECONDS)}/s]")
           info.count == 2 && info.interval.length > 0 && info.speed(SECONDS) > 1.9 && info.speed(SECONDS) < 2.1
-        }
-        case _ => false
       }
     }
   }

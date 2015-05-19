@@ -20,8 +20,8 @@ import akka.actor.Props
 import akka.pattern.ask
 import akka.testkit.TestActorRef
 import akka.util.Timeout
+import blended.util.protocol.{CounterInfo, TrackingCounter}
 import de.wayofquality.blended.itestsupport.jms.protocol._
-import de.wayofquality.blended.util.protocol._
 import org.apache.activemq.ActiveMQConnectionFactory
 
 import scala.concurrent.Await

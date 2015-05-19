@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.testsupport;
 
-import de.wayofquality.blended.util.FileReader;
+import blended.util.FileReader;
 import org.apache.camel.Message;
 import org.apache.camel.impl.DefaultMessage;
 import org.slf4j.Logger;

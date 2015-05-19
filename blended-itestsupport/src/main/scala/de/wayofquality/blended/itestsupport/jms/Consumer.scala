@@ -20,8 +20,8 @@ import javax.jms._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.event.LoggingReceive
+import blended.util.protocol.IncrementCounter
 import de.wayofquality.blended.itestsupport.jms.protocol._
-import de.wayofquality.blended.util.protocol.IncrementCounter
 
 import scala.concurrent.duration._
 

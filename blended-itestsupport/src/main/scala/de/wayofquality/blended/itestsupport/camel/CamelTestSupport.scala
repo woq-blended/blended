@@ -18,8 +18,8 @@ package de.wayofquality.blended.itestsupport.camel
 
 import akka.actor.ActorSystem
 import akka.camel.{CamelExtension, CamelMessage}
+import blended.util.FileReader
 import de.wayofquality.blended.testsupport.XMLMessageFactory
-import de.wayofquality.blended.util.FileReader
 import org.apache.camel.impl.DefaultExchange
 import org.apache.camel.{Exchange, ExchangePattern, Message}
 

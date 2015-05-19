@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality GmbH
+ * Copyright 2014ff,  https://github.com/woq-blended
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.util
+package blended.util
 
 import akka.actor.{ActorSystem, Props}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
-import de.wayofquality.blended.util.protocol._
+import blended.util.protocol._
 import org.scalatest.{Matchers, WordSpecLike}
 
 import scala.concurrent.Await
@@ -103,12 +103,10 @@ class StatsCounterSpec extends TestKit(ActorSystem("StatsCounter"))
       system.scheduler.scheduleOnce(1.second, counterActor, new IncrementCounter)
       system.scheduler.scheduleOnce(1.1.seconds, counterActor, QueryCounter)
 
-      fishForMessage(3.seconds) {
-        case info : CounterInfo => {
+      fishForMessage() {
+        case info : CounterInfo =>
           system.log.info(s"Speed is [${info.speed(SECONDS)} / s]")
           info.count == 2 && info.interval.length > 0 && (info.speed(SECONDS) > 1.5) && (info.speed(SECONDS) < 2.5)
-        }
-        case _ => false
       }
     }
 

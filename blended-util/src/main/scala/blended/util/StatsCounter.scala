@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality GmbH
+ * Copyright 2014ff,  https://github.com/woq-blended
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.util
+package blended.util
 
 import akka.actor.{Actor, ActorLogging}
 import akka.event.LoggingReceive
-import de.wayofquality.blended.util.protocol._
+import blended.util.protocol._
 
 class StatsCounter extends Actor with ActorLogging {
 
@@ -27,16 +27,14 @@ class StatsCounter extends Actor with ActorLogging {
   var lastCount  : Option[Long] = None
 
   override def receive = LoggingReceive {
-    case IncrementCounter(c) => {
+    case IncrementCounter(c) =>
       firstCount match {
-        case None => {
+        case None =>
           firstCount = Some(System.currentTimeMillis)
           lastCount = firstCount
-        }
         case _ => lastCount = Some(System.currentTimeMillis)
       }
       count += c
-    }
     case QueryCounter => sender ! new CounterInfo(
       count,
       firstCount,

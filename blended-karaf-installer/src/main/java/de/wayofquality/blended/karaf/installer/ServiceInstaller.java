@@ -16,7 +16,7 @@
 
 package de.wayofquality.blended.karaf.installer;
 
-import de.wayofquality.blended.util.ReflectionHelper;
+import blended.util.ReflectionHelper;
 
 import java.io.File;
 import java.util.HashMap;

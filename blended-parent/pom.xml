@@ -22,7 +22,7 @@
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.wayofquality.blended</groupId>
-  <artifactId>blended-parent</artifactId>
+  <artifactId>blended.parent</artifactId>
   <packaging>pom</packaging>
 
   <version>1.2-SNAPSHOT</version>
@@ -39,8 +39,8 @@
   </licenses>
 
   <organization>
-    <name>WoQ - Way of Quality GmbH</name>
-    <url>http://www.wayofquality.de</url>
+    <name>https://github.com/woq-blended</name>
+    <url>https://github.com/woq-blended/blended</url>
   </organization>
 
   <developers>
@@ -49,6 +49,12 @@
       <email>andreas@wayofquality.de</email>
       <organization>WoQ - Way of Quality GmbH</organization>
       <organizationUrl>http://www.wayofquality.de</organizationUrl>
+    </developer>
+
+    <developer>
+      <name>Tobias Roeser</name>
+      <email>tobias.roeser@tototec.de</email>
+      <organization>ToToTec GbR</organization>
     </developer>
   </developers>
 
@@ -470,31 +476,12 @@
     </pluginManagement>
     
     <plugins>
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>1.6.5</version>
-        <extensions>true</extensions>
-        <configuration>
-          <serverId>ossrh</serverId>
-          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-          <autoReleaseAfterClose>true</autoReleaseAfterClose>
-        </configuration>
-      </plugin>
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.9.1</version>
       </plugin>
-
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>2.4</version>
-      </plugin>
--->
 
     </plugins>
 
@@ -547,23 +534,9 @@
   </repositories>
 
   <profiles>
-    <profile>
-      <id>sign</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-          </plugin>        
-        </plugins>
-      </build>
-    </profile>
 
     <profile>
-      <id>docs</id>
+      <id>release</id>
       <activation> 
         <activeByDefault>false</activeByDefault>
       </activation>
@@ -573,7 +546,11 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
-            <version>2.4</version>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
           </plugin>
 
           <plugin>
@@ -588,7 +565,20 @@
               </execution>
             </executions>
           </plugin>
-       </plugins>
+
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>1.6.5</version>
+            <extensions>true</extensions>
+            <configuration>
+              <serverId>ossrh</serverId>
+              <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+              <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+
+        </plugins>
       </build>
     </profile>
   </profiles>

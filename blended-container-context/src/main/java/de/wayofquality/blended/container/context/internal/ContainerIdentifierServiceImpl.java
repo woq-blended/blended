@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import de.wayofquality.blended.container.context.ContainerContext;
 import de.wayofquality.blended.container.context.ContainerIdentifierService;
-import de.wayofquality.blended.util.ManagedServiceSupport;
+import blended.util.ManagedServiceSupport;
 
 public class ContainerIdentifierServiceImpl
 		extends ManagedServiceSupport
