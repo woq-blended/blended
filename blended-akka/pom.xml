@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
+    <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>${project.groupId}.akka</artifactId>
+  <artifactId>blended.akka</artifactId>
   <packaging>bundle</packaging>
   
   <description>
@@ -37,7 +37,7 @@
   </description>
 
   <properties>
-    <bundle.namespace>de.wayofquality.blended.akka</bundle.namespace>
+    <bundle.namespace>blended.akka</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
   </properties>
 
@@ -45,7 +45,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-context</artifactId>
+      <artifactId>blended.container.context</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -74,14 +74,8 @@
     </dependency>
 
     <dependency>
-      <groupId>com.typesafe.akka</groupId>
-      <artifactId>akka-camel_${scala.version}</artifactId>
-      <version>${akka.version}</version>
-    </dependency>
-
-    <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-testsupport</artifactId>
+      <artifactId>blended.testsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -89,6 +83,13 @@
     <dependency>
       <groupId>com.typesafe.akka</groupId>
       <artifactId>akka-testkit_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_${scala.version}</artifactId>
       <version>${akka.version}</version>
       <scope>test</scope>
     </dependency>

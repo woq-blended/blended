@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -191,8 +191,8 @@
     <feature version="${activemq.version}">blended-activemq-blueprint</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
     <bundle>blueprint:file:etc/amq-broker.xml</bundle>
-    <bundle>mvn:de.wayofquality.blended.samples/${project.groupId}.samples.spray.helloworld/${blended.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended.samples/blended-samples-camel/${blended.version}</bundle>
+    <bundle>mvn:blended.samples/${project.groupId}.samples.spray.helloworld/${blended.version}</bundle>
+    <bundle>mvn:blended.samples/blended-samples-camel/${blended.version}</bundle>
   </feature>
 
 </features>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality GmbH
+ * Copyright 2014ff,  https://github.com/woq-blended
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.testing.activemq
+package blended.testing.activemq
 
 import java.net.URI
 import java.util.UUID
