@@ -25,13 +25,13 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-karaf-parent</artifactId>
+    <artifactId>blended.karaf.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
   </parent>
 
   <properties>
     <blended.branding.groupId>${project.groupId}</blended.branding.groupId>
-    <blended.branding.artifactId>blended-karaf-branding</blended.branding.artifactId>
+    <blended.branding.artifactId>blended.karaf.branding</blended.branding.artifactId>
     <blended.branding.version>${project.version}</blended.branding.version>
 
     <karaf.min.memory>128</karaf.min.memory>
@@ -39,7 +39,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </properties>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-karaf-demo</artifactId>
+  <artifactId>blended.karaf.demo</artifactId>
   <description>
     A sample Karaf container with some services installed.
   </description>
@@ -47,7 +47,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-karaf-features</artifactId>
+      <artifactId>blended.karaf.features</artifactId>
       <version>${blended.version}</version>
       <classifier>features</classifier>
       <type>xml</type>
@@ -55,7 +55,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-karaf-parent</artifactId>
+      <artifactId>blended.karaf.parent</artifactId>
       <version>${blended.version}</version>
       <classifier>assembly</classifier>
       <type>linux-nojre</type>
@@ -63,7 +63,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-karaf-parent</artifactId>
+      <artifactId>blended.karaf.parent</artifactId>
       <version>${blended.version}</version>
       <classifier>assembly</classifier>
       <type>windows-nojre</type>
@@ -78,8 +78,8 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.linux-nojre</descriptor>
-            <descriptor>${project.build.directory}/descriptors/blended-karaf-parent-${blended.version}-assembly.windows-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/blended.karaf.parent-${blended.version}-assembly.linux-nojre</descriptor>
+            <descriptor>${project.build.directory}/descriptors/blended.karaf.parent-${blended.version}-assembly.windows-nojre</descriptor>
           </descriptors>
         </configuration>
       </plugin>
@@ -99,7 +99,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
         <artifactId>features-maven-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>mvn:${project.groupId}/blended-karaf-features/${project.version}/xml/features</descriptor>
+            <descriptor>mvn:${project.groupId}/blended.karaf.features/${project.version}/xml/features</descriptor>
           </descriptors>
           <features>
             <feature>config</feature>

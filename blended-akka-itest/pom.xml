@@ -29,7 +29,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-akka-itest</artifactId>
+  <artifactId>blended.akka.itest</artifactId>
   <packaging>jar</packaging>
   
   <description>
@@ -41,7 +41,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-docker-demo</artifactId>
+      <artifactId>blended.docker.demo</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -55,7 +55,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-itestsupport</artifactId>
+      <artifactId>blended.itestsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

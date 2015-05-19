@@ -19,7 +19,7 @@
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
            xmlns:amq="http://activemq.apache.org/schema/core">
 
-  <bean id="brokerStarter" class="BrokerStarter" init-method="init"
+  <bean id="brokerStarter" class="blended.activemq.brokerstarter.BrokerStarter" init-method="init"
         destroy-method="destroy">
     <argument index="0">
       <amq:broker

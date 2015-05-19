@@ -7,12 +7,14 @@ Bundle-SymbolicName:\
 Bundle-Activator: \
   ${bundle.namespace}.internal.HelloActivator
 
+Export-Package:
+
 Import-Package: \
   spray.routing,\
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  de.wayofquality.blended.spray,\
+  blended.spray,\
   *
 
 Private-Package:\

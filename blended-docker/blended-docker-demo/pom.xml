@@ -26,7 +26,7 @@
     <version>1.2-SNAPSHOT</version>
   </parent>
 
-  <artifactId>blended-docker-demo</artifactId>
+  <artifactId>blended.docker.demo</artifactId>
   <description>
     Packaging the sample container into a docker image.
   </description>
@@ -35,7 +35,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-karaf-demo</artifactId>
+      <artifactId>blended.karaf.demo</artifactId>
       <version>${project.version}</version>
       <classifier>nojre</classifier>
       <type>tar.gz</type>
