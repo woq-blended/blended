@@ -16,9 +16,8 @@
 
 package blended.container.context.internal
 
-import org.helgoboss.domino.DominoActivator
-import blended.container.context.ContainerContext
 import blended.container.context.ContainerIdentifierService
+import org.helgoboss.domino.DominoActivator
 
 class ContainerContextActivator extends DominoActivator {
 

@@ -26,11 +26,10 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended.parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-mgmt-rest</artifactId>
+  <artifactId>blended.mgmt.rest</artifactId>
   <packaging>bundle</packaging>
   
   <description>
@@ -47,28 +46,26 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray</artifactId>
+      <artifactId>blended.spray</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray-api</artifactId>
+      <artifactId>blended.spray.api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-registry</artifactId>
+      <artifactId>blended.container.registry</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-akka</artifactId>
+      <artifactId>blended.akka</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>

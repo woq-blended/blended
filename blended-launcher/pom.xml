@@ -27,7 +27,7 @@
 	</parent>
 
 	<name>${project.artifactId}</name>
-	<artifactId>blended-launcher</artifactId>
+	<artifactId>blended.launcher</artifactId>
 	<packaging>bundle</packaging>
 
 	<description>

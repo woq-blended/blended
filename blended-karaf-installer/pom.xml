@@ -26,7 +26,7 @@
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-karaf-installer</artifactId>
+  <artifactId>blended.karaf.installer</artifactId>
   <description>
     Installer that allows to install the container as a service without starting the container 
     as it would normally be required by Karaf.

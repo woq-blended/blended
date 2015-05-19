@@ -27,11 +27,10 @@
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended.parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-karaf-features</artifactId>
+  <artifactId>blended.karaf.features</artifactId>
   <description>
     Karaf Feature definitions for useful bundle groups.
   </description>
@@ -40,97 +39,97 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-util</artifactId>
+      <artifactId>blended.util</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-context</artifactId>
+      <artifactId>blended.container.context</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-jmx</artifactId>
+      <artifactId>blended.jmx</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-persistence</artifactId>
+      <artifactId>blended.persistence</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-neo4j-api</artifactId>
+      <artifactId>blended.neo4j.api</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-registry</artifactId>
+      <artifactId>blended.container.registry</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-camel-utils</artifactId>
+      <artifactId>blended.camel.utils</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-mgmt-agent</artifactId>
+      <artifactId>blended.mgmt.agent</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-mgmt-rest</artifactId>
+      <artifactId>blended.mgmt.rest</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-jolokia</artifactId>
+      <artifactId>blended.jolokia</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>${project.groupId}.brokerstarter</artifactId>
+      <artifactId>blended.activemq.brokerstarter</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>${project.groupId}.akka</artifactId>
+      <artifactId>blended.akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray-api</artifactId>
+      <artifactId>blended.spray.api</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-spray</artifactId>
+      <artifactId>blended.spray</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}.samples</groupId>
-      <artifactId>${project.groupId}.samples.spray.helloworld</artifactId>
+      <artifactId>blended.samples.spray.helloworld</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}.samples</groupId>
-      <artifactId>blended-samples-camel</artifactId>
+      <artifactId>blended.samples.camel</artifactId>
       <version>${blended.version}</version>
     </dependency>
 

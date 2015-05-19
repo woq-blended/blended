@@ -4,4 +4,5 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Export-Package:
+Import-Package:

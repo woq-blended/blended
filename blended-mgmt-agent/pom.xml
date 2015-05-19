@@ -26,11 +26,10 @@
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended.parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-mgmt-agent</artifactId>
+  <artifactId>blended.mgmt.agent</artifactId>
   <packaging>bundle</packaging>
   
   <description>
@@ -47,13 +46,13 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-akka</artifactId>
+      <artifactId>blended.akka</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-container-registry</artifactId>
+      <artifactId>blended.container.registry</artifactId>
       <version>${project.version}</version>
     </dependency>
 

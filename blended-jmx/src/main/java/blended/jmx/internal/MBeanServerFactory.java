@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package blended.mgmt_core.internal;
+package blended.jmx.internal;
 
 import javax.management.MBeanServer;
 import java.lang.management.ManagementFactory;

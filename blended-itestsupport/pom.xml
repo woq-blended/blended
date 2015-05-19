@@ -23,11 +23,10 @@
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended.parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-itestsupport</artifactId>
+  <artifactId>blended.itestsupport</artifactId>
   <description>
     Define an integration test API for collaborating blended container(s) using docker as a runtime 
     for the container(s) under test and an Akka based Camel framework to perform the integration tests 
@@ -39,13 +38,13 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-jolokia</artifactId>
+      <artifactId>blended.jolokia</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-testsupport</artifactId>
+      <artifactId>blended.testsupport</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
@@ -53,6 +52,12 @@
       <groupId>com.github.docker-java</groupId>
       <artifactId>docker-java</artifactId>
       <version>${docker-java.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-camel_${scala.version}</artifactId>
+      <version>${akka.version}</version>
     </dependency>
 
     <dependency>
