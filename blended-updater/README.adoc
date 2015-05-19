@@ -1,0 +1,19 @@
+= Blended Updater
+
+== Internal / Development
+
+=== Materializing an update
+
+** download all artifacts referenced in that config
+** check checksums of all artifacts
+** generate a `LauncherConfig` from the config
+** restart the container
+
+=== Config types
+
+The `LauncherConfig` contains only locally available jars and is used to bootstrap the OSGi container. It is processed by the `blender-launcher` module.
+
+The `RuntimeConfig` is the notion of an updateable configuration. It contains some metadata and all artifact locations as URLs.  It is processed by the `blended-updater` module. 
+
+After a successful download and integrity check of all artifacts references in a `RuntimeConfig`, a `LauncherConfig` will be generated. All relevant metadata required to map a generated `LauncherConfig` to its producing `RuntimeConfig` will be stored in the `branding` property of the `LauncherConfig`.
+
