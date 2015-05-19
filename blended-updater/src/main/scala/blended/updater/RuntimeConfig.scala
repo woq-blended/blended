@@ -4,8 +4,8 @@ import scala.collection.immutable.Seq
 import com.typesafe.config.Config
 
 case class BundleConfig(
-  symbolicName: String,
-  version: String,
+  //  symbolicName: String,
+  //  version: String,
   url: String,
   jarName: String,
   sha1Sum: String,
@@ -22,7 +22,7 @@ case class RuntimeConfig(
 object RuntimeConfig {
 
   def read(config: Config): RuntimeConfig = {
-     ???
+    ???
   }
 
 }

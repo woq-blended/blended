@@ -1,155 +1,165 @@
 package blended.updater
 
+import java.io.File
+import java.util.UUID
+
 import scala.collection.immutable.Seq
+
 import org.osgi.framework.BundleContext
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
-import akka.actor.Props
-import blended.updater.internal.Logger
-import blended.updater.unused.RuntimeConfigDiff
 import akka.actor.ActorRef
-import java.io.File
-import akka.routing.BalancingPool
+import akka.actor.Props
+import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
-import blended.updater.BlockingDownloader.DownloadResult
+import akka.routing.BalancingPool
 import blended.updater.BlockingDownloader.Download
-import scala.util.Failure
-import scala.util.Success
+import blended.updater.BlockingDownloader.DownloadFailed
+import blended.updater.BlockingDownloader.DownloadFinished
 import blended.updater.Sha1SumChecker.CheckFile
+import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
-import blended.updater.Sha1SumChecker.InvalidChecksum
-import blended.updater.BlockingDownloader.DownloadResult
-import blended.updater.Sha1SumChecker.InvalidChecksum
 
 object UpdaterActor {
 
   // Messages
-  //  case class GetCurrentConfig()
-  case class Update(requestId: String, requestActor: ActorRef, config: RuntimeConfig)
+  case class StageUpdate(requestId: String, requestActor: ActorRef, config: RuntimeConfig)
 
   // Replies
-  case object AnotherUpdateInProgress
-  //  case class CurrentConfig(config: RuntimeConfig, diff: Seq[RuntimeConfigDiff] = Seq())
-  //  case class InvalidConfigFile(msg: String)
-  case class UpdateCancelled(requestId: String, config: RuntimeConfig, reason: Throwable)
+  case class StageUpdateProgress(requestId: String, progress: Int)
+  case class StageUpdateCancelled(requestId: String, reason: Throwable)
+  case class StageUpdateFinished(requestid: String)
 
   def props(bundleContext: BundleContext, configDir: String, baseDir: File): Props = Props(new UpdaterActor(bundleContext, configDir: String, baseDir: File))
 
+  private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
+
+  private case class State(
+    requestId: String,
+    requestActor: ActorRef,
+    config: RuntimeConfig,
+    installDir: File,
+    bundlesToDownload: Seq[BundleInProgress],
+    bundlesToCheck: Seq[BundleInProgress])
+
 }
 
-class UpdaterActor(bundleContext: BundleContext, configDir: String, baseDir: File)
+class UpdaterActor(bundleContext: BundleContext, configDir: String, installBaseDir: File)
   extends Actor
   with ActorLogging {
   import UpdaterActor._
 
-  private[this] val log = Logger[UpdaterActor]
+  val artifactDownloader = context.actorOf(BalancingPool(4).props(BlockingDownloader.props()), "artifactDownloader")
+  val artifactChecker = context.actorOf(BalancingPool(4).props(Sha1SumChecker.props()), "artifactChecker")
 
-  val artifactDownloader = context.actorOf(BalancingPool(5).props(BlockingDownloader.props(false)), "artifactDownloader")
-  val artifactChecker = context.actorOf(BalancingPool(5).props(Sha1SumChecker.props(false)), "artifactChecker")
+  private[this] var inProgress: Map[String, State] = Map()
 
-  
-  
-//  case class State(
-//    requestId: String,
-//    requestActor: ActorRef,
-//    config: RuntimeConfig,
-//    installDir: File,
-//    bundlesToDownload: Seq[(Long, BundleConfig)],
-//    bundlesToCheck: Seq[(Long, BundleConfig)])
-//
-//  var inProgress: Map[String, State] = Map()
+  def updateInProgress(state: State): Unit = {
+    val id = state.requestId
 
-  override def receive: Actor.Receive = idle
+    val allBundlesSize = 1 + state.config.bundles.size
+    val progress = (100 / allBundlesSize) * (allBundlesSize - state.bundlesToDownload.size - state.bundlesToCheck.size)
+    log.debug("Progress: {} for reqestId: {}", progress, id)
+    state.requestActor ! StageUpdateProgress(id, progress)
 
-  def updateState(reqId: String, requestActor: ActorRef, config: RuntimeConfig, installDir: File, missing: Seq[BundleConfig], toCheck: Seq[BundleConfig]) = {
-    if (missing.isEmpty && toCheck.isEmpty) {
-      //      context.become(deploying(requestActor, config, installDir), true)
-
-      // UPDATE
-
+    if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
+      inProgress = inProgress.filterKeys(id !=)
+      // TODO: register to stage db
+      state.requestActor ! StageUpdateFinished(id)
     } else {
-      context.become(LoggingReceive(downloading(reqId, requestActor, config, installDir, missing, toCheck) orElse notIdle(requestActor)))
+      inProgress += id -> state
     }
   }
 
-  def becomeIdle() {
-    context.become(LoggingReceive(idle orElse notDownloading()))
-  }
+  def nextId(): String = UUID.randomUUID().toString()
 
-  def idle: Actor.Receive = {
-    case Update(reqId, reqActor, config) =>
-      val installDir = new File(baseDir, s"${config.name}-${config.version}")
+  override def receive: Actor.Receive = LoggingReceive {
+    case msg @ StageUpdate(reqId, reqActor, config) =>
+      if (inProgress.contains(reqId)) {
+        log.error("Duplicate id detected. Dropping request: {}", msg)
+      }
+
+      log.info("About to stage installation: {}", config)
+
+      val installDir = new File(installBaseDir, s"${config.name}-${config.version}")
+      if (installDir.exists()) {
+        log.debug("Installation directory already exists: {}", installDir)
+      }
 
       // analyze config
       val bundles = config.framework :: config.bundles.toList
       // determine missing artifacts
-      val (existing, missing) = bundles.partition(b => !new File(installDir, b.jarName).exists())
+      val (existing, missing) = bundles.partition(b => new File(installDir, b.jarName).exists())
       // download artifacts
-      missing.foreach { missingBundle =>
-        artifactDownloader ! Download(self, missingBundle.url, new File(installDir, missingBundle.jarName))
+      val missingWithId = missing.map { missingBundle =>
+        val inProgress = BundleInProgress(nextId(), missingBundle, new File(installDir, missingBundle.jarName))
+        artifactDownloader ! Download(inProgress.reqId, self, missingBundle.url, inProgress.file)
+        inProgress
       }
       // check artifacts
-      existing.foreach { existingBundle =>
-        artifactChecker ! CheckFile(self, new File(installDir, existingBundle.jarName), existingBundle.sha1Sum)
+      val existingWithId = existing.map { existingBundle =>
+        val inProgress = BundleInProgress(nextId(), existingBundle, new File(installDir, existingBundle.jarName))
+        artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
+        inProgress
       }
-      // generate runtime config
-      updateState(reqId, reqActor, config, installDir, missing, existing)
+      updateInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId))
 
-  }
-
-  def notIdle(requestActor: ActorRef): Actor.Receive = {
-    case Update(reqId, reqRef, _) => reqRef ! AnotherUpdateInProgress
-  }
-
-  def notDownloading(): Actor.Receive = {
-    case DownloadResult(_, _) =>
-    // not expecting any download, must be old
-    case ValidChecksum(_, _) =>
-    // not expecting any checksum 
-    case InvalidChecksum(_, _) =>
-    // not expecting any checksum 
-  }
-
-  def downloading(reqId: String, requestActor: ActorRef, config: RuntimeConfig, installDir: File, missing: Seq[BundleConfig], toCheck: Seq[BundleConfig]): Actor.Receive = {
-    case DownloadResult(url, fileTry) =>
-      fileTry match {
-        case Success(file) =>
-          missing.find(b => b.url == url && new File(installDir, b.jarName) == file) match {
-            case Some(bundle) =>
-              val newMissing = missing.filter(bundle !=)
-              val newToCheck = bundle +: toCheck
-              artifactChecker ! CheckFile(self, new File(installDir, bundle.jarName), bundle.sha1Sum)
-              updateState(reqId, requestActor, config, installDir, newMissing, newToCheck)
-            case None =>
-            // not our bundle
-            // FIXME: ignore for now
-          }
-        case Failure(ex) =>
-          requestActor ! UpdateCancelled(reqId, config, ex)
-          becomeIdle()
+    case DownloadFinished(downloadId, url, file) =>
+      val foundProgress = inProgress.values.flatMap { state =>
+        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+      }.toList
+      foundProgress match {
+        case Nil =>
+          log.error("Unkown download id {}. Url: {}" + downloadId, url)
+        case (state, bundleInProgress) :: _ =>
+          val newToCheck = bundleInProgress.copy(reqId = nextId())
+          artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.bundle.sha1Sum)
+          updateInProgress(state.copy(
+            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress !=),
+            bundlesToCheck = newToCheck +: state.bundlesToCheck
+          ))
       }
-    case ValidChecksum(file, sha1Sum) =>
-      toCheck.find(b => new File(installDir, b.jarName) == file && b.sha1Sum == sha1Sum) match {
-        case Some(bundle) =>
-          val newToCheck = toCheck.filter(bundle !=)
-          updateState(reqId, requestActor, config, installDir, missing, newToCheck)
+
+    case DownloadFailed(downloadId, url, file, error) =>
+      val foundState = inProgress.values.find { state =>
+        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.isDefined
+      }
+      foundState match {
         case None =>
-        // not our bundle
-        // FIXME: ignore for now
+          log.error("Unkown download id {}. Url: {}" + downloadId, url)
+        case Some(state) =>
+          log.debug("Cancelling in progress state: {}\nReason: {}", state, error)
+          inProgress = inProgress.filterKeys(state.requestId !=)
+          state.requestActor ! StageUpdateCancelled(state.requestId, error)
       }
-    case InvalidChecksum(file, actualChecksum) =>
-      toCheck.find(b => new File(installDir, b.jarName) == file) match {
-        case Some(bundle) =>
-          requestActor ! UpdateCancelled(reqId, config, new RuntimeException("Invalid checksum"))
-          becomeIdle()
-        case None =>
-        // not our bundle
-        // FIXME: ignore for now
+
+    case ValidChecksum(checkId, file, sha1Sum) =>
+      val foundProgress = inProgress.values.flatMap { state =>
+        state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
+      }.toList
+      foundProgress match {
+        case Nil =>
+          log.error("Unkown check id {}. file: {}" + checkId, file)
+        case (state, bundleInProgress) :: _ =>
+          updateInProgress(state.copy(
+            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress !=)
+          ))
+      }
+
+    case InvalidChecksum(checkId, file, sha1Sum) =>
+      val foundProgress = inProgress.values.flatMap { state =>
+        state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
+      }.toList
+      foundProgress match {
+        case Nil =>
+          log.error("Unkown check id {}. file: {}" + checkId, file)
+        case (state, bundleInProgress) :: _ =>
+          val errorMsg = "Invalid checksum for resource from URL: " + bundleInProgress.bundle.url
+          log.debug("Cancelling in progress state: {}\nReason: Invalid checksum", state)
+          inProgress = inProgress.filterKeys(state.requestId !=)
+          state.requestActor ! StageUpdateCancelled(state.requestId, new RuntimeException(errorMsg))
       }
   }
-
-  //  def deploying(requestActor: ActorRef, config: RuntimeConfig, installDir: File): Actor.Receive = {
-  //    case 
-  //  } orElse notIdle(requestActor) orElse notDownloading()
 
 }
