@@ -1,8 +1,13 @@
 package blended.launcher
 
+import org.scalatest.Finders
 import org.scalatest.FreeSpec
-import com.typesafe.config.ConfigFactory
+
 import com.typesafe.config.ConfigException
+import com.typesafe.config.ConfigFactory
+
+import LauncherConfig.read
+import LauncherConfig.toConfig
 
 class LauncherConfigTest extends FreeSpec {
 
@@ -11,10 +16,10 @@ class LauncherConfigTest extends FreeSpec {
     |defaultStartLevel = 20
     |frameworkBundle = "framework.jar"
     |bundles = []
-""".stripMargin
+    |""".stripMargin
 
   "Minimal config" - {
-    "read must succeed" in {
+    "read() must succeed" in {
       val config = LauncherConfig.read(ConfigFactory.parseString(minimalConfig))
     }
     val lines = minimalConfig.trim().split("\n")
@@ -25,6 +30,56 @@ class LauncherConfigTest extends FreeSpec {
           LauncherConfig.read(ConfigFactory.parseString(config.mkString("\n")))
         }
       }
+    }
+
+    "read() -> toConfig() -> read() must result in same config" in {
+      import LauncherConfig._
+      val config = read(ConfigFactory.parseString(minimalConfig))
+      assert(config === read(toConfig(config)))
+    }
+  }
+
+  "Complex config" - {
+
+    "read() -> toConfig() -> read() must result in same config" in {
+      import LauncherConfig._
+
+      val config = """
+        |frameworkBundle = framework-1.0.0.jar
+        |startLevel = 10
+        |defaultStartLevel = 20
+        |bundles = [
+        |  {
+        |    location = "bundle1-1.0.0.jar"
+        |    start = true
+        |    startLevel = 5
+        |  },
+        |  {
+        |    location = "bundle2-1.1.0.jar"
+        |    start = true
+        |  },
+        |  {
+        |    location = "bundle3-1.2.0.jar"
+        |  }
+        |]
+        |systemProperties = {
+        |  p1 = v1
+        |  p2 = v2
+        |}
+        |frameworkProperties = {
+        |  p3 = v3
+        |  p4 = v4
+        |}
+        |branding = {
+        |  p5 = v5
+        |  p6 = v6
+        |}
+        |""".stripMargin
+
+      val a = read(ConfigFactory.parseString(config))
+      val b = read(toConfig(a))
+
+      assert(a === b)
     }
   }
 

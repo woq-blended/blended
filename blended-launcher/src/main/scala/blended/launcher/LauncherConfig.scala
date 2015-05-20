@@ -2,9 +2,7 @@ package blended.launcher
 
 import java.io.File
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.immutable.Seq
+import scala.collection.JavaConverters._
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -15,13 +13,24 @@ import blended.launcher.internal.Logger
 case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
 
 case class LauncherConfig(
-  frameworkJar: String,
-  systemProperties: Map[String, String],
-  frameworkProperties: Map[String, String],
-  startLevel: Int,
-  defaultStartLevel: Int,
-  bundles: Seq[BundleConfig],
-  branding: Map[String, String])
+    frameworkJar: String,
+    systemProperties: Map[String, String],
+    frameworkProperties: Map[String, String],
+    startLevel: Int,
+    defaultStartLevel: Int,
+    bundles: Seq[BundleConfig],
+    branding: Map[String, String]) {
+
+  override def toString = getClass().getSimpleName() +
+    "(frameworkJar=" + frameworkJar +
+    ",systemProperties=" + systemProperties +
+    ",frameworkProperties=" + frameworkProperties +
+    ",startLevel=" + startLevel +
+    ",defaultStartLevel=" + defaultStartLevel +
+    ",bundles=" + bundles +
+    ",branding=" + branding +
+    ")"
+}
 
 object LauncherConfig {
 
@@ -77,6 +86,25 @@ object LauncherConfig {
   def read(file: File): LauncherConfig = {
     val config = ConfigFactory.parseFile(file).getConfig(ConfigPrefix).resolve()
     read(config)
+  }
+
+  def toConfig(launcherConfig: LauncherConfig): Config = {
+    val config = Map(
+      "frameworkBundle" -> launcherConfig.frameworkJar,
+      "systemProperties" -> launcherConfig.systemProperties.asJava,
+      "frameworkProperties" -> launcherConfig.frameworkProperties.asJava,
+      "startLevel" -> launcherConfig.startLevel,
+      "defaultStartLevel" -> launcherConfig.defaultStartLevel,
+      "bundles" -> launcherConfig.bundles.map { b =>
+        Map(
+          "location" -> b.location,
+          "start" -> b.start,
+          "startLevel" -> b.startLevel
+        ).asJava
+      }.asJava,
+      "branding" -> launcherConfig.branding.asJava
+    ).asJava
+    ConfigFactory.parseMap(config)
   }
 
 }
