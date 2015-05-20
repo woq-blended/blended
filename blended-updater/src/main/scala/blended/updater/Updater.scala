@@ -29,7 +29,7 @@ object Updater {
 
   // Replies
   /**
-   * Reply to [StageUpdate]
+   * Reply to [GetStagedUpdates]
    */
   case class StagedUpdates(requestId: String, configs: Seq[RuntimeConfig])
   case class StageUpdateProgress(requestId: String, progress: Int)
@@ -70,7 +70,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
     state.requestActor ! StageUpdateProgress(id, progress)
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
-      inProgress = inProgress.filterKeys(id !=)
+      inProgress = inProgress.filterKeys(id != _)
       stagedConfigs += state.config
       state.requestActor ! StageUpdateFinished(id)
     } else {
@@ -125,7 +125,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
           val newToCheck = bundleInProgress.copy(reqId = nextId())
           artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.bundle.sha1Sum)
           updateInProgress(state.copy(
-            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress !=),
+            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress != _),
             bundlesToCheck = newToCheck +: state.bundlesToCheck
           ))
       }
@@ -139,7 +139,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
           log.error("Unkown download id {}. Url: {}" + downloadId, url)
         case Some(state) =>
           log.debug("Cancelling in progress state: {}\nReason: {}", state, error)
-          inProgress = inProgress.filterKeys(state.requestId !=)
+          inProgress = inProgress.filterKeys(state.requestId != _)
           state.requestActor ! StageUpdateCancelled(state.requestId, error)
       }
 
@@ -152,7 +152,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
           log.error("Unkown check id {}. file: {}" + checkId, file)
         case (state, bundleInProgress) :: _ =>
           updateInProgress(state.copy(
-            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress !=)
+            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress != _)
           ))
       }
 
@@ -166,7 +166,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
         case (state, bundleInProgress) :: _ =>
           val errorMsg = "Invalid checksum for resource from URL: " + bundleInProgress.bundle.url
           log.debug("Cancelling in progress state: {}\nReason: Invalid checksum", state)
-          inProgress = inProgress.filterKeys(state.requestId !=)
+          inProgress = inProgress.filterKeys(state.requestId != _)
           state.requestActor ! StageUpdateCancelled(state.requestId, new RuntimeException(errorMsg))
       }
   }
