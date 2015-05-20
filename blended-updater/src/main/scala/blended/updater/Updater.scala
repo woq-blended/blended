@@ -3,7 +3,7 @@ package blended.updater
 import java.io.File
 import java.util.UUID
 
-import scala.collection.immutable.Seq
+import scala.collection.immutable._
 
 import org.osgi.framework.BundleContext
 
@@ -21,17 +21,22 @@ import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
 
-object UpdaterActor {
+object Updater {
 
   // Messages
+  case class GetStagedUpdates(requestId: String, requestActor: ActorRef)
   case class StageUpdate(requestId: String, requestActor: ActorRef, config: RuntimeConfig)
 
   // Replies
+  /**
+   * Reply to [StageUpdate]
+   */
+  case class StagedUpdates(requestId: String, configs: Seq[RuntimeConfig])
   case class StageUpdateProgress(requestId: String, progress: Int)
   case class StageUpdateCancelled(requestId: String, reason: Throwable)
   case class StageUpdateFinished(requestid: String)
 
-  def props(bundleContext: BundleContext, configDir: String, baseDir: File): Props = Props(new UpdaterActor(bundleContext, configDir: String, baseDir: File))
+  def props(bundleContext: BundleContext, configDir: String, baseDir: File): Props = Props(new Updater(bundleContext, configDir: String, baseDir: File))
 
   private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
 
@@ -45,17 +50,18 @@ object UpdaterActor {
 
 }
 
-class UpdaterActor(bundleContext: BundleContext, configDir: String, installBaseDir: File)
-  extends Actor
-  with ActorLogging {
-  import UpdaterActor._
+class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: File)
+    extends Actor
+    with ActorLogging {
+  import Updater._
 
   val artifactDownloader = context.actorOf(BalancingPool(4).props(BlockingDownloader.props()), "artifactDownloader")
   val artifactChecker = context.actorOf(BalancingPool(4).props(Sha1SumChecker.props()), "artifactChecker")
 
+  private[this] var stagedConfigs: Set[RuntimeConfig] = Set()
   private[this] var inProgress: Map[String, State] = Map()
 
-  def updateInProgress(state: State): Unit = {
+  private[this] def updateInProgress(state: State): Unit = {
     val id = state.requestId
 
     val allBundlesSize = 1 + state.config.bundles.size
@@ -65,16 +71,19 @@ class UpdaterActor(bundleContext: BundleContext, configDir: String, installBaseD
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
       inProgress = inProgress.filterKeys(id !=)
-      // TODO: register to stage db
+      stagedConfigs += state.config
       state.requestActor ! StageUpdateFinished(id)
     } else {
       inProgress += id -> state
     }
   }
 
-  def nextId(): String = UUID.randomUUID().toString()
+  private[this] def nextId(): String = UUID.randomUUID().toString()
 
   override def receive: Actor.Receive = LoggingReceive {
+    case GetStagedUpdates(reqId, reqRef) =>
+      reqRef ! StagedUpdates(reqId, stagedConfigs.toList)
+
     case msg @ StageUpdate(reqId, reqActor, config) =>
       if (inProgress.contains(reqId)) {
         log.error("Duplicate id detected. Dropping request: {}", msg)

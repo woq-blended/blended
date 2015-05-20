@@ -9,15 +9,15 @@ import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
 import blended.updater.test.TestSupport
-import blended.updater.UpdaterActor.StageUpdate
-import blended.updater.UpdaterActor.StageUpdate
-import blended.updater.UpdaterActor.StageUpdate
+import blended.updater.Updater.StageUpdate
+import blended.updater.Updater.StageUpdate
+import blended.updater.Updater.StageUpdate
 import scala.collection.immutable.Seq
-import blended.updater.UpdaterActor.StageUpdateProgress
-import blended.updater.UpdaterActor.StageUpdate
-import blended.updater.UpdaterActor.StageUpdateFinished
+import blended.updater.Updater.StageUpdateProgress
+import blended.updater.Updater.StageUpdate
+import blended.updater.Updater.StageUpdateFinished
 
-class UpdaterActorTest
+class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
     with FreeSpecLike
     with TestSupport
@@ -36,7 +36,7 @@ class UpdaterActorTest
         val bundleContext = mock[BundleContext]
         val configDir = new File(baseDir, "config")
         val installBaseDir = new File(baseDir, "install")
-        val updater = system.actorOf(UpdaterActor.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
+        val updater = system.actorOf(Updater.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
 
         val stageId = nextId()
         val config = RuntimeConfig(
@@ -75,7 +75,7 @@ class UpdaterActorTest
         val bundleContext = mock[BundleContext]
         val configDir = new File(baseDir, "config")
         val installBaseDir = new File(baseDir, "install")
-        val updater = system.actorOf(UpdaterActor.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
+        val updater = system.actorOf(Updater.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
 
         val stageId = nextId()
         val config = RuntimeConfig(

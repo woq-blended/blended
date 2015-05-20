@@ -7,7 +7,7 @@ import scala.reflect.runtime.universe
 import org.helgoboss.domino.DominoActivator
 
 import akka.actor.ActorSystem
-import blended.updater.UpdaterActor
+import blended.updater.Updater
 import de.wayofquality.blended.container.context.ContainerIdentifierService
 
 class BlendedUpdaterActivator extends DominoActivator {
@@ -20,7 +20,7 @@ class BlendedUpdaterActivator extends DominoActivator {
       log.info(s"About to start ${getClass()}")
       val configDir = idService.getContainerContext().getContainerConfigDirectory()
       val installDir = new File(idService.getContainerContext().getContainerDirectory(), "installations").getAbsoluteFile()
-      val updaterActor = actorSystem.actorOf(UpdaterActor.props(bundleContext, configDir, installDir))
+      val updater = actorSystem.actorOf(Updater.props(bundleContext, configDir, installDir))
     }
 
   }

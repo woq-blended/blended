@@ -13,7 +13,6 @@ trait TestSupport {
     val file = File.createTempFile("test", "")
     val os = new PrintStream(new FileOutputStream(file))
     os.print(content)
-    //    os.flush()
     os.close()
     try {
       f(file)
