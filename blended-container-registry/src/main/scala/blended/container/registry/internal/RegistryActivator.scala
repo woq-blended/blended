@@ -22,6 +22,6 @@ import blended.akka.{OSGIActorConfig, ActorSystemAware}
 class RegistryActivator extends ActorSystemAware {
   
   whenBundleActive {
-    manageBundleActor { cfg: OSGIActorConfig =>  Props(ContainerRegistryImpl(cfg)) }
+    setupBundleActor { cfg: OSGIActorConfig =>  Props(ContainerRegistryImpl(cfg)) }
   }
 }

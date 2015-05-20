@@ -23,6 +23,6 @@ import blended.akka.{ActorSystemAware, OSGIActorConfig}
 class AgentActivator extends ActorSystemAware {
   
   whenBundleActive {
-    manageBundleActor { cfg: OSGIActorConfig => Props(MgmtReporter(cfg)) }
+    setupBundleActor { cfg: OSGIActorConfig => Props(MgmtReporter(cfg)) }
   }
 }

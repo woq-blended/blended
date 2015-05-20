@@ -55,7 +55,7 @@ class OSGIActorSpec extends TestActorSys
 
     "allow to invoke a service" in {
 
-      val probe = TestActorRef(Props(OSGIActorDummy(testActorConfig("foo"))), "testActor")
+      val probe = TestActorRef(Props(OSGIActorDummy(testActorConfig("foo", system))), "testActor")
 
       Await.result(probe ?  "invoke", 3.seconds) should be ("Andreas")
     }

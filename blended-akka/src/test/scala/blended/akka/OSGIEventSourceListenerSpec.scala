@@ -19,15 +19,12 @@ package blended.akka
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.testkit.{TestActorRef, TestLatch, TestProbe}
-import com.typesafe.config.Config
 import blended.akka.protocol._
 import blended.testsupport.TestActorSys
-import org.osgi.framework.BundleContext
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.Await
-import scala.util.{Success, Try}
 
 object OSGIActorDummyPublisher {
   def apply(actorConfig: OSGIActorConfig) = new OSGIActorDummyPublisher(actorConfig)
@@ -71,8 +68,8 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
       system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
-      val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
-      val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+      val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher", system))), "publisher")
+      val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
 
       system.eventStream.publish(BundleActorStarted("publisher"))
       system.eventStream.publish(BundleActorStarted("listener"))
@@ -96,7 +93,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "start referring to the dlc when the publisher is unavailbale" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
 
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
     system.eventStream.publish(BundleActorStarted("listener"))
@@ -117,7 +114,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
 
-    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
     system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
@@ -126,7 +123,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
       case _ => false
     }
 
-    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
+    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher", system))), "publisher")
     system.eventStream.publish(BundleActorStarted("publisher"))
 
     //TODO: This is a test only hack to give the listener some time to finish its registration
@@ -142,7 +139,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
 
   "fallback to system.dlc when the publisher becomes unavailable" in new TestActorSys with TestSetup with MockitoSugar {
 
-    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener"))), "listener")
+    val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
 
     system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
     system.eventStream.publish(BundleActorStarted("listener"))
@@ -153,7 +150,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
       case _ => false
     }
 
-    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher"))), "publisher")
+    val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher", system))), "publisher")
     system.eventStream.publish(BundleActorStarted("publisher"))
 
     val watcher = new TestProbe(system)
