@@ -38,17 +38,17 @@ abstract class ActorSystemAware
       system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
       log info s"Bundle actor started [$bundleSymbolicName]."
 
-      postStartBundleActor()
+      postStartBundleActor(system, actorConfig)
 
       onStop {
-        preStopBundleActor()
+        preStopBundleActor(system, actorConfig)
         actorRef ! PoisonPill
       }
     }
   }
 
-  def postStartBundleActor() : Unit = {}
+  def postStartBundleActor(system: ActorSystem, actorConfig: OSGIActorConfig) : Unit = {}
 
-  def preStopBundleActor() : Unit = {}
+  def preStopBundleActor(system: ActorSystem, actorConfig: OSGIActorConfig) : Unit = {}
 
 }
