@@ -1,4 +1,4 @@
-Bundle-Version:\
+Bundle-Version: \
   ${project.version}
 
 Bundle-SymbolicName: \
@@ -8,9 +8,8 @@ Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   *
 
-Export-Package: 
+Export-Package: \
   ${bundle.namespace}
 
 Private-Package: \
-  ${bundle.namespace}, \
   ${bundle.namespace}.internal
