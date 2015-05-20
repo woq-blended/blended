@@ -18,12 +18,12 @@ import blended.updater.UpdaterActor.StageUpdate
 import blended.updater.UpdaterActor.StageUpdateFinished
 
 class UpdaterActorTest
-  extends TestKit(ActorSystem("updater-test"))
-  with FreeSpecLike
-  with TestSupport
-  with ImplicitSender
-  with BeforeAndAfterAll
-  with MockitoSugar {
+    extends TestKit(ActorSystem("updater-test"))
+    with FreeSpecLike
+    with TestSupport
+    with ImplicitSender
+    with BeforeAndAfterAll
+    with MockitoSugar {
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)
@@ -31,16 +31,16 @@ class UpdaterActorTest
 
   "Stage a minimal setup" in {
     withTestFile("Bundle 1") { bundle1 =>
-
       withTestDir() { baseDir =>
+
         val bundleContext = mock[BundleContext]
         val configDir = new File(baseDir, "config")
         val installBaseDir = new File(baseDir, "install")
-        val updater = system.actorOf(UpdaterActor.props(bundleContext, configDir.getPath(), installBaseDir), "updater")
+        val updater = system.actorOf(UpdaterActor.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
 
         val stageId = nextId()
         val config = RuntimeConfig(
-          name = "test", version = "1.0.0",
+          name = "test-with-1-framework-bundle", version = "1.0.0",
           framework = BundleConfig(
             url = bundle1.toURI().toString(),
             sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
@@ -58,9 +58,65 @@ class UpdaterActorTest
         fishForMessage() {
           case msg: StageUpdateFinished => true
         }
+
+        assert(installBaseDir.list().toSet ===
+          Set("test-with-1-framework-bundle-1.0.0"))
+        assert(new File(installBaseDir, "test-with-1-framework-bundle-1.0.0").list().toSet ===
+          Set("org.osgi.core-5.0.0.jar"))
+
       }
     }
+  }
 
+  "Stage a setup with 3 bundles" in {
+    withTestFiles("Bundle 1", "Bundle 2", "Bundle 3") { (bundle1, bundle2, bundle3) =>
+      withTestDir() { baseDir =>
+
+        val bundleContext = mock[BundleContext]
+        val configDir = new File(baseDir, "config")
+        val installBaseDir = new File(baseDir, "install")
+        val updater = system.actorOf(UpdaterActor.props(bundleContext, configDir.getPath(), installBaseDir), s"updater-${nextId()}")
+
+        val stageId = nextId()
+        val config = RuntimeConfig(
+          name = "test-with-3-bundles", version = "1.0.0",
+          framework = BundleConfig(
+            url = bundle1.toURI().toString(),
+            sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
+            start = true,
+            startLevel = Some(0),
+            jarName = "bundle1-1.0.0.jar"
+          ),
+          bundles = Seq(
+            BundleConfig(
+              url = bundle2.toURI().toString(),
+              sha1Sum = "72cdfea44be8a153c44b9ed73129b6939bcc087d",
+              start = true,
+              startLevel = Some(0),
+              jarName = "bundle2-1.0.0.jar"
+            ),
+            BundleConfig(
+              url = bundle3.toURI().toString(),
+              sha1Sum = "a6d3a54eae9c63959997e55698c1b1e5ad097b06",
+              start = true,
+              startLevel = Some(0),
+              jarName = "bundle3-1.0.0.jar"
+            )),
+          startLevel = 10
+        )
+        updater ! StageUpdate(stageId, testActor, config)
+
+        fishForMessage() {
+          case msg: StageUpdateProgress => false
+          case msg: StageUpdateFinished => true
+        }
+
+        assert(installBaseDir.list().toSet ===
+          Set("test-with-3-bundles-1.0.0"))
+        assert(new File(installBaseDir, "test-with-3-bundles-1.0.0").list().toSet ===
+          Set("bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
+      }
+    }
   }
 
 }

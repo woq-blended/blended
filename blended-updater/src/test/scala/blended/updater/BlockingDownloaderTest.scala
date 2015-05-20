@@ -19,11 +19,11 @@ import java.util.UUID
 import blended.updater.test.TestSupport
 
 class BlockingDownloaderTest
-  extends TestKit(ActorSystem("test"))
-  with FreeSpecLike
-  with ImplicitSender
-  with BeforeAndAfterAll
-  with TestSupport {
+    extends TestKit(ActorSystem("test"))
+    with FreeSpecLike
+    with ImplicitSender
+    with BeforeAndAfterAll
+    with TestSupport {
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)
@@ -31,14 +31,11 @@ class BlockingDownloaderTest
 
   "Reference" - {
     "Download a local file" in {
-      withTestFile("content") { file =>
-        withTestFile("") { target =>
-
-          import sys.process._
-          file.#>(target).!
-          val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
-          assert("content" === downloadedContent)
-        }
+      withTestFiles("content", "") { (file, target) =>
+        import sys.process._
+        file.#>(target).!
+        val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
+        assert("content" === downloadedContent)
       }
     }
   }
@@ -46,31 +43,27 @@ class BlockingDownloaderTest
   "DownloadActor" - {
     "Download of a local file should work" in {
       val id = nextId()
-      withTestFile("content") { file =>
-        withTestFile("") { target =>
-          val actorRef = system.actorOf(BlockingDownloader.props())
-          actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
-          val msg = expectMsgType[BlockingDownloader.DownloadFinished]
-          assert(msg.url === file.toURI().toString())
-          assert(msg.file === target)
-          val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
-          assert("content" === downloadedContent)
-        }
+      withTestFiles("content", "") { (file, target) =>
+        val actorRef = system.actorOf(BlockingDownloader.props())
+        actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
+        val msg = expectMsgType[BlockingDownloader.DownloadFinished]
+        assert(msg.url === file.toURI().toString())
+        assert(msg.file === target)
+        val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
+        assert("content" === downloadedContent)
       }
     }
 
     "Download of a missing file should fail" in {
       val id = nextId()
-      withTestFile("content") { file =>
+      withTestFiles("content", "") { (file, target) =>
         file.delete()
-        withTestFile("") { target =>
-          val actorRef = system.actorOf(BlockingDownloader.props())
-          actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
-          val msg = expectMsgPF() {
-            case BlockingDownloader.DownloadFailed(id, msg, file, ex) => (msg, ex)
-          }
-          assert(msg._1 === file.toURI().toString())
+        val actorRef = system.actorOf(BlockingDownloader.props())
+        actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
+        val msg = expectMsgPF() {
+          case BlockingDownloader.DownloadFailed(id, msg, file, ex) => (msg, ex)
         }
+        assert(msg._1 === file.toURI().toString())
       }
     }
 
