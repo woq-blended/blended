@@ -8,7 +8,7 @@ import org.helgoboss.domino.DominoActivator
 
 import akka.actor.ActorSystem
 import blended.updater.Updater
-import de.wayofquality.blended.container.context.ContainerIdentifierService
+import blended.container.context.ContainerIdentifierService
 
 class BlendedUpdaterActivator extends DominoActivator {
 
