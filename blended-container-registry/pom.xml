@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -22,13 +22,12 @@
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
+    <artifactId>blended.parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-container-registry</artifactId>
+  <artifactId>blended.container.registry</artifactId>
   <packaging>bundle</packaging>
   
   <description>
@@ -46,13 +45,13 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-persistence</artifactId>
+      <artifactId>blended.persistence</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-akka</artifactId>
+      <artifactId>blended.akka</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -83,6 +82,12 @@
     <!-- Test dependencies -->
 
     <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-slf4j_${scala.version}</artifactId>
+      <version>${akka.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
       <version>${scalatest.version}</version>
@@ -97,7 +102,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-testsupport</artifactId>
+      <artifactId>blended.testsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

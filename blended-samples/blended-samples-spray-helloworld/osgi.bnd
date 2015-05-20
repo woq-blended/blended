@@ -5,15 +5,22 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  de.wayofquality.blended.samples.spray.helloworld.internal.HelloActivator
+  ${bundle.namespace}.internal.HelloActivator
+
+Export-Package:
 
 Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
   spray.routing,\
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  de.wayofquality.blended.spray,\
+  blended.spray,\
   *
+
+Private-Package:\
+  ${bundle.namespace}.internal.*
+
 
 
 

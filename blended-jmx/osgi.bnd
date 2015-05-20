@@ -7,5 +7,7 @@ Bundle-SymbolicName:\
 Import-Package: \
   *
 
+Export-Package:
+
 Private-Package:\
-  de.wayofquality.blended.*.internal.*
+  ${bundle.namespace}.internal.*

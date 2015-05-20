@@ -7,10 +7,13 @@ Bundle-SymbolicName:\
 Bundle-Activator:\
   ${bundle.namespace}.internal.BlendedAkkaActivator
 
+Export-Package: \
+  ${bundle.namespace}, \
+  ${bundle.namespace}.protocol
+  
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
-  akka.event.slf4j, \
   *
 
-Private-Package: \
-  ${bundle.namespace}.internal
+Private-Package:\
+  ${bundle.namespace}.internal.*

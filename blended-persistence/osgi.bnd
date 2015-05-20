@@ -4,16 +4,16 @@ Bundle-Version: \
 Bundle-SymbolicName: \
   ${bundle.symbolicName}; singleton:=true
 
+Export-Package: \
+  ${bundle.namespace}, \
+  ${bundle.namespace}.protocol
+
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   *
 
+Private-Package:\
+  ${bundle.namespace}.internal.*
+
 Bundle-Activator: \
-  ${namespace}.internal.PersistenceActivator
-
-Private-Package: \
-  ${namespace}.internal
-
-Export-Package: \
-  ${namespace}, \
-  ${namespace}.protocol
+  ${bundle.namespace}.internal.PersistenceActivator

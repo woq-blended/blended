@@ -4,9 +4,15 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Export-Package: \
+  ${bundle.namespace},\
+  ${bundle.namespace}.protocol
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
 
 Private-Package:\
-  de.wayofquality.blended.*.internal.*
+  ${bundle.namespace}.internal.*
 
-Bundle-Activator: de.wayofquality.blended.container.registry.internal.RegistryActivator
+Bundle-Activator: ${bundle.namespace}.internal.RegistryActivator

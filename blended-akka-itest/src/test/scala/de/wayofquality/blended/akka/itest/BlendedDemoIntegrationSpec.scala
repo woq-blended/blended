@@ -1,5 +1,5 @@
 /*
- * Copyright 2014ff, WoQ - Way of Quality GmbH
+ * Copyright 2014ff,  https://github.com/woq-blended
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.wayofquality.blended.akka.itest
+package blended.akka.itest
 
 import akka.actor.Props
-import de.wayofquality.blended.itestsupport.BlendedIntegrationTestSupport
-import de.wayofquality.blended.testsupport.TestActorSys
+import blended.itestsupport.BlendedIntegrationTestSupport
+import blended.testsupport.TestActorSys
 import org.scalatest.{BeforeAndAfterAll, SpecLike}
 
 import scala.collection.immutable.IndexedSeq

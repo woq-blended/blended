@@ -20,4 +20,4 @@ for %%f in (%SCRIPT_HOME%\*.jar) do (
   set CLASSPATH=!CLASSPATH!;%%f
 )
 
-%KARAF_JAVA_HOME%\bin\java -cp %CLASSPATH% -DKARAF_JAVA_HOME=%KARAF_JAVA_HOME% de.wayofquality.blended.karaf.installer.ServiceInstaller -b %KARAF_HOME% -n %SERVICE_NAME% %KARAF_SVC_PARAMS%
+%KARAF_JAVA_HOME%\bin\java -cp %CLASSPATH% -DKARAF_JAVA_HOME=%KARAF_JAVA_HOME% blended.karaf.installer.ServiceInstaller -b %KARAF_HOME% -n %SERVICE_NAME% %KARAF_SVC_PARAMS%

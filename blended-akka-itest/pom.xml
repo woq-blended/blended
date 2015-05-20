@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -24,12 +24,12 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
+    <artifactId>blended.parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-akka-itest</artifactId>
+  <artifactId>blended.akka.itest</artifactId>
   <packaging>jar</packaging>
   
   <description>
@@ -41,7 +41,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-docker-demo</artifactId>
+      <artifactId>blended.docker.demo</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -55,7 +55,7 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended-itestsupport</artifactId>
+      <artifactId>blended.itestsupport</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

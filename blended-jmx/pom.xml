@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <!--
-  ~ Copyright 2014ff, WoQ - Way of Quality GmbH
+  ~ Copyright 2014ff,  https://github.com/woq-blended
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -22,13 +22,12 @@
 
   <parent>
     <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended-parent</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
+    <artifactId>blended.parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended-jmx</artifactId>
+  <artifactId>blended.jmx</artifactId>
   <packaging>bundle</packaging>
   
   <description>
