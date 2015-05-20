@@ -2,17 +2,15 @@
 
 set -e
 
-blendedVersion="1.1.4-SNAPSHOT"
+blendedVersion="1.2-SNAPSHOT"
 
 projects="blended-activemq-brokerstarter \
 blended-akka \
 blended-akka-itest \
 blended-camel-utils \
 blended-container-context \
-blended-container-id \
 blended-container-registry \
 blended-itestsupport \
-blended-jaxrs \
 blended-jmx \
 blended-jolokia \
 blended-karaf-branding \
@@ -24,12 +22,10 @@ blended-karaf-parent \
 blended-launcher \
 blended-mgmt-agent \
 blended-mgmt-rest \
-blended-modules \
 blended-neo4j-api \
 blended-parent \
 blended-persistence \
 blended-samples \
-blended-scalatest-bundle \
 blended-spray \
 blended-spray-api \
 blended-testing \
@@ -39,8 +35,9 @@ blended-util"
 
 genForProjects="$projects"
 
-if [ -n "$@" ]; then
-  genForProjects="$@"
+if [ -n "$*" ]; then
+  echo "Generating for selected projects: $*"
+  genForProjects="$*"
 fi
 
 for project in $genForProjects; do
@@ -156,12 +153,13 @@ optimise=false
 recompileOnMacroDef=true
 relationsDebug=false
 scala.compiler.additionalParams=\ -Xsource\:2.10 -Ymacro-expand\:none
-scala.compiler.installation=-510426087
+scala.compiler.installation=2.10
 scala.compiler.sourceLevel=2.10
 scala.compiler.useProjectSettings=true
 stopBuildOnError=true
 target=jvm-1.6
 unchecked=false
+useScopesCompiler=true
 verbose=false
 withVersionClasspathValidator=false
 EOF
@@ -173,7 +171,7 @@ EOF
 
     foundInReactor=""
     for p in $projects; do
-      if [ "libs/${p}-${blendedVersion}.jar" = "$lib" ]; then
+      if [ "libs/${p//-/.}-${blendedVersion}.jar" = "$lib" ]; then
         foundInReactor="$p"
         break
       fi

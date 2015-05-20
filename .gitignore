@@ -11,6 +11,7 @@ felix-cache
 *.pdf
 .settings/
 .cache
+.cache-main
 .project
 .classpath
 libs/
