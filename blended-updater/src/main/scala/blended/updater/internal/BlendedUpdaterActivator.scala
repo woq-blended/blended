@@ -10,7 +10,7 @@ import blended.akka.ActorSystemAware
 
 class BlendedUpdaterActivator extends ActorSystemAware {
   whenBundleActive {
-    manageBundleActor { config =>
+    setupBundleActor { config =>
       log.info(s"About to start ${getClass()}")
       val configDir = config.idSvc.getContainerContext().getContainerConfigDirectory()
       val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "installations").getAbsoluteFile()
