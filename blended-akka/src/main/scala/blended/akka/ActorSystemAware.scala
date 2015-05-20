@@ -16,7 +16,7 @@
 
 package blended.akka
 
-import akka.actor.{ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import blended.akka.protocol.BundleActorStarted
 import blended.container.context.ContainerIdentifierService
 import org.helgoboss.domino.DominoActivator
@@ -31,24 +31,24 @@ abstract class ActorSystemAware
     whenServicesPresent[ActorSystem, ContainerIdentifierService] { (system, idSvc) =>
       val bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 
-      val actorConfig = OSGIActorConfig(bundleContext, idSvc)
+      val actorConfig = OSGIActorConfig(bundleContext, system, idSvc)
 
       val actorRef = system.actorOf(f(actorConfig), bundleSymbolicName)
 
       system.eventStream.publish(BundleActorStarted(bundleSymbolicName))
       log info s"Bundle actor started [$bundleSymbolicName]."
 
-      postStartBundleActor(system, actorConfig)
+      postStartBundleActor(actorConfig, actorRef)
 
       onStop {
-        preStopBundleActor(system, actorConfig)
+        preStopBundleActor(actorConfig, actorRef)
         actorRef ! PoisonPill
       }
     }
   }
 
-  def postStartBundleActor(system: ActorSystem, actorConfig: OSGIActorConfig) : Unit = {}
+  def postStartBundleActor(config: OSGIActorConfig, actor: ActorRef) : Unit = {}
 
-  def preStopBundleActor(system: ActorSystem, actorConfig: OSGIActorConfig) : Unit = {}
+  def preStopBundleActor(config: OSGIActorConfig, actor: ActorRef) : Unit = {}
 
 }
