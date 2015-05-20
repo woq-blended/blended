@@ -17,14 +17,17 @@
 package blended.persistence.internal
 
 import akka.actor.Props
-import blended.akka.{ActorSystemAware, OSGIActorConfig}
+import blended.akka.{OSGIActorConfig, ActorSystemAware}
 import blended.persistence.PersistenceBackend
 
 class PersistenceActivator extends ActorSystemAware {
 
-  whenBundleActive {
-    whenServicePresent[PersistenceBackend] { svc =>
-      manageBundleActor{ cfg : OSGIActorConfig => Props(PersistenceManager(cfg, svc)) }
-    }
+  private[this] def persistenceMgr(backend: PersistenceBackend) : PropsFactory = { cfg : OSGIActorConfig =>
+    Props(PersistenceManager(cfg, backend))
   }
+
+  whenBundleActive {
+    whenServicePresent[PersistenceBackend] { backend => setupBundleActor(persistenceMgr(backend)) }
+  }
+
 }

@@ -21,16 +21,13 @@ import blended.akka.{ActorSystemAware, OSGIActorConfig}
 import org.osgi.service.http.HttpService
 
 class CollectorActivator extends ActorSystemAware {
-  
+
+  private[this] def mgmtCollector(httpService: HttpService, context: String) : PropsFactory = { cfg: OSGIActorConfig =>
+    Props(ManagementCollector(cfg, context))
+  }
+
   whenBundleActive {
-    whenServicePresent[HttpService] { httpSvc =>
-
-      manageBundleActor { cfg : OSGIActorConfig =>
-
-        Props(ManagementCollector(cfg, "wayofquality"))
-      }
-
-    }
+    whenServicePresent[HttpService] { httpSvc => setupBundleActor(mgmtCollector(httpSvc, "wayofquality")) }
   }
 }
 

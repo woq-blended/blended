@@ -21,14 +21,16 @@ import blended.akka.protocol.BundleActorStarted
 import blended.container.context.ContainerIdentifierService
 import org.helgoboss.domino.DominoActivator
 
-trait ActorSystemAware
-  extends DominoActivator { 
+abstract class ActorSystemAware
+  extends DominoActivator {
 
-  def manageBundleActor(f : OSGIActorConfig => Props) : Unit = {
+  type PropsFactory = OSGIActorConfig => Props
+
+  def setupBundleActor(f: PropsFactory) : Unit = {
 
     whenServicesPresent[ActorSystem, ContainerIdentifierService] { (system, idSvc) =>
       val bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
-      
+
       val actorConfig = OSGIActorConfig(bundleContext, idSvc)
 
       val actorRef = system.actorOf(f(actorConfig), bundleSymbolicName)
@@ -48,4 +50,5 @@ trait ActorSystemAware
   def postStartBundleActor() : Unit = {}
 
   def preStopBundleActor() : Unit = {}
+
 }

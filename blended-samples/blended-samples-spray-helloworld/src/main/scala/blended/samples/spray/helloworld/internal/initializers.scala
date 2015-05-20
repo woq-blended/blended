@@ -22,6 +22,6 @@ import blended.akka.{ActorSystemAware, OSGIActorConfig}
 class HelloActivator extends ActorSystemAware {
   
   whenBundleActive {
-    manageBundleActor { cfg: OSGIActorConfig =>  Props(HelloRoute(cfg, "blended")) }
+    setupBundleActor { cfg: OSGIActorConfig =>  Props(HelloRoute(cfg, "blended")) }
   }
 }
