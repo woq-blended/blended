@@ -2,11 +2,8 @@ package blended.updater
 
 import java.io.File
 import java.util.UUID
-
 import scala.collection.immutable._
-
 import org.osgi.framework.BundleContext
-
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
@@ -20,26 +17,58 @@ import blended.updater.BlockingDownloader.DownloadFinished
 import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
+import blended.launcher.LauncherConfig
 
 object Updater {
 
   // Messages
+  /**
+   * Request a list of staged runtime configurations. Replied with [StagedUpdates].
+   */
   case class GetStagedUpdates(requestId: String, requestActor: ActorRef)
+
+  /**
+   * Stage a runtime configuration. Replied with:
+   * - [StageUpdateProgress] to indicate progress
+   * - [StageUpdateFinished] to indicate success
+   * - [StageUpdateCancelled] to indicate failure
+   */
   case class StageUpdate(requestId: String, requestActor: ActorRef, config: RuntimeConfig)
+
+  case class ActivateStage(requestId: String, requestActor: ActorRef, stageName: String, stageVersion: String)
 
   // Replies
   /**
-   * Reply to [GetStagedUpdates]
+   * Contains a list of staged runtime configurations. Reply to [GetStagedUpdates]
    */
   case class StagedUpdates(requestId: String, configs: Seq[RuntimeConfig])
+
   case class StageUpdateProgress(requestId: String, progress: Int)
+
   case class StageUpdateCancelled(requestId: String, reason: Throwable)
-  case class StageUpdateFinished(requestid: String)
 
-  def props(bundleContext: BundleContext, configDir: String, baseDir: File): Props = Props(new Updater(bundleContext, configDir: String, baseDir: File))
+  case class StageUpdateFinished(requestTd: String)
 
+  case class StageActivated(requestId: String)
+
+  case class StageActivationFailed(requestId: String, reason: String)
+
+  def props(
+    configDir: String,
+    baseDir: File,
+    runtimeConfigRepository: RuntimeConfigRepository,
+    launcherConfigRepository: LauncherConfigRepository,
+    restartFramework: () => Unit): Props =
+    Props(new Updater(configDir, baseDir, runtimeConfigRepository, launcherConfigRepository, restartFramework))
+
+  /**
+   * A bundle in progress, e.g. downloading or verifying.
+   */
   private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
 
+  /**
+   * Internal working state of in-progress stagings.
+   */
   private case class State(
     requestId: String,
     requestActor: ActorRef,
@@ -50,15 +79,20 @@ object Updater {
 
 }
 
-class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: File)
+class Updater(
+  configDir: String,
+  installBaseDir: File,
+  runtimeConfigRepo: RuntimeConfigRepository,
+  launchConfigRepo: LauncherConfigRepository,
+  restartFramework: () => Unit)
     extends Actor
     with ActorLogging {
   import Updater._
 
+  // FIXME: move magic numbers into config
   val artifactDownloader = context.actorOf(BalancingPool(4).props(BlockingDownloader.props()), "artifactDownloader")
   val artifactChecker = context.actorOf(BalancingPool(4).props(Sha1SumChecker.props()), "artifactChecker")
 
-  private[this] var stagedConfigs: Set[RuntimeConfig] = Set()
   private[this] var inProgress: Map[String, State] = Map()
 
   private[this] def updateInProgress(state: State): Unit = {
@@ -71,7 +105,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
       inProgress = inProgress.filterKeys(id != _)
-      stagedConfigs += state.config
+      runtimeConfigRepo.add(state.config)
       state.requestActor ! StageUpdateFinished(id)
     } else {
       inProgress += id -> state
@@ -82,7 +116,7 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
 
   override def receive: Actor.Receive = LoggingReceive {
     case GetStagedUpdates(reqId, reqRef) =>
-      reqRef ! StagedUpdates(reqId, stagedConfigs.toList)
+      reqRef ! StagedUpdates(reqId, runtimeConfigRepo.getAll())
 
     case msg @ StageUpdate(reqId, reqActor, config) =>
       if (inProgress.contains(reqId)) {
@@ -169,6 +203,19 @@ class Updater(bundleContext: BundleContext, configDir: String, installBaseDir: F
           inProgress = inProgress.filterKeys(state.requestId != _)
           state.requestActor ! StageUpdateCancelled(state.requestId, new RuntimeException(errorMsg))
       }
+
+    case ActivateStage(requestId, requestingActor, stageName, stageVersion) =>
+      runtimeConfigRepo.getByNameAndVersion(stageName, stageVersion) match {
+        case None =>
+          requestingActor ! StageActivationFailed(requestId, "Stage not found")
+        case Some(stage) =>
+          // FIXME: finish
+          requestingActor ! StageActivated(requestId)
+          // write config
+          // restart framework
+          restartFramework()
+      }
+
   }
 
 }

@@ -1,28 +1,26 @@
 package blended.updater.internal
 
 import java.io.File
-
 import scala.reflect.runtime.universe
-
 import org.helgoboss.domino.DominoActivator
-
 import akka.actor.ActorSystem
 import blended.updater.Updater
 import blended.container.context.ContainerIdentifierService
+import blended.akka.ActorSystemAware
 
-class BlendedUpdaterActivator extends DominoActivator {
-
+class BlendedUpdaterActivator extends ActorSystemAware {
   whenBundleActive {
-
-    val servicePid = bundleContext.getBundle().getSymbolicName()
-
-    whenServicesPresent[ActorSystem, ContainerIdentifierService] { (actorSystem, idService) =>
+    manageBundleActor { config =>
       log.info(s"About to start ${getClass()}")
-      val configDir = idService.getContainerContext().getContainerConfigDirectory()
-      val installDir = new File(idService.getContainerContext().getContainerDirectory(), "installations").getAbsoluteFile()
-      val updater = actorSystem.actorOf(Updater.props(bundleContext, configDir, installDir))
+      val configDir = config.idSvc.getContainerContext().getContainerConfigDirectory()
+      val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "installations").getAbsoluteFile()
+      val restartFramework = { () =>
+        val frameworkBundle = bundleContext.getBundle(0)
+        frameworkBundle.update()
+      }
+      val runtimeConfigRepository = ???
+      val launcherConfigRepository = ???
+      Updater.props(configDir, installDir, runtimeConfigRepository, launcherConfigRepository, restartFramework)
     }
-
   }
-
 }

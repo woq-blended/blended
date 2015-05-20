@@ -17,7 +17,10 @@ case class RuntimeConfig(
   version: String,
   framework: BundleConfig,
   bundles: Seq[BundleConfig],
-  startLevel: Int)
+  startLevel: Int,
+  defaultStartLevel: Int,
+  frameworkProperties: Map[String, String],
+  systemProperties: Map[String, String])
 
 object RuntimeConfig {
 
