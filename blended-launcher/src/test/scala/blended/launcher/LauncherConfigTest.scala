@@ -1,4 +1,4 @@
-package de.wayofquality.blended.launcher
+package blended.launcher
 
 import org.scalatest.FreeSpec
 import com.typesafe.config.ConfigFactory

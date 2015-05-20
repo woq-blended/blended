@@ -1,4 +1,4 @@
-package de.wayofquality.blended.launcher
+package blended.launcher
 
 import java.io.File
 
@@ -10,7 +10,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
-import de.wayofquality.blended.launcher.internal.Logger
+import blended.launcher.internal.Logger
 
 case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
 
@@ -25,7 +25,7 @@ case class LauncherConfig(
 
 object LauncherConfig {
 
-  private[this] val ConfigPrefix = "de.wayofquality.blended.launcher.Launcher"
+  private[this] val ConfigPrefix = "blended.launcher.Launcher"
 
   private[this] val log = Logger[LauncherConfig.type]
 

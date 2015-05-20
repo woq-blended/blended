@@ -1,4 +1,4 @@
-de.wayofquality.blended.launcher.Launcher {
+blended.launcher.Launcher {
 
   repo = "../../mvn/m2repo"
 
