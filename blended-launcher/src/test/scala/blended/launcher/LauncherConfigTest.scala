@@ -22,6 +22,7 @@ class LauncherConfigTest extends FreeSpec {
     "read() must succeed" in {
       val config = LauncherConfig.read(ConfigFactory.parseString(minimalConfig))
     }
+
     val lines = minimalConfig.trim().split("\n")
     0.to(lines.size - 1).foreach { n =>
       "without line " + n + " must fail" in {
