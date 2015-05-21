@@ -4,6 +4,7 @@ import java.io.PrintStream
 import java.io.FileOutputStream
 import java.io.File
 import java.util.UUID
+import java.io.BufferedOutputStream
 
 trait TestSupport {
 
@@ -11,10 +12,13 @@ trait TestSupport {
 
   def withTestFile(content: String)(f: File => Any): Unit = {
     val file = File.createTempFile("test", "")
-    val os = new PrintStream(new FileOutputStream(file))
-    os.print(content)
-    os.close()
+    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
     try {
+      try {
+        os.print(content)
+      } finally {
+        os.close()
+      }
       f(file)
     } finally {
       if (!file.delete()) {
