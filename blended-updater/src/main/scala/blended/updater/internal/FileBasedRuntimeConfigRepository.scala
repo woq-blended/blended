@@ -14,14 +14,18 @@ import java.io.PrintStream
 class FileBasedRuntimeConfigRepository(configFile: File, configListPrefix: String) extends RuntimeConfigRepository {
 
   def readConfigs(): Seq[RuntimeConfig] = {
-    ConfigFactory.parseFile(configFile).getConfigList(configListPrefix).asScala.toList.map { config =>
-      RuntimeConfig.read(config)
-    }
+    val config = ConfigFactory.parseFile(configFile)
+    if (config.hasPath(configListPrefix)) {
+      config.getConfigList(configListPrefix).asScala.toList.map { config =>
+        RuntimeConfig.read(config)
+      }
+    } else Seq()
   }
 
   def writeConfigs(runtimeConfigs: Seq[RuntimeConfig]): Unit = {
-    val updatedConfig = ConfigFactory.parseFile(configFile).withValue(configListPrefix, ConfigValueFactory.fromIterable(runtimeConfigs.map {
-      rc => RuntimeConfig.toConfig(rc)
+    val config = ConfigFactory.parseFile(configFile)
+    val updatedConfig = config.withValue(configListPrefix, ConfigValueFactory.fromIterable(runtimeConfigs.map {
+      rc => RuntimeConfig.toConfig(rc).root().unwrapped()
     }.asJava))
     val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(configFile)))
     try {
