@@ -8,7 +8,7 @@ import blended.updater.Updater
 import blended.container.context.ContainerIdentifierService
 import blended.akka.ActorSystemAware
 import blended.updater.InMemoryRuntimeConfigRepository
-import blended.updater.DummyLauncherConfigRepository
+import blended.launcher.DummyLauncherConfigRepository
 
 class BlendedUpdaterActivator extends ActorSystemAware {
   whenBundleActive {

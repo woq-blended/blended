@@ -18,6 +18,7 @@ import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
 import blended.launcher.LauncherConfig
+import blended.launcher.LauncherConfigRepository
 
 object Updater {
 
@@ -208,11 +209,12 @@ class Updater(
       runtimeConfigRepo.getByNameAndVersion(stageName, stageVersion) match {
         case None =>
           requestingActor ! StageActivationFailed(requestId, "Stage not found")
-        case Some(stage) =>
-          // FIXME: finish
-          requestingActor ! StageActivated(requestId)
+        case Some(runtimeConfig) =>
           // write config
-          // restart framework
+          val launcherConfig = ConfigConverter.convertToLauncherConfig(runtimeConfig, installBaseDir.getPath())
+          log.debug("About to activate launcher config: {}", launcherConfig)
+          launchConfigRepo.updateConfig(launcherConfig)
+          requestingActor ! StageActivated(requestId)
           restartFramework()
       }
 

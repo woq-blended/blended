@@ -20,6 +20,7 @@ import blended.updater.Updater.GetStagedUpdates
 import blended.updater.Updater.StagedUpdates
 import blended.updater.Updater.ActivateStage
 import blended.updater.Updater.StageActivated
+import blended.launcher.DummyLauncherConfigRepository
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))

@@ -1,6 +1,4 @@
-package blended.updater
-
-import blended.launcher.LauncherConfig
+package blended.launcher
 
 trait LauncherConfigRepository {
   def getCurrentConfig(): Option[LauncherConfig]
