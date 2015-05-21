@@ -89,7 +89,7 @@ class Launcher private (config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(): Unit = {
+  def start(): Framework = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
@@ -168,6 +168,15 @@ class Launcher private (config: LauncherConfig) {
     log.info("Laucher finished starting of framework and bundles. Awaiting framework termination now.")
     // Framework and bundles started
 
+    framework
+  }
+
+  /**
+   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
+   */
+  def run(): Unit = {
+    val framework = start()
+
     def awaitFrameworkStop(framwork: Framework): Unit = {
       val event = framework.waitForStop(0)
       event.getType match {
@@ -185,6 +194,7 @@ class Launcher private (config: LauncherConfig) {
         awaitFrameworkStop(framework)
       }
     }
+
     try {
       Runtime.getRuntime.addShutdownHook(shutdownHook)
       awaitFrameworkStop(framework)
@@ -194,7 +204,6 @@ class Launcher private (config: LauncherConfig) {
     } finally {
       Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
     }
-
   }
 
 }
