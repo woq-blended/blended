@@ -155,7 +155,7 @@ class Updater(
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown download id {}. Url: {}" + downloadId, url)
+          log.error("Unkown download id {}. Url: {}", downloadId, url)
         case (state, bundleInProgress) :: _ =>
           val newToCheck = bundleInProgress.copy(reqId = nextId())
           artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.bundle.sha1Sum)
@@ -171,7 +171,7 @@ class Updater(
       }
       foundState match {
         case None =>
-          log.error("Unkown download id {}. Url: {}" + downloadId, url)
+          log.error("Unkown download id {}. Url: {}", downloadId, url)
         case Some(state) =>
           log.debug("Cancelling in progress state: {}\nReason: {}", state, error)
           inProgress = inProgress.filterKeys(state.requestId != _)
@@ -184,7 +184,7 @@ class Updater(
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown check id {}. file: {}" + checkId, file)
+          log.error("Unkown check id {}. file: {}", checkId, file)
         case (state, bundleInProgress) :: _ =>
           updateInProgress(state.copy(
             bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress != _)
@@ -197,7 +197,7 @@ class Updater(
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown check id {}. file: {}" + checkId, file)
+          log.error("Unkown check id {}. file: {}", checkId, file)
         case (state, bundleInProgress) :: _ =>
           val errorMsg = "Invalid checksum for resource from URL: " + bundleInProgress.bundle.url
           log.debug("Cancelling in progress state: {}\nReason: Invalid checksum", state)
