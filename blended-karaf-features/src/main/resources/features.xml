@@ -38,10 +38,7 @@
   
   <feature name="blended-domino" version="${project.version}" resolver="(obr)" start-level="15">
     <bundle>mvn:org.apache.felix/org.apache.felix.metatype/${felix.metatype.version}</bundle>
-    <bundle>mvn:org.helgoboss/capsule/${capsule.version}</bundle>
-    <bundle>mvn:org.helgoboss/scala-logging/${domino.version}</bundle>
-    <bundle>mvn:org.helgoboss/scala-osgi-metatype/${domino.version}</bundle>
-    <bundle>mvn:org.helgoboss/domino/${domino.version}</bundle>
+    <bundle>mvn:com.github.domino-osgi/domino_${scala.version}/${domino.version}</bundle>
   </feature>
 
   <feature name="blended-base" description="Blended - Base bundles" version="${project.version}" resolver="(obr)" start-level="20">
