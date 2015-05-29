@@ -13,6 +13,9 @@ import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
 import scala.util.control.NonFatal
+import java.io.BufferedInputStream
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
 
 object BlockingDownloader {
 
@@ -44,12 +47,36 @@ class BlockingDownloader() extends Actor with ActorLogging {
             parent.mkdirs()
           }
         }
-        val retVal = new URL(url).#>(file).!
-        if (retVal == 0) {
-          requestRef ! DownloadFinished(reqId, url, file)
-        } else {
-          requestRef ! DownloadFailed(reqId, url, file, new RuntimeException(s"Download of ${url} errored with exit value ${retVal}"))
+
+        val outStream = new BufferedOutputStream(new FileOutputStream(file))
+        try {
+
+          val connection = new URL(url).openConnection
+          connection.setRequestProperty("User-Agent", "Blended Updater")
+          val inStream = new BufferedInputStream(connection.getInputStream())
+          try {
+            val bufferSize = 1024
+            var break = false
+            var len = 0
+            var buffer = new Array[Byte](bufferSize)
+
+            while (!break) {
+              inStream.read(buffer, 0, bufferSize) match {
+                case x if x < 0 => break = true
+                case count => {
+                  len = len + count
+                  outStream.write(buffer, 0, count)
+                }
+              }
+            }
+          } finally {
+            inStream.close()
+          }
+        } finally {
+          outStream.flush()
+          outStream.close()
         }
+        requestRef ! DownloadFinished(reqId, url, file)
       } catch {
         case NonFatal(e) =>
           requestRef ! DownloadFailed(reqId, url, file, e)
