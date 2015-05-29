@@ -42,9 +42,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.helgoboss</groupId>
-			<artifactId>domino</artifactId>
-			<version>1.0.0</version>
+			<groupId>com.github.domino-osgi</groupId>
+			<artifactId>domino_${scala.version}</artifactId>
+			<version>${domino.version}</version>
 		</dependency>
 
 		<dependency>

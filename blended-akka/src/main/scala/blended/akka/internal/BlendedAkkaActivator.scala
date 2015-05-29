@@ -23,8 +23,8 @@ import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
 import com.typesafe.config.{Config, ConfigFactory}
 import blended.container.context.{ContainerIdentifierService, ContainerContext}
-import org.helgoboss.capsule.Capsule
-import org.helgoboss.domino.DominoActivator
+import domino.capsule.Capsule
+import domino.DominoActivator
 import org.osgi.framework.BundleContext
 
 object BlendedAkkaActivator {

@@ -50,8 +50,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.helgoboss</groupId>
-      <artifactId>domino</artifactId>
+      <groupId>com.github.domino-osgi</groupId>
+      <artifactId>domino_${scala.version}</artifactId>
       <version>${domino.version}</version>
     </dependency>
 

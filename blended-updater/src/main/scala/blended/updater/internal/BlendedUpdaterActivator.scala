@@ -2,7 +2,7 @@ package blended.updater.internal
 
 import java.io.File
 import scala.reflect.runtime.universe
-import org.helgoboss.domino.DominoActivator
+import domino.DominoActivator
 import akka.actor.ActorSystem
 import blended.updater.Updater
 import blended.container.context.ContainerIdentifierService
