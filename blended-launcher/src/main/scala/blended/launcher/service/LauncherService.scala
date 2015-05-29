@@ -26,7 +26,7 @@ class LauncherService() extends Daemon {
     val launcher = Launcher(configFile)
     val errors = launcher.validate()
     if (!errors.isEmpty) {
-      throw new RuntimeException("Could not starrt the OSGi Framework. Details:\n" + errors.mkString("\n"))
+      throw new RuntimeException("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
     }
     framework = Option(launcher.start())
   }
