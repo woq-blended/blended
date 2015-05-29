@@ -48,7 +48,6 @@
     <feature version="${project.version}">blended-domino</feature>
     <bundle>mvn:org.apache.felix/org.apache.felix.eventadmin/${felix.event.version}</bundle>
     <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
-    <bundle>mvn:org.helgoboss/domino/${domino.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.util/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.container.context/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.jmx/${blended.version}</bundle>
