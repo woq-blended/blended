@@ -158,6 +158,8 @@ class UpdaterTest
             fishForMessage() {
               case StageActivated(`reqId`) => true
             }
+            // restart happens after the message, so we wait
+            Thread.sleep(500)
             assert(restarted === true)
           }
         }
