@@ -8,19 +8,25 @@ import org.scalatest.FreeSpecLike
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
-import blended.updater.Updater.StageUpdate
-import blended.updater.Updater.StageUpdate
-import blended.updater.Updater.StageUpdate
-import blended.updater.Updater.StageUpdate
 import blended.updater.Updater.StageUpdateFinished
-import blended.updater.Updater.StageUpdateProgress
 import blended.updater.test.TestSupport
 import blended.updater.Updater.StagedUpdates
-import blended.updater.Updater.GetStagedUpdates
 import blended.updater.Updater.StagedUpdates
-import blended.updater.Updater.ActivateStage
 import blended.updater.Updater.StageActivated
 import blended.launcher.DummyLauncherConfigRepository
+import blended.updater.Updater.AddRuntimeConfig
+import blended.updater.Updater.RuntimeConfigAdded
+import blended.updater.Updater.StageRuntimeConfig
+import blended.updater.Updater.StageRuntimeConfig
+import blended.updater.Updater.RuntimeConfigStaged
+import blended.updater.Updater.GetRuntimeConfigs
+import blended.updater.Updater.RuntimeConfigs
+import blended.updater.Updater.ActivateRuntimeConfig
+import blended.updater.Updater.RuntimeConfigAdded
+import blended.updater.Updater.StageRuntimeConfig
+import blended.updater.Updater.GetProgress
+import blended.updater.Updater.Progress
+import blended.updater.Updater.RuntimeConfigStaged
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -44,9 +50,9 @@ class UpdaterTest
           val configDir = new File(baseDir, "config")
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(Updater.props(configDir.getPath(), installBaseDir,
-            new InMemoryRuntimeConfigRepository(), new DummyLauncherConfigRepository(), () => {}), s"updater-${nextId()}")
+            new InMemoryRuntimeConfigRepository(), new InMemoryRuntimeConfigRepository(),
+            new DummyLauncherConfigRepository(), () => {}), s"updater-${nextId()}")
 
-          val stageId = nextId()
           val config = RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
             framework = BundleConfig(
@@ -62,12 +68,24 @@ class UpdaterTest
             frameworkProperties = Map(),
             systemProperties = Map()
           )
-          updater ! StageUpdate(stageId, testActor, config)
-          expectMsg(StageUpdateProgress(stageId, 0))
-          expectMsg(StageUpdateProgress(stageId, 0))
-          expectMsg(StageUpdateProgress(stageId, 100))
-          fishForMessage() {
-            case msg: StageUpdateFinished => true
+
+          {
+            val addId = nextId()
+            updater ! AddRuntimeConfig(addId, config)
+            fishForMessage() {
+              case RuntimeConfigAdded(`addId`) => true
+            }
+          }
+          {
+            val stageId = nextId()
+            updater ! StageRuntimeConfig(stageId, config.name, config.version)
+            //            updater ! GetProgress(stageId)
+            //            fishForMessage() {
+            //              case Progress(`stageId`, _) => true
+            //            }
+            fishForMessage() {
+              case RuntimeConfigStaged(`stageId`) => true
+            }
           }
 
           assert(installBaseDir.list().toSet ===
@@ -94,12 +112,17 @@ class UpdaterTest
           val installBaseDir = new File(baseDir, "install")
           var restarted = false
           val updater = system.actorOf(
-            Updater.props(configDir.getPath(), installBaseDir, new InMemoryRuntimeConfigRepository(), new DummyLauncherConfigRepository(), () => restarted = true),
+            Updater.props(
+              configDir.getPath(),
+              installBaseDir,
+              new InMemoryRuntimeConfigRepository(),
+              new InMemoryRuntimeConfigRepository(),
+              new DummyLauncherConfigRepository(),
+              () => restarted = true),
             s"updater-${nextId()}"
           )
 
           {
-            val stageId = nextId()
             val config = RuntimeConfig(
               name = "test-with-3-bundles", version = "1.0.0",
               framework = BundleConfig(
@@ -129,38 +152,58 @@ class UpdaterTest
               frameworkProperties = Map(),
               systemProperties = Map()
             )
-            updater ! StageUpdate(stageId, testActor, config)
 
-            fishForMessage() {
-              case StageUpdateProgress(`stageId`, _) => false
-              case StageUpdateFinished(`stageId`) => true
+            {
+              val addId = nextId()
+              updater ! AddRuntimeConfig(addId, config)
+
+              fishForMessage() {
+                case RuntimeConfigAdded(`addId`) => true
+              }
             }
 
-            assert(installBaseDir.list().toSet ===
-              Set("test-with-3-bundles-1.0.0"))
-            assert(new File(installBaseDir, "test-with-3-bundles-1.0.0").list().toSet ===
-              Set("bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
-          }
-
-          {
-            val queryId = nextId()
-            updater ! GetStagedUpdates(queryId, testActor)
-            val configs = expectMsgPF() {
-              case StagedUpdates(`queryId`, configs) => configs
+            {
+              val queryId = nextId()
+              updater ! GetRuntimeConfigs(queryId)
+              fishForMessage() {
+                case RuntimeConfigs(`queryId`, Seq(`config`), Seq()) => true
+              }
             }
-            assert(configs.size === 1)
-          }
 
-          {
-            assert(restarted === false)
-            val reqId = nextId()
-            updater ! ActivateStage(reqId, testActor, "test-with-3-bundles", "1.0.0")
-            fishForMessage() {
-              case StageActivated(`reqId`) => true
+            {
+              assert(installBaseDir.exists === false)
+
+              val stageId = nextId()
+              updater ! StageRuntimeConfig(stageId, config.name, config.version)
+              fishForMessage() {
+                case RuntimeConfigStaged(`stageId`) => true
+              }
+
+              assert(installBaseDir.list().toSet ===
+                Set("test-with-3-bundles-1.0.0"))
+              assert(new File(installBaseDir, "test-with-3-bundles-1.0.0").list().toSet ===
+                Set("bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
             }
-            // restart happens after the message, so we wait
-            Thread.sleep(500)
-            assert(restarted === true)
+
+            {
+              val queryId = nextId()
+              updater ! GetRuntimeConfigs(queryId)
+              fishForMessage() {
+                case RuntimeConfigs(`queryId`, Seq(), Seq(`config`)) => true
+              }
+            }
+
+            {
+              assert(restarted === false)
+              val reqId = nextId()
+              updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0")
+              fishForMessage() {
+                case StageActivated(`reqId`) => true
+              }
+              // restart happens after the message, so we wait
+              Thread.sleep(500)
+              assert(restarted === true)
+            }
           }
         }
       }
