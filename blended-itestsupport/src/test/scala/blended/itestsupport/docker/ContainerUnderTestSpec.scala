@@ -17,36 +17,37 @@
 package blended.itestsupport.docker
 
 import akka.event.LoggingAdapter
-import com.typesafe.config.Config
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
+import com.typesafe.config.Config
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpec}
 
-class ContainerUnderTestSpec extends TestActorSys
-  with WordSpecLike
+class ContainerUnderTestSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
 
-  private def docker = {
-    System.setProperty("docker.io.version", "1.17")
-    new Docker with VolumeBaseDir {
-      override implicit val logger: LoggingAdapter = system.log
-      override implicit val config: Config = system.settings.config
-      override implicit val client = mockClient
-    }
-  }
 
   "The Container Under Test" should {
 
-    "be configurable from the configuration" in {
-      
+    "be configurable from the configuration" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+
+      def docker = {
+        System.setProperty("docker.io.version", "1.17")
+        new Docker with VolumeBaseDir {
+          override implicit val logger: LoggingAdapter = system.log
+          override implicit val config: Config = system.settings.config
+          override implicit val client = mockClient
+        }
+      }
+
       val cuts = ContainerUnderTest.containerMap(config)
       
       system.log.info(s"$cuts")
       
-      cuts should have size(ctNames.size)
+      cuts should have size ctNames.size
       
       cuts.get("jms_demo") should not be None
       cuts.get("blended_demo") should not be None

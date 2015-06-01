@@ -17,33 +17,40 @@
 package blended.itestsupport.jms
 
 import akka.actor.Props
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import blended.itestsupport.condition.ConditionActor
 import blended.itestsupport.protocol._
+import blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 
 class JMSConditionAvailableSpec extends AbstractJMSSpec {
 
   "The JMS Available Condition" should {
 
-    "fail if no connection can be made" in {
+    "fail if no connection can be made" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val cf = new ActiveMQConnectionFactory("vm://foo?create=false")
       val condition = JMSAvailableCondition(cf)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(List.empty, List(condition)))
+      probe.expectMsg(ConditionCheckResult(List.empty, List(condition)))
     }
 
-    "succeed if a connection can be made" in {
+    "succeed if a connection can be made" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val cf = new ActiveMQConnectionFactory("vm://blended?create=false")
       val condition = JMSAvailableCondition(cf)
 
       val checker = TestActorRef(Props(ConditionActor(cond = condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(List(condition), List.empty))
+      probe.expectMsg(ConditionCheckResult(List(condition), List.empty))
     }
   }
 }

@@ -17,12 +17,12 @@
 package blended.jolokia
 
 import akka.actor.Props
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import akka.util.Timeout
 import blended.jolokia.model._
 import blended.jolokia.protocol._
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.duration._
 import scala.util.Failure
@@ -35,72 +35,94 @@ class JolokiaFake extends JolokiaClient with JolokiaAddress {
   override val jolokiaUrl = "http://localhost:43888/jolokia"
 }
 
-class JolokiaClientSpec extends TestActorSys
-  with WordSpecLike
+class JolokiaClientSpec extends WordSpec
   with Matchers {
 
   implicit val timeout = new Timeout(3.seconds)
 
   "The Jolokia client" should {
 
-    "Connect to Jolokia" in {
+    "Connect to Jolokia" in TestActorSys { testkit =>
+
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! GetJolokiaVersion
-      expectMsgAnyClassOf(classOf[JolokiaVersion])
+      jolokia.tell(GetJolokiaVersion, probe.ref)
+      probe.expectMsgAnyClassOf(classOf[JolokiaVersion])
     }
 
-    "Allow to search for MBeans by domain only" in {
+    "Allow to search for MBeans by domain only" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! SearchJolokia(new MBeanSearchDef {
+      jolokia.tell(SearchJolokia(new MBeanSearchDef {
         override def jmxDomain = "java.lang"
-      })
-      fishForMessage() {
+      }), probe.ref)
+
+      probe.fishForMessage() {
         case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
         case _ => false
       }
     }
 
-    "Allow to search for MBeans by domain and properties" in {
+    "Allow to search for MBeans by domain and properties" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! SearchJolokia(new MBeanSearchDef {
+      jolokia.tell(SearchJolokia(new MBeanSearchDef {
         override def jmxDomain = "java.lang"
         override def searchProperties = Map( "type" -> "Memory" )
-      })
-      fishForMessage() {
+      }), probe.ref)
+
+      probe.fishForMessage() {
         case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
         case _ => false
       }
     }
 
-    "Allow to read a specific MBean" in {
+    "Allow to read a specific MBean" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! ReadJolokiaMBean("java.lang:type=Memory")
-      fishForMessage() {
+      jolokia.tell(ReadJolokiaMBean("java.lang:type=Memory"), probe.ref)
+
+      probe.fishForMessage() {
         case JolokiaReadResult(objName, _) => objName == "java.lang:type=Memory"
         case _ => false
       }
     }
 
-    "Allow to execute a given operation on a MBean" in {
+    "Allow to execute a given operation on a MBean" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia ! ExecJolokiaOperation(new OperationExecDef {
+      jolokia.tell(ExecJolokiaOperation(new OperationExecDef {
         override def objectName = "java.lang:type=Threading"
         override def operationName = "dumpAllThreads"
         override def parameters = List("true", "true")
-      })
-      fishForMessage() {
+      }), probe.ref)
+
+      probe.fishForMessage() {
         case JolokiaExecResult(objName, operation, _) => objName == "java.lang:type=Threading" && operation == "dumpAllThreads"
         case _ => false
       }
     }
     
-    "Respond with a failure if the rest call fails" in {
+    "Respond with a failure if the rest call fails" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val jolokia = TestActorRef(Props[JolokiaFake])
-      jolokia ! GetJolokiaVersion
-      fishForMessage() {
+      jolokia.tell(GetJolokiaVersion, probe.ref)
+
+      probe.fishForMessage() {
         case Failure(error) => true
       }
     }
   }
-
 }

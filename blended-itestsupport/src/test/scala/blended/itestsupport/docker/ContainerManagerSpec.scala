@@ -17,21 +17,18 @@
 package blended.itestsupport.docker
 
 import akka.actor.Props
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.docker.protocol._
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.mock.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
-class ContainerManagerSpec extends TestActorSys
-  with WordSpecLike
+class ContainerManagerSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
   
-  private[this] val log = system.log
-
   object TestContainerManager {
     def apply() = new  ContainerManager with DockerClientProvider {
       override def getClient = mockClient
@@ -40,16 +37,18 @@ class ContainerManagerSpec extends TestActorSys
 
   "The ContainerManager" should {
 
-    "Respond with an event after all containers have been started" in {
-      
+    "Respond with an event after all containers have been started" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val cuts = ContainerUnderTest.containerMap(system.settings.config)
       
-      log.info(s"$cuts")
+      system.log.info(s"$cuts")
       
       val mgr = TestActorRef(Props(TestContainerManager()), "mgr")
-      mgr ! StartContainerManager(cuts)
+      mgr.tell(StartContainerManager(cuts), probe.ref)
       
-      expectMsgType[ContainerManagerStarted]
+      probe.expectMsgType[ContainerManagerStarted]
     }
   }
 }

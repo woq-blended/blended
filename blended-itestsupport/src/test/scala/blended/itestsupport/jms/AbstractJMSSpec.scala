@@ -18,32 +18,31 @@ package blended.itestsupport.jms
 
 import javax.jms.ConnectionFactory
 
-import akka.actor.ActorRef
-import akka.testkit.ImplicitSender
+import akka.actor.{ActorRef, ActorSystem}
+import akka.testkit.TestProbe
 import blended.itestsupport.jms.protocol._
-import blended.testsupport.TestActorSys
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
 
-abstract class AbstractJMSSpec extends TestActorSys
-  with WordSpecLike
+abstract class AbstractJMSSpec extends WordSpec
   with Matchers
-  with BeforeAndAfterAll
-  with ImplicitSender {
+  with BeforeAndAfterAll {
 
   protected var broker : Option[BrokerService] = None
   protected val cf : ConnectionFactory = new ActiveMQConnectionFactory("vm://blended")
 
-  protected def connect(connector: ActorRef) : Unit = {
-    connector ! Connect("test")
-    expectMsg(Right(Connected("test")))
+  protected def connect(connector: ActorRef)(implicit system: ActorSystem) : Unit = {
+    val probe = TestProbe()
+    connector.tell(Connect("test"), probe.ref)
+    probe.expectMsg(Right(Connected("test")))
   }
 
-  protected def disconnect(connector: ActorRef) : Unit = {
-    connector ! Disconnect
-    expectMsg(Right(Disconnected))
+  protected def disconnect(connector: ActorRef)(implicit system: ActorSystem) : Unit = {
+    val probe = TestProbe()
+    connector.tell(Disconnect, probe.ref)
+    probe.expectMsg(Right(Disconnected))
   }
 
   override protected def beforeAll() : Unit = {

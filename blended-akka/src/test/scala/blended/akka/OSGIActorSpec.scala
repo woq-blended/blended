@@ -22,7 +22,7 @@ import akka.testkit.TestActorRef
 import akka.util.Timeout
 import blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{WordSpec, Matchers, WordSpecLike}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -42,9 +42,8 @@ class OSGIActorDummy(actorConfig: OSGIActorConfig) extends OSGIActor(actorConfig
   }
 }
 
-class OSGIActorSpec extends TestActorSys 
-  with WordSpecLike
-  with Matchers 
+class OSGIActorSpec extends WordSpec
+  with Matchers
   with TestSetup 
   with MockitoSugar {
 
@@ -53,9 +52,11 @@ class OSGIActorSpec extends TestActorSys
 
     implicit val timeout = Timeout(1.second)
 
-    "allow to invoke a service" in {
+    "allow to invoke a service" in TestActorSys { testkit =>
 
-      val probe = TestActorRef(Props(OSGIActorDummy(testActorConfig("foo", system))), "testActor")
+      implicit val system = testkit.system
+
+      val probe = TestActorRef(Props(OSGIActorDummy(testActorConfig("foo", testkit.system))), "testActor")
 
       Await.result(probe ?  "invoke", 3.seconds) should be ("Andreas")
     }

@@ -23,18 +23,19 @@ import akka.testkit.{ImplicitSender, TestKit}
 
 object TestActorSys {
   val uniqueId = new AtomicInteger(0)
+
+  def apply(f : TestKit => Unit) = new TestActorSys("TestActorSys%05d".format(uniqueId.incrementAndGet()), f)
 }
 
-class TestActorSys(name : String)
-  extends TestKit(ActorSystem(name))
-  with ImplicitSender {
+class TestActorSys(name : String, f : TestKit => Unit)
+  extends TestKit(ActorSystem(name)) {
 
-  def this() = this("TestSystem%05d".format(TestActorSys.uniqueId.incrementAndGet()))
-
-  def shutdown() : Unit = { system.shutdown() }
-
-  def apply(block : Unit) : Unit = {
-    try block
-    finally shutdown()
+  try {
+    system.log.info("Start TestKit[{}]", system.name)
+    f(this)
+  }
+  finally {
+    system.log.info("Shutting down TestKit[{}]", system.name)
+    system.shutdown()
   }
 }
