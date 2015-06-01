@@ -120,7 +120,6 @@ org.eclipse.jdt.core.compiler.source=1.7
 EOF
 
   cat > .settings/org.scala-ide.sdt.core.prefs << EOF
-
 P=
 Xcheckinit=false
 Xdisable-assertions=false
