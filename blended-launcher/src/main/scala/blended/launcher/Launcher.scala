@@ -106,7 +106,7 @@ class Launcher private (config: LauncherConfig) {
     val frameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
     frameworkStartLevel.setInitialBundleStartLevel(config.defaultStartLevel)
 
-    framework.start
+    framework.start()
     log.info(s"Framework started. State: ${framework.getState}")
 
     log.info("Installing bundles");

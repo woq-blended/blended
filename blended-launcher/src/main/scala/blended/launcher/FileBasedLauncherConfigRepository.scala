@@ -25,7 +25,7 @@ class FileBasedLauncherConfigRepository(configFile: File, configPrefix: String) 
       LauncherConfig.toConfig(launcherConfig).root().unwrapped()))
     val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(configFile)))
     try {
-      os.print(updatedConfig.toString())
+      os.print(updatedConfig.root.render())
     } finally {
       os.close()
     }
