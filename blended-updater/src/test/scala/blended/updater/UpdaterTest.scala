@@ -8,11 +8,7 @@ import org.scalatest.FreeSpecLike
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
-import blended.updater.Updater.StageUpdateFinished
 import blended.updater.test.TestSupport
-import blended.updater.Updater.StagedUpdates
-import blended.updater.Updater.StagedUpdates
-import blended.updater.Updater.StageActivated
 import blended.launcher.DummyLauncherConfigRepository
 import blended.updater.Updater.AddRuntimeConfig
 import blended.updater.Updater.RuntimeConfigAdded
@@ -27,6 +23,7 @@ import blended.updater.Updater.StageRuntimeConfig
 import blended.updater.Updater.GetProgress
 import blended.updater.Updater.Progress
 import blended.updater.Updater.RuntimeConfigStaged
+import blended.updater.Updater.RuntimeConfigActivated
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -198,7 +195,7 @@ class UpdaterTest
               val reqId = nextId()
               updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0")
               fishForMessage() {
-                case StageActivated(`reqId`) => true
+                case RuntimeConfigActivated(`reqId`) => true
               }
               // restart happens after the message, so we wait
               Thread.sleep(500)

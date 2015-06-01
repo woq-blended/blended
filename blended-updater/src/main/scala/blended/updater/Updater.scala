@@ -27,7 +27,6 @@ object Updater {
   }
   trait Reply
 
-  // Messages
   /**
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
@@ -53,26 +52,6 @@ object Updater {
   case class UnknownRuntimeConfig(requestId: String) extends Reply
   case class UnknownRequestId(requestId: String) extends Reply
 
-  /**
-   * Stage a runtime configuration. Replied with:
-   * - [StageUpdateProgress] to indicate progress
-   * - [StageUpdateFinished] to indicate success
-   * - [StageUpdateCancelled] to indicate failure
-   */
-  case class StageUpdate(requestId: String, config: RuntimeConfig)
-  /**
-   * Contains a list of staged runtime configurations. Reply to [GetStagedUpdates]
-   */
-  case class StagedUpdates(requestId: String, configs: Seq[RuntimeConfig])
-  case class StageUpdateProgress(requestId: String, progress: Int)
-  case class StageUpdateCancelled(requestId: String, reason: Throwable)
-  case class StageUpdateFinished(requestTd: String)
-
-  // case class ActivateRuntimeConfig(requestId: String, stageName: String, stageVersion: String)
-
-  case class StageActivated(requestId: String)
-
-  case class StageActivationFailed(requestId: String, reason: String)
 
   def props(
     configDir: String,
@@ -230,13 +209,13 @@ class Updater(
       val requestingActor = sender()
       stagedConfigRepo.getByNameAndVersion(name, version) match {
         case None =>
-          sender() ! StageActivationFailed(reqId, "No such runtime configuration found")
+          sender() ! RuntimeConfigActivationFailed(reqId, "No such runtime configuration found")
         case Some(config) =>
           // write config
           val launcherConfig = ConfigConverter.convertToLauncherConfig(config, installBaseDir.getPath())
           log.debug("About to activate launcher config: {}", launcherConfig)
           launchConfigRepo.updateConfig(launcherConfig)
-          requestingActor ! StageActivated(reqId)
+          requestingActor ! RuntimeConfigActivated(reqId)
           restartFramework()
       }
 
@@ -277,7 +256,7 @@ class Updater(
         case Some(state) =>
           log.debug("Cancelling in progress state: {}\nReason: {}", state, error)
           stagingInProgress = stagingInProgress.filterKeys(state.requestId != _)
-          state.requestActor ! StageUpdateCancelled(state.requestId, error)
+          state.requestActor ! RuntimeConfigStagingFailed(state.requestId, error.getMessage())
       }
 
     case ValidChecksum(checkId, file, sha1Sum) =>
@@ -304,7 +283,7 @@ class Updater(
           val errorMsg = "Invalid checksum for resource from URL: " + bundleInProgress.bundle.url
           log.debug("Cancelling in progress state: {}\nReason: Invalid checksum", state)
           stagingInProgress = stagingInProgress.filterKeys(state.requestId != _)
-          state.requestActor ! StageUpdateCancelled(state.requestId, new RuntimeException(errorMsg))
+          state.requestActor ! RuntimeConfigStagingFailed(state.requestId, errorMsg)
       }
 
   }

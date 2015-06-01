@@ -10,6 +10,7 @@ import scala.collection.JavaConverters._
 import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
+import com.typesafe.config.ConfigRenderOptions
 
 class FileBasedRuntimeConfigRepository(configFile: File, configListPrefix: String) extends RuntimeConfigRepository {
 
@@ -29,7 +30,7 @@ class FileBasedRuntimeConfigRepository(configFile: File, configListPrefix: Strin
     }.asJava))
     val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(configFile)))
     try {
-      os.print(updatedConfig.toString())
+      os.print(updatedConfig.root().render(ConfigRenderOptions.concise().setFormatted(true)))
     } finally {
       os.close()
     }
@@ -44,7 +45,7 @@ class FileBasedRuntimeConfigRepository(configFile: File, configListPrefix: Strin
     writeConfigs(configs)
   }
   override def remove(name: String, version: String): Unit = {
-    configs = configs.filter(c => c.name != name && c.version != version)
+    configs = configs.filter(c => c.name != name || c.version != version)
     writeConfigs(configs)
   }
 }
