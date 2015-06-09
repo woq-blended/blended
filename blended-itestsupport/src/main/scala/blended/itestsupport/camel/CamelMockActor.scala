@@ -38,7 +38,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
   private[this] var routeId : Option[String] = None
 
   override def preStart(): Unit = {
-    log.info("Starting Camel Mock Actor for [{}]", uri)
+    log.debug("Starting Camel Mock Actor for [{}]", uri)
 
     camelContext.addRoutes( new RouteBuilder() {
 
