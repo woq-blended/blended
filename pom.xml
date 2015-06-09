@@ -156,6 +156,7 @@
       <modules>
         <module>blended-karaf-installer</module>
 
+	<module>blended-updater-config</module>
 	<module>blended-launcher</module>
 	<module>blended-updater</module>
 

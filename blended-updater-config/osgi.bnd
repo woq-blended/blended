@@ -1,0 +1,15 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName: \
+  ${bundle.symbolicName}
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
+
+Export-Package: \
+  ${bundle.namespace}
+
+Private-Package: \
+  ${bundle.namespace}.internal

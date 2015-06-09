@@ -31,6 +31,7 @@ blended-spray-api \
 blended-testing \
 blended-testsupport \
 blended-updater \
+blended-updater-config \
 blended-util"
 
 genForProjects="$projects"
