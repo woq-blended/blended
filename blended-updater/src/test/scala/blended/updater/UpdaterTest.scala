@@ -25,7 +25,6 @@ import blended.updater.Updater.RuntimeConfigStaged
 import blended.updater.Updater.RuntimeConfigActivated
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.LauncherConfig
-import blended.updater.test.FsTest
 import blended.updater.test.TestSupport.DeleteWhenNoFailure
 import blended.updater.test.TestSupport.DeleteNever
 
