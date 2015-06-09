@@ -7,6 +7,7 @@ Bundle-SymbolicName: \
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   org.apache.commons.daemon;resolution:=optional, \
+  de.tototec.cmdoption.*;resolution:=optional, \
   *
 
 Export-Package: \

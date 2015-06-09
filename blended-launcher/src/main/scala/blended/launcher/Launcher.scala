@@ -34,21 +34,66 @@ import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
 import blended.launcher.internal.Logger
 import blended.updater.config.LauncherConfig
+import de.tototec.cmdoption.CmdOption
+import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.CmdlineParserException
+import blended.updater.config.ConfigConverter
+import com.typesafe.config.ConfigFactory
+import blended.updater.config.RuntimeConfig
 
 object Launcher {
 
   case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
+  class Cmdline {
+
+    @CmdOption(names = Array("--config", "-c"), args = Array("FILE"), description = "Configuration file")
+    def setPonfigFile(file: String): Unit = configFile = Option(file)
+    var configFile: Option[String] = None
+
+    @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
+    var help: Boolean = false
+
+    @CmdOption(names = Array("--profile-dir", "-p"), args = Array("DIR"), description = "Profile dir")
+    def setProfileDir(dir: String): Unit = profileDir = Option(dir)
+    var profileDir: Option[String] = None
+  }
+
   def main(args: Array[String]): Unit = {
 
-    val configFile = args match {
-      case Array(configFile) => new File(configFile).getAbsoluteFile()
-      case _ =>
-        Console.err.println("Usage: main configfile")
+    val cmdline = new Cmdline()
+    val cp = new CmdlineParser(cmdline)
+    try {
+      cp.parse(args: _*)
+    } catch {
+      case e: CmdlineParserException =>
+        Console.err.println(s"Error: ${e.getMessage()}\nRun launcher --help for help.")
         sys.exit(1)
     }
 
-    val launcher = Launcher(configFile)
+    if (cmdline.help) {
+      cp.usage()
+      sys.exit(0)
+    }
+
+    val launcherConfig = cmdline.configFile match {
+      case Some(configFile) =>
+        val config = ConfigFactory.parseFile(new File(configFile)).resolve()
+        LauncherConfig.read(config)
+      case None =>
+        cmdline.profileDir match {
+          case None =>
+            Console.err.println("Either a config file or a profile dir must be given")
+            sys.exit(1)
+          case Some(profileDir) =>
+            val profileFile = new File(profileDir, "profile.conf")
+            val config = ConfigFactory.parseFile(profileFile).resolve()
+            val runtimeConfig = RuntimeConfig.read(config)
+            ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+        }
+    }
+
+    val launcher = new Launcher(launcherConfig)
     val errors = launcher.validate()
     if (!errors.isEmpty) {
       Console.err.println("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
