@@ -1,5 +1,7 @@
 package blended.launcher
 
+import blended.updater.config.LauncherConfig
+
 trait LauncherConfigRepository {
   def getCurrentConfig(): Option[LauncherConfig]
   def updateConfig(config: LauncherConfig): Unit

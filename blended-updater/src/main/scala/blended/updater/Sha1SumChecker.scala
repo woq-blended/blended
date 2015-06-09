@@ -12,6 +12,7 @@ import java.io.BufferedInputStream
 import java.util.Formatter
 import java.io.FileInputStream
 import scala.util.control.NonFatal
+import blended.updater.config.RuntimeConfig
 
 object Sha1SumChecker {
 
@@ -29,29 +30,9 @@ object Sha1SumChecker {
 class Sha1SumChecker() extends Actor with ActorLogging {
   import Sha1SumChecker._
 
-  private def bytesToString(digest: Array[Byte]): String = {
-    import java.lang.StringBuilder
-    val result = new StringBuilder(32);
-    val f = new Formatter(result)
-    digest.foreach(b => f.format("%02x", b.asInstanceOf[Object]))
-    result.toString
-  }
-
-  def digestFile(file: File): Option[String] = {
-    val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
-    try {
-      while (sha1Stream.read != -1) {}
-      Some(bytesToString(sha1Stream.getMessageDigest.digest))
-    } catch {
-      case NonFatal(e) => None
-    } finally {
-      sha1Stream.close()
-    }
-  }
-
   def receive: Actor.Receive = LoggingReceive {
     case msg @ CheckFile(reqId, reqRef, file, sha1Sum) =>
-      digestFile(file) match {
+      RuntimeConfig.digestFile(file) match {
         case Some(`sha1Sum`) =>
           reqRef ! ValidChecksum(reqId, file, sha1Sum)
         case other =>

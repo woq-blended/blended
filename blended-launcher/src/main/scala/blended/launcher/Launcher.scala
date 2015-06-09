@@ -19,12 +19,10 @@ package blended.launcher
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
-
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
-
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -34,12 +32,12 @@ import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
-
 import blended.launcher.internal.Logger
+import blended.updater.config.LauncherConfig
 
 object Launcher {
 
-  case class InstalledBundle(jarBundle: BundleConfig, bundle: Bundle)
+  case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
   def main(args: Array[String]): Unit = {
 

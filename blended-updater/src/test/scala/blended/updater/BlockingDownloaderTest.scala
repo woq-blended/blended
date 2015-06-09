@@ -17,6 +17,8 @@ import scala.util.Failure
 import java.io.FileNotFoundException
 import java.util.UUID
 import blended.updater.test.TestSupport
+import blended.updater.test.TestSupport.DeleteWhenNoFailure
+import blended.updater.test.TestSupport.DeletePolicy
 
 class BlockingDownloaderTest
     extends TestKit(ActorSystem("test"))
@@ -24,6 +26,8 @@ class BlockingDownloaderTest
     with ImplicitSender
     with BeforeAndAfterAll
     with TestSupport {
+
+  implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
 
   override def afterAll {
     TestKit.shutdownActorSystem(system)
@@ -67,7 +71,7 @@ class BlockingDownloaderTest
       }
     }
 
-    "Download of a file into a directory with is actually a file should fail" in {
+    "Download of a file into a directory which is actually a file should fail" in {
       pending
     }
   }

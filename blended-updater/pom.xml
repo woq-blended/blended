@@ -67,7 +67,7 @@
 
 		<dependency>
 			<groupId>de.wayofquality.blended</groupId>
-			<artifactId>blended.launcher</artifactId>
+			<artifactId>blended.updater.config</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
 

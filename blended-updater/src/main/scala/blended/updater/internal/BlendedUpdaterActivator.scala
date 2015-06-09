@@ -4,7 +4,6 @@ import java.io.File
 import akka.actor.ActorRef
 import blended.akka.ActorSystemAware
 import blended.akka.OSGIActorConfig
-import blended.launcher.DummyLauncherConfigRepository
 import blended.updater.Updater
 import akka.actor.Actor
 import java.util.UUID
@@ -15,10 +14,14 @@ import java.util.concurrent.TimeUnit.SECONDS
 import akka.pattern._
 import akka.util.Timeout
 import org.osgi.framework.ServiceRegistration
-import blended.updater.RuntimeConfig
 import com.typesafe.config.ConfigFactory
 import blended.updater.Updater._
-import blended.launcher.FileBasedLauncherConfigRepository
+import com.typesafe.config.ConfigRenderOptions
+import java.io.FileOutputStream
+import java.io.PrintStream
+import blended.updater.config.LauncherConfig
+import blended.updater.config.RuntimeConfig
+import blended.updater.config.ConfigConverter
 
 class BlendedUpdaterActivator extends ActorSystemAware {
 
@@ -36,13 +39,13 @@ class BlendedUpdaterActivator extends ActorSystemAware {
       }
 
       val configFile = new File(configDir, "blended.updater.conf")
-      val unstagedConfigRepository = new FileBasedRuntimeConfigRepository(configFile, "blended.updater.unstagedRuntimeConfigs")
-      val stagedConfigRepository = new FileBasedRuntimeConfigRepository(configFile, "blended.updater.runtimeConfigs")
 
       val launcherFile = new File(configDir, "blended.launcher.conf")
-      val launcherConfigRepository = new FileBasedLauncherConfigRepository(launcherFile, "blended.launcher.Launcher")
+      val launcherConfigSetter = { config: LauncherConfig =>
+        // TODO: write Config
+      }
 
-      Updater.props(configDir, installDir, unstagedConfigRepository, stagedConfigRepository, launcherConfigRepository, restartFrameworkAction)
+      Updater.props(configDir, installDir, launcherConfigSetter, restartFrameworkAction)
     }
 
     setupBundleActor(mainActorFactory)
@@ -67,7 +70,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
 
 class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
 
-  val commands = Array("show", "add", "stage", "activate")
+  val commands = Array("show", "add", "stage", "activate", "convertLauchConfigToRuntimeConfig")
 
   def show(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
@@ -79,7 +82,7 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
   }
 
   def add(file: File): AnyRef = {
-    val config = ConfigFactory.parseFile(file)
+    val config = ConfigFactory.parseFile(file).resolve()
     val runtimeConfig = RuntimeConfig.read(config)
     println("About to add: " + runtimeConfig)
 
@@ -109,7 +112,7 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
           "Error: " + x
       }
   }
-  
+
   def activate(name: String, version: String): AnyRef = {
     implicit val timeout = Timeout(5, MINUTES)
     val reqId = UUID.randomUUID().toString()
@@ -122,7 +125,15 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
         case x =>
           "Error: " + x
       }
-    
+  }
+
+  def convertLauchConfigToRuntimeConfig(launcherConfig: File, runtimeConfig: File): Unit = {
+    val lc = LauncherConfig.read(launcherConfig)
+    val rc = ConfigConverter.launcherConfigToRuntimeConfig(lc, "???")
+    val rendered = RuntimeConfig.toConfig(rc).root().render(ConfigRenderOptions.concise().setFormatted(true).setJson(false))
+    val os = new PrintStream(new FileOutputStream(runtimeConfig))
+    os.print(rendered)
+    os.close()
   }
 
 }

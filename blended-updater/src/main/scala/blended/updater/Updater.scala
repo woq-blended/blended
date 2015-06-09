@@ -17,8 +17,12 @@ import blended.updater.BlockingDownloader.DownloadFinished
 import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
-import blended.launcher.LauncherConfig
-import blended.launcher.LauncherConfigRepository
+import blended.updater.config.LauncherConfig
+import com.typesafe.config.ConfigFactory
+import scala.util.control.NonFatal
+import blended.updater.config.RuntimeConfig
+import blended.updater.config.ConfigConverter
+import blended.updater.config.ConfigWriter
 
 object Updater {
 
@@ -37,6 +41,8 @@ object Updater {
   case class RuntimeConfigAdded(requestId: String) extends Reply
   case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
 
+  case class ScanForRuntimeConfigs(requestId: String) extends Protocol
+
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
   case class StageRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
   case class RuntimeConfigStaged(requestId: String) extends Reply
@@ -52,22 +58,17 @@ object Updater {
   case class UnknownRuntimeConfig(requestId: String) extends Reply
   case class UnknownRequestId(requestId: String) extends Reply
 
-
   def props(
     configDir: String,
     baseDir: File,
-    unstagedConfigRepository: RuntimeConfigRepository,
-    stagedConfigRepository: RuntimeConfigRepository,
-    launcherConfigRepository: LauncherConfigRepository,
+    launcherConfigSetter: LauncherConfig => Unit,
     restartFramework: () => Unit,
     artifactDownloaderProps: Props = null,
     artifactCheckerProps: Props = null): Props =
     Props(new Updater(
       configDir,
       baseDir,
-      unstagedConfigRepository,
-      stagedConfigRepository,
-      launcherConfigRepository,
+      launcherConfigSetter,
       restartFramework,
       Option(artifactDownloaderProps),
       Option(artifactCheckerProps)
@@ -76,7 +77,7 @@ object Updater {
   /**
    * A bundle in progress, e.g. downloading or verifying.
    */
-  private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
+  private case class BundleInProgress(reqId: String, bundle: RuntimeConfig.BundleConfig, file: File)
 
   /**
    * Internal working state of in-progress stagings.
@@ -89,6 +90,8 @@ object Updater {
       bundlesToDownload: Seq[BundleInProgress],
       bundlesToCheck: Seq[BundleInProgress]) {
 
+    val profileId = ProfileId(config.name, config.version)
+
     def progress(): Int = {
       val allBundlesSize = config.bundles.size
       if (allBundlesSize > 0)
@@ -98,20 +101,34 @@ object Updater {
 
   }
 
+  case class ProfileId(name: String, version: String)
+
+  object Profile {
+    sealed trait ProfileState
+    case class Invalid(issues: Seq[String]) extends ProfileState
+    case object Valid extends ProfileState
+  }
+
+  case class Profile(dir: File, config: RuntimeConfig, state: Option[Profile.ProfileState]) {
+    def profile: ProfileId = ProfileId(config.name, config.version)
+  }
+
 }
 
 class Updater(
   configDir: String,
   installBaseDir: File,
-  unstagedConfigRepo: RuntimeConfigRepository,
-  stagedConfigRepo: RuntimeConfigRepository,
-  launchConfigRepo: LauncherConfigRepository,
+  launchConfigSetter: LauncherConfig => Unit,
   restartFramework: () => Unit,
   artifactDownloaderProps: Option[Props],
   artifactCheckerProps: Option[Props])
     extends Actor
     with ActorLogging {
   import Updater._
+
+  override def preStart(): Unit = {
+    self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
+  }
 
   val artifactDownloader = context.actorOf(
     artifactDownloaderProps.getOrElse(BalancingPool(4).props(BlockingDownloader.props())),
@@ -122,6 +139,8 @@ class Updater(
 
   private[this] var stagingInProgress: Map[String, State] = Map()
 
+  private[this] var profiles: Map[ProfileId, Profile] = Map()
+
   private[this] def stageInProgress(state: State): Unit = {
     val id = state.requestId
     val config = state.config
@@ -130,31 +149,75 @@ class Updater(
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
       stagingInProgress = stagingInProgress.filterKeys(id != _)
-      stagedConfigRepo.add(config)
-      unstagedConfigRepo.remove(config.name, config.version)
+      profiles += state.profileId -> Profile(state.installDir, state.config, Some(Profile.Valid))
       state.requestActor ! RuntimeConfigStaged(id)
     } else {
       stagingInProgress += id -> state
     }
   }
 
-  def findConfig(name: String, version: String): Option[RuntimeConfig] = unstagedConfigRepo.getByNameAndVersion(name, version)
-    .orElse(stagedConfigRepo.getByNameAndVersion(name, version))
+  def findConfig(id: ProfileId): Option[RuntimeConfig] = profiles.get(id).map(_.config)
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
   def protocol(msg: Protocol): Unit = msg match {
 
+    case ScanForRuntimeConfigs(reqId) =>
+      val nameDirs = Option(installBaseDir.listFiles).getOrElse(Array()).toList
+      val foundProfiles = nameDirs.flatMap { nameDir =>
+        val versionDirs = Option(nameDir.listFiles).getOrElse(Array()).toList
+        versionDirs.flatMap { versionDir =>
+          val profileFile = new File(versionDir, "profile.conf")
+          if (!profileFile.exists()) Nil
+          else {
+            try {
+              val config = ConfigFactory.parseFile(profileFile).resolve()
+              val runtimeConfig = RuntimeConfig.read(config)
+              if (runtimeConfig.name == nameDir.getName() && runtimeConfig.version == versionDir.getName()) {
+                val stagedMarkerFile = new File(versionDir, ".staged")
+                val profileState =
+                  if (stagedMarkerFile.exists() && stagedMarkerFile.lastModified() >= profileFile.lastModified()) {
+                    Profile.Valid
+                  } else {
+                    Profile.Invalid(Seq())
+                  }
+                List(Profile(versionDir, runtimeConfig, Some(profileState)))
+              } else List()
+            } catch {
+              case NonFatal(e) => List()
+            }
+          }
+        }
+
+      }
+      profiles = foundProfiles.map { profile => profile.profile -> profile }.toMap
+
     case GetRuntimeConfigs(reqId) =>
+      val (staged, unstaged) = profiles.values.toList.partition { p =>
+        p.state match {
+          case Some(Profile.Valid) => true
+          case _ => false
+        }
+      }
       sender() ! RuntimeConfigs(reqId,
-        unstaged = unstagedConfigRepo.getAll(),
-        staged = stagedConfigRepo.getAll()
+        unstaged = unstaged.map(_.config),
+        staged = staged.map(_.config)
       )
 
     case AddRuntimeConfig(reqId, config) =>
-      findConfig(config.name, config.version) match {
+      val id = ProfileId(config.name, config.version)
+      findConfig(id) match {
         case None =>
-          unstagedConfigRepo.add(config)
+          // TODO: stage
+
+          val dir = new File(new File(installBaseDir, config.name), config.version)
+          dir.mkdirs()
+
+          val confFile = new File(dir, "profile.conf")
+
+          ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
+          profiles += id -> Profile(dir, config, None)
+
           sender() ! RuntimeConfigAdded(reqId)
         case Some(`config`) =>
           sender() ! RuntimeConfigAdded(reqId)
@@ -163,60 +226,54 @@ class Updater(
       }
 
     case StageRuntimeConfig(reqId, name, version) =>
-      stagedConfigRepo.getByNameAndVersion(name, version) match {
-        case Some(config) =>
+      profiles.get(ProfileId(name, version)) match {
+        case None =>
+          sender() ! RuntimeConfigStagingFailed(reqId, "No such runtime configuration found")
+
+        case Some(Profile(dir, config, Some(Profile.Valid))) =>
           // already staged
           sender() ! RuntimeConfigStaged(reqId)
-        case None =>
-          unstagedConfigRepo.getByNameAndVersion(name, version) match {
-            case Some(config) =>
 
-              val reqActor = sender()
-              if (stagingInProgress.contains(reqId)) {
-                log.error("Duplicate id detected. Dropping request: {}", msg)
-              } else {
-                log.info("About to stage installation: {}", config)
+        case Some(Profile(installDir, config, stateOption)) =>
+          val reqActor = sender()
+          if (stagingInProgress.contains(reqId)) {
+            log.error("Duplicate id detected. Dropping request: {}", msg)
+          } else {
+            log.info("About to stage installation: {}", config)
 
-                val installDir = new File(installBaseDir, s"${config.name}-${config.version}")
-                if (installDir.exists()) {
-                  log.debug("Installation directory already exists: {}", installDir)
-                }
-
-                // analyze config
-                val bundles = config.framework :: config.bundles.toList
-                // determine missing artifacts
-                val (existing, missing) = bundles.partition(b => new File(installDir, b.jarName).exists())
-                // download artifacts
-                val missingWithId = missing.map { missingBundle =>
-                  val inProgress = BundleInProgress(nextId(), missingBundle, new File(installDir, missingBundle.jarName))
-                  artifactDownloader ! Download(inProgress.reqId, self, missingBundle.url, inProgress.file)
-                  inProgress
-                }
-                // check artifacts
-                val existingWithId = existing.map { existingBundle =>
-                  val inProgress = BundleInProgress(nextId(), existingBundle, new File(installDir, existingBundle.jarName))
-                  artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
-                  inProgress
-                }
-                stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId))
-              }
-            case None =>
-              sender() ! RuntimeConfigStagingFailed(reqId, "No such runtime configuration found")
+            // analyze config
+            val bundles = config.framework :: config.bundles.toList
+            // determine missing artifacts
+            val (existing, missing) = bundles.partition(b => new File(installDir, b.jarName).exists())
+            // download artifacts
+            val missingWithId = missing.map { missingBundle =>
+              val inProgress = BundleInProgress(nextId(), missingBundle, new File(installDir, missingBundle.jarName))
+              artifactDownloader ! Download(inProgress.reqId, self, missingBundle.url, inProgress.file)
+              inProgress
+            }
+            // check artifacts
+            val existingWithId = existing.map { existingBundle =>
+              val inProgress = BundleInProgress(nextId(), existingBundle, new File(installDir, existingBundle.jarName))
+              artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
+              inProgress
+            }
+            stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId))
           }
+
       }
 
     case ActivateRuntimeConfig(reqId, name: String, version: String) =>
       val requestingActor = sender()
-      stagedConfigRepo.getByNameAndVersion(name, version) match {
-        case None =>
-          sender() ! RuntimeConfigActivationFailed(reqId, "No such runtime configuration found")
-        case Some(config) =>
+      profiles.get(ProfileId(name, version)) match {
+        case Some(Profile(dir, config, Some(Profile.Valid))) =>
           // write config
-          val launcherConfig = ConfigConverter.convertToLauncherConfig(config, installBaseDir.getPath())
+          val launcherConfig = ConfigConverter.runtimeConfigToLauncherConfig(config, installBaseDir.getPath())
           log.debug("About to activate launcher config: {}", launcherConfig)
-          launchConfigRepo.updateConfig(launcherConfig)
+          launchConfigSetter(launcherConfig)
           requestingActor ! RuntimeConfigActivated(reqId)
           restartFramework()
+        case _ =>
+          sender() ! RuntimeConfigActivationFailed(reqId, "No such active runtime configuration found")
       }
 
     case GetProgress(reqId) =>

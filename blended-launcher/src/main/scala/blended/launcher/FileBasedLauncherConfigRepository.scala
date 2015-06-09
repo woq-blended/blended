@@ -10,6 +10,7 @@ import java.io.BufferedOutputStream
 import java.io.FileOutputStream
 import java.io.PrintStream
 import com.typesafe.config.ConfigRenderOptions
+import blended.updater.config.LauncherConfig
 
 class FileBasedLauncherConfigRepository(configFile: File, configPrefix: String) extends LauncherConfigRepository {
 
