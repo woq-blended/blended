@@ -54,7 +54,7 @@ object Launcher {
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
     var help: Boolean = false
 
-    @CmdOption(names = Array("--profile-dir", "-p"), args = Array("DIR"), description = "Profile dir")
+    @CmdOption(names = Array("--profile", "-p"), args = Array("profile"), description = "Profile file or directory")
     def setProfileDir(dir: String): Unit = profileDir = Option(dir)
     var profileDir: Option[String] = None
   }
@@ -85,8 +85,12 @@ object Launcher {
           case None =>
             Console.err.println("Either a config file or a profile dir must be given")
             sys.exit(1)
-          case Some(profileDir) =>
-            val profileFile = new File(profileDir, "profile.conf")
+          case Some(profile) =>
+            val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
+              profile -> new File(profile, "profile.conf")
+            } else {
+              Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
+            }
             val config = ConfigFactory.parseFile(profileFile).resolve()
             val runtimeConfig = RuntimeConfig.read(config)
             ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
