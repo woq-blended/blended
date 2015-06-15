@@ -32,6 +32,7 @@ blended-testing \
 blended-testsupport \
 blended-updater \
 blended-updater-config \
+blended-updater-tools \
 blended-util"
 
 genForProjects="$projects"

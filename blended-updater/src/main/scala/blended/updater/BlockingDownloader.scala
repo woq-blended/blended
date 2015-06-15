@@ -16,6 +16,7 @@ import scala.util.control.NonFatal
 import java.io.BufferedInputStream
 import java.io.FileOutputStream
 import java.io.BufferedOutputStream
+import blended.updater.config.RuntimeConfig
 
 object BlockingDownloader {
 
@@ -38,47 +39,10 @@ class BlockingDownloader() extends Actor with ActorLogging {
 
   def receive: Actor.Receive = LoggingReceive {
     case Download(reqId, requestRef, url, file) =>
-      try {
-        import sys.process._
-        file.getParentFile match {
-          case null =>
-          case parent => if (!parent.exists()) {
-            log.debug("Creating dir: {}", parent)
-            parent.mkdirs()
-          }
-        }
-
-        val outStream = new BufferedOutputStream(new FileOutputStream(file))
-        try {
-
-          val connection = new URL(url).openConnection
-          connection.setRequestProperty("User-Agent", "Blended Updater")
-          val inStream = new BufferedInputStream(connection.getInputStream())
-          try {
-            val bufferSize = 1024
-            var break = false
-            var len = 0
-            var buffer = new Array[Byte](bufferSize)
-
-            while (!break) {
-              inStream.read(buffer, 0, bufferSize) match {
-                case x if x < 0 => break = true
-                case count => {
-                  len = len + count
-                  outStream.write(buffer, 0, count)
-                }
-              }
-            }
-          } finally {
-            inStream.close()
-          }
-        } finally {
-          outStream.flush()
-          outStream.close()
-        }
-        requestRef ! DownloadFinished(reqId, url, file)
-      } catch {
-        case NonFatal(e) =>
+      RuntimeConfig.download(url, file) match {
+        case Success(f) =>
+          requestRef ! DownloadFinished(reqId, url, file)
+        case Failure(e) =>
           requestRef ! DownloadFailed(reqId, url, file, e)
       }
   }

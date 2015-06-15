@@ -4,18 +4,22 @@ import java.io.File
 import scala.collection.immutable._
 
 trait ConfigConverter {
+  
+  import ConfigConverter._
 
   def runtimeConfigToLauncherConfig(runtimeConfig: RuntimeConfig, profileDir: String): LauncherConfig = {
     import LauncherConfig._
 
     val baseDirPrefix = s"${profileDir}/"
 
-    val allBundles = runtimeConfig.allBundles.filter(b => b.startLevel != Some(0)).map { bc =>
-      BundleConfig(
-        location = baseDirPrefix + bc.jarName,
-        start = bc.start,
-        startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
-    }
+    val allBundles = runtimeConfig.allBundles.
+      filter(b => b.startLevel != Some(0)).
+      map { bc =>
+        BundleConfig(
+          location = baseDirPrefix + bc.jarName,
+          start = bc.start,
+          startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
+      }
 
     LauncherConfig(
       frameworkJar = baseDirPrefix + runtimeConfig.framework.jarName,
@@ -23,7 +27,7 @@ trait ConfigConverter {
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,
       defaultStartLevel = runtimeConfig.defaultStartLevel,
-      bundles = allBundles, 
+      bundles = allBundles,
       branding = Map(
         "profile.name" -> runtimeConfig.name,
         "profile.version" -> runtimeConfig.version

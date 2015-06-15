@@ -385,35 +385,51 @@
         <plugin>
           <groupId>net.alchim31.maven</groupId>
           <artifactId>scala-maven-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.2.1</version>
           <executions>
             <execution>
               <id>compile-scala</id>
               <goals>
                 <goal>compile</goal>
               </goals>
+              <configuration>
+                <fork>true</fork>
+                <recompileMode>incremental</recompileMode>
+                <useZincServer>true</useZincServer>
+                <args>
+                  <arg>-deprecation</arg>
+                  <arg>-feature</arg>
+                </args>
+                <jvmArgs>
+                  <jvmArg>-Xms256m</jvmArg>
+                  <jvmArg>-Xmx512m</jvmArg>
+                  <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+                </jvmArgs>
+              </configuration>
             </execution>
             <execution>
               <id>test-compile-scala</id>
               <goals>
                 <goal>testCompile</goal>
               </goals>
+              <configuration>
+                <fork>true</fork>
+                <recompileMode>incremental</recompileMode>
+                <useZincServer>true</useZincServer>
+                <args>
+                  <arg>-deprecation</arg>
+                  <arg>-feature</arg>
+                </args>
+                <jvmArgs>
+                  <jvmArg>-Xms256m</jvmArg>
+                  <jvmArg>-Xmx512m</jvmArg>
+                  <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+                </jvmArgs>
+              </configuration>
             </execution>
           </executions>
           <configuration>
-            <fork>true</fork>
             <scalaVersion>${scala.version}.${scala.micro.version}</scalaVersion>
-            <recompileMode>incremental</recompileMode>
-            <useZincServer>true</useZincServer>
-            <args>
-              <arg>-deprecation</arg>
-              <arg>-feature</arg>
-            </args>
-            <jvmArgs>
-              <jvmArg>-Xms256m</jvmArg>
-              <jvmArg>-Xmx512m</jvmArg>
-              <jvmArg>-XX:MaxPermSize=128m</jvmArg>
-            </jvmArgs>
           </configuration>
         </plugin>
 

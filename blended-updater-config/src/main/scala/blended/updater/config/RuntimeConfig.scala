@@ -6,7 +6,6 @@ import java.io.FileInputStream
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
-
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
@@ -14,10 +13,16 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.util.control.NonFatal
-
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
+import java.io.FileOutputStream
+import java.net.URL
+import java.io.BufferedOutputStream
+import scala.util.Try
+import java.nio.file.Paths
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 object RuntimeConfig {
 
@@ -124,16 +129,68 @@ object RuntimeConfig {
   }
 
   def digestFile(file: File): Option[String] = {
-    val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
-    try {
-      while (sha1Stream.read != -1) {}
-      Some(bytesToString(sha1Stream.getMessageDigest.digest))
-    } catch {
-      case NonFatal(e) => None
-    } finally {
-      sha1Stream.close()
+    if (!file.exists()) None else {
+      val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
+      try {
+        while (sha1Stream.read != -1) {}
+        Some(bytesToString(sha1Stream.getMessageDigest.digest))
+      } catch {
+        case NonFatal(e) => None
+      } finally {
+        sha1Stream.close()
+      }
     }
   }
+
+  def download(url: String, file: File): Try[File] =
+    Try {
+      import sys.process._
+      val parentDir = file.getAbsoluteFile().getParentFile() match {
+        case null =>
+          new File(".")
+        case parent =>
+          if (!parent.exists()) {
+            parent.mkdirs()
+          }
+          parent
+      }
+
+      val tmpFile = File.createTempFile(s".${file.getName()}", "", parentDir)
+
+      val outStream = new BufferedOutputStream(new FileOutputStream(tmpFile))
+      try {
+
+        val connection = new URL(url).openConnection
+        connection.setRequestProperty("User-Agent", "Blended Updater")
+        val inStream = new BufferedInputStream(connection.getInputStream())
+        try {
+          val bufferSize = 1024
+          var break = false
+          var len = 0
+          var buffer = new Array[Byte](bufferSize)
+
+          while (!break) {
+            inStream.read(buffer, 0, bufferSize) match {
+              case x if x < 0 => break = true
+              case count => {
+                len = len + count
+                outStream.write(buffer, 0, count)
+              }
+            }
+          }
+        } finally {
+          inStream.close()
+        }
+      } finally {
+        outStream.flush()
+        outStream.close()
+      }
+
+      Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()),
+        StandardCopyOption.ATOMIC_MOVE);
+
+      file
+    }
 
 }
 
@@ -155,5 +212,5 @@ case class RuntimeConfig(
     require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
     fs.head
   }
-  
+
 }
