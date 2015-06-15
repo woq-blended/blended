@@ -51,30 +51,15 @@ object RuntimeConfigBuilder {
     var runtimeConfig = RuntimeConfig.read(config)
 
     if (options.check) {
-      val issues = runtimeConfig.bundles.flatMap { b =>
-        val jar = new File(dir, b.jarName)
-        val issue = if (!jar.exists()) {
-          Some(s"Missing bundle jar: ${jar}")
-        } else {
-          RuntimeConfig.digestFile(jar) match {
-            case Some(d) =>
-              if (d != b.sha1Sum) {
-                Some(s"Invalid checksum of bundle jar: ${jar}")
-              } else None
-            case None =>
-              Some(s"Could not evaluate checksum of bundle jar: ${jar}")
-          }
-        }
-        issue.foreach { println }
-        issue.toList
-      }
+      val issues = RuntimeConfig.validate(dir, runtimeConfig)
       if (!issues.isEmpty) {
+        println(issues.mkString("\n"))
         sys.exit(1)
       }
     }
 
     if (options.downloadMissing) {
-      runtimeConfig.bundles.foreach { b =>
+      runtimeConfig.allBundles.foreach { b =>
         val jar = new File(dir, b.jarName)
         if (!jar.exists()) {
           println(s"Downloading: ${jar}")
@@ -84,19 +69,25 @@ object RuntimeConfigBuilder {
     }
 
     if (options.updateChecksums) {
-      val newRuntimeConfig = runtimeConfig.bundles.foldLeft(runtimeConfig) { (c, b) =>
+      def checkAndupdateBundle(b: RuntimeConfig.BundleConfig): RuntimeConfig.BundleConfig = {
         val jar = new File(dir, b.jarName)
         RuntimeConfig.digestFile(jar).map { checksum =>
           if (b.sha1Sum != checksum) {
             println(s"Updating checksum for bundle: ${b.jarName}")
-            c.copy(
-              bundles = b.copy(sha1Sum = checksum) +: (c.bundles.filter { _ != b })
-            )
-          } else {
-            c
-          }
-        }.getOrElse(c)
+            b.copy(sha1Sum = checksum)
+          } else b
+        }.getOrElse(b)
       }
+
+      val newBundles = runtimeConfig.bundles.map(checkAndupdateBundle)
+      val newFragments = runtimeConfig.fragments.map { f =>
+        f.copy(bundles = f.bundles.map(checkAndupdateBundle))
+      }
+      val newRuntimeConfig = runtimeConfig.copy(
+        bundles = newBundles,
+        fragments = newFragments
+      )
+
       if (runtimeConfig != newRuntimeConfig) {
         println("Updating config file: " + configFile)
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), configFile, None)

@@ -109,7 +109,7 @@ object Updater {
     case object Valid extends ProfileState
   }
 
-  case class Profile(dir: File, config: RuntimeConfig, state: Option[Profile.ProfileState]) {
+  case class Profile(dir: File, config: RuntimeConfig, state: Profile.ProfileState) {
     def profile: ProfileId = ProfileId(config.name, config.version)
   }
 
@@ -125,10 +125,6 @@ class Updater(
     extends Actor
     with ActorLogging {
   import Updater._
-
-  override def preStart(): Unit = {
-    self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
-  }
 
   val artifactDownloader = context.actorOf(
     artifactDownloaderProps.getOrElse(BalancingPool(4).props(BlockingDownloader.props())),
@@ -149,7 +145,7 @@ class Updater(
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
       stagingInProgress = stagingInProgress.filterKeys(id != _)
-      profiles += state.profileId -> Profile(state.installDir, state.config, Some(Profile.Valid))
+      profiles += state.profileId -> Profile(state.installDir, state.config, Profile.Valid)
       state.requestActor ! RuntimeConfigStaged(id)
     } else {
       stagingInProgress += id -> state
@@ -159,6 +155,11 @@ class Updater(
   def findConfig(id: ProfileId): Option[RuntimeConfig] = profiles.get(id).map(_.config)
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
+
+  override def preStart(): Unit = {
+    log.debug("Initial scanning for profiles")
+    self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
+  }
 
   def protocol(msg: Protocol): Unit = msg match {
 
@@ -174,14 +175,19 @@ class Updater(
               val config = ConfigFactory.parseFile(profileFile).resolve()
               val runtimeConfig = RuntimeConfig.read(config)
               if (runtimeConfig.name == nameDir.getName() && runtimeConfig.version == versionDir.getName()) {
-                val stagedMarkerFile = new File(versionDir, ".staged")
-                val profileState =
-                  if (stagedMarkerFile.exists() && stagedMarkerFile.lastModified() >= profileFile.lastModified()) {
-                    Profile.Valid
-                  } else {
-                    Profile.Invalid(Seq())
-                  }
-                List(Profile(versionDir, runtimeConfig, Some(profileState)))
+                //                val stagedMarkerFile = new File(versionDir, ".staged")
+                //                val profileState =
+                //                  if (stagedMarkerFile.exists() && stagedMarkerFile.lastModified() >= profileFile.lastModified()) {
+                //                    Profile.Valid
+                //                  } else {
+                //                    Profile.Invalid(Seq())
+                //                  }
+                val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
+                val profileState = issues match {
+                  case Seq() => Profile.Valid
+                  case issues => Profile.Invalid(issues)
+                }
+                List(Profile(versionDir, runtimeConfig, profileState))
               } else List()
             } catch {
               case NonFatal(e) => List()
@@ -195,7 +201,7 @@ class Updater(
     case GetRuntimeConfigs(reqId) =>
       val (staged, unstaged) = profiles.values.toList.partition { p =>
         p.state match {
-          case Some(Profile.Valid) => true
+          case Profile.Valid => true
           case _ => false
         }
       }
@@ -216,7 +222,7 @@ class Updater(
           val confFile = new File(dir, "profile.conf")
 
           ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-          profiles += id -> Profile(dir, config, None)
+          profiles += id -> Profile(dir, config, Profile.Invalid(Seq("Never checked")))
 
           sender() ! RuntimeConfigAdded(reqId)
         case Some(`config`) =>
@@ -230,11 +236,11 @@ class Updater(
         case None =>
           sender() ! RuntimeConfigStagingFailed(reqId, "No such runtime configuration found")
 
-        case Some(Profile(dir, config, Some(Profile.Valid))) =>
+        case Some(Profile(dir, config, Profile.Valid)) =>
           // already staged
           sender() ! RuntimeConfigStaged(reqId)
 
-        case Some(Profile(installDir, config, stateOption)) =>
+        case Some(Profile(installDir, config, state)) =>
           val reqActor = sender()
           if (stagingInProgress.contains(reqId)) {
             log.error("Duplicate id detected. Dropping request: {}", msg)
@@ -265,7 +271,7 @@ class Updater(
     case ActivateRuntimeConfig(reqId, name: String, version: String) =>
       val requestingActor = sender()
       profiles.get(ProfileId(name, version)) match {
-        case Some(Profile(dir, config, Some(Profile.Valid))) =>
+        case Some(Profile(dir, config, Profile.Valid)) =>
           // write config
           val launcherConfig = ConfigConverter.runtimeConfigToLauncherConfig(config, installBaseDir.getPath())
           log.debug("About to activate launcher config: {}", launcherConfig)
