@@ -192,6 +192,25 @@ object RuntimeConfig {
       file
     }
 
+  def validate(baseDir: File, config: RuntimeConfig): Seq[String] = {
+    config.allBundles.flatMap { b =>
+      val jar = new File(baseDir, b.jarName)
+      val issue = if (!jar.exists()) {
+        Some(s"Missing bundle jar: ${b.jarName}")
+      } else {
+        RuntimeConfig.digestFile(jar) match {
+          case Some(d) =>
+            if (d != b.sha1Sum) {
+              Some(s"Invalid checksum of bundle jar: ${b.jarName}")
+            } else None
+          case None =>
+            Some(s"Could not evaluate checksum of bundle jar: ${b.jarName}")
+        }
+      }
+      issue.toList
+    }
+  }
+
 }
 
 case class RuntimeConfig(
