@@ -2,11 +2,11 @@ package blended.updater
 
 import java.io.File
 import java.util.UUID
-import scala.collection.immutable._
-import org.osgi.framework.BundleContext
+import java.util.concurrent.TimeUnit
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.ActorRef
+import akka.actor.Cancellable
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
@@ -17,18 +17,27 @@ import blended.updater.BlockingDownloader.DownloadFinished
 import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
-import blended.updater.config.LauncherConfig
-import com.typesafe.config.ConfigFactory
-import scala.util.control.NonFatal
-import blended.updater.config.RuntimeConfig
 import blended.updater.config.ConfigConverter
 import blended.updater.config.ConfigWriter
+import blended.updater.config.LauncherConfig
+import blended.updater.config.RuntimeConfig
+import com.typesafe.config.ConfigFactory
+import org.osgi.framework.BundleContext
+import scala.collection.immutable._
+import scala.util.control.NonFatal
+import scala.concurrent.duration.Duration
 
 object Updater {
 
+  /**
+   * Supported Messages by the [[Updater]] actor.
+   */
   sealed trait Protocol {
     def requestId: String
   }
+  /**
+   * Supported Replies by the [[Updater]] actor.
+   */
   trait Reply
 
   /**
@@ -45,6 +54,7 @@ object Updater {
 
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
   case class StageRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
+  case class StageNextRuntimeConfig(requestId: String) extends Protocol
   case class RuntimeConfigStaged(requestId: String) extends Reply
   case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
 
@@ -105,6 +115,7 @@ object Updater {
 
   object Profile {
     sealed trait ProfileState
+    case class Pending(issues: Seq[String]) extends ProfileState
     case class Invalid(issues: Seq[String]) extends ProfileState
     case object Valid extends ProfileState
   }
@@ -115,6 +126,8 @@ object Updater {
 
 }
 
+// TODO: Move profiles with persisting issues into invalid state
+// TODO: Move auto-staging enablement and interval into config
 class Updater(
   configDir: String,
   installBaseDir: File,
@@ -137,6 +150,8 @@ class Updater(
 
   private[this] var profiles: Map[ProfileId, Profile] = Map()
 
+  private[this] var stageProfilesTicker: Option[Cancellable] = None
+
   private[this] def stageInProgress(state: State): Unit = {
     val id = state.requestId
     val config = state.config
@@ -157,8 +172,26 @@ class Updater(
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
   override def preStart(): Unit = {
-    log.debug("Initial scanning for profiles")
+    log.info("Initial scanning for profiles")
     self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
+
+    log.info("Enabling auto-staging")
+    implicit val eCtx = context.system.dispatcher
+    stageProfilesTicker = Some(context.system.scheduler.schedule(Duration(1, TimeUnit.MINUTES), Duration(5, TimeUnit.MINUTES)) {
+      self ! StageNextRuntimeConfig(nextId())
+    })
+
+    super.preStart()
+
+  }
+
+  override def postStop(): Unit = {
+    stageProfilesTicker.foreach { t =>
+      log.info("Disabling auto-staging")
+      t.cancel()
+    }
+    stageProfilesTicker = None
+    super.postStop()
   }
 
   def protocol(msg: Protocol): Unit = msg match {
@@ -185,7 +218,7 @@ class Updater(
                 val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
                 val profileState = issues match {
                   case Seq() => Profile.Valid
-                  case issues => Profile.Invalid(issues)
+                  case issues => Profile.Pending(issues)
                 }
                 List(Profile(versionDir, runtimeConfig, profileState))
               } else List()
@@ -222,13 +255,22 @@ class Updater(
           val confFile = new File(dir, "profile.conf")
 
           ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-          profiles += id -> Profile(dir, config, Profile.Invalid(Seq("Never checked")))
+          profiles += id -> Profile(dir, config, Profile.Pending(Seq("Never checked")))
 
           sender() ! RuntimeConfigAdded(reqId)
         case Some(`config`) =>
           sender() ! RuntimeConfigAdded(reqId)
         case Some(collision) =>
           sender() ! RuntimeConfigAdditionFailed(reqId, "A different runtime config is already present under the same coordinates")
+      }
+
+    case StageNextRuntimeConfig(reqId) =>
+      if (stagingInProgress.isEmpty) {
+        profiles.collect {
+          case (id, Profile(_, _, Profile.Pending(_))) =>
+            log.info("About to auto-stage profile {}", id)
+            self ! StageRuntimeConfig(nextId(), id.name, id.version)
+        }
       }
 
     case StageRuntimeConfig(reqId, name, version) =>
