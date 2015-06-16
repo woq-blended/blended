@@ -38,14 +38,14 @@ class BlendedUpdaterActivator extends ActorSystemAware {
         frameworkBundle.update()
       }
 
-      val configFile = new File(configDir, "blended.updater.conf")
-
-      val launcherFile = new File(configDir, "blended.launcher.conf")
+      //      val configFile = new File(configDir, "blended.updater.conf")
+      //      val launcherFile = new File(configDir, "blended.launcher.conf")
+      
       val launcherConfigSetter = { config: LauncherConfig =>
         // TODO: write Config
       }
 
-      Updater.props(configDir, installDir, launcherConfigSetter, restartFrameworkAction)
+      Updater.props(installDir, launcherConfigSetter, restartFrameworkAction)
     }
 
     setupBundleActor(mainActorFactory)

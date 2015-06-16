@@ -69,14 +69,12 @@ object Updater {
   case class UnknownRequestId(requestId: String) extends Reply
 
   def props(
-    configDir: String,
     baseDir: File,
     launcherConfigSetter: LauncherConfig => Unit,
     restartFramework: () => Unit,
     artifactDownloaderProps: Props = null,
     artifactCheckerProps: Props = null): Props =
     Props(new Updater(
-      configDir,
       baseDir,
       launcherConfigSetter,
       restartFramework,
@@ -129,7 +127,6 @@ object Updater {
 // TODO: Move profiles with persisting issues into invalid state
 // TODO: Move auto-staging enablement and interval into config
 class Updater(
-  configDir: String,
   installBaseDir: File,
   launchConfigSetter: LauncherConfig => Unit,
   restartFramework: () => Unit,

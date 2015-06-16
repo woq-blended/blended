@@ -49,9 +49,8 @@ class UpdaterTest
       withTestFiles("Bundle 1", launchConfig) { (bundle1, launcherConfigFile) =>
         withTestDir() { baseDir =>
 
-          val configDir = new File(baseDir, "config")
           val installBaseDir = new File(baseDir, "install")
-          val updater = system.actorOf(Updater.props(configDir.getPath(), installBaseDir,
+          val updater = system.actorOf(Updater.props(installBaseDir,
             { c => }, { () => }), s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
@@ -116,13 +115,11 @@ class UpdaterTest
       withTestFiles("Bundle 1", "Bundle 2", "Bundle 3", launchConfig) { (bundle1, bundle2, bundle3, launcherConfigFile) =>
         withTestDir() { baseDir =>
 
-          val configDir = new File(baseDir, "config")
           val installBaseDir = new File(baseDir, "install")
           var restarted = false
           var curLaunchConfig = Option.empty[LauncherConfig]
           val updater = system.actorOf(
             Updater.props(
-              configDir.getPath(),
               installBaseDir,
               { c => curLaunchConfig = Some(c) },
               () => restarted = true),
