@@ -47,16 +47,34 @@ object Launcher {
 
   class Cmdline {
 
-    @CmdOption(names = Array("--config", "-c"), args = Array("FILE"), description = "Configuration file")
+    @CmdOption(names = Array("--config", "-c"), args = Array("FILE"),
+      description = "Configuration file",
+      conflictsWith = Array("--profile", "--profile-lookup")
+    )
     def setPonfigFile(file: String): Unit = configFile = Option(file)
     var configFile: Option[String] = None
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
     var help: Boolean = false
 
-    @CmdOption(names = Array("--profile", "-p"), args = Array("profile"), description = "Profile file or directory")
+    @CmdOption(names = Array("--profile", "-p"), args = Array("profile"),
+      description = "Start the profile from file or directory {0}",
+      conflictsWith = Array("--profile-lookup", "--config")
+    )
     def setProfileDir(dir: String): Unit = profileDir = Option(dir)
     var profileDir: Option[String] = None
+
+    @CmdOption(names = Array("--framework-restart", "-r"), args = Array("BOOLEAN"),
+      description = "Should the launcher restart the framework after updates." +
+        " If disabled and the framework was updated, the exit code is 2.")
+    var handleFrameworkRestart: Boolean = true
+
+    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("configfile"),
+      description = "Lookup to profile file or directory from the config file {0}",
+      conflictsWith = Array("--profile", "--config")
+    )
+    def setProfileLookup(file: String): Unit = profileLookup = Option(file)
+    var profileLookup: Option[String] = None
   }
 
   def main(args: Array[String]): Unit = {
@@ -76,36 +94,49 @@ object Launcher {
       sys.exit(0)
     }
 
-    val launcherConfig = cmdline.configFile match {
-      case Some(configFile) =>
-        val config = ConfigFactory.parseFile(new File(configFile)).resolve()
-        LauncherConfig.read(config)
-      case None =>
-        cmdline.profileDir match {
-          case None =>
-            Console.err.println("Either a config file or a profile dir must be given")
-            sys.exit(1)
-          case Some(profile) =>
-            val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
-              profile -> new File(profile, "profile.conf")
-            } else {
-              Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
-            }
-            val config = ConfigFactory.parseFile(profileFile).resolve()
-            val runtimeConfig = RuntimeConfig.read(config)
-            ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
-        }
-    }
+    val handleFrameworkRestart = cmdline.handleFrameworkRestart
 
-    val launcher = new Launcher(launcherConfig)
-    val errors = launcher.validate()
-    if (!errors.isEmpty) {
-      Console.err.println("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
-      sys.exit(1)
-    }
-    launcher.run()
-    sys.exit(0)
+    var retVal = 0
+    do {
+      val launcherConfig = cmdline.configFile match {
+        case Some(configFile) =>
+          val config = ConfigFactory.parseFile(new File(configFile)).resolve()
+          LauncherConfig.read(config)
+        case None =>
+          val profile = cmdline.profileLookup match {
+            case Some(p) => 
+              val c = ConfigFactory.parseFile(new File(p)).resolve()
+              c.getString("profile")
+            case None =>
+              cmdline.profileDir match {
+                case None =>
+                  Console.err.println("Either a config file or a profile dir or file or a profile lookup path must be given")
+                  sys.exit(1)
+                case Some(profile) => profile
+              }
+          }
 
+          val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
+            profile -> new File(profile, "profile.conf")
+          } else {
+            Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
+          }
+          val config = ConfigFactory.parseFile(profileFile).resolve()
+          val runtimeConfig = RuntimeConfig.read(config)
+          ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+      }
+
+      val launcher = new Launcher(launcherConfig)
+      val errors = launcher.validate()
+      if (!errors.isEmpty) {
+        Console.err.println("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
+        retVal = 1
+      } else {
+        retVal = launcher.run()
+      }
+    } while (handleFrameworkRestart && retVal == 2)
+
+    sys.exit(retVal)
   }
 
   def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
@@ -221,16 +252,24 @@ class Launcher private (config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(): Unit = {
+  def run(): Int = {
     val framework = start()
 
-    def awaitFrameworkStop(framwork: Framework): Unit = {
+    def awaitFrameworkStop(framwork: Framework): Int = {
       val event = framework.waitForStop(0)
       event.getType match {
-        case FrameworkEvent.ERROR => log.info("Framework has encountered an error: ", event.getThrowable)
-        case FrameworkEvent.STOPPED => log.info("Framework has been stopped by bundle " + event.getBundle)
-        case FrameworkEvent.STOPPED_UPDATE => log.info("Framework has been updated by " + event.getBundle + " and need a restart")
-        case _ => log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
+        case FrameworkEvent.ERROR =>
+          log.info("Framework has encountered an error: ", event.getThrowable)
+          1
+        case FrameworkEvent.STOPPED =>
+          log.info("Framework has been stopped by bundle " + event.getBundle)
+          0
+        case FrameworkEvent.STOPPED_UPDATE =>
+          log.info("Framework has been updated by " + event.getBundle + " and need a restart")
+          2
+        case _ =>
+          log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
+          0
       }
     }
 
@@ -248,6 +287,7 @@ class Launcher private (config: LauncherConfig) {
     } catch {
       case NonFatal(x) =>
         log.error("Framework was interrupted. Cause: ", x)
+        1
     } finally {
       Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
     }
