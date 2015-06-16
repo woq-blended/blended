@@ -79,13 +79,11 @@ object RuntimeConfigBuilder {
         }.getOrElse(b)
       }
 
-      val newBundles = runtimeConfig.bundles.map(checkAndupdateBundle)
-      val newFragments = runtimeConfig.fragments.map { f =>
-        f.copy(bundles = f.bundles.map(checkAndupdateBundle))
-      }
       val newRuntimeConfig = runtimeConfig.copy(
-        bundles = newBundles,
-        fragments = newFragments
+        bundles = runtimeConfig.bundles.map(checkAndupdateBundle),
+        fragments = runtimeConfig.fragments.map { f =>
+          f.copy(bundles = f.bundles.map(checkAndupdateBundle))
+        }
       )
 
       if (runtimeConfig != newRuntimeConfig) {
