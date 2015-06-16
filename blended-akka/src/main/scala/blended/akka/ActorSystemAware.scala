@@ -42,7 +42,7 @@ abstract class ActorSystemAware
 
       onStop {
         preStopBundleActor(actorConfig, actorRef)
-        actorRef ! PoisonPill
+        system.stop(actorRef)
       }
     }
   }
