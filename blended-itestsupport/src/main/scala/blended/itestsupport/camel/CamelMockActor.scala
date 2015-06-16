@@ -16,30 +16,72 @@
 
 package blended.itestsupport.camel
 
-import akka.actor.ActorLogging
-import akka.camel.{Ack, CamelMessage, Consumer}
+import java.util.UUID
+
+import akka.actor.{Actor, ActorLogging}
+import akka.camel.{CamelMessage, CamelExtension}
 import akka.event.LoggingReceive
 import blended.itestsupport.camel.protocol._
+import org.apache.camel.{Exchange, Processor}
+import org.apache.camel.builder.RouteBuilder
+
+import scala.collection.convert.Wrappers.JMapWrapper
 
 object CamelMockActor {
-  def apply(uri: String, ack: Boolean = true) = new CamelMockActor(uri)
+  def apply(uri: String) = new CamelMockActor(uri)
 }
 
-class CamelMockActor(uri: String, ack: Boolean = true) extends Consumer with ActorLogging {
-  
-  override def endpointUri: String = uri
+class CamelMockActor(uri: String) extends Actor with ActorLogging {
 
-  override def receive = receiving()
-  
-  override def autoAck = false
-  
+  private[this] val camelContext = CamelExtension(context.system).context
+  private[this] val mockActor = self
+  private[this] var routeId : Option[String] = None
+
+  override def preStart(): Unit = {
+    log.debug("Starting Camel Mock Actor for [{}]", uri)
+
+    camelContext.addRoutes( new RouteBuilder() {
+
+      override def configure(): Unit = {
+
+        routeId = Some(UUID.randomUUID().toString())
+
+        routeId.foreach { rid =>
+          context.system.log.debug("Starting mock route {}", rid)
+          from(uri)
+            .id(rid)
+            .process(new Processor {
+            override def process(exchange: Exchange): Unit = {
+              val header = JMapWrapper(exchange.getIn().getHeaders()).filter { case (k,v) => Option(v).isDefined }.toMap
+              val msg = CamelMessage(exchange.getIn().getBody(), header)
+              mockActor ! msg
+            }
+          })
+        }
+      }
+    })
+    super.preStart()
+  }
+
+
+  override def postStop(): Unit = {
+    routeId.foreach { rid =>
+      log.debug("Stopping route [{}]", rid)
+      camelContext.stopRoute(rid)
+      camelContext.removeRoute(rid)
+    }
+    super.postStop()
+  }
+
+  override def receive: Actor.Receive = receiving()
+
   def receiving(messages: List[CamelMessage] = List.empty) : Receive = LoggingReceive {
     
-    case msg : CamelMessage => 
+    case msg : CamelMessage =>
+      log.debug("Received msg at uri [{}]", uri)
       context.become(receiving(msg :: messages))
       context.system.eventStream.publish(MockMessageReceived(uri))
-      if (ack) sender ! Ack
-    
+
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
     
     case ca : CheckAssertions => 

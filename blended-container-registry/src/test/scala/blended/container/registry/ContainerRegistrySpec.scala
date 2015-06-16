@@ -17,7 +17,7 @@
 package blended.karaf.container.registry
 
 import akka.actor.Props
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import blended.akka.OSGIActorConfig
 import blended.container.context.{ContainerContext, ContainerIdentifierService}
 import blended.container.registry.protocol._
@@ -44,12 +44,16 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 
   "Container registry" should {
 
-    "Respond with a OK message upon an container update message" in new TestActorSys {
+    "Respond with a OK message upon an container update message" in TestActorSys { testkit =>
+
+      implicit val system = testkit.system
+
+      val probe = TestProbe()
 
       val registry = TestActorRef(Props(ContainerRegistryImpl(OSGIActorConfig(osgiContext, system, idSvc))))
-      registry ! UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas")))
+      registry.tell(UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas"))), probe.ref)
 
-      expectMsg(ContainerRegistryResponseOK("foo"))
+      probe.expectMsg(ContainerRegistryResponseOK("foo"))
     }
   }
 

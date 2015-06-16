@@ -57,16 +57,22 @@ class OSGIDummyListener(cfg: OSGIActorConfig) extends OSGIActor(cfg) { this : OS
 
 //----------
 
-class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
-
+class OSGIEventSourceListenerSpec extends WordSpec
+  with Matchers
+  with TestSetup
+  with MockitoSugar {
 
   "The OSGI Event source listener" should {
 
-    "subscribe to a publisher bundle if it already exists in the actor system" in new TestActorSys with TestSetup with MockitoSugar {
+    "subscribe to a publisher bundle if it already exists in the actor system" in TestActorSys { testkit =>
+
+      implicit val system = testkit.system
 
       import scala.concurrent.duration._
 
-      system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+      val probe = TestProbe()
+
+      system.eventStream.subscribe(probe.ref, classOf[BundleActorStarted])
 
       val publisher = TestActorRef(Props(OSGIActorDummyPublisher(testActorConfig("publisher", system))), "publisher")
       val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
@@ -75,7 +81,7 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
       system.eventStream.publish(BundleActorStarted("listener"))
 
       // We need to wait for the Actor bundle to finish it's initialization
-      fishForMessage() {
+      probe.fishForMessage() {
         case BundleActorStarted(s) if s == "listener" => true
         case _ => false
       }
@@ -91,15 +97,19 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     }
   }
 
-  "start referring to the dlc when the publisher is unavailbale" in new TestActorSys with TestSetup with MockitoSugar {
+  "start referring to the dlc when the publisher is unavailbale" in TestActorSys { testkit =>
+
+    implicit val system = testkit.system
 
     val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+    val probe = TestProbe()
+
+    system.eventStream.subscribe(probe.ref, classOf[BundleActorStarted])
     system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
-    fishForMessage() {
+    probe.fishForMessage() {
       case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }
@@ -108,17 +118,21 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     listenerReal.publisher should be(system.deadLetters)
   }
 
-  "subscribe to the publisher when it becomes available" in new TestActorSys with TestSetup with MockitoSugar {
+  "subscribe to the publisher when it becomes available" in TestActorSys { testkit =>
 
     import scala.concurrent.duration._
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+    implicit val system = testkit.system
+
+    val probe = TestProbe()
+
+    system.eventStream.subscribe(probe.ref, classOf[BundleActorStarted])
 
     val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
     system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
-    fishForMessage() {
+    probe.fishForMessage() {
       case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }
@@ -137,15 +151,19 @@ class OSGIEventSourceListenerSpec extends WordSpec with Matchers {
     latch.isOpen should be (true)
   }
 
-  "fallback to system.dlc when the publisher becomes unavailable" in new TestActorSys with TestSetup with MockitoSugar {
+  "fallback to system.dlc when the publisher becomes unavailable" in TestActorSys { testkit =>
+
+    implicit val system = testkit.system
 
     val listener = TestActorRef(Props(OSGIDummyListener(testActorConfig("listener", system))), "listener")
 
-    system.eventStream.subscribe(testActor, classOf[BundleActorStarted])
+    val probe = TestProbe()
+
+    system.eventStream.subscribe(probe.ref, classOf[BundleActorStarted])
     system.eventStream.publish(BundleActorStarted("listener"))
 
     // We need to wait for the Actor bundle to finish it's initialization
-    fishForMessage() {
+    probe.fishForMessage() {
       case BundleActorStarted(s) if s == "listener" => true
       case _ => false
     }

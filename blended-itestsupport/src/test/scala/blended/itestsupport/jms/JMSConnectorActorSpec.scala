@@ -18,10 +18,11 @@ package blended.itestsupport.jms
 
 import akka.actor.Props
 import akka.pattern.ask
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import akka.util.Timeout
-import blended.util.protocol.{CounterInfo, TrackingCounter}
 import blended.itestsupport.jms.protocol._
+import blended.testsupport.TestActorSys
+import blended.util.protocol.{CounterInfo, TrackingCounter}
 import org.apache.activemq.ActiveMQConnectionFactory
 
 import scala.concurrent.Await
@@ -32,40 +33,49 @@ class JMSConnectorActorSpec extends AbstractJMSSpec {
 
   "The JMSConnectorActor" should {
 
-    "Allow to (dis)connect via the underlying JMS connection factory" in {
+    "Allow to (dis)connect via the underlying JMS connection factory" in TestActorSys { testkit =>
+      implicit val system = testkit.system
 
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
       connect(connector)
       disconnect(connector)
     }
 
-    "Respond with a caught exception if the connection can't be established" in {
+    "Respond with a caught exception if the connection can't be established" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val invalidCf = new ActiveMQConnectionFactory("vm://foo?create=false")
       val connector = TestActorRef(Props(JMSConnectorActor(invalidCf)))
 
-      connector ! Connect("invalid")
+      connector.tell(Connect("invalid"), probe.ref)
 
-      fishForMessage() {
+      probe.fishForMessage() {
         case Left(e: JMSCaughtException) => true
         case _ => false
       }
     }
 
-    "Allow to create a producer" in {
+    "Allow to create a producer" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
       connect(connector)
 
-      connector ! CreateProducer("queue:test")
-      expectMsgAllClassOf(classOf[ProducerActor])
+      connector.tell(CreateProducer("queue:test"), probe.ref)
+      probe.expectMsgAllClassOf(classOf[ProducerActor])
 
       disconnect(connector)
     }
 
-    "Allow to create a consumer" in {
+    "Allow to create a consumer" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
 
       implicit val timeout = Timeout(3.seconds)
 
-      system.eventStream.subscribe(testActor, classOf[ConsumerStopped])
+      system.eventStream.subscribe(probe.ref, classOf[ConsumerStopped])
 
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
       connect(connector)
@@ -74,15 +84,18 @@ class JMSConnectorActorSpec extends AbstractJMSSpec {
         Await.result((connector ? CreateConsumer("queue:test")).mapTo[ConsumerActor], 1.second)
 
       consumer.consumer ! StopConsumer
-      expectMsg(ConsumerStopped("queue:test"))
+      probe.expectMsg(ConsumerStopped("queue:test"))
 
       disconnect(connector)
     }
 
-    "Allow to create a durable subscriber" in {
+    "Allow to create a durable subscriber" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       implicit val timeout = Timeout(3.seconds)
 
-      system.eventStream.subscribe(testActor, classOf[ConsumerStopped])
+      system.eventStream.subscribe(probe.ref, classOf[ConsumerStopped])
 
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
       connect(connector)
@@ -91,18 +104,21 @@ class JMSConnectorActorSpec extends AbstractJMSSpec {
         Await.result((connector ? CreateDurableSubscriber("topic:test", "test")).mapTo[ConsumerActor], 1.second)
 
       consumer.consumer ! StopConsumer
-      expectMsg(ConsumerStopped("topic:test"))
+      probe.expectMsg(ConsumerStopped("topic:test"))
 
       disconnect(connector)
     }
 
-    "Count the number of produced messages" in {
+    "Count the number of produced messages" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       implicit val timeout = Timeout(3.seconds)
 
       val NUM_MSG = new Random(System.currentTimeMillis).nextInt(50) + 50
 
       val connector = TestActorRef(Props(JMSConnectorActor(cf)))
-      val counter = TestActorRef(Props(TrackingCounter(1.second, testActor)))
+      val counter = TestActorRef(Props(TrackingCounter(1.second, probe.ref)))
 
       connect(connector)
 
@@ -115,7 +131,7 @@ class JMSConnectorActorSpec extends AbstractJMSSpec {
         count = NUM_MSG
       )
 
-      fishForMessage() {
+      probe.fishForMessage() {
         case info: CounterInfo =>
           info.count == NUM_MSG
         case _ => false

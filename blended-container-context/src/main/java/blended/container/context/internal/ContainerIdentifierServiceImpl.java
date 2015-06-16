@@ -137,22 +137,20 @@ public class ContainerIdentifierServiceImpl
 
 			log.info("Container identifier is [" + uuid + "]");
 
-			if (!requiresSave) {
-				final Properties backup_props = properties;
-				properties = new Properties();
+			final Properties backup_props = properties;
+			properties = new Properties();
 
-				for (final String key : incoming_props.stringPropertyNames()) {
-					final String value = incoming_props.getProperty(key);
+			for (final String key : incoming_props.stringPropertyNames()) {
+				final String value = incoming_props.getProperty(key);
 
-					if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
-						final String realKey = key.substring(PROP_PROPERTY.length());
-						properties.setProperty(realKey, value);
+				if (key.startsWith(PROP_PROPERTY) && key.length() > PROP_PROPERTY.length()) {
+					final String realKey = key.substring(PROP_PROPERTY.length());
+					properties.setProperty(realKey, value);
 
-						if (backup_props.get(realKey) != null && backup_props.getProperty(realKey).equals(value)) {
-							requiresSave = true;
-						}
-						log.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
+					if (backup_props.get(realKey) != null && backup_props.getProperty(realKey).equals(value)) {
+						requiresSave = true;
 					}
+					log.info(String.format("Set identifier property [%s] to [%s]", realKey, value));
 				}
 			}
 

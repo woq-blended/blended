@@ -17,70 +17,86 @@
 package blended.itestsupport.condition
 
 import akka.actor.Props
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import blended.itestsupport.protocol._
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpec, WordSpecLike}
 
-class SequentialCheckerSpec extends TestActorSys
-  with WordSpecLike
+class SequentialCheckerSpec extends WordSpec
   with Matchers {
 
   "The Condition Checker" should {
 
-    "respond with a satisfied message on an empty list of conditions" in {
+    "respond with a satisfied message on an empty list of conditions" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
 
       val condition = new SequentialComposedCondition()
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
+      probe.expectMsg(ConditionCheckResult(List.empty[Condition], List.empty[Condition]))
     }
 
-    "respond with a satisfied message after a single wrapped condition has been satisfied" in {
+    "respond with a satisfied message after a single wrapped condition has been satisfied" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val conditions = (1 to 1).map { i => new AlwaysTrue() }.toList
       val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
+      probe.expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
-    "respond with a satisfied message after some wrapped conditions have been satisfied" in {
+    "respond with a satisfied message after some wrapped conditions have been satisfied" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val conditions = (1 to 5).map { i => new AlwaysTrue() }.toList
       val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
+      probe.expectMsg(ConditionCheckResult(conditions, List.empty[Condition]))
     }
 
-    "respond with a timeout message after a single wrapped condition has timed out" in {
+    "respond with a timeout message after a single wrapped condition has timed out" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val conditions = (1 to 1).map { i => new NeverTrue() }.toList
       val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
+      probe.expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
     }
 
-    "respond with a timeout message after the first wrapped condition has timed out" in {
+    "respond with a timeout message after the first wrapped condition has timed out" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val conditions = (1 to 5).map { i => new NeverTrue() }.toList
       val condition = new SequentialComposedCondition(conditions.toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
+      probe.expectMsg(ConditionCheckResult(List.empty[Condition], conditions))
     }
 
     """"
      respond with a timeout message containing the remaining Conditions
      after the first failing condition has timed out
-    """ in {
+    """ in TestActorSys { testkit =>
+
+      implicit val system = testkit.system
+      val probe = TestProbe()
 
       val trueConditions      = (1 to 2).map { i => new AlwaysTrue() }.toList
       val remainingConditions = new NeverTrue() :: (1 to 2).map { i => new AlwaysTrue() }.toList
@@ -88,10 +104,9 @@ class SequentialCheckerSpec extends TestActorSys
       val condition = new SequentialComposedCondition((trueConditions ::: remainingConditions).toSeq:_*)
 
       val checker = TestActorRef(Props(ConditionActor(condition)))
-      checker ! CheckCondition
+      checker.tell(CheckCondition, probe.ref)
 
-      expectMsg(ConditionCheckResult(trueConditions, remainingConditions))
+      probe.expectMsg(ConditionCheckResult(trueConditions, remainingConditions))
     }
   }
-
 }

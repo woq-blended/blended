@@ -19,23 +19,24 @@ package blended.itestsupport.docker
 import java.util.UUID
 
 import akka.actor.{Props, Terminated}
-import akka.testkit.TestActorRef
+import akka.testkit.{TestProbe, TestActorRef}
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.{ContainerLink, ContainerUnderTest}
 import blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{Matchers, WordSpec}
 
-class DependentContainerActorSpec extends TestActorSys
-  with WordSpecLike
+class DependentContainerActorSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
 
   "the DependentContainerActor" should {
 
-    "Respond with a DependenciesStarted message after the last dependant container was started" in {
-      
+    "Respond with a DependenciesStarted message after the last dependant container was started" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val ctName = "blended_demo_0"
       val imageId = ctImageNames(ctName)
       
@@ -50,12 +51,12 @@ class DependentContainerActorSpec extends TestActorSys
       val container = new DockerContainer(cut)
       val depActor = TestActorRef(Props(DependentContainerActor(cut)))
 
-      watch(depActor)
+      probe.watch(depActor)
 
-      depActor ! ContainerStarted(Right(cut.copy(ctName = "blended_demo_0")))
-      expectMsg( DependenciesStarted(Right(cut.copy(links = List(ContainerLink("foobar", "blended_demo"))))) )
+      depActor.tell(ContainerStarted(Right(cut.copy(ctName = "blended_demo_0"))), probe.ref)
+      probe.expectMsg( DependenciesStarted(Right(cut.copy(links = List(ContainerLink("foobar", "blended_demo"))))) )
 
-      fishForMessage() {
+      probe.fishForMessage() {
         case m : Terminated => true
         case _ => false
       }

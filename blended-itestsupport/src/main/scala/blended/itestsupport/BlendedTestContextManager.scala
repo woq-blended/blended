@@ -43,7 +43,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
         }), "ContainerMgr")
 
       containerMgr ! StartContainerManager(req.cuts)
-      context.become(starting(List(sender), containerMgr) orElse stashing)
+      context.become(starting(List(sender()), containerMgr) orElse stashing)
   } 
   
   def starting(requestors: List[ActorRef], containerMgr: ActorRef) : Receive = LoggingReceive {
@@ -70,12 +70,10 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
       
       val checker = context.system.actorOf(Props(ConditionActor(condition)))
 
-      ((checker ? CheckCondition)(condition.timeout).map { result =>
-        result match {
-          case cr: ConditionCheckResult => ContainerReady(cr.allSatisfied)
-          case _ => ContainerReady(false)
-        }
-      }).pipeTo(sender)
+      (checker ? CheckCondition)(condition.timeout).map {
+        case cr: ConditionCheckResult => ContainerReady(cr.allSatisfied)
+        case _ => ContainerReady(false)
+      }.pipeTo(sender())
 
     case ConfiguredContainers_? => sender ! ConfiguredContainers(cuts)
       

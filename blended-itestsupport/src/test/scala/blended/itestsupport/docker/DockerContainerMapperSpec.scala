@@ -17,38 +17,37 @@
 package blended.itestsupport.docker
 
 import akka.actor.Props
+import akka.testkit.TestProbe
 import blended.itestsupport.ContainerUnderTest
 import blended.testsupport.TestActorSys
-import org.scalatest.{Matchers, WordSpecLike}
 import org.scalatest.mock.MockitoSugar
-import org.slf4j.LoggerFactory
+import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.duration._
 
-class DockerContainerMapperSpec extends TestActorSys
-  with WordSpecLike
+class DockerContainerMapperSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
-  
-  private[this] val log = LoggerFactory.getLogger(classOf[DockerContainerMapperSpec])
-  
+
   "The DockerContainerMapper" should {
     
-    "Respond with an updated list of CUTs upon successful port mappings" in {
-      
+    "Respond with an updated list of CUTs upon successful port mappings" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val cuts = ContainerUnderTest.containerMap(system.settings.config)
       val mapper = system.actorOf(Props(new DockerContainerMapper))
       
-      mapper ! InternalMapDockerContainers(testActor, cuts, mockClient)
+      mapper.tell(InternalMapDockerContainers(probe.ref, cuts, mockClient), probe.ref)
       
-      val msg = receiveOne(3.seconds).asInstanceOf[InternalDockerContainersMapped]
+      val msg = probe.receiveOne(3.seconds).asInstanceOf[InternalDockerContainersMapped]
       
       msg.result match {
         case Left(t) => fail(t)
-        case Right(cuts) => 
-          val jmsDemo = cuts("jms_demo")
-          jmsDemo.ports should have size(3)
+        case Right(container) =>
+          val jmsDemo = container("jms_demo")
+          jmsDemo.ports should have size 3
           
           jmsDemo.ports("jms").privatePort should be(1883)
           jmsDemo.ports("jms").publicPort should be(45004) 
@@ -61,8 +60,8 @@ class DockerContainerMapperSpec extends TestActorSys
 
           jmsDemo.dockerName should be("jms_demo_0")
           
-          val blendedDemo = cuts("blended_demo")
-          blendedDemo.ports should have size(2)
+          val blendedDemo = container("blended_demo")
+          blendedDemo.ports should have size 2
           
           blendedDemo.ports("jmx").privatePort should be(1099)
           blendedDemo.ports("jmx").publicPort should be(45000)

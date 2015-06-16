@@ -47,7 +47,7 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
       val mockProbe = new TestProbe(system)
       testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
  
-      sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", false) match {
+      sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", binary = false) match {
         // We have successfully sent the message 
         case Right(msg) =>
           // make sure the message reaches the mock actors before we start assertions

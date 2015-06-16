@@ -16,7 +16,7 @@
 
 package blended.itestsupport.camel
 
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
 import akka.camel.{CamelExtension, Oneway, Producer}
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
@@ -25,43 +25,44 @@ import blended.itestsupport.camel.protocol._
 import blended.itestsupport.docker.DockerTestSetup
 import blended.testsupport.TestActorSys
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpecLike}
+import org.scalatest.{WordSpec, Matchers, WordSpecLike}
 
 import scala.concurrent.duration._
 
-class CamelMockActorSpec extends TestActorSys
-  with WordSpecLike
+class CamelMockActorSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
 
   implicit val timeout = Timeout(3.seconds)
   
-  val camel = CamelExtension(system)
-  private[this] val log = system.log
+  def mockActor(uri: String)(implicit system : ActorSystem) = TestActorRef(Props(new CamelMockActor(s"direct-vm:$uri")))
   
-  def mockActor(uri: String) = TestActorRef(Props(new CamelMockActor(s"direct-vm:$uri"))) 
-  
-  def producer(uri: String) = TestActorRef(Props(new Producer with Oneway {
+  def producer(uri: String)(implicit system : ActorSystem) = TestActorRef(Props(new Producer with Oneway {
     def endpointUri = s"direct-vm:$uri?block=true"    
   })) 
   
-  def createProbe = {
-    val probe = new TestProbe(system)
+  def createProbe(implicit system : ActorSystem) = {
+    val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[MockMessageReceived])
     probe
   } 
 
   "The Camel Mock Actor" should {
     
-    "Initialze with an empty set of received messages" in {
+    "Initialze with an empty set of received messages" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val probe = TestProbe()
+
       val mock = mockActor("a")
       
-      mock ! GetReceivedMessages 
-      expectMsg(ReceivedMessages(List.empty))
+      mock.tell(GetReceivedMessages, probe.ref)
+      probe.expectMsg(ReceivedMessages(List.empty))
     }
     
-    "Should notify upon reception of a message on the event bus" in {
+    "Should notify upon reception of a message on the event bus" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+
       val mock = mockActor("b") 
       val p = producer("b")
       
@@ -71,33 +72,38 @@ class CamelMockActorSpec extends TestActorSys
       probe.expectMsg(MockMessageReceived("direct-vm:b"))
     }
   
-    "Track the received messages" in {
-      
+    "Track the received messages" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val sender = TestProbe()
+
       val mock = mockActor("c") 
       val p = producer("c") 
       val probe = createProbe
 
-      mock ! GetReceivedMessages 
-      expectMsg(ReceivedMessages(List.empty))
+      mock.tell(GetReceivedMessages, sender.ref)
+      sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:c"))
 
-      mock ! GetReceivedMessages
-      fishForMessage() {
+      mock.tell(GetReceivedMessages, sender.ref)
+      sender.fishForMessage() {
         case list : ReceivedMessages => 
           list.messages.size == 1
         case _ => false
       }
     }
 
-    "Allow execute a list of assertions and collect messages for failed assertions" in {
+    "Allow execute a list of assertions and collect messages for failed assertions" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val sender = TestProbe()
+
       val mock = mockActor("d") 
       val p = producer("d") 
       val probe = createProbe
 
-      mock ! GetReceivedMessages 
-      expectMsg(ReceivedMessages(List.empty))
+      mock.tell(GetReceivedMessages, sender.ref)
+      sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:d"))
@@ -105,13 +111,16 @@ class CamelMockActorSpec extends TestActorSys
       checkAssertions(mock, expectedMessageCount(2)) should have size 1
     }  
 
-    "Allow execute a list of assertions" in {
+    "Allow execute a list of assertions" in TestActorSys { testkit =>
+      implicit val system = testkit.system
+      val sender = TestProbe()
+
       val mock = mockActor("e") 
       val p = producer("e") 
       val probe = createProbe
 
-      mock ! GetReceivedMessages 
-      expectMsg(ReceivedMessages(List.empty))
+      mock.tell(GetReceivedMessages, sender.ref)
+      sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
       probe.expectMsg(MockMessageReceived("direct-vm:e"))
