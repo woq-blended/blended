@@ -96,7 +96,8 @@ object Updater {
       config: RuntimeConfig,
       installDir: File,
       bundlesToDownload: Seq[BundleInProgress],
-      bundlesToCheck: Seq[BundleInProgress]) {
+      bundlesToCheck: Seq[BundleInProgress],
+      issues: Seq[String]) {
 
     val profileId = ProfileId(config.name, config.version)
 
@@ -157,8 +158,12 @@ class Updater(
 
     if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
       stagingInProgress = stagingInProgress.filterKeys(id != _)
-      profiles += state.profileId -> Profile(state.installDir, state.config, Profile.Valid)
-      state.requestActor ! RuntimeConfigStaged(id)
+      val (profileState, msg) = state.issues match {
+        case Seq() => Profile.Valid -> RuntimeConfigStaged(id)
+        case issues => Profile.Invalid(issues) -> RuntimeConfigStagingFailed(id, issues.mkString("; "))
+      }
+      profiles += state.profileId -> Profile(state.installDir, state.config, profileState)
+      state.requestActor ! msg
     } else {
       stagingInProgress += id -> state
     }
@@ -194,38 +199,40 @@ class Updater(
   def protocol(msg: Protocol): Unit = msg match {
 
     case ScanForRuntimeConfigs(reqId) =>
-      val nameDirs = Option(installBaseDir.listFiles).getOrElse(Array()).toList
-      val foundProfiles = nameDirs.flatMap { nameDir =>
-        val versionDirs = Option(nameDir.listFiles).getOrElse(Array()).toList
-        versionDirs.flatMap { versionDir =>
-          val profileFile = new File(versionDir, "profile.conf")
-          if (!profileFile.exists()) Nil
-          else {
-            try {
-              val config = ConfigFactory.parseFile(profileFile).resolve()
-              val runtimeConfig = RuntimeConfig.read(config)
-              if (runtimeConfig.name == nameDir.getName() && runtimeConfig.version == versionDir.getName()) {
-                //                val stagedMarkerFile = new File(versionDir, ".staged")
-                //                val profileState =
-                //                  if (stagedMarkerFile.exists() && stagedMarkerFile.lastModified() >= profileFile.lastModified()) {
-                //                    Profile.Valid
-                //                  } else {
-                //                    Profile.Invalid(Seq())
-                //                  }
-                val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
-                val profileState = issues match {
-                  case Seq() => Profile.Valid
-                  case issues => Profile.Pending(issues)
-                }
-                List(Profile(versionDir, runtimeConfig, profileState))
-              } else List()
-            } catch {
-              case NonFatal(e) => List()
+      // profileFiles
+      val confs = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
+        flatMap { nameDir =>
+          Option(nameDir.listFiles).getOrElse(Array()).toList.
+            flatMap { versionDir =>
+              val profileFile = new File(versionDir, "profile.conf")
+              if (profileFile.exists()) Some(profileFile)
+              else None
             }
-          }
         }
 
+      log.info("Detected profile configs : {}", confs)
+
+      // read configs
+      val foundProfiles = confs.flatMap { profileFile =>
+        val versionDir = profileFile.getParentFile()
+        val version = versionDir.getName()
+        val name = versionDir.getParentFile.getName()
+        try {
+          val config = ConfigFactory.parseFile(profileFile).resolve()
+          val runtimeConfig = RuntimeConfig.read(config)
+          if (runtimeConfig.name == name && runtimeConfig.version == version) {
+            val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
+            val profileState = issues match {
+              case Seq() => Profile.Valid
+              case issues => Profile.Pending(issues)
+            }
+            List(Profile(versionDir, runtimeConfig, profileState))
+          } else List()
+        } catch {
+          case NonFatal(e) => List()
+        }
       }
+
       profiles = foundProfiles.map { profile => profile.profile -> profile }.toMap
 
     case GetRuntimeConfigs(reqId) =>
@@ -302,7 +309,7 @@ class Updater(
               artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
               inProgress
             }
-            stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId))
+            stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId, Seq()))
           }
 
       }
@@ -318,7 +325,7 @@ class Updater(
           requestingActor ! RuntimeConfigActivated(reqId)
           restartFramework()
         case _ =>
-          sender() ! RuntimeConfigActivationFailed(reqId, "No such active runtime configuration found")
+          sender() ! RuntimeConfigActivationFailed(reqId, "No such staged runtime configuration found")
       }
 
     case GetProgress(reqId) =>
@@ -349,18 +356,19 @@ class Updater(
       }
 
     case DownloadFailed(downloadId, url, file, error) =>
-      val foundState = stagingInProgress.values.find { state =>
-        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.isDefined
-      }
-      foundState match {
-        case None =>
+      val foundProgress = stagingInProgress.values.flatMap { state =>
+        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+      }.toList
+      foundProgress match {
+        case Nil =>
           log.error("Unkown download id {}. Url: {}", downloadId, url)
-        case Some(state) =>
-          log.debug("Cancelling in progress state: {}\nReason: {}", state, error)
-          stagingInProgress = stagingInProgress.filterKeys(state.requestId != _)
-          state.requestActor ! RuntimeConfigStagingFailed(state.requestId, error.getMessage())
+        case (state, bundleInProgress) :: _ =>
+          stageInProgress(state.copy(
+            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress != _),
+            issues = error.getMessage() +: state.issues
+          ))
       }
-
+      
     case ValidChecksum(checkId, file, sha1Sum) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
         state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
@@ -382,10 +390,10 @@ class Updater(
         case Nil =>
           log.error("Unkown check id {}. file: {}", checkId, file)
         case (state, bundleInProgress) :: _ =>
-          val errorMsg = "Invalid checksum for resource from URL: " + bundleInProgress.bundle.url
-          log.debug("Cancelling in progress state: {}\nReason: Invalid checksum", state)
-          stagingInProgress = stagingInProgress.filterKeys(state.requestId != _)
-          state.requestActor ! RuntimeConfigStagingFailed(state.requestId, errorMsg)
+          stageInProgress(state.copy(
+            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress != _),
+            issues = s"Invalid checksum for file ${file}" +: state.issues
+          ))
       }
 
   }

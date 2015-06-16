@@ -32,7 +32,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
     val mainActorFactory: PropsFactory = { config =>
       log.info(s"About to setup ${getClass()}")
       val configDir = config.idSvc.getContainerContext().getContainerConfigDirectory()
-      val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "installations").getAbsoluteFile()
+      val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
       val restartFrameworkAction = { () =>
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
@@ -40,7 +40,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
 
       //      val configFile = new File(configDir, "blended.updater.conf")
       //      val launcherFile = new File(configDir, "blended.launcher.conf")
-      
+
       val launcherConfigSetter = { config: LauncherConfig =>
         // TODO: write Config
       }
@@ -77,8 +77,8 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
     val configs = Await.result(
       ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
       timeout.duration)
-    "unstaged: " + configs.unstaged + "\n" +
-      "staged: " + configs.staged
+    "unstaged: " + configs.unstaged.map(p => p.name + "-" + p.version).mkString(", ") + "\n" +
+      "staged: " + configs.staged.map(p => p.name + "-" + p.version).mkString(", ")
   }
 
   def add(file: File): AnyRef = {
