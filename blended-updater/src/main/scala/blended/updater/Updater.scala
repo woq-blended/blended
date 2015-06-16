@@ -44,7 +44,7 @@ object Updater {
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
   case class GetRuntimeConfigs(requestId: String) extends Protocol
-  case class RuntimeConfigs(requestId: String, unstaged: Seq[RuntimeConfig], staged: Seq[RuntimeConfig]) extends Reply
+  case class RuntimeConfigs(requestId: String, staged: Seq[RuntimeConfig], pending: Seq[RuntimeConfig], invalid: Seq[RuntimeConfig]) extends Reply
 
   case class AddRuntimeConfig(requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
   case class RuntimeConfigAdded(requestId: String) extends Reply
@@ -125,7 +125,6 @@ object Updater {
 
 }
 
-// TODO: Move profiles with persisting issues into invalid state
 // TODO: Move auto-staging enablement and interval into config
 class Updater(
   installBaseDir: File,
@@ -236,15 +235,10 @@ class Updater(
       profiles = foundProfiles.map { profile => profile.profile -> profile }.toMap
 
     case GetRuntimeConfigs(reqId) =>
-      val (staged, unstaged) = profiles.values.toList.partition { p =>
-        p.state match {
-          case Profile.Valid => true
-          case _ => false
-        }
-      }
       sender() ! RuntimeConfigs(reqId,
-        unstaged = unstaged.map(_.config),
-        staged = staged.map(_.config)
+        staged = profiles.values.toList.collect { case Profile(dir, config, Profile.Valid) => config },
+        pending = profiles.values.toList.collect { case Profile(dir, config, Profile.Pending(_)) => config },
+        invalid = profiles.values.toList.collect { case Profile(dir, config, Profile.Invalid(_)) => config }
       )
 
     case AddRuntimeConfig(reqId, config) =>
@@ -270,11 +264,11 @@ class Updater(
 
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
-        profiles.collect {
+        profiles.toStream.collect {
           case (id, Profile(_, _, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
             self ! StageRuntimeConfig(nextId(), id.name, id.version)
-        }
+        }.headOption
       }
 
     case StageRuntimeConfig(reqId, name, version) =>
@@ -368,7 +362,7 @@ class Updater(
             issues = error.getMessage() +: state.issues
           ))
       }
-      
+
     case ValidChecksum(checkId, file, sha1Sum) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
         state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList

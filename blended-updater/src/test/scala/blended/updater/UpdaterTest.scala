@@ -171,7 +171,7 @@ class UpdaterTest
               val queryId = nextId()
               updater ! GetRuntimeConfigs(queryId)
               fishForMessage() {
-                case RuntimeConfigs(`queryId`, Seq(`config`), Seq()) => true
+                case RuntimeConfigs(`queryId`, Seq(), Seq(`config`), Seq()) => true
               }
             }
 
@@ -193,7 +193,7 @@ class UpdaterTest
               val queryId = nextId()
               updater ! GetRuntimeConfigs(queryId)
               fishForMessage() {
-                case RuntimeConfigs(`queryId`, Seq(), Seq(`config`)) => true
+                case RuntimeConfigs(`queryId`, Seq(`config`), Seq(), Seq()) => true
               }
             }
 

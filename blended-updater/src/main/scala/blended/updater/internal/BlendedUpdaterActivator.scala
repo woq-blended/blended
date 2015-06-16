@@ -77,8 +77,12 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
     val configs = Await.result(
       ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
       timeout.duration)
-    "unstaged: " + configs.unstaged.map(p => p.name + "-" + p.version).mkString(", ") + "\n" +
-      "staged: " + configs.staged.map(p => p.name + "-" + p.version).mkString(", ")
+      
+    def format(config: RuntimeConfig): String = s"${config.name}-${config.version}"
+    
+    "staged: " + configs.staged.map(format).mkString(", ") + "\n" +
+      "pending: " + configs.pending.map(format).mkString(", ") + "\n" +
+      "invalid: " + configs.invalid.map(format).mkString(", ")
   }
 
   def add(file: File): AnyRef = {
