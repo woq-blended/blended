@@ -8,6 +8,8 @@ import blended.updater.config.ConfigWriter
 import blended.updater.config.RuntimeConfig
 import de.tototec.cmdoption.CmdOption
 import de.tototec.cmdoption.CmdlineParser
+import scala.collection.JavaConverters._
+import scala.collection.immutable._
 
 object RuntimeConfigBuilder {
 
@@ -26,13 +28,19 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("-f"), args = Array("configfile"))
     var configFile: String = ""
+
+    @CmdOption(names = Array("-r", "--fragment-repo"), args = Array("file"),
+      description = "Lookup fragments from {0}",
+      maxCount = -1
+    )
+    def addFragmentRepo(repo: String): Unit = fragmentRepos +:= repo
+    var fragmentRepos: Seq[String] = Seq()
   }
 
   def main(args: Array[String]): Unit = {
     println(s"RuntimeConfigBuilder: ${args.mkString(" ")}")
 
     val options = new CmdOptions()
-    //    val api = new CmdlineApi()
 
     val cp = new CmdlineParser(options)
     cp.parse(args: _*)
@@ -45,10 +53,18 @@ object RuntimeConfigBuilder {
       sys.error("No config file given")
     }
 
+    // read fragment repo files
+    val fragments = options.fragmentRepos.flatMap { fileName => 
+      val repoConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
+      repoConfig.getObjectList("fragments").asScala.map { c =>
+    	  RuntimeConfig.FragmentConfig.read(c.toConfig()).get
+      }
+    }
+    
     val configFile = new File(options.configFile).getAbsoluteFile()
     val dir = configFile.getParentFile()
-    val config = ConfigFactory.parseFile(new File(options.configFile)).resolve()
-    var runtimeConfig = RuntimeConfig.read(config)
+    val config = ConfigFactory.parseFile(configFile).resolve()
+    var runtimeConfig = RuntimeConfig.read(config, fragments).get
 
     if (options.check) {
       val issues = RuntimeConfig.validate(dir, runtimeConfig)

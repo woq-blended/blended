@@ -17,7 +17,7 @@ class RuntimeConfigTest extends FreeSpecLike {
       |""".stripMargin
 
     "read" in {
-      val config = RuntimeConfig.read(ConfigFactory.parseString(minimal))
+      val config = RuntimeConfig.read(ConfigFactory.parseString(minimal)).get
     }
 
     val lines = minimal.trim().split("\n")
@@ -25,7 +25,7 @@ class RuntimeConfigTest extends FreeSpecLike {
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n")))
+          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get
         }
         assert(ex.isInstanceOf[ConfigException.ValidationFailed] || ex.isInstanceOf[IllegalArgumentException])
       }
@@ -34,7 +34,7 @@ class RuntimeConfigTest extends FreeSpecLike {
     "read -> toConfig -> read must result in same config" in {
       import RuntimeConfig._
       val config = read(ConfigFactory.parseString(minimal))
-      assert(config === read(toConfig(config)))
+      assert(config === read(toConfig(config.get)))
     }
   }
 

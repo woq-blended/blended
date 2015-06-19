@@ -26,6 +26,7 @@ import org.osgi.framework.BundleContext
 import scala.collection.immutable._
 import scala.util.control.NonFatal
 import scala.concurrent.duration.Duration
+import scala.util.Try
 
 object Updater {
 
@@ -216,9 +217,9 @@ class Updater(
         val versionDir = profileFile.getParentFile()
         val version = versionDir.getName()
         val name = versionDir.getParentFile.getName()
-        try {
+        Try {
           val config = ConfigFactory.parseFile(profileFile).resolve()
-          val runtimeConfig = RuntimeConfig.read(config)
+          val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
             val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
             val profileState = issues match {
@@ -227,9 +228,7 @@ class Updater(
             }
             List(Profile(versionDir, runtimeConfig, profileState))
           } else List()
-        } catch {
-          case NonFatal(e) => List()
-        }
+        }.getOrElse(List())
       }
 
       profiles = foundProfiles.map { profile => profile.profile -> profile }.toMap

@@ -33,12 +33,37 @@ object RuntimeConfig {
     start: Boolean,
     startLevel: Option[Int])
 
+  object BundleConfig {
+    def read(config: Config): Try[BundleConfig] = Try {
+      BundleConfig(
+        url = config.getString("url"),
+        jarName = config.getString("jarName"),
+        sha1Sum = config.getString("sha1Sum"),
+        start = if (config.hasPath("start")) config.getBoolean("start") else false,
+        startLevel = if (config.hasPath("startLevel")) Option(config.getInt("startLevel")) else None
+      )
+    }
+  }
+
   case class FragmentConfig(
     name: String,
     version: String,
     bundles: Seq[BundleConfig])
 
-  def read(config: Config): RuntimeConfig = {
+  object FragmentConfig {
+    def read(config: Config): Try[FragmentConfig] = Try {
+      FragmentConfig(
+        name = config.getString("name"),
+        version = config.getString("version"),
+        bundles =
+          if (config.hasPath("bundles")) {
+            config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
+          } else Nil
+      )
+    }
+  }
+
+  def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
@@ -55,22 +80,13 @@ object RuntimeConfig {
     val bundleReference = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val bundleOptionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
 
-    def readBundle(bc: Config) = BundleConfig(
-
-      url = bc.getString("url"),
-      jarName = bc.getString("jarName"),
-      sha1Sum = bc.getString("sha1Sum"),
-      start = if (bc.hasPath("start")) bc.getBoolean("start") else false,
-      startLevel = if (bc.hasPath("startLevel")) Option(bc.getInt("startLevel")) else None
-    )
-
     RuntimeConfig(
       name = config.getString("name"),
       version = config.getString("version"),
       // framework = readBundle(config.getConfig("framework")),
       bundles =
         if (config.hasPath("bundles"))
-          config.getObjectList("bundles").asScala.map { bc => readBundle(bc.toConfig()) }.toList
+          config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
         else Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
@@ -80,11 +96,18 @@ object RuntimeConfig {
         if (config.hasPath("fragments"))
           config.getObjectList("fragments").asScala.map { f =>
           val fc = f.toConfig()
-          FragmentConfig(
-            name = fc.getString("name"),
-            version = fc.getString("version"),
-            bundles = config.getObjectList("bundles").asScala.map { bc => readBundle(bc.toConfig()) }.toList
-          )
+          if (fc.hasPath("bundles")) {
+            // read directly
+            FragmentConfig.read(fc).get
+          } else {
+            // lookup in repo
+            val fName = fc.getString("name")
+            val fVersion = fc.getString("version")
+            fragmentRepo.find(f => f.name == fName && f.version == fVersion) match {
+              case Some(f) => f
+              case None => sys.error(s"Could not found bundles for fragment: ${fName}-${fVersion}")
+            }
+          }
         }.toList
         else Seq()
     )

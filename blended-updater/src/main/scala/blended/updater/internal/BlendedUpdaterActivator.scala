@@ -87,7 +87,7 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
 
   def add(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file).resolve()
-    val runtimeConfig = RuntimeConfig.read(config)
+    val runtimeConfig = RuntimeConfig.read(config).get
     println("About to add: " + runtimeConfig)
 
     implicit val timeout = Timeout(5, SECONDS)

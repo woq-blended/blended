@@ -122,7 +122,7 @@ object Launcher {
             Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
           }
           val config = ConfigFactory.parseFile(profileFile).resolve()
-          val runtimeConfig = RuntimeConfig.read(config)
+          val runtimeConfig = RuntimeConfig.read(config).get
           ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
       }
 
