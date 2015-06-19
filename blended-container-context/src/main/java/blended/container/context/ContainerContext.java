@@ -24,7 +24,10 @@ public interface ContainerContext {
   public String getContainerConfigDirectory();
   public String getContainerHostname();
 
+  @Deprecated
   public Properties readConfig(String configId);
+
+  @Deprecated
   public void writeConfig(String configId, Properties props);
 
 }

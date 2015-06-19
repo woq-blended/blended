@@ -38,6 +38,12 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.configadmin</artifactId>
+      <version>${felix.ca.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.util</artifactId>
       <version>${blended.version}</version>
