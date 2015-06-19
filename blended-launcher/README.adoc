@@ -5,13 +5,13 @@ Launch an OSGi Framework.
 == Invocation
 
 ----
-java -cp launcher.jar:org.osgi.core-5.0.0.jar:com.typesafe.config-1.2.1.jar de.wayofquality.blended.launcher.Launcher configfile
+java -cp launcher.jar:org.osgi.core-5.0.0.jar:com.typesafe.config-1.2.1.jar blended.launcher.Launcher configfile
 ----
 
 == Configuration
 
 [source,conf]
-de.wayofquality.blended.launcher.Launcher {
+blended.launcher.Launcher {
   # configuration goes here
 }
 

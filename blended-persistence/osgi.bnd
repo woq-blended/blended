@@ -1,7 +1,7 @@
-Bundle-Version:\
+Bundle-Version: \
   ${project.version}
 
-Bundle-SymbolicName:\
+Bundle-SymbolicName: \
   ${bundle.symbolicName}; singleton:=true
 
 Export-Package: \
@@ -17,4 +17,3 @@ Private-Package:\
 
 Bundle-Activator: \
   ${bundle.namespace}.internal.PersistenceActivator
-

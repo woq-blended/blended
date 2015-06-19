@@ -50,8 +50,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.helgoboss</groupId>
-      <artifactId>domino</artifactId>
+      <groupId>com.github.domino-osgi</groupId>
+      <artifactId>domino_${scala.version}</artifactId>
       <version>${domino.version}</version>
     </dependency>
 
@@ -63,8 +63,12 @@
 
     <dependency>
       <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
-      <version>${scala.version}.${scala.micro.version}</version>
     </dependency>
 
     <dependency>

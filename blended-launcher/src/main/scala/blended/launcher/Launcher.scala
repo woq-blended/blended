@@ -19,7 +19,7 @@ package blended.launcher
 import java.io.File
 import java.net.URLClassLoader
 import java.util.ServiceLoader
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -31,86 +31,143 @@ import org.osgi.framework.launch.Framework
 import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
+import org.osgi.framework.wiring.FrameworkWiring
 import blended.launcher.internal.Logger
+import blended.updater.config.LauncherConfig
+import de.tototec.cmdoption.CmdOption
+import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.CmdlineParserException
+import blended.updater.config.ConfigConverter
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.RuntimeConfig
 
 object Launcher {
 
+  case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
+
+  class Cmdline {
+
+    @CmdOption(names = Array("--config", "-c"), args = Array("FILE"),
+      description = "Configuration file",
+      conflictsWith = Array("--profile", "--profile-lookup")
+    )
+    def setPonfigFile(file: String): Unit = configFile = Option(file)
+    var configFile: Option[String] = None
+
+    @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
+    var help: Boolean = false
+
+    @CmdOption(names = Array("--profile", "-p"), args = Array("profile"),
+      description = "Start the profile from file or directory {0}",
+      conflictsWith = Array("--profile-lookup", "--config")
+    )
+    def setProfileDir(dir: String): Unit = profileDir = Option(dir)
+    var profileDir: Option[String] = None
+
+    @CmdOption(names = Array("--framework-restart", "-r"), args = Array("BOOLEAN"),
+      description = "Should the launcher restart the framework after updates." +
+        " If disabled and the framework was updated, the exit code is 2.")
+    var handleFrameworkRestart: Boolean = true
+
+    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("configfile"),
+      description = "Lookup to profile file or directory from the config file {0}",
+      conflictsWith = Array("--profile", "--config")
+    )
+    def setProfileLookup(file: String): Unit = profileLookup = Option(file)
+    var profileLookup: Option[String] = None
+  }
+
   def main(args: Array[String]): Unit = {
 
-    val configFile = args match {
-      case Array(configFile) => new File(configFile).getAbsoluteFile()
-      case _ =>
-        Console.err.println("Usage: main configfile")
+    val cmdline = new Cmdline()
+    val cp = new CmdlineParser(cmdline)
+    try {
+      cp.parse(args: _*)
+    } catch {
+      case e: CmdlineParserException =>
+        Console.err.println(s"Error: ${e.getMessage()}\nRun launcher --help for help.")
         sys.exit(1)
     }
 
-    new Launcher(LauncherConfig.read(configFile)).run()
-    sys.exit(0)
+    if (cmdline.help) {
+      cp.usage()
+      sys.exit(0)
+    }
 
+    val handleFrameworkRestart = cmdline.handleFrameworkRestart
+
+    var retVal = 0
+    do {
+      val launcherConfig = cmdline.configFile match {
+        case Some(configFile) =>
+          val config = ConfigFactory.parseFile(new File(configFile)).resolve()
+          LauncherConfig.read(config)
+        case None =>
+          val profile = cmdline.profileLookup match {
+            case Some(p) => 
+              val c = ConfigFactory.parseFile(new File(p)).resolve()
+              c.getString("profile")
+            case None =>
+              cmdline.profileDir match {
+                case None =>
+                  Console.err.println("Either a config file or a profile dir or file or a profile lookup path must be given")
+                  sys.exit(1)
+                case Some(profile) => profile
+              }
+          }
+
+          val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
+            profile -> new File(profile, "profile.conf")
+          } else {
+            Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
+          }
+          val config = ConfigFactory.parseFile(profileFile).resolve()
+          val runtimeConfig = RuntimeConfig.read(config).get
+          ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+      }
+
+      val launcher = new Launcher(launcherConfig)
+      val errors = launcher.validate()
+      if (!errors.isEmpty) {
+        Console.err.println("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
+        retVal = 1
+      } else {
+        retVal = launcher.run()
+      }
+    } while (handleFrameworkRestart && retVal == 2)
+
+    sys.exit(retVal)
   }
+
+  def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
 
 }
 
-case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
-
-case class LauncherConfig(
-  frameworkJar: String,
-  systemProperties: Map[String, String],
-  frameworkProperties: Map[String, String],
-  startLevel: Int,
-  defaultStartLevel: Int,
-  bundles: Seq[BundleConfig])
-
-object LauncherConfig {
-
-  private[this] val log = Logger[LauncherConfig.type]
-
-  def read(file: File): LauncherConfig = {
-
-    val config = ConfigFactory.parseFile(file).getConfig("de.wayofquality.blended.launcher.Launcher").resolve()
-
-    val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf",
-      ConfigParseOptions.defaults().setAllowMissing(false))
-    log.debug(s"Checking config with reference: ${reference}")
-    config.checkValid(reference)
-
-    LauncherConfig(
-      frameworkJar = config.getString("frameworkBundle"),
-      systemProperties = config.getConfig("systemProperties")
-        .entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap,
-      frameworkProperties = config.getConfig("frameworkProperties")
-        .entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap,
-      startLevel = config.getInt("startLevel"),
-      defaultStartLevel = config.getInt("defaultStartLevel"),
-      bundles = config.getObjectList("bundles")
-        .asScala.map { b =>
-          val c = b.toConfig()
-          BundleConfig(
-            location = c.getString("location"),
-            start = if (c.hasPath("start")) c.getBoolean("start") else false,
-            startLevel = if (c.hasPath("startLevel")) c.getInt("startLevel") else config.getInt("defaultStartLevel")
-          )
-        }.toList
-    )
-
-  }
-
-}
-
-class Launcher(config: LauncherConfig) {
+class Launcher private (config: LauncherConfig) {
   import Launcher._
 
   private[this] val log = Logger[Launcher]
 
-  case class InstalledBundle(jarBundle: BundleConfig, bundle: Bundle)
+  /**
+   * Validate this Launcher's configuration and return the issues if any found.
+   */
+  def validate(): Seq[String] = {
+    val files = ("Framework JAR", config.frameworkJar) :: config.bundles.toList.map(b => "Bundle JAR" -> b.location)
+    files.flatMap {
+      case (kind, file) =>
+        val f = new File(file).getAbsoluteFile()
+        if (!f.exists()) Some(s"${kind} ${f} does not exists")
+        else if (!f.isFile()) Some(s"${kind} ${f} is not a file")
+        else if (!f.canRead()) Some(s"${kind} ${f} is not readable")
+        else None
+    }
 
-  def run(): Unit = {
+  }
+
+  /**
+   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
+   */
+  def start(): Framework = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
@@ -127,7 +184,7 @@ class Launcher(config: LauncherConfig) {
     val frameworkStartLevel = framework.adapt(classOf[FrameworkStartLevel])
     frameworkStartLevel.setInitialBundleStartLevel(config.defaultStartLevel)
 
-    framework.start
+    framework.start()
     log.info(s"Framework started. State: ${framework.getState}")
 
     log.info("Installing bundles");
@@ -174,19 +231,45 @@ class Launcher(config: LauncherConfig) {
           failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
         }")
       }
+    }
 
+    val bundlesInInstalledState = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
+    if (!bundlesInInstalledState.isEmpty) {
+      log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
+      log.info("Resolving installed bundles")
+      val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
+      frameworkWiring.resolveBundles(null /* all bundles */ )
+      val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
+      log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
     }
 
     log.info("Laucher finished starting of framework and bundles. Awaiting framework termination now.")
     // Framework and bundles started
 
-    def awaitFrameworkStop(framwork: Framework): Unit = {
+    framework
+  }
+
+  /**
+   * Run an (embedded) OSGiFramework based of this Launcher's configuration.
+   */
+  def run(): Int = {
+    val framework = start()
+
+    def awaitFrameworkStop(framwork: Framework): Int = {
       val event = framework.waitForStop(0)
       event.getType match {
-        case FrameworkEvent.ERROR => log.info("Framework has encountered an error: ", event.getThrowable)
-        case FrameworkEvent.STOPPED => log.info("Framework has been stopped by bundle " + event.getBundle)
-        case FrameworkEvent.STOPPED_UPDATE => log.info("Framework has been updated by " + event.getBundle + " and need a restart")
-        case _ => log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
+        case FrameworkEvent.ERROR =>
+          log.info("Framework has encountered an error: ", event.getThrowable)
+          1
+        case FrameworkEvent.STOPPED =>
+          log.info("Framework has been stopped by bundle " + event.getBundle)
+          0
+        case FrameworkEvent.STOPPED_UPDATE =>
+          log.info("Framework has been updated by " + event.getBundle + " and need a restart")
+          2
+        case _ =>
+          log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
+          0
       }
     }
 
@@ -197,16 +280,17 @@ class Launcher(config: LauncherConfig) {
         awaitFrameworkStop(framework)
       }
     }
+
     try {
       Runtime.getRuntime.addShutdownHook(shutdownHook)
       awaitFrameworkStop(framework)
     } catch {
       case NonFatal(x) =>
         log.error("Framework was interrupted. Cause: ", x)
+        1
     } finally {
       Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
     }
-
   }
 
 }

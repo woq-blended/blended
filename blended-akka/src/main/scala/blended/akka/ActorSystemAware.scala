@@ -19,7 +19,7 @@ package blended.akka
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import blended.akka.protocol.BundleActorStarted
 import blended.container.context.ContainerIdentifierService
-import org.helgoboss.domino.DominoActivator
+import domino.DominoActivator
 
 abstract class ActorSystemAware
   extends DominoActivator {

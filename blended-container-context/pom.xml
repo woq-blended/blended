@@ -42,6 +42,11 @@
   <dependencies>
 
     <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.util</artifactId>
       <version>${blended.version}</version>
@@ -60,8 +65,8 @@
     </dependency>
 
     <dependency>
-      <groupId>org.helgoboss</groupId>
-      <artifactId>domino</artifactId>
+      <groupId>com.github.domino-osgi</groupId>
+      <artifactId>domino_${scala.version}</artifactId>
       <version>${domino.version}</version>
     </dependency>
 

@@ -24,6 +24,7 @@
 		<groupId>de.wayofquality.blended</groupId>
 		<artifactId>blended.parent</artifactId>
 		<version>1.2-SNAPSHOT</version>
+		<relativePath>../blended-parent</relativePath>
 	</parent>
 
 	<name>${project.artifactId}</name>
@@ -41,6 +42,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.core</artifactId>
 			<version>5.0.0</version>
@@ -54,6 +59,21 @@
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
 			<version>${typesafe.config.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-daemon</groupId>
+			<artifactId>commons-daemon</artifactId>
+			<version>1.0.15</version>
+		</dependency>
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.updater.config</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.tototec</groupId>
+			<artifactId>de.tototec.cmdoption</artifactId>
+			<version>0.4.2</version>
 		</dependency>
 
 		<dependency>
@@ -96,6 +116,12 @@
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.fileinstall</artifactId>
 			<version>${felix.fileinstall.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.metatype</artifactId>
+			<version>${felix.metatype.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
