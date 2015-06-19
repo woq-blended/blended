@@ -1,15 +1,15 @@
 package blended.updater.tools.configbuilder
 
 import java.io.File
-
 import com.typesafe.config.ConfigFactory
-
 import blended.updater.config.ConfigWriter
 import blended.updater.config.RuntimeConfig
 import de.tototec.cmdoption.CmdOption
 import de.tototec.cmdoption.CmdlineParser
 import scala.collection.JavaConverters._
 import scala.collection.immutable._
+import scala.util.Failure
+import scala.util.Try
 
 object RuntimeConfigBuilder {
 
@@ -54,13 +54,13 @@ object RuntimeConfigBuilder {
     }
 
     // read fragment repo files
-    val fragments = options.fragmentRepos.flatMap { fileName => 
+    val fragments = options.fragmentRepos.flatMap { fileName =>
       val repoConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
       repoConfig.getObjectList("fragments").asScala.map { c =>
-    	  RuntimeConfig.FragmentConfig.read(c.toConfig()).get
+        RuntimeConfig.FragmentConfig.read(c.toConfig()).get
       }
     }
-    
+
     val configFile = new File(options.configFile).getAbsoluteFile()
     val dir = configFile.getParentFile()
     val config = ConfigFactory.parseFile(configFile).resolve()
@@ -75,12 +75,19 @@ object RuntimeConfigBuilder {
     }
 
     if (options.downloadMissing) {
-      runtimeConfig.allBundles.foreach { b =>
+      val issues = runtimeConfig.allBundles.par.map { b =>
         val jar = new File(dir, b.jarName)
         if (!jar.exists()) {
           println(s"Downloading: ${jar}")
-          RuntimeConfig.download(b.url, jar)
-        }
+          b -> RuntimeConfig.download(b.url, jar)
+        } else b -> Try(jar)
+      }.collect {
+        case (b, Failure(e)) =>
+          Console.err.println(s"Could not download bundle: ${b.jarName} (${e.getMessage()}")
+          e
+      }
+      if (!issues.isEmpty) {
+        sys.exit(1)
       }
     }
 

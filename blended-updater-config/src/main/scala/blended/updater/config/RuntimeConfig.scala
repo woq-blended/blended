@@ -64,6 +64,9 @@ object RuntimeConfig {
   }
 
   def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
+    
+    // TODO: ensure, all fragments are non-empty
+    
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
