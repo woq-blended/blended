@@ -182,40 +182,49 @@ object RuntimeConfig {
       }
 
       val tmpFile = File.createTempFile(s".${file.getName()}", "", parentDir)
-
-      val outStream = new BufferedOutputStream(new FileOutputStream(tmpFile))
       try {
 
-        val connection = new URL(url).openConnection
-        connection.setRequestProperty("User-Agent", "Blended Updater")
-        val inStream = new BufferedInputStream(connection.getInputStream())
+        val outStream = new BufferedOutputStream(new FileOutputStream(tmpFile))
         try {
-          val bufferSize = 1024
-          var break = false
-          var len = 0
-          var buffer = new Array[Byte](bufferSize)
 
-          while (!break) {
-            inStream.read(buffer, 0, bufferSize) match {
-              case x if x < 0 => break = true
-              case count => {
-                len = len + count
-                outStream.write(buffer, 0, count)
+          val connection = new URL(url).openConnection
+          connection.setRequestProperty("User-Agent", "Blended Updater")
+          val inStream = new BufferedInputStream(connection.getInputStream())
+          try {
+            val bufferSize = 1024
+            var break = false
+            var len = 0
+            var buffer = new Array[Byte](bufferSize)
+
+            while (!break) {
+              inStream.read(buffer, 0, bufferSize) match {
+                case x if x < 0 => break = true
+                case count => {
+                  len = len + count
+                  outStream.write(buffer, 0, count)
+                }
               }
             }
+          } finally {
+            inStream.close()
           }
         } finally {
-          inStream.close()
+          outStream.flush()
+          outStream.close()
         }
-      } finally {
-        outStream.flush()
-        outStream.close()
+
+        Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()),
+          StandardCopyOption.ATOMIC_MOVE);
+
+        file
+      } catch {
+        case NonFatal(e) =>
+          if (tmpFile.exists()) {
+            tmpFile.delete()
+          }
+          throw e
       }
 
-      Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()),
-        StandardCopyOption.ATOMIC_MOVE);
-
-      file
     }
 
   def validate(baseDir: File, config: RuntimeConfig): Seq[String] = {
