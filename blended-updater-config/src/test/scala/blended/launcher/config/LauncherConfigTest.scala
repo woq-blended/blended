@@ -1,10 +1,10 @@
-package blended.updater.config
+package blended.launcher.config
 
-import org.scalatest.Finders
 import org.scalatest.FreeSpec
-
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
+import blended.launcher.config.LauncherConfig.read
+import blended.launcher.config.LauncherConfig.toConfig
 
 class LauncherConfigTest extends FreeSpec {
 

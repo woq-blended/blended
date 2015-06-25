@@ -26,6 +26,13 @@ import java.nio.file.StandardCopyOption
 
 object RuntimeConfig {
 
+  object Properties {
+    val PROFILES_DIR = "blended.updater.profiles.dir"
+    val PROFILE_NAME = "blended.updater.profile.name"
+    val PROFILE_VERSION = "blended.updater.profile.version"
+    val MVN_REPO = "blended.updater.mvn.url"
+  }
+  
   case class BundleConfig(
     url: String,
     jarName: String,
@@ -64,9 +71,9 @@ object RuntimeConfig {
   }
 
   def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
-    
+
     // TODO: ensure, all fragments are non-empty
-    
+
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
@@ -93,6 +100,7 @@ object RuntimeConfig {
         else Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
+      properties = configAsMap("properties", Some(() => Map())),
       frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
       systemProperties = configAsMap("systemProperties", Some(() => Map())),
       fragments =
@@ -251,10 +259,10 @@ object RuntimeConfig {
 case class RuntimeConfig(
     name: String,
     version: String,
-    //    framework: BundleConfig,
     bundles: Seq[RuntimeConfig.BundleConfig],
     startLevel: Int,
     defaultStartLevel: Int,
+    properties: Map[String, String],
     frameworkProperties: Map[String, String],
     systemProperties: Map[String, String],
     fragments: Seq[RuntimeConfig.FragmentConfig]) {

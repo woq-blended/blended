@@ -19,7 +19,7 @@ import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
 import blended.updater.config.ConfigConverter
 import blended.updater.config.ConfigWriter
-import blended.updater.config.LauncherConfig
+import blended.launcher.config.LauncherConfig
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.ConfigFactory
 import org.osgi.framework.BundleContext

@@ -24,7 +24,7 @@ import blended.updater.Updater.Progress
 import blended.updater.Updater.RuntimeConfigStaged
 import blended.updater.Updater.RuntimeConfigActivated
 import blended.updater.config.RuntimeConfig
-import blended.updater.config.LauncherConfig
+import blended.launcher.config.LauncherConfig
 import blended.updater.test.TestSupport.DeleteWhenNoFailure
 import blended.updater.test.TestSupport.DeleteNever
 
@@ -68,7 +68,8 @@ class UpdaterTest
             startLevel = 10,
             defaultStartLevel = 10,
             frameworkProperties = Map(),
-            systemProperties = Map()
+            systemProperties = Map(),
+            properties = Map()
           )
 
           {
@@ -155,7 +156,8 @@ class UpdaterTest
               startLevel = 10,
               defaultStartLevel = 10,
               frameworkProperties = Map(),
-              systemProperties = Map()
+              systemProperties = Map(),
+              properties = Map()
             )
 
             {

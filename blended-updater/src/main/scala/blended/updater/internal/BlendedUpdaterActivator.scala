@@ -19,11 +19,18 @@ import blended.updater.Updater._
 import com.typesafe.config.ConfigRenderOptions
 import java.io.FileOutputStream
 import java.io.PrintStream
-import blended.updater.config.LauncherConfig
+import blended.launcher.config.LauncherConfig
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.ConfigConverter
+import scala.util.Try
+import java.util.Properties
 
 class BlendedUpdaterActivator extends ActorSystemAware {
+
+  Try {
+    val props = blended.launcher.runtime.Branding.getProperties()
+    println("Blended Launcher detected: " + props)
+  }
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 
@@ -77,9 +84,15 @@ class Commands(updater: ActorRef)(implicit val actorSystem: ActorSystem) {
     val configs = Await.result(
       ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
       timeout.duration)
-      
-    def format(config: RuntimeConfig): String = s"${config.name}-${config.version}"
-    
+
+    val branding = Try { blended.launcher.runtime.Branding.getProperties() }.getOrElse(new Properties())
+    val pName = Option(branding.getProperty(RuntimeConfig.Properties.PROFILE_NAME)).getOrElse("")
+    val pVersion = Option(branding.getProperty(RuntimeConfig.Properties.PROFILE_VERSION)).getOrElse("")
+
+    def format(config: RuntimeConfig): String = {
+      s"${config.name}-${config.version}${if (pName == config.name && pVersion == config.version) " [active]" else ""}"
+    }
+
     "staged: " + configs.staged.map(format).mkString(", ") + "\n" +
       "pending: " + configs.pending.map(format).mkString(", ") + "\n" +
       "invalid: " + configs.invalid.map(format).mkString(", ")

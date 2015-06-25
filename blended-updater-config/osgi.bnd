@@ -9,7 +9,5 @@ Import-Package: \
   *
 
 Export-Package: \
-  ${bundle.namespace}
-
-Private-Package: \
-  ${bundle.namespace}.internal
+  ${bundle.namespace}, \
+  blended.launcher.config

@@ -73,6 +73,13 @@
 
 		<dependency>
 			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.launcher</artifactId>
+			<version>${blended.version}</version>
+			<!-- <scope>provided</scope> -->
+		</dependency>
+
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
 			<artifactId>blended.container.context</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
