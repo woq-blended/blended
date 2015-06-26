@@ -97,6 +97,7 @@ object RuntimeConfig {
       "bundles" -> runtimeConfig.bundles.map(BundleConfig.toConfig).map(_.root().unwrapped()).asJava,
       "startLevel" -> runtimeConfig.startLevel,
       "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
+      "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
       "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava
@@ -217,6 +218,17 @@ case class RuntimeConfig(
     frameworkProperties: Map[String, String],
     systemProperties: Map[String, String],
     fragments: Seq[FragmentConfig]) {
+
+  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
+
+  def resolveBundleUrl(url: String): Try[String] = Try {
+    if (url.startsWith("mvn:")) {
+      mvnBaseUrl match {
+        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
+        case None => sys.error("No repository defined to resolve url: " + url)
+      }
+    } else url
+  }
 
   def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
 

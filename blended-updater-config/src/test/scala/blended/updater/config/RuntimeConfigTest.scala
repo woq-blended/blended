@@ -1,8 +1,9 @@
 package blended.updater.config
 
 import org.scalatest.FreeSpecLike
-import com.typesafe.config.ConfigFactory
+
 import com.typesafe.config.ConfigException
+import com.typesafe.config.ConfigFactory
 
 class RuntimeConfigTest extends FreeSpecLike {
 

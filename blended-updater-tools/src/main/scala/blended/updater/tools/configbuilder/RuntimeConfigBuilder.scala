@@ -81,11 +81,11 @@ object RuntimeConfigBuilder {
         val jar = new File(dir, b.jarName)
         if (!jar.exists()) {
           println(s"Downloading: ${jar}")
-          b -> RuntimeConfig.download(b.url, jar)
+          b -> RuntimeConfig.download(runtimeConfig.resolveBundleUrl(b.url).get, jar)
         } else b -> Try(jar)
       }.collect {
         case (b, Failure(e)) =>
-          Console.err.println(s"Could not download bundle: ${b.jarName} (${e.getMessage()}")
+          Console.err.println(s"Could not download bundle: ${b.jarName} (${e.getClass.getSimpleName()}: ${e.getMessage()})")
           e
       }
       if (!issues.isEmpty) {

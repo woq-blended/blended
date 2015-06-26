@@ -112,7 +112,10 @@ class BlendedUpdaterActivator extends ActorSystemAware {
 
   override def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     commandsReg.map { reg =>
-      reg.unregister()
+      try { reg.unregister() } catch {
+        case _: IllegalStateException =>
+          // might be because the framework already unregistered the Commands class
+      }
       commandsReg = None
     }
   }
