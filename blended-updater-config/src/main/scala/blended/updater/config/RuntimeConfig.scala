@@ -1,28 +1,30 @@
 package blended.updater.config
 
 import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
+import scala.util.Try
 import scala.util.control.NonFatal
+
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
-import java.io.FileOutputStream
-import java.net.URL
-import java.io.BufferedOutputStream
-import scala.util.Try
-import java.nio.file.Paths
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 object RuntimeConfig {
 
@@ -30,44 +32,8 @@ object RuntimeConfig {
     val PROFILES_DIR = "blended.updater.profiles.dir"
     val PROFILE_NAME = "blended.updater.profile.name"
     val PROFILE_VERSION = "blended.updater.profile.version"
+    val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
     val MVN_REPO = "blended.updater.mvn.url"
-  }
-  
-  case class BundleConfig(
-    url: String,
-    jarName: String,
-    sha1Sum: String,
-    start: Boolean,
-    startLevel: Option[Int])
-
-  object BundleConfig {
-    def read(config: Config): Try[BundleConfig] = Try {
-      BundleConfig(
-        url = config.getString("url"),
-        jarName = config.getString("jarName"),
-        sha1Sum = config.getString("sha1Sum"),
-        start = if (config.hasPath("start")) config.getBoolean("start") else false,
-        startLevel = if (config.hasPath("startLevel")) Option(config.getInt("startLevel")) else None
-      )
-    }
-  }
-
-  case class FragmentConfig(
-    name: String,
-    version: String,
-    bundles: Seq[BundleConfig])
-
-  object FragmentConfig {
-    def read(config: Config): Try[FragmentConfig] = Try {
-      FragmentConfig(
-        name = config.getString("name"),
-        version = config.getString("version"),
-        bundles =
-          if (config.hasPath("bundles")) {
-            config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
-          } else Nil
-      )
-    }
   }
 
   def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
@@ -125,30 +91,15 @@ object RuntimeConfig {
   }
 
   def toConfig(runtimeConfig: RuntimeConfig): Config = {
-    def bundle(bundle: BundleConfig) = (
-      Map(
-        "url" -> bundle.url,
-        "jarName" -> bundle.jarName,
-        "sha1Sum" -> bundle.sha1Sum,
-        "start" -> bundle.start
-      ) ++ bundle.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map())
-    ).asJava
-
     val config = Map(
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
-      "bundles" -> runtimeConfig.bundles.map { b => bundle(b) }.asJava,
+      "bundles" -> runtimeConfig.bundles.map(BundleConfig.toConfig).map(_.root().unwrapped()).asJava,
       "startLevel" -> runtimeConfig.startLevel,
       "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "fragments" -> runtimeConfig.fragments.map { f =>
-        Map(
-          "name" -> f.name,
-          "version" -> f.version,
-          "bundles" -> f.bundles.map { b => bundle(b) }.asJava
-        ).asJava
-      }.asJava
+      "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
     ConfigFactory.parseMap(config)
@@ -259,17 +210,17 @@ object RuntimeConfig {
 case class RuntimeConfig(
     name: String,
     version: String,
-    bundles: Seq[RuntimeConfig.BundleConfig],
+    bundles: Seq[BundleConfig],
     startLevel: Int,
     defaultStartLevel: Int,
     properties: Map[String, String],
     frameworkProperties: Map[String, String],
     systemProperties: Map[String, String],
-    fragments: Seq[RuntimeConfig.FragmentConfig]) {
+    fragments: Seq[FragmentConfig]) {
 
-  def allBundles: Seq[RuntimeConfig.BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
 
-  val framework: RuntimeConfig.BundleConfig = {
+  val framework: BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
     require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
     fs.head

@@ -10,6 +10,8 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable._
 import scala.util.Failure
 import scala.util.Try
+import blended.updater.config.FragmentConfig
+import blended.updater.config.BundleConfig
 
 object RuntimeConfigBuilder {
 
@@ -57,7 +59,7 @@ object RuntimeConfigBuilder {
     val fragments = options.fragmentRepos.flatMap { fileName =>
       val repoConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
       repoConfig.getObjectList("fragments").asScala.map { c =>
-        RuntimeConfig.FragmentConfig.read(c.toConfig()).get
+        FragmentConfig.read(c.toConfig()).get
       }
     }
 
@@ -92,7 +94,7 @@ object RuntimeConfigBuilder {
     }
 
     if (options.updateChecksums) {
-      def checkAndupdateBundle(b: RuntimeConfig.BundleConfig): RuntimeConfig.BundleConfig = {
+      def checkAndupdateBundle(b: BundleConfig): BundleConfig = {
         val jar = new File(dir, b.jarName)
         RuntimeConfig.digestFile(jar).map { checksum =>
           if (b.sha1Sum != checksum) {

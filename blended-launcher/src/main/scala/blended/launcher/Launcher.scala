@@ -42,6 +42,7 @@ import blended.updater.config.ConfigConverter
 import com.typesafe.config.ConfigFactory
 import blended.updater.config.RuntimeConfig
 import java.util.Properties
+import blended.updater.config.ProfileLookup
 
 object Launcher {
 
@@ -81,6 +82,8 @@ object Launcher {
 
   def main(args: Array[String]): Unit = {
 
+    val log = Logger[Launcher.type]
+
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
@@ -107,8 +110,11 @@ object Launcher {
         case None =>
           val profile = cmdline.profileLookup match {
             case Some(p) =>
+              log.debug("About to read profile lookup file: " + p)
               val c = ConfigFactory.parseFile(new File(p)).resolve()
-              c.getString("profile")
+              val profileLookup = ProfileLookup.read(c).get
+              log.debug("ProfileLookup: " + profileLookup)
+              s"${profileLookup.profileBaseDir}/${profileLookup.profileName}/${profileLookup.profileVersion}"
             case None =>
               cmdline.profileDir match {
                 case None =>
@@ -125,7 +131,13 @@ object Launcher {
           }
           val config = ConfigFactory.parseFile(profileFile).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
-          ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+          val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+          launchConfig.copy(
+            branding = launchConfig.branding ++ (cmdline.profileLookup match {
+              case None => Map()
+              case Some(f) => Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath())
+            })
+          )
       }
 
       val launcher = new Launcher(launcherConfig)
@@ -182,6 +194,7 @@ class Launcher private (config: LauncherConfig) {
       val brandingProps = new Properties()
       config.branding.foreach { p => brandingProps.setProperty(p._1, p._2) }
       BrandingProperties.setLastBrandingProperties(brandingProps)
+      log.debug("Exposing branding via class " + classOf[BrandingProperties].getName() + ": " + brandingProps)
     }
 
     config.systemProperties foreach { p =>

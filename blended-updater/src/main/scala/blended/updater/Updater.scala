@@ -27,6 +27,7 @@ import scala.collection.immutable._
 import scala.util.control.NonFatal
 import scala.concurrent.duration.Duration
 import scala.util.Try
+import blended.updater.config.BundleConfig
 
 object Updater {
 
@@ -71,13 +72,13 @@ object Updater {
 
   def props(
     baseDir: File,
-    launcherConfigSetter: LauncherConfig => Unit,
+    profileUpdater: (String, String) => Boolean,
     restartFramework: () => Unit,
     artifactDownloaderProps: Props = null,
     artifactCheckerProps: Props = null): Props =
     Props(new Updater(
       baseDir,
-      launcherConfigSetter,
+      profileUpdater,
       restartFramework,
       Option(artifactDownloaderProps),
       Option(artifactCheckerProps)
@@ -86,7 +87,7 @@ object Updater {
   /**
    * A bundle in progress, e.g. downloading or verifying.
    */
-  private case class BundleInProgress(reqId: String, bundle: RuntimeConfig.BundleConfig, file: File)
+  private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
 
   /**
    * Internal working state of in-progress stagings.
@@ -129,7 +130,7 @@ object Updater {
 // TODO: Move auto-staging enablement and interval into config
 class Updater(
   installBaseDir: File,
-  launchConfigSetter: LauncherConfig => Unit,
+  profileUpdater: (String, String) => Boolean,
   restartFramework: () => Unit,
   artifactDownloaderProps: Option[Props],
   artifactCheckerProps: Option[Props])
@@ -312,13 +313,16 @@ class Updater(
       profiles.get(ProfileId(name, version)) match {
         case Some(Profile(dir, config, Profile.Valid)) =>
           // write config
-          val launcherConfig = ConfigConverter.runtimeConfigToLauncherConfig(config, installBaseDir.getPath())
-          log.debug("About to activate launcher config: {}", launcherConfig)
-          launchConfigSetter(launcherConfig)
-          requestingActor ! RuntimeConfigActivated(reqId)
-          restartFramework()
+          log.debug("About to activate new profile for next startup: {}-{}", name, version)
+          val success = profileUpdater(name, version)
+          if (success) {
+            requestingActor ! RuntimeConfigActivated(reqId)
+            restartFramework()
+          } else {
+            requestingActor ! RuntimeConfigActivationFailed(reqId, "Could not update next startup profile")
+          }
         case _ =>
-          sender() ! RuntimeConfigActivationFailed(reqId, "No such staged runtime configuration found")
+          requestingActor ! RuntimeConfigActivationFailed(reqId, "No such staged runtime configuration found")
       }
 
     case GetProgress(reqId) =>
