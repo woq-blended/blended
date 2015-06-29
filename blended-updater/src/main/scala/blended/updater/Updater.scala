@@ -294,8 +294,9 @@ class Updater(
             // download artifacts
             val missingWithId = missing.map { missingBundle =>
               val inProgress = BundleInProgress(nextId(), missingBundle, new File(installDir, missingBundle.jarName))
-              // TODO: handle failure in url resolving in next line
-              artifactDownloader ! Download(inProgress.reqId, self, config.resolveBundleUrl(missingBundle.url).get, inProgress.file)
+              // Let the downloader handle the potentially unsupported url
+              val resolvedUrl = config.resolveBundleUrl(missingBundle.url).getOrElse(missingBundle.url)
+              artifactDownloader ! Download(inProgress.reqId, self, resolvedUrl, inProgress.file)
               inProgress
             }
             // check artifacts
