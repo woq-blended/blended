@@ -29,3 +29,5 @@ New: If all required artifacts are present, the launcher is also able to start d
 * Redownload of JARs with incorrect checksums (retry-count)
 
 * Move download configuration to config file
+
+* Make Bundle/JarName optionen (infer from URL)

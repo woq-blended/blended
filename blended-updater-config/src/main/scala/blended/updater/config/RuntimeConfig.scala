@@ -189,7 +189,7 @@ object RuntimeConfig {
 
   def validate(baseDir: File, config: RuntimeConfig): Seq[String] = {
     config.allBundles.flatMap { b =>
-      val jar = new File(baseDir, b.jarName)
+      val jar = config.bundleLocation(b, baseDir)
       val issue = if (!jar.exists()) {
         Some(s"Missing bundle jar: ${b.jarName}")
       } else {
@@ -237,5 +237,15 @@ case class RuntimeConfig(
     require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
     fs.head
   }
+
+  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
+
+  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.jarName)
+
+  def profileFileLocation(baseDir: File): File =
+    new File(baseDir, "profile.conf")
 
 }

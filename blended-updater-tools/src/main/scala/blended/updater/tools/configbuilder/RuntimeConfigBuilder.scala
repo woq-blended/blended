@@ -78,7 +78,7 @@ object RuntimeConfigBuilder {
 
     if (options.downloadMissing) {
       val issues = runtimeConfig.allBundles.par.map { b =>
-        val jar = new File(dir, b.jarName)
+        val jar = runtimeConfig.bundleLocation(b, dir)
         if (!jar.exists()) {
           println(s"Downloading: ${jar}")
           b -> RuntimeConfig.download(runtimeConfig.resolveBundleUrl(b.url).get, jar)
@@ -95,7 +95,7 @@ object RuntimeConfigBuilder {
 
     if (options.updateChecksums) {
       def checkAndupdateBundle(b: BundleConfig): BundleConfig = {
-        val jar = new File(dir, b.jarName)
+        val jar = runtimeConfig.bundleLocation(b, dir)
         RuntimeConfig.digestFile(jar).map { checksum =>
           if (b.sha1Sum != checksum) {
             println(s"Updating checksum for bundle: ${b.jarName}")

@@ -293,7 +293,7 @@ class Updater(
             val (existing, missing) = bundles.partition(b => new File(installDir, b.jarName).exists())
             // download artifacts
             val missingWithId = missing.map { missingBundle =>
-              val inProgress = BundleInProgress(nextId(), missingBundle, new File(installDir, missingBundle.jarName))
+              val inProgress = BundleInProgress(nextId(), missingBundle, config.bundleLocation(missingBundle, installDir))
               // Let the downloader handle the potentially unsupported url
               val resolvedUrl = config.resolveBundleUrl(missingBundle.url).getOrElse(missingBundle.url)
               artifactDownloader ! Download(inProgress.reqId, self, resolvedUrl, inProgress.file)
@@ -301,7 +301,7 @@ class Updater(
             }
             // check artifacts
             val existingWithId = existing.map { existingBundle =>
-              val inProgress = BundleInProgress(nextId(), existingBundle, new File(installDir, existingBundle.jarName))
+              val inProgress = BundleInProgress(nextId(), existingBundle, config.bundleLocation(existingBundle, installDir))
               artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
               inProgress
             }

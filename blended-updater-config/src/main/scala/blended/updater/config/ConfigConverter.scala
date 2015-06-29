@@ -11,19 +11,19 @@ trait ConfigConverter {
   def runtimeConfigToLauncherConfig(runtimeConfig: RuntimeConfig, profileDir: String): LauncherConfig = {
     import LauncherConfig._
 
-    val baseDirPrefix = s"${profileDir}/"
+    val bundlePrefix = s"${profileDir}/bundles"
 
     val allBundles = runtimeConfig.allBundles.
       filter(b => b.startLevel != Some(0)).
       map { bc =>
         BundleConfig(
-          location = baseDirPrefix + bc.jarName,
+          location = s"${bundlePrefix}/${bc.jarName}",
           start = bc.start,
           startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
       }
 
     LauncherConfig(
-      frameworkJar = baseDirPrefix + runtimeConfig.framework.jarName,
+      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.jarName}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

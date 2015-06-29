@@ -100,7 +100,9 @@ class UpdaterTest
           assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
           assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
           assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0").list().toSet ===
-            Set("profile.conf", "org.osgi.core-5.0.0.jar"))
+            Set("profile.conf", "bundles"))
+          assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/bundles").list().toSet ===
+            Set("org.osgi.core-5.0.0.jar"))
 
         }
       }
@@ -193,7 +195,9 @@ class UpdaterTest
               assert(installBaseDir.list().toSet === Set("test-with-3-bundles"))
               assert(new File(installBaseDir, "test-with-3-bundles").list().toSet === Set("1.0.0"))
               assert(new File(installBaseDir, "test-with-3-bundles/1.0.0").list().toSet ===
-                Set("profile.conf", "bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
+                Set("profile.conf", "bundles"))
+              assert(new File(installBaseDir, "test-with-3-bundles/1.0.0/bundles").list().toSet ===
+                Set("bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
             }
 
             {
