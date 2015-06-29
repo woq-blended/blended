@@ -22,12 +22,13 @@ New: If all required artifacts are present, the launcher is also able to start d
 === TODOs
 
 * Also download configuration files
+
 * Rework profile layout:
 ** currently, all downloaded JARs lie in the profile directory `profiles/<name>/<version>`.
 ** goal: downloaded JARs should be kept in a sub directory, next to a new `etc` directory
 
 * Redownload of JARs with incorrect checksums (retry-count)
 
-* Move download configuration to config file
+* Move download configuration of Update actor to config file
 
 * Make Bundle/JarName optionen (infer from URL)
