@@ -86,6 +86,10 @@ object RuntimeConfig {
             }
           }
         }.toList
+        else Seq(),
+      resources =
+        if (config.hasPath("resources"))
+          config.getObjectList("resources").asScala.map(r => Artifact.read(r.toConfig()).get).toList
         else Seq()
     )
   }
@@ -187,22 +191,25 @@ object RuntimeConfig {
 
     }
 
-  def validate(baseDir: File, config: RuntimeConfig): Seq[String] = {
-    config.allBundles.flatMap { b =>
-      val jar = config.bundleLocation(b, baseDir)
-      val issue = if (!jar.exists()) {
-        Some(s"Missing bundle jar: ${b.jarName}")
-      } else {
-        RuntimeConfig.digestFile(jar) match {
-          case Some(d) =>
-            if (d != b.sha1Sum) {
-              Some(s"Invalid checksum of bundle jar: ${b.jarName}")
-            } else None
-          case None =>
-            Some(s"Could not evaluate checksum of bundle jar: ${b.jarName}")
+  def validate(baseDir: File, config: RuntimeConfig, includeResourceArchives: Boolean): Seq[String] = {
+    val artifacts = config.allBundles.map(b => config.bundleLocation(b, baseDir) -> b.artifact) ++
+      (if (includeResourceArchives) config.resources.map(r => config.resourceArchiveLocation(r, baseDir) -> r) else Seq())
+
+    artifacts.flatMap {
+      case (file, artifact) =>
+        val issue = if (!file.exists()) {
+          Some(s"Missing bundle jar: ${artifact.fileName}")
+        } else {
+          RuntimeConfig.digestFile(file) match {
+            case Some(d) =>
+              if (d != artifact.sha1Sum) {
+                Some(s"Invalid checksum of bundle jar: ${artifact.fileName}")
+              } else None
+            case None =>
+              Some(s"Could not evaluate checksum of bundle jar: ${artifact.fileName}")
+          }
         }
-      }
-      issue.toList
+        issue.toList
     }
   }
 
@@ -217,7 +224,8 @@ case class RuntimeConfig(
     properties: Map[String, String],
     frameworkProperties: Map[String, String],
     systemProperties: Map[String, String],
-    fragments: Seq[FragmentConfig]) {
+    fragments: Seq[FragmentConfig],
+    resources: Seq[Artifact]) {
 
   def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 
@@ -245,7 +253,13 @@ case class RuntimeConfig(
   def bundleLocation(bundle: BundleConfig, baseDir: File): File =
     new File(bundlesBaseDir(baseDir), bundle.jarName)
 
+  def bundleLocation(bundle: Artifact, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.fileName)
+
   def profileFileLocation(baseDir: File): File =
     new File(baseDir, "profile.conf")
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName}")
 
 }

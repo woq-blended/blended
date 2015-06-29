@@ -12,6 +12,7 @@ import scala.util.Failure
 import scala.util.Try
 import blended.updater.config.FragmentConfig
 import blended.updater.config.BundleConfig
+import blended.updater.config.Artifact
 
 object RuntimeConfigBuilder {
 
@@ -69,7 +70,7 @@ object RuntimeConfigBuilder {
     var runtimeConfig = RuntimeConfig.read(config, fragments).get
 
     if (options.check) {
-      val issues = RuntimeConfig.validate(dir, runtimeConfig)
+      val issues = RuntimeConfig.validate(dir, runtimeConfig, includeResourceArchives = true)
       if (!issues.isEmpty) {
         println(issues.mkString("\n"))
         sys.exit(1)
@@ -77,15 +78,25 @@ object RuntimeConfigBuilder {
     }
 
     if (options.downloadMissing) {
-      val issues = runtimeConfig.allBundles.par.map { b =>
-        val jar = runtimeConfig.bundleLocation(b, dir)
-        if (!jar.exists()) {
-          println(s"Downloading: ${jar}")
-          b -> RuntimeConfig.download(runtimeConfig.resolveBundleUrl(b.url).get, jar)
-        } else b -> Try(jar)
-      }.collect {
-        case (b, Failure(e)) =>
-          Console.err.println(s"Could not download bundle: ${b.jarName} (${e.getClass.getSimpleName()}: ${e.getMessage()})")
+
+      val files = runtimeConfig.allBundles.map(b =>
+        runtimeConfig.bundleLocation(b, dir) -> runtimeConfig.resolveBundleUrl(b.url).getOrElse(b.url)
+      ) ++
+        runtimeConfig.resources.map(r =>
+          runtimeConfig.resourceArchiveLocation(r, dir) -> runtimeConfig.resolveBundleUrl(r.url).getOrElse(r.url)
+        )
+
+      val states = files.par.map {
+        case (file, url) =>
+          if (!file.exists()) {
+            println(s"Downloading: ${file}")
+            file -> RuntimeConfig.download(url, file)
+          } else file -> Try(file)
+      }.seq
+
+      val issues = states.collect {
+        case (file, Failure(e)) =>
+          Console.err.println(s"Could not download: ${file} (${e.getClass.getSimpleName()}: ${e.getMessage()})")
           e
       }
       if (!issues.isEmpty) {
@@ -94,21 +105,25 @@ object RuntimeConfigBuilder {
     }
 
     if (options.updateChecksums) {
-      def checkAndupdateBundle(b: BundleConfig): BundleConfig = {
-        val jar = runtimeConfig.bundleLocation(b, dir)
-        RuntimeConfig.digestFile(jar).map { checksum =>
-          if (b.sha1Sum != checksum) {
-            println(s"Updating checksum for bundle: ${b.jarName}")
-            b.copy(sha1Sum = checksum)
-          } else b
-        }.getOrElse(b)
+      def checkAndUpdateResource(r: Artifact): Artifact = {
+        val file = runtimeConfig.resourceArchiveLocation(r, dir)
+        RuntimeConfig.digestFile(file).map { checksum =>
+          if (r.sha1Sum != checksum) {
+            println(s"Updating checksum for: ${r.fileName}")
+            r.copy(sha1Sum = checksum)
+          } else r
+        }.getOrElse(r)
       }
+
+      def checkAndupdateBundle(b: BundleConfig): BundleConfig =
+        b.copy(artifact = checkAndUpdateResource(b.artifact))
 
       val newRuntimeConfig = runtimeConfig.copy(
         bundles = runtimeConfig.bundles.map(checkAndupdateBundle),
         fragments = runtimeConfig.fragments.map { f =>
           f.copy(bundles = f.bundles.map(checkAndupdateBundle))
-        }
+        },
+        resources = runtimeConfig.resources.map(checkAndUpdateResource)
       )
 
       if (runtimeConfig != newRuntimeConfig) {

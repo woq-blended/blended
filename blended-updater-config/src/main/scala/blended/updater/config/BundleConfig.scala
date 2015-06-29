@@ -7,13 +7,27 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
 case class BundleConfig(
-  url: String,
-  jarName: String,
-  sha1Sum: String,
-  start: Boolean,
-  startLevel: Option[Int])
+    artifact: Artifact,
+    start: Boolean,
+    startLevel: Option[Int]) {
+  def url = artifact.url
+  def jarName = artifact.fileName
+  def sha1Sum = artifact.sha1Sum
+}
 
 object BundleConfig {
+
+  def apply(url: String,
+    jarName: String,
+    sha1Sum: String,
+    start: Boolean,
+    startLevel: Option[Int]): BundleConfig =
+    BundleConfig(
+      artifact = Artifact(fileName = jarName, url = url, sha1Sum = sha1Sum),
+      start = start,
+      startLevel = startLevel
+    )
+
   def read(config: Config): Try[BundleConfig] = Try {
     BundleConfig(
       url = config.getString("url"),

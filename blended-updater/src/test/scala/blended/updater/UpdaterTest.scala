@@ -70,7 +70,8 @@ class UpdaterTest
             defaultStartLevel = 10,
             frameworkProperties = Map(),
             systemProperties = Map(),
-            properties = Map()
+            properties = Map(),
+            resources = Seq()
           )
 
           {
@@ -164,7 +165,8 @@ class UpdaterTest
               defaultStartLevel = 10,
               frameworkProperties = Map(),
               systemProperties = Map(),
-              properties = Map()
+              properties = Map(),
+              resources = Seq()
             )
 
             {

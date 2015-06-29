@@ -11,23 +11,24 @@ import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
 import akka.routing.BalancingPool
+import blended.launcher.config.LauncherConfig
 import blended.updater.BlockingDownloader.Download
 import blended.updater.BlockingDownloader.DownloadFailed
 import blended.updater.BlockingDownloader.DownloadFinished
 import blended.updater.Sha1SumChecker.CheckFile
 import blended.updater.Sha1SumChecker.InvalidChecksum
 import blended.updater.Sha1SumChecker.ValidChecksum
+import blended.updater.config.Artifact
+import blended.updater.config.BundleConfig
 import blended.updater.config.ConfigConverter
 import blended.updater.config.ConfigWriter
-import blended.launcher.config.LauncherConfig
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.ConfigFactory
 import org.osgi.framework.BundleContext
 import scala.collection.immutable._
-import scala.util.control.NonFatal
 import scala.concurrent.duration.Duration
+import scala.util.control.NonFatal
 import scala.util.Try
-import blended.updater.config.BundleConfig
 
 object Updater {
 
@@ -87,7 +88,7 @@ object Updater {
   /**
    * A bundle in progress, e.g. downloading or verifying.
    */
-  private case class BundleInProgress(reqId: String, bundle: BundleConfig, file: File)
+  private case class ArtifactInProgress(reqId: String, artifact: Artifact, file: File)
 
   /**
    * Internal working state of in-progress stagings.
@@ -97,8 +98,8 @@ object Updater {
       requestActor: ActorRef,
       config: RuntimeConfig,
       installDir: File,
-      bundlesToDownload: Seq[BundleInProgress],
-      bundlesToCheck: Seq[BundleInProgress],
+      artifactsToDownload: Seq[ArtifactInProgress],
+      artifactsToCheck: Seq[ArtifactInProgress],
       issues: Seq[String]) {
 
     val profileId = ProfileId(config.name, config.version)
@@ -106,7 +107,7 @@ object Updater {
     def progress(): Int = {
       val allBundlesSize = config.bundles.size
       if (allBundlesSize > 0)
-        (100 / allBundlesSize) * (allBundlesSize - bundlesToDownload.size - bundlesToCheck.size)
+        (100 / allBundlesSize) * (allBundlesSize - artifactsToDownload.size - artifactsToCheck.size)
       else 100
     }
 
@@ -157,7 +158,7 @@ class Updater(
     val progress = state.progress()
     log.debug("Progress: {} for reqestId: {}", progress, id)
 
-    if (state.bundlesToCheck.isEmpty && state.bundlesToDownload.isEmpty) {
+    if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty) {
       stagingInProgress = stagingInProgress.filterKeys(id != _)
       val (profileState, msg) = state.issues match {
         case Seq() => Profile.Valid -> RuntimeConfigStaged(id)
@@ -222,7 +223,7 @@ class Updater(
           val config = ConfigFactory.parseFile(profileFile).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
-            val issues = RuntimeConfig.validate(versionDir, runtimeConfig)
+            val issues = RuntimeConfig.validate(versionDir, runtimeConfig, includeResourceArchives = true)
             val profileState = issues match {
               case Seq() => Profile.Valid
               case issues => Profile.Pending(issues)
@@ -288,23 +289,31 @@ class Updater(
             log.info("About to stage installation: {}", config)
 
             // analyze config
-            val bundles = config.framework :: config.bundles.toList
-            // determine missing artifacts
-            val (existing, missing) = bundles.partition(b => new File(installDir, b.jarName).exists())
+            val resources =
+              config.allBundles.map(b => config.bundleLocation(b, installDir) -> b.artifact) ++
+                config.resources.map(r => config.resourceArchiveLocation(r, installDir) -> r)
+
+            // determine missing
+            val (existing, missing) = resources.partition { case (file, _) => file.exists() }
+
             // download artifacts
-            val missingWithId = missing.map { missingBundle =>
-              val inProgress = BundleInProgress(nextId(), missingBundle, config.bundleLocation(missingBundle, installDir))
-              // Let the downloader handle the potentially unsupported url
-              val resolvedUrl = config.resolveBundleUrl(missingBundle.url).getOrElse(missingBundle.url)
-              artifactDownloader ! Download(inProgress.reqId, self, resolvedUrl, inProgress.file)
-              inProgress
+            val missingWithId = missing.map {
+              case (file, artifact) =>
+                val inProgress = ArtifactInProgress(nextId(), artifact, file)
+                // Let the downloader handle the potentially unsupported url
+                val resolvedUrl = config.resolveBundleUrl(artifact.url).getOrElse(artifact.url)
+                artifactDownloader ! Download(inProgress.reqId, self, resolvedUrl, inProgress.file)
+                inProgress
             }
+
             // check artifacts
-            val existingWithId = existing.map { existingBundle =>
-              val inProgress = BundleInProgress(nextId(), existingBundle, config.bundleLocation(existingBundle, installDir))
-              artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, existingBundle.sha1Sum)
-              inProgress
+            val existingWithId = existing.map {
+              case (file, artifact) =>
+                val inProgress = ArtifactInProgress(nextId(), artifact, file)
+                artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, artifact.sha1Sum)
+                inProgress
             }
+
             stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId, Seq()))
           }
 
@@ -340,57 +349,57 @@ class Updater(
 
     case DownloadFinished(downloadId, url, file) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+        state.artifactsToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
           log.error("Unkown download id {}. Url: {}", downloadId, url)
         case (state, bundleInProgress) :: _ =>
           val newToCheck = bundleInProgress.copy(reqId = nextId())
-          artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.bundle.sha1Sum)
+          artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.artifact.sha1Sum)
           stageInProgress(state.copy(
-            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress != _),
-            bundlesToCheck = newToCheck +: state.bundlesToCheck
+            artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _),
+            artifactsToCheck = newToCheck +: state.artifactsToCheck
           ))
       }
 
     case DownloadFailed(downloadId, url, file, error) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.bundlesToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+        state.artifactsToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
           log.error("Unkown download id {}. Url: {}", downloadId, url)
         case (state, bundleInProgress) :: _ =>
           stageInProgress(state.copy(
-            bundlesToDownload = state.bundlesToDownload.filter(bundleInProgress != _),
+            artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _),
             issues = error.getMessage() +: state.issues
           ))
       }
 
     case ValidChecksum(checkId, file, sha1Sum) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
+        state.artifactsToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
           log.error("Unkown check id {}. file: {}", checkId, file)
         case (state, bundleInProgress) :: _ =>
           stageInProgress(state.copy(
-            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress != _)
+            artifactsToCheck = state.artifactsToCheck.filter(bundleInProgress != _)
           ))
       }
 
     case InvalidChecksum(checkId, file, sha1Sum) =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.bundlesToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
+        state.artifactsToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
           log.error("Unkown check id {}. file: {}", checkId, file)
         case (state, bundleInProgress) :: _ =>
           stageInProgress(state.copy(
-            bundlesToCheck = state.bundlesToCheck.filter(bundleInProgress != _),
+            artifactsToCheck = state.artifactsToCheck.filter(bundleInProgress != _),
             issues = s"Invalid checksum for file ${file}" +: state.issues
           ))
       }
