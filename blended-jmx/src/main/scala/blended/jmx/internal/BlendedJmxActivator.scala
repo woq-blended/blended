@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package blended.jmx.internal;
+package blended.jmx.internal
 
-import javax.management.MBeanServer;
-import java.lang.management.ManagementFactory;
+import java.lang.management.ManagementFactory
+import javax.management.MBeanServer
 
-public class MBeanServerFactory {
+import domino.DominoActivator
 
-  public MBeanServer getServer() throws Exception {
-    return ManagementFactory.getPlatformMBeanServer();
+class BlendedJmxActivator extends DominoActivator {
+
+  whenBundleActive {
+    ManagementFactory.getPlatformMBeanServer.providesService[MBeanServer]
   }
 
 }

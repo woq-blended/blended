@@ -45,8 +45,8 @@ class TestContainerProxy extends BlendedTestContextManager with TestContextConfi
     
     ParallelComposedCondition(
       JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t)),
-      JolokiaAvailableCondition(jmxRest(cuts), Some(t), Some("blended"), Some("blended")),
-      CamelContextExistsCondition(jmxRest(cuts), Some("blended"), Some("blended"),  "BlendedSample", Some(t))
+      JolokiaAvailableCondition(jmxRest(cuts), Some(t), Some("blended"), Some("blended"))
+      //CamelContextExistsCondition(jmxRest(cuts), Some("blended"), Some("blended"),  "BlendedSample", Some(t))
     )      
   }
 }
