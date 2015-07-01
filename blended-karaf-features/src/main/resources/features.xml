@@ -24,6 +24,7 @@
   <repository>mvn:org.ops4j.pax.web/pax-web-features/${pax-web.version}/xml/features</repository>
 
   <feature name="blended-commons" description="Blended - Commons" version="${project.version}" start-level="10" resolver="(obr)">
+    <bundle>mvn:de.wayofquality.blended/blended.jmx/${blended.version}</bundle>
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.collections/${commons.collections.version}</bundle>
     <bundle>mvn:org.apache.commons/com.springsource.org.apache.commons.discovery/${commons.discovery.version}</bundle>
     <bundle>mvn:commons-lang/commons-lang/${commons.lang.version}</bundle>
@@ -50,7 +51,6 @@
     <bundle>mvn:org.apache.felix/org.apache.felix.fileinstall/${felix.fileinstall.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.util/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.container.context/${blended.version}</bundle>
-    <bundle>mvn:de.wayofquality.blended/blended.jmx/${blended.version}</bundle>
     <!--bundle>mvn:de.wayofquality.blended/blended.persistence/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.neo4j.api/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.container.registry/${blended.version}</bundle-->

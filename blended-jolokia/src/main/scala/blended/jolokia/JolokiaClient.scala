@@ -41,21 +41,18 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
 
   def receive = LoggingReceive {
     case GetJolokiaVersion => jolokiaGet(sender, "version"){ JolokiaVersion(_) }
-    case SearchJolokia(searchDef) => {
+    case SearchJolokia(searchDef) =>
       val request = URI.create(s"search/${searchDef.jmxDomain}:${searchDef.pattern}*".replaceAll("\"", "%22")).toString
-      log.debug(s"Jolokia search request is [${request}")
+      log.debug(s"Jolokia search request is [$request]")
       jolokiaGet(sender, request){ JolokiaSearchResult(_) }
-    }
-    case ReadJolokiaMBean(name) => {
+    case ReadJolokiaMBean(name) =>
       val request = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
-      log.debug(s"Jolokia read request is [${request}")
+      log.debug(s"Jolokia read request is [$request")
       jolokiaGet(sender, request){ JolokiaReadResult(_) }
-    }
-    case ExecJolokiaOperation(execDef) => {
+    case ExecJolokiaOperation(execDef) =>
       val request = s"exec/${execDef.pattern}"
-      log.debug(s"Jolokia exec request is [${request}].")
+      log.debug(s"Jolokia exec request is [$request].")
       jolokiaGet(sender, request) { JolokiaExecResult(_) }
-    }
   }
 
   private def jolokiaGet[T](requestor: ActorRef, operation: String)(extract : JsValue => T) : Unit = {
@@ -69,14 +66,13 @@ class JolokiaClient extends Actor with ActorLogging { this : JolokiaAddress =>
       ~> unmarshal[String]
     )
 
-    val response = pipeline { Get( s"${jolokiaUrl}/${operation}") }
+    val response = pipeline { Get( s"$jolokiaUrl/$operation") }
 
     response.onComplete {
-      case Success(result) => {
+      case Success(result) =>
         val parsed = result.parseJson
         log debug s"\n${parsed.prettyPrint}"
         requestor ! extract(parsed)
-      }
       case Failure(error) => requestor ! Failure(error)
     }
   }
