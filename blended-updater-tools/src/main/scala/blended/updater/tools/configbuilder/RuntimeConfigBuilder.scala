@@ -70,7 +70,12 @@ object RuntimeConfigBuilder {
     var runtimeConfig = RuntimeConfig.read(config, fragments).get
 
     if (options.check) {
-      val issues = RuntimeConfig.validate(dir, runtimeConfig, includeResourceArchives = true)
+      val issues = RuntimeConfig.validate(
+        dir,
+        runtimeConfig,
+        includeResourceArchives = true,
+        explodedResourceArchives = false
+      )
       if (!issues.isEmpty) {
         println(issues.mkString("\n"))
         sys.exit(1)
@@ -80,10 +85,10 @@ object RuntimeConfigBuilder {
     if (options.downloadMissing) {
 
       val files = runtimeConfig.allBundles.map(b =>
-        runtimeConfig.bundleLocation(b, dir) -> runtimeConfig.resolveBundleUrl(b.url).getOrElse(b.url)
+        RuntimeConfig.bundleLocation(b, dir) -> runtimeConfig.resolveBundleUrl(b.url).getOrElse(b.url)
       ) ++
         runtimeConfig.resources.map(r =>
-          runtimeConfig.resourceArchiveLocation(r, dir) -> runtimeConfig.resolveBundleUrl(r.url).getOrElse(r.url)
+          RuntimeConfig.resourceArchiveLocation(r, dir) -> runtimeConfig.resolveBundleUrl(r.url).getOrElse(r.url)
         )
 
       val states = files.par.map {
@@ -105,8 +110,7 @@ object RuntimeConfigBuilder {
     }
 
     if (options.updateChecksums) {
-      def checkAndUpdateResource(r: Artifact): Artifact = {
-        val file = runtimeConfig.resourceArchiveLocation(r, dir)
+      def checkAndUpdate(file: File, r: Artifact): Artifact = {
         RuntimeConfig.digestFile(file).map { checksum =>
           if (r.sha1Sum != checksum) {
             println(s"Updating checksum for: ${r.fileName}")
@@ -115,13 +119,16 @@ object RuntimeConfigBuilder {
         }.getOrElse(r)
       }
 
-      def checkAndupdateBundle(b: BundleConfig): BundleConfig =
-        b.copy(artifact = checkAndUpdateResource(b.artifact))
+      def checkAndUpdateResource(a: Artifact): Artifact =
+        checkAndUpdate(RuntimeConfig.resourceArchiveLocation(a, dir), a)
+
+      def checkAndUpdateBundle(b: BundleConfig): BundleConfig =
+        b.copy(artifact = checkAndUpdate(RuntimeConfig.bundleLocation(b, dir), b.artifact))
 
       val newRuntimeConfig = runtimeConfig.copy(
-        bundles = runtimeConfig.bundles.map(checkAndupdateBundle),
+        bundles = runtimeConfig.bundles.map(checkAndUpdateBundle),
         fragments = runtimeConfig.fragments.map { f =>
-          f.copy(bundles = f.bundles.map(checkAndupdateBundle))
+          f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
         },
         resources = runtimeConfig.resources.map(checkAndUpdateResource)
       )

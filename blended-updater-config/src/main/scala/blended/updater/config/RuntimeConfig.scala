@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
-
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
@@ -21,10 +20,11 @@ import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
 import scala.util.Try
 import scala.util.control.NonFatal
-
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
+import java.io.PrintStream
+import scala.io.Source
 
 object RuntimeConfig {
 
@@ -104,7 +104,8 @@ object RuntimeConfig {
       "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava
+      "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava,
+      "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
     ConfigFactory.parseMap(config)
@@ -191,11 +192,13 @@ object RuntimeConfig {
 
     }
 
-  def validate(baseDir: File, config: RuntimeConfig, includeResourceArchives: Boolean): Seq[String] = {
-    val artifacts = config.allBundles.map(b => config.bundleLocation(b, baseDir) -> b.artifact) ++
-      (if (includeResourceArchives) config.resources.map(r => config.resourceArchiveLocation(r, baseDir) -> r) else Seq())
+  def validate(baseDir: File, config: RuntimeConfig,
+    includeResourceArchives: Boolean,
+    explodedResourceArchives: Boolean): Seq[String] = {
+    val artifacts = config.allBundles.map(b => bundleLocation(b, baseDir) -> b.artifact) ++
+      (if (includeResourceArchives) config.resources.map(r => RuntimeConfig.resourceArchiveLocation(r, baseDir) -> r) else Seq())
 
-    artifacts.flatMap {
+    val artifactIssues = artifacts.flatMap {
       case (file, artifact) =>
         val issue = if (!file.exists()) {
           Some(s"Missing bundle jar: ${artifact.fileName}")
@@ -211,7 +214,56 @@ object RuntimeConfig {
         }
         issue.toList
     }
+
+    val resourceIssues = if (explodedResourceArchives) {
+      config.resources.flatMap { artifact =>
+        val touchFile = RuntimeConfig.resourceArchiveTouchFileLocation(artifact, baseDir)
+        if (touchFile.exists()) {
+          val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
+          if (persistedChecksum != artifact.sha1Sum) {
+            List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
+          } else Nil
+        } else {
+          List(s"Resource ${artifact.fileName} not unpacked")
+        }
+      }
+    } else Nil
+
+    artifactIssues ++ resourceIssues
   }
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName}")
+
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
+    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
+    new File(resFile.getParentFile(), s".${resFile.getName()}")
+  }
+
+  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: String, baseDir: File): Try[File] = Try {
+    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
+    Option(file.getParentFile()).foreach { parent =>
+      parent.mkdirs()
+    }
+    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
+    try {
+      os.println(resourceArchiveChecksum)
+    } finally {
+      os.close()
+    }
+    file
+  }
+
+  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.jarName)
+
+  def bundleLocation(bundle: Artifact, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.fileName)
+
+  def profileFileLocation(baseDir: File): File =
+    new File(baseDir, "profile.conf")
 
 }
 
@@ -247,19 +299,5 @@ case class RuntimeConfig(
   }
 
   def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
-
-  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
-
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
-    new File(bundlesBaseDir(baseDir), bundle.jarName)
-
-  def bundleLocation(bundle: Artifact, baseDir: File): File =
-    new File(bundlesBaseDir(baseDir), bundle.fileName)
-
-  def profileFileLocation(baseDir: File): File =
-    new File(baseDir, "profile.conf")
-
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
-    new File(baseDir, s"resources/${resourceArchive.fileName}")
 
 }

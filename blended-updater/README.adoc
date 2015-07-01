@@ -31,4 +31,4 @@ New: If all required artifacts are present, the launcher is also able to start d
 
 * Move download configuration of Update actor to config file
 
-* Make Bundle/JarName optionen (infer from URL)
+* Make Bundle/JarName optional (infer from URL)

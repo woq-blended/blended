@@ -8,16 +8,9 @@ import akka.actor.ActorLogging
 import akka.actor.ActorRef
 import akka.actor.Cancellable
 import akka.actor.Props
-import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
 import akka.routing.BalancingPool
 import blended.launcher.config.LauncherConfig
-import blended.updater.BlockingDownloader.Download
-import blended.updater.BlockingDownloader.DownloadFailed
-import blended.updater.BlockingDownloader.DownloadFinished
-import blended.updater.Sha1SumChecker.CheckFile
-import blended.updater.Sha1SumChecker.InvalidChecksum
-import blended.updater.Sha1SumChecker.ValidChecksum
 import blended.updater.config.Artifact
 import blended.updater.config.BundleConfig
 import blended.updater.config.ConfigConverter
@@ -29,6 +22,8 @@ import scala.collection.immutable._
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
 
 object Updater {
 
@@ -41,48 +36,50 @@ object Updater {
   /**
    * Supported Replies by the [[Updater]] actor.
    */
-  trait Reply
+  sealed trait Reply
 
   /**
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
-  case class GetRuntimeConfigs(requestId: String) extends Protocol
-  case class RuntimeConfigs(requestId: String, staged: Seq[RuntimeConfig], pending: Seq[RuntimeConfig], invalid: Seq[RuntimeConfig]) extends Reply
+  final case class GetRuntimeConfigs(requestId: String) extends Protocol
+  final case class RuntimeConfigs(requestId: String, staged: Seq[RuntimeConfig], pending: Seq[RuntimeConfig], invalid: Seq[RuntimeConfig]) extends Reply
 
-  case class AddRuntimeConfig(requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
-  case class RuntimeConfigAdded(requestId: String) extends Reply
-  case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
+  final case class AddRuntimeConfig(requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
+  final case class RuntimeConfigAdded(requestId: String) extends Reply
+  final case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
 
-  case class ScanForRuntimeConfigs(requestId: String) extends Protocol
+  final case class ScanForRuntimeConfigs(requestId: String) extends Protocol
 
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  case class StageRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
-  case class StageNextRuntimeConfig(requestId: String) extends Protocol
-  case class RuntimeConfigStaged(requestId: String) extends Reply
-  case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
+  final case class StageRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
+  final case class StageNextRuntimeConfig(requestId: String) extends Protocol
+  final case class RuntimeConfigStaged(requestId: String) extends Reply
+  final case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
 
-  case class ActivateRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
-  case class RuntimeConfigActivated(requestId: String) extends Reply
-  case class RuntimeConfigActivationFailed(requestId: String, reason: String) extends Reply
+  final case class ActivateRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
+  final case class RuntimeConfigActivated(requestId: String) extends Reply
+  final case class RuntimeConfigActivationFailed(requestId: String, reason: String) extends Reply
 
-  case class GetProgress(requestId: String) extends Protocol
-  case class Progress(requestId: String, progress: Int) extends Reply
+  final case class GetProgress(requestId: String) extends Protocol
+  final case class Progress(requestId: String, progress: Int) extends Reply
 
-  case class UnknownRuntimeConfig(requestId: String) extends Reply
-  case class UnknownRequestId(requestId: String) extends Reply
+  final case class UnknownRuntimeConfig(requestId: String) extends Reply
+  final case class UnknownRequestId(requestId: String) extends Reply
 
   def props(
     baseDir: File,
     profileUpdater: (String, String) => Boolean,
     restartFramework: () => Unit,
     artifactDownloaderProps: Props = null,
-    artifactCheckerProps: Props = null): Props =
+    artifactCheckerProps: Props = null,
+    unpackerProps: Props = null): Props =
     Props(new Updater(
       baseDir,
       profileUpdater,
       restartFramework,
-      Option(artifactDownloaderProps),
-      Option(artifactCheckerProps)
+      Option(artifactDownloaderProps).getOrElse(BalancingPool(4).props(BlockingDownloader.props())),
+      Option(artifactCheckerProps).getOrElse(BalancingPool(4).props(Sha1SumChecker.props())),
+      Option(unpackerProps).getOrElse(BalancingPool(4).props(Unpacker.props()))
     ))
 
   /**
@@ -100,6 +97,8 @@ object Updater {
       installDir: File,
       artifactsToDownload: Seq[ArtifactInProgress],
       artifactsToCheck: Seq[ArtifactInProgress],
+      pendingArtifactsToUnpack: Seq[ArtifactInProgress],
+      artifactsToUnpack: Seq[ArtifactInProgress],
       issues: Seq[String]) {
 
     val profileId = ProfileId(config.name, config.version)
@@ -133,19 +132,18 @@ class Updater(
   installBaseDir: File,
   profileUpdater: (String, String) => Boolean,
   restartFramework: () => Unit,
-  artifactDownloaderProps: Option[Props],
-  artifactCheckerProps: Option[Props])
+  artifactDownloaderProps: Props,
+  artifactCheckerProps: Props,
+  unpackerProps: Props)
     extends Actor
     with ActorLogging {
   import Updater._
 
-  val artifactDownloader = context.actorOf(
-    artifactDownloaderProps.getOrElse(BalancingPool(4).props(BlockingDownloader.props())),
-    "artifactDownloader")
-  val artifactChecker = context.actorOf(
-    artifactCheckerProps.getOrElse(BalancingPool(4).props(Sha1SumChecker.props())),
-    "artifactChecker")
+  val artifactDownloader = context.actorOf(artifactDownloaderProps, "artifactDownloader")
+  val artifactChecker = context.actorOf(artifactCheckerProps, "artifactChecker")
+  val unpacker = context.actorOf(unpackerProps, "unpacker")
 
+  // requestId -> State
   private[this] var stagingInProgress: Map[String, State] = Map()
 
   private[this] var profiles: Map[ProfileId, Profile] = Map()
@@ -158,7 +156,17 @@ class Updater(
     val progress = state.progress()
     log.debug("Progress: {} for reqestId: {}", progress, id)
 
-    if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty) {
+    if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty && state.issues.isEmpty && !state.pendingArtifactsToUnpack.isEmpty) {
+      // start unpacking
+      state.pendingArtifactsToUnpack.foreach { a =>
+        unpacker ! Unpacker.Unpack(a.reqId, self, a.file, state.installDir)
+      }
+      stageInProgress(state.copy(
+        artifactsToUnpack = state.pendingArtifactsToUnpack,
+        pendingArtifactsToUnpack = Nil
+      ))
+    } else if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
+      // no work left
       stagingInProgress = stagingInProgress.filterKeys(id != _)
       val (profileState, msg) = state.issues match {
         case Seq() => Profile.Valid -> RuntimeConfigStaged(id)
@@ -223,7 +231,12 @@ class Updater(
           val config = ConfigFactory.parseFile(profileFile).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
-            val issues = RuntimeConfig.validate(versionDir, runtimeConfig, includeResourceArchives = true)
+            val issues = RuntimeConfig.validate(
+              versionDir,
+              runtimeConfig,
+              includeResourceArchives = false,
+              explodedResourceArchives = true)
+            log.debug(s"Validation result for [${name}-${version}]: ${issues.mkString(";")}")
             val profileState = issues match {
               case Seq() => Profile.Valid
               case issues => Profile.Pending(issues)
@@ -289,32 +302,40 @@ class Updater(
             log.info("About to stage installation: {}", config)
 
             // analyze config
-            val resources =
-              config.allBundles.map(b => config.bundleLocation(b, installDir) -> b.artifact) ++
-                config.resources.map(r => config.resourceArchiveLocation(r, installDir) -> r)
 
-            // determine missing
-            val (existing, missing) = resources.partition { case (file, _) => file.exists() }
+            val artifacts = config.allBundles.map { b =>
+              ArtifactInProgress(nextId(), b.artifact, RuntimeConfig.bundleLocation(b, installDir))
+            } ++
+              config.resources.map { r =>
+                ArtifactInProgress(nextId(), r, RuntimeConfig.resourceArchiveLocation(r, installDir))
+              }
 
-            // download artifacts
-            val missingWithId = missing.map {
-              case (file, artifact) =>
-                val inProgress = ArtifactInProgress(nextId(), artifact, file)
-                // Let the downloader handle the potentially unsupported url
-                val resolvedUrl = config.resolveBundleUrl(artifact.url).getOrElse(artifact.url)
-                artifactDownloader ! Download(inProgress.reqId, self, resolvedUrl, inProgress.file)
-                inProgress
+            val pendingUnpacks = config.resources.map { r =>
+              ArtifactInProgress(nextId(), r, RuntimeConfig.resourceArchiveLocation(r, installDir))
             }
 
-            // check artifacts
-            val existingWithId = existing.map {
-              case (file, artifact) =>
-                val inProgress = ArtifactInProgress(nextId(), artifact, file)
-                artifactChecker ! CheckFile(inProgress.reqId, self, inProgress.file, artifact.sha1Sum)
-                inProgress
+            val (existing, missing) = artifacts.partition(a => a.file.exists())
+
+            val missingWithId = missing.map { a =>
+              val resolvedUrl = config.resolveBundleUrl(a.artifact.url).getOrElse(a.artifact.url)
+              artifactDownloader ! BlockingDownloader.Download(a.reqId, self, resolvedUrl, a.file)
+              a
+            }
+            val existingWithId = existing.map { a =>
+              artifactChecker ! Sha1SumChecker.CheckFile(a.reqId, self, a.file, a.artifact.sha1Sum)
+              a
             }
 
-            stageInProgress(State(reqId, reqActor, config, installDir, missingWithId, existingWithId, Seq()))
+            stageInProgress(State(
+              requestId = reqId,
+              requestActor = reqActor,
+              config = config,
+              installDir = installDir,
+              artifactsToDownload = missingWithId,
+              artifactsToCheck = existingWithId,
+              pendingArtifactsToUnpack = pendingUnpacks,
+              artifactsToUnpack = Seq(),
+              issues = Seq()))
           }
 
       }
@@ -347,61 +368,81 @@ class Updater(
   override def receive: Actor.Receive = LoggingReceive {
     case p: Protocol => protocol(p)
 
-    case DownloadFinished(downloadId, url, file) =>
+    case msg: BlockingDownloader.DownloadReply =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+        state.artifactsToDownload.find { bip => bip.reqId == msg.reqId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown download id {}. Url: {}", downloadId, url)
+          log.error("Unkown download id {}", msg.reqId)
         case (state, bundleInProgress) :: _ =>
-          val newToCheck = bundleInProgress.copy(reqId = nextId())
-          artifactChecker ! CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.artifact.sha1Sum)
-          stageInProgress(state.copy(
-            artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _),
-            artifactsToCheck = newToCheck +: state.artifactsToCheck
-          ))
+          val artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
+          msg match {
+            case BlockingDownloader.DownloadFinished(_, url, file) =>
+              val newToCheck = bundleInProgress.copy(reqId = nextId())
+              artifactChecker ! Sha1SumChecker.CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.artifact.sha1Sum)
+              stageInProgress(state.copy(
+                artifactsToDownload = artifactsToDownload,
+                artifactsToCheck = newToCheck +: state.artifactsToCheck
+              ))
+            case BlockingDownloader.DownloadFailed(_, url, file, error) =>
+              stageInProgress(state.copy(
+                artifactsToDownload = artifactsToDownload,
+                issues = s"Download failed for ${file} (${error.getClass().getSimpleName()}: ${error.getMessage()})" +: state.issues
+              ))
+          }
       }
 
-    case DownloadFailed(downloadId, url, file, error) =>
+    case msg: Sha1SumChecker.Reply =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToDownload.find { bip => bip.reqId == downloadId }.map(state -> _).toList
+        state.artifactsToCheck.find { bip => bip.reqId == msg.reqId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown download id {}. Url: {}", downloadId, url)
+          log.error("Unkown check id {}", msg.reqId)
         case (state, bundleInProgress) :: _ =>
-          stageInProgress(state.copy(
-            artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _),
-            issues = error.getMessage() +: state.issues
-          ))
+          val artifactsToCheck = state.artifactsToCheck.filter(bundleInProgress != _)
+          msg match {
+            case Sha1SumChecker.ValidChecksum(_, _, _) =>
+              stageInProgress(state.copy(
+                artifactsToCheck = artifactsToCheck
+              ))
+            case Sha1SumChecker.InvalidChecksum(_, file, sha1Sum) =>
+              stageInProgress(state.copy(
+                artifactsToCheck = artifactsToCheck,
+                issues = s"Invalid checksum for file ${file} (expected: ${bundleInProgress.artifact.sha1Sum}, found: ${sha1Sum})" +: state.issues
+              ))
+          }
       }
 
-    case ValidChecksum(checkId, file, sha1Sum) =>
+    case msg: Unpacker.UnpackReply =>
       val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
+        state.artifactsToUnpack.find { a => a.reqId == msg.reqId }.map(state -> _).toList
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown check id {}. file: {}", checkId, file)
-        case (state, bundleInProgress) :: _ =>
-          stageInProgress(state.copy(
-            artifactsToCheck = state.artifactsToCheck.filter(bundleInProgress != _)
-          ))
-      }
-
-    case InvalidChecksum(checkId, file, sha1Sum) =>
-      val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToCheck.find { bip => bip.reqId == checkId }.map(state -> _).toList
-      }.toList
-      foundProgress match {
-        case Nil =>
-          log.error("Unkown check id {}. file: {}", checkId, file)
-        case (state, bundleInProgress) :: _ =>
-          stageInProgress(state.copy(
-            artifactsToCheck = state.artifactsToCheck.filter(bundleInProgress != _),
-            issues = s"Invalid checksum for file ${file}" +: state.issues
-          ))
+          log.error("Unkown unpack process {}", msg.reqId)
+        case (state, artifact) :: _ =>
+          val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
+          msg match {
+            case Unpacker.UnpackingFinished(_) =>
+              RuntimeConfig.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum, state.installDir) match {
+                case Success(file) =>
+                  stageInProgress(state.copy(
+                    artifactsToUnpack = artifactsToUnpack
+                  ))
+                case Failure(e) =>
+                  stageInProgress(state.copy(
+                    artifactsToUnpack = artifactsToUnpack,
+                    issues = s"Could not create unpacked-marker file for resource file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
+                  ))
+              }
+            case Unpacker.UnpackingFailed(_, e) =>
+              stageInProgress(state.copy(
+                artifactsToUnpack = artifactsToUnpack,
+                issues = s"Could not unpack file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
+              ))
+          }
       }
 
   }

@@ -95,6 +95,20 @@ trait TestSupport {
     file.delete()
   }
 
+  def listFilesRecursive(file: File): Seq[String] = {
+    def list(file: File, prefix: String): List[String] = {
+      file.listFiles() match {
+        case null => Nil
+        case files =>
+          files.toList.flatMap { f =>
+            val newPrefix = if (prefix.isEmpty()) f.getName() else s"${prefix}/${f.getName()}"
+            newPrefix :: list(f, newPrefix)
+          }
+      }
+    }
+    list(file, "").sorted
+  }
+
 }
 
 object TestSupport extends TestSupport {

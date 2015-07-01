@@ -20,8 +20,11 @@ object Sha1SumChecker {
   case class CheckFile(reqId: String, requestActor: ActorRef, file: File, sha1Sum: String)
 
   // Replies
-  case class ValidChecksum(reqId: String, file: File, sha1Sum: String)
-  case class InvalidChecksum(reqId: String, file: File, actualChecksum: Option[String])
+  sealed trait Reply {
+    def reqId: String
+  }
+  final case class ValidChecksum(reqId: String, file: File, sha1Sum: String) extends Reply
+  final case class InvalidChecksum(reqId: String, file: File, actualChecksum: Option[String]) extends Reply
 
   def props(): Props = Props(new Sha1SumChecker())
 
