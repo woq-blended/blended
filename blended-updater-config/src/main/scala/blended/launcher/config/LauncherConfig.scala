@@ -1,9 +1,7 @@
-package blended.updater.config
+package blended.launcher.config
 
 import java.io.File
-
 import scala.collection.JavaConverters._
-
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions

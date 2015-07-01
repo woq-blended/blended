@@ -23,18 +23,12 @@ New: If all required artifacts are present, the launcher is also able to start d
 
 * Also download configuration files
 
-* Define a repository layout, such that artifact URL can be more abstract and support retargeting to a consolidation download area
-** Idea: support a `mvn` protocol, which accepts standard Maven coordinates (GAV, groupId:artifactId:version) and introduce a new config setting to direct to the repository URL.
-** Example: `mvn:de.wayofquality:blended-updater:0.1.0`
-
-
 * Rework profile layout:
 ** currently, all downloaded JARs lie in the profile directory `profiles/<name>/<version>`.
 ** goal: downloaded JARs should be kept in a sub directory, next to a new `etc` directory
 
-* Automatically update a profile lookup file after a profile activation
-
-* Design a config builder tool
-
 * Redownload of JARs with incorrect checksums (retry-count)
 
+* Move download configuration of Update actor to config file
+
+* Make Bundle/JarName optional (infer from URL)

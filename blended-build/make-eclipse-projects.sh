@@ -3,6 +3,9 @@
 set -e
 
 blendedVersion="1.2-SNAPSHOT"
+classesDir="target-eclipse/classes"
+testClassesDir="target-eclipse/test-classes"
+libsDir="target-eclipse/libs"
 
 projects="blended-activemq-brokerstarter \
 blended-akka \
@@ -88,13 +91,13 @@ EOF
   for path in src/test/scala src/test/java src/test/binaryResources src/test/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
-        <classpathentry kind="src" output="target/test-classes" path="$path"/>
+        <classpathentry kind="src" output="${testClassesDir}" path="$path"/>
 EOF
     fi
   done
 
   cat >> .classpath << EOF
-        <classpathentry kind="output" path="target/classes"/>
+        <classpathentry kind="output" path="${classesDir}"/>
         <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 EOF
 
@@ -165,14 +168,14 @@ verbose=false
 withVersionClasspathValidator=false
 EOF
 
-  rm -rf libs
-  mvn dependency:copy-dependencies -DoutputDirectory=libs || true
+  rm -rf "${libsDir}"
+  mvn dependency:copy-dependencies -DoutputDirectory="${libsDir}" || true
 
-  for lib in $(ls libs/*); do
+  for lib in $(ls "${libsDir}"/*); do
 
     foundInReactor=""
     for p in $projects; do
-      if [ "libs/${p//-/.}-${blendedVersion}.jar" = "$lib" ]; then
+      if [ "${libsDir}/${p//-/.}-${blendedVersion}.jar" = "$lib" ]; then
         foundInReactor="$p"
         break
       fi
@@ -188,7 +191,7 @@ EOF
     fi
 
     cat >> .classpath << EOF
-      <classpathentry kind="lib" path="$lib" sourcepath="libs/$(basename -s .jar $lib)-sources.jar"/>
+      <classpathentry kind="lib" path="$lib" sourcepath="${libsDir}/$(basename -s .jar $lib)-sources.jar"/>
 EOF
 
   done
@@ -197,7 +200,7 @@ EOF
 </classpath>
 EOF
 
-  mvn dependency:copy-dependencies -DoutputDirectory=libs -Dclassifier=sources || true
+  mvn dependency:copy-dependencies -DoutputDirectory="${libsDir}" -Dclassifier=sources || true
 
   cd ..
 

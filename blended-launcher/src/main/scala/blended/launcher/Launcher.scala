@@ -21,6 +21,7 @@ import java.net.URLClassLoader
 import java.util.ServiceLoader
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
+import scala.collection.immutable.Map
 import scala.util.Try
 import scala.util.control.NonFatal
 import org.osgi.framework.Bundle
@@ -33,13 +34,15 @@ import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
 import blended.launcher.internal.Logger
-import blended.updater.config.LauncherConfig
+import blended.launcher.config.LauncherConfig
 import de.tototec.cmdoption.CmdOption
 import de.tototec.cmdoption.CmdlineParser
 import de.tototec.cmdoption.CmdlineParserException
 import blended.updater.config.ConfigConverter
 import com.typesafe.config.ConfigFactory
 import blended.updater.config.RuntimeConfig
+import java.util.Properties
+import blended.updater.config.ProfileLookup
 
 object Launcher {
 
@@ -79,6 +82,8 @@ object Launcher {
 
   def main(args: Array[String]): Unit = {
 
+    val log = Logger[Launcher.type]
+
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
@@ -104,9 +109,12 @@ object Launcher {
           LauncherConfig.read(config)
         case None =>
           val profile = cmdline.profileLookup match {
-            case Some(p) => 
+            case Some(p) =>
+              log.debug("About to read profile lookup file: " + p)
               val c = ConfigFactory.parseFile(new File(p)).resolve()
-              c.getString("profile")
+              val profileLookup = ProfileLookup.read(c).get
+              log.debug("ProfileLookup: " + profileLookup)
+              s"${profileLookup.profileBaseDir}/${profileLookup.profileName}/${profileLookup.profileVersion}"
             case None =>
               cmdline.profileDir match {
                 case None =>
@@ -123,7 +131,13 @@ object Launcher {
           }
           val config = ConfigFactory.parseFile(profileFile).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
-          ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+          val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+          launchConfig.copy(
+            branding = launchConfig.branding ++ (cmdline.profileLookup match {
+              case None => Map()
+              case Some(f) => Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath())
+            })
+          )
       }
 
       val launcher = new Launcher(launcherConfig)
@@ -175,6 +189,13 @@ class Launcher private (config: LauncherConfig) {
     if (!new File(frameworkURL.getFile()).exists) throw new RuntimeException("Framework Bundle does not exist")
     val cl = new URLClassLoader(Array(frameworkURL), getClass.getClassLoader)
     val frameworkFactory = ServiceLoader.load(classOf[FrameworkFactory], cl).iterator().next()
+
+    {
+      val brandingProps = new Properties()
+      config.branding.foreach { p => brandingProps.setProperty(p._1, p._2) }
+      BrandingProperties.setLastBrandingProperties(brandingProps)
+      log.debug("Exposing branding via class " + classOf[BrandingProperties].getName() + ": " + brandingProps)
+    }
 
     config.systemProperties foreach { p =>
       System.setProperty(p._1, p._2)
@@ -278,6 +299,7 @@ class Launcher private (config: LauncherConfig) {
         log.info("Catched kill signal: stopping framework")
         framework.stop()
         awaitFrameworkStop(framework)
+        BrandingProperties.setLastBrandingProperties(new Properties())
       }
     }
 
@@ -289,6 +311,7 @@ class Launcher private (config: LauncherConfig) {
         log.error("Framework was interrupted. Cause: ", x)
         1
     } finally {
+      BrandingProperties.setLastBrandingProperties(new Properties())
       Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
     }
   }

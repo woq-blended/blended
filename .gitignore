@@ -1,6 +1,7 @@
 .idea
 *.iml
 target
+target-eclipse
 .DS_Store
 felix-cache
 *.log

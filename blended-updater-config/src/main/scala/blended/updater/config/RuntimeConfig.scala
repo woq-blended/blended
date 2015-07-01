@@ -1,8 +1,14 @@
 package blended.updater.config
 
 import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
@@ -12,61 +18,28 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.immutable.Map
 import scala.collection.immutable.Seq
+import scala.util.Try
 import scala.util.control.NonFatal
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
-import java.io.FileOutputStream
-import java.net.URL
-import java.io.BufferedOutputStream
-import scala.util.Try
-import java.nio.file.Paths
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
+import java.io.PrintStream
+import scala.io.Source
 
 object RuntimeConfig {
 
-  case class BundleConfig(
-    url: String,
-    jarName: String,
-    sha1Sum: String,
-    start: Boolean,
-    startLevel: Option[Int])
-
-  object BundleConfig {
-    def read(config: Config): Try[BundleConfig] = Try {
-      BundleConfig(
-        url = config.getString("url"),
-        jarName = config.getString("jarName"),
-        sha1Sum = config.getString("sha1Sum"),
-        start = if (config.hasPath("start")) config.getBoolean("start") else false,
-        startLevel = if (config.hasPath("startLevel")) Option(config.getInt("startLevel")) else None
-      )
-    }
-  }
-
-  case class FragmentConfig(
-    name: String,
-    version: String,
-    bundles: Seq[BundleConfig])
-
-  object FragmentConfig {
-    def read(config: Config): Try[FragmentConfig] = Try {
-      FragmentConfig(
-        name = config.getString("name"),
-        version = config.getString("version"),
-        bundles =
-          if (config.hasPath("bundles")) {
-            config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
-          } else Nil
-      )
-    }
+  object Properties {
+    val PROFILES_DIR = "blended.updater.profiles.dir"
+    val PROFILE_NAME = "blended.updater.profile.name"
+    val PROFILE_VERSION = "blended.updater.profile.version"
+    val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
+    val MVN_REPO = "blended.updater.mvn.url"
   }
 
   def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
-    
+
     // TODO: ensure, all fragments are non-empty
-    
+
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
@@ -93,6 +66,7 @@ object RuntimeConfig {
         else Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
+      properties = configAsMap("properties", Some(() => Map())),
       frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
       systemProperties = configAsMap("systemProperties", Some(() => Map())),
       fragments =
@@ -112,35 +86,26 @@ object RuntimeConfig {
             }
           }
         }.toList
+        else Seq(),
+      resources =
+        if (config.hasPath("resources"))
+          config.getObjectList("resources").asScala.map(r => Artifact.read(r.toConfig()).get).toList
         else Seq()
     )
   }
 
   def toConfig(runtimeConfig: RuntimeConfig): Config = {
-    def bundle(bundle: BundleConfig) = (
-      Map(
-        "url" -> bundle.url,
-        "jarName" -> bundle.jarName,
-        "sha1Sum" -> bundle.sha1Sum,
-        "start" -> bundle.start
-      ) ++ bundle.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map())
-    ).asJava
-
     val config = Map(
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
-      "bundles" -> runtimeConfig.bundles.map { b => bundle(b) }.asJava,
+      "bundles" -> runtimeConfig.bundles.map(BundleConfig.toConfig).map(_.root().unwrapped()).asJava,
       "startLevel" -> runtimeConfig.startLevel,
       "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
+      "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "fragments" -> runtimeConfig.fragments.map { f =>
-        Map(
-          "name" -> f.name,
-          "version" -> f.version,
-          "bundles" -> f.bundles.map { b => bundle(b) }.asJava
-        ).asJava
-      }.asJava
+      "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava,
+      "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
     ConfigFactory.parseMap(config)
@@ -227,44 +192,112 @@ object RuntimeConfig {
 
     }
 
-  def validate(baseDir: File, config: RuntimeConfig): Seq[String] = {
-    config.allBundles.flatMap { b =>
-      val jar = new File(baseDir, b.jarName)
-      val issue = if (!jar.exists()) {
-        Some(s"Missing bundle jar: ${b.jarName}")
-      } else {
-        RuntimeConfig.digestFile(jar) match {
-          case Some(d) =>
-            if (d != b.sha1Sum) {
-              Some(s"Invalid checksum of bundle jar: ${b.jarName}")
-            } else None
-          case None =>
-            Some(s"Could not evaluate checksum of bundle jar: ${b.jarName}")
+  def validate(baseDir: File, config: RuntimeConfig,
+    includeResourceArchives: Boolean,
+    explodedResourceArchives: Boolean): Seq[String] = {
+    val artifacts = config.allBundles.map(b => bundleLocation(b, baseDir) -> b.artifact) ++
+      (if (includeResourceArchives) config.resources.map(r => RuntimeConfig.resourceArchiveLocation(r, baseDir) -> r) else Seq())
+
+    val artifactIssues = artifacts.flatMap {
+      case (file, artifact) =>
+        val issue = if (!file.exists()) {
+          Some(s"Missing bundle jar: ${artifact.fileName}")
+        } else {
+          RuntimeConfig.digestFile(file) match {
+            case Some(d) =>
+              if (d != artifact.sha1Sum) {
+                Some(s"Invalid checksum of bundle jar: ${artifact.fileName}")
+              } else None
+            case None =>
+              Some(s"Could not evaluate checksum of bundle jar: ${artifact.fileName}")
+          }
+        }
+        issue.toList
+    }
+
+    val resourceIssues = if (explodedResourceArchives) {
+      config.resources.flatMap { artifact =>
+        val touchFile = RuntimeConfig.resourceArchiveTouchFileLocation(artifact, baseDir)
+        if (touchFile.exists()) {
+          val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
+          if (persistedChecksum != artifact.sha1Sum) {
+            List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
+          } else Nil
+        } else {
+          List(s"Resource ${artifact.fileName} not unpacked")
         }
       }
-      issue.toList
-    }
+    } else Nil
+
+    artifactIssues ++ resourceIssues
   }
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName}")
+
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
+    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
+    new File(resFile.getParentFile(), s".${resFile.getName()}")
+  }
+
+  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: String, baseDir: File): Try[File] = Try {
+    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
+    Option(file.getParentFile()).foreach { parent =>
+      parent.mkdirs()
+    }
+    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
+    try {
+      os.println(resourceArchiveChecksum)
+    } finally {
+      os.close()
+    }
+    file
+  }
+
+  def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.jarName)
+
+  def bundleLocation(bundle: Artifact, baseDir: File): File =
+    new File(bundlesBaseDir(baseDir), bundle.fileName)
+
+  def profileFileLocation(baseDir: File): File =
+    new File(baseDir, "profile.conf")
 
 }
 
 case class RuntimeConfig(
     name: String,
     version: String,
-    //    framework: BundleConfig,
-    bundles: Seq[RuntimeConfig.BundleConfig],
+    bundles: Seq[BundleConfig],
     startLevel: Int,
     defaultStartLevel: Int,
+    properties: Map[String, String],
     frameworkProperties: Map[String, String],
     systemProperties: Map[String, String],
-    fragments: Seq[RuntimeConfig.FragmentConfig]) {
+    fragments: Seq[FragmentConfig],
+    resources: Seq[Artifact]) {
 
-  def allBundles: Seq[RuntimeConfig.BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 
-  val framework: RuntimeConfig.BundleConfig = {
+  def resolveBundleUrl(url: String): Try[String] = Try {
+    if (url.startsWith("mvn:")) {
+      mvnBaseUrl match {
+        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
+        case None => sys.error("No repository defined to resolve url: " + url)
+      }
+    } else url
+  }
+
+  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+
+  val framework: BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
     require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
     fs.head
   }
+
+  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
 }

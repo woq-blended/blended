@@ -24,9 +24,10 @@ import blended.updater.Updater.Progress
 import blended.updater.Updater.RuntimeConfigStaged
 import blended.updater.Updater.RuntimeConfigActivated
 import blended.updater.config.RuntimeConfig
-import blended.updater.config.LauncherConfig
+import blended.launcher.config.LauncherConfig
 import blended.updater.test.TestSupport.DeleteWhenNoFailure
 import blended.updater.test.TestSupport.DeleteNever
+import blended.updater.config.BundleConfig
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -34,7 +35,7 @@ class UpdaterTest
     with TestSupport
     with ImplicitSender
     with BeforeAndAfterAll {
-  
+
   implicit val deletePolicy = DeleteNever
 
   override def afterAll {
@@ -51,13 +52,13 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(Updater.props(installBaseDir,
-            { c => }, { () => }), s"updater-${nextId()}")
+            { (n, v) => true }, { () => }), s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
 
           val config = RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
-            bundles = Seq(RuntimeConfig.BundleConfig(
+            bundles = Seq(BundleConfig(
               url = bundle1.toURI().toString(),
               sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
               start = true,
@@ -68,7 +69,9 @@ class UpdaterTest
             startLevel = 10,
             defaultStartLevel = 10,
             frameworkProperties = Map(),
-            systemProperties = Map()
+            systemProperties = Map(),
+            properties = Map(),
+            resources = Seq()
           )
 
           {
@@ -98,7 +101,9 @@ class UpdaterTest
           assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
           assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
           assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0").list().toSet ===
-            Set("profile.conf", "org.osgi.core-5.0.0.jar"))
+            Set("profile.conf", "bundles"))
+          assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/bundles").list().toSet ===
+            Set("org.osgi.core-5.0.0.jar"))
 
         }
       }
@@ -117,11 +122,15 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           var restarted = false
-          var curLaunchConfig = Option.empty[LauncherConfig]
+          //          var curLaunchConfig = Option.empty[LauncherConfig]
+          var curNameVersion = Option.empty[(String, String)]
           val updater = system.actorOf(
             Updater.props(
               installBaseDir,
-              { c => curLaunchConfig = Some(c) },
+              { (n, v) =>
+                curNameVersion = Some(n -> v)
+                true
+              },
               () => restarted = true),
             s"updater-${nextId()}"
           )
@@ -130,21 +139,21 @@ class UpdaterTest
             val config = RuntimeConfig(
               name = "test-with-3-bundles", version = "1.0.0",
               bundles = Seq(
-                RuntimeConfig.BundleConfig(
+                BundleConfig(
                   url = bundle1.toURI().toString(),
                   sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
                   start = true,
                   startLevel = Some(0),
                   jarName = "bundle1-1.0.0.jar"
                 ),
-                RuntimeConfig.BundleConfig(
+                BundleConfig(
                   url = bundle2.toURI().toString(),
                   sha1Sum = "72cdfea44be8a153c44b9ed73129b6939bcc087d",
                   start = true,
                   startLevel = Some(2),
                   jarName = "bundle2-1.0.0.jar"
                 ),
-                RuntimeConfig.BundleConfig(
+                BundleConfig(
                   url = bundle3.toURI().toString(),
                   sha1Sum = "a6d3a54eae9c63959997e55698c1b1e5ad097b06",
                   start = true,
@@ -155,7 +164,9 @@ class UpdaterTest
               startLevel = 10,
               defaultStartLevel = 10,
               frameworkProperties = Map(),
-              systemProperties = Map()
+              systemProperties = Map(),
+              properties = Map(),
+              resources = Seq()
             )
 
             {
@@ -186,7 +197,9 @@ class UpdaterTest
               assert(installBaseDir.list().toSet === Set("test-with-3-bundles"))
               assert(new File(installBaseDir, "test-with-3-bundles").list().toSet === Set("1.0.0"))
               assert(new File(installBaseDir, "test-with-3-bundles/1.0.0").list().toSet ===
-                Set("profile.conf", "bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
+                Set("profile.conf", "bundles"))
+              assert(new File(installBaseDir, "test-with-3-bundles/1.0.0/bundles").list().toSet ===
+                Set("bundle1-1.0.0.jar", "bundle2-1.0.0.jar", "bundle3-1.0.0.jar"))
             }
 
             {
@@ -199,14 +212,14 @@ class UpdaterTest
 
             {
               assert(restarted === false)
-              assert(curLaunchConfig === None)
+              assert(curNameVersion === None)
               val reqId = nextId()
               updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0")
               fishForMessage() {
                 case RuntimeConfigActivated(`reqId`) => true
               }
               // restart happens after the message, so we wait
-              assert(curLaunchConfig !== None)
+              assert(curNameVersion === Some("test-with-3-bundles" -> "1.0.0"))
               Thread.sleep(500)
               assert(restarted === true)
             }

@@ -9,6 +9,7 @@ Bundle-Activator: \
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
+  blended.launcher.runtime;resolution:=optional, \
   *
 
 Export-Package: \

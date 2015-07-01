@@ -24,12 +24,12 @@ object BlockingDownloader {
   case class Download(reqId: String, requestRef: ActorRef, url: String, file: File)
 
   // Replies
-  case class DownloadFinished(reqId: String, url: String, file: File)
-  case class DownloadFailed(reqId: String, url: String, file: File, error: Throwable)
+  sealed trait DownloadReply {
+    def reqId: String
+  }
+  final case class DownloadFinished(reqId: String, url: String, file: File) extends DownloadReply
+  final case class DownloadFailed(reqId: String, url: String, file: File, error: Throwable) extends DownloadReply
 
-  /**
-   * @param useParentAsSender Use the parent actor as sender, which is useful, when this actor is used via a [akka.routing.Router].
-   */
   def props(): Props = Props(new BlockingDownloader())
 
 }
