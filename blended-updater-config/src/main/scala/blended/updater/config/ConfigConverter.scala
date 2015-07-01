@@ -17,13 +17,13 @@ trait ConfigConverter {
       filter(b => b.startLevel != Some(0)).
       map { bc =>
         BundleConfig(
-          location = s"${bundlePrefix}/${bc.jarName}",
+          location = s"${bundlePrefix}/${bc.jarName.getOrElse(runtimeConfig.resolveFileName(bc.url).get)}",
           start = bc.start,
           startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
       }
 
     LauncherConfig(
-      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.jarName}",
+      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,
@@ -47,16 +47,16 @@ trait ConfigConverter {
       systemProperties = launcherConfig.systemProperties,
       bundles = BundleConfig(
         url = missingPlaceholder,
-        jarName = new File(launcherConfig.frameworkJar).getName(),
-        sha1Sum = digestFile(new File(launcherConfig.frameworkJar)).getOrElse(missingPlaceholder),
+        jarName = Option(new File(launcherConfig.frameworkJar).getName()),
+        sha1Sum = digestFile(new File(launcherConfig.frameworkJar)),
         start = true,
         startLevel = Some(0)
       ) +:
         launcherConfig.bundles.toList.map { b =>
           BundleConfig(
             url = missingPlaceholder,
-            jarName = new File(b.location).getName(),
-            sha1Sum = digestFile(new File(b.location)).getOrElse(missingPlaceholder),
+            jarName = Option(new File(b.location).getName()),
+            sha1Sum = digestFile(new File(b.location)),
             start = b.start,
             startLevel = Option(b.startLevel)
           )

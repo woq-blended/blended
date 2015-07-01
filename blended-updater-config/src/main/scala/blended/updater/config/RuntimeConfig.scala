@@ -26,6 +26,79 @@ import com.typesafe.config.ConfigParseOptions
 import java.io.PrintStream
 import scala.io.Source
 
+case class RuntimeConfig(
+    name: String,
+    version: String,
+    bundles: Seq[BundleConfig] = Seq(),
+    startLevel: Int,
+    defaultStartLevel: Int,
+    properties: Map[String, String] = Map(),
+    frameworkProperties: Map[String, String] = Map(),
+    systemProperties: Map[String, String] = Map(),
+    fragments: Seq[FragmentConfig] = Seq(),
+    resources: Seq[Artifact] = Seq()) {
+
+  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
+
+  def resolveBundleUrl(url: String): Try[String] = Try {
+    if (url.startsWith("mvn:")) {
+      mvnBaseUrl match {
+        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
+        case None => sys.error("No repository defined to resolve url: " + url)
+      }
+    } else url
+  }
+
+  def resolveFileName(url: String): Try[String] =
+    resolveBundleUrl(url).flatMap { url =>
+      Try {
+        val path = new URL(url).getPath()
+        path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
+      }
+    }
+
+  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+
+  val framework: BundleConfig = {
+    val fs = allBundles.filter(b => b.startLevel == Some(0))
+    require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
+    fs.head
+  }
+
+  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
+
+  def bundleLocation(artifact: Artifact, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
+
+  def profileFileLocation(baseDir: File): File =
+    new File(baseDir, "profile.conf")
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
+
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
+    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
+    new File(resFile.getParentFile(), s".${resFile.getName()}")
+  }
+
+  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String], baseDir: File): Try[File] = Try {
+    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
+    Option(file.getParentFile()).foreach { parent =>
+      parent.mkdirs()
+    }
+    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
+    try {
+      os.println(resourceArchiveChecksum.getOrElse(""))
+    } finally {
+      os.close()
+    }
+    file
+  }
+}
+
 object RuntimeConfig {
 
   object Properties {
@@ -53,8 +126,7 @@ object RuntimeConfig {
         }.toMap
       }
 
-    val bundleReference = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    val bundleOptionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+    val properties = configAsMap("properties", Some(() => Map()))
 
     RuntimeConfig(
       name = config.getString("name"),
@@ -66,7 +138,7 @@ object RuntimeConfig {
         else Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
-      properties = configAsMap("properties", Some(() => Map())),
+      properties = properties,
       frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
       systemProperties = configAsMap("systemProperties", Some(() => Map())),
       fragments =
@@ -195,21 +267,21 @@ object RuntimeConfig {
   def validate(baseDir: File, config: RuntimeConfig,
     includeResourceArchives: Boolean,
     explodedResourceArchives: Boolean): Seq[String] = {
-    val artifacts = config.allBundles.map(b => bundleLocation(b, baseDir) -> b.artifact) ++
-      (if (includeResourceArchives) config.resources.map(r => RuntimeConfig.resourceArchiveLocation(r, baseDir) -> r) else Seq())
+    val artifacts = config.allBundles.map(b => config.bundleLocation(b, baseDir) -> b.artifact) ++
+      (if (includeResourceArchives) config.resources.map(r => config.resourceArchiveLocation(r, baseDir) -> r) else Seq())
 
     val artifactIssues = artifacts.flatMap {
       case (file, artifact) =>
         val issue = if (!file.exists()) {
-          Some(s"Missing bundle jar: ${artifact.fileName}")
+          Some(s"Missing file: ${file.getName()}")
         } else {
           RuntimeConfig.digestFile(file) match {
             case Some(d) =>
-              if (d != artifact.sha1Sum) {
-                Some(s"Invalid checksum of bundle jar: ${artifact.fileName}")
+              if (Option(d) != artifact.sha1Sum) {
+                Some(s"Invalid checksum of bundle jar: ${file.getName()}")
               } else None
             case None =>
-              Some(s"Could not evaluate checksum of bundle jar: ${artifact.fileName}")
+              Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
           }
         }
         issue.toList
@@ -217,14 +289,14 @@ object RuntimeConfig {
 
     val resourceIssues = if (explodedResourceArchives) {
       config.resources.flatMap { artifact =>
-        val touchFile = RuntimeConfig.resourceArchiveTouchFileLocation(artifact, baseDir)
+        val touchFile = config.resourceArchiveTouchFileLocation(artifact, baseDir)
         if (touchFile.exists()) {
           val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
           if (persistedChecksum != artifact.sha1Sum) {
             List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
           } else Nil
         } else {
-          List(s"Resource ${artifact.fileName} not unpacked")
+          List(s"Resource ${artifact.fileName.getOrElse(config.resolveFileName(artifact.url).get)} not unpacked")
         }
       }
     } else Nil
@@ -232,72 +304,6 @@ object RuntimeConfig {
     artifactIssues ++ resourceIssues
   }
 
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
-    new File(baseDir, s"resources/${resourceArchive.fileName}")
-
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
-    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
-    new File(resFile.getParentFile(), s".${resFile.getName()}")
-  }
-
-  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: String, baseDir: File): Try[File] = Try {
-    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
-    Option(file.getParentFile()).foreach { parent =>
-      parent.mkdirs()
-    }
-    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
-    try {
-      os.println(resourceArchiveChecksum)
-    } finally {
-      os.close()
-    }
-    file
-  }
-
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
-
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
-    new File(bundlesBaseDir(baseDir), bundle.jarName)
-
-  def bundleLocation(bundle: Artifact, baseDir: File): File =
-    new File(bundlesBaseDir(baseDir), bundle.fileName)
-
-  def profileFileLocation(baseDir: File): File =
-    new File(baseDir, "profile.conf")
-
-}
-
-case class RuntimeConfig(
-    name: String,
-    version: String,
-    bundles: Seq[BundleConfig],
-    startLevel: Int,
-    defaultStartLevel: Int,
-    properties: Map[String, String],
-    frameworkProperties: Map[String, String],
-    systemProperties: Map[String, String],
-    fragments: Seq[FragmentConfig],
-    resources: Seq[Artifact]) {
-
-  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
-
-  def resolveBundleUrl(url: String): Try[String] = Try {
-    if (url.startsWith("mvn:")) {
-      mvnBaseUrl match {
-        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
-        case None => sys.error("No repository defined to resolve url: " + url)
-      }
-    } else url
-  }
-
-  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
-
-  val framework: BundleConfig = {
-    val fs = allBundles.filter(b => b.startLevel == Some(0))
-    require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
-    fs.head
-  }
-
-  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
 }

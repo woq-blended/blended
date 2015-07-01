@@ -11,7 +11,11 @@
 
 === Config types
 
+==== `LaunchConfig`
+
 The `LauncherConfig` contains only locally available jars and is used to bootstrap the OSGi container. It is processed by the `blender-launcher` module.
+
+==== `RuntimeConfig`
 
 The `RuntimeConfig` is the notion of an updateable configuration. It contains some metadata and all artifact locations as URLs.  It is processed by the `blended-updater` module.
 
@@ -21,14 +25,18 @@ New: If all required artifacts are present, the launcher is also able to start d
 
 === TODOs
 
-* Also download configuration files
 
-* Rework profile layout:
-** currently, all downloaded JARs lie in the profile directory `profiles/<name>/<version>`.
-** goal: downloaded JARs should be kept in a sub directory, next to a new `etc` directory
+* Make Bundle/JarName optional (infer from URL)
+* Validate checksums in launcher
+* Tooling for features
+** Resolve of features
+** materialization of repositories
 
-* Redownload of JARs with incorrect checksums (retry-count)
+* Template-based resource processing
+
+* Tests for Resource updates
+
+* Re-download of JARs with incorrect checksums (retry-count)
 
 * Move download configuration of Update actor to config file
 
-* Make Bundle/JarName optional (infer from URL)

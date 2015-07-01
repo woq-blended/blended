@@ -304,14 +304,14 @@ class Updater(
             // analyze config
 
             val artifacts = config.allBundles.map { b =>
-              ArtifactInProgress(nextId(), b.artifact, RuntimeConfig.bundleLocation(b, installDir))
+              ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b, installDir))
             } ++
               config.resources.map { r =>
-                ArtifactInProgress(nextId(), r, RuntimeConfig.resourceArchiveLocation(r, installDir))
+                ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r, installDir))
               }
 
             val pendingUnpacks = config.resources.map { r =>
-              ArtifactInProgress(nextId(), r, RuntimeConfig.resourceArchiveLocation(r, installDir))
+              ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r, installDir))
             }
 
             val (existing, missing) = artifacts.partition(a => a.file.exists())
@@ -321,8 +321,8 @@ class Updater(
               artifactDownloader ! BlockingDownloader.Download(a.reqId, self, resolvedUrl, a.file)
               a
             }
-            val existingWithId = existing.map { a =>
-              artifactChecker ! Sha1SumChecker.CheckFile(a.reqId, self, a.file, a.artifact.sha1Sum)
+            val existingWithId = existing.filter(_.artifact.sha1Sum.isDefined).map { a =>
+              artifactChecker ! Sha1SumChecker.CheckFile(a.reqId, self, a.file, a.artifact.sha1Sum.get)
               a
             }
 
@@ -379,11 +379,15 @@ class Updater(
           val artifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
           msg match {
             case BlockingDownloader.DownloadFinished(_, url, file) =>
-              val newToCheck = bundleInProgress.copy(reqId = nextId())
-              artifactChecker ! Sha1SumChecker.CheckFile(newToCheck.reqId, self, newToCheck.file, newToCheck.artifact.sha1Sum)
+              val toCheck = bundleInProgress.artifact.sha1Sum.map { sha1Sum =>
+                // only check if we have a checksum
+                val newToCheck = bundleInProgress.copy(reqId = nextId())
+                artifactChecker ! Sha1SumChecker.CheckFile(newToCheck.reqId, self, newToCheck.file, sha1Sum)
+                newToCheck
+              }
               stageInProgress(state.copy(
                 artifactsToDownload = artifactsToDownload,
-                artifactsToCheck = newToCheck +: state.artifactsToCheck
+                artifactsToCheck = toCheck.toList ++: state.artifactsToCheck
               ))
             case BlockingDownloader.DownloadFailed(_, url, file, error) =>
               stageInProgress(state.copy(
@@ -426,7 +430,7 @@ class Updater(
           val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
           msg match {
             case Unpacker.UnpackingFinished(_) =>
-              RuntimeConfig.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum, state.installDir) match {
+              state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum, state.installDir) match {
                 case Success(file) =>
                   stageInProgress(state.copy(
                     artifactsToUnpack = artifactsToUnpack

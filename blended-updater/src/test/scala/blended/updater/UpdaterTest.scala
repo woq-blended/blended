@@ -60,10 +60,10 @@ class UpdaterTest
             name = "test-with-1-framework-bundle", version = "1.0.0",
             bundles = Seq(BundleConfig(
               url = bundle1.toURI().toString(),
-              sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
+              sha1Sum = Option("1316d3ef708f9059883a837ca833a22a6a5d1f6a"),
               start = true,
               startLevel = Some(0),
-              jarName = "org.osgi.core-5.0.0.jar"
+              jarName = Option("org.osgi.core-5.0.0.jar")
             )),
             fragments = Seq(),
             startLevel = 10,
@@ -141,24 +141,24 @@ class UpdaterTest
               bundles = Seq(
                 BundleConfig(
                   url = bundle1.toURI().toString(),
-                  sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
+                  sha1Sum = Option("1316d3ef708f9059883a837ca833a22a6a5d1f6a"),
                   start = true,
                   startLevel = Some(0),
-                  jarName = "bundle1-1.0.0.jar"
+                  jarName = Option("bundle1-1.0.0.jar")
                 ),
                 BundleConfig(
                   url = bundle2.toURI().toString(),
-                  sha1Sum = "72cdfea44be8a153c44b9ed73129b6939bcc087d",
+                  sha1Sum = Option("72cdfea44be8a153c44b9ed73129b6939bcc087d"),
                   start = true,
                   startLevel = Some(2),
-                  jarName = "bundle2-1.0.0.jar"
+                  jarName = Option("bundle2-1.0.0.jar")
                 ),
                 BundleConfig(
                   url = bundle3.toURI().toString(),
-                  sha1Sum = "a6d3a54eae9c63959997e55698c1b1e5ad097b06",
+                  sha1Sum = Option("a6d3a54eae9c63959997e55698c1b1e5ad097b06"),
                   start = true,
                   startLevel = Some(2),
-                  jarName = "bundle3-1.0.0.jar"
+                  jarName = Option("bundle3-1.0.0.jar")
                 )),
               fragments = Seq(),
               startLevel = 10,
