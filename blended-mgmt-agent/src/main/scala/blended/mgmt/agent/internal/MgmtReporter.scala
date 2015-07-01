@@ -18,13 +18,13 @@ package blended.mgmt.agent.internal
 
 import akka.actor.Cancellable
 import akka.event.LoggingReceive
-import blended.akka.{OSGIActor, OSGIActorConfig}
+import blended.akka.{ OSGIActor, OSGIActorConfig }
 import blended.container.context.ContainerIdentifierService
 import blended.container.registry.protocol._
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import akka.pattern.pipe
 
 import scala.concurrent.Future
@@ -37,7 +37,7 @@ object MgmtReporter {
 class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSupport {
 
   implicit private[this] val eCtxt = context.system.dispatcher
-  private[this] var ticker : Option[Cancellable] = None
+  private[this] var ticker: Option[Cancellable] = None
 
   case object Tick
 
@@ -52,23 +52,21 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
     super.postStop()
   }
 
-  def receive : Receive = LoggingReceive {
+  def receive: Receive = LoggingReceive {
 
     case Tick =>
-      withService[ContainerIdentifierService, Option[ContainerInfo]] { 
+      withService[ContainerIdentifierService, Unit] {
         case Some(idSvc) =>
-          Some(ContainerInfo(idSvc.getUUID, idSvc.getProperties.toMap))
-        case _ => None
-      } match {
-        case Some(info) =>
+          val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap)
           log info s"Performing report [${info.toString}]."
-          val pipeline :  HttpRequest => Future[ContainerRegistryResponseOK] = {
+          val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
             sendReceive ~> unmarshal[ContainerRegistryResponseOK]
           }
-          pipeline{ Post("http://localhost:8181/wayofquality/container", info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
+          pipeline { Post("http://localhost:8181/wayofquality/container", info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
+        case None =>
       }
 
-    case response : ContainerRegistryResponseOK => log.info("Reported [{}] to management node", response.id)
+    case response: ContainerRegistryResponseOK => log.info("Reported [{}] to management node", response.id)
   }
 
 }
