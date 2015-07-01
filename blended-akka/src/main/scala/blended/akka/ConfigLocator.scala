@@ -23,23 +23,27 @@ import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
 
-class ConfigLocator(configDirectory: String) {
+abstract class ConfigLocator(configDirectory: String) {
 
-  private[ConfigLocator] val logger = LoggerFactory.getLogger(classOf[ConfigLocator])
 
-  protected def fallbackConfig: Config = ConfigFactory.empty()
+  private[this] val log = LoggerFactory.getLogger(classOf[ConfigLocator])
+
+  protected def fallbackConfig: Config
 
   def getConfig(id: String): Config = {
     val file = new File(configDirectory, s"$id.conf")
-    logger.debug("Retreiving config from [{}]", file.getAbsolutePath())
+    log.debug("Retreiving config from [{}]", file.getAbsolutePath())
 
     if (file.exists && file.isFile && file.canRead)
       ConfigFactory.parseFile(file)
     else
       try {
+        log.debug("Config File not found, falling back to default config.")
         fallbackConfig.getConfig(id)
       } catch {
-        case NonFatal(e) => ConfigFactory.empty()
+        case NonFatal(e) =>
+          log.debug("No config found. Giving up with empty config.")
+          ConfigFactory.empty()
       }
   }
 }

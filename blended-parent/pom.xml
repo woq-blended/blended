@@ -177,7 +177,7 @@
     <typesafe.config.version>1.2.0</typesafe.config.version>
     <uncommons.maths.version>1.2.2</uncommons.maths.version>
     <velocity.version>1.7_5</velocity.version>
-    <xbean.version>3.14</xbean.version>
+    <xbean.version>3.16</xbean.version>
     <xmlbeans.version>2.4.0</xmlbeans.version>
     <xpp3.version>1.1.4c_5</xpp3.version>
     <xstream.version>1.3_3</xstream.version>
@@ -338,7 +338,7 @@
               <supportedProjectType>war</supportedProjectType>
             </supportedProjectTypes>
             <instructions>
-              <_include>-osgi.bnd</_include>
+              <_include>osgi.bnd</_include>
             </instructions>
           </configuration>
         </plugin>

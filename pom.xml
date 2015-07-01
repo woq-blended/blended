@@ -189,6 +189,7 @@
         <module>blended-itestsupport</module>
 
         <module>blended-samples</module>
+        <module>blended-activemq-samplebroker</module>
       </modules>
     </profile>
 

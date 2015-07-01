@@ -137,14 +137,6 @@
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
     <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries.blueprint.version}</bundle>
     <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
-  </feature>
-
-  <feature name="blended-activemq-blueprint" description="Blended - ActiveMQ Blueprint support" version="${activemq.version}" resolver="(obr)" start-level="50">
-    <feature version="${activemq.version}">blended-activemq</feature>
-    <bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.scripting-api-1.0/1.9.0</bundle>
-    <bundle dependency="true">mvn:org.apache.commons/commons-jexl/2.0.1</bundle>
-    <bundle dependency="true">mvn:org.apache.xbean/xbean-blueprint/${xbean.version}</bundle>
-    <bundle>mvn:org.apache.activemq/activemq-blueprint/${activemq.version}</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.activemq.brokerstarter/${project.version}</bundle>
   </feature>
 
@@ -178,9 +170,9 @@
   <feature name="blended-samples" description="Sample bundles" version="${blended.version}" resolver="(obr)">
     <feature version="${akka.version}">blended-akka</feature>
     <feature version="${blended.version}">blended-camel</feature>
-    <feature version="${activemq.version}">blended-activemq-blueprint</feature>
+    <feature version="${activemq.version}">blended-activemq</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
-    <bundle>blueprint:file:etc/amq-broker.xml</bundle>
+    <bundle>mvn:de.wayofquality.blended/blended.activemq.samplebroker/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended.samples.spray.helloworld/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended.samples.camel/${blended.version}</bundle>
   </feature>

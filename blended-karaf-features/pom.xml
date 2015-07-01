@@ -111,6 +111,12 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>blended.activemq.samplebroker</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended.akka</artifactId>
       <version>${blended.version}</version>
     </dependency>

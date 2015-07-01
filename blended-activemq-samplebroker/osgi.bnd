@@ -4,8 +4,7 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Import-Package: *
+Export-Package:
 
-Export-Package: \
-  ${bundle.namespace}
-
+Bundle-Activator: \
+  ${bundle.namespace}.internal.SampleBrokerActivator

@@ -4,7 +4,10 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Activator: ${bundle.namespace}.internal.CamelSampleActivator
+
 Export-Package:
 
-Import-Package: \
-  *
+Import-Package: *
+
+Private-Package: ${bundle.namespace}.internal
