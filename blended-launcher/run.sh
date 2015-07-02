@@ -23,7 +23,8 @@ java\
 :"${REPO}/commons-daemon/commons-daemon/1.0.15/commons-daemon-1.0.15.jar"\
  blended.launcher.Launcher\
  --framework-restart 0\
- --profile-lookup ${TOOLDIR}/launch-profile.conf\
  "$@" && RETVAL=$? || RETVAL=$?
 
 done
+
+# --profile-lookup ${TOOLDIR}/launch-profile.conf\
