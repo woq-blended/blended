@@ -26,8 +26,8 @@ New: If all required artifacts are present, the launcher is also able to start d
 === TODOs
 
 
-* Make Bundle/JarName optional (infer from URL)
 * Validate checksums in launcher
+
 * Tooling for features
 ** Resolve of features
 ** materialization of repositories
@@ -39,4 +39,35 @@ New: If all required artifacts are present, the launcher is also able to start d
 * Re-download of JARs with incorrect checksums (retry-count)
 
 * Move download configuration of Update actor to config file
+
+=== Boot process
+
+* Launcher has 3 moded:
+** `LaunchConfig` - Explicit set of settings
+** `RuntimeConfig` - local materialized config of the updater
+** `ProfileLookup` - read a lookup file, which holds further info about the available profiles and the current profile
+
+Only the third mode enables the updater to restart into another profile
+
+When starting the launcher will expose various properties via the `blended.launcher.runtime.Branding` class:
+* Location of the `ProfileLookup` file
+* The current profile name and version
+* The current profile directory
+
+=== Update process
+
+* In the staging phase, the updater will:
+** download and check bundles
+** download and check resources
+** unpack and filter resources, it will replace various properties:
+*** all defined in `ProfileLookup`
+*** `blended.updater.profile.dir`
+*** `blended.updater.profile.name`
+*** `blended.updater.profile.version`
+*** `blended.updater.profiles.basedir`
+
+=== Open Questions
+
+* How to configure the file install service
+* How to initialize configuration files after an update
 
