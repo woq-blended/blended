@@ -31,7 +31,7 @@ import blended.container.context.ContainerContext;
 
 public class ContainerContextImpl implements ContainerContext {
 
-  private final static String PROP_WOQ_HOME = "woq.home";
+  private final static String PROP_BLENDED_HOME = "blended.home";
   private final static String CONFIG_DIR = "etc";
 
   private final Logger log = LoggerFactory.getLogger(ContainerContextImpl.class);
@@ -53,7 +53,7 @@ public class ContainerContextImpl implements ContainerContext {
   @Override
   public String getContainerDirectory() {
 
-    String dir = System.getProperty(PROP_WOQ_HOME);
+    String dir = System.getProperty(PROP_BLENDED_HOME);
 
     if (dir == null) {
       dir = System.getProperty("user.dir");

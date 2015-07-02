@@ -30,6 +30,7 @@ java\
  -Dfelix.fileinstall.log.level=3\
  -Dhawtio.authenticationEnabled=false\
  -Dlogback.configurationFile=$BLENDED_HOME/etc/logback.xml\
+ -Dblended.home=$BLENDED_HOME\
  blended.launcher.Launcher\
  --framework-restart 0\
  "$@" && RETVAL=$? || RETVAL=$?‚
