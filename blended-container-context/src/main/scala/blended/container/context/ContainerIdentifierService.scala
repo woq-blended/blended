@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package blended.container.context
 
-package blended.container.context;
+import java.util.Properties
 
-import java.util.Properties;
-
-public interface ContainerContext {
-
-  public String getContainerDirectory();
-  public String getContainerConfigDirectory();
-  public String getContainerHostname();
-
-  @Deprecated
-  public Properties readConfig(String configId);
-
-  @Deprecated
-  public void writeConfig(String configId, Properties props);
-
+/**
+ * Each container within the infrastructure has a unique ID. Once the unique ID is assigned to
+ * a container, it doesn't change and also survives container restarts.
+ * A set of user defined properties can be associated with the container id. This can be used
+ * within the registration process at the data center and also to provide a simple mechanism for
+ * container meta data.
+ */
+trait ContainerIdentifierService {
+  def getUUID(): String
+  def getProperties(): Properties
+  def getContainerContext(): ContainerContext
 }

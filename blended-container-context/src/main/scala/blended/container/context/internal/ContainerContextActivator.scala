@@ -18,14 +18,48 @@ package blended.container.context.internal
 
 import blended.container.context.ContainerIdentifierService
 import domino.DominoActivator
+import java.util.UUID
+import org.slf4j.LoggerFactory
 
 class ContainerContextActivator extends DominoActivator {
 
   whenBundleActive {
     val containerContext = new ContainerContextImpl()
 
-    val idService = new ContainerIdentifierServiceImpl(bundleContext, containerContext)
-    idService.providesService[ContainerIdentifierService]
+    val pid = classOf[ContainerIdentifierService].getPackage().getName()
+
+    whenConfigurationActive(pid) { conf =>
+
+      val log = LoggerFactory.getLogger(classOf[ContainerContextActivator])
+
+      val uuidOption = conf.get(ContainerIdentifierServiceImpl.PROP_UUID)
+
+      val uuid = uuidOption match {
+        case Some(x) => x.toString()
+        case None =>
+          // generate and persist
+          val newUuid = UUID.randomUUID().toString()
+          log.info("About to write newly generated UUID: {}", newUuid)
+          val toStore = containerContext.readConfig(pid)
+          toStore.setProperty(ContainerIdentifierServiceImpl.PROP_UUID, newUuid)
+          containerContext.writeConfig(pid, toStore)
+          newUuid
+      }
+
+      val props = conf.collect {
+        case (k: String, v: String) if v.startsWith(ContainerIdentifierServiceImpl.PROP_PROPERTY)
+          && v.length > ContainerIdentifierServiceImpl.PROP_PROPERTY.length() =>
+          val realKey = k.substring(ContainerIdentifierServiceImpl.PROP_PROPERTY.length())
+          log.info("Set identifier property [{}] to [{}]", Array(realKey, v): _*)
+          realKey -> v
+      }
+
+      log.info("Container identifier is [{}]", uuid)
+
+      val idService = new ContainerIdentifierServiceImpl(containerContext, uuid, props)
+      idService.providesService[ContainerIdentifierService]
+
+    }
   }
 
 }

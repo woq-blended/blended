@@ -112,7 +112,9 @@ object Launcher {
             case Some(p) =>
               log.debug("About to read profile lookup file: " + p)
               val c = ConfigFactory.parseFile(new File(p)).resolve()
-              val profileLookup = ProfileLookup.read(c).get
+              val profileLookup = ProfileLookup.read(c).map { pl =>
+                pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
+              }.get
               log.debug("ProfileLookup: " + profileLookup)
               s"${profileLookup.profileBaseDir}/${profileLookup.profileName}/${profileLookup.profileVersion}"
             case None =>
@@ -133,10 +135,10 @@ object Launcher {
           val runtimeConfig = RuntimeConfig.read(config).get
           val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
           launchConfig.copy(
-            branding = launchConfig.branding ++ (cmdline.profileLookup match {
-              case None => Map()
-              case Some(f) => Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath())
-            })
+            branding = launchConfig.branding ++ (
+              cmdline.profileLookup.map(f =>
+                Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath()
+                )).getOrElse(Map())) ++ (Map(RuntimeConfig.Properties.PROFILE_DIR -> profileDir))
           )
       }
 

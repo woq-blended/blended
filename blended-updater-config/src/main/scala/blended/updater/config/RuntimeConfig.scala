@@ -102,7 +102,8 @@ case class RuntimeConfig(
 object RuntimeConfig {
 
   object Properties {
-    val PROFILES_DIR = "blended.updater.profiles.dir"
+    val PROFILES_BASE_DIR = "blended.updater.profiles.basedir"
+    val PROFILE_DIR = "blended.updater.profile.dir"
     val PROFILE_NAME = "blended.updater.profile.name"
     val PROFILE_VERSION = "blended.updater.profile.version"
     val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
