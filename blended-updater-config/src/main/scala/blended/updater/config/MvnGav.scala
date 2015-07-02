@@ -23,7 +23,7 @@ object MvnGav {
 
   val GroupIdToPathPattern = Pattern.compile("[.]")
   val ParseCompactPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]+)")
-  val ParseFullPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]+)[:]([^:]+)([:]([^:]+))?")
+  val ParseFullPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]*)[:]([^:]+)([:]([^:]+))?")
 
   def toUrl(baseUrl: String)(mvnUrl: MvnGav): String = mvnUrl.toUrl(baseUrl)
 

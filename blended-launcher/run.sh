@@ -5,6 +5,8 @@ TOOLDIR="$(dirname "$0")"
 #REPO="${TOOLDIR}/../../mvn/m2repo"
 REPO="/Users/andreas/.m2/repository"
 
+BLENDED_HOME=/Users/andreas/projects/blended/blended-launcher-demo/target/classes
+
 RETVAL=2
 
 while [ "x$RETVAL" == "x2" ]; do
@@ -22,10 +24,12 @@ java\
 :"${REPO}/com/typesafe/config/1.2.0/config-1.2.0.jar"\
 :"${REPO}/commons-daemon/commons-daemon/1.0.15/commons-daemon-1.0.15.jar"\
  -Dfelix.fileinstall.filter=.*cfg\
- -Dfelix.fileinstall.dir=/Users/andreas/projects/blended/blended-launcher-demo/target/classes/etc\
+ -Dfelix.fileinstall.dir=$BLENDED_HOME/etc\
  -Dfelix.fileinstall.bundles.new.start=false\
- -Dfelix.fileinstall.enableConfigSave=false\
+ -Dfelix.fileinstall.enableConfigSave=true\
+ -Dfelix.fileinstall.log.level=3\
  -Dhawtio.authenticationEnabled=false\
+ -Dlogback.configurationFile=$BLENDED_HOME/etc/logback.xml\
  blended.launcher.Launcher\
  --framework-restart 0\
  "$@" && RETVAL=$? || RETVAL=$?‚
