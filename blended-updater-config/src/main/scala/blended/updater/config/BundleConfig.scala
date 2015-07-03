@@ -18,14 +18,14 @@ case class BundleConfig(
 object BundleConfig {
 
   def apply(url: String,
-    jarName: Option[String],
-    sha1Sum: Option[String],
+    jarName: String = null,
+    sha1Sum: String = null,
     start: Boolean,
-    startLevel: Option[Int]): BundleConfig =
+    startLevel: Integer = null): BundleConfig =
     BundleConfig(
-      artifact = Artifact(fileName = jarName, url = url, sha1Sum = sha1Sum),
+      artifact = Artifact(fileName = Option(jarName), url = url, sha1Sum = Option(sha1Sum)),
       start = start,
-      startLevel = startLevel
+      startLevel = Option(startLevel)
     )
 
   def read(config: Config): Try[BundleConfig] = Try {
@@ -34,9 +34,11 @@ object BundleConfig {
     config.withFallback(optionals).checkValid(reference)
 
     BundleConfig(
-      url = config.getString("url"),
-      jarName = if (config.hasPath("jarName")) Option(config.getString("jarName")) else None,
-      sha1Sum = if (config.hasPath("sha1Sum")) Option(config.getString("sha1Sum")) else None,
+      artifact = Artifact(
+        url = config.getString("url"),
+        fileName = if (config.hasPath("jarName")) Option(config.getString("jarName")) else None,
+        sha1Sum = if (config.hasPath("sha1Sum")) Option(config.getString("sha1Sum")) else None
+      ),
       start = if (config.hasPath("start")) config.getBoolean("start") else false,
       startLevel = if (config.hasPath("startLevel")) Option(config.getInt("startLevel")) else None
     )

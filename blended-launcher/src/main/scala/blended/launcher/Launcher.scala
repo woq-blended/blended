@@ -43,6 +43,8 @@ import com.typesafe.config.ConfigFactory
 import blended.updater.config.RuntimeConfig
 import java.util.Properties
 import blended.updater.config.ProfileLookup
+import blended.launcher.runtime.Branding
+import java.util.Hashtable
 
 object Launcher {
 
@@ -193,11 +195,12 @@ class Launcher private (config: LauncherConfig) {
     val cl = new URLClassLoader(Array(frameworkURL), getClass.getClassLoader)
     val frameworkFactory = ServiceLoader.load(classOf[FrameworkFactory], cl).iterator().next()
 
-    {
+    val brandingProps = {
       val brandingProps = new Properties()
       config.branding.foreach { p => brandingProps.setProperty(p._1, p._2) }
       BrandingProperties.setLastBrandingProperties(brandingProps)
       log.debug("Exposing branding via class " + classOf[BrandingProperties].getName() + ": " + brandingProps)
+      brandingProps
     }
 
     config.systemProperties foreach { p =>
@@ -210,6 +213,12 @@ class Launcher private (config: LauncherConfig) {
 
     framework.start()
     log.info(s"Framework started. State: ${framework.getState}")
+
+    {
+      val props = new Hashtable[String, AnyRef]()
+      props.put("blended.launcher", "true")
+      framework.getBundleContext.registerService(classOf[Properties], brandingProps, props)
+    }
 
     log.info("Installing bundles");
     val context = framework.getBundleContext()

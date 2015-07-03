@@ -31,6 +31,7 @@ New: If all required artifacts are present, the launcher is also able to start d
 * Tooling for features
 ** Resolve of features
 ** materialization of repositories
+** install to mvn repo, classifier = "$name-$version"
 
 * Template-based resource processing
 

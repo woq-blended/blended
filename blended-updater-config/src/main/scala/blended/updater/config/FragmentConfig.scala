@@ -7,6 +7,7 @@ import scala.util.Try
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import scala.collection.immutable._
 
 case class FragmentConfig(
   name: String,
@@ -16,6 +17,20 @@ case class FragmentConfig(
   fragments: Seq[FragmentConfig])
 
 object FragmentConfig {
+  def apply(name: String,
+    version: String,
+    url: String = null,
+    bundles: Seq[BundleConfig] = null,
+    fragments: Seq[FragmentConfig] = null): FragmentConfig = {
+    FragmentConfig(
+      name = name,
+      version = version,
+      url = Option(url),
+      bundles = Option(bundles).getOrElse(Seq()),
+      fragments = Option(fragments).getOrElse(Seq())
+    )
+  }
+
   def read(config: Config): Try[FragmentConfig] = Try {
     FragmentConfig(
       name = config.getString("name"),

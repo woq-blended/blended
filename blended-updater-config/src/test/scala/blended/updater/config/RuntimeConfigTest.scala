@@ -42,17 +42,17 @@ class RuntimeConfigTest extends FreeSpecLike {
 
   "resolveFileName" - {
     "should infer the correct filename from a file URL" in {
-      val bundle = BundleConfig(url = "file:///tmp/file1.jar", jarName = None, sha1Sum = None, start = false, startLevel = Some(0))
+      val bundle = BundleConfig(url = "file:///tmp/file1.jar", start = false, startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should infer the correct filename from a http URL" in {
-      val bundle = BundleConfig(url = "http:///tmp/file1.jar", jarName = None, sha1Sum = None, start = false, startLevel = Some(0))
+      val bundle = BundleConfig(url = "http:///tmp/file1.jar", start = false, startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
     "should not infer the correct filename from a mvn URL without a repo setting" in {
-      val bundle = BundleConfig(url = "mvn:group:file:1", jarName = None, sha1Sum = None, start = false, startLevel = Some(0))
+      val bundle = BundleConfig(url = "mvn:group:file:1", start = false, startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url).isInstanceOf[Failure[_]])
     }

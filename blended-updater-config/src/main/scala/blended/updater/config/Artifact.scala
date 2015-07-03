@@ -12,6 +12,15 @@ case class Artifact(
   sha1Sum: Option[String])
 
 object Artifact {
+  def apply(url: String,
+    fileName: String = null,
+    sha1Sum: String = null): Artifact = {
+    Artifact(
+      url = url,
+      fileName = Option(fileName),
+      sha1Sum = Option(sha1Sum)
+    )
+  }
 
   def read(config: Config): Try[Artifact] = Try {
     Artifact(

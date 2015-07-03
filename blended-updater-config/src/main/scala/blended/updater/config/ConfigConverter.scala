@@ -47,18 +47,18 @@ trait ConfigConverter {
       systemProperties = launcherConfig.systemProperties,
       bundles = BundleConfig(
         url = missingPlaceholder,
-        jarName = Option(new File(launcherConfig.frameworkJar).getName()),
-        sha1Sum = digestFile(new File(launcherConfig.frameworkJar)),
+        jarName = new File(launcherConfig.frameworkJar).getName(),
+        sha1Sum = digestFile(new File(launcherConfig.frameworkJar)).orNull,
         start = true,
-        startLevel = Some(0)
+        startLevel = 0
       ) +:
         launcherConfig.bundles.toList.map { b =>
           BundleConfig(
             url = missingPlaceholder,
-            jarName = Option(new File(b.location).getName()),
-            sha1Sum = digestFile(new File(b.location)),
+            jarName = new File(b.location).getName(),
+            sha1Sum = digestFile(new File(b.location)).orNull,
             start = b.start,
-            startLevel = Option(b.startLevel)
+            startLevel = b.startLevel
           )
         },
       fragments = Seq(),
