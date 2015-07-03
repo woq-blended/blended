@@ -43,7 +43,7 @@ New: If all required artifacts are present, the launcher is also able to start d
 
 === Boot process
 
-* Launcher has 3 moded:
+* Launcher has 3 modes:
 ** `LaunchConfig` - Explicit set of settings
 ** `RuntimeConfig` - local materialized config of the updater
 ** `ProfileLookup` - read a lookup file, which holds further info about the available profiles and the current profile
