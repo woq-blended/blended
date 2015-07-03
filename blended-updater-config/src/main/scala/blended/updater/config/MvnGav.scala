@@ -14,7 +14,7 @@ case class MvnGav(
   def toUrl(baseUrl: String): String = {
     val sep = if (baseUrl.isEmpty() || baseUrl.endsWith("/")) "" else "/"
     val groupPath = GroupIdToPathPattern.matcher(group).replaceAll("/")
-    val classifierPart = classifier.map(c => s"-${c}").getOrElse("")
+    val classifierPart = classifier.filter(_ != "jar").map(c => s"-${c}").getOrElse("")
     s"${baseUrl}${sep}${groupPath}/${artifact}/${version}/${artifact}-${version}${classifierPart}.${fileExt}"
   }
 }
@@ -23,7 +23,7 @@ object MvnGav {
 
   val GroupIdToPathPattern = Pattern.compile("[.]")
   val ParseCompactPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]+)")
-  val ParseFullPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]+)[:]([^:]+)([:]([^:]+))?")
+  val ParseFullPattern = Pattern.compile("([^:]+)[:]([^:]+)[:]([^:]*)[:]([^:]+)([:]([^:]+))?")
 
   def toUrl(baseUrl: String)(mvnUrl: MvnGav): String = mvnUrl.toUrl(baseUrl)
 
@@ -35,7 +35,7 @@ object MvnGav {
       val m2 = ParseFullPattern.matcher(gav)
       if (m2.matches()) {
         val classifier = m2.group(3) match {
-          case "" => None
+          case "" | "jar" => None
           case c => Some(c)
         }
         val fileExt = m2.group(6) match {
