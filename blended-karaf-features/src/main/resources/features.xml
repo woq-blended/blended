@@ -135,7 +135,7 @@
     <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.xstream/1.3_3</bundle>
     <bundle dependency="true">mvn:org.apache.aries.transaction/org.apache.aries.transaction.manager/1.0.0</bundle>
     <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-j2ee-connector_1.5_spec/2.0.0</bundle>
-    <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries.blueprint.version}</bundle>
+    <bundle dependency="true">mvn:org.apache.aries/org.apache.aries.util/${aries.util.version}</bundle>
     <bundle dependency="true">mvn:org.apache.activemq/activeio-core/3.1.4</bundle>
     <bundle>mvn:de.wayofquality.blended/blended.activemq.brokerstarter/${project.version}</bundle>
   </feature>
