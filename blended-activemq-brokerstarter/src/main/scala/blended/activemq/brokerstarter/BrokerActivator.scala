@@ -25,7 +25,7 @@ import blended.container.context.ContainerIdentifierService
 import com.typesafe.config.{ConfigFactory, Config}
 import domino.DominoActivator
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.DefaultBrokerFactory
+import org.apache.activemq.broker.{BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.jms.connection.CachingConnectionFactory
@@ -38,6 +38,8 @@ class BrokerActivator extends DominoActivator {
 
     val log = LoggerFactory.getLogger(classOf[BrokerActivator])
     whenServicePresent[ContainerIdentifierService] { idSvc =>
+
+      var brokerService : Option[BrokerService] = None
 
       val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
 
@@ -58,22 +60,25 @@ class BrokerActivator extends DominoActivator {
 
         Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
 
-        val brokerService = new XBeanBrokerFactory().createBroker(new URI(uri))
-        brokerService.waitUntilStarted()
+        brokerService = Some(new XBeanBrokerFactory().createBroker(new URI(uri)))
 
-        val brokerName = brokerService.getBrokerName()
+        brokerService.foreach { broker =>
+          broker.waitUntilStarted()
 
-        log.info("ActiveMQ broker [{}] started successfully.", brokerName)
+          val brokerName = broker.getBrokerName()
 
-        val url = s"vm://$brokerName?create=false"
-        val amqCF = new ActiveMQConnectionFactory(url)
+          log.info("ActiveMQ broker [{}] started successfully.", brokerName)
 
-        val cf = new CachingConnectionFactory(amqCF)
+          val url = s"vm://$brokerName?create=false"
+          val amqCF = new ActiveMQConnectionFactory(url)
 
-        cf.providesService[ConnectionFactory](Map(
-          "provider" -> provider,
-          "brokerName" -> brokerName
-        ))
+          val cf = new CachingConnectionFactory(amqCF)
+
+          cf.providesService[ConnectionFactory](Map(
+            "provider" -> provider,
+            "brokerName" -> brokerName
+          ))
+        }
 
       } catch {
         case  NonFatal(e) =>
@@ -81,6 +86,15 @@ class BrokerActivator extends DominoActivator {
           throw e
       } finally {
         Thread.currentThread().setContextClassLoader(oldLoader)
+      }
+
+      onStop {
+        brokerService.foreach { broker =>
+          log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
+          broker.stop()
+          broker.waitUntilStopped()
+        }
+        brokerService = None
       }
     }
   }

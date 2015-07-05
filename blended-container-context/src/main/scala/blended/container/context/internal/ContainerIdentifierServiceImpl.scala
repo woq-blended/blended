@@ -14,8 +14,6 @@ object ContainerIdentifierServiceImpl {
 class ContainerIdentifierServiceImpl(containerContext: ContainerContext, uuid: String, props: Map[String, String])
     extends ContainerIdentifierService {
 
-  import ContainerIdentifierServiceImpl._
-
   override def getContainerContext(): ContainerContext = containerContext
 
   override def getUUID(): String = uuid
