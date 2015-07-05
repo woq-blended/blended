@@ -4,7 +4,8 @@ set -e
 
 TOOLDIR="$(dirname "$0")"
 
-M2REPO="${TOOLDIR}/../../mvn/m2repo"
+#M2REPO="${TOOLDIR}/../../mvn/m2repo"
+M2REPO="/Users/andreas/.m2/repository"
 
 java\
  -classpath\

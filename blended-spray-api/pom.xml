@@ -113,6 +113,12 @@
       </exclusions>
     </dependency>
 
+    <dependency>
+      <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
+      <artifactId>concurrentlinkedhashmap-lru</artifactId>
+      <version>${linkedhashmap.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>
