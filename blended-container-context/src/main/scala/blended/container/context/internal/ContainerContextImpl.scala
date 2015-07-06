@@ -50,7 +50,9 @@ class ContainerContextImpl extends ContainerContext {
     }
   }
 
-  override def getContainerDirectory(): String = {
+  override def getContainerDirectory(): String = containerDir
+
+  private[this] val containerDir: String = {
 
     val profileHome = Try {
       import blended.launcher.runtime.Branding
