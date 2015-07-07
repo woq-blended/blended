@@ -84,7 +84,7 @@ class ContainerContextImpl extends ContainerContext {
     configDir.getAbsolutePath()
   }
 
-  override def getContainerConfigDirectory(): String = s"${getContainerDirectory()}/${CONFIG_DIR}"
+  override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath
 
   override def readConfig(configId: String): Properties = {
     val props = new Properties()
@@ -143,5 +143,5 @@ class ContainerContextImpl extends ContainerContext {
     log.info("Exported configuration [{}]", configFile)
   }
 
-  private def getConfigFile(configId: String): String = s"${getContainerConfigDirectory()}/${configId}.cfg"
+  private def getConfigFile(configId: String): String = new File(getContainerConfigDirectory(), s"${configId}.cfg").getPath()
 }

@@ -31,18 +31,18 @@ abstract class ConfigLocator(configDirectory: String) {
   protected def fallbackConfig: Config
 
   def getConfig(id: String): Config = {
-    val file = new File(configDirectory, s"$id.conf")
+    val file = new File(configDirectory, s"${id}.conf")
     log.debug("Retreiving config from [{}]", file.getAbsolutePath())
 
     if (file.exists && file.isFile && file.canRead)
       ConfigFactory.parseFile(file)
     else
       try {
-        log.debug("Config File not found, falling back to default config.")
+        log.debug("Config File [{}] not found, falling back to fallback config.", file)
         fallbackConfig.getConfig(id)
       } catch {
         case NonFatal(e) =>
-          log.debug("No config found. Giving up with empty config.")
+          log.debug("No config file [{}] found. Giving up with empty config.", file)
           ConfigFactory.empty()
       }
   }
