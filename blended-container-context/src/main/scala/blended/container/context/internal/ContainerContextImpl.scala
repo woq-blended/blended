@@ -32,11 +32,11 @@ import java.io.IOException
 import scala.util.Try
 
 object ContainerContextImpl {
-  private val PROP_WOQ_HOME = "woq.home"
+  private val PROP_BLENDED_HOME = "blended.home"
   private val CONFIG_DIR = "etc"
 }
 
-class ContainerContextImpl extends ContainerContext {
+class ContainerContextImpl() extends ContainerContext {
   import ContainerContextImpl._
 
   private[this] val log = LoggerFactory.getLogger(classOf[ContainerContextImpl])
@@ -67,7 +67,7 @@ class ContainerContextImpl extends ContainerContext {
       }
 
     val dir = profileHome getOrElse {
-      Option(System.getProperty(PROP_WOQ_HOME)) getOrElse {
+      Option(System.getProperty(PROP_BLENDED_HOME)) getOrElse {
         Option(System.getProperty("user.dir")) getOrElse {
           "."
         }
