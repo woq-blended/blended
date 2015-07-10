@@ -5,6 +5,7 @@ import java.io.FileOutputStream
 import java.io.File
 import java.util.UUID
 import java.io.BufferedOutputStream
+import java.io.SyncFailedException
 
 trait TestSupport {
   import TestSupport._
@@ -41,7 +42,11 @@ trait TestSupport {
         os.print(content)
       } finally {
         os.flush()
-        // fos.getFD().sync()
+        try {
+          fos.getFD().sync()
+        } catch {
+          case e: SyncFailedException => // at least we tried
+        }
         os.close()
       }
       f(file)
