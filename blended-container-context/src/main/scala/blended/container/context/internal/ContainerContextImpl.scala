@@ -54,13 +54,17 @@ class ContainerContextImpl() extends ContainerContext {
 
   private[this] val containerDir: String = {
 
-    val profileHome = Try {
-      import blended.launcher.runtime.Branding
-      // it is possible, that this optional class is not available at runtime, 
-      // e.g. when started with another launcher
-      log.debug("About to read launcher branding properies")
-      Branding.getProperties()
-    }.toOption.flatMap(ps => Option(ps.getProperty("blended.updater.profile.dir"))).
+    val profileHome = (
+      try {
+        import blended.launcher.runtime.Branding
+        // it is possible, that this optional class is not available at runtime, 
+        // e.g. when started with another launcher
+        log.debug("About to read launcher branding properies")
+        Option(Branding.getProperties())
+      } catch {
+        case e: NoClassDefFoundError => None
+      }
+    ).flatMap(ps => Option(ps.getProperty("blended.updater.profile.dir"))).
       orElse {
         log.warn("Could not read the profile directory from read launcher branding properies")
         None
