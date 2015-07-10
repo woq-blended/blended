@@ -2,6 +2,11 @@ language: java
 
 sudo: false
 
+before_script:
+  - wget http://downloads.typesafe.com/zinc/0.3.7/zinc-0.3.7.tgz
+  - tar xzf zinc-0.3.7.tgz
+  - ./zinc-0.3.7/bin/zinc -start
+
 script: ./blended-build/build.sh
 
 jdk:
