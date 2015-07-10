@@ -89,14 +89,21 @@ class BlendedUpdaterActivator extends ActorSystemAware {
 
   }
 
-  def readUpdateEnv() = Try {
+  def readUpdateEnv() = try {
     val props = blended.launcher.runtime.Branding.getProperties()
     println("Blended Launcher detected: " + props)
     val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
     val pVersion = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_VERSION))
     val pProfileLookupFile = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE))
     Some(UpdateEnv(pName.get, pVersion.get, pProfileLookupFile.map(f => new File(f))))
-  } getOrElse (None)
+  } catch {
+    case e: NoClassDefFoundError =>
+      // could not load optional branding class
+      None
+    case e: NoSuchElementException =>
+      // could not found some required properties
+      None
+  }
 
   override def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     val updateEnv = readUpdateEnv()
@@ -114,7 +121,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
     commandsReg.map { reg =>
       try { reg.unregister() } catch {
         case _: IllegalStateException =>
-          // might be because the framework already unregistered the Commands class
+        // might be because the framework already unregistered the Commands class
       }
       commandsReg = None
     }
