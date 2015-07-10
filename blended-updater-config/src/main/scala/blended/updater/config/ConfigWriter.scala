@@ -1,13 +1,14 @@
 package blended.updater.config
 
-import com.typesafe.config.Config
-import java.io.File
-import com.typesafe.config.ConfigRenderOptions
-import java.io.FileOutputStream
 import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 import java.io.PrintStream
+
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
+import com.typesafe.config.ConfigRenderOptions
 
 trait ConfigWriter {
 
@@ -17,15 +18,21 @@ trait ConfigWriter {
       case parent => parent.mkdirs()
     }
     val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
-    val cnf = path.map { p =>
-      ConfigFactory.empty().withValue(p, config.root())
-    }.getOrElse(config)
     try {
-      ps.print(cnf.root().render(
-        ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(false)))
+      write(config, ps, path)
     } finally {
       ps.close()
     }
+  }
+
+  def write(config: Config, os: OutputStream, path: Option[String]): Unit = {
+    val ps = new PrintStream(new BufferedOutputStream(os))
+    val cnf = path.map { p =>
+      ConfigFactory.empty().withValue(p, config.root())
+    }.getOrElse(config)
+    ps.print(cnf.root().render(
+      ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(false)))
+    ps.flush()
   }
 
 }
