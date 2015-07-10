@@ -250,9 +250,9 @@ class Updater(
 
     case GetRuntimeConfigs(reqId) =>
       sender() ! RuntimeConfigs(reqId,
-        staged = profiles.values.toList.collect { case Profile(dir, config, Profile.Valid) => config },
-        pending = profiles.values.toList.collect { case Profile(dir, config, Profile.Pending(_)) => config },
-        invalid = profiles.values.toList.collect { case Profile(dir, config, Profile.Invalid(_)) => config }
+        staged = profiles.values.toList.collect { case Profile(_, config, Profile.Valid) => config },
+        pending = profiles.values.toList.collect { case Profile(_, config, Profile.Pending(_)) => config },
+        invalid = profiles.values.toList.collect { case Profile(_, config, Profile.Invalid(_)) => config }
       )
 
     case AddRuntimeConfig(reqId, config) =>
@@ -288,7 +288,7 @@ class Updater(
     case StageRuntimeConfig(reqId, name, version) =>
       profiles.get(ProfileId(name, version)) match {
         case None =>
-          sender() ! RuntimeConfigStagingFailed(reqId, "No such runtime configuration found")
+          sender() ! RuntimeConfigStagingFailed(reqId, s"No such runtime configuration found: ${name} ${version}")
 
         case Some(Profile(dir, config, Profile.Valid)) =>
           // already staged

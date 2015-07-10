@@ -28,6 +28,9 @@ import blended.launcher.config.LauncherConfig
 import blended.updater.test.TestSupport.DeleteWhenNoFailure
 import blended.updater.test.TestSupport.DeleteNever
 import blended.updater.config.BundleConfig
+import blended.updater.Updater.RuntimeConfigAdditionFailed
+import blended.updater.Updater.GetRuntimeConfigs
+import blended.updater.Updater.RuntimeConfigs
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -43,6 +46,115 @@ class UpdaterTest
   }
 
   "A minimal setup" - {
+
+    "add config" in {
+      withTestFile("Bundle 1") { (bundle1) =>
+        withTestDir() { baseDir =>
+
+          val installBaseDir = new File(baseDir, "install")
+          val updater = system.actorOf(Updater.props(installBaseDir,
+            { (n, v) => true }, { () => }), s"updater-${nextId()}")
+
+          assert(!installBaseDir.exists())
+
+          val config = RuntimeConfig(
+            name = "test-with-1-framework-bundle", version = "1.0.0",
+            bundles = Seq(BundleConfig(
+              url = bundle1.toURI().toString(),
+              sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
+              start = true,
+              startLevel = 0
+            )),
+            startLevel = 10,
+            defaultStartLevel = 10
+          )
+
+          {
+            val addId = nextId()
+            updater ! AddRuntimeConfig(addId, config)
+            fishForMessage() {
+              case RuntimeConfigAdded(`addId`) => true
+            }
+          }
+          assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
+          assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
+          assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0").list().toSet ===
+            Set("profile.conf"))
+
+          {
+            val id = nextId()
+            updater ! GetRuntimeConfigs(id)
+            fishForMessage() {
+              case Updater.RuntimeConfigs(`id`, Seq(), Seq(`config`), Seq()) => true
+            }
+          }
+        }
+      }
+    }
+
+    "add conflicting config" in {
+      withTestFile("Bundle 1") { (bundle1) =>
+        withTestDir() { baseDir =>
+
+          val installBaseDir = new File(baseDir, "install")
+          val updater = system.actorOf(Updater.props(installBaseDir,
+            { (n, v) => true }, { () => }), s"updater-${nextId()}")
+
+          assert(!installBaseDir.exists())
+
+          {
+            val id = nextId()
+            updater ! GetRuntimeConfigs(id)
+            fishForMessage() {
+              case Updater.RuntimeConfigs(`id`, Seq(), Seq(), Seq()) => true
+            }
+          }
+
+          val config = RuntimeConfig(
+            name = "test-with-1-framework-bundle", version = "1.0.0",
+            bundles = Seq(BundleConfig(
+              url = bundle1.toURI().toString(),
+              sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
+              start = true,
+              startLevel = 0
+            )),
+            startLevel = 10,
+            defaultStartLevel = 10
+          )
+
+          {
+            val addId = nextId()
+            updater ! AddRuntimeConfig(addId, config)
+            fishForMessage() {
+              case RuntimeConfigAdded(`addId`) => true
+            }
+            assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
+            assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
+            assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0").list().toSet ===
+              Set("profile.conf"))
+          }
+
+          {
+            val id = nextId()
+            updater ! GetRuntimeConfigs(id)
+            fishForMessage() {
+              case Updater.RuntimeConfigs(`id`, Seq(), Seq(`config`), Seq()) => true
+            }
+          }
+
+          {
+            val config2 = config.copy(startLevel = 20)
+            val addId = nextId()
+            updater ! AddRuntimeConfig(addId, config2)
+            fishForMessage() {
+              case RuntimeConfigAdditionFailed(`addId`, _) => true
+            }
+          }
+
+        }
+      }
+    }
+
     "stage" in {
       val launchConfig = """
       |""".stripMargin
@@ -65,13 +177,8 @@ class UpdaterTest
               startLevel = 0,
               jarName = "org.osgi.core-5.0.0.jar"
             )),
-            fragments = Seq(),
             startLevel = 10,
-            defaultStartLevel = 10,
-            frameworkProperties = Map(),
-            systemProperties = Map(),
-            properties = Map(),
-            resources = Seq()
+            defaultStartLevel = 10
           )
 
           {
@@ -89,10 +196,6 @@ class UpdaterTest
           {
             val stageId = nextId()
             updater ! StageRuntimeConfig(stageId, config.name, config.version)
-            //            updater ! GetProgress(stageId)
-            //            fishForMessage() {
-            //              case Progress(`stageId`, _) => true
-            //            }
             fishForMessage() {
               case RuntimeConfigStaged(`stageId`) => true
             }
@@ -160,13 +263,8 @@ class UpdaterTest
                   startLevel = 2,
                   jarName = "bundle3-1.0.0.jar"
                 )),
-              fragments = Seq(),
               startLevel = 10,
-              defaultStartLevel = 10,
-              frameworkProperties = Map(),
-              systemProperties = Map(),
-              properties = Map(),
-              resources = Seq()
+              defaultStartLevel = 10
             )
 
             {
