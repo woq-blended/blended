@@ -67,11 +67,6 @@
     <bundle>mvn:de.wayofquality.blended/blended.camel.utils/${blended.version}</bundle>
   </feature>
 
-  <feature name="blended-activemq-broker" description="Blended - Active MQ support" resolver="(obr)">
-    <feature version="${activemq.version}">blended-activemq-blueprint</feature>
-    <feature version="${project.version}">blended-base</feature>
-  </feature>
-
   <!-- Bundles needed if only client will be deployed in the container -->
   <feature name="blended-activemq-client" description="Blended - ActiveMQ client libraries" version="${activemq.version}" resolver="(obr)" start-level="50">
     <feature version="[3.1,4)">spring</feature>
