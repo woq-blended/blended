@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-package blended.activemq.samplebroker.internal
+package blended.activemq.defaultbroker.internal
 
 import blended.activemq.brokerstarter.BrokerActivator
 
-class SampleBrokerActivator extends BrokerActivator
+class DefaultBrokerActivator extends BrokerActivator

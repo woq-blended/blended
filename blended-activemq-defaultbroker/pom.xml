@@ -29,10 +29,10 @@
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended.activemq.samplebroker</artifactId>
+  <artifactId>blended.activemq.defaultbroker</artifactId>
   <packaging>bundle</packaging>
 
-  <description>An Active MQ Sample broker.</description>
+  <description>An Active MQ broker instance.</description>
   <properties>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>

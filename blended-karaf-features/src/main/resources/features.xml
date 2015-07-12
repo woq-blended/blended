@@ -167,7 +167,7 @@
     <feature version="${blended.version}">blended-camel</feature>
     <feature version="${activemq.version}">blended-activemq</feature>
     <feature version="${blended.version}">blended-akka-spray</feature>
-    <bundle>mvn:de.wayofquality.blended/blended.activemq.samplebroker/${blended.version}</bundle>
+    <bundle>mvn:de.wayofquality.blended/blended.activemq.defaultbroker/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended.samples.spray.helloworld/${blended.version}</bundle>
     <bundle>mvn:de.wayofquality.blended.samples/blended.samples.camel/${blended.version}</bundle>
   </feature>
