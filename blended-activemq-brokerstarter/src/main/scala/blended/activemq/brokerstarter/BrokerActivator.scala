@@ -25,7 +25,7 @@ import blended.container.context.ContainerIdentifierService
 import com.typesafe.config.{ConfigFactory, Config}
 import domino.DominoActivator
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.{BrokerService, DefaultBrokerFactory}
+import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.slf4j.LoggerFactory
 import org.springframework.jms.connection.CachingConnectionFactory
@@ -49,6 +49,7 @@ class BrokerActivator extends DominoActivator {
 
       val config = locator.getConfig(bundleContext.getBundle().getSymbolicName())
 
+      val brokerName = config.getString("brokerName")
       val uri = s"file://$cfgDir/${config.getString("file")}"
       val provider = config.getString("provider")
 
@@ -58,14 +59,16 @@ class BrokerActivator extends DominoActivator {
 
       try {
 
+        BrokerFactory.setStartDefault(false)
+
         Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
 
         brokerService = Some(new XBeanBrokerFactory().createBroker(new URI(uri)))
 
         brokerService.foreach { broker =>
+          broker.setBrokerName(brokerName)
+          broker.start()
           broker.waitUntilStarted()
-
-          val brokerName = broker.getBrokerName()
 
           log.info("ActiveMQ broker [{}] started successfully.", brokerName)
 
