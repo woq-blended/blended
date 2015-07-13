@@ -111,7 +111,7 @@
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended.activemq.samplebroker</artifactId>
+      <artifactId>blended.activemq.defaultbroker</artifactId>
       <version>${blended.version}</version>
     </dependency>
 
