@@ -48,7 +48,7 @@ class ContainerContextActivator extends DominoActivator {
     }
 
     val props = confProps.asScala.toMap.collect {
-      case (k: String, v: String) if v.startsWith(ContainerIdentifierServiceImpl.PROP_PROPERTY)
+      case (k: String, v: String) if k.startsWith(ContainerIdentifierServiceImpl.PROP_PROPERTY)
         && v.length > ContainerIdentifierServiceImpl.PROP_PROPERTY.length() =>
         val realKey = k.substring(ContainerIdentifierServiceImpl.PROP_PROPERTY.length())
         log.info("Set identifier property [{}] to [{}]", Array(realKey, v): _*)
