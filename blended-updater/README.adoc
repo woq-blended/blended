@@ -72,3 +72,8 @@ When starting the launcher will expose various properties via the `blended.launc
 * How to configure the file install service
 * How to initialize configuration files after an update
 
+
+====
+
+BLENDED_HOME
+BLENDED_PROFILE_HOME

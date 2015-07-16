@@ -65,9 +65,7 @@ object RuntimeConfigBuilder {
       sys.exit(0)
     }
 
-    if (options.configFile == "") {
-      sys.error("No config file given")
-    }
+    if (options.configFile.isEmpty()) sys.error("No config file given")
 
     // read fragment repo files
     val fragments = options.fragmentRepos.flatMap { fileName =>
@@ -80,7 +78,10 @@ object RuntimeConfigBuilder {
     val configFile = new File(options.configFile).getAbsoluteFile()
     val dir = configFile.getParentFile()
     val config = ConfigFactory.parseFile(configFile).resolve()
-    var runtimeConfig = RuntimeConfig.read(config, fragments).get
+    val runtimeConfig = RuntimeConfig.read(config, fragments).get
+
+    val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, fragments)
+    println("runtime config with resolved features: " + resolvedRuntimeConfig)
 
     val outFile = Option(options.outFile.trim())
       .filter(!_.isEmpty())
@@ -158,10 +159,10 @@ object RuntimeConfigBuilder {
       case None =>
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
-        if (runtimeConfig != newRuntimeConfig) {
-          Console.err.println("Updating config file: " + configFile)
-          ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
-        }
+        //        if (runtimeConfig != newRuntimeConfig) {
+        Console.err.println("Writing config file: " + configFile)
+        ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
+      //        }
     }
 
     sys.exit(exitCode)

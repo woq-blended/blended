@@ -46,13 +46,11 @@ object BundleConfig {
 
   def toConfig(bundleConfig: BundleConfig): Config = {
     val config = (
-      Map(
-        "url" -> bundleConfig.url,
-        "start" -> bundleConfig.start
-      ) ++
-        bundleConfig.jarName.map(n => Map("jarName" -> n)).getOrElse(Map()) ++
-        bundleConfig.sha1Sum.map(n => Map("sha1Sum" -> n)).getOrElse(Map()) ++
-        bundleConfig.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map())
+      Map("url" -> bundleConfig.url) ++
+      (if (bundleConfig.start) Map("start" -> bundleConfig.start) else Map()) ++
+      bundleConfig.jarName.map(n => Map("jarName" -> n)).getOrElse(Map()) ++
+      bundleConfig.sha1Sum.map(n => Map("sha1Sum" -> n)).getOrElse(Map()) ++
+      bundleConfig.startLevel.map(sl => Map("startLevel" -> sl)).getOrElse(Map())
     ).asJava
     ConfigFactory.parseMap(config)
   }

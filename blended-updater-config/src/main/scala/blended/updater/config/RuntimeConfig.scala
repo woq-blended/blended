@@ -26,79 +26,6 @@ import com.typesafe.config.ConfigParseOptions
 import java.io.PrintStream
 import scala.io.Source
 
-case class RuntimeConfig(
-    name: String,
-    version: String,
-    bundles: Seq[BundleConfig] = Seq(),
-    startLevel: Int,
-    defaultStartLevel: Int,
-    properties: Map[String, String] = Map(),
-    frameworkProperties: Map[String, String] = Map(),
-    systemProperties: Map[String, String] = Map(),
-    fragments: Seq[FragmentConfig] = Seq(),
-    resources: Seq[Artifact] = Seq()) {
-
-  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
-
-  def resolveBundleUrl(url: String): Try[String] = Try {
-    if (url.startsWith("mvn:")) {
-      mvnBaseUrl match {
-        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
-        case None => sys.error("No repository defined to resolve url: " + url)
-      }
-    } else url
-  }
-
-  def resolveFileName(url: String): Try[String] =
-    resolveBundleUrl(url).flatMap { url =>
-      Try {
-        val path = new URL(url).getPath()
-        path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
-      }
-    }
-
-  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
-
-  val framework: BundleConfig = {
-    val fs = allBundles.filter(b => b.startLevel == Some(0))
-    require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
-    fs.head
-  }
-
-  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
-
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
-
-  def bundleLocation(artifact: Artifact, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
-
-  def profileFileLocation(baseDir: File): File =
-    new File(baseDir, "profile.conf")
-
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
-    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
-
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
-    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
-    new File(resFile.getParentFile(), s".${resFile.getName()}")
-  }
-
-  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String], baseDir: File): Try[File] = Try {
-    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
-    Option(file.getParentFile()).foreach { parent =>
-      parent.mkdirs()
-    }
-    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
-    try {
-      os.println(resourceArchiveChecksum.getOrElse(""))
-    } finally {
-      os.close()
-    }
-    file
-  }
-}
-
 object RuntimeConfig {
 
   object Properties {
@@ -307,4 +234,83 @@ object RuntimeConfig {
 
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
+  def resolveBundleUrl(url: String, mvnBaseUrl: Option[String] = None): Try[String] = Try {
+    if (url.startsWith("mvn:")) {
+      mvnBaseUrl match {
+        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
+        case None => sys.error("No repository defined to resolve url: " + url)
+      }
+    } else url
+  }
+
+  def resolveFileName(url: String, mvnBaseUrl: Option[String] = None): Try[String] =
+    resolveBundleUrl(url, mvnBaseUrl).flatMap { url =>
+      Try {
+        val path = new URL(url).getPath()
+        path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
+      }
+    }
+
+}
+
+case class RuntimeConfig(
+    name: String,
+    version: String,
+    bundles: Seq[BundleConfig] = Seq(),
+    startLevel: Int,
+    defaultStartLevel: Int,
+    properties: Map[String, String] = Map(),
+    frameworkProperties: Map[String, String] = Map(),
+    systemProperties: Map[String, String] = Map(),
+    fragments: Seq[FragmentConfig] = Seq(),
+    resources: Seq[Artifact] = Seq()) {
+
+  import RuntimeConfig._
+
+  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
+
+  def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
+
+  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url, mvnBaseUrl)
+
+  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+
+  val framework: BundleConfig = {
+    val fs = allBundles.filter(b => b.startLevel == Some(0))
+    require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
+    fs.head
+  }
+
+  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
+
+  def bundleLocation(artifact: Artifact, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
+
+  def profileFileLocation(baseDir: File): File =
+    new File(baseDir, "profile.conf")
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
+
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
+    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
+    new File(resFile.getParentFile(), s".${resFile.getName()}")
+  }
+
+  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String], baseDir: File): Try[File] = Try {
+    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
+    Option(file.getParentFile()).foreach { parent =>
+      parent.mkdirs()
+    }
+    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
+    try {
+      os.println(resourceArchiveChecksum.getOrElse(""))
+    } finally {
+      os.close()
+    }
+    file
+  }
 }
