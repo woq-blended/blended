@@ -53,35 +53,101 @@
             <artifactId>blended.updater.tools</artifactId>
             <version>${blended.version}</version>
           </dependency>
-          <dependency>
-            <groupId>org.scala-lang</groupId>
-            <artifactId>scala-library</artifactId>
-            <version>${scala.version}.${scala.micro.version}</version>
-          </dependency>
+<!--           <dependency> -->
+<!--             <groupId>org.scala-lang</groupId> -->
+<!--             <artifactId>scala-library</artifactId> -->
+<!--             <version>${scala.version}.${scala.micro.version}</version> -->
+<!--           </dependency>         -->
         </dependencies>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
         <executions>
           <execution>
             <phase>compile</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
+            <goals><goal>script</goal></goals>
             <configuration>
-              <target>
-                <java classname="blended.updater.tools.configbuilder.RuntimeConfigBuilder">
-                  <arg value="-f" />
-                  <arg value="${basedir}/target/classes/profile.conf" />
-                  <arg value="-i" />
-                  <arg value="-d" />
-                  <arg value="-u" />
-                </java>
-              </target>
+              <script><![CDATA[
+                import blended.updater.tools.configbuilder._
+                import scala.collection.JavaConverters._
+                import java.io.File
+                
+                val srcFeatureDir = "target/classes/features"
+                val destFeatureDir = "target/features"
+                
+                println(s"Project: ${project}")
+                println(s"Project repositories: ${project.getRepositories}")
+                println(s"Project properties: ${project.getProperties}")
+                println(s"Project building request: ${project.getProjectBuildingRequest}")
+                println(s"Project local repository: ${project.getProjectBuildingRequest.getLocalRepository}")
+                val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
+                val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
+                
+                val features = Option(new File(srcFeatureDir).listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
+                println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
+                
+                val targetFeatures = features.map { featureFile =>
+                  val targetFile = new File(destFeatureDir, featureFile.getName()) 
+                  println(s"Processing feature: ${featureFile}")
+                  val args = Array(
+                    "--debug",
+                    "-f", featureFile.getAbsolutePath(),
+                    "-o", targetFile.getAbsolutePath(),
+                    "--work-dir", new File("target/downloads").getAbsolutePath(),
+                    "--discard-invalid",
+                    "--download-missing",
+                    "--update-checksums",
+                    "--maven-dir", localRepoUrl
+                  ) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
+                  println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
+                  
+                  FeatureBuilder.run(args)
+                  targetFile
+                }
+                
+                // TODO: attach features to project
+                
+                println(s"Produced: ${targetFeatures}")
+              ]]></script>
             </configuration>
           </execution>
         </executions>
       </plugin>
+<!--       <plugin> -->
+<!--         <dependencies> -->
+<!--           <dependency> -->
+<!--             <groupId>${project.groupId}</groupId> -->
+<!--             <artifactId>blended.updater.tools</artifactId> -->
+<!--             <version>${blended.version}</version> -->
+<!--           </dependency> -->
+<!--           <dependency> -->
+<!--             <groupId>org.scala-lang</groupId> -->
+<!--             <artifactId>scala-library</artifactId> -->
+<!--             <version>${scala.version}.${scala.micro.version}</version> -->
+<!--           </dependency> -->
+<!--         </dependencies> -->
+<!--         <groupId>org.apache.maven.plugins</groupId> -->
+<!--         <artifactId>maven-antrun-plugin</artifactId> -->
+<!--         <version>1.8</version> -->
+<!--         <executions> -->
+<!--           <execution> -->
+<!--             <phase>compile</phase> -->
+<!--             <goals> -->
+<!--               <goal>run</goal> -->
+<!--             </goals> -->
+<!--             <configuration> -->
+<!--               <target> -->
+<!--                 <java classname="blended.updater.tools.configbuilder.RuntimeConfigBuilder"> -->
+<!--                   <arg value="-f" /> -->
+<!--                   <arg value="${basedir}/target/classes/profile.conf" /> -->
+<!--                   <arg value="-i" /> -->
+<!--                   <arg value="-d" /> -->
+<!--                   <arg value="-u" /> -->
+<!--                 </java> -->
+<!--               </target> -->
+<!--             </configuration> -->
+<!--           </execution> -->
+<!--         </executions> -->
+<!--       </plugin> -->
     </plugins>
   </build>
 
