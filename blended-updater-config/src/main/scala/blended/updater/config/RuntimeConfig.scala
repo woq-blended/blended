@@ -37,9 +37,9 @@ object RuntimeConfig {
     val MVN_REPO = "blended.updater.mvn.url"
   }
 
-  def read(config: Config, fragmentRepo: Seq[FragmentConfig] = Seq()): Try[RuntimeConfig] = Try {
+  def read(config: Config, featureRepo: Seq[FeatureConfig] = Seq()): Try[RuntimeConfig] = Try {
 
-    // TODO: ensure, all fragments are non-empty
+    // TODO: ensure, all features are non-empty
 
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
@@ -69,20 +69,20 @@ object RuntimeConfig {
       properties = properties,
       frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
       systemProperties = configAsMap("systemProperties", Some(() => Map())),
-      fragments =
-        if (config.hasPath("fragments"))
-          config.getObjectList("fragments").asScala.map { f =>
+      features =
+        if (config.hasPath("features"))
+          config.getObjectList("features").asScala.map { f =>
           val fc = f.toConfig()
           if (fc.hasPath("bundles")) {
             // read directly
-            FragmentConfig.read(fc).get
+            FeatureConfig.read(fc).get
           } else {
             // lookup in repo
             val fName = fc.getString("name")
             val fVersion = fc.getString("version")
-            fragmentRepo.find(f => f.name == fName && f.version == fVersion) match {
+            featureRepo.find(f => f.name == fName && f.version == fVersion) match {
               case Some(f) => f
-              case None => sys.error(s"Could not found bundles for fragment: ${fName}-${fVersion}")
+              case None => sys.error(s"Could not found bundles for feature: ${fName}-${fVersion}")
             }
           }
         }.toList
@@ -104,7 +104,7 @@ object RuntimeConfig {
       "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "fragments" -> runtimeConfig.fragments.map(FragmentConfig.toConfig).map(_.root().unwrapped()).asJava,
+      "features" -> runtimeConfig.features.map(FeatureConfig.toConfig).map(_.root().unwrapped()).asJava,
       "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
@@ -262,7 +262,7 @@ case class RuntimeConfig(
     properties: Map[String, String] = Map(),
     frameworkProperties: Map[String, String] = Map(),
     systemProperties: Map[String, String] = Map(),
-    fragments: Seq[FragmentConfig] = Seq(),
+    features: Seq[FeatureConfig] = Seq(),
     resources: Seq[Artifact] = Seq()) {
 
   import RuntimeConfig._
@@ -273,7 +273,7 @@ case class RuntimeConfig(
 
   def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url, mvnBaseUrl)
 
-  def allBundles: Seq[BundleConfig] = bundles ++ fragments.flatMap(_.bundles)
+  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.bundles)
 
   val framework: BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))

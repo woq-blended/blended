@@ -7,7 +7,7 @@ import java.io.File
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import scala.util.Try
-import blended.updater.config.FragmentConfig
+import blended.updater.config.FeatureConfig
 import blended.updater.config.RuntimeConfig
 import de.tototec.cmdoption.internal.LoggerFactory
 import blended.updater.config.BundleConfig
@@ -101,7 +101,7 @@ object FeatureBuilder {
     val file = new File(cmdline.featureFiles)
     val config = ConfigFactory.parseFile(file).resolve()
 
-    val feature = FragmentConfig.read(config).get
+    val feature = FeatureConfig.read(config).get
     Console.err.println(s"Processing feature: ${feature.name} ${feature.version}")
 
     val bundles = feature.bundles
@@ -152,10 +152,10 @@ object FeatureBuilder {
     } else feature
 
     if (cmdline.outputFile.isDefined) {
-      ConfigWriter.write(FragmentConfig.toConfig(newFeature), new File(cmdline.outputFile.get), None)
+      ConfigWriter.write(FeatureConfig.toConfig(newFeature), new File(cmdline.outputFile.get), None)
     } else {
       val ps = new PrintStream(Console.out)
-      ConfigWriter.write(FragmentConfig.toConfig(newFeature), ps, None)
+      ConfigWriter.write(FeatureConfig.toConfig(newFeature), ps, None)
     }
   }
 

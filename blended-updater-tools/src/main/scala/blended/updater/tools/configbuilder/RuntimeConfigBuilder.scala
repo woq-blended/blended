@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable._
 import scala.util.Failure
 import scala.util.Try
-import blended.updater.config.FragmentConfig
+import blended.updater.config.FeatureConfig
 import blended.updater.config.BundleConfig
 import blended.updater.config.Artifact
 import java.io.PrintWriter
@@ -45,12 +45,12 @@ object RuntimeConfigBuilder {
     )
     var inPlace: Boolean = false
 
-    @CmdOption(names = Array("-r", "--fragment-repo"), args = Array("fragementfile"),
-      description = "Lookup additional fragment configuration(s) from file {0}",
+    @CmdOption(names = Array("-r", "--feature-repo"), args = Array("featurefile"),
+      description = "Lookup additional feature configuration(s) from file {0}",
       maxCount = -1
     )
-    def addFragmentRepo(repo: String): Unit = fragmentRepos +:= repo
-    var fragmentRepos: Seq[String] = Seq()
+    def addFeatureRepo(repo: String): Unit = featureRepos +:= repo
+    var featureRepos: Seq[String] = Seq()
   }
 
   def main(args: Array[String]): Unit = {
@@ -67,20 +67,20 @@ object RuntimeConfigBuilder {
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
 
-    // read fragment repo files
-    val fragments = options.fragmentRepos.flatMap { fileName =>
+    // read feature repo files
+    val features = options.featureRepos.flatMap { fileName =>
       val repoConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
       repoConfig.getObjectList("fragments").asScala.map { c =>
-        FragmentConfig.read(c.toConfig()).get
+        FeatureConfig.read(c.toConfig()).get
       }
     }
 
     val configFile = new File(options.configFile).getAbsoluteFile()
     val dir = configFile.getParentFile()
     val config = ConfigFactory.parseFile(configFile).resolve()
-    val runtimeConfig = RuntimeConfig.read(config, fragments).get
+    val runtimeConfig = RuntimeConfig.read(config, features).get
 
-    val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, fragments)
+    val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
     println("runtime config with resolved features: " + resolvedRuntimeConfig)
 
     val outFile = Option(options.outFile.trim())
@@ -148,7 +148,7 @@ object RuntimeConfigBuilder {
 
       runtimeConfig.copy(
         bundles = runtimeConfig.bundles.map(checkAndUpdateBundle),
-        fragments = runtimeConfig.fragments.map { f =>
+        features = runtimeConfig.features.map { f =>
           f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
         },
         resources = runtimeConfig.resources.map(checkAndUpdateResource)

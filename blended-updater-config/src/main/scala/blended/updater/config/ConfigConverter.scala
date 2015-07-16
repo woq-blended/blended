@@ -61,9 +61,7 @@ trait ConfigConverter {
             startLevel = b.startLevel
           )
         },
-      fragments = Seq(),
-      properties = launcherConfig.branding,
-      resources = Seq()
+      properties = launcherConfig.branding
     )
   }
 
