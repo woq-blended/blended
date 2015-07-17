@@ -70,6 +70,11 @@
                 import blended.updater.tools.configbuilder._
                 import scala.collection.JavaConverters._
                 import java.io.File
+                import org.apache.maven.artifact.DefaultArtifact
+                import org.apache.maven.artifact.versioning.VersionRange
+                import org.apache.maven.project.DefaultMavenProjectHelper
+                import org.apache.maven.project.artifact.AttachedArtifact
+                import org.apache.maven.artifact.handler.DefaultArtifactHandler
                 
                 val srcFeatureDir = "target/classes/features"
                 val destFeatureDir = "target/features"
@@ -85,7 +90,7 @@
                 val features = Option(new File(srcFeatureDir).listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
                 println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
                 
-                val targetFeatures = features.map { featureFile =>
+                val targetFeatureFiles = features.map { featureFile =>
                   val targetFile = new File(destFeatureDir, featureFile.getName()) 
                   println(s"Processing feature: ${featureFile}")
                   val args = Array(
@@ -104,9 +109,29 @@
                   targetFile
                 }
                 
-                // TODO: attach features to project
+                println(s"Produced: ${targetFeatureFiles.mkString(", ")}")
+
+                val projectHelper = new DefaultMavenProjectHelper()
                 
-                println(s"Produced: ${targetFeatures}")
+                // TODO: attach features to project
+                targetFeatureFiles.foreach { featureFile =>
+                  val name = featureFile.getName
+                  val classifier = name.substring(0, name.length - ".conf".length)
+                  println(s"Attaching as artifact: ${classifier}")
+                  
+                  val handler = new DefaultArtifactHandler("conf")
+                  // val artifact = new DefaultArtifact(project.getGroupId, project.getArtifactId, VersionRange.createFromVersion(project.getVersion), "compile", "conf", classifier, handler)
+                  val artifact = new AttachedArtifact(project.getArtifact(), "conf", classifier, handler)
+                  artifact.setFile(featureFile)
+                  artifact.setResolved(true)
+                  project.addAttachedArtifact(artifact)
+                  // project.attachArtifact("conf", classifier, featureFile)
+                  
+                  // projectHelper.attachArtifact(project, featureFile, classifier)
+                  // FIXME: we dont want to attach with "jar" type, but we get a NPE with the line below
+                  // projectHelper.attachArtifact(project, "conf", classifier, featureFile)
+                }
+                
               ]]></script>
             </configuration>
           </execution>
