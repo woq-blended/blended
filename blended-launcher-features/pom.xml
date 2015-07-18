@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2014ff,  https://github.com/woq-blended
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.wayofquality.blended</groupId>
+    <artifactId>blended.parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <relativePath>../blended-parent</relativePath>
+  </parent>
+
+  <name>${project.artifactId}</name>
+  <artifactId>blended.launcher.features</artifactId>
+  <packaging>jar</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <dependencies>
+          <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blended.updater.tools</artifactId>
+            <version>${blended.version}</version>
+          </dependency>
+        </dependencies>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals><goal>script</goal></goals>
+            <configuration>
+              <script><![CDATA[
+                import blended.updater.tools.configbuilder._
+                import scala.collection.JavaConverters._
+                import java.io.File
+                import org.apache.maven.artifact.DefaultArtifact
+                import org.apache.maven.artifact.versioning.VersionRange
+                import org.apache.maven.project.DefaultMavenProjectHelper
+                import org.apache.maven.project.artifact.AttachedArtifact
+                import org.apache.maven.artifact.handler.DefaultArtifactHandler
+                
+                val srcFeatureDir = "target/classes"
+                val destFeatureDir = "target/features"
+                
+                println(s"Project: ${project}")
+                println(s"Project repositories: ${project.getRepositories}")
+                println(s"Project properties: ${project.getProperties}")
+                println(s"Project building request: ${project.getProjectBuildingRequest}")
+                println(s"Project local repository: ${project.getProjectBuildingRequest.getLocalRepository}")
+                val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
+                val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
+                
+                val features = Option(new File(srcFeatureDir).listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
+                println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
+                
+                val targetFeatureFiles = features.map { featureFile =>
+                  val targetFile = new File(destFeatureDir, featureFile.getName()) 
+                  println(s"Processing feature: ${featureFile}")
+                  val args = Array(
+                    "--debug",
+                    "-f", featureFile.getAbsolutePath(),
+                    "-o", targetFile.getAbsolutePath(),
+                    "--work-dir", new File("target/downloads").getAbsolutePath(),
+                    "--discard-invalid",
+                    "--download-missing",
+                    "--update-checksums",
+                    "--maven-dir", localRepoUrl
+                  ) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
+                  println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
+                  
+                  FeatureBuilder.run(args)
+                  targetFile
+                }
+                
+                println(s"Produced: ${targetFeatureFiles.mkString(", ")}")
+
+                val projectHelper = new DefaultMavenProjectHelper()
+                
+                targetFeatureFiles.foreach { featureFile =>
+                  val name = featureFile.getName
+                  val classifier = name.substring(0, name.length - ".conf".length)
+                  println(s"Attaching as artifact: ${classifier}")
+                  
+                  val handler = new DefaultArtifactHandler("conf")
+                  // val artifact = new DefaultArtifact(project.getGroupId, project.getArtifactId, VersionRange.createFromVersion(project.getVersion), "compile", "conf", classifier, handler)
+                  val artifact = new AttachedArtifact(project.getArtifact(), "conf", classifier, handler)
+                  artifact.setFile(featureFile)
+                  artifact.setResolved(true)
+                  project.addAttachedArtifact(artifact)
+                  // project.attachArtifact("conf", classifier, featureFile)
+                  
+                  // projectHelper.attachArtifact(project, featureFile, classifier)
+                  // FIXME: we dont want to attach with "jar" type, but we get a NPE with the line below
+                  // projectHelper.attachArtifact(project, "conf", classifier, featureFile)
+                }
+              ]]></script>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+<!--       <plugin> -->
+<!--         <dependencies> -->
+<!--           <dependency> -->
+<!--             <groupId>${project.groupId}</groupId> -->
+<!--             <artifactId>blended.updater.tools</artifactId> -->
+<!--             <version>${blended.version}</version> -->
+<!--           </dependency> -->
+<!--           <dependency> -->
+<!--             <groupId>org.scala-lang</groupId> -->
+<!--             <artifactId>scala-library</artifactId> -->
+<!--             <version>${scala.version}.${scala.micro.version}</version> -->
+<!--           </dependency> -->
+<!--         </dependencies> -->
+<!--         <groupId>org.apache.maven.plugins</groupId> -->
+<!--         <artifactId>maven-antrun-plugin</artifactId> -->
+<!--         <version>1.8</version> -->
+<!--         <executions> -->
+<!--           <execution> -->
+<!--             <phase>compile</phase> -->
+<!--             <goals> -->
+<!--               <goal>run</goal> -->
+<!--             </goals> -->
+<!--             <configuration> -->
+<!--               <target> -->
+<!--                 <java classname="blended.updater.tools.configbuilder.RuntimeConfigBuilder"> -->
+<!--                   <arg value="-f" /> -->
+<!--                   <arg value="${basedir}/target/classes/profile.conf" /> -->
+<!--                   <arg value="-i" /> -->
+<!--                   <arg value="-d" /> -->
+<!--                   <arg value="-u" /> -->
+<!--                 </java> -->
+<!--               </target> -->
+<!--             </configuration> -->
+<!--           </execution> -->
+<!--         </executions> -->
+<!--       </plugin> -->
+    </plugins>
+  </build>
+
+</project>
+

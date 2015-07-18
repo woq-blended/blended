@@ -82,7 +82,7 @@ object RuntimeConfig {
             val fVersion = fc.getString("version")
             featureRepo.find(f => f.name == fName && f.version == fVersion) match {
               case Some(f) => f
-              case None => sys.error(s"Could not found bundles for feature: ${fName}-${fVersion}")
+              case None => sys.error(s"Could not find bundles for feature: ${fName}-${fVersion}")
             }
           }
         }.toList

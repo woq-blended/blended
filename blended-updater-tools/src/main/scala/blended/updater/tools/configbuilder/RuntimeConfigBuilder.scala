@@ -49,7 +49,7 @@ object RuntimeConfigBuilder {
       description = "Lookup additional feature configuration(s) from file {0}",
       maxCount = -1
     )
-    def addFeatureRepo(repo: String): Unit = featureRepos +:= repo
+    def addFeatureRepo(repo: String): Unit = featureRepos ++= Seq(repo)
     var featureRepos: Seq[String] = Seq()
 
     // TODO: additional maven repos

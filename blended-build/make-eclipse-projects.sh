@@ -36,6 +36,7 @@ blended-testsupport \
 blended-updater \
 blended-updater-config \
 blended-updater-tools \
+blended-launcher-features \
 blended-launcher-demo \
 blended-util"
 

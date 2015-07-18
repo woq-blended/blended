@@ -190,6 +190,10 @@
 
         <module>blended-samples</module>
         <module>blended-activemq-defaultbroker</module>
+
+	<module>blended-launcher-features</module>
+	<module>blended-launcher-demo</module>
+
       </modules>
     </profile>
 

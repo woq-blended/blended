@@ -37,10 +37,81 @@
 
   <dependencies>
     <!-- FIXME: this is why? -->
+<!--     <dependency> -->
+<!--       <groupId>de.wayofquality.blended</groupId> -->
+<!--       <artifactId>blended.karaf.features</artifactId> -->
+<!--       <version>${project.version}</version> -->
+<!--     </dependency> -->
+    
     <dependency>
-      <groupId>de.wayofquality.blended</groupId>
-      <artifactId>blended.karaf.features</artifactId>
-      <version>${project.version}</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-commons</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-http</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-jetty</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-jaxrs</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-spray</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-hawtio</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-spring</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-activemq</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-camel</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-samples</classifier>
     </dependency>
   </dependencies>
 
@@ -76,70 +147,24 @@
                 import org.apache.maven.project.artifact.AttachedArtifact
                 import org.apache.maven.artifact.handler.DefaultArtifactHandler
                 
-                val srcFeatureDir = "target/classes/features"
-                val destFeatureDir = "target/features"
                 val srcProfile = "target/classes/profile.conf"
                 val targetProfile = "target/classes/profile.conf"
-                
-                println(s"Project: ${project}")
-                println(s"Project repositories: ${project.getRepositories}")
-                println(s"Project properties: ${project.getProperties}")
-                println(s"Project building request: ${project.getProjectBuildingRequest}")
-                println(s"Project local repository: ${project.getProjectBuildingRequest.getLocalRepository}")
-                val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
-                val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
-                
-                val features = Option(new File(srcFeatureDir).listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
-                println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
-                
-                val targetFeatureFiles = features.map { featureFile =>
-                  val targetFile = new File(destFeatureDir, featureFile.getName()) 
-                  println(s"Processing feature: ${featureFile}")
-                  val args = Array(
-                    "--debug",
-                    "-f", featureFile.getAbsolutePath(),
-                    "-o", targetFile.getAbsolutePath(),
-                    "--work-dir", new File("target/downloads").getAbsolutePath(),
-                    "--discard-invalid",
-                    "--download-missing",
-                    "--update-checksums",
-                    "--maven-dir", localRepoUrl
-                  ) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
-                  println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
-                  
-                  FeatureBuilder.run(args)
-                  targetFile
-                }
-                
-                println(s"Produced: ${targetFeatureFiles.mkString(", ")}")
 
-                val projectHelper = new DefaultMavenProjectHelper()
-                
-                // TODO: attach features to project
-                targetFeatureFiles.foreach { featureFile =>
-                  val name = featureFile.getName
-                  val classifier = name.substring(0, name.length - ".conf".length)
-                  println(s"Attaching as artifact: ${classifier}")
-                  
-                  val handler = new DefaultArtifactHandler("conf")
-                  // val artifact = new DefaultArtifact(project.getGroupId, project.getArtifactId, VersionRange.createFromVersion(project.getVersion), "compile", "conf", classifier, handler)
-                  val artifact = new AttachedArtifact(project.getArtifact(), "conf", classifier, handler)
-                  artifact.setFile(featureFile)
-                  artifact.setResolved(true)
-                  project.addAttachedArtifact(artifact)
-                  // project.attachArtifact("conf", classifier, featureFile)
-                  
-                  // projectHelper.attachArtifact(project, featureFile, classifier)
-                  // FIXME: we dont want to attach with "jar" type, but we get a NPE with the line below
-                  // projectHelper.attachArtifact(project, "conf", classifier, featureFile)
-                }
-                
+                val confArtifacts = project.getDependencyArtifacts.asScala.
+                  filter(a => a.getScope() == "compile" && a.getType() == "conf")
+                println(s"Feature artifacts: ${confArtifacts.mkString(", ")}")
+                val featureFiles = confArtifacts.map(_.getFile())
+ 
+ 				println("feature args: " + featureFiles.toArray.flatMap { f => 
+                  Array("-r", f.getAbsolutePath)
+                })
+ 
                 val profileArgs = Array(
                   "-f", new File(srcProfile).getAbsolutePath,
                   "-o", new File(targetProfile).getAbsolutePath,
                   "-d",
                   "-u"
-                ) ++ targetFeatureFiles.flatMap { f => 
+                ) ++ featureFiles.toArray.flatMap { f => 
                   Array("-r", f.getAbsolutePath)
                 }
                 RuntimeConfigBuilder.run(profileArgs)
