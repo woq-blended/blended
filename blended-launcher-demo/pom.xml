@@ -78,6 +78,8 @@
                 
                 val srcFeatureDir = "target/classes/features"
                 val destFeatureDir = "target/features"
+                val srcProfile = "target/classes/profile.conf"
+                val targetProfile = "target/classes/profile.conf"
                 
                 println(s"Project: ${project}")
                 println(s"Project repositories: ${project.getRepositories}")
@@ -132,6 +134,15 @@
                   // projectHelper.attachArtifact(project, "conf", classifier, featureFile)
                 }
                 
+                val profileArgs = Array(
+                  "-f", new File(srcProfile).getAbsolutePath,
+                  "-o", new File(targetProfile).getAbsolutePath,
+                  "-d",
+                  "-u"
+                ) ++ targetFeatureFiles.flatMap { f => 
+                  Array("-r", f.getAbsolutePath)
+                }
+                RuntimeConfigBuilder.run(profileArgs)
               ]]></script>
             </configuration>
           </execution>

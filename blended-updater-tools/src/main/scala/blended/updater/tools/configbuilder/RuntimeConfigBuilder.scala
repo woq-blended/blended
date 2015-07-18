@@ -51,9 +51,16 @@ object RuntimeConfigBuilder {
     )
     def addFeatureRepo(repo: String): Unit = featureRepos +:= repo
     var featureRepos: Seq[String] = Seq()
+
+    // TODO: additional maven repos
   }
 
   def main(args: Array[String]): Unit = {
+    val exitCode = run(args)
+    sys.exit(exitCode)
+  }
+
+  def run(args: Array[String]): Int = {
     println(s"RuntimeConfigBuilder: ${args.mkString(" ")}")
 
     val options = new CmdOptions()
@@ -62,31 +69,31 @@ object RuntimeConfigBuilder {
     cp.parse(args: _*)
     if (options.help) {
       cp.usage()
-      sys.exit(0)
+      return 0
     }
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
 
     // read feature repo files
-    val features = options.featureRepos.flatMap { fileName =>
-      val repoConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
-      repoConfig.getObjectList("fragments").asScala.map { c =>
-        FeatureConfig.read(c.toConfig()).get
-      }
+    val features = options.featureRepos.map { fileName =>
+      val featureConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
+      //      repoConfig.getObjectList("features").asScala.map { c =>
+      FeatureConfig.read(featureConfig).get
+      //      }
     }
 
     val configFile = new File(options.configFile).getAbsoluteFile()
-    val dir = configFile.getParentFile()
+    val outFile = Option(options.outFile.trim())
+      .filter(!_.isEmpty())
+      .orElse(if (options.inPlace) Option(configFile.getPath()) else None)
+      .map(new File(_).getAbsoluteFile())
+
+    val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
     val config = ConfigFactory.parseFile(configFile).resolve()
     val runtimeConfig = RuntimeConfig.read(config, features).get
 
     val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
     println("runtime config with resolved features: " + resolvedRuntimeConfig)
-
-    val outFile = Option(options.outFile.trim())
-      .filter(!_.isEmpty())
-      .orElse(if (options.inPlace) Option(configFile.getPath()) else None)
-      .map(new File(_).getAbsoluteFile())
 
     var exitCode = 0
 
@@ -165,7 +172,7 @@ object RuntimeConfigBuilder {
       //        }
     }
 
-    sys.exit(exitCode)
+    exitCode
   }
 
 }
