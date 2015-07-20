@@ -56,11 +56,17 @@ object RuntimeConfigBuilder {
   }
 
   def main(args: Array[String]): Unit = {
-    val exitCode = run(args)
-    sys.exit(exitCode)
+    try {
+      run(args)
+      sys.exit(0)
+    } catch {
+      case e: Throwable =>
+        Console.err.println(s"An error occurred: ${e.getMessage()}")
+        sys.exit(1)
+    }
   }
 
-  def run(args: Array[String]): Int = {
+  def run(args: Array[String]): Unit = {
     println(s"RuntimeConfigBuilder: ${args.mkString(" ")}")
 
     val options = new CmdOptions()
@@ -69,7 +75,7 @@ object RuntimeConfigBuilder {
     cp.parse(args: _*)
     if (options.help) {
       cp.usage()
-      return 0
+      return
     }
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
@@ -95,8 +101,6 @@ object RuntimeConfigBuilder {
     val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
     println("runtime config with resolved features: " + resolvedRuntimeConfig)
 
-    var exitCode = 0
-
     if (options.check) {
       val issues = RuntimeConfig.validate(
         dir,
@@ -105,8 +109,7 @@ object RuntimeConfigBuilder {
         explodedResourceArchives = false
       )
       if (!issues.isEmpty) {
-        Console.err.println(issues.mkString("\n"))
-        exitCode = 1
+        sys.error(issues.mkString("\n"))
       }
     }
 
@@ -133,7 +136,7 @@ object RuntimeConfigBuilder {
           e
       }
       if (!issues.isEmpty) {
-        exitCode = 1
+        sys.error(issues.mkString("\n"))
       }
     }
 
@@ -171,8 +174,6 @@ object RuntimeConfigBuilder {
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
       //        }
     }
-
-    exitCode
   }
 
 }

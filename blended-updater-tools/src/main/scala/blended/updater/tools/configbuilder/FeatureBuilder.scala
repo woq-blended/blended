@@ -87,7 +87,7 @@ object FeatureBuilder {
     cp.parse(args: _*)
     if (cmdlineCommon.help) {
       cp.usage()
-      sys.exit(0)
+      return
     }
 
     if (cmdlineCommon.debug) Console.err.println(s"Config: ${cmdline}")
