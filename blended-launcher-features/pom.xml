@@ -35,6 +35,194 @@
   <artifactId>blended.launcher.features</artifactId>
   <packaging>jar</packaging>
 
+  <dependencies>
+    <dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.configadmin</artifactId>
+			<version>${felix.ca.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.util</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.container.context</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.jmx</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.persistence</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.neo4j.api</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.container.registry</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.camel.utils</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.mgmt.agent</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.mgmt.rest</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.jolokia</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.activemq.brokerstarter</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.activemq.defaultbroker</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.akka</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.spray.api</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.spray</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}.samples</groupId>
+			<artifactId>blended.samples.spray.helloworld</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}.samples</groupId>
+			<artifactId>blended.samples.camel</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ops4j.pax.logging</groupId>
+			<artifactId>pax-logging-api</artifactId>
+			<version>${pax-logging.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ops4j.pax.logging</groupId>
+			<artifactId>pax-logging-service</artifactId>
+			<version>${pax-logging.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries.jmx</groupId>
+			<artifactId>org.apache.aries.jmx.api</artifactId>
+			<version>${aries.jmx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries.jmx</groupId>
+			<artifactId>org.apache.aries.jmx.core</artifactId>
+			<version>${aries.jmx.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries</groupId>
+			<artifactId>org.apache.aries.util</artifactId>
+			<version>${aries.util.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ops4j.pax.logging</groupId>
+			<artifactId>pax-logging-log4j2</artifactId>
+			<version>${pax-logging.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.servicemix.specs</groupId>
+			<artifactId>org.apache.servicemix.specs.jaxb-api-2.2</artifactId>
+			<version>2.5.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.servicemix.specs</groupId>
+			<artifactId>org.apache.servicemix.specs.stax-api-1.0</artifactId>
+			<version>2.4.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>4.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries.proxy</groupId>
+			<artifactId>org.apache.aries.proxy.api</artifactId>
+			<version>${aries.proxy.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries.blueprint</groupId>
+			<artifactId>org.apache.aries.blueprint.api</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.aries.blueprint</groupId>
+			<artifactId>org.apache.aries.blueprint.core</artifactId>
+			<version>1.4.3</version>
+		</dependency>
+  </dependencies>
+
   <build>
     <plugins>
       <plugin>
@@ -58,12 +246,11 @@
                 import java.io.File
                 import org.apache.maven.artifact.DefaultArtifact
                 import org.apache.maven.artifact.versioning.VersionRange
-                import org.apache.maven.project.DefaultMavenProjectHelper
                 import org.apache.maven.project.artifact.AttachedArtifact
                 import org.apache.maven.artifact.handler.DefaultArtifactHandler
                 
-                val srcFeatureDir = "target/classes"
-                val destFeatureDir = "target/features"
+                val srcFeatureDir = new File(project.getBasedir, "/target/classes")
+                val destFeatureDir = new File(project.getBasedir, "target/features")
                 
                 println(s"Project: ${project}")
                 println(s"Project repositories: ${project.getRepositories}")
@@ -73,7 +260,8 @@
                 val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
                 val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
                 
-                val features = Option(new File(srcFeatureDir).listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
+                val features = Option(srcFeatureDir.listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
+                if(features.isEmpty) sys.error("No feature files found")
                 println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
                 
                 val targetFeatureFiles = features.map { featureFile =>
@@ -97,8 +285,6 @@
                 
                 println(s"Produced: ${targetFeatureFiles.mkString(", ")}")
 
-                val projectHelper = new DefaultMavenProjectHelper()
-                
                 targetFeatureFiles.foreach { featureFile =>
                   val name = featureFile.getName
                   val classifier = name.substring(0, name.length - ".conf".length)
@@ -110,11 +296,6 @@
                   artifact.setFile(featureFile)
                   artifact.setResolved(true)
                   project.addAttachedArtifact(artifact)
-                  // project.attachArtifact("conf", classifier, featureFile)
-                  
-                  // projectHelper.attachArtifact(project, featureFile, classifier)
-                  // FIXME: we dont want to attach with "jar" type, but we get a NPE with the line below
-                  // projectHelper.attachArtifact(project, "conf", classifier, featureFile)
                 }
               ]]></script>
             </configuration>

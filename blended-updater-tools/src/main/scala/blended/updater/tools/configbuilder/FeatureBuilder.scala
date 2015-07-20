@@ -132,7 +132,9 @@ object FeatureBuilder {
             Console.err.println(s"Downloading ${bundleFile.getName()} from ${url}")
             RuntimeConfig.download(url, bundleFile).isSuccess
           } getOrElse {
-            sys.error(s"Could not download ${bundleFile.getName()} from: ${urls}")
+            val msg = s"Could not download ${bundleFile.getName()} from: ${urls}"
+            Console.err.println(msg)
+            sys.error(msg)
           }
         }
     }
@@ -144,7 +146,9 @@ object FeatureBuilder {
             val digest = RuntimeConfig.digestFile(bundleFile)
             bundle.copy(artifact = bundle.artifact.copy(sha1Sum = digest))
           } else {
-            sys.error(s"Cannot update checksum of missing bundle file: ${bundleFile.getName()}")
+            val msg = s"Cannot update checksum of missing bundle file: ${bundleFile.getName()}"
+            Console.err.println(msg)
+            sys.error(msg)
           }
       }
       // config.withValue("bundles", ConfigValueFactory.fromIterable(newBundles.map(c => BundleConfig.toConfig(c).root().unwrapped()).asJava))

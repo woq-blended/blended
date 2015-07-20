@@ -36,13 +36,6 @@
      </description>
 
   <dependencies>
-    <!-- FIXME: this is why? -->
-<!--     <dependency> -->
-<!--       <groupId>de.wayofquality.blended</groupId> -->
-<!--       <artifactId>blended.karaf.features</artifactId> -->
-<!--       <version>${project.version}</version> -->
-<!--     </dependency> -->
-    
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -147,21 +140,21 @@
                 import org.apache.maven.project.artifact.AttachedArtifact
                 import org.apache.maven.artifact.handler.DefaultArtifactHandler
                 
-                val srcProfile = "target/classes/profile.conf"
-                val targetProfile = "target/classes/profile.conf"
+                val srcProfile = new File(project.getBasedir, "target/classes/profile.conf")
+                val targetProfile = new File(project.getBasedir, "target/classes/profile.conf")
 
                 val confArtifacts = project.getDependencyArtifacts.asScala.
                   filter(a => a.getScope() == "compile" && a.getType() == "conf")
                 println(s"Feature artifacts: ${confArtifacts.mkString(", ")}")
                 val featureFiles = confArtifacts.map(_.getFile())
  
- 				println("feature args: " + featureFiles.toArray.flatMap { f => 
+ 				println("feature args: " + featureFiles.toArray.flatMap { f =>
                   Array("-r", f.getAbsolutePath)
                 })
  
                 val profileArgs = Array(
-                  "-f", new File(srcProfile).getAbsolutePath,
-                  "-o", new File(targetProfile).getAbsolutePath,
+                  "-f", srcProfile.getAbsolutePath,
+                  "-o", targetProfile.getAbsolutePath,
                   "-d",
                   "-u"
                 ) ++ featureFiles.toArray.flatMap { f => 
