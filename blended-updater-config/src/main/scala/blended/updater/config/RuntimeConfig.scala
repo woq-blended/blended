@@ -243,13 +243,27 @@ object RuntimeConfig {
     } else url
   }
 
-  def resolveFileName(url: String, mvnBaseUrl: Option[String] = None): Try[String] =
-    resolveBundleUrl(url, mvnBaseUrl).flatMap { url =>
-      Try {
-        val path = new URL(url).getPath()
-        path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
-      }
-    }
+  def resolveFileName(url: String): Try[String] = Try {
+    val resolvedUrl = if (url.startsWith("mvn:")) {
+      MvnGav.parse(url.substring(4)).get.toUrl("file:///")
+    } else url
+    val path = new URL(resolvedUrl).getPath()
+    path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
+  }
+
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
+
+  def bundleLocation(artifact: Artifact, baseDir: File): File =
+    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
+
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
+    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
+
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File, mvnBaseUrl: Option[String]): File = {
+    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
+    new File(resFile.getParentFile(), s".${resFile.getName()}")
+  }
 
 }
 
@@ -271,7 +285,7 @@ case class RuntimeConfig(
 
   def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
 
-  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url, mvnBaseUrl)
+  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
 
   def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.bundles)
 
@@ -283,22 +297,16 @@ case class RuntimeConfig(
 
   def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
+  def bundleLocation(bundle: BundleConfig, baseDir: File): File = RuntimeConfig.bundleLocation(bundle, baseDir)
 
-  def bundleLocation(artifact: Artifact, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
+  def bundleLocation(artifact: Artifact, baseDir: File): File = RuntimeConfig.bundleLocation(artifact, baseDir)
 
   def profileFileLocation(baseDir: File): File =
     new File(baseDir, "profile.conf")
 
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
-    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
+  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File = RuntimeConfig.resourceArchiveLocation(resourceArchive, baseDir)
 
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = {
-    val resFile = resourceArchiveLocation(resourceArchive, baseDir)
-    new File(resFile.getParentFile(), s".${resFile.getName()}")
-  }
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = RuntimeConfig.resourceArchiveTouchFileLocation(resourceArchive, baseDir, mvnBaseUrl)
 
   def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String], baseDir: File): Try[File] = Try {
     val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)

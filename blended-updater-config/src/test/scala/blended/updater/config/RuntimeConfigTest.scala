@@ -51,10 +51,10 @@ class RuntimeConfigTest extends FreeSpecLike {
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file1.jar"))
     }
-    "should not infer the correct filename from a mvn URL without a repo setting" in {
+    "should infer the correct filename from a mvn URL without a repo setting" in {
       val bundle = BundleConfig(url = "mvn:group:file:1", start = false, startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
-      assert(rc.resolveFileName(bundle.url).isInstanceOf[Failure[_]])
+      assert(rc.resolveFileName(bundle.url) === Success("file-1.jar"))
     }
 
   }

@@ -108,7 +108,7 @@ object FeatureBuilder {
     val mvnUrls = cmdline.mavenDir // .map { d => new File(d).getAbsoluteFile().toURI().toString() }
 
     val bundleFiles = bundles.map { bundle =>
-      bundle -> new File(workDir, RuntimeConfig.resolveFileName(bundle.url, mvnUrls.headOption).get)
+      bundle -> new File(workDir, RuntimeConfig.resolveFileName(bundle.url).get)
     }
 
     bundleFiles.map {

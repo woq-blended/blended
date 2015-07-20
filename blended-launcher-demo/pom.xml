@@ -117,11 +117,6 @@
             <artifactId>blended.updater.tools</artifactId>
             <version>${blended.version}</version>
           </dependency>
-<!--           <dependency> -->
-<!--             <groupId>org.scala-lang</groupId> -->
-<!--             <artifactId>scala-library</artifactId> -->
-<!--             <version>${scala.version}.${scala.micro.version}</version> -->
-<!--           </dependency>         -->
         </dependencies>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -152,14 +147,18 @@
                   Array("-r", f.getAbsolutePath)
                 })
  
+                val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
+                val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
+ 
                 val profileArgs = Array(
                   "-f", srcProfile.getAbsolutePath,
                   "-o", targetProfile.getAbsolutePath,
                   "-d",
-                  "-u"
+                  "-u",
+                  "--maven-url", localRepoUrl
                 ) ++ featureFiles.toArray.flatMap { f => 
                   Array("-r", f.getAbsolutePath)
-                }
+                } ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
                 RuntimeConfigBuilder.run(profileArgs)
               ]]></script>
             </configuration>

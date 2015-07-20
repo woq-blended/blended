@@ -52,7 +52,12 @@ object RuntimeConfigBuilder {
     def addFeatureRepo(repo: String): Unit = featureRepos ++= Seq(repo)
     var featureRepos: Seq[String] = Seq()
 
-    // TODO: additional maven repos
+    @CmdOption(names = Array("-m", "--maven-url"), args = Array("url"), maxCount = -1)
+    def addMavenUrl(mavenUrl: String) = this.mavenUrls ++= Seq(mavenUrl)
+    var mavenUrls: Seq[String] = Seq()
+
+    @CmdOption(names = Array("--debug"))
+    var debug: Boolean = false
   }
 
   def main(args: Array[String]): Unit = {
@@ -77,6 +82,8 @@ object RuntimeConfigBuilder {
       cp.usage()
       return
     }
+
+    val debug = options.debug
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
 
@@ -113,20 +120,33 @@ object RuntimeConfigBuilder {
       }
     }
 
+    lazy val mvnUrls = runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
+    if (debug) Console.err.println(s"Maven URLs: ${mvnUrls}")
+
     if (options.downloadMissing) {
 
       val files = runtimeConfig.allBundles.map(b =>
-        runtimeConfig.bundleLocation(b, dir) -> runtimeConfig.resolveBundleUrl(b.url).getOrElse(b.url)
+        RuntimeConfig.bundleLocation(b, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption)
       ) ++
         runtimeConfig.resources.map(r =>
-          runtimeConfig.resourceArchiveLocation(r, dir) -> runtimeConfig.resolveBundleUrl(r.url).getOrElse(r.url)
+          RuntimeConfig.resourceArchiveLocation(r, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(r.url, Option(baseUrl)).toOption)
         )
 
       val states = files.par.map {
-        case (file, url) =>
+        case (file, urls) =>
           if (!file.exists()) {
             println(s"Downloading: ${file}")
-            file -> RuntimeConfig.download(url, file)
+            //            file -> RuntimeConfig.download(url, file)
+
+            urls.find { url =>
+              Console.err.println(s"Downloading ${file.getName()} from ${url}")
+              RuntimeConfig.download(url, file).isSuccess
+            }.map { url => file -> Try(file)
+            }.getOrElse {
+              val msg = s"Could not download ${file.getName()} from: ${urls}"
+              Console.err.println(msg)
+              sys.error(msg)
+            }
           } else file -> Try(file)
       }.seq
 
@@ -144,7 +164,7 @@ object RuntimeConfigBuilder {
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
         RuntimeConfig.digestFile(file).map { checksum =>
           if (r.sha1Sum != Option(checksum)) {
-            println(s"Updating checksum for: ${r.fileName.getOrElse(runtimeConfig.resolveFileName(r.url).get)}")
+            println(s"Updating checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
             r.copy(sha1Sum = Option(checksum))
           } else r
         }.getOrElse(r)
