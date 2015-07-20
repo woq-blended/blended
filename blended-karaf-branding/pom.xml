@@ -27,6 +27,7 @@
     <groupId>de.wayofquality.blended</groupId>
     <artifactId>blended.parent</artifactId>
     <version>1.2-SNAPSHOT</version>
+    <relativePath>../blended-parent</relativePath>
   </parent>
 
   <name>${project.artifactId}</name>
