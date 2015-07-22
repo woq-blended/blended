@@ -85,7 +85,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
     
     case ca : CheckAssertions => 
-      val results = CheckResults(ca.assertions.toList.map { a => a(messages) })
+      val results = CheckResults(ca.assertions.toList.map { a => a(messages.reverse) })
       errors(results) match {
         case e if e.isEmpty => 
         case l => log.error(prettyPrint(l))

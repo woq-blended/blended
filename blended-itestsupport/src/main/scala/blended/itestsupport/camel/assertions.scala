@@ -31,6 +31,14 @@ object MockAssertions {
     Await.result(f, timeout.duration).results.filter { _.isLeft }.map{ _.left.get }
   }
 
+  def minMessageCount(n: Int) : MockAssertion = { l : List[CamelMessage] =>
+    if (l.size >= n) {
+      Right(s"MockActor has [${l.size}] messages")
+    } else {
+      Left(new Exception(s"MockActor has [${l.size}] messages, but expected at least [$n] messages"))
+    }
+  }
+
   def expectedMessageCount(n: Int) : MockAssertion = { l : List[CamelMessage] => 
     l.size match {
       case s : Int if s == n => Right(s"MockActor has [$n] messages.")
