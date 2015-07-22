@@ -113,10 +113,24 @@ case class ContainerUnderTest(
   
   val DEFAULT_PROTOCOL = "tcp"
   
-  def url(portName: String, host: String = "127.0.0.1", protocol: String = DEFAULT_PROTOCOL) : String = 
-    ports.get(portName) match {
-      case None => s"$protocol://$host:65000"
-      case Some(p) => s"$protocol://$host:${p.publicPort}"
+  def url(
+    portName: String,
+    host: String = "127.0.0.1",
+    protocol: String = DEFAULT_PROTOCOL,
+    user: Option[String] = None,
+    pwd: Option[String] = None
+  ) : String = {
+    val port = ports.get(portName) match {
+      case None => 65000
+      case Some(p) => p.publicPort
     }
-}
 
+    val cred = (user, pwd) match {
+      case (None, None) => ""
+      case (Some(u), None) => s"$u@"
+      case (Some(u), Some(p)) => s"$u:$p@"
+    }
+
+    s"$protocol://$cred$host:$port"
+  }
+}
