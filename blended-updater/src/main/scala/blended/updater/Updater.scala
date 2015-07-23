@@ -24,6 +24,7 @@ import scala.util.control.NonFatal
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import com.typesafe.config.Config
 
 object Updater {
 
@@ -72,15 +73,19 @@ object Updater {
     restartFramework: () => Unit,
     artifactDownloaderProps: Props = null,
     artifactCheckerProps: Props = null,
-    unpackerProps: Props = null): Props =
+    unpackerProps: Props = null,
+    config: UpdaterConfig): Props = {
+
     Props(new Updater(
-      baseDir,
-      profileUpdater,
-      restartFramework,
-      Option(artifactDownloaderProps).getOrElse(BalancingPool(4).props(BlockingDownloader.props())),
-      Option(artifactCheckerProps).getOrElse(BalancingPool(4).props(Sha1SumChecker.props())),
-      Option(unpackerProps).getOrElse(BalancingPool(4).props(Unpacker.props()))
+      installBaseDir = baseDir,
+      profileUpdater = profileUpdater,
+      restartFramework = restartFramework,
+      Option(artifactDownloaderProps),
+      Option(artifactCheckerProps),
+      Option(unpackerProps),
+      config
     ))
+  }
 
   /**
    * A bundle in progress, e.g. downloading or verifying.
@@ -127,21 +132,27 @@ object Updater {
 
 }
 
-// TODO: Move auto-staging enablement and interval into config
 class Updater(
   installBaseDir: File,
   profileUpdater: (String, String) => Boolean,
   restartFramework: () => Unit,
-  artifactDownloaderProps: Props,
-  artifactCheckerProps: Props,
-  unpackerProps: Props)
+  artifactDownloaderProps: Option[Props],
+  artifactCheckerProps: Option[Props],
+  unpackerProps: Option[Props],
+  config: UpdaterConfig)
     extends Actor
     with ActorLogging {
   import Updater._
 
-  val artifactDownloader = context.actorOf(artifactDownloaderProps, "artifactDownloader")
-  val artifactChecker = context.actorOf(artifactCheckerProps, "artifactChecker")
-  val unpacker = context.actorOf(unpackerProps, "unpacker")
+  val artifactDownloader = context.actorOf(
+    artifactDownloaderProps.getOrElse(BalancingPool(config.artifactDownloaderPoolSize).props(BlockingDownloader.props())),
+    "artifactDownloader")
+  val artifactChecker = context.actorOf(
+    artifactCheckerProps.getOrElse(BalancingPool(config.artifactCheckerPoolSize).props(Sha1SumChecker.props())),
+    "artifactChecker")
+  val unpacker = context.actorOf(
+    unpackerProps.getOrElse(BalancingPool(config.unpackerPoolSize).props(Unpacker.props())),
+    "unpacker")
 
   // requestId -> State
   private[this] var stagingInProgress: Map[String, State] = Map()
@@ -187,11 +198,15 @@ class Updater(
     log.info("Initial scanning for profiles")
     self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
 
-    log.info("Enabling auto-staging")
-    implicit val eCtx = context.system.dispatcher
-    stageProfilesTicker = Some(context.system.scheduler.schedule(Duration(1, TimeUnit.MINUTES), Duration(5, TimeUnit.MINUTES)) {
-      self ! StageNextRuntimeConfig(nextId())
-    })
+    if (config.autoStagingIntervalMSec > 0) {
+      log.info(s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
+      implicit val eCtx = context.system.dispatcher
+      stageProfilesTicker = Some(context.system.scheduler.schedule(
+        Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
+        Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)) {
+          self ! StageNextRuntimeConfig(nextId())
+        })
+    }
 
     super.preStart()
 

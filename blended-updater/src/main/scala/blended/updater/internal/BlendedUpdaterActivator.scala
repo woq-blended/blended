@@ -5,7 +5,6 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
-
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
@@ -13,12 +12,9 @@ import scala.reflect.runtime.universe
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-
 import org.osgi.framework.ServiceRegistration
-
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
@@ -37,6 +33,7 @@ import blended.updater.config.ConfigConverter
 import blended.updater.config.ConfigWriter
 import blended.updater.config.ProfileLookup
 import blended.updater.config.RuntimeConfig
+import blended.updater.UpdaterConfig
 
 case class UpdateEnv(
   launchedProfileName: String,
@@ -57,9 +54,6 @@ class BlendedUpdaterActivator extends ActorSystemAware {
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
       }
-
-      //      val configFile = new File(configDir, "blended.updater.conf")
-      //      val launcherFile = new File(configDir, "blended.launcher.conf")
 
       val profileUpdater = { (name: String, version: String) =>
         // TODO: Error reporting
@@ -82,7 +76,11 @@ class BlendedUpdaterActivator extends ActorSystemAware {
         }
       }
 
-      Updater.props(installDir, profileUpdater, restartFrameworkAction)
+      Updater.props(
+        baseDir = installDir,
+        profileUpdater = profileUpdater,
+        restartFramework = restartFrameworkAction,
+        config = UpdaterConfig.fromConfig(config.config))
     }
 
     setupBundleActor(mainActorFactory)

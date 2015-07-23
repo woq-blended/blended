@@ -52,8 +52,9 @@ class UpdaterTest
         withTestDir() { baseDir =>
 
           val installBaseDir = new File(baseDir, "install")
-          val updater = system.actorOf(Updater.props(installBaseDir,
-            { (n, v) => true }, { () => }), s"updater-${nextId()}")
+          val updater = system.actorOf(
+            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
 
@@ -97,8 +98,9 @@ class UpdaterTest
         withTestDir() { baseDir =>
 
           val installBaseDir = new File(baseDir, "install")
-          val updater = system.actorOf(Updater.props(installBaseDir,
-            { (n, v) => true }, { () => }), s"updater-${nextId()}")
+          val updater = system.actorOf(
+            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
 
@@ -163,8 +165,9 @@ class UpdaterTest
         withTestDir() { baseDir =>
 
           val installBaseDir = new File(baseDir, "install")
-          val updater = system.actorOf(Updater.props(installBaseDir,
-            { (n, v) => true }, { () => }), s"updater-${nextId()}")
+          val updater = system.actorOf(
+            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
 
@@ -234,7 +237,8 @@ class UpdaterTest
                 curNameVersion = Some(n -> v)
                 true
               },
-              () => restarted = true),
+              () => restarted = true,
+              config = UpdaterConfig.default),
             s"updater-${nextId()}"
           )
 
