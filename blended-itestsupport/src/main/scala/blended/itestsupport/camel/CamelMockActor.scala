@@ -63,37 +63,38 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     super.preStart()
   }
 
+  override def receive: Actor.Receive = receiving(List.empty) orElse (handleRquests(List.empty))
 
-  override def postStop(): Unit = {
-    routeId.foreach { rid =>
-      log.debug("Stopping route [{}]", rid)
-      camelContext.stopRoute(rid)
-      camelContext.removeRoute(rid)
-    }
-    super.postStop()
-  }
-
-  override def receive: Actor.Receive = receiving()
-
-  def receiving(messages: List[CamelMessage] = List.empty) : Receive = LoggingReceive {
-    
-    case msg : CamelMessage =>
-      log.debug("Received msg at uri [{}]", uri)
-      context.become(receiving(msg :: messages))
-      context.system.eventStream.publish(MockMessageReceived(uri))
-
+  def handleRquests(messages: List[CamelMessage]) : Receive = {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
-    
-    case ca : CheckAssertions => 
+
+    case ca : CheckAssertions =>
       val results = CheckResults(ca.assertions.toList.map { a => a(messages.reverse) })
       errors(results) match {
-        case e if e.isEmpty => 
+        case e if e.isEmpty =>
         case l => log.error(prettyPrint(l))
       }
       sender ! results
   }
-  
-  private[this] def prettyPrint(errors : List[String]) : String = 
+
+  def receiving(messages: List[CamelMessage]) : Receive = {
+    case msg : CamelMessage =>
+      log.info("Received msg at uri [{}]", uri)
+      val newList = msg :: messages
+      context.become(receiving(newList) orElse (handleRquests(newList)))
+      context.system.eventStream.publish(MockMessageReceived(uri))
+
+    case StopReceive =>
+      routeId.foreach { rid =>
+        log.debug("Stopping route [{}]", rid)
+        camelContext.stopRoute(rid)
+        camelContext.removeRoute(rid)
+      }
+      sender ! ReceiveStopped(uri)
+      context.become(handleRquests(messages))
+  }
+
+  private[this] def prettyPrint(errors : List[String]) : String =
     errors match {
       case e if e.isEmpty => s"All assertions were satisfied for mock actor [$uri]"
       case l => l.map(msg => s"  $msg").mkString(s"\n----------\nGot Assertion errors for mock actor [$uri]:\n", "\n", "\n----------")

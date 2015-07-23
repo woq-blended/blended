@@ -29,5 +29,7 @@ package object protocol {
   case class  MockMessageReceived(uri: String)
   case class  CheckAssertions(assertions : Seq[MockAssertion])
   case class  CheckResults(results: List[AssertionResult])
+  case object StopReceive
+  case class  ReceiveStopped(uri: String)
 
 }

@@ -86,7 +86,7 @@ object MockAssertions {
             val headerMsg = misMatchedHeaders(m, h).mkString(",")
             s"Message [$m] did not have headers [$headerMsg]"
           }.mkString("\n")
-          Left(new Exception(new Exception(msg)))
+          Left(new Exception(msg))
         
       }
 
