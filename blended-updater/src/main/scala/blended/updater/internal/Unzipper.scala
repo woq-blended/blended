@@ -9,22 +9,33 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipInputStream
-import scala.collection.immutable._
-import org.slf4j.LoggerFactory
+import scala.collection.immutable.List
+import scala.collection.immutable.Nil
+import scala.collection.immutable.Seq
 import scala.util.Try
+import org.slf4j.LoggerFactory
+import scala.util.control.NonFatal
 
-object Util extends Util
+object Unzipper extends Unzipper {
+  // TODO: add failMissingProperty 
+  case class PlaceholderConfig(
+    openSequence: String,
+    closeSequence: String,
+    escapeChar: Char,
+    properties: Map[String, String])
+}
 
-class Util {
+class Unzipper {
+  import Unzipper._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[Util])
+  private[this] val log = LoggerFactory.getLogger(classOf[Unzipper])
 
   def unzip(archive: File, targetDir: File, selectedFiles: String*): Try[Seq[File]] = {
-    unzip(archive, targetDir, selectedFiles.map(f => (f, null)).toList, None)
+    unzip(archive, targetDir, selectedFiles.map(f => (f, null)).toList, None, None)
   }
 
   def unzip(archive: File, targetDir: File, _selectedFiles: List[(String, File)]): Try[Seq[File]] = {
-    unzip(archive, targetDir, _selectedFiles, None)
+    unzip(archive, targetDir, _selectedFiles, None, None)
   }
 
   /**
@@ -43,7 +54,11 @@ class Util {
    *
    * @return A `Seq` of all extracted files.
    */
-  def unzip(archive: File, targetDir: File, selectedFiles: List[(String, File)], fileSelector: Option[String => Boolean]): Try[Seq[File]] = Try {
+  def unzip(archive: File,
+    targetDir: File,
+    selectedFiles: List[(String, File)],
+    fileSelector: Option[String => Boolean],
+    placeholderReplacer: Option[PlaceholderConfig]): Try[Seq[File]] = Try {
 
     if (!archive.exists() || !archive.isFile()) throw new FileNotFoundException("Zip file cannot be found: " + archive)
     targetDir.mkdirs
@@ -52,6 +67,13 @@ class Util {
 
     val partial = !selectedFiles.isEmpty || fileSelector.isDefined
     if (partial) log.debug("Only extracting some content of zip file")
+
+    val fileWriter: (InputStream, OutputStream) => Unit = placeholderReplacer match {
+      case None => copy _
+      case Some(PlaceholderConfig(openSeq, closeSeq, escapeChar, props)) =>
+        val pp = new PlaceholderProcessor(props, openSeq, closeSeq, escapeChar)
+        (in, out) => pp.process(in, out).get
+    }
 
     def findName(name: String): String = {
       val index = name.lastIndexOf("/")
@@ -125,8 +147,11 @@ class Util {
           // Ensure, that the directory exists
           targetFile.getParentFile.mkdirs
           val outputStream = new BufferedOutputStream(new FileOutputStream(targetFile))
-          copy(zipIs, outputStream)
-          outputStream.close
+          try {
+            fileWriter(zipIs, outputStream)
+          } finally {
+            outputStream.close
+          }
           extractedFilesInv ::= targetFile
           if (zipEntry.getTime > 0) {
             targetFile.setLastModified(zipEntry.getTime)
@@ -138,9 +163,11 @@ class Util {
 
       zipIs.close
     } catch {
-      case e: IOException =>
-        throw new RuntimeException("Could not unzip file: " + archive,
-          e)
+      //      case e: IOException =>
+      //        throw new RuntimeException("Could not unzip file: " + archive,
+      //          e)
+      case NonFatal(e) =>
+        throw new RuntimeException("Could not unzip file: " + archive, e)
     }
 
     if (!filesToExtract.isEmpty) {

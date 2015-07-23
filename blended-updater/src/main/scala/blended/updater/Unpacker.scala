@@ -17,7 +17,7 @@ import java.io.BufferedInputStream
 import java.io.FileOutputStream
 import java.io.BufferedOutputStream
 import blended.updater.config.RuntimeConfig
-import blended.updater.internal.Util
+import blended.updater.internal.Unzipper
 import scala.util.Failure
 import scala.collection.immutable._
 
@@ -46,8 +46,16 @@ class Unpacker() extends Actor with ActorLogging {
   def receive: Actor.Receive = LoggingReceive {
     case Unpack(reqId, requestRef, archiveFile, targetDir) =>
       val blacklist = List("profile.conf", "bundles", "resources")
-      Util.unzip(archiveFile, targetDir, Nil,
-        fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) }) match {
+      val placeholderConfig = Unzipper.PlaceholderConfig(
+        openSequence = "${",
+        closeSequence = "}",
+        escapeChar = '\\',
+        properties = Map()
+      )
+      Unzipper.unzip(archiveFile, targetDir, Nil,
+        fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) },
+        placeholderReplacer = None
+      ) match {
           case Success(files) => requestRef ! UnpackingFinished(reqId)
           case Failure(e) => requestRef ! UnpackingFailed(reqId, e)
         }
