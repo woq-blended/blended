@@ -28,6 +28,8 @@ import scala.io.Source
 
 object RuntimeConfig {
 
+  val MvnPrefix = "mvn:"
+
   object Properties {
     val PROFILES_BASE_DIR = "blended.updater.profiles.basedir"
     val PROFILE_DIR = "blended.updater.profile.dir"
@@ -235,17 +237,17 @@ object RuntimeConfig {
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
   def resolveBundleUrl(url: String, mvnBaseUrl: Option[String] = None): Try[String] = Try {
-    if (url.startsWith("mvn:")) {
+    if (url.startsWith(MvnPrefix)) {
       mvnBaseUrl match {
-        case Some(base) => MvnGav.parse(url.substring(4)).get.toUrl(base)
+        case Some(base) => MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl(base)
         case None => sys.error("No repository defined to resolve url: " + url)
       }
     } else url
   }
 
   def resolveFileName(url: String): Try[String] = Try {
-    val resolvedUrl = if (url.startsWith("mvn:")) {
-      MvnGav.parse(url.substring(4)).get.toUrl("file:///")
+    val resolvedUrl = if (url.startsWith(MvnPrefix)) {
+      MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl("file:///")
     } else url
     val path = new URL(resolvedUrl).getPath()
     path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
