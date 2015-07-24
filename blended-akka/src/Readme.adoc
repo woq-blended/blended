@@ -9,24 +9,4 @@ Encapsulates the configuration which is passed to every single actor within the 
 * the OSGi bundleContext
 * the instance of the Container Identifier Service
 
-== ActorSystemAware
-
-This trait is an extension of the +DominoActivator+ trait. It implements a service dependency on the +ActorSystem+ and the +ContainerIdentifier+ OSGi services within the +manageBundleActor+ method. 
-
-+manageBundleActor+ takes a function (OSGIActorConfig -> Props) as an argument, so that the implementation of manageBundleActor can create the underlying Bundle Actor and inject a proper OSGIActorConfig.
-
-A typical Activator extends +ActorSystemAware+ and calls +manageBundleActor+ within it's +whenBundleActive+ Capsule. +manageBundleActor+ builds a proper +OSGIActorConfig+ and injects it into the underlying Actor.
-
-[underline]##Example:##
-[source,scala]
-----
-class PersistenceActivator extends ActorSystemAware {
-
-  whenBundleActive {
-    whenServicePresent[PersistenceBackend] { svc =>
-      manageBundleActor{ cfg : OSGIActorConfig => Props(PersistenceManager(cfg, svc)) }
-    }
-  }
-}
-----
 

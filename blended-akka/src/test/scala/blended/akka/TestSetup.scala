@@ -18,6 +18,7 @@ package blended.akka
 
 import akka.actor.ActorSystem
 import blended.container.context.{ContainerIdentifierService, ContainerContext}
+import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
@@ -69,6 +70,6 @@ trait TestSetup { this : MockitoSugar =>
     when(b.getBundleContext()) thenReturn(bCtxt)
     when(b.getSymbolicName()) thenReturn(symbolicName)
     
-    OSGIActorConfig(bCtxt, system, idSvc)
+    OSGIActorConfig(bCtxt, system, ConfigFactory.empty(), idSvc)
   }
 }

@@ -17,12 +17,20 @@
 package blended.mgmt.agent.internal
 
 import akka.actor.Props
-import blended.akka.{ActorSystemAware, OSGIActorConfig}
+import blended.akka.ActorSystemWatching
+import domino.DominoActivator
 
 // The Activator that is called from the OSGi framework whenever the bundle is started or stopped.
-class AgentActivator extends ActorSystemAware {
+class AgentActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
-    setupBundleActor { cfg: OSGIActorConfig => Props(MgmtReporter(cfg)) }
+    whenActorSystemAvailable { cfg =>
+
+      val actor = cfg.system.actorOf(Props(MgmtReporter(cfg)))
+
+      onStop {
+        cfg.system.stop(actor)
+      }
+    }
   }
 }

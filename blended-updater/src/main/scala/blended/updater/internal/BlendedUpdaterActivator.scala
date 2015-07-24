@@ -6,6 +6,8 @@ import java.io.PrintStream
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
+import domino.DominoActivator
+
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
@@ -23,8 +25,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.akka.ActorSystemAware
-import blended.akka.OSGIActorConfig
+import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import blended.launcher.config.LauncherConfig
 import blended.updater.Updater
 import blended.updater.Updater.RuntimeConfigActivated
@@ -43,16 +44,16 @@ case class UpdateEnv(
   launchedProfileVersion: String,
   launchProfileLookupFile: Option[File])
 
-class BlendedUpdaterActivator extends ActorSystemAware {
+class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 
   whenBundleActive {
-
-    val mainActorFactory: PropsFactory = { config =>
+    whenActorSystemAvailable { cfg =>
       log.info(s"About to setup ${getClass()}")
-      val configDir = config.idSvc.getContainerContext().getContainerConfigDirectory()
-      val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
+
+      val configDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+      val installDir = new File(cfg.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
       val restartFrameworkAction = { () =>
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
@@ -82,11 +83,17 @@ class BlendedUpdaterActivator extends ActorSystemAware {
         }
       }
 
-      Updater.props(installDir, profileUpdater, restartFrameworkAction)
+      val actor = cfg.system.actorOf(
+        Updater.props(installDir, profileUpdater, restartFrameworkAction),
+        bundleContext.getBundle().getSymbolicName()
+      )
+      postStartBundleActor(cfg, actor)
+
+      onStop {
+        preStopBundleActor(cfg, actor)
+        cfg.system.stop(actor)
+      }
     }
-
-    setupBundleActor(mainActorFactory)
-
   }
 
   def readUpdateEnv() = try {
@@ -105,7 +112,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
       None
   }
 
-  override def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
+  def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     val updateEnv = readUpdateEnv()
 
     println("Blended Updated env: " + updateEnv)
@@ -117,7 +124,7 @@ class BlendedUpdaterActivator extends ActorSystemAware {
     ))
   }
 
-  override def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
+  def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     commandsReg.map { reg =>
       try { reg.unregister() } catch {
         case _: IllegalStateException =>

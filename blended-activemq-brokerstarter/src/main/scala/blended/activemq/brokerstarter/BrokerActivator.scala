@@ -16,38 +16,27 @@
 
 package blended.activemq.brokerstarter
 
-import java.io.File
 import java.net.URI
 import javax.jms.ConnectionFactory
 
-import blended.akka.ConfigLocator
-import blended.container.context.ContainerIdentifierService
-import com.typesafe.config.{ConfigFactory, Config}
+import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
-import org.slf4j.LoggerFactory
 import org.springframework.jms.connection.CachingConnectionFactory
 
 import scala.util.control.NonFatal
 
-class BrokerActivator extends DominoActivator {
+class BrokerActivator extends DominoActivator
+  with TypesafeConfigWatching {
 
   whenBundleActive {
+    whenTypesafeConfigAvailable { (config, idSvc) =>
 
-    val log = LoggerFactory.getLogger(classOf[BrokerActivator])
-    whenServicePresent[ContainerIdentifierService] { idSvc =>
-
-      var brokerService : Option[BrokerService] = None
+      var brokerService: Option[BrokerService] = None
 
       val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
-
-      val locator = new ConfigLocator(cfgDir){
-        override protected def fallbackConfig: Config = ConfigFactory.parseFile(new File(cfgDir, "application.conf"))
-      }
-
-      val config = locator.getConfig(bundleContext.getBundle().getSymbolicName())
 
       val brokerName = config.getString("brokerName")
       val uri = s"file://$cfgDir/${config.getString("file")}"
@@ -70,7 +59,7 @@ class BrokerActivator extends DominoActivator {
           broker.start()
           broker.waitUntilStarted()
 
-          log.info("ActiveMQ broker [{}] started successfully.", brokerName)
+          log.info(s"ActiveMQ broker [$brokerName] started successfully.")
 
           val url = s"vm://$brokerName?create=false"
           val amqCF = new ActiveMQConnectionFactory(url)
@@ -84,7 +73,7 @@ class BrokerActivator extends DominoActivator {
         }
 
       } catch {
-        case  NonFatal(e) =>
+        case NonFatal(e) =>
           log.error("Failed to configure broker from [{}]", e, uri)
           throw e
       } finally {
@@ -93,7 +82,7 @@ class BrokerActivator extends DominoActivator {
 
       onStop {
         brokerService.foreach { broker =>
-          log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
+          log.info(s"Stopping ActiveMQ Broker [${broker.getBrokerName()}]")
           broker.stop()
           broker.waitUntilStopped()
         }

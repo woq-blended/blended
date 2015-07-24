@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
+@Deprecated
 public abstract class ManagedServiceSupport implements ManagedService
 {
 

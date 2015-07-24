@@ -123,6 +123,12 @@
     </dependency>
 
     <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.domino</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.spray.api</artifactId>
       <version>${blended.version}</version>

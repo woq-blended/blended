@@ -17,17 +17,21 @@
 package blended.mgmt.rest.internal
 
 import akka.actor.Props
-import blended.akka.{ActorSystemAware, OSGIActorConfig}
+import blended.akka.ActorSystemWatching
+import domino.DominoActivator
 import org.osgi.service.http.HttpService
 
-class CollectorActivator extends ActorSystemAware {
-
-  private[this] def mgmtCollector(httpService: HttpService, context: String) : PropsFactory = { cfg: OSGIActorConfig =>
-    Props(ManagementCollector(cfg, context))
-  }
+class CollectorActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
-    whenServicePresent[HttpService] { httpSvc => setupBundleActor(mgmtCollector(httpSvc, "wayofquality")) }
+    whenActorSystemAvailable { cfg =>
+      whenServicePresent[HttpService] { httpSvc =>
+        val actor = cfg.system.actorOf(Props(ManagementCollector(cfg, "mgmt")), bundleContext.getBundle().getSymbolicName())
+        onStop {
+          cfg.system.stop(actor)
+        }
+      }
+    }
   }
 }
 

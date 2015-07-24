@@ -24,13 +24,7 @@ import org.osgi.framework.BundleContext
 case class OSGIActorConfig (
   bundleContext: BundleContext,
   system: ActorSystem,
+  config: Config,
   idSvc: ContainerIdentifierService
-) {
+)
 
-  private lazy val configLocator = new ConfigLocator(idSvc.getContainerContext().getContainerConfigDirectory()) {
-    override protected def fallbackConfig: Config = system.settings.config
-  }
-
-  val config : Config =
-    configLocator.getConfig(bundleContext.getBundle().getSymbolicName())
-} 

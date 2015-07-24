@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package blended.akka
+package blended.domino
 
 import java.io.File
 
@@ -23,29 +23,27 @@ import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
 
-abstract class ConfigLocator(configDirectory: String) {
-
+class ConfigLocator(configDirectory: String) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConfigLocator])
 
-  protected def fallbackConfig: Config
-
-  def getConfig(id: String): Config = {
-    val file = new File(configDirectory, s"${id}.conf")
+  private[this] def config(fileName : String) : Config = {
+    val file = new File(configDirectory, fileName)
     log.debug("Retreiving config from [{}]", file.getAbsolutePath())
 
     if (file.exists && file.isFile && file.canRead)
       ConfigFactory.parseFile(file)
     else
-      try {
-        log.debug("Config File [{}] not found, falling back to fallback config.", file)
-        fallbackConfig.getConfig(id)
-      } catch {
-        case NonFatal(e) =>
-          log.debug("No config file [{}] found. Giving up with empty config.", file)
-          ConfigFactory.empty()
+      ConfigFactory.empty
+  }
+
+  def getConfig(id: String): Config = config(s"$id.conf") match {
+    case empty if empty.isEmpty =>
+      config("application.conf") match {
+        case empty if empty.isEmpty => empty
+        case cfg =>
+          if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
       }
+    case cfg => cfg
   }
 }
-
-

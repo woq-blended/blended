@@ -17,11 +17,18 @@
 package blended.samples.spray.helloworld.internal
 
 import akka.actor.Props
-import blended.akka.{ActorSystemAware, OSGIActorConfig}
+import blended.akka.ActorSystemWatching
+import domino.DominoActivator
 
-class HelloActivator extends ActorSystemAware {
+class HelloActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
-    setupBundleActor { cfg: OSGIActorConfig =>  Props(HelloRoute(cfg, "blended")) }
+    whenActorSystemAvailable { cfg =>
+      val actor = cfg.system.actorOf(Props(HelloRoute(cfg, "blended")), bundleContext.getBundle().getSymbolicName())
+
+      onStop {
+        cfg.system.stop(actor)
+      }
+    }
   }
 }
