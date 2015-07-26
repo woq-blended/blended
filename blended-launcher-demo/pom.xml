@@ -41,6 +41,13 @@
       <artifactId>blended.launcher.features</artifactId>
       <version>${blended.version}</version>
       <type>conf</type>
+      <classifier>blended-base</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
       <classifier>blended-commons</classifier>
     </dependency>
     <dependency>

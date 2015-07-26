@@ -1,10 +1,10 @@
 package blended.akka.internal
 
 import akka.actor.ActorSystem
-import blended.domino.TypesafeConfigWatching
 import blended.akka.OSGIActorConfig
+import blended.domino.TypesafeConfigWatching
 import domino.DominoImplicits
-import domino.capsule.{CapsuleScope, CapsuleContext, Capsule}
+import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
 import domino.service_watching.ServiceWatching
 import org.osgi.framework.BundleContext
 

@@ -24,11 +24,8 @@ class HelloActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      val actor = cfg.system.actorOf(Props(HelloRoute(cfg, "blended")), bundleContext.getBundle().getSymbolicName())
-
-      onStop {
-        cfg.system.stop(actor)
-      }
+      val actor = setupBundleActor(cfg, Props(HelloRoute(cfg, "blended")))
+      onStop ( stopBundleActor(cfg, actor) )
     }
   }
 }

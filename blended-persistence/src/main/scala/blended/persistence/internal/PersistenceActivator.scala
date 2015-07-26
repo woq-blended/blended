@@ -26,7 +26,8 @@ class PersistenceActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
       whenServicePresent[PersistenceBackend] { backend =>
-        cfg.system.actorOf(Props(PersistenceManager(cfg, backend)))
+        val actor = setupBundleActor(cfg, Props(PersistenceManager(cfg, backend)))
+        onStop( stopBundleActor(cfg, actor) )
       }
     }
   }

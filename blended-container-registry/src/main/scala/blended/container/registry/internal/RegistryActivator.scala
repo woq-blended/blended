@@ -24,12 +24,8 @@ class RegistryActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-
-      val actor = cfg.system.actorOf(Props(ContainerRegistryImpl(cfg)), bundleContext.getBundle().getSymbolicName())
-
-      onStop {
-        cfg.system.stop(actor)
-      }
+      val actor = setupBundleActor(cfg, Props(ContainerRegistryImpl(cfg)))
+      onStop ( stopBundleActor(cfg, actor) )
     }
   }
 }

@@ -83,16 +83,8 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
         }
       }
 
-      val actor = cfg.system.actorOf(
-        Updater.props(installDir, profileUpdater, restartFrameworkAction),
-        bundleContext.getBundle().getSymbolicName()
-      )
-      postStartBundleActor(cfg, actor)
-
-      onStop {
-        preStopBundleActor(cfg, actor)
-        cfg.system.stop(actor)
-      }
+      val actor = setupBundleActor(cfg, Updater.props(installDir, profileUpdater, restartFrameworkAction))
+      onStop ( stopBundleActor(cfg, actor) )
     }
   }
 
@@ -112,7 +104,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
       None
   }
 
-  def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
+  override def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     val updateEnv = readUpdateEnv()
 
     println("Blended Updated env: " + updateEnv)
@@ -124,7 +116,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     ))
   }
 
-  def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
+  override def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
     commandsReg.map { reg =>
       try { reg.unregister() } catch {
         case _: IllegalStateException =>
