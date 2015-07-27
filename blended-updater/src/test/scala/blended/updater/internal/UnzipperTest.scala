@@ -61,17 +61,19 @@ class UnzipperTest extends FreeSpec
     "unpacking everything and replacing a varible should work" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
-          openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map("VERSION" -> "1.0.0")
+          openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map("VERSION" -> "1.0.0"),
+          failOnMissing = true
         )))
-        println("unpacked files: " + files.get)
+        println("unpacked files: " + files)
         assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
         assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-1.0.0\"", ""))
       }
     }
-    "unpacking everything and replacing a missing varible should work" in {
+    "unpacking everything and replacing a missing varible should not work" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
-          openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map()
+          openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
+          failOnMissing = true
         )))
         println("unpacked files: " + files)
         assert(files.isFailure)
@@ -80,6 +82,18 @@ class UnzipperTest extends FreeSpec
         assert(files.asInstanceOf[Failure[_]].exception.getCause.getMessage() === "No property found to replace: ${VERSION}")
       }
     }
+    "unpacking everything and replacing a missing varible should work when failOnMissing is false" in {
+      withTestDir() { dir =>
+        val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
+          openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
+          failOnMissing = false
+        )))
+        println("unpacked files: " + files)
+        assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
+        assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))
+      }
+    }
+
   }
 
 }

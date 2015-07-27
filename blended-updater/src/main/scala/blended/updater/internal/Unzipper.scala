@@ -22,7 +22,8 @@ object Unzipper extends Unzipper {
     openSequence: String,
     closeSequence: String,
     escapeChar: Char,
-    properties: Map[String, String])
+    properties: Map[String, String],
+    failOnMissing: Boolean)
 }
 
 class Unzipper {
@@ -70,8 +71,8 @@ class Unzipper {
 
     val fileWriter: (InputStream, OutputStream) => Unit = placeholderReplacer match {
       case None => copy _
-      case Some(PlaceholderConfig(openSeq, closeSeq, escapeChar, props)) =>
-        val pp = new PlaceholderProcessor(props, openSeq, closeSeq, escapeChar)
+      case Some(PlaceholderConfig(openSeq, closeSeq, escapeChar, props, failOnMissing)) =>
+        val pp = new PlaceholderProcessor(props, openSeq, closeSeq, escapeChar, failOnMissing)
         (in, out) => pp.process(in, out).get
     }
 

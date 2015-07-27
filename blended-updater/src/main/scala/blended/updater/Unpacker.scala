@@ -50,7 +50,8 @@ class Unpacker() extends Actor with ActorLogging {
         openSequence = "${",
         closeSequence = "}",
         escapeChar = '\\',
-        properties = Map()
+        properties = Map(),
+        failOnMissing = true
       )
       Unzipper.unzip(archiveFile, targetDir, Nil,
         fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) },
