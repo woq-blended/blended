@@ -17,6 +17,7 @@
 package blended.akka.itest
 
 import akka.actor.Props
+import akka.camel.CamelExtension
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import blended.itestsupport.BlendedIntegrationTestSupport
@@ -36,6 +37,7 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
   implicit val system = testKit.system
   implicit val timeOut = new Timeout(3.seconds)
   implicit val eCtxt = testKit.system.dispatcher
+  override implicit val camelContext = CamelExtension.get(system).context
 
   private[this] val log = testKit.system.log
 
