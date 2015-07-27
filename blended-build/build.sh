@@ -3,6 +3,8 @@ set -e
 
 MVN="$(readlink -f "$(dirname "$0")/mvnw")"
 
+"$MVN" -version
+
 cd blended-parent
 "$MVN" clean install
 cd ..
