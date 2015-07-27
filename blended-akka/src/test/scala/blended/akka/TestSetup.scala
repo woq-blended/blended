@@ -18,6 +18,7 @@ package blended.akka
 
 import akka.actor.ActorSystem
 import blended.container.context.{ContainerIdentifierService, ContainerContext}
+import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext, ServiceReference}
 import org.scalatest.mock.MockitoSugar
@@ -34,30 +35,22 @@ trait TestSetup { this : MockitoSugar =>
     
     val osgiContext = mock[BundleContext]
     
-    val service = mock[TestInterface1]
-    val svcRef = mock[ServiceReference[TestInterface1]]
     val ctContextRef = mock[ServiceReference[ContainerContext]]
     val svcBundle = mock[Bundle]
     val idSvcRef = mock[ServiceReference[ContainerIdentifierService]]
 
     val idName : String = classOf[ContainerIdentifierService].getName()
     val ccName : String = classOf[ContainerContext].getName()
-    val tiName : String = classOf[TestInterface1].getName()
 
     when[ServiceReference[_]](osgiContext.getServiceReference(ccName)) thenReturn (ctContextRef)
     when(osgiContext.getService(ctContextRef)) thenReturn (ctContext)
-
-    when[ServiceReference[_]](osgiContext.getServiceReference(tiName)) thenReturn(svcRef)
-    when(osgiContext.getService(svcRef)) thenReturn(service)
-    when(service.name) thenReturn("Andreas")
 
     when[ServiceReference[_]](osgiContext.getServiceReference(idName)) thenReturn(idSvcRef)
     when(osgiContext.getService(idSvcRef)) thenReturn(idSvc)
 
     when(svcBundle.getSymbolicName()) thenReturn("foo")
     when(svcBundle.getBundleContext) thenReturn (osgiContext)
-    when(svcRef.getBundle) thenReturn (svcBundle)
-    
+
     osgiContext
   }
   
@@ -69,6 +62,6 @@ trait TestSetup { this : MockitoSugar =>
     when(b.getBundleContext()) thenReturn(bCtxt)
     when(b.getSymbolicName()) thenReturn(symbolicName)
     
-    OSGIActorConfig(bCtxt, system, idSvc)
+    OSGIActorConfig(bCtxt, system, ConfigFactory.load("listener.conf"), idSvc)
   }
 }

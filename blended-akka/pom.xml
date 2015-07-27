@@ -43,10 +43,15 @@
   </properties>
 
   <dependencies>
-
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.container.context</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.domino</artifactId>
       <version>${project.version}</version>
     </dependency>
 

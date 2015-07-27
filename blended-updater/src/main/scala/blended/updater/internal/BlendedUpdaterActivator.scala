@@ -5,6 +5,9 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
+
+import domino.DominoActivator
+
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
@@ -19,8 +22,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.akka.ActorSystemAware
-import blended.akka.OSGIActorConfig
+import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import blended.launcher.config.LauncherConfig
 import blended.updater.Updater
 import blended.updater.Updater.RuntimeConfigActivated
@@ -40,20 +42,24 @@ case class UpdateEnv(
   launchedProfileVersion: String,
   launchProfileLookupFile: Option[File])
 
-class BlendedUpdaterActivator extends ActorSystemAware {
+class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 
   whenBundleActive {
-
-    val mainActorFactory: PropsFactory = { config =>
+    whenActorSystemAvailable { cfg =>
       log.info(s"About to setup ${getClass()}")
-      val configDir = config.idSvc.getContainerContext().getContainerConfigDirectory()
-      val installDir = new File(config.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
+
+      val configDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+      val installDir = new File(cfg.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
+
       val restartFrameworkAction = { () =>
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
       }
+
+      //      val configFile = new File(configDir, "blended.updater.conf")
+      //      val launcherFile = new File(configDir, "blended.launcher.conf")
 
       val profileUpdater = { (name: String, version: String) =>
         // TODO: Error reporting
@@ -76,15 +82,15 @@ class BlendedUpdaterActivator extends ActorSystemAware {
         }
       }
 
-      Updater.props(
+      val actor = setupBundleActor(cfg, Updater.props(
         baseDir = installDir,
         profileUpdater = profileUpdater,
         restartFramework = restartFrameworkAction,
-        config = UpdaterConfig.fromConfig(config.config))
+        config = UpdaterConfig.fromConfig(cfg.config)
+      ))
+
+      onStop ( stopBundleActor(cfg, actor) )
     }
-
-    setupBundleActor(mainActorFactory)
-
   }
 
   def readUpdateEnv() = try {

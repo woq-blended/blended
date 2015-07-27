@@ -173,6 +173,7 @@
         <module>blended-karaf-features</module>
         <module>blended-karaf-branding</module>
 
+        <module>blended-domino</module>
         <module>blended-akka</module>
         <module>blended-mgmt-agent</module>
         <module>blended-mgmt-rest</module>

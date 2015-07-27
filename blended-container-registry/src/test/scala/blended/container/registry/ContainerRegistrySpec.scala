@@ -24,6 +24,7 @@ import blended.container.registry.protocol._
 import blended.testsupport.TestActorSys
 import blended.container.registry.internal.ContainerRegistryImpl
 import blended.container.registry.protocol.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
+import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext}
 import org.scalatest.mock.MockitoSugar
@@ -50,7 +51,7 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 
       val probe = TestProbe()
 
-      val registry = TestActorRef(Props(ContainerRegistryImpl(OSGIActorConfig(osgiContext, system, idSvc))))
+      val registry = TestActorRef(Props(ContainerRegistryImpl(OSGIActorConfig(osgiContext, system, ConfigFactory.empty(), idSvc))))
       registry.tell(UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas"))), probe.ref)
 
       probe.expectMsg(ContainerRegistryResponseOK("foo"))

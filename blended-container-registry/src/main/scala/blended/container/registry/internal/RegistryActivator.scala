@@ -17,11 +17,15 @@
 package blended.container.registry.internal
 
 import akka.actor.Props
-import blended.akka.{OSGIActorConfig, ActorSystemAware}
+import blended.akka.ActorSystemWatching
+import domino.DominoActivator
 
-class RegistryActivator extends ActorSystemAware {
+class RegistryActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
-    setupBundleActor { cfg: OSGIActorConfig =>  Props(ContainerRegistryImpl(cfg)) }
+    whenActorSystemAvailable { cfg =>
+      val actor = setupBundleActor(cfg, Props(ContainerRegistryImpl(cfg)))
+      onStop ( stopBundleActor(cfg, actor) )
+    }
   }
 }
