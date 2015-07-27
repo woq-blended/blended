@@ -70,7 +70,6 @@ class PlaceholderProcessor(props: Map[String, String], openSeq: String, closeSeq
             if (failOnMissing) sys.error(s"No property found to replace: ${openSeq}${variable}${closeSeq}")
             else m.group(0)
           }
-          println(s"About to replace [${variable}] with [${replacement}]")
           m.appendReplacement(sb, Matcher.quoteReplacement(replacement))
           val newTail = new StringBuffer()
           m.appendTail(newTail)
