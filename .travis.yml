@@ -10,9 +10,10 @@ before_script:
 script: ./blended-build/build.sh
 
 jdk:
-  - oraclejdk7
   - oraclejdk8
-  - openjdk7
+
+#  - oraclejdk7
+#  - openjdk7
 
 notifications:
   webhooks:
