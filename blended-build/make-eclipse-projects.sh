@@ -13,6 +13,7 @@ blended-akka-itest \
 blended-camel-utils \
 blended-container-context \
 blended-container-registry \
+blended-domino \
 blended-itestsupport \
 blended-jmx \
 blended-jolokia \
