@@ -161,6 +161,7 @@ class Updater(
 
   private[this] var stageProfilesTicker: Option[Cancellable] = None
 
+  // TODO: generate properties file
   private[this] def stageInProgress(state: State): Unit = {
     val id = state.requestId
     val config = state.config

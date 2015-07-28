@@ -2,11 +2,11 @@ package blended.updater.internal
 
 import org.scalatest.FreeSpec
 import scala.util.Success
-import blended.updater.test.TestSupport
-import blended.updater.test.TestSupport.DeleteWhenNoFailure
 import scala.io.Source
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeleteWhenNoFailure
 
-class PlaceholderProcessorTest extends FreeSpec with TestSupport {
+class PlaceholderProcessorTest extends FreeSpec with TestFile {
 
   "With a PlaceholderProcesser with failOnMissing=true" - {
     val pp = new PlaceholderProcessor(Map("A" -> "a", "B" -> "b"), "${", "}", failOnMissing = true)

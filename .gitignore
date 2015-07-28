@@ -17,3 +17,4 @@ felix-cache
 .project
 .classpath
 libs/
+.mvn/maven.settings

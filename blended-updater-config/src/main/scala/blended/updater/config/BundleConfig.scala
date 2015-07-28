@@ -20,7 +20,7 @@ object BundleConfig {
   def apply(url: String,
     jarName: String = null,
     sha1Sum: String = null,
-    start: Boolean,
+    start: Boolean = false,
     startLevel: Integer = null): BundleConfig =
     BundleConfig(
       artifact = Artifact(fileName = Option(jarName), url = url, sha1Sum = Option(sha1Sum)),

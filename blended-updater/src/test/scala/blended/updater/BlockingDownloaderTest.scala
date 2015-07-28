@@ -16,16 +16,16 @@ import akka.testkit.TestKit
 import scala.util.Failure
 import java.io.FileNotFoundException
 import java.util.UUID
-import blended.updater.test.TestSupport
-import blended.updater.test.TestSupport.DeleteWhenNoFailure
-import blended.updater.test.TestSupport.DeletePolicy
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeleteWhenNoFailure
+import blended.testsupport.TestFile.DeletePolicy
 
 class BlockingDownloaderTest
     extends TestKit(ActorSystem("test"))
     with FreeSpecLike
     with ImplicitSender
     with BeforeAndAfterAll
-    with TestSupport {
+    with TestFile {
 
   implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
 

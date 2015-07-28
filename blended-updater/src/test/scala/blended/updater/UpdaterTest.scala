@@ -8,25 +8,18 @@ import org.scalatest.FreeSpecLike
 import akka.actor.ActorSystem
 import akka.testkit.ImplicitSender
 import akka.testkit.TestKit
-import blended.updater.test.TestSupport
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeleteNever
 import blended.updater.Updater.AddRuntimeConfig
-import blended.updater.Updater.RuntimeConfigAdded
-import blended.updater.Updater.StageRuntimeConfig
 import blended.updater.Updater.StageRuntimeConfig
 import blended.updater.Updater.RuntimeConfigStaged
-import blended.updater.Updater.GetRuntimeConfigs
-import blended.updater.Updater.RuntimeConfigs
 import blended.updater.Updater.ActivateRuntimeConfig
 import blended.updater.Updater.RuntimeConfigAdded
-import blended.updater.Updater.StageRuntimeConfig
 import blended.updater.Updater.GetProgress
 import blended.updater.Updater.Progress
-import blended.updater.Updater.RuntimeConfigStaged
 import blended.updater.Updater.RuntimeConfigActivated
 import blended.updater.config.RuntimeConfig
 import blended.launcher.config.LauncherConfig
-import blended.updater.test.TestSupport.DeleteWhenNoFailure
-import blended.updater.test.TestSupport.DeleteNever
 import blended.updater.config.BundleConfig
 import blended.updater.Updater.RuntimeConfigAdditionFailed
 import blended.updater.Updater.GetRuntimeConfigs
@@ -35,7 +28,7 @@ import blended.updater.Updater.RuntimeConfigs
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
     with FreeSpecLike
-    with TestSupport
+    with TestFile
     with ImplicitSender
     with BeforeAndAfterAll {
 
