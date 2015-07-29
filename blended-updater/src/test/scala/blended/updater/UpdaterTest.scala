@@ -24,6 +24,7 @@ import blended.updater.config.BundleConfig
 import blended.updater.Updater.RuntimeConfigAdditionFailed
 import blended.updater.Updater.GetRuntimeConfigs
 import blended.updater.Updater.RuntimeConfigs
+import blended.updater.config.LocalRuntimeConfig
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -79,7 +80,7 @@ class UpdaterTest
             val id = nextId()
             updater ! GetRuntimeConfigs(id)
             fishForMessage() {
-              case Updater.RuntimeConfigs(`id`, Seq(), Seq(`config`), Seq()) => true
+              case Updater.RuntimeConfigs(`id`, Seq(), Seq(LocalRuntimeConfig(`config`, _)), Seq()) => true
             }
           }
         }
@@ -133,7 +134,7 @@ class UpdaterTest
             val id = nextId()
             updater ! GetRuntimeConfigs(id)
             fishForMessage() {
-              case Updater.RuntimeConfigs(`id`, Seq(), Seq(`config`), Seq()) => true
+              case Updater.RuntimeConfigs(`id`, Seq(), Seq(LocalRuntimeConfig(`config`, _)), Seq()) => true
             }
           }
 
@@ -277,7 +278,7 @@ class UpdaterTest
               val queryId = nextId()
               updater ! GetRuntimeConfigs(queryId)
               fishForMessage() {
-                case RuntimeConfigs(`queryId`, Seq(), Seq(`config`), Seq()) => true
+                case RuntimeConfigs(`queryId`, Seq(), Seq(LocalRuntimeConfig(`config`, _)), Seq()) => true
               }
             }
 
@@ -301,7 +302,7 @@ class UpdaterTest
               val queryId = nextId()
               updater ! GetRuntimeConfigs(queryId)
               fishForMessage() {
-                case RuntimeConfigs(`queryId`, Seq(`config`), Seq(), Seq()) => true
+                case RuntimeConfigs(`queryId`, Seq(LocalRuntimeConfig(`config`, _)), Seq(), Seq()) => true
               }
             }
 

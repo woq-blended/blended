@@ -183,7 +183,7 @@ class Updater(
         // TODO: detect previous config
         val previousRuntimeConfig = None
         // TODO: generate properties file
-        val result = RuntimeConfig.createPropertyFile(state.config.runtimeConfig, previousRuntimeConfig, installBaseDir)
+        val result = RuntimeConfig.createPropertyFile(state.config, previousRuntimeConfig)
         result match {
           case None =>
             // nothing to do, is ok
