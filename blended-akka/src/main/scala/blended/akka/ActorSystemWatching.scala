@@ -23,17 +23,13 @@ trait ActorSystemWatching extends DominoImplicits {
 
   def setupBundleActor(cfg: OSGIActorConfig, props: Props) : ActorRef = {
     val actorRef = cfg.system.actorOf(props, bundleContext.getBundle().getSymbolicName())
-    postStartBundleActor(cfg, actorRef)
     cfg.system.eventStream.publish(BundleActorStarted(bundleContext.getBundle().getSymbolicName()))
 
     actorRef
   }
 
   def stopBundleActor : (OSGIActorConfig, ActorRef) => Unit = { (cfg, actor) =>
-    preStopBundleActor(cfg, actor)
     cfg.system.stop(actor)
   }
 
-  def postStartBundleActor(cfg: OSGIActorConfig, actor: ActorRef) : Unit = {}
-  def preStopBundleActor(cfg: OSGIActorConfig, actor: ActorRef) : Unit = {}
 }
