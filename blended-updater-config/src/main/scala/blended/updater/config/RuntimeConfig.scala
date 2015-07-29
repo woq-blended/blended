@@ -203,11 +203,12 @@ object RuntimeConfig {
 
     }
 
-  def validate(baseDir: File, config: RuntimeConfig,
+  def validate(config: LocalRuntimeConfig,
     includeResourceArchives: Boolean,
     explodedResourceArchives: Boolean): Seq[String] = {
-    val artifacts = config.allBundles.map(b => config.bundleLocation(b, baseDir) -> b.artifact) ++
-      (if (includeResourceArchives) config.resources.map(r => config.resourceArchiveLocation(r, baseDir) -> r) else Seq())
+    val runtimeConfig = config.runtimeConfig
+    val artifacts = runtimeConfig.allBundles.map(b => config.bundleLocation(b) -> b.artifact) ++
+      (if (includeResourceArchives) runtimeConfig.resources.map(r => config.resourceArchiveLocation(r) -> r) else Seq())
 
     val artifactIssues = artifacts.flatMap {
       case (file, artifact) =>
@@ -227,15 +228,15 @@ object RuntimeConfig {
     }
 
     val resourceIssues = if (explodedResourceArchives) {
-      config.resources.flatMap { artifact =>
-        val touchFile = config.resourceArchiveTouchFileLocation(artifact, baseDir)
+      runtimeConfig.resources.flatMap { artifact =>
+        val touchFile = config.resourceArchiveTouchFileLocation(artifact)
         if (touchFile.exists()) {
           val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
           if (persistedChecksum != artifact.sha1Sum) {
             List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
           } else Nil
         } else {
-          List(s"Resource ${artifact.fileName.getOrElse(config.resolveFileName(artifact.url).get)} not unpacked")
+          List(s"Resource ${artifact.fileName.getOrElse(runtimeConfig.resolveFileName(artifact.url).get)} not unpacked")
         }
       }
     } else Nil
@@ -280,8 +281,7 @@ object RuntimeConfig {
 
   def getPropertyFileProvider(
     curRuntime: RuntimeConfig,
-    prevRuntime: Option[RuntimeConfig],
-    baseDir: File): Try[Seq[PropertyProvider]] = Try {
+    prevRuntime: Option[LocalRuntimeConfig]): Try[Seq[PropertyProvider]] = Try {
     curRuntime.properties.get(Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
       case "env" => Some(new EnvPropertyProvider())
       case "sysprop" => Some(new SystemPropertyProvider())
@@ -293,29 +293,28 @@ object RuntimeConfig {
         val arg = x.substring("fileCurVer:".size).trim()
         if (arg.size == 0) sys.error(s"Invalid filename argument given with ${x}. Syntax: fileCurVer:<filename>")
         // Only create file based property provider if we have the same profile name
-        prevRuntime.find(_.name == curRuntime.name).map { prev =>
-          val file = new File(prev.baseDir(baseDir), arg)
+        prevRuntime.find(_.runtimeConfig.name == curRuntime.name).map { prev =>
+          val file = new File(prev.baseDir, arg)
           new FilePropertyProvider(file)
         }
       case pType => sys.error(s"Unsupported provider type: ${pType}")
     }
   }
 
-  def createPropertyFile(curRuntime: RuntimeConfig,
-    prevRuntime: Option[RuntimeConfig],
-    baseDir: File): Option[Try[File]] = {
+  def createPropertyFile(curRuntime: LocalRuntimeConfig,
+    prevRuntime: Option[LocalRuntimeConfig]): Option[Try[File]] = {
 
-    curRuntime.properties.get(Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
+    curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
       // log.debug(s"Properties file: ${fileName}")
-      curRuntime.properties.get(Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
+      curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
         // log.debug(s"Mandatory properties: ${props}")
-        val providers = getPropertyFileProvider(curRuntime, prevRuntime, baseDir).get
+        val providers = getPropertyFileProvider(curRuntime.runtimeConfig, prevRuntime).get
         if (providers.isEmpty) sys.error(s"No property providers defined (${Properties.PROFILE_PROPERTY_PROVIDERS})")
         //        providers.map { providers =>
         val resolvedProps = props.map { prop =>
           prop -> providers.toStream.map(_.provide(prop)).find(_.isDefined).map(_.get).getOrElse(sys.error(s"Could not find property value for key [${prop}]"))
         }
-        val propFile = new File(curRuntime.baseDir(baseDir), fileName)
+        val propFile = new File(curRuntime.baseDir, fileName)
         propFile.getParentFile.mkdirs()
         val content = new Properties()
         resolvedProps.foreach { case (k, v) => content.setProperty(k, v) }
@@ -364,19 +363,18 @@ case class RuntimeConfig(
 
   def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
-  def bundleLocation(bundle: BundleConfig, baseDir: File): File = RuntimeConfig.bundleLocation(bundle, baseDir)
+  def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
 
+}
+
+case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
+  def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
   def bundleLocation(artifact: Artifact, baseDir: File): File = RuntimeConfig.bundleLocation(artifact, baseDir)
-
-  def profileFileLocation(baseDir: File): File =
-    new File(baseDir, "profile.conf")
-
-  def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File = RuntimeConfig.resourceArchiveLocation(resourceArchive, baseDir)
-
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File): File = RuntimeConfig.resourceArchiveTouchFileLocation(resourceArchive, baseDir, mvnBaseUrl)
-
-  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String], baseDir: File): Try[File] = Try {
-    val file = resourceArchiveTouchFileLocation(resourceArchive, baseDir)
+  def profileFileLocation(baseDir: File): File = new File(baseDir, "profile.conf")
+  def resourceArchiveLocation(resourceArchive: Artifact): File = RuntimeConfig.resourceArchiveLocation(resourceArchive, baseDir)
+  def resourceArchiveTouchFileLocation(resourceArchive: Artifact): File = RuntimeConfig.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
+  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String]): Try[File] = Try {
+    val file = resourceArchiveTouchFileLocation(resourceArchive)
     Option(file.getParentFile()).foreach { parent =>
       parent.mkdirs()
     }

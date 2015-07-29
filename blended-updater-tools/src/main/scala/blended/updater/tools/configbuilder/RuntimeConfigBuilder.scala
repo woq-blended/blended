@@ -14,6 +14,7 @@ import blended.updater.config.FeatureConfig
 import blended.updater.config.BundleConfig
 import blended.updater.config.Artifact
 import java.io.PrintWriter
+import blended.updater.config.LocalRuntimeConfig
 
 object RuntimeConfigBuilder {
 
@@ -104,14 +105,14 @@ object RuntimeConfigBuilder {
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
     val config = ConfigFactory.parseFile(configFile).resolve()
     val runtimeConfig = RuntimeConfig.read(config, features).get
+    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
 
     val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
     println("runtime config with resolved features: " + resolvedRuntimeConfig)
 
     if (options.check) {
       val issues = RuntimeConfig.validate(
-        dir,
-        runtimeConfig,
+        localRuntimeConfig,
         includeResourceArchives = true,
         explodedResourceArchives = false
       )
@@ -171,10 +172,10 @@ object RuntimeConfigBuilder {
       }
 
       def checkAndUpdateResource(a: Artifact): Artifact =
-        checkAndUpdate(runtimeConfig.resourceArchiveLocation(a, dir), a)
+        checkAndUpdate(localRuntimeConfig.resourceArchiveLocation(a), a)
 
       def checkAndUpdateBundle(b: BundleConfig): BundleConfig =
-        b.copy(artifact = checkAndUpdate(runtimeConfig.bundleLocation(b, dir), b.artifact))
+        b.copy(artifact = checkAndUpdate(localRuntimeConfig.bundleLocation(b), b.artifact))
 
       runtimeConfig.copy(
         bundles = runtimeConfig.bundles.map(checkAndUpdateBundle),

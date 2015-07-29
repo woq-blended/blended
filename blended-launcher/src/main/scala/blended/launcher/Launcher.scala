@@ -45,6 +45,9 @@ import java.util.Properties
 import blended.updater.config.ProfileLookup
 import blended.launcher.runtime.Branding
 import java.util.Hashtable
+import blended.updater.config.LocalRuntimeConfig
+import scala.util.Failure
+import scala.util.Success
 
 object Launcher {
 
@@ -80,9 +83,26 @@ object Launcher {
     )
     def setProfileLookup(file: String): Unit = profileLookup = Option(file)
     var profileLookup: Option[String] = None
+
+    @CmdOption(names = Array("--reset-profile-props"),
+      description = "Try to recreate the profile properties file before starting a profile",
+      conflictsWith = Array("--config")
+    )
+    var resetProfileProps: Boolean = false
   }
 
   def main(args: Array[String]): Unit = {
+    try {
+      run(args)
+    } catch {
+      case t: Throwable =>
+        Console.err.println(s"Error: ${t.getMessage()}")
+        sys.exit(1)
+    }
+    sys.exit(0)
+  }
+
+  def run(args: Array[String]): Unit = {
 
     val log = Logger[Launcher.type]
 
@@ -92,23 +112,22 @@ object Launcher {
       cp.parse(args: _*)
     } catch {
       case e: CmdlineParserException =>
-        Console.err.println(s"Error: ${e.getMessage()}\nRun launcher --help for help.")
-        sys.exit(1)
+        sys.error(s"${e.getMessage()}\nRun launcher --help for help.")
     }
 
     if (cmdline.help) {
       cp.usage()
-      sys.exit(0)
+      return
     }
 
     val handleFrameworkRestart = cmdline.handleFrameworkRestart
 
-    var retVal = 0
+    var retVal: Int = 0
     do {
-      val launcherConfig = cmdline.configFile match {
+      val (launcherConfig, profileConfigOption) = cmdline.configFile match {
         case Some(configFile) =>
           val config = ConfigFactory.parseFile(new File(configFile)).resolve()
-          LauncherConfig.read(config)
+          LauncherConfig.read(config) -> None
         case None =>
           val profile = cmdline.profileLookup match {
             case Some(p) =>
@@ -122,8 +141,7 @@ object Launcher {
             case None =>
               cmdline.profileDir match {
                 case None =>
-                  Console.err.println("Either a config file or a profile dir or file or a profile lookup path must be given")
-                  sys.exit(1)
+                  sys.error("Either a config file or a profile dir or file or a profile lookup path must be given")
                 case Some(profile) => profile
               }
           }
@@ -141,20 +159,33 @@ object Launcher {
               cmdline.profileLookup.map(f =>
                 Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath()
                 )).getOrElse(Map())) ++ (Map(RuntimeConfig.Properties.PROFILE_DIR -> profileDir))
-          )
+          ) -> Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir)))
       }
 
       val launcher = new Launcher(launcherConfig)
       val errors = launcher.validate()
-      if (!errors.isEmpty) {
-        Console.err.println("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
-        retVal = 1
+      if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
+
+      if (cmdline.resetProfileProps) {
+        val localConfig = profileConfigOption.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
+        RuntimeConfig.createPropertyFile(localConfig, None) match {
+          case None => // nothing to generate, ok
+          case Some(Success(f)) => // generated successfully, ok
+            Console.err.println(s"Created properties file for profile: ${f}")
+          case Some(Failure(e)) => sys.error(s"Could not reset properties file. ${e.getMessage()}")
+        }
       } else {
-        retVal = launcher.run()
+        // check props
+        profileConfigOption.foreach { localConfig =>
+          // TODO: check if all mandatory props are set
+        }
       }
+
+      retVal = launcher.run()
+
     } while (handleFrameworkRestart && retVal == 2)
 
-    sys.exit(retVal)
+    if (retVal != 0) throw new LauncherException("", errorCode = retVal)
   }
 
   def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))

@@ -25,6 +25,7 @@ import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
 import com.typesafe.config.Config
+import blended.updater.config.LocalRuntimeConfig
 
 object Updater {
 
@@ -43,7 +44,7 @@ object Updater {
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
   final case class GetRuntimeConfigs(requestId: String) extends Protocol
-  final case class RuntimeConfigs(requestId: String, staged: Seq[RuntimeConfig], pending: Seq[RuntimeConfig], invalid: Seq[RuntimeConfig]) extends Reply
+  final case class RuntimeConfigs(requestId: String, staged: Seq[LocalRuntimeConfig], pending: Seq[LocalRuntimeConfig], invalid: Seq[LocalRuntimeConfig]) extends Reply
 
   final case class AddRuntimeConfig(requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
   final case class RuntimeConfigAdded(requestId: String) extends Reply
@@ -98,18 +99,17 @@ object Updater {
   private case class State(
       requestId: String,
       requestActor: ActorRef,
-      config: RuntimeConfig,
-      installDir: File,
+      config: LocalRuntimeConfig,
       artifactsToDownload: Seq[ArtifactInProgress],
       artifactsToCheck: Seq[ArtifactInProgress],
       pendingArtifactsToUnpack: Seq[ArtifactInProgress],
       artifactsToUnpack: Seq[ArtifactInProgress],
       issues: Seq[String]) {
 
-    val profileId = ProfileId(config.name, config.version)
+    val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
 
     def progress(): Int = {
-      val allBundlesSize = config.bundles.size
+      val allBundlesSize = config.runtimeConfig.bundles.size
       if (allBundlesSize > 0)
         (100 / allBundlesSize) * (allBundlesSize - artifactsToDownload.size - artifactsToCheck.size)
       else 100
@@ -126,8 +126,8 @@ object Updater {
     case object Valid extends ProfileState
   }
 
-  case class Profile(dir: File, config: RuntimeConfig, state: Profile.ProfileState) {
-    def profile: ProfileId = ProfileId(config.name, config.version)
+  case class Profile(config: LocalRuntimeConfig, state: Profile.ProfileState) {
+    def profile: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
   }
 
 }
@@ -171,27 +171,45 @@ class Updater(
     if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty && state.issues.isEmpty && !state.pendingArtifactsToUnpack.isEmpty) {
       // start unpacking
       state.pendingArtifactsToUnpack.foreach { a =>
-        unpacker ! Unpacker.Unpack(a.reqId, self, a.file, state.installDir)
+        unpacker ! Unpacker.Unpack(a.reqId, self, a.file, config.baseDir)
       }
       stageInProgress(state.copy(
         artifactsToUnpack = state.pendingArtifactsToUnpack,
         pendingArtifactsToUnpack = Nil
       ))
     } else if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
-      // no work left
+
+      val finalIssues = if (state.issues.isEmpty) {
+        // TODO: detect previous config
+        val previousRuntimeConfig = None
+        // TODO: generate properties file
+        val result = RuntimeConfig.createPropertyFile(state.config.runtimeConfig, previousRuntimeConfig, installBaseDir)
+        result match {
+          case None =>
+            // nothing to do, is ok
+            Seq()
+          case Some(Success(_)) =>
+            // ok
+            Seq()
+          case Some(Failure(e)) =>
+            // could not create properties file
+            Seq(s"Could not create properties file: ${e.getMessage()}")
+        }
+      } else state.issues
+
       stagingInProgress = stagingInProgress.filterKeys(id != _)
-      val (profileState, msg) = state.issues match {
+      val (profileState, msg) = finalIssues match {
         case Seq() => Profile.Valid -> RuntimeConfigStaged(id)
         case issues => Profile.Invalid(issues) -> RuntimeConfigStagingFailed(id, issues.mkString("; "))
       }
-      profiles += state.profileId -> Profile(state.installDir, state.config, profileState)
+      profiles += state.profileId -> Profile(state.config, profileState)
       state.requestActor ! msg
     } else {
       stagingInProgress += id -> state
     }
   }
 
-  def findConfig(id: ProfileId): Option[RuntimeConfig] = profiles.get(id).map(_.config)
+  def findConfig(id: ProfileId): Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
@@ -248,8 +266,7 @@ class Updater(
           val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
             val issues = RuntimeConfig.validate(
-              versionDir,
-              runtimeConfig,
+              LocalRuntimeConfig(baseDir = versionDir, runtimeConfig = runtimeConfig),
               includeResourceArchives = false,
               explodedResourceArchives = true)
             log.debug(s"Validation result for [${name}-${version}]: ${issues.mkString(";")}")
@@ -257,7 +274,7 @@ class Updater(
               case Seq() => Profile.Valid
               case issues => Profile.Pending(issues)
             }
-            List(Profile(versionDir, runtimeConfig, profileState))
+            List(Profile(LocalRuntimeConfig(runtimeConfig, versionDir), profileState))
           } else List()
         }.getOrElse(List())
       }
@@ -266,9 +283,9 @@ class Updater(
 
     case GetRuntimeConfigs(reqId) =>
       sender() ! RuntimeConfigs(reqId,
-        staged = profiles.values.toList.collect { case Profile(_, config, Profile.Valid) => config },
-        pending = profiles.values.toList.collect { case Profile(_, config, Profile.Pending(_)) => config },
-        invalid = profiles.values.toList.collect { case Profile(_, config, Profile.Invalid(_)) => config }
+        staged = profiles.values.toList.collect { case Profile(config, Profile.Valid) => config },
+        pending = profiles.values.toList.collect { case Profile(config, Profile.Pending(_)) => config },
+        invalid = profiles.values.toList.collect { case Profile(config, Profile.Invalid(_)) => config }
       )
 
     case AddRuntimeConfig(reqId, config) =>
@@ -283,7 +300,7 @@ class Updater(
           val confFile = new File(dir, "profile.conf")
 
           ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-          profiles += id -> Profile(dir, config, Profile.Pending(Seq("Never checked")))
+          profiles += id -> Profile(LocalRuntimeConfig(config, dir), Profile.Pending(Seq("Never checked")))
 
           sender() ! RuntimeConfigAdded(reqId)
         case Some(`config`) =>
@@ -295,7 +312,7 @@ class Updater(
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
         profiles.toStream.collect {
-          case (id, Profile(_, _, Profile.Pending(_))) =>
+          case (id, Profile( _, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
             self ! StageRuntimeConfig(nextId(), id.name, id.version)
         }.headOption
@@ -306,11 +323,11 @@ class Updater(
         case None =>
           sender() ! RuntimeConfigStagingFailed(reqId, s"No such runtime configuration found: ${name} ${version}")
 
-        case Some(Profile(dir, config, Profile.Valid)) =>
+        case Some(Profile(config, Profile.Valid)) =>
           // already staged
           sender() ! RuntimeConfigStaged(reqId)
 
-        case Some(Profile(installDir, config, state)) =>
+        case Some(Profile(config, state)) =>
           val reqActor = sender()
           if (stagingInProgress.contains(reqId)) {
             log.error("Duplicate id detected. Dropping request: {}", msg)
@@ -319,21 +336,21 @@ class Updater(
 
             // analyze config
 
-            val artifacts = config.allBundles.map { b =>
-              ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b, installDir))
+            val artifacts = config.runtimeConfig.allBundles.map { b =>
+              ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
             } ++
-              config.resources.map { r =>
-                ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r, installDir))
+              config.runtimeConfig.resources.map { r =>
+                ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
               }
 
-            val pendingUnpacks = config.resources.map { r =>
-              ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r, installDir))
+            val pendingUnpacks = config.runtimeConfig.resources.map { r =>
+              ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
             }
 
             val (existing, missing) = artifacts.partition(a => a.file.exists())
 
             val missingWithId = missing.map { a =>
-              val resolvedUrl = config.resolveBundleUrl(a.artifact.url).getOrElse(a.artifact.url)
+              val resolvedUrl = config.runtimeConfig.resolveBundleUrl(a.artifact.url).getOrElse(a.artifact.url)
               artifactDownloader ! BlockingDownloader.Download(a.reqId, self, resolvedUrl, a.file)
               a
             }
@@ -346,7 +363,6 @@ class Updater(
               requestId = reqId,
               requestActor = reqActor,
               config = config,
-              installDir = installDir,
               artifactsToDownload = missingWithId,
               artifactsToCheck = existingWithId,
               pendingArtifactsToUnpack = pendingUnpacks,
@@ -359,7 +375,7 @@ class Updater(
     case ActivateRuntimeConfig(reqId, name: String, version: String) =>
       val requestingActor = sender()
       profiles.get(ProfileId(name, version)) match {
-        case Some(Profile(dir, config, Profile.Valid)) =>
+        case Some(Profile(LocalRuntimeConfig(config, dir), Profile.Valid)) =>
           // write config
           log.debug("About to activate new profile for next startup: {}-{}", name, version)
           val success = profileUpdater(name, version)
@@ -446,7 +462,7 @@ class Updater(
           val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
           msg match {
             case Unpacker.UnpackingFinished(_) =>
-              state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum, state.installDir) match {
+              state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum) match {
                 case Success(file) =>
                   stageInProgress(state.copy(
                     artifactsToUnpack = artifactsToUnpack

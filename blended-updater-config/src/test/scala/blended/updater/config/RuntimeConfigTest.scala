@@ -75,7 +75,9 @@ class RuntimeConfigTest
 
     "should not write a properties file without required settings" in {
       withTestDir() { dir =>
-        val res = RuntimeConfig.createPropertyFile(prev, Option(next), dir)
+        val res = RuntimeConfig.createPropertyFile(
+          LocalRuntimeConfig(next, new File(dir, "test/1")),
+          Option(LocalRuntimeConfig(next, new File(dir, "test/2"))))
         assert(res === None)
       }
     }
@@ -84,16 +86,20 @@ class RuntimeConfigTest
       withTestDir() { dir =>
         sys.props += "TEST_A" -> "TEST_a"
         sys.props += "test.prop" -> "TEST_PROP"
-        val res = RuntimeConfig.createPropertyFile(next.copy(properties = Map(
-          RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
-          RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "sysprop",
-          RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "TEST_A,test.prop"
-        )), None, dir)
-        val expectedTargetFile = new File(dir, "test/2/etc/props")
-        assert(res === Some(Success(expectedTargetFile)))
-        assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("TEST_A=TEST_a", "test.prop=TEST_PROP"))
-        sys.props -= "TEST_A"
-        sys.props -= "test.prop"
+        try {
+          val res = RuntimeConfig.createPropertyFile(
+            LocalRuntimeConfig(next.copy(properties = Map(
+              RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
+              RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "sysprop",
+              RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "TEST_A,test.prop"
+            )), new File(dir, "test/2")), None)
+          val expectedTargetFile = new File(dir, "test/2/etc/props")
+          assert(res === Some(Success(expectedTargetFile)))
+          assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("TEST_A=TEST_a", "test.prop=TEST_PROP"))
+        } finally {
+          sys.props -= "TEST_A"
+          sys.props -= "test.prop"
+        }
       }
     }
 
@@ -107,11 +113,15 @@ class RuntimeConfigTest
           w.close()
         }
 
-        val res = RuntimeConfig.createPropertyFile(next.copy(properties = Map(
-          RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
-          RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
-          RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "test.prop"
-        )), Some(prev), dir)
+        val res = RuntimeConfig.createPropertyFile(
+          LocalRuntimeConfig(next.copy(properties = Map(
+            RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
+            RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
+            RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "test.prop"
+          )), new File(dir, "test/2")),
+          Some(LocalRuntimeConfig(prev, new File(dir, "test/1"))
+          )
+        )
         assert(res === Some(Success(expectedTargetFile)))
         assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("test.prop=TEST_PROP"))
       }

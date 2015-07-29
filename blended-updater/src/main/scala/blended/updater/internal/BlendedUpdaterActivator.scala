@@ -5,9 +5,7 @@ import java.io.FileOutputStream
 import java.io.PrintStream
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
-
 import domino.DominoActivator
-
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
@@ -36,6 +34,7 @@ import blended.updater.config.ConfigWriter
 import blended.updater.config.ProfileLookup
 import blended.updater.config.RuntimeConfig
 import blended.updater.UpdaterConfig
+import blended.updater.config.LocalRuntimeConfig
 
 case class UpdateEnv(
   launchedProfileName: String,
@@ -139,12 +138,12 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
       timeout.duration)
 
-    def format(config: RuntimeConfig): String = {
+    def format(config: LocalRuntimeConfig): String = {
       val activeSuffix = env match {
-        case Some(e) if e.launchedProfileName == config.name && e.launchedProfileVersion == config.version => " [active]"
+        case Some(e) if e.launchedProfileName == config.runtimeConfig.name && e.launchedProfileVersion == config.runtimeConfig.version => " [active]"
         case _ => ""
       }
-      s"${config.name}-${config.version}${activeSuffix}"
+      s"${config.runtimeConfig.name}-${config.runtimeConfig.version}${activeSuffix}"
     }
 
     "staged: " + configs.staged.map(format).mkString(", ") + "\n" +
