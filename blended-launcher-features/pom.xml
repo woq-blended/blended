@@ -44,6 +44,18 @@
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.updater</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.updater.config</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.util</artifactId>
 			<version>${blended.version}</version>
 		</dependency>

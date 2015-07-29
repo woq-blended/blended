@@ -5,6 +5,7 @@ import blended.updater.config.RuntimeConfig
 import scala.util.Try
 import java.io.File
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
 
 trait FragmentResolver {
   import FragmentResolver._
@@ -48,7 +49,7 @@ object FragmentResolver {
             val url = runtimeConfig.resolveBundleUrl(unresolveUrl).get
             val file = File.createTempFile(runtimeConfig.resolveFileName(url).get, "")
             RuntimeConfig.download(url, file).get
-            val config = ConfigFactory.parseFile(file).resolve()
+            val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
             file.delete()
             FeatureConfig.read(config).get
           }.toOption.map { fetched =>

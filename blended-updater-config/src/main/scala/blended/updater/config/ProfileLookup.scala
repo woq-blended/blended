@@ -15,10 +15,14 @@ case class ProfileLookup(
 
 object ProfileLookup {
   def read(config: Config): Try[ProfileLookup] = Try {
+    val profileName = config.getString("profile.name")
+    val profileVersion = config.getString("profile.version")
+    val profileBaseDir = new File(config.getString("profile.baseDir"))
+
     ProfileLookup(
-      profileName = config.getString("profile.name"),
-      profileVersion = config.getString("profile.version"),
-      profileBaseDir = new File(config.getString("profile.baseDir"))
+      profileName = profileName,
+      profileVersion = profileVersion,
+      profileBaseDir = profileBaseDir
     )
   }
   def toConfig(profileLookup: ProfileLookup): Config = {

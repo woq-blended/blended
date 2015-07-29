@@ -20,7 +20,7 @@ import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.akka.{ActorSystemWatching, OSGIActorConfig}
+import blended.akka.{ ActorSystemWatching, OSGIActorConfig }
 import blended.launcher.config.LauncherConfig
 import blended.updater.Updater
 import blended.updater.Updater.RuntimeConfigActivated
@@ -39,7 +39,8 @@ import blended.updater.config.LocalRuntimeConfig
 case class UpdateEnv(
   launchedProfileName: String,
   launchedProfileVersion: String,
-  launchProfileLookupFile: Option[File])
+  launchProfileLookupFile: Option[File],
+  profilesBaseDir: File)
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
@@ -49,53 +50,71 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     whenActorSystemAvailable { cfg =>
       log.info(s"About to setup ${getClass()}")
 
-      val configDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
-      val installDir = new File(cfg.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
+      //      val configDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+      //      val installDir = new File(cfg.idSvc.getContainerContext().getContainerDirectory(), "profiles").getAbsoluteFile()
 
       val restartFrameworkAction = { () =>
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
-      } 
-
-      val profileUpdater = { (name: String, version: String) =>
-        // TODO: Error reporting
-        readUpdateEnv() match {
-          case Some(UpdateEnv(_, _, Some(lookupFile))) =>
-            // TODO: write Config
-            val config = ConfigFactory.parseFile(lookupFile).resolve()
-            ProfileLookup.read(config) match {
-              case Success(profileLookup) =>
-                val newConfig = profileLookup.copy(profileName = name, profileVersion = version)
-                ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
-                true
-              case Failure(e) =>
-                false
-            }
-
-          case _ =>
-            // no lookup file
-            false
-        }
       }
 
-      val actor = setupBundleActor(cfg, Updater.props(
-        baseDir = installDir,
-        profileUpdater = profileUpdater,
-        restartFramework = restartFrameworkAction,
-        config = UpdaterConfig.fromConfig(cfg.config)
-      ))
+      readUpdateEnv() match {
+        case None =>
+          sys.error("Cannot detect updateable environment. Did you used the blended launcher?")
 
-      onStop ( stopBundleActor(cfg, actor) )
+        case Some(updateEnv) =>
+          println("Blended Updated env: " + updateEnv)
+
+          val profileUpdater = { (name: String, version: String) =>
+            // TODO: Error reporting
+            updateEnv match {
+              case UpdateEnv(_, _, Some(lookupFile), profileBaseDir) =>
+                // TODO: write Config
+                val config = ConfigFactory.parseFile(lookupFile).resolve()
+                ProfileLookup.read(config) match {
+                  case Success(profileLookup) =>
+                    val newConfig = profileLookup.copy(profileName = name, profileVersion = version)
+                    ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
+                    true
+                  case Failure(e) =>
+                    false
+                }
+
+              case _ =>
+                // no lookup file
+                false
+            }
+          }
+
+          val actor = setupBundleActor(cfg, Updater.props(
+            baseDir = updateEnv.profilesBaseDir,
+            profileUpdater = profileUpdater,
+            restartFramework = restartFrameworkAction,
+            config = UpdaterConfig.fromConfig(cfg.config)
+          ))
+
+          val commands = new Commands(actor, Some(updateEnv))(cfg.system)
+          commands.providesService[Object](
+            "osgi.command.scope" -> "blended.updater",
+            "osgi.command.function" -> commands.commands
+          )
+
+          onStop {
+            stopBundleActor(cfg, actor)
+          }
+
+      }
     }
   }
 
-  def readUpdateEnv() = try {
+  def readUpdateEnv(): Option[UpdateEnv] = try {
     val props = blended.launcher.runtime.Branding.getProperties()
     println("Blended Launcher detected: " + props)
     val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
     val pVersion = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_VERSION))
     val pProfileLookupFile = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE))
-    Some(UpdateEnv(pName.get, pVersion.get, pProfileLookupFile.map(f => new File(f))))
+    val pProfilesBaseDir = Option(props.getProperty(RuntimeConfig.Properties.PROFILES_BASE_DIR))
+    Some(UpdateEnv(pName.get, pVersion.get, pProfileLookupFile.map(f => new File(f)), new File(pProfilesBaseDir.get)))
   } catch {
     case e: NoClassDefFoundError =>
       // could not load optional branding class
@@ -105,27 +124,6 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
       None
   }
 
-  override def postStartBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
-    val updateEnv = readUpdateEnv()
-
-    println("Blended Updated env: " + updateEnv)
-
-    val commands = new Commands(updater, updateEnv)(config.system)
-    commandsReg = Option(commands.providesService[Object](
-      "osgi.command.scope" -> "blended.updater",
-      "osgi.command.function" -> commands.commands
-    ))
-  }
-
-  override def preStopBundleActor(config: OSGIActorConfig, updater: ActorRef): Unit = {
-    commandsReg.map { reg =>
-      try { reg.unregister() } catch {
-        case _: IllegalStateException =>
-        // might be because the framework already unregistered the Commands class
-      }
-      commandsReg = None
-    }
-  }
 }
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
@@ -185,7 +183,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def activate(name: String, version: String): AnyRef = {
     env match {
-      case Some(UpdateEnv(_, _, Some(lookupFile))) =>
+      case Some(UpdateEnv(_, _, Some(lookupFile), _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(

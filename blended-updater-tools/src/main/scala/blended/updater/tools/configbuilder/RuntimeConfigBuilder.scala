@@ -15,6 +15,7 @@ import blended.updater.config.BundleConfig
 import blended.updater.config.Artifact
 import java.io.PrintWriter
 import blended.updater.config.LocalRuntimeConfig
+import com.typesafe.config.ConfigParseOptions
 
 object RuntimeConfigBuilder {
 
@@ -90,7 +91,7 @@ object RuntimeConfigBuilder {
 
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
-      val featureConfig = ConfigFactory.parseFile(new File(fileName)).resolve()
+      val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
       //      repoConfig.getObjectList("features").asScala.map { c =>
       FeatureConfig.read(featureConfig).get
       //      }
@@ -103,7 +104,7 @@ object RuntimeConfigBuilder {
       .map(new File(_).getAbsoluteFile())
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
-    val config = ConfigFactory.parseFile(configFile).resolve()
+    val config = ConfigFactory.parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val runtimeConfig = RuntimeConfig.read(config, features).get
     val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
 

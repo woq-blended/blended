@@ -57,7 +57,7 @@ object LauncherConfig {
    * @return A valid [LauncherConfig].
    */
   def read(file: File): LauncherConfig = {
-    val config = ConfigFactory.parseFile(file).getConfig(ConfigPrefix).resolve()
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).getConfig(ConfigPrefix).resolve()
     read(config)
   }
 

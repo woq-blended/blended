@@ -48,6 +48,7 @@ import java.util.Hashtable
 import blended.updater.config.LocalRuntimeConfig
 import scala.util.Failure
 import scala.util.Success
+import com.typesafe.config.ConfigParseOptions
 
 object Launcher {
 
@@ -95,9 +96,13 @@ object Launcher {
     try {
       run(args)
     } catch {
+      case t: LauncherException =>
+        Console.err.println(s"Error: ${t.getMessage()}")
+        sys.exit(t.errorCode)
       case t: Throwable =>
         Console.err.println(s"Error: ${t.getMessage()}")
-        sys.exit(1)
+        //        sys.exit(1)
+        throw t
     }
     sys.exit(0)
   }
@@ -122,27 +127,32 @@ object Launcher {
 
     val handleFrameworkRestart = cmdline.handleFrameworkRestart
 
+    var firstStart = true
     var retVal: Int = 0
     do {
-      val (launcherConfig, profileConfigOption) = cmdline.configFile match {
+      case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
+
+      val configs = cmdline.configFile match {
         case Some(configFile) =>
-          val config = ConfigFactory.parseFile(new File(configFile)).resolve()
-          LauncherConfig.read(config) -> None
+          val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+          Configs(LauncherConfig.read(config))
         case None =>
-          val profile = cmdline.profileLookup match {
-            case Some(p) =>
-              log.debug("About to read profile lookup file: " + p)
-              val c = ConfigFactory.parseFile(new File(p)).resolve()
-              val profileLookup = ProfileLookup.read(c).map { pl =>
-                pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
-              }.get
-              log.debug("ProfileLookup: " + profileLookup)
-              s"${profileLookup.profileBaseDir}/${profileLookup.profileName}/${profileLookup.profileVersion}"
+          val profileLookup = cmdline.profileLookup.map { pl =>
+            log.debug("About to read profile lookup file: " + pl)
+            val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+            ProfileLookup.read(c).map { pl =>
+              pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
+            }.get
+          }
+
+          val profile = profileLookup match {
+            case Some(pl) =>
+              s"${pl.profileBaseDir}/${pl.profileName}/${pl.profileVersion}"
             case None =>
               cmdline.profileDir match {
+                case Some(profile) => profile
                 case None =>
                   sys.error("Either a config file or a profile dir or file or a profile lookup path must be given")
-                case Some(profile) => profile
               }
           }
 
@@ -151,23 +161,31 @@ object Launcher {
           } else {
             Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
           }
-          val config = ConfigFactory.parseFile(profileFile).resolve()
+          val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
           val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
-          launchConfig.copy(
-            branding = launchConfig.branding ++ (
-              cmdline.profileLookup.map(f =>
-                Map(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(f).getAbsolutePath()
-                )).getOrElse(Map())) ++ (Map(RuntimeConfig.Properties.PROFILE_DIR -> profileDir))
-          ) -> Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir)))
+
+          var brandingProps = Map(
+            RuntimeConfig.Properties.PROFILE_DIR -> profileDir
+          )
+          profileLookup.foreach { pl =>
+            brandingProps ++= Map(
+              RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
+              RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
+            )
+          }
+
+          Configs(
+            launcherConfig = launchConfig.copy(branding = launchConfig.branding ++ brandingProps),
+            profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
       }
 
-      val launcher = new Launcher(launcherConfig)
+      val launcher = new Launcher(configs.launcherConfig)
       val errors = launcher.validate()
       if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
 
-      if (cmdline.resetProfileProps) {
-        val localConfig = profileConfigOption.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
+      if (firstStart && cmdline.resetProfileProps) {
+        val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
         RuntimeConfig.createPropertyFile(localConfig, None) match {
           case None => // nothing to generate, ok
           case Some(Success(f)) => // generated successfully, ok
@@ -176,13 +194,14 @@ object Launcher {
         }
       } else {
         // check props
-        profileConfigOption.foreach { localConfig =>
+        configs.profileConfig.foreach { localConfig =>
           // TODO: check if all mandatory props are set
         }
       }
 
       retVal = launcher.run()
 
+      firstStart = false
     } while (handleFrameworkRestart && retVal == 2)
 
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
@@ -228,7 +247,7 @@ class Launcher private (config: LauncherConfig) {
 
     val brandingProps = {
       val brandingProps = new Properties()
-      config.branding.foreach { p => brandingProps.setProperty(p._1, p._2) }
+      config.branding.foreach { case (k, v) => brandingProps.setProperty(k, v) }
       BrandingProperties.setLastBrandingProperties(brandingProps)
       log.debug("Exposing branding via class " + classOf[BrandingProperties].getName() + ": " + brandingProps)
       brandingProps

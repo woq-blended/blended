@@ -26,6 +26,7 @@ import scala.util.Success
 import scala.util.Failure
 import com.typesafe.config.Config
 import blended.updater.config.LocalRuntimeConfig
+import com.typesafe.config.ConfigParseOptions
 
 object Updater {
 
@@ -127,7 +128,7 @@ object Updater {
   }
 
   case class Profile(config: LocalRuntimeConfig, state: Profile.ProfileState) {
-    def profile: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
+    def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
   }
 
 }
@@ -243,6 +244,8 @@ class Updater(
   def protocol(msg: Protocol): Unit = msg match {
 
     case ScanForRuntimeConfigs(reqId) =>
+      log.info("Scanning for profiles in: {}", installBaseDir)
+
       // profileFiles
       val confs = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
         flatMap { nameDir =>
@@ -254,15 +257,15 @@ class Updater(
             }
         }
 
-      log.info("Detected profile configs : {}", confs)
+      log.info("Found potential profile configs : {}", confs)
 
       // read configs
       val foundProfiles = confs.flatMap { profileFile =>
-        val versionDir = profileFile.getParentFile()
-        val version = versionDir.getName()
-        val name = versionDir.getParentFile.getName()
         Try {
-          val config = ConfigFactory.parseFile(profileFile).resolve()
+          val versionDir = profileFile.getParentFile()
+          val version = versionDir.getName()
+          val name = versionDir.getParentFile.getName()
+          val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
             val issues = RuntimeConfig.validate(
@@ -275,17 +278,26 @@ class Updater(
               case issues => Profile.Pending(issues)
             }
             List(Profile(LocalRuntimeConfig(runtimeConfig, versionDir), profileState))
-          } else List()
-        }.getOrElse(List())
+          } else {
+            log.warning(s"Profile name and version do not match directory names: ${profileFile}")
+            List()
+          }
+        }.getOrElse {
+          log.warning(s"Could not read profile file: ${profileFile}")
+          List()
+        }
       }
+      
+      log.info(s"Profiles: ${profiles}")
 
-      profiles = foundProfiles.map { profile => profile.profile -> profile }.toMap
+      profiles = foundProfiles.map { profile => profile.profileId -> profile }.toMap
 
     case GetRuntimeConfigs(reqId) =>
+      val ps = profiles.values.toList
       sender() ! RuntimeConfigs(reqId,
-        staged = profiles.values.toList.collect { case Profile(config, Profile.Valid) => config },
-        pending = profiles.values.toList.collect { case Profile(config, Profile.Pending(_)) => config },
-        invalid = profiles.values.toList.collect { case Profile(config, Profile.Invalid(_)) => config }
+        staged = ps.collect { case Profile(config, Profile.Valid) => config },
+        pending = ps.collect { case Profile(config, Profile.Pending(_)) => config },
+        invalid = ps.collect { case Profile(config, Profile.Invalid(_)) => config }
       )
 
     case AddRuntimeConfig(reqId, config) =>
@@ -312,7 +324,7 @@ class Updater(
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
         profiles.toStream.collect {
-          case (id, Profile( _, Profile.Pending(_))) =>
+          case (id, Profile(_, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
             self ! StageRuntimeConfig(nextId(), id.name, id.version)
         }.headOption

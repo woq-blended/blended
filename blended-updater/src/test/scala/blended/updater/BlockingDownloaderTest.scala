@@ -38,6 +38,7 @@ class BlockingDownloaderTest
       withTestFiles("content", "") { (file, target) =>
         import sys.process._
         file.#>(target).!
+        Thread.sleep(1)
         val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
         assert("content" === downloadedContent)
       }

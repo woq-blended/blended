@@ -15,6 +15,7 @@ import com.typesafe.config.ConfigValueFactory
 import scala.collection.JavaConverters._
 import blended.updater.config.ConfigWriter
 import java.io.PrintStream
+import com.typesafe.config.ConfigParseOptions
 
 object FeatureBuilder {
 
@@ -99,7 +100,7 @@ object FeatureBuilder {
     val workDir = new File(cmdline.outputDir.getOrElse("/tmp")).getAbsoluteFile()
 
     val file = new File(cmdline.featureFiles)
-    val config = ConfigFactory.parseFile(file).resolve()
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
     val feature = FeatureConfig.read(config).get
     Console.err.println(s"Processing feature: ${feature.name} ${feature.version}")
