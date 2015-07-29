@@ -38,13 +38,7 @@ class ContainerContextActivator extends DominoActivator {
 
     val uuid = Option(confProps.getProperty(ContainerIdentifierServiceImpl.PROP_UUID)) match {
       case Some(x) => x.toString()
-      case None =>
-        // generate and persist
-        val newUuid = UUID.randomUUID().toString()
-        log.info("About to write newly generated UUID: {}", newUuid)
-        confProps.setProperty(ContainerIdentifierServiceImpl.PROP_UUID, newUuid)
-        containerContext.writeConfig(pid, confProps)
-        newUuid
+      case None => sys.error("No UUID found in configuration!")
     }
 
     val props = confProps.asScala.toMap.collect {
