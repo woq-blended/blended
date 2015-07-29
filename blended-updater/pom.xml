@@ -160,6 +160,12 @@
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.testsupport</artifactId>
+			<version>${blended.version}</version>
+			<scope>test</scope>
+		</dependency>
 
 	</dependencies>
 

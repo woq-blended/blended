@@ -1,4 +1,4 @@
-package blended.updater.test
+package blended.testsupport
 
 import java.io.PrintStream
 import java.io.FileOutputStream
@@ -7,8 +7,8 @@ import java.util.UUID
 import java.io.BufferedOutputStream
 import java.io.SyncFailedException
 
-trait TestSupport {
-  import TestSupport._
+trait TestFile {
+  import TestFile._
 
   def nextId(): String = UUID.randomUUID().toString()
 
@@ -116,7 +116,7 @@ trait TestSupport {
 
 }
 
-object TestSupport extends TestSupport {
+object TestFile extends TestFile {
 
   sealed trait DeletePolicy
   case object DeleteAlways extends DeletePolicy

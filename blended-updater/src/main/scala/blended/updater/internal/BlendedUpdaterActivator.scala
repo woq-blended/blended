@@ -56,10 +56,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
       val restartFrameworkAction = { () =>
         val frameworkBundle = bundleContext.getBundle(0)
         frameworkBundle.update()
-      }
-
-      //      val configFile = new File(configDir, "blended.updater.conf")
-      //      val launcherFile = new File(configDir, "blended.launcher.conf")
+      } 
 
       val profileUpdater = { (name: String, version: String) =>
         // TODO: Error reporting

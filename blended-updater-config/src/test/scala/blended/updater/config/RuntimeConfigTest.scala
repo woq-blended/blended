@@ -5,8 +5,16 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import scala.util.Success
 import scala.util.Failure
+import blended.testsupport.TestFile
+import java.io.File
+import scala.io.Source
+import java.io.FileWriter
 
-class RuntimeConfigTest extends FreeSpecLike {
+class RuntimeConfigTest
+    extends FreeSpecLike
+    with TestFile {
+
+  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 
   "Minimal config" - {
 
@@ -57,6 +65,57 @@ class RuntimeConfigTest extends FreeSpecLike {
       assert(rc.resolveFileName(bundle.url) === Success("file-1.jar"))
     }
 
+  }
+
+  "Property file generation" - {
+
+    val bundle0 = BundleConfig(url = "http://b0.jar", startLevel = 0)
+    val prev = RuntimeConfig(name = "test", version = "1", startLevel = 5, defaultStartLevel = 5, bundles = List(bundle0))
+    val next = prev.copy(version = "2")
+
+    "should not write a properties file without required settings" in {
+      withTestDir() { dir =>
+        val res = RuntimeConfig.createPropertyFile(prev, Option(next), dir)
+        assert(res === None)
+      }
+    }
+
+    "should write properties file without a previous config" in {
+      withTestDir() { dir =>
+        sys.props += "TEST_A" -> "TEST_a"
+        sys.props += "test.prop" -> "TEST_PROP"
+        val res = RuntimeConfig.createPropertyFile(next.copy(properties = Map(
+          RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
+          RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "sysprop",
+          RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "TEST_A,test.prop"
+        )), None, dir)
+        val expectedTargetFile = new File(dir, "test/2/etc/props")
+        assert(res === Some(Success(expectedTargetFile)))
+        assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("TEST_A=TEST_a", "test.prop=TEST_PROP"))
+        sys.props -= "TEST_A"
+        sys.props -= "test.prop"
+      }
+    }
+
+    "should write properties file from previous config" in {
+      withTestDir() { dir =>
+        val sourceFile = new File(dir, "test/1/etc/props")
+        val expectedTargetFile = new File(dir, "test/2/etc/props") {
+          sourceFile.getParentFile().mkdirs()
+          val w = new FileWriter(sourceFile)
+          w.append("test.prop=TEST_PROP")
+          w.close()
+        }
+
+        val res = RuntimeConfig.createPropertyFile(next.copy(properties = Map(
+          RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
+          RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
+          RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "test.prop"
+        )), Some(prev), dir)
+        assert(res === Some(Success(expectedTargetFile)))
+        assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("test.prop=TEST_PROP"))
+      }
+    }
   }
 
 }

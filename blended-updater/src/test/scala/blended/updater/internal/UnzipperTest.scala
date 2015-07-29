@@ -2,15 +2,15 @@ package blended.updater.internal
 
 import org.scalatest.FreeSpec
 import java.io.File
-import blended.updater.test.TestSupport
 import scala.io.Source
 import scala.util.Failure
 import scala.util.Failure
+import blended.testsupport.TestFile
 
 class UnzipperTest extends FreeSpec
-    with TestSupport {
+    with TestFile {
 
-  implicit val deletePolicy = TestSupport.DeleteWhenNoFailure
+  implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 
   val testZip = new File("src/test/binaryResources/test.zip")
   val test2Zip = new File("src/test/binaryResources/test2.zip")

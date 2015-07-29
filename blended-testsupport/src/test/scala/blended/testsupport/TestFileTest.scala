@@ -1,14 +1,14 @@
-package blended.updater.test
+package blended.testsupport
 
 import org.scalatest.FreeSpec
 import java.io.File
 import scala.io.Source
-import blended.updater.test.TestSupport.DeleteAlways
-import blended.updater.test.TestSupport.DeleteNever
-import blended.updater.test.TestSupport.DeleteWhenNoFailure
-import blended.updater.test.TestSupport.DeletePolicy
+import blended.testsupport.TestFile.DeleteAlways
+import blended.testsupport.TestFile.DeleteNever
+import blended.testsupport.TestFile.DeleteWhenNoFailure
+import blended.testsupport.TestFile.DeletePolicy
 
-class TestSupportTest extends FreeSpec with TestSupport {
+class TestFileTest extends FreeSpec with TestFile {
 
   "withTestFile" - {
 

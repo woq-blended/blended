@@ -46,13 +46,6 @@ class Unpacker() extends Actor with ActorLogging {
   def receive: Actor.Receive = LoggingReceive {
     case Unpack(reqId, requestRef, archiveFile, targetDir) =>
       val blacklist = List("profile.conf", "bundles", "resources")
-      val placeholderConfig = Unzipper.PlaceholderConfig(
-        openSequence = "${",
-        closeSequence = "}",
-        escapeChar = '\\',
-        properties = Map(),
-        failOnMissing = true
-      )
       Unzipper.unzip(archiveFile, targetDir, Nil,
         fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) },
         placeholderReplacer = None
