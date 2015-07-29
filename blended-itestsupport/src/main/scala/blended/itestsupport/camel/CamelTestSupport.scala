@@ -84,6 +84,9 @@ trait CamelTestSupport {
   def missingHeaderNames(exchange: CamelMessage, mandatoryHeaders: List[String]) =
     mandatoryHeaders.filter( headerName => !headerExists(exchange, headerName))
 
+  def camelMessage(msg: Message)(implicit context: CamelContext) : CamelMessage =
+    CamelMessage(msg.getBody, JMapWrapper(msg.getHeaders).mapValues { _.asInstanceOf[Any] }.toMap)
+
   private [CamelTestSupport] def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : CamelMessage =
     (evaluateXML match {
       case true => createMessageFromXML(message, binary)
@@ -114,9 +117,7 @@ trait CamelTestSupport {
     }
   }
 
-  private[CamelTestSupport] def camelMessage(msg: Message)(implicit context: CamelContext) : CamelMessage =
-    CamelMessage(msg.getBody, JMapWrapper(msg.getHeaders).mapValues { _.asInstanceOf[Any] }.toMap)
-    
+
   private[this] def camelExchange(msg: CamelMessage)(implicit context: CamelContext) : Exchange = {
 
     val exchange = new DefaultExchange(context)
