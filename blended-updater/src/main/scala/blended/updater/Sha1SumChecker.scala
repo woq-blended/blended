@@ -17,7 +17,7 @@ import blended.updater.config.RuntimeConfig
 object Sha1SumChecker {
 
   // Messages
-  case class CheckFile(reqId: String, requestActor: ActorRef, file: File, sha1Sum: String)
+  case class CheckFile(reqId: String, file: File, sha1Sum: String)
 
   // Replies
   sealed trait Reply {
@@ -34,12 +34,12 @@ class Sha1SumChecker() extends Actor with ActorLogging {
   import Sha1SumChecker._
 
   def receive: Actor.Receive = LoggingReceive {
-    case msg @ CheckFile(reqId, reqRef, file, sha1Sum) =>
+    case msg @ CheckFile(reqId, file, sha1Sum) =>
       RuntimeConfig.digestFile(file) match {
         case Some(`sha1Sum`) =>
-          reqRef ! ValidChecksum(reqId, file, sha1Sum)
+          sender() ! ValidChecksum(reqId, file, sha1Sum)
         case other =>
-          reqRef ! InvalidChecksum(reqId, file, other)
+          sender() ! InvalidChecksum(reqId, file, other)
 
       }
   }

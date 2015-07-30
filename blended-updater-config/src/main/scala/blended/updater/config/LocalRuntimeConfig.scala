@@ -14,7 +14,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
 
   def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
 
-  def bundleLocation(artifact: Artifact, baseDir: File): File = RuntimeConfig.bundleLocation(artifact, baseDir)
+  def bundleLocation(artifact: Artifact): File = RuntimeConfig.bundleLocation(artifact, baseDir)
 
   val profileFileLocation: File = new File(baseDir, "profile.conf")
 

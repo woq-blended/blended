@@ -21,7 +21,10 @@ import blended.updater.config.RuntimeConfig
 object BlockingDownloader {
 
   // Messages
-  case class Download(reqId: String, requestRef: ActorRef, url: String, file: File)
+  sealed trait Protocol {
+    def reqId: String
+  }
+  case class Download(override val reqId: String, url: String, file: File) extends Protocol
 
   // Replies
   sealed trait DownloadReply {
@@ -38,12 +41,12 @@ class BlockingDownloader() extends Actor with ActorLogging {
   import BlockingDownloader._
 
   def receive: Actor.Receive = LoggingReceive {
-    case Download(reqId, requestRef, url, file) =>
+    case Download(reqId, url, file) =>
       RuntimeConfig.download(url, file) match {
         case Success(f) =>
-          requestRef ! DownloadFinished(reqId, url, file)
+          sender() ! DownloadFinished(reqId, url, file)
         case Failure(e) =>
-          requestRef ! DownloadFailed(reqId, url, file, e)
+          sender() ! DownloadFailed(reqId, url, file, e)
       }
   }
 }

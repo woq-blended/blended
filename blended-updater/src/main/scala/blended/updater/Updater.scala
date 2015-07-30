@@ -44,26 +44,26 @@ object Updater {
   /**
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
-  final case class GetRuntimeConfigs(requestId: String) extends Protocol
+  final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
   final case class RuntimeConfigs(requestId: String, staged: Seq[LocalRuntimeConfig], pending: Seq[LocalRuntimeConfig], invalid: Seq[LocalRuntimeConfig]) extends Reply
 
-  final case class AddRuntimeConfig(requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
+  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
   final case class RuntimeConfigAdded(requestId: String) extends Reply
   final case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
 
-  final case class ScanForRuntimeConfigs(requestId: String) extends Protocol
+  final case class ScanForRuntimeConfigs(override val requestId: String) extends Protocol
 
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
-  final case class StageNextRuntimeConfig(requestId: String) extends Protocol
+  final case class StageRuntimeConfig(override val requestId: String, name: String, version: String) extends Protocol
+  final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
   final case class RuntimeConfigStaged(requestId: String) extends Reply
   final case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
 
-  final case class ActivateRuntimeConfig(requestId: String, name: String, version: String) extends Protocol
+  final case class ActivateRuntimeConfig(override val requestId: String, name: String, version: String) extends Protocol
   final case class RuntimeConfigActivated(requestId: String) extends Reply
   final case class RuntimeConfigActivationFailed(requestId: String, reason: String) extends Reply
 
-  final case class GetProgress(requestId: String) extends Protocol
+  final case class GetProgress(override val requestId: String) extends Protocol
   final case class Progress(requestId: String, progress: Int) extends Reply
 
   final case class UnknownRuntimeConfig(requestId: String) extends Reply
@@ -220,6 +220,27 @@ class Updater(
     }.map(_.config)
   }
 
+  def findLocalResource(name: String, sha1Sum: String): Option[File] =
+    profiles.values.filter { profile =>
+      // only valid profiles
+      profile.state == Profile.Valid
+    }.
+      flatMap { profile =>
+        profile.config.runtimeConfig.allBundles.filter { b =>
+          // same sha1sum
+          b.sha1Sum == Some(sha1Sum)
+        }.
+          filter { b =>
+            val location = profile.config.bundleLocation(b.artifact)
+            // same file name and file exists
+            location.getName() == name && location.exists()
+          }.
+          map { b =>
+            // extract location
+            profile.config.bundleLocation(b.artifact)
+          }.headOption
+      }.headOption
+
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
   override def preStart(): Unit = {
@@ -370,12 +391,17 @@ class Updater(
             val (existing, missing) = artifacts.partition(a => a.file.exists())
 
             val missingWithId = missing.map { a =>
-              val resolvedUrl = config.runtimeConfig.resolveBundleUrl(a.artifact.url).getOrElse(a.artifact.url)
-              artifactDownloader ! BlockingDownloader.Download(a.reqId, self, resolvedUrl, a.file)
+              val resolvedUrl = a.artifact.sha1Sum.flatMap { sha1Sum =>
+                findLocalResource(a.file.getName(), sha1Sum).map(f => f.getAbsoluteFile().toURI().toString())
+              }.
+                getOrElse {
+                  config.runtimeConfig.resolveBundleUrl(a.artifact.url).getOrElse(a.artifact.url)
+                }
+              artifactDownloader ! BlockingDownloader.Download(a.reqId, resolvedUrl, a.file)
               a
             }
             val existingWithId = existing.filter(_.artifact.sha1Sum.isDefined).map { a =>
-              artifactChecker ! Sha1SumChecker.CheckFile(a.reqId, self, a.file, a.artifact.sha1Sum.get)
+              artifactChecker ! Sha1SumChecker.CheckFile(a.reqId, a.file, a.artifact.sha1Sum.get)
               a
             }
 
@@ -434,7 +460,7 @@ class Updater(
               val toCheck = bundleInProgress.artifact.sha1Sum.map { sha1Sum =>
                 // only check if we have a checksum
                 val newToCheck = bundleInProgress.copy(reqId = nextId())
-                artifactChecker ! Sha1SumChecker.CheckFile(newToCheck.reqId, self, newToCheck.file, sha1Sum)
+                artifactChecker ! Sha1SumChecker.CheckFile(newToCheck.reqId, newToCheck.file, sha1Sum)
                 newToCheck
               }
               stageInProgress(state.copy(

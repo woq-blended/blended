@@ -50,7 +50,7 @@ class BlockingDownloaderTest
       val id = nextId()
       withTestFiles("content", "") { (file, target) =>
         val actorRef = system.actorOf(BlockingDownloader.props())
-        actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
+        actorRef ! BlockingDownloader.Download(id, file.toURI().toString(), target)
         val msg = expectMsgType[BlockingDownloader.DownloadFinished]
         assert(msg.url === file.toURI().toString())
         assert(msg.file === target)
@@ -64,7 +64,7 @@ class BlockingDownloaderTest
       withTestFiles("content", "") { (file, target) =>
         file.delete()
         val actorRef = system.actorOf(BlockingDownloader.props())
-        actorRef ! BlockingDownloader.Download(id, testActor, file.toURI().toString(), target)
+        actorRef ! BlockingDownloader.Download(id, file.toURI().toString(), target)
         val msg = expectMsgPF() {
           case BlockingDownloader.DownloadFailed(id, msg, file, ex) => (msg, ex)
         }
