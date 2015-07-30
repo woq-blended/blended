@@ -76,7 +76,8 @@ object Updater {
     artifactDownloaderProps: Props = null,
     artifactCheckerProps: Props = null,
     unpackerProps: Props = null,
-    config: UpdaterConfig): Props = {
+    config: UpdaterConfig,
+    launchedProfileDir: File = null): Props = {
 
     Props(new Updater(
       installBaseDir = baseDir,
@@ -85,7 +86,8 @@ object Updater {
       Option(artifactDownloaderProps),
       Option(artifactCheckerProps),
       Option(unpackerProps),
-      config
+      config,
+      Option(launchedProfileDir)
     ))
   }
 
@@ -140,7 +142,8 @@ class Updater(
   artifactDownloaderProps: Option[Props],
   artifactCheckerProps: Option[Props],
   unpackerProps: Option[Props],
-  config: UpdaterConfig)
+  config: UpdaterConfig,
+  launchedProfileDir: Option[File])
     extends Actor
     with ActorLogging {
   import Updater._
@@ -181,9 +184,7 @@ class Updater(
     } else if (state.artifactsToCheck.isEmpty && state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
 
       val finalIssues = if (state.issues.isEmpty) {
-        // TODO: detect previous config
-        val previousRuntimeConfig = None
-        // TODO: generate properties file
+        val previousRuntimeConfig = findActiveConfig()
         val result = RuntimeConfig.createPropertyFile(state.config, previousRuntimeConfig)
         result match {
           case None =>
@@ -211,6 +212,13 @@ class Updater(
   }
 
   def findConfig(id: ProfileId): Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
+
+  def findActiveConfig(): Option[LocalRuntimeConfig] = launchedProfileDir.flatMap { dir =>
+    val absDir = dir.getAbsoluteFile()
+    profiles.values.find { profile =>
+      profile.config.baseDir.getAbsoluteFile() == absDir
+    }.map(_.config)
+  }
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
@@ -268,10 +276,10 @@ class Updater(
           val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           val runtimeConfig = RuntimeConfig.read(config).get
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
-            val issues = RuntimeConfig.validate(
-              LocalRuntimeConfig(baseDir = versionDir, runtimeConfig = runtimeConfig),
+            val issues = LocalRuntimeConfig(baseDir = versionDir, runtimeConfig = runtimeConfig).validate(
               includeResourceArchives = false,
-              explodedResourceArchives = true)
+              explodedResourceArchives = true,
+              checkPropertiesFile = true)
             log.debug(s"Validation result for [${name}-${version}]: ${issues.mkString(";")}")
             val profileState = issues match {
               case Seq() => Profile.Valid
@@ -287,7 +295,7 @@ class Updater(
           List()
         }
       }
-      
+
       log.info(s"Profiles: ${profiles}")
 
       profiles = foundProfiles.map { profile => profile.profileId -> profile }.toMap

@@ -97,12 +97,11 @@ object Launcher {
       run(args)
     } catch {
       case t: LauncherException =>
-        Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(t.errorCode)
       case t: Throwable =>
         Console.err.println(s"Error: ${t.getMessage()}")
-        //        sys.exit(1)
-        throw t
+        sys.exit(1)
+      //        throw t
     }
     sys.exit(0)
   }
@@ -181,21 +180,31 @@ object Launcher {
       }
 
       val launcher = new Launcher(configs.launcherConfig)
-      val errors = launcher.validate()
+
+      val createProperties = firstStart && cmdline.resetProfileProps
+      
+      val errors = configs.profileConfig match {
+        case Some(localConfig) =>
+          // if present, validate local RuntimeConfig
+          localConfig.validate(
+            includeResourceArchives = false,
+            explodedResourceArchives = true,
+            checkPropertiesFile = !createProperties
+          )
+        case None =>
+          // if no RuntimeConfig, just check existence of bundles
+          launcher.validate()
+      }
+
       if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
 
-      if (firstStart && cmdline.resetProfileProps) {
+      if (createProperties) {
         val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
         RuntimeConfig.createPropertyFile(localConfig, None) match {
           case None => // nothing to generate, ok
           case Some(Success(f)) => // generated successfully, ok
             Console.err.println(s"Created properties file for profile: ${f}")
           case Some(Failure(e)) => sys.error(s"Could not reset properties file. ${e.getMessage()}")
-        }
-      } else {
-        // check props
-        configs.profileConfig.foreach { localConfig =>
-          // TODO: check if all mandatory props are set
         }
       }
 

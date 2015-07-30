@@ -50,8 +50,6 @@ object RuntimeConfig {
 
   def read(config: Config, featureRepo: Seq[FeatureConfig] = Seq()): Try[RuntimeConfig] = Try {
 
-    // TODO: ensure, all features are non-empty
-
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
@@ -203,49 +201,6 @@ object RuntimeConfig {
 
     }
 
-  def validate(config: LocalRuntimeConfig,
-    includeResourceArchives: Boolean,
-    explodedResourceArchives: Boolean): Seq[String] = {
-    val runtimeConfig = config.runtimeConfig
-    val artifacts = runtimeConfig.allBundles.map(b => config.bundleLocation(b) -> b.artifact) ++
-      (if (includeResourceArchives) runtimeConfig.resources.map(r => config.resourceArchiveLocation(r) -> r) else Seq())
-
-    val artifactIssues = artifacts.flatMap {
-      case (file, artifact) =>
-        val issue = if (!file.exists()) {
-          Some(s"Missing file: ${file.getName()}")
-        } else {
-          RuntimeConfig.digestFile(file) match {
-            case Some(d) =>
-              if (Option(d) != artifact.sha1Sum) {
-                Some(s"Invalid checksum of bundle jar: ${file.getName()}")
-              } else None
-            case None =>
-              Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
-          }
-        }
-        issue.toList
-    }
-
-    val resourceIssues = if (explodedResourceArchives) {
-      runtimeConfig.resources.flatMap { artifact =>
-        val touchFile = config.resourceArchiveTouchFileLocation(artifact)
-        if (touchFile.exists()) {
-          val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
-          if (persistedChecksum != artifact.sha1Sum) {
-            List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
-          } else Nil
-        } else {
-          List(s"Resource ${artifact.fileName.getOrElse(runtimeConfig.resolveFileName(artifact.url).get)} not unpacked")
-        }
-      }
-    } else Nil
-
-    // TODO: check for mandatory properties
-
-    artifactIssues ++ resourceIssues
-  }
-
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
   def resolveBundleUrl(url: String, mvnBaseUrl: Option[String] = None): Try[String] = Try {
@@ -305,12 +260,9 @@ object RuntimeConfig {
     prevRuntime: Option[LocalRuntimeConfig]): Option[Try[File]] = {
 
     curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
-      // log.debug(s"Properties file: ${fileName}")
       curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
-        // log.debug(s"Mandatory properties: ${props}")
         val providers = getPropertyFileProvider(curRuntime.runtimeConfig, prevRuntime).get
         if (providers.isEmpty) sys.error(s"No property providers defined (${Properties.PROFILE_PROPERTY_PROVIDERS})")
-        //        providers.map { providers =>
         val resolvedProps = props.map { prop =>
           prop -> providers.toStream.map(_.provide(prop)).find(_.isDefined).map(_.get).getOrElse(sys.error(s"Could not find property value for key [${prop}]"))
         }
@@ -325,7 +277,6 @@ object RuntimeConfig {
           writer.close()
         }
         Success(propFile)
-        //        }
       }
     }
 
@@ -365,25 +316,4 @@ case class RuntimeConfig(
 
   def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
 
-}
-
-case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
-  def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
-  def bundleLocation(artifact: Artifact, baseDir: File): File = RuntimeConfig.bundleLocation(artifact, baseDir)
-  def profileFileLocation(baseDir: File): File = new File(baseDir, "profile.conf")
-  def resourceArchiveLocation(resourceArchive: Artifact): File = RuntimeConfig.resourceArchiveLocation(resourceArchive, baseDir)
-  def resourceArchiveTouchFileLocation(resourceArchive: Artifact): File = RuntimeConfig.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
-  def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String]): Try[File] = Try {
-    val file = resourceArchiveTouchFileLocation(resourceArchive)
-    Option(file.getParentFile()).foreach { parent =>
-      parent.mkdirs()
-    }
-    val os = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
-    try {
-      os.println(resourceArchiveChecksum.getOrElse(""))
-    } finally {
-      os.close()
-    }
-    file
-  }
 }

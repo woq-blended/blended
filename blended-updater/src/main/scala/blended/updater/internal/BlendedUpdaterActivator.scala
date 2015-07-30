@@ -40,7 +40,8 @@ case class UpdateEnv(
   launchedProfileName: String,
   launchedProfileVersion: String,
   launchProfileLookupFile: Option[File],
-  profilesBaseDir: File)
+  profilesBaseDir: File,
+  launchedProfileDir: Option[File])
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
@@ -68,7 +69,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
           val profileUpdater = { (name: String, version: String) =>
             // TODO: Error reporting
             updateEnv match {
-              case UpdateEnv(_, _, Some(lookupFile), profileBaseDir) =>
+              case UpdateEnv(_, _, Some(lookupFile), profileBaseDir, _) =>
                 // TODO: write Config
                 val config = ConfigFactory.parseFile(lookupFile).resolve()
                 ProfileLookup.read(config) match {
@@ -86,12 +87,15 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
             }
           }
 
-          val actor = setupBundleActor(cfg, Updater.props(
-            baseDir = updateEnv.profilesBaseDir,
-            profileUpdater = profileUpdater,
-            restartFramework = restartFrameworkAction,
-            config = UpdaterConfig.fromConfig(cfg.config)
-          ))
+          val actor = setupBundleActor(cfg,
+            Updater.props(
+              baseDir = updateEnv.profilesBaseDir,
+              profileUpdater = profileUpdater,
+              restartFramework = restartFrameworkAction,
+              config = UpdaterConfig.fromConfig(cfg.config),
+              launchedProfileDir = updateEnv.launchedProfileDir.orNull
+            )
+          )
 
           val commands = new Commands(actor, Some(updateEnv))(cfg.system)
           commands.providesService[Object](
@@ -114,7 +118,16 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     val pVersion = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_VERSION))
     val pProfileLookupFile = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_LOOKUP_FILE))
     val pProfilesBaseDir = Option(props.getProperty(RuntimeConfig.Properties.PROFILES_BASE_DIR))
-    Some(UpdateEnv(pName.get, pVersion.get, pProfileLookupFile.map(f => new File(f)), new File(pProfilesBaseDir.get)))
+    val pProfileDir = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_DIR))
+    Some(
+      UpdateEnv(
+        launchedProfileName = pName.get, 
+        launchedProfileVersion = pVersion.get, 
+        launchProfileLookupFile = pProfileLookupFile.map(f => new File(f)),
+        profilesBaseDir = new File(pProfilesBaseDir.get),
+        launchedProfileDir = pProfileDir.map(f => new File(f))
+      )
+    )
   } catch {
     case e: NoClassDefFoundError =>
       // could not load optional branding class
@@ -183,7 +196,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def activate(name: String, version: String): AnyRef = {
     env match {
-      case Some(UpdateEnv(_, _, Some(lookupFile), _)) =>
+      case Some(UpdateEnv(_, _, Some(lookupFile), _, _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(

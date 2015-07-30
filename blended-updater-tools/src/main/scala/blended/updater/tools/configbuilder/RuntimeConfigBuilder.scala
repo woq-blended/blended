@@ -112,10 +112,10 @@ object RuntimeConfigBuilder {
     println("runtime config with resolved features: " + resolvedRuntimeConfig)
 
     if (options.check) {
-      val issues = RuntimeConfig.validate(
-        localRuntimeConfig,
+      val issues = localRuntimeConfig.validate(
         includeResourceArchives = true,
-        explodedResourceArchives = false
+        explodedResourceArchives = false,
+        checkPropertiesFile = false
       )
       if (!issues.isEmpty) {
         sys.error(issues.mkString("\n"))
