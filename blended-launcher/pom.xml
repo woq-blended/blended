@@ -143,6 +143,39 @@
 				<artifactId>scalatest-maven-plugin</artifactId>
 			</plugin>
 
+<!--       <plugin> -->
+<!--         <groupId>org.apache.maven.plugins</groupId> -->
+<!--         <artifactId>maven-dependency-plugin</artifactId> -->
+<!--         <version>2.10</version> -->
+<!--         <executions> -->
+<!--           <execution> -->
+<!--             <id>runtime-deps</id> -->
+<!--             <phase>package</phase> -->
+<!--             <goals><goal>copy-dependencies</goal></goals> -->
+<!--             <configuration> -->
+<!--               <includeScope>runtime</includeScope> -->
+<!--             </configuration> -->
+<!--           </execution> -->
+<!--         </executions> -->
+<!--       </plugin> -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/bin.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>bin</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
 		</plugins>
 	</build>
 
