@@ -213,14 +213,26 @@
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
           <descriptors>
-            <descriptor>src/main/assembly/linux-nojre.xml</descriptor>
+            <descriptor>src/main/assembly/full-nojre.xml</descriptor>
+            <descriptor>src/main/assembly/product.xml</descriptor>
           </descriptors>
         </configuration>
         <executions>
           <execution>
-            <id>CreateProduct</id>
+            <id>assemle</id>
             <phase>package</phase>
             <goals><goal>single</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-jar</id>
+            <phase>none</phase>
           </execution>
         </executions>
       </plugin>
