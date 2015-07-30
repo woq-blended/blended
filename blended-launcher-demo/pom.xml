@@ -47,6 +47,13 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher</artifactId>
+      <version>${blended.version}</version>
+      <type>zip</type>
+      <classifier>bin</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
       <version>${blended.version}</version>
       <type>conf</type>
@@ -172,6 +179,30 @@
                 } ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
                 RuntimeConfigBuilder.run(profileArgs)
               ]]></script>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.10</version>
+        <executions>
+          <execution>
+            <id>launcher</id>
+            <phase>package</phase>
+            <goals><goal>unpack</goal></goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>${project.groupId}</groupId>
+                  <artifactId>blended.launcher</artifactId>
+                  <classifier>bin</classifier>
+                  <type>zip</type>
+                  <outputDirectory>${project.build.directory}/launcher</outputDirectory>
+                </artifactItem>
+              </artifactItems>
             </configuration>
           </execution>
         </executions>
