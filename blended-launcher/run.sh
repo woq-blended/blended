@@ -33,7 +33,7 @@ java\
  -Dblended.home=$BLENDED_HOME\
  blended.launcher.Launcher\
  --framework-restart 0\
- "$@" && RETVAL=$? || RETVAL=$?‚
+ "$@" && RETVAL=$? || RETVAL=$?
 
 done
 
