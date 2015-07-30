@@ -37,7 +37,12 @@
 
   <description>
     A sample container for the blended launcher
-     </description>
+  </description>
+
+  <properties>
+    <profile.name>blended-demo</profile.name>
+    <profile.version>${project.version}</profile.version>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -140,11 +145,6 @@
                 import blended.updater.tools.configbuilder._
                 import scala.collection.JavaConverters._
                 import java.io.File
-                import org.apache.maven.artifact.DefaultArtifact
-                import org.apache.maven.artifact.versioning.VersionRange
-                import org.apache.maven.project.DefaultMavenProjectHelper
-                import org.apache.maven.project.artifact.AttachedArtifact
-                import org.apache.maven.artifact.handler.DefaultArtifactHandler
                 
                 val srcProfile = new File(project.getBasedir, "target/classes/profile.conf")
                 val targetProfile = new File(project.getBasedir, "target/classes/profile.conf")
@@ -176,6 +176,24 @@
           </execution>
         </executions>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptors>
+            <descriptor>src/main/assembly/linux-nojre.xml</descriptor>
+          </descriptors>
+        </configuration>
+        <executions>
+          <execution>
+            <id>CreateProduct</id>
+            <phase>package</phase>
+            <goals><goal>single</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
 
