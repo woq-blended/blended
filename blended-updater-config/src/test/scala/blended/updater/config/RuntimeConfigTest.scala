@@ -67,7 +67,7 @@ class RuntimeConfigTest
 
   }
 
-  "Property file generation" - {
+  "Property file generator" - {
 
     val bundle0 = BundleConfig(url = "http://b0.jar", startLevel = 0)
     val prev = RuntimeConfig(name = "test", version = "1", startLevel = 5, defaultStartLevel = 5, bundles = List(bundle0))
@@ -124,6 +124,40 @@ class RuntimeConfigTest
         )
         assert(res === Some(Success(expectedTargetFile)))
         assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("test.prop=TEST_PROP"))
+      }
+    }
+
+    "should not loose old non-mandatory properties but overwrite existing mandatory ones" in {
+      withTestDir() { dir =>
+        val sourceFile = new File(dir, "test/1/etc/props")
+        val expectedTargetFile = new File(dir, "test/2/etc/props")
+
+        {
+          sourceFile.getParentFile().mkdirs()
+          val w = new FileWriter(sourceFile)
+          w.append("test.prop=TEST_PROP\n")
+          w.append("test.prop2=TEST_PROP3")
+          w.close()
+        }
+        {
+          expectedTargetFile.getParentFile().mkdirs()
+          val w = new FileWriter(expectedTargetFile)
+          w.append("test.prop=TEST_PROP1\n")
+          w.append("test.prop2=TEST_PROP2")
+          w.close()
+        }
+
+        val res = RuntimeConfig.createPropertyFile(
+          LocalRuntimeConfig(next.copy(properties = Map(
+            RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
+            RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
+            RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS -> "test.prop"
+          )), new File(dir, "test/2")),
+          Some(LocalRuntimeConfig(prev, new File(dir, "test/1"))
+          )
+        )
+        assert(res === Some(Success(expectedTargetFile)))
+        assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("test.prop=TEST_PROP", "test.prop2=TEST_PROP2"))
       }
     }
   }

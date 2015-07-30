@@ -28,6 +28,8 @@ import scala.io.Source
 import java.util.Properties
 import java.io.FileWriter
 import scala.util.Success
+import java.io.FileReader
+import java.io.BufferedReader
 
 object RuntimeConfig {
 
@@ -269,6 +271,9 @@ object RuntimeConfig {
         val propFile = new File(curRuntime.baseDir, fileName)
         propFile.getParentFile.mkdirs()
         val content = new Properties()
+        if (propFile.exists()) {
+          content.load(new BufferedReader(new FileReader(propFile)))
+        }
         resolvedProps.foreach { case (k, v) => content.setProperty(k, v) }
         val writer = new FileWriter(propFile)
         try {
