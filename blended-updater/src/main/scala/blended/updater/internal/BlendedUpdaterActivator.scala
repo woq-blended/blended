@@ -103,10 +103,6 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
             "osgi.command.function" -> commands.commands
           )
 
-          onStop {
-            stopBundleActor(cfg, actor)
-          }
-
       }
     }
   }

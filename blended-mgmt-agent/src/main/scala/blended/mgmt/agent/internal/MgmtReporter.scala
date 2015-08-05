@@ -26,12 +26,12 @@ import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
 import scala.collection.JavaConverters._
 import akka.pattern.pipe
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import akka.actor.Props
 
 object MgmtReporter {
-  def apply(cfg: OSGIActorConfig) = new MgmtReporter(cfg)
+  def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
 }
 
 class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSupport {

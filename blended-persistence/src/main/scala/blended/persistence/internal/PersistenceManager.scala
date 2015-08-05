@@ -24,7 +24,7 @@ import blended.persistence.protocol._
 
 object PersistenceManager {
 
-  def apply(cfg: OSGIActorConfig, impl: PersistenceBackend) = new PersistenceManager(cfg, impl)
+  def props(cfg: OSGIActorConfig, impl: PersistenceBackend): Props = Props(new PersistenceManager(cfg, impl))
 }
 
 class PersistenceManager(cfg: OSGIActorConfig, backend: PersistenceBackend) extends OSGIActor(cfg) with MemoryStash {

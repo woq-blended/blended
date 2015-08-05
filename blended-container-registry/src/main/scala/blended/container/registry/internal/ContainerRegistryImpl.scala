@@ -20,10 +20,10 @@ import akka.actor.ActorRef
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.container.registry.protocol._
 import blended.persistence.protocol._
-
+import akka.actor.Props
 
 object ContainerRegistryImpl {
-  def apply(cfg: OSGIActorConfig) = new ContainerRegistryImpl(cfg)
+  def props(cfg: OSGIActorConfig): Props = Props(new ContainerRegistryImpl(cfg))
 }
 
 class ContainerRegistryImpl(cfg: OSGIActorConfig) extends OSGIActor(cfg) {
@@ -35,7 +35,7 @@ class ContainerRegistryImpl(cfg: OSGIActorConfig) extends OSGIActor(cfg) {
       log debug s"Received ${info.toString}"
 
       bundleActor("de.wayofquality.blended.persistence").map {
-        case actor : ActorRef =>
+        case actor: ActorRef =>
           log.debug("Storing Container Information")
           actor ! StoreObject(info)
         case dlq if dlq == context.system.deadLetters => log.debug("Persistence manager not available")

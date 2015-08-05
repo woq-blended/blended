@@ -29,8 +29,8 @@ import spray.httpx.SprayJsonSupport
 import spray.routing._
 import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
-
 import scala.concurrent.duration._
+import akka.actor.Props
 
 trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
@@ -50,8 +50,7 @@ trait CollectorService extends HttpService { this : SprayJsonSupport =>
 
 object ManagementCollector {
 
-  def apply(cfg: OSGIActorConfig, contextPath: String) =
-    new ManagementCollector(cfg, contextPath)
+  def props(cfg: OSGIActorConfig, contextPath: String): Props =  Props(new ManagementCollector(cfg, contextPath))
 }
 
 class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)

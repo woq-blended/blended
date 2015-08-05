@@ -16,7 +16,6 @@
 
 package blended.samples.spray.helloworld.internal
 
-import akka.actor.Props
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
 
@@ -24,8 +23,7 @@ class HelloActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      val actor = setupBundleActor(cfg, Props(HelloRoute(cfg, "blended")))
-      onStop ( stopBundleActor(cfg, actor) )
+      setupBundleActor(cfg, HelloRoute.props(cfg, "blended"))
     }
   }
 }

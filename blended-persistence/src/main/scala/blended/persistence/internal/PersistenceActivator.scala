@@ -16,7 +16,6 @@
 
 package blended.persistence.internal
 
-import akka.actor.Props
 import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import blended.persistence.PersistenceBackend
 import domino.DominoActivator
@@ -26,8 +25,7 @@ class PersistenceActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
       whenServicePresent[PersistenceBackend] { backend =>
-        val actor = setupBundleActor(cfg, Props(PersistenceManager(cfg, backend)))
-        onStop( stopBundleActor(cfg, actor) )
+        setupBundleActor(cfg, PersistenceManager.props(cfg, backend))
       }
     }
   }
