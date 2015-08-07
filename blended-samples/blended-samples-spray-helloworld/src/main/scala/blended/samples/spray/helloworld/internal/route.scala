@@ -18,7 +18,7 @@ package blended.samples.spray.helloworld.internal
 
 import javax.servlet.Servlet
 
-import akka.actor.{ActorRefFactory, Actor}
+import akka.actor.{ActorRefFactory, Actor, Props}
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
 import spray.http.MediaTypes._
@@ -43,8 +43,8 @@ trait HelloService extends HttpService {
 }
 
 object HelloRoute {
-  def apply(cfg: OSGIActorConfig, contextPath: String) =
-    new HelloRoute(cfg, contextPath)
+  def props(cfg: OSGIActorConfig, contextPath: String): Props =
+    Props(new HelloRoute(cfg, contextPath))
 }
 
 class HelloRoute(cfg: OSGIActorConfig, contextPath: String) extends OSGIActor(cfg) with HelloService {

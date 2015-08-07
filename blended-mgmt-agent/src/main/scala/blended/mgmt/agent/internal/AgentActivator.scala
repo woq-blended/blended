@@ -25,8 +25,7 @@ class AgentActivator extends DominoActivator with ActorSystemWatching {
   
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      val actor = setupBundleActor(cfg, Props(MgmtReporter(cfg)))
-      onStop ( stopBundleActor(cfg, actor) )
+      setupBundleActor(cfg, MgmtReporter.props(cfg))
     }
   }
 }

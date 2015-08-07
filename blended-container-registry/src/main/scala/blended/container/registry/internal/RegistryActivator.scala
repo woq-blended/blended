@@ -21,11 +21,10 @@ import blended.akka.ActorSystemWatching
 import domino.DominoActivator
 
 class RegistryActivator extends DominoActivator with ActorSystemWatching {
-  
+
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      val actor = setupBundleActor(cfg, Props(ContainerRegistryImpl(cfg)))
-      onStop ( stopBundleActor(cfg, actor) )
+      setupBundleActor(cfg, ContainerRegistryImpl.props(cfg))
     }
   }
 }
