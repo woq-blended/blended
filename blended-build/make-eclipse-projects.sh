@@ -24,6 +24,7 @@ blended-karaf-features \
 blended-karaf-installer \
 blended-karaf-parent \
 blended-launcher \
+blended-mgmt-base \
 blended-mgmt-agent \
 blended-mgmt-rest \
 blended-neo4j-api \

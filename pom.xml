@@ -175,6 +175,7 @@
 
         <module>blended-domino</module>
         <module>blended-akka</module>
+        <module>blended-mgmt-base</module>
         <module>blended-mgmt-agent</module>
         <module>blended-mgmt-rest</module>
 

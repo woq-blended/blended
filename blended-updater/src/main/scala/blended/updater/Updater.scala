@@ -27,6 +27,8 @@ import scala.util.Failure
 import com.typesafe.config.Config
 import blended.updater.config.LocalRuntimeConfig
 import com.typesafe.config.ConfigParseOptions
+import blended.mgmt.base.ServiceInfo
+import org.slf4j.LoggerFactory
 
 object Updater {
 
@@ -144,9 +146,11 @@ class Updater(
   unpackerProps: Option[Props],
   config: UpdaterConfig,
   launchedProfileDir: Option[File])
-    extends Actor
-    with ActorLogging {
+    extends Actor //    with ActorLogging 
+    {
   import Updater._
+
+  private[this] val log = LoggerFactory.getLogger(classOf[Updater])
 
   val artifactDownloader = context.actorOf(
     artifactDownloaderProps.getOrElse(BalancingPool(config.artifactDownloaderPoolSize).props(BlockingDownloader.props())),
@@ -158,12 +162,15 @@ class Updater(
     unpackerProps.getOrElse(BalancingPool(config.unpackerPoolSize).props(Unpacker.props())),
     "unpacker")
 
+  /////////////////////
+  // MUTABLE
   // requestId -> State
   private[this] var stagingInProgress: Map[String, State] = Map()
 
   private[this] var profiles: Map[ProfileId, Profile] = Map()
 
-  private[this] var stageProfilesTicker: Option[Cancellable] = None
+  private[this] var tickers: Seq[Cancellable] = Nil
+  ////////////////////
 
   // TODO: generate properties file
   private[this] def stageInProgress(state: State): Unit = {
@@ -243,18 +250,34 @@ class Updater(
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
+  case object PublishServiceInfo
+
   override def preStart(): Unit = {
-    log.info("Initial scanning for profiles")
+    log.info("Initiating initial scanning for profiles")
     self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
 
     if (config.autoStagingIntervalMSec > 0) {
       log.info(s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
       implicit val eCtx = context.system.dispatcher
-      stageProfilesTicker = Some(context.system.scheduler.schedule(
+      tickers +:= context.system.scheduler.schedule(
         Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
         Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)) {
           self ! StageNextRuntimeConfig(nextId())
-        })
+        }
+    } else {
+      log.info(s"Auto-staging is disabled")
+    }
+
+    if (config.serviceInfoIntervalMSec > 0) {
+      log.info(s"Enabling service info publishing [${config.serviceInfoIntervalMSec}] and lifetime [${config.serviceInfoLifetimeMSec}]")
+      implicit val eCtx = context.system.dispatcher
+      tickers +:= context.system.scheduler.schedule(
+        Duration(100, TimeUnit.MILLISECONDS),
+        Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)) {
+          self ! PublishServiceInfo
+        }
+    } else {
+      log.info("Publishing of service infos is disabled")
     }
 
     super.preStart()
@@ -262,11 +285,11 @@ class Updater(
   }
 
   override def postStop(): Unit = {
-    stageProfilesTicker.foreach { t =>
-      log.info("Disabling auto-staging")
+    tickers.foreach { t =>
+      log.info("Disabling ticker: {}", t)
       t.cancel()
     }
-    stageProfilesTicker = None
+    tickers = Nil
     super.postStop()
   }
 
@@ -308,11 +331,11 @@ class Updater(
             }
             List(Profile(LocalRuntimeConfig(runtimeConfig, versionDir), profileState))
           } else {
-            log.warning(s"Profile name and version do not match directory names: ${profileFile}")
+            log.warn(s"Profile name and version do not match directory names: ${profileFile}")
             List()
           }
         }.getOrElse {
-          log.warning(s"Could not read profile file: ${profileFile}")
+          log.warn(s"Could not read profile file: ${profileFile}")
           List()
         }
       }
@@ -352,11 +375,11 @@ class Updater(
 
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
-        profiles.toStream.collect {
+        profiles.toIterator.collect {
           case (id, Profile(_, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
             self ! StageRuntimeConfig(nextId(), id.name, id.version)
-        }.headOption
+        }.take(1)
       }
 
     case StageRuntimeConfig(reqId, name, version) =>
@@ -423,7 +446,7 @@ class Updater(
       profiles.get(ProfileId(name, version)) match {
         case Some(Profile(LocalRuntimeConfig(config, dir), Profile.Valid)) =>
           // write config
-          log.debug("About to activate new profile for next startup: {}-{}", name, version)
+          log.debug("About to activate new profile for next startup: {}-{}", Array(name, version))
           val success = profileUpdater(name, version)
           if (success) {
             requestingActor ! RuntimeConfigActivated(reqId)
@@ -445,6 +468,24 @@ class Updater(
 
   override def receive: Actor.Receive = LoggingReceive {
     case p: Protocol => protocol(p)
+
+    case PublishServiceInfo =>
+      log.debug("About to gather service infos")
+
+      val props = Map(
+        "profiles.valid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Valid)) => s"$name-$version" }.mkString(","),
+        "profiles.invalid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Invalid(_))) => s"$name-$version" }.mkString(","),
+        "profiles.pending" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Pending(_))) => s"$name-$version" }.mkString(",")
+      ).filter { case (k, v) => !v.isEmpty() }
+
+      val serviceInfo = ServiceInfo(
+        name = context.self.path.toString,
+        timestampMsec = System.currentTimeMillis(),
+        lifetimeMsec = config.serviceInfoLifetimeMSec,
+        props = props
+      )
+      log.debug("About to publish service info: {}", serviceInfo)
+      context.system.eventStream.publish(serviceInfo)
 
     case msg: BlockingDownloader.DownloadReply =>
       val foundProgress = stagingInProgress.values.flatMap { state =>

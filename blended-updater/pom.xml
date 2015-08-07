@@ -80,6 +80,12 @@
 
 		<dependency>
 			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.mgmt.base</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
 			<artifactId>blended.container.context</artifactId>
 			<version>${blended.version}</version>
 		</dependency>

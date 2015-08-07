@@ -15,7 +15,9 @@ object UpdaterConfig {
       artifactCheckerPoolSize = 4,
       unpackerPoolSize = 4,
       autoStagingDelayMSec = 0,
-      autoStagingIntervalMSec = 0
+      autoStagingIntervalMSec = 0,
+      serviceInfoIntervalMSec = 0,
+      serviceInfoLifetimeMSec = 0
     )
 
   }
@@ -26,15 +28,26 @@ object UpdaterConfig {
       artifactCheckerPoolSize = cfg.getInt("artifactCheckerPoolSize", default.artifactCheckerPoolSize),
       unpackerPoolSize = cfg.getInt("updaterPoolSize", default.unpackerPoolSize),
       autoStagingDelayMSec = cfg.getLong("autoStagingDelayMSec", default.autoStagingDelayMSec),
-      autoStagingIntervalMSec = cfg.getLong("autoStagingIntervalMSec", default.autoStagingIntervalMSec)
+      autoStagingIntervalMSec = cfg.getLong("autoStagingIntervalMSec", default.autoStagingIntervalMSec),
+      serviceInfoIntervalMSec = cfg.getLong("serviceInfoIntervalMSec", default.serviceInfoIntervalMSec),
+      serviceInfoLifetimeMSec = cfg.getLong("serviceInfoLifetimeMSec", default.serviceInfoLifetimeMSec)
     )
   }
 }
 
+/**
+ * Configuration for [Updater] actor.
+ * 
+ * @param serviceInfoIntervalMSec Interval in milliseconds to publish a ServiceInfo message to the Akka event stream.
+ *        An value of zero (0) or below indicated that no such information should be published.
+ * @param serviceInfoLifetimeMSec The lifetime a serviceInfo message should be valid.
+ */
 case class UpdaterConfig(
   artifactDownloaderPoolSize: Int,
   artifactCheckerPoolSize: Int,
   unpackerPoolSize: Int,
   autoStagingDelayMSec: Long,
-  autoStagingIntervalMSec: Long)
+  autoStagingIntervalMSec: Long,
+  serviceInfoIntervalMSec: Long,
+  serviceInfoLifetimeMSec: Long)
     

@@ -17,56 +17,112 @@
 package blended.mgmt.agent.internal
 
 import akka.actor.Cancellable
+import akka.actor.Props
 import akka.event.LoggingReceive
+import akka.pattern.pipe
 import blended.akka.{ OSGIActor, OSGIActorConfig }
+import blended.mgmt.base.ServiceInfo
 import blended.container.context.ContainerIdentifierService
 import blended.container.registry.protocol._
+import com.typesafe.config.Config
+import org.slf4j.LoggerFactory
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.{ Try, Success, Failure }
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
-import scala.collection.JavaConverters._
-import akka.pattern.pipe
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import akka.actor.Props
 
 object MgmtReporter {
+
+  object MgmtReporterConfig {
+    def fromConfig(config: Config): Try[MgmtReporterConfig] = Try {
+      MgmtReporterConfig(
+        registryUrl = config.getString("registryUrl"),
+        updateIntervalMsec = if (config.hasPath("updateIntervalMsec")) config.getLong("updateIntervalMsec") else 0,
+        initialUpdateDelayMsec = if (config.hasPath("initialUpdateDelayMsec")) config.getLong("initialUpdateDelayMsec") else 0
+      )
+    }
+  }
+
+  case class MgmtReporterConfig(
+    registryUrl: String,
+    updateIntervalMsec: Long,
+    initialUpdateDelayMsec: Long)
+
+  case object Tick
+
   def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
 }
 
 class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSupport {
 
-  implicit private[this] val eCtxt = context.system.dispatcher
-  private[this] var ticker: Option[Cancellable] = None
+  import MgmtReporter._
 
-  case object Tick
+  ////////////////////
+  // MUTABLE
+  private[this] var ticker: Option[Cancellable] = None
+  private[this] var serviceInfos: Map[String, ServiceInfo] = Map()
+  ////////////////////
+
+  private[this] val log = LoggerFactory.getLogger(classOf[MgmtReporter])
+
+  implicit private[this] val eCtxt = context.system.dispatcher
+  private[this] val idSvc = cfg.idSvc
+  private[this] val config: Try[MgmtReporterConfig] = MgmtReporterConfig.fromConfig(cfg.config) match {
+    case f @ Failure(e) =>
+      log.warn("Incomplete management reporter config. Disabled connection to management server.", e)
+      f
+    case x =>
+      log.info("Management reporter config: {}", x)
+      x
+  }
 
   override def preStart(): Unit = {
-    ticker = Some(context.system.scheduler.schedule(100.milliseconds, 60.seconds, self, Tick))
     super.preStart()
+
+    config foreach { config =>
+      if (config.initialUpdateDelayMsec < 0 || config.updateIntervalMsec <= 0) {
+        log.warn("Inapropriate timing configuration detected. Disabling automatic container status reporting")
+      } else {
+        log.info("Activating automatic container status reporting with update interval [{}]", config.updateIntervalMsec)
+        ticker = Some(context.system.scheduler.schedule(config.initialUpdateDelayMsec.milliseconds, config.updateIntervalMsec.milliseconds, self, Tick))
+      }
+    }
+
+    context.system.eventStream.subscribe(context.self, classOf[ServiceInfo])
   }
 
   override def postStop(): Unit = {
+    context.system.eventStream.unsubscribe(context.self)
+
     ticker.foreach(_.cancel())
     ticker = None
+
     super.postStop()
   }
 
   def receive: Receive = LoggingReceive {
 
     case Tick =>
-      withService[ContainerIdentifierService, Unit] {
-        case Some(idSvc) =>
-          val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap)
-          log info s"Performing report [${info.toString}]."
-          val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
-            sendReceive ~> unmarshal[ContainerRegistryResponseOK]
-          }
-          pipeline { Post("http://localhost:8181/wayofquality/container", info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
-        case None =>
+      config.foreach { config =>
+        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap)
+        log.info("Performing report [{}].", info)
+        val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
+          sendReceive ~> unmarshal[ContainerRegistryResponseOK]
+        }
+        pipeline { Post(config.registryUrl, info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
 
-    case response: ContainerRegistryResponseOK => log.info("Reported [{}] to management node", response.id)
+    case ContainerRegistryResponseOK(id) => log.info("Reported [{}] to management node", id)
+
+    case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>
+      log.debug("Update service info for: {}", name)
+      serviceInfos += name -> serviceInfo
+
   }
 
 }
