@@ -10,7 +10,7 @@ class MvnUrlTest extends FreeSpec {
   "toUrl" - {
 
     def ok(mvn: MvnGav, url: String) = {
-      s"shold process ${mvn}" in {
+      s"should process ${mvn}" in {
         assert(mvn.toUrl("") === url)
         assert(mvn.toUrl("http://org.example/repo1") === s"http://org.example/repo1/${url}")
         assert(mvn.toUrl("http://org.example/repo1/") === s"http://org.example/repo1/${url}")
