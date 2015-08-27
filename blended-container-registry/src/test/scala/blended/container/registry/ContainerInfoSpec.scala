@@ -17,11 +17,10 @@
 package blended.karaf.container.registry
 
 import blended.container.registry.protocol._
-import blended.container.registry.protocol.ContainerInfo
 import blended.persistence.protocol._
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
-
+import blended.mgmt.base.ServiceInfo
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
@@ -31,22 +30,24 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
   "ContainerInfo" should {
 
+	  val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
+
     "serialize to Json correctly" in {
-      val info = ContainerInfo("uuid", Map("fooo" -> "bar"))
+      val info = ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo))
       val json = info.toJson
-      json.compactPrint should be("""{"containerId":"uuid","properties":{"fooo":"bar"}}""")
+      json.compactPrint should be("""{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}""")
     }
 
     "serialize from Json correctly" in {
-      val json = """{"containerId":"uuid","properties":{"fooo":"bar"}}""".parseJson
+      val json = """{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}""".parseJson
       val info = json.convertTo[ContainerInfo]
 
-      info should be(ContainerInfo("uuid", Map("fooo" -> "bar")))
+      info should be(ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo)))
     }
 
     "create the Persistence Properties correctly" in {
 
-      val info = ContainerInfo("uuid", Map("fooo" -> "bar"))
+      val info = ContainerInfo("uuid", Map("fooo" -> "bar"), List())
 
       val props = info.persistenceProperties
 

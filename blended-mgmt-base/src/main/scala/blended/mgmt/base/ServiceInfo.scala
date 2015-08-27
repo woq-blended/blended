@@ -1,7 +1,5 @@
 package blended.mgmt.base
 
-object ServiceInfo {
-}
 
 case class ServiceInfo(name: String, timestampMsec: Long, lifetimeMsec: Long, props: Map[String, String]) {
 

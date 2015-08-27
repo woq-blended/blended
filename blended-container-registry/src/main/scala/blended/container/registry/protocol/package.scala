@@ -16,9 +16,8 @@
 
 package blended.container.registry
 
-import spray.json.DefaultJsonProtocol
-
-package object protocol extends DefaultJsonProtocol {
-  implicit val infoFormat = jsonFormat2(ContainerInfo)
-  implicit val responseFormat = jsonFormat1(ContainerRegistryResponseOK)
+/**
+ * Inherits the specific JSON de-/serialization type-classes from [JsonProtocol].
+ */
+package object protocol extends JsonProtocol {
 }

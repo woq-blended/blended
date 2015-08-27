@@ -37,7 +37,7 @@ class ManagementCollectorSpec
   "The Management collector" should {
 
     "handle a posted container info" in {
-      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"))) ~> collectorRoute ~> check {
+      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List())) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       testLatch.isOpen should be (true)

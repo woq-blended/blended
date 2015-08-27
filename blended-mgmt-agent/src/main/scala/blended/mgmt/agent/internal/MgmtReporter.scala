@@ -109,7 +109,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
 
     case Tick =>
       config.foreach { config =>
-        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap)
+        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList)
         log.info("Performing report [{}].", info)
         val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
           sendReceive ~> unmarshal[ContainerRegistryResponseOK]

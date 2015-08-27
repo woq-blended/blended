@@ -23,7 +23,6 @@ import akka.util.Timeout
 import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
 import blended.container.registry.protocol._
 import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
-import blended.container.registry.protocol.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
 import spray.routing._
@@ -39,10 +38,10 @@ trait CollectorService extends HttpService { this : SprayJsonSupport =>
   val collectorRoute = {
 
     implicit val timeout = Timeout(1.second)
-
+    
     path("container") {
       post {
-        handleWith { info : ContainerInfo => { processContainerInfo(info) } }
+        handleWith { info : ContainerInfo => processContainerInfo(info) }
       }
     }
   }
@@ -82,11 +81,11 @@ class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)
       override def actorSystem = actorSys
     }
 
-    servlet.providesService[Servlet] ( Map(
+    servlet.providesService[Servlet] (
       "urlPatterns" -> "/",
       "Webapp-Context" -> contextPath,
       "Web-ContextPath" -> s"/$contextPath"
-    ))
+    )
 
     context.become(runRoute(collectorRoute))
   }

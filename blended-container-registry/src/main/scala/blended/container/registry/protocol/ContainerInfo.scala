@@ -17,10 +17,12 @@
 package blended.container.registry.protocol
 
 import blended.persistence.protocol._
-
 import scala.collection.mutable
+import scala.collection.immutable
+import blended.mgmt.base.ServiceInfo
 
-case class ContainerInfo (containerId : String, properties : Map[String, String]) extends DataObject(containerId) {
+case class ContainerInfo (containerId : String, properties : Map[String, String], serviceInfos: immutable.Seq[ServiceInfo]) extends DataObject(containerId) {
+  // TODO: implement serviceInfos persistence
   override def persistenceProperties: PersistenceProperties = {
     var builder =
       new mutable.MapBuilder[String, PersistenceProperty[_], mutable.Map[String, PersistenceProperty[_]]](mutable.Map.empty)
