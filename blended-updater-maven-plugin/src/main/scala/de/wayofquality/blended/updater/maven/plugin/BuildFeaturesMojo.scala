@@ -8,14 +8,16 @@ import org.apache.maven.plugins.annotations.Component
 import blended.updater.tools.configbuilder._
 import org.apache.maven.artifact.DefaultArtifact
 import org.apache.maven.artifact.versioning.VersionRange
-import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.project.MavenProject
+import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.project.artifact.AttachedArtifact
 import org.apache.maven.execution.BuildFailure
 import org.apache.maven.BuildFailureException
 import scala.collection.JavaConverters._
+import blended.updater.config.RuntimeConfig
+import org.apache.maven.plugins.annotations.ResolutionScope
 
-@Mojo(name = "build-features", threadSafe = true)
+@Mojo(name = "build-features", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST)
 class BuildFeaturesMojo extends AbstractMojo {
 
   @Component
@@ -38,7 +40,13 @@ class BuildFeaturesMojo extends AbstractMojo {
 
   @Parameter(defaultValue = "conf", property = "attachType")
   var attachType: String = _
-  
+
+  /**
+   * Resolve all artifacts with mvn URLs only from the dependencies of the project.
+   */
+  @Parameter(property = "resolveFromDependencies", defaultValue = "false")
+  var resolveFromDependencies: Boolean = _
+
   override def execute() = {
     getLog.debug("Running Mojo build-features");
 
@@ -62,6 +70,17 @@ class BuildFeaturesMojo extends AbstractMojo {
     val targetFeatureFiles = features.map { featureFile =>
       val targetFile = new File(destFeatureDir, featureFile.getName())
       println(s"Processing feature: ${featureFile}")
+
+      val repoArgs = if (resolveFromDependencies) {
+        project.getArtifacts.asScala.toArray.flatMap { a =>
+          Array("--maven-artifact",
+            s"${a.getGroupId}:${a.getArtifactId}:${Option(a.getClassifier).filter(_ != "jar").getOrElse("")}:${a.getVersion}:${Option(a.getType).getOrElse("")}",
+            a.getFile.getAbsolutePath)
+        }
+      } else {
+        Array("--maven-dir", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
+      }
+
       val args = Array(
         "--debug",
         "-f", featureFile.getAbsolutePath(),
@@ -69,9 +88,9 @@ class BuildFeaturesMojo extends AbstractMojo {
         "--work-dir", new File("target/downloads").getAbsolutePath(),
         "--discard-invalid",
         "--download-missing",
-        "--update-checksums",
-        "--maven-dir", localRepoUrl
-      ) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
+        "--update-checksums"
+      ) ++ repoArgs
+
       println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
 
       FeatureBuilder.run(args)
