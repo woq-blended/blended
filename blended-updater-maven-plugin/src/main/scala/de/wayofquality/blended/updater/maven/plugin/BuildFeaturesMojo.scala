@@ -21,9 +21,6 @@ class BuildFeaturesMojo extends AbstractMojo {
   @Component
   var project: MavenProject = _
 
-  @Parameter(defaultValue = "${project.basedir}")
-  var baseDirectory: File = _
-
   @Parameter(property = "localRepositoryUrl")
   var localRepositoryUrl: String = _
 
@@ -44,7 +41,6 @@ class BuildFeaturesMojo extends AbstractMojo {
   
   override def execute() = {
     getLog.debug("Running Mojo build-features");
-    getLog.info("Base dir: " + baseDirectory)
 
     //TODO
     //    val srcFeatureDir = new File(project.getBasedir, "/target/classes")

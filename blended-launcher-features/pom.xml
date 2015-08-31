@@ -238,78 +238,16 @@
   <build>
     <plugins>
       <plugin>
-        <dependencies>
-          <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>blended.updater.tools</artifactId>
-            <version>${blended.version}</version>
-          </dependency>
-        </dependencies>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
+        <groupId>de.wayofquality.blended</groupId>
+        <artifactId>blended-updater-maven-plugin</artifactId>
+        <version>${blended.version}</version>
         <executions>
           <execution>
+            <id>make-features</id>
             <phase>compile</phase>
-            <goals><goal>script</goal></goals>
+            <goals><goal>build-features</goal></goals>
             <configuration>
-              <script><![CDATA[
-                import blended.updater.tools.configbuilder._
-                import scala.collection.JavaConverters._
-                import java.io.File
-                import org.apache.maven.artifact.DefaultArtifact
-                import org.apache.maven.artifact.versioning.VersionRange
-                import org.apache.maven.project.artifact.AttachedArtifact
-                import org.apache.maven.artifact.handler.DefaultArtifactHandler
-                
-                val srcFeatureDir = new File(project.getBasedir, "/target/classes")
-                val destFeatureDir = new File(project.getBasedir, "target/features")
-                
-                println(s"Project: ${project}")
-                println(s"Project repositories: ${project.getRepositories}")
-                println(s"Project properties: ${project.getProperties}")
-                println(s"Project building request: ${project.getProjectBuildingRequest}")
-                println(s"Project local repository: ${project.getProjectBuildingRequest.getLocalRepository}")
-                val localRepoUrl = project.getProjectBuildingRequest.getLocalRepository.getUrl
-                val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
-                
-                val features = Option(srcFeatureDir.listFiles()).getOrElse(Array()).filter(f => f.getName.endsWith(".conf"))
-                if(features.isEmpty) sys.error("No feature files found")
-                println(s"About to process feature files: ${features.map(_.getName).mkString(", ")}")
-                
-                val targetFeatureFiles = features.map { featureFile =>
-                  val targetFile = new File(destFeatureDir, featureFile.getName()) 
-                  println(s"Processing feature: ${featureFile}")
-                  val args = Array(
-                    "--debug",
-                    "-f", featureFile.getAbsolutePath(),
-                    "-o", targetFile.getAbsolutePath(),
-                    "--work-dir", new File("target/downloads").getAbsolutePath(),
-                    "--discard-invalid",
-                    "--download-missing",
-                    "--update-checksums",
-                    "--maven-dir", localRepoUrl
-                  ) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
-                  println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
-                  
-                  FeatureBuilder.run(args)
-                  targetFile
-                }
-                
-                println(s"Produced: ${targetFeatureFiles.mkString(", ")}")
-
-                targetFeatureFiles.foreach { featureFile =>
-                  val name = featureFile.getName
-                  val classifier = name.substring(0, name.length - ".conf".length)
-                  println(s"Attaching as artifact: ${classifier}")
-                  
-                  val handler = new DefaultArtifactHandler("conf")
-                  // val artifact = new DefaultArtifact(project.getGroupId, project.getArtifactId, VersionRange.createFromVersion(project.getVersion), "compile", "conf", classifier, handler)
-                  val artifact = new AttachedArtifact(project.getArtifact(), "conf", classifier, handler)
-                  artifact.setFile(featureFile)
-                  artifact.setResolved(true)
-                  project.addAttachedArtifact(artifact)
-                }
-              ]]></script>
+              <srcFeatureDir>${project.build.directory}/classes</srcFeatureDir>
             </configuration>
           </execution>
         </executions>
