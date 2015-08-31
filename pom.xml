@@ -152,6 +152,17 @@
     </profile>
 
     <profile>
+      <id>updater</id>
+      <modules>
+	<module>blended-updater</module>
+	<module>blended-updater-config</module>
+	<module>blended-updater-tools</module>
+	<module>blended-launcher</module>
+	<module>blended-updater-maven-plugin</module>
+      </modules>
+    </profile>
+
+    <profile>
       <id>build</id>
       <modules>
         <module>blended-karaf-installer</module>
