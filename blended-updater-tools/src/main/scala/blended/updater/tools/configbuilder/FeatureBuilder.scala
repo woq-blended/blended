@@ -16,6 +16,8 @@ import scala.collection.JavaConverters._
 import blended.updater.config.ConfigWriter
 import java.io.PrintStream
 import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.MvnGav
+import scala.util.Success
 
 object FeatureBuilder {
 
@@ -39,6 +41,10 @@ object FeatureBuilder {
     @CmdOption(names = Array("-m", "--maven-dir"), args = Array("dir"), maxCount = -1)
     def addMavenDir(mavenDir: String) = this.mavenDir ++= Seq(mavenDir)
     var mavenDir: Seq[String] = Seq()
+
+    @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
+    def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts: Seq[(String, String)] = Seq()
 
     @CmdOption(names = Array("-d", "--download-missing"))
     var downloadMissing: Boolean = false
@@ -107,6 +113,11 @@ object FeatureBuilder {
 
     val bundles = feature.bundles
     val mvnUrls = cmdline.mavenDir // .map { d => new File(d).getAbsoluteFile().toURI().toString() }
+    val mvnGavs = cmdline.mavenArtifacts.map {
+      case (gav, file) => MvnGav.parse(gav) -> file
+    }.collect {
+      case (Success(gav), file) => gav -> file
+    }
 
     val bundleFiles = bundles.map { bundle =>
       bundle -> new File(workDir, RuntimeConfig.resolveFileName(bundle.url).get)
@@ -126,9 +137,22 @@ object FeatureBuilder {
           }
         }
 
-        lazy val urls = mvnUrls.map(url => RuntimeConfig.resolveBundleUrl(bundle.url, Option(url)).get)
-
         if (!bundleFile.exists() && cmdline.downloadMissing) {
+          // lookup in GAV
+          val mvnGav = MvnGav.parse(bundle.url.substring(RuntimeConfig.MvnPrefix.length()))
+          val directUrl = mvnGavs.find {
+            case (gav, _) => mvnGav.toOption.filter { _ == gav }.isDefined
+          }.map {
+            case (_, file) => new File(file).toURI().toString()
+          }
+
+          if (debug && !mvnGavs.isEmpty && directUrl.isEmpty) {
+            Console.err.println(s"Could not find artifact [${mvnGav}] in given artifact list")
+          }
+
+          val urls =
+            if (directUrl.isDefined) directUrl.toSeq
+            else mvnUrls.map(url => RuntimeConfig.resolveBundleUrl(bundle.url, Option(url)).get)
           urls.find { url =>
             Console.err.println(s"Downloading ${bundleFile.getName()} from ${url}")
             RuntimeConfig.download(url, bundleFile).isSuccess
