@@ -170,6 +170,8 @@
     <profile>
       <id>updater</id>
       <modules>
+	<module>blended-util</module>
+	<module>blended-testsupport</module>
 	<module>blended-updater</module>
 	<module>blended-updater-config</module>
 	<module>blended-updater-tools</module>
