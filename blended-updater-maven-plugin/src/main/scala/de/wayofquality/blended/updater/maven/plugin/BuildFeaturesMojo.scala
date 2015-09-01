@@ -48,7 +48,7 @@ class BuildFeaturesMojo extends AbstractMojo {
   var resolveFromDependencies: Boolean = _
 
   override def execute() = {
-    getLog.debug("Running Mojo build-features");
+    getLog.debug("Running Mojo build-features")
 
     //TODO
     //    val srcFeatureDir = new File(project.getBasedir, "/target/classes")
