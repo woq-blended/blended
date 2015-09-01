@@ -1,259 +1,494 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright 2014ff,  https://github.com/woq-blended
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
-
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-  <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-  <prerequisites>
-    <maven>3.3.3</maven>
-  </prerequisites>
+	<prerequisites>
+		<maven>3.3.3</maven>
+	</prerequisites>
 
-  <parent>
-    <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended.parent</artifactId>
-    <version>1.2-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
-  </parent>
+	<parent>
+		<groupId>de.wayofquality.blended</groupId>
+		<artifactId>blended.parent</artifactId>
+		<version>1.2-SNAPSHOT</version>
+		<relativePath>../blended-parent</relativePath>
+	</parent>
 
-  <name>${project.artifactId}</name>
-  <artifactId>blended.launcher.features</artifactId>
-  <packaging>jar</packaging>
+	<name>${project.artifactId}</name>
+	<artifactId>blended.launcher.features</artifactId>
+	<packaging>jar</packaging>
 
-  <dependencies>
-    <dependency>
+	<dependencies>
+
+		<!-- blended-base -->
+
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.framework</artifactId>
+			<version>5.0.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<version>${felix.ca.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.eventadmin</artifactId>
+			<version>${felix.event.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.fileinstall</artifactId>
+			<version>${felix.fileinstall.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.gogo.runtime</artifactId>
+			<version>0.16.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.gogo.shell</artifactId>
+			<version>0.10.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.gogo.command</artifactId>
+			<version>0.14.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.felix</groupId>
+			<artifactId>org.apache.felix.metatype</artifactId>
+			<version>1.0.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe</groupId>
+			<artifactId>config</artifactId>
+			<version>1.2.1</version>
+		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.updater</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.updater.config</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.util</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.container.context</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.jmx</artifactId>
+			<artifactId>blended.akka</artifactId>
 			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_${scala.version}</artifactId>
+			<version>${akka.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-osgi_${scala.version}</artifactId>
+			<version>${akka.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-slf4j_${scala.version}</artifactId>
+			<version>${akka.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.persistence</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.neo4j.api</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.container.registry</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.camel.utils</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.mgmt.agent</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.mgmt.rest</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.jolokia</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
+		<!-- blended-activemq -->
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>blended.activemq.brokerstarter</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.specs</groupId>
+			<artifactId>org.apache.servicemix.specs.jaxb-api-2.2</artifactId>
+			<version>2.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.servicemix.specs</groupId>
+			<artifactId>org.apache.servicemix.specs.stax-api-1.0</artifactId>
+			<version>2.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.proxy</groupId>
+			<artifactId>org.apache.aries.proxy.api</artifactId>
+			<version>${aries.proxy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.blueprint</groupId>
+			<artifactId>org.apache.aries.blueprint.api</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.aries.blueprint</groupId>
+			<artifactId>org.apache.aries.blueprint.core</artifactId>
+			<version>1.4.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-annotation_1.0_spec</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+
+		<!-- bledned-camel -->
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.activemq.defaultbroker</artifactId>
+			<artifactId>blended.camel.utils</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-		
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.akka</artifactId>
-			<version>${blended.version}</version>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-servletlistener</artifactId>
+			<version>${camel.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.spray.api</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
+		<!-- blended-commons -->
 
 		<dependency>
 			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.spray</artifactId>
+			<artifactId>blended.jmx</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}.samples</groupId>
-			<artifactId>blended.samples.spray.helloworld</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>${project.groupId}.samples</groupId>
-			<artifactId>blended.samples.camel</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>jcl-over-slf4j</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.ops4j.pax.logging</groupId>
-			<artifactId>pax-logging-api</artifactId>
-			<version>${pax-logging.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.ops4j.pax.logging</groupId>
-			<artifactId>pax-logging-service</artifactId>
-			<version>${pax-logging.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.apache.aries.jmx</groupId>
 			<artifactId>org.apache.aries.jmx.api</artifactId>
 			<version>${aries.jmx.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.aries.jmx</groupId>
 			<artifactId>org.apache.aries.jmx.core</artifactId>
 			<version>${aries.jmx.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.aries</groupId>
 			<artifactId>org.apache.aries.util</artifactId>
 			<version>${aries.util.version}</version>
 		</dependency>
 
+		<!-- blended-samples -->
+
 		<dependency>
-			<groupId>org.ops4j.pax.logging</groupId>
-			<artifactId>pax-logging-log4j2</artifactId>
-			<version>${pax-logging.version}</version>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.activemq.defaultbroker</artifactId>
+			<version>${blended.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>${project.groupId}.samples</groupId>
+			<artifactId>blended.samples.spray.helloworld</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}.samples</groupId>
+			<artifactId>blended.samples.camel</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<!-- blended-spray -->
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.spray.api</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.spray</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<!-- blended-hawtio -->
+
+		<dependency>
+			<groupId>io.hawt</groupId>
+			<artifactId>hawtio-osgi-jmx</artifactId>
+			<version>${hawtio.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.hawt</groupId>
+			<artifactId>hawtio-web</artifactId>
+			<version>${hawtio.version}</version>
+			<type>war</type>
+		</dependency>
+		<dependency>
+			<groupId>org.fusesource.insight</groupId>
+			<artifactId>insight-log</artifactId>
+			<version>7.2.0.redhat-060</version>
+		</dependency>
+
+		<!-- blended-http -->
+
+		<dependency>
+			<groupId>org.ops4j.base</groupId>
+			<artifactId>ops4j-base-lang</artifactId>
+			<version>1.4.0</version>
+		</dependency>
+
+		<!-- blended-jetty -->
 
 		<dependency>
 			<groupId>org.apache.servicemix.specs</groupId>
-			<artifactId>org.apache.servicemix.specs.jaxb-api-2.2</artifactId>
-			<version>2.5.0</version>
+			<artifactId>org.apache.servicemix.specs.activation-api-1.1</artifactId>
+			<version>2.2.0</version>
 		</dependency>
-
 		<dependency>
-			<groupId>org.apache.servicemix.specs</groupId>
-			<artifactId>org.apache.servicemix.specs.stax-api-1.0</artifactId>
-			<version>2.4.0</version>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.4</version>
 		</dependency>
-
 		<dependency>
-			<groupId>org.ow2.asm</groupId>
-			<artifactId>asm-all</artifactId>
-			<version>4.1</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.aries.proxy</groupId>
-			<artifactId>org.apache.aries.proxy.api</artifactId>
-			<version>${aries.proxy.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.aries.blueprint</groupId>
-			<artifactId>org.apache.aries.blueprint.api</artifactId>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-annotation_1.1_spec</artifactId>
 			<version>1.0.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.geronimo.specs</groupId>
+			<artifactId>geronimo-jaspic_1.0_spec</artifactId>
+			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty.aggregate</groupId>
+			<artifactId>jetty-all-server</artifactId>
+			<version>8.1.14.v20131031</version>
+		</dependency>
+
+		<!-- blended-spring -->
 
 		<dependency>
-			<groupId>org.apache.aries.blueprint</groupId>
-			<artifactId>org.apache.aries.blueprint.core</artifactId>
-			<version>1.4.3</version>
+			<groupId>org.apache.servicemix.bundles</groupId>
+			<artifactId>org.apache.servicemix.bundles.aopalliance</artifactId>
+			<version>1.0_6</version>
 		</dependency>
-  </dependencies>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.core</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.expression</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.beans</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.aop</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.context</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.context.support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.transaction</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>org.springframework.jms</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
 
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>de.wayofquality.blended</groupId>
-        <artifactId>blended-updater-maven-plugin</artifactId>
-        <version>${blended.version}</version>
-        <executions>
-          <execution>
-            <id>make-features</id>
-            <phase>compile</phase>
-            <goals><goal>build-features</goal></goals>
-            <configuration>
-              <srcFeatureDir>${project.build.directory}/classes</srcFeatureDir>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+		<!-- blended-jaxrs -->
+
+		<dependency>
+			<groupId>org.codehaus.jettison</groupId>
+			<artifactId>jettison</artifactId>
+			<version>${jettison.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-core-asl</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-mapper-asl</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.codehaus.jackson</groupId>
+			<artifactId>jackson-jaxrs</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-core</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-json</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-server</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-servlet</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.jersey</groupId>
+			<artifactId>jersey-client</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+
+		<!-- <dependency> -->
+		<!-- <groupId></groupId> -->
+		<!-- <artifactId></artifactId> -->
+		<!-- <version></version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId></groupId> -->
+		<!-- <artifactId></artifactId> -->
+		<!-- <version></version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId></groupId> -->
+		<!-- <artifactId></artifactId> -->
+		<!-- <version></version> -->
+		<!-- </dependency> -->
+		<!-- <dependency> -->
+		<!-- <groupId></groupId> -->
+		<!-- <artifactId></artifactId> -->
+		<!-- <version></version> -->
+		<!-- </dependency> -->
+
+
+		<!-- UNSORTED -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.persistence</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.neo4j.api</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.container.registry</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.mgmt.agent</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.mgmt.rest</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>${project.groupId}</groupId> -->
+		<!-- <artifactId>blended.jolokia</artifactId> -->
+		<!-- <version>${blended.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
+		<!-- <artifactId>pax-logging-api</artifactId> -->
+		<!-- <version>${pax-logging.version}</version> -->
+		<!-- </dependency> -->
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
+		<!-- <artifactId>pax-logging-service</artifactId> -->
+		<!-- <version>${pax-logging.version}</version> -->
+		<!-- </dependency> -->
+
+
+
+		<!-- <dependency> -->
+		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
+		<!-- <artifactId>pax-logging-log4j2</artifactId> -->
+		<!-- <version>${pax-logging.version}</version> -->
+		<!-- </dependency> -->
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>de.wayofquality.blended</groupId>
+				<artifactId>blended-updater-maven-plugin</artifactId>
+				<version>${blended.version}</version>
+				<executions>
+					<execution>
+						<id>make-features</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>build-features</goal>
+						</goals>
+						<configuration>
+							<srcFeatureDir>${project.build.directory}/classes</srcFeatureDir>
+							<resolveFromDependencies>true</resolveFromDependencies>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>
 
