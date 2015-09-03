@@ -29,7 +29,7 @@ class ConfigLocator(configDirectory: String) {
 
   private[this] def config(fileName : String) : Config = {
     val file = new File(configDirectory, fileName)
-    log.debug("Retreiving config from [{}]", file.getAbsolutePath())
+    log.debug("Retrieving config from [{}]", file.getAbsolutePath())
 
     if (file.exists && file.isFile && file.canRead)
       ConfigFactory.parseFile(file)
