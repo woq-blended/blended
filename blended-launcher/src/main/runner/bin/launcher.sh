@@ -16,6 +16,7 @@ java\
  "${TOOLDIR}/lib/*"\
  blended.launcher.Launcher\
  --framework-restart 0\
+ ${LAUNCHER_OPTS}\
  "$@" && RETVAL=$? || RETVAL=$?
 
 done

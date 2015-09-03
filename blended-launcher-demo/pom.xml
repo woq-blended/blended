@@ -141,7 +141,7 @@
         <executions>
           <execution>
             <id>launcher</id>
-            <phase>package</phase>
+            <phase>compile</phase>
             <goals><goal>unpack</goal></goals>
             <configuration>
               <artifactItems>
@@ -153,6 +153,58 @@
                   <outputDirectory>${project.build.directory}/launcher</outputDirectory>
                 </artifactItem>
               </artifactItems>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ammonite-ops_${scala.version}</artifactId>
+            <version>0.4.6</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>build-product</id>
+            <phase>test-compile</phase>
+            <goals><goal>script</goal></goals>
+            <configuration>
+              <script><![CDATA[
+
+import java.io.File
+import ammonite.ops._
+import scala.collection.JavaConverters._
+
+val profileName = project.getProperties.get("profile.name").asInstanceOf[String]
+val profileVersion = project.getProperties.get("profile.version").asInstanceOf[String]
+
+val projectDir = Path(project.getBasedir)
+val prodDir = projectDir/'target/'product
+val profDir = prodDir/'profiles/profileName/profileVersion
+val launchFile = prodDir/"launch.conf"
+
+rm! prodDir
+mkdir! prodDir/up
+
+// copy launcher
+cp(projectDir/'target/'launcher/"blended.launcher-1.2-SNAPSHOT", prodDir)
+
+// copy profile
+mkdir! profDir/up
+cp(projectDir/'target/'classes, profDir)
+
+// make launchfile
+write(launchFile, s"profile.baseDir=${prodDir/'profiles}\nprofile.name=${profileName}\nprofile.version=${profileVersion}")
+
+// make run script
+write.over(prodDir/'bin/"launcher.sh", "#!bin/bash\nLAUNCHER_OPTS=\"--profile-lookup \"" + launchFile + "\"\"\n" + read(prodDir/'bin/"launcher.sh"))
+
+              ]]></script>
             </configuration>
           </execution>
         </executions>
