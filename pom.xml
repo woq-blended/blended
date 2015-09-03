@@ -223,6 +223,7 @@
 
 	<module>blended-launcher-features</module>
 	<module>blended-launcher-demo</module>
+	<module>blended-demo-mgmt</module>
 
       </modules>
     </profile>

@@ -41,6 +41,7 @@ blended-updater-tools \
 blended-updater-maven-plugin \
 blended-launcher-features \
 blended-launcher-demo \
+blended-demo-mgmt \
 blended-util"
 
 genForProjects="$projects"
