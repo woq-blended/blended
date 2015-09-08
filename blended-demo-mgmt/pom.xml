@@ -126,7 +126,7 @@
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended.mgmt.agent</artifactId>
+      <artifactId>blended.mgmt.rest</artifactId>
       <version>${blended.version}</version>
     </dependency>
     <dependency>
