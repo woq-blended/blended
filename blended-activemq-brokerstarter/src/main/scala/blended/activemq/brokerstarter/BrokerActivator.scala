@@ -18,22 +18,25 @@ package blended.activemq.brokerstarter
 
 import java.net.URI
 import javax.jms.ConnectionFactory
-
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.springframework.jms.connection.CachingConnectionFactory
-
 import scala.util.control.NonFatal
+import org.slf4j.LoggerFactory
 
 class BrokerActivator extends DominoActivator
   with TypesafeConfigWatching {
 
   whenBundleActive {
+	  val log = LoggerFactory.getLogger(classOf[BrokerActivator])
+    
+    
     whenTypesafeConfigAvailable { (config, idSvc) =>
 
+      
       var brokerService: Option[BrokerService] = None
 
       val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
@@ -42,7 +45,7 @@ class BrokerActivator extends DominoActivator
       val uri = s"file://$cfgDir/${config.getString("file")}"
       val provider = config.getString("provider")
 
-      log.info("Configuring Active MQ Broker from config [{}] with provider id [{}].", uri, provider)
+      log.info("Configuring Active MQ Broker from config [{}] with provider id [{}].", Array(uri, provider))
 
       val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -74,7 +77,7 @@ class BrokerActivator extends DominoActivator
 
       } catch {
         case NonFatal(e) =>
-          log.error("Failed to configure broker from [{}]", e, uri)
+          log.error("Failed to configure broker from [{}]", Array(e, uri))
           throw e
       } finally {
         Thread.currentThread().setContextClassLoader(oldLoader)
@@ -82,7 +85,7 @@ class BrokerActivator extends DominoActivator
 
       onStop {
         brokerService.foreach { broker =>
-          log.info(s"Stopping ActiveMQ Broker [${broker.getBrokerName()}]")
+          log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
           broker.stop()
           broker.waitUntilStopped()
         }

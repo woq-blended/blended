@@ -404,6 +404,9 @@
                 <args>
                   <arg>-deprecation</arg>
                   <arg>-feature</arg>
+                  <arg>-Xlint</arg>
+                  <!-- <arg>-Ywarn-unused-import</arg> -->
+                  <arg>-Ywarn-nullary-override</arg>
                 </args>
                 <jvmArgs>
                   <jvmArg>-Xms256m</jvmArg>
@@ -424,6 +427,9 @@
                 <args>
                   <arg>-deprecation</arg>
                   <arg>-feature</arg>
+                  <arg>-Xlint</arg>
+                  <!-- <arg>-Ywarn-unused-import</arg> -->
+                  <arg>-Ywarn-nullary-override</arg>
                 </args>
                 <jvmArgs>
                   <jvmArg>-Xms256m</jvmArg>

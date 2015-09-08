@@ -24,13 +24,13 @@ class AlwaysTrue extends Condition {
 
   val id = ConditionProvider.counter.incrementAndGet().toString
 
-  override def satisfied(): Boolean = true
+  override def satisfied: Boolean = true
   override val description = s"AlwaysTrueCondition[$id]"
 }
 
 class NeverTrue extends Condition {
   val id = ConditionProvider.counter.incrementAndGet().toString
-  override def satisfied(): Boolean = false
+  override def satisfied: Boolean = false
   override val description = s"NeverTrueCondition[$id]"
 }
 
@@ -39,7 +39,7 @@ class DelayedTrue(d: FiniteDuration) extends Condition {
   private val id = ConditionProvider.counter.incrementAndGet().toString
   private val created = System.currentTimeMillis()
 
-  override def satisfied(): Boolean = (System.currentTimeMillis() - created) >= d.toMillis
+  override def satisfied: Boolean = (System.currentTimeMillis() - created) >= d.toMillis
   override val description = s"DelayedTrue[$id]"
 }
 
