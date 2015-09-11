@@ -117,7 +117,11 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
         pipeline { Post(config.registryUrl, info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
 
-    case ContainerRegistryResponseOK(id) => log.info("Reported [{}] to management node", id)
+    case ContainerRegistryResponseOK(id, actions) =>
+      log.info("Reported [{}] to management node", id)
+      if (!actions.isEmpty) {
+        log.info("Received {} update actions from management node: {}", actions.size, actions)
+      }
 
     case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>
       log.debug("Update service info for: {}", name)
