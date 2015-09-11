@@ -17,17 +17,13 @@
 package blended.container.registry.protocol
 
 import blended.mgmt.base.ServiceInfo
-import spray.json.DefaultJsonProtocol
-import spray.json.RootJsonFormat
-import spray.json.JsonFormat
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.Artifact
 import blended.updater.config.BundleConfig
 import blended.updater.config.FeatureConfig
+import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
-import com.typesafe.config.ConfigFactory
-import spray.json.RootJsonWriter
-import spray.json.RootJsonReader
+import spray.json.RootJsonFormat
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.
@@ -36,31 +32,16 @@ trait JsonProtocol extends DefaultJsonProtocol {
 
   implicit val serviceInfoFormat: RootJsonFormat[ServiceInfo] = jsonFormat4(ServiceInfo)
   implicit val containerInfoFormat: RootJsonFormat[ContainerInfo] = jsonFormat3(ContainerInfo)
-
-  implicit val artifactFormat: RootJsonFormat[Artifact] = new RootJsonFormat[Artifact] {
-    private[this] val writer = jsonFormat(Artifact, "url", "fileName", "sha1Sum")
-    override def write(obj: Artifact): JsValue = writer.write(obj)
-    override def read(json: JsValue): Artifact = Artifact.read(ConfigFactory.parseString(json.compactPrint)).get
-  }
-  implicit val bundleConfigFormat: RootJsonFormat[BundleConfig] = new RootJsonFormat[BundleConfig] {
-    private[this] val writer = jsonFormat(BundleConfig, "artifact", "start", "startLevel")
-    override def write(obj: BundleConfig): JsValue = writer.write(obj)
-    override def read(json: JsValue): BundleConfig = BundleConfig.read(ConfigFactory.parseString(json.compactPrint)).get
-  }
-  implicit val featureConfigFormat: RootJsonFormat[FeatureConfig] = new RootJsonFormat[FeatureConfig] {
-    private[this] val writer = jsonFormat(FeatureConfig, "name", "version", "url", "bundles", "features")
-    override def write(obj: FeatureConfig): JsValue = writer.write(obj)
-    override def read(json: JsValue): FeatureConfig = FeatureConfig.read(ConfigFactory.parseString(json.compactPrint)).get
-  }
-  implicit val runtimeConfigFormat: RootJsonFormat[RuntimeConfig] = new RootJsonFormat[RuntimeConfig] {
-    private[this] val writer = jsonFormat(RuntimeConfig,
+  implicit val artifactFormat: RootJsonFormat[Artifact] = jsonFormat3(Artifact)
+  implicit val bundleConfigFormat: RootJsonFormat[BundleConfig] = jsonFormat3(BundleConfig)
+  implicit val featureConfigFormat: RootJsonFormat[FeatureConfig] = jsonFormat5(FeatureConfig)
+  implicit val runtimeConfigFormat: RootJsonFormat[RuntimeConfig] =
+    // RuntimeConfig has an additional derived val confuses automatic field extraction 
+    jsonFormat(RuntimeConfig,
       "name", "version", "bundles",
       "startLevel", "defaultStartLevel",
       "properties", "frameworkProperties", "systemProperties",
       "features", "resources")
-    override def write(obj: RuntimeConfig): JsValue = writer.write(obj)
-    override def read(json: JsValue): RuntimeConfig = RuntimeConfig.read(ConfigFactory.parseString(json.compactPrint)).get
-  }
 
   implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat1(StageProfile)
   implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat2(ActivateProfile)
