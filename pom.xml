@@ -188,6 +188,7 @@
 	<module>blended-launcher</module>
 	<module>blended-updater</module>
 	<module>blended-updater-tools</module>
+	<module>blended-updater-remote</module>
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>

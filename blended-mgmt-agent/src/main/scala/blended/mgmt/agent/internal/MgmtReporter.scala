@@ -121,6 +121,8 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
       log.info("Reported [{}] to management node", id)
       if (!actions.isEmpty) {
         log.info("Received {} update actions from management node: {}", actions.size, actions)
+        // TODO: sent actions to updater
+        
       }
 
     case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>

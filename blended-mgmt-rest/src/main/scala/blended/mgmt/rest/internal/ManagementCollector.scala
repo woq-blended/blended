@@ -34,7 +34,7 @@ import com.typesafe.config.Config
 trait CollectorService extends HttpService { this: SprayJsonSupport =>
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
-  
+
   val collectorRoute = {
 
     implicit val timeout = Timeout(1.second)
@@ -48,7 +48,7 @@ trait CollectorService extends HttpService { this: SprayJsonSupport =>
 }
 
 case class ManagementCollectorConfig(servletSettings: ConnectorSettings, routingSettings: RoutingSettings, contextPath: String) {
-
+  override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath})"
 }
 
 object ManagementCollectorConfig {
@@ -71,10 +71,10 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
     with SprayJsonSupport {
 
   type ContainerId = String
-  
+
   // mutable vars
   private[this] var cachedActions: Map[ContainerId, Seq[UpdateAction]] = Map()
-  
+
   // Required by CollectorService
   override implicit def actorRefFactory: ActorRefFactory = context
 

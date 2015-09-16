@@ -473,6 +473,7 @@ class Updater(
       log.debug("About to gather service infos")
 
       val props = Map(
+        "profile.active" -> findActiveConfig().map(lrc => s"${lrc.runtimeConfig.name}-${lrc.runtimeConfig.version}").getOrElse(""),
         "profiles.valid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Valid)) => s"$name-$version" }.mkString(","),
         "profiles.invalid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Invalid(_))) => s"$name-$version" }.mkString(","),
         "profiles.pending" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Pending(_))) => s"$name-$version" }.mkString(",")
