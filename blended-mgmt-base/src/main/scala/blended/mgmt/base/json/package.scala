@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package blended.container.registry
+package blended.mgmt.base
 
 /**
  * Inherits the specific JSON de-/serialization type-classes from [JsonProtocol].
  */
-package object protocol extends JsonProtocol {
+package object json extends JsonProtocol {
 }

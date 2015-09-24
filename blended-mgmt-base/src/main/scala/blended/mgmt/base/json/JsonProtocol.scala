@@ -1,22 +1,7 @@
-/*
- * Copyright 2014ff,  https://github.com/woq-blended
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package blended.container.registry.protocol
+package blended.mgmt.base.json
 
 import blended.mgmt.base.ServiceInfo
+import blended.mgmt.base.ContainerInfo
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.Artifact
 import blended.updater.config.BundleConfig
@@ -24,6 +9,10 @@ import blended.updater.config.FeatureConfig
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.RootJsonFormat
+import blended.mgmt.base.StageProfile
+import blended.mgmt.base.ActivateProfile
+import blended.mgmt.base.UpdateAction
+import blended.mgmt.base.ContainerRegistryResponseOK
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.

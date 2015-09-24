@@ -20,7 +20,7 @@ import javax.servlet.Servlet
 import akka.actor.{ Actor, ActorRefFactory }
 import akka.util.Timeout
 import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
-import blended.container.registry.protocol._
+import blended.mgmt.base.json._
 import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
@@ -30,6 +30,10 @@ import spray.util.LoggingContext
 import scala.concurrent.duration._
 import akka.actor.Props
 import com.typesafe.config.Config
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.UpdateContainerInfo
+import blended.mgmt.base.UpdateAction
 
 trait CollectorService extends HttpService { this: SprayJsonSupport =>
 

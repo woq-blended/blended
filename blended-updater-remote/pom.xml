@@ -71,11 +71,11 @@
 			<version>${blended.version}</version>
 		</dependency>
 
-		<dependency>
-			<groupId>de.wayofquality.blended</groupId>
-			<artifactId>blended.container.registry</artifactId>
-			<version>${blended.version}</version>
-		</dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.mgmt.base</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
 		<dependency>
 			<groupId>de.wayofquality.blended</groupId>

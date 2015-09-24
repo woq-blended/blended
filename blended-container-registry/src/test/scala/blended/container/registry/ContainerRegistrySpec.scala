@@ -20,15 +20,16 @@ import akka.actor.Props
 import akka.testkit.{TestProbe, TestActorRef}
 import blended.akka.OSGIActorConfig
 import blended.container.context.{ContainerContext, ContainerIdentifierService}
-import blended.container.registry.protocol._
 import blended.testsupport.TestActorSys
-import blended.container.registry.internal.ContainerRegistryImpl
-import blended.container.registry.protocol.{ContainerRegistryResponseOK, UpdateContainerInfo, ContainerInfo}
 import com.typesafe.config.ConfigFactory
 import org.mockito.Mockito._
 import org.osgi.framework.{Bundle, BundleContext}
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.container.registry.internal.ContainerRegistryImpl
+import blended.mgmt.base.UpdateContainerInfo
+import blended.mgmt.base.ContainerInfo
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 

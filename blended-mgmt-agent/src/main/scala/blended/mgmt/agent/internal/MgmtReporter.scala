@@ -23,7 +23,7 @@ import akka.pattern.pipe
 import blended.akka.{ OSGIActor, OSGIActorConfig }
 import blended.mgmt.base.ServiceInfo
 import blended.container.context.ContainerIdentifierService
-import blended.container.registry.protocol._
+import blended.mgmt.base.json._
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
@@ -35,6 +35,8 @@ import scala.util.{ Try, Success, Failure }
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
 
 object MgmtReporter {
 

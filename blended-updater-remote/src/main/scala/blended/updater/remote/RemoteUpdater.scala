@@ -1,8 +1,11 @@
 package blended.updater.remote
 
+import blended.mgmt.base.ContainerInfo
 import blended.updater.config.RuntimeConfig
-import blended.container.registry.protocol.ContainerInfo
 import scala.collection.immutable
+import blended.mgmt.base.StageProfile
+import blended.mgmt.base.UpdateAction
+import blended.mgmt.base.ActivateProfile
 
 trait RemoteUpdater {
 
@@ -49,8 +52,4 @@ trait RemoteUpdater {
   def getContainerActions(containerId: ContainerId): immutable.Seq[UpdateAction] = state.getOrElse(containerId, immutable.Seq())
 
 }
-
-sealed trait UpdateAction
-final case class StageProfile(runtimeConfig: RuntimeConfig) extends UpdateAction
-final case class ActivateProfile(profileName: String, profileVersion: String) extends UpdateAction
 
