@@ -129,16 +129,6 @@
       <artifactId>blended.mgmt.agent</artifactId>
       <version>${blended.version}</version>
     </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.container.registry</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.persistence</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
 
   </dependencies>
 
