@@ -17,6 +17,8 @@ function blended_home() {
 
 export BLENDED_HOME=$(blended_home $BLENDED_HOME)
 
+LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf"
+
 RETVAL=2
 
 if [ -n "$DEBUG_PORT" ] ; then
