@@ -16,7 +16,6 @@
 
 package blended.container.registry.internal
 
-import akka.actor.Props
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
 
