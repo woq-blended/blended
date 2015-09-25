@@ -1,7 +1,14 @@
 #!/bin/sh
 
-TOOLDIR="$(dirname $(readlink -f "$0"))/.."
+OLDDIR=$(pwd)
+TOOLDIR="$(dirname $0)/.."
+cd $TOOLDIR
+export TOOLDIR=$(pwd)
+cd $OLDDIR
 
+LAUNCHER_OPTS="--profile-lookup "$TOOLDIR/launch.conf""
+
+RETVAL=2
 RETVAL=2
 
 if [ -n "$DEBUG_PORT" ] ; then
