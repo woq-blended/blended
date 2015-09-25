@@ -214,8 +214,11 @@ val profileVersion = project.getProperties.get("profile.version").asInstanceOf[S
 
 val projectDir = Path(project.getBasedir)
 val prodDir = projectDir/'target/'product
+
 val profDir = prodDir/'profiles/profileName/profileVersion
-val launchFile = prodDir/"launch.conf"
+
+val prodLaunch = prodDir/"launch.conf"
+val tarLaunch = projectDir/'target/'launcher/launcherDir/"launch.conf"
 
 rm! prodDir
 mkdir! prodDir/up
@@ -228,11 +231,15 @@ mkdir! profDir/up
 cp(projectDir/'target/'classes, profDir)
 
 // make launchfile
-write(launchFile, "profile.baseDir=${TOOLDIR}/profiles" +
+
+val launchConf = "profile.baseDir=${BLENDED_HOME}/profiles" +
 s"""
 profile.name=${profileName}
 profile.version=${profileVersion}
-""")
+"""
+
+write(prodLaunch, launchConf)
+write(tarLaunch, launchConf)
 
               ]]></script>
             </configuration>
