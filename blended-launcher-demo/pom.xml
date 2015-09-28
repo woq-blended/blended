@@ -238,6 +238,10 @@ profile.name=${profileName}
 profile.version=${profileVersion}
 """
 
+// copy logging config
+mkdir! prodDir/'etc
+cp(projectDir/'target/'classes/'etc/"logback.xml", prodDir/'etc/"logback.xml")
+
 write(prodLaunch, launchConf)
 write(tarLaunch, launchConf)
 
