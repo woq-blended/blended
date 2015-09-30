@@ -15,8 +15,9 @@
   -->
 
 <configuration>
+
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>${BLENDED_HOME}/log/blended.log</file>
+    <file>${blended.home}/log/blended.log</file>
     <layout class="ch.qos.logback.classic.PatternLayout">
       <Pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</Pattern>
     </layout>
@@ -31,4 +32,7 @@
   <root level="info">
     <appender-ref ref="FILE" />
   </root>
+
+  <logger name="blended" level="DEBUG" />
+
 </configuration>

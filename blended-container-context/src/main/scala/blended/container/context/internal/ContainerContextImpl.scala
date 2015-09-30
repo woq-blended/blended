@@ -15,21 +15,11 @@
  */
 package blended.container.context.internal
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.InetAddress
+import java.io.{BufferedInputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.util.Properties
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+
 import blended.container.context.ContainerContext
-import scala.io.Source
-import java.io.BufferedInputStream
-import java.io.FileNotFoundException
-import java.io.IOException
-import scala.util.Try
+import org.slf4j.LoggerFactory
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -85,7 +75,9 @@ class ContainerContextImpl() extends ContainerContext {
       log.error("Container directory [{}] is not readable.", dir)
     }
 
-    configDir.getAbsolutePath()
+    val absDir = configDir.getAbsolutePath
+    System.setProperty("blended.container.home", absDir)
+    absDir
   }
 
   override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath

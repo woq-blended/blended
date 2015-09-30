@@ -83,7 +83,7 @@
     <profile>
       <id>docker</id>
       <modules>
-        <module>blended-docker-demo</module>
+        <module>blended-docker-karaf-demo</module>
       </modules>
     </profile>
 

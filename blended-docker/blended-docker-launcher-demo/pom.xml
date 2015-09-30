@@ -27,18 +27,18 @@
     <relativePath>../../blended-parent</relativePath>
   </parent>
 
-  <artifactId>blended.docker.karaf.demo</artifactId>
+  <artifactId>blended.docker.laucher.demo</artifactId>
   <description>
-    Packaging the karaf sample container into a docker image.
+    Packaging the launcher sample container into a docker image.
   </description>
 
   <dependencies>
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended.karaf.demo</artifactId>
+      <artifactId>blended.launcher.demo</artifactId>
       <version>${project.version}</version>
-      <classifier>nojre</classifier>
+      <classifier>full-nojre</classifier>
       <type>tar.gz</type>
       <scope>provided</scope>
     </dependency>
