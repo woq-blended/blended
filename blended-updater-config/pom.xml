@@ -23,6 +23,13 @@
 	</properties>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>org.scala-lang</groupId>
+			<artifactId>scala-library</artifactId>
+			<version>${scala.version}.${scala.micro.version}</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
@@ -34,13 +41,21 @@
 			<artifactId>scalatest_${scala.version}</artifactId>
 			<version>${scalatest.version}</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.scala-lang</groupId>
+					<artifactId>scala-library</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
+
 		<dependency>
 			<groupId>de.wayofquality.blended</groupId>
 			<artifactId>blended.testsupport</artifactId>
 			<version>${blended.version}</version>
 			<scope>test</scope>
 		</dependency>
+
 	</dependencies>
 
 	<build>

@@ -21,10 +21,14 @@ import akka.camel.CamelMessage
 import akka.pattern.ask
 import akka.util.Timeout
 import blended.itestsupport.camel.protocol.{CheckAssertions, CheckResults, MockAssertion}
+import de.tototec.cmdoption.internal.LoggerFactory
 
 import scala.concurrent.Await
+import scala.collection.JavaConverters._
 
-object MockAssertions { 
+object MockAssertions {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[MockAssertions])
   
   def checkAssertions(mock: ActorRef, assertions: MockAssertion*)(implicit timeout: Timeout) : List[Throwable] = {
     val f = (mock ? CheckAssertions(assertions)).mapTo[CheckResults]
@@ -73,22 +77,27 @@ object MockAssertions {
   
   def expectedHeaders(headers : Map[String, Any]*) : MockAssertion = { l: List[CamelMessage] =>
 
-    def misMatchedHeaders(m : CamelMessage, expected: Map[String, Any]) : Map[String, Any] =
-      expected.filter { case (k, v) => 
+    def misMatchedHeaders(m : CamelMessage, expected: Map[String, Any]) : Map[String, Any] = {
+      log.debug(s"Checking headers ${m.getHeaders.asScala}, expected: [$expected]")
+
+      expected.filter { case (k, v) =>
         !m.headers.contains(k) || m.headers(k) != v
       }
+    }
     
-    def compareHeaders(matchList: Map[CamelMessage, Map[String, Any]]) : Either[Throwable, String] = 
+    def compareHeaders(matchList: Map[CamelMessage, Map[String, Any]]) : Either[Throwable, String] = {
+
       matchList.filter { case (m, headers) => !misMatchedHeaders(m, headers).isEmpty } match {
         case e if e.isEmpty => Right("MockActor has received the correct headers")
-        case l => 
-          val msg = l.map { case (m, h) => 
+        case l =>
+          val msg = l.map { case (m, h) =>
             val headerMsg = misMatchedHeaders(m, h).mkString(",")
             s"Message [$m] did not have headers [$headerMsg]"
           }.mkString("\n")
           Left(new Exception(msg))
-        
+
       }
+    }
 
     if (headers.length == 1) 
       compareHeaders(l.map(m => (m, headers(0))).toMap)
@@ -98,5 +107,6 @@ object MockAssertions {
       case _ =>  Left(new Exception(s"The number of messages received [${l.size}] does not match the number of header maps [${headers.length}]"))
     }
   }
-  
 }
+
+class MockAssertions

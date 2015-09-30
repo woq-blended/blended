@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright 2014ff,  https://github.com/woq-blended
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>de.wayofquality.blended</groupId>
+    <artifactId>blended.parent</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <relativePath>../../blended-parent</relativePath>
+  </parent>
+
+  <artifactId>blended.docker.karaf.demo</artifactId>
+  <description>
+    Packaging the karaf sample container into a docker image.
+  </description>
+
+  <properties>
+    <docker.src.groupId>de.wayofquality.blended</docker.src.groupId>
+    <docker.src.artifactId>blended.karaf.demo</docker.src.artifactId>
+    <docker.src.version>${project.version}</docker.src.version>
+    <docker.src.classifier>nojre</docker.src.classifier>
+    <docker.src.type>tar.gz</docker.src.type>
+    <docker.target>karaf</docker.target>
+  </properties>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>${docker.src.groupId}</groupId>
+      <artifactId>${docker.src.artifactId}</artifactId>
+      <version>${docker.src.version}</version>
+      <classifier>${docker.src.classifier}</classifier>
+      <type>${docker.src.type}</type>
+      <scope>provided</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/docker</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+
+          <execution>
+            <id>extract-blended-container</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeScope>provided</includeScope>
+              <outputDirectory>${project.build.directory}/docker/${docker.target}</outputDirectory>
+            </configuration>
+          </execution>
+
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>com.alexecollins.docker</groupId>
+        <artifactId>docker-maven-plugin</artifactId>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

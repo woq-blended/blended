@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="true"
+                     xmlns:log4j='http://jakarta.apache.org/log4j/'>
+
+  <appender name="file" class="org.apache.log4j.RollingFileAppender">
+    <param name="append" value="false" />
+    <param name="maxFileSize" value="10MB" />
+    <param name="maxBackupIndex" value="5" />
+    <!-- For Tomcat -->
+    <param name="file" value="${blended.home}/log/boot.log" />
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern"
+             value="%-5p | %d{yyyy-MM-dd HH:mm:ss:SSS} | %8.8r | %c-30.30{1} | %m%n" />
+    </layout>
+  </appender>
+
+  <root>
+    <level value="INFO" />
+    <appender-ref ref="file" />
+  </root>
+
+</log4j:configuration>

@@ -46,7 +46,14 @@ xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/ma
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended.docker.demo</artifactId>
+      <artifactId>blended.docker.karaf.demo</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.docker.launcher.demo</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

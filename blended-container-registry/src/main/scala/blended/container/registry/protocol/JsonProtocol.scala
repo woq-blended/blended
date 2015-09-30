@@ -17,9 +17,7 @@
 package blended.container.registry.protocol
 
 import blended.mgmt.base.ServiceInfo
-import spray.json.DefaultJsonProtocol
-import spray.json.RootJsonFormat
-import spray.json.JsonFormat
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.

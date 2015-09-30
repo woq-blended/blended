@@ -207,29 +207,39 @@ import java.io.File
 import ammonite.ops._
 import scala.collection.JavaConverters._
 
+val launcherDir = "blended.launcher-" + project.getProperties.get("blended.version").asInstanceOf[String]
+
 val profileName = project.getProperties.get("profile.name").asInstanceOf[String]
 val profileVersion = project.getProperties.get("profile.version").asInstanceOf[String]
 
 val projectDir = Path(project.getBasedir)
 val prodDir = projectDir/'target/'product
+
 val profDir = prodDir/'profiles/profileName/profileVersion
-val launchFile = prodDir/"launch.conf"
+
+val prodLaunch = prodDir/"launch.conf"
+val tarLaunch = projectDir/'target/'launcher/launcherDir/"launch.conf"
 
 rm! prodDir
 mkdir! prodDir/up
 
 // copy launcher
-cp(projectDir/'target/'launcher/"blended.launcher-1.2-SNAPSHOT", prodDir)
+cp(projectDir/'target/'launcher/launcherDir, prodDir)
 
 // copy profile
 mkdir! profDir/up
 cp(projectDir/'target/'classes, profDir)
 
 // make launchfile
-write(launchFile, s"profile.baseDir=${prodDir/'profiles}\nprofile.name=${profileName}\nprofile.version=${profileVersion}")
 
-// make run script
-write.over(prodDir/'bin/"launcher.sh", "#!bin/bash\nLAUNCHER_OPTS=\"--profile-lookup \"" + launchFile + "\"\"\n" + read(prodDir/'bin/"launcher.sh"))
+val launchConf = "profile.baseDir=${BLENDED_HOME}/profiles" +
+s"""
+profile.name=${profileName}
+profile.version=${profileVersion}
+"""
+
+write(prodLaunch, launchConf)
+write(tarLaunch, launchConf)
 
               ]]></script>
             </configuration>

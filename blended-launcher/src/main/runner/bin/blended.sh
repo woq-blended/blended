@@ -16,6 +16,11 @@ function blended_home() {
 }
 
 export BLENDED_HOME=$(blended_home $BLENDED_HOME)
+cd $BLENDED_HOME
+
+LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf"
+JAVA_OPTS="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml ${JAVA_OPTS}"
+JAVA_OPTS="-Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME} ${JAVA_OPTS}"
 
 RETVAL=2
 

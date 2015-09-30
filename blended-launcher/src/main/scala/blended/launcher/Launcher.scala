@@ -175,7 +175,10 @@ object Launcher {
           }
 
           Configs(
-            launcherConfig = launchConfig.copy(branding = launchConfig.branding ++ brandingProps),
+            launcherConfig = launchConfig.copy(
+              branding = launchConfig.branding ++ brandingProps,
+              systemProperties = launchConfig.systemProperties + ("blended.container.home" -> profileDir)
+            ),
             profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
       }
 
@@ -263,6 +266,7 @@ class Launcher private (config: LauncherConfig) {
     }
 
     config.systemProperties foreach { p =>
+      log.info(s"Setting System property [${p._1}] to [${p._2}]")
       System.setProperty(p._1, p._2)
     }
     val framework = frameworkFactory.newFramework(config.frameworkProperties.asJava)
