@@ -32,14 +32,23 @@
     Packaging the karaf sample container into a docker image.
   </description>
 
+  <properties>
+    <docker.src.groupId>de.wayofquality.blended</docker.src.groupId>
+    <docker.src.artifactId>blended.karaf.demo</docker.src.artifactId>
+    <docker.src.version>${project.version}</docker.src.version>
+    <docker.src.classifier>nojre</docker.src.classifier>
+    <docker.src.type>tar.gz</docker.src.type>
+    <docker.target>karaf</docker.target>
+  </properties>
+
   <dependencies>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.karaf.demo</artifactId>
-      <version>${project.version}</version>
-      <classifier>nojre</classifier>
-      <type>tar.gz</type>
+      <groupId>${docker.src.groupId}</groupId>
+      <artifactId>${docker.src.artifactId}</artifactId>
+      <version>${docker.src.version}</version>
+      <classifier>${docker.src.classifier}</classifier>
+      <type>${docker.src.type}</type>
       <scope>provided</scope>
     </dependency>
 
@@ -67,7 +76,7 @@
             </goals>
             <configuration>
               <includeScope>provided</includeScope>
-              <outputDirectory>${project.build.directory}/docker/demo</outputDirectory>
+              <outputDirectory>${project.build.directory}/docker/${docker.target}</outputDirectory>
             </configuration>
           </execution>
 

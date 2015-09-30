@@ -16,6 +16,7 @@ function blended_home() {
 }
 
 export BLENDED_HOME=$(blended_home $BLENDED_HOME)
+cd $BLENDED_HOME
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf"
 JAVA_OPTS="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml ${JAVA_OPTS}"
@@ -29,7 +30,7 @@ fi
 
 while [ "x$RETVAL" == "x2" ]; do
 
-java\
+${JAVA_HOME}/bin/java\
  $JAVA_OPTS\
  -cp\
  "${BLENDED_HOME}/etc:${BLENDED_HOME}/lib/*"\

@@ -27,19 +27,28 @@
     <relativePath>../../blended-parent</relativePath>
   </parent>
 
-  <artifactId>blended.docker.laucher.demo</artifactId>
+  <artifactId>blended.docker.launcher.demo</artifactId>
   <description>
     Packaging the launcher sample container into a docker image.
   </description>
 
+  <properties>
+    <docker.src.groupId>de.wayofquality.blended</docker.src.groupId>
+    <docker.src.artifactId>blended.launcher.demo</docker.src.artifactId>
+    <docker.src.version>${project.version}</docker.src.version>
+    <docker.src.classifier>full-nojre</docker.src.classifier>
+    <docker.src.type>tar.gz</docker.src.type>
+    <docker.target>blended</docker.target>
+  </properties>
+
   <dependencies>
 
     <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.launcher.demo</artifactId>
-      <version>${project.version}</version>
-      <classifier>full-nojre</classifier>
-      <type>tar.gz</type>
+      <groupId>${docker.src.groupId}</groupId>
+      <artifactId>${docker.src.artifactId}</artifactId>
+      <version>${docker.src.version}</version>
+      <classifier>${docker.src.classifier}</classifier>
+      <type>${docker.src.type}</type>
       <scope>provided</scope>
     </dependency>
 
@@ -67,7 +76,7 @@
             </goals>
             <configuration>
               <includeScope>provided</includeScope>
-              <outputDirectory>${project.build.directory}/docker/demo</outputDirectory>
+              <outputDirectory>${project.build.directory}/docker/${docker.target}</outputDirectory>
             </configuration>
           </execution>
 

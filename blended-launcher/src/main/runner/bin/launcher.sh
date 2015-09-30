@@ -25,7 +25,7 @@ fi
 
 while [ "x$RETVAL" == "x2" ]; do
 
-java\
+${JAVA_HOME}/bin/java\
  $JAVA_OPTS\
  -cp\
  "${BLENDED_HOME}/etc:${BLENDED_HOME}/lib/*"\

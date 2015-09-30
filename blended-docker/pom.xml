@@ -84,6 +84,7 @@
       <id>docker</id>
       <modules>
         <module>blended-docker-karaf-demo</module>
+        <module>blended-docker-launcher-demo</module>
       </modules>
     </profile>
 

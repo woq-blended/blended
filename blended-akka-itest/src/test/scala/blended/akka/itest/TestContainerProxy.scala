@@ -27,8 +27,8 @@ import org.apache.camel.component.jms.JmsComponent
 import scala.concurrent.duration._
 
 object TestContainerProxy {
-  def amqUrl(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = cuts("blended_demo_0").url("jms", dockerHost, "tcp")
-  def jmxRest(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = s"${cuts("blended_demo_0").url("http", dockerHost, "http")}/hawtio/jolokia"
+  def amqUrl(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = cuts("blended_blended_0").url("jms", dockerHost, "tcp")
+  def jmxRest(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = s"${cuts("blended_blended_0").url("http", dockerHost, "http")}/hawtio/jolokia"
 }
 
 class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
