@@ -262,18 +262,26 @@ object RuntimeConfig {
     prevRuntime: Option[LocalRuntimeConfig]): Option[Try[File]] = {
 
     curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
+      val propFile = new File(curRuntime.baseDir, fileName)
+      propFile.getParentFile.mkdirs()
+
+      val content = new Properties()
+      if (propFile.exists()) {
+        content.load(new BufferedReader(new FileReader(propFile)))
+      }
+
       curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
         val providers = getPropertyFileProvider(curRuntime.runtimeConfig, prevRuntime).get
         if (providers.isEmpty) sys.error(s"No property providers defined (${Properties.PROFILE_PROPERTY_PROVIDERS})")
         val resolvedProps = props.map { prop =>
-          prop -> providers.toStream.map(_.provide(prop)).find(_.isDefined).map(_.get).getOrElse(sys.error(s"Could not find property value for key [${prop}]"))
+          val newValue = providers.toStream.map(_.provide(prop)).find(_.isDefined).map(_.get)
+
+          newValue match {
+            case None => (prop, Option(content.getProperty(prop)).getOrElse(sys.error(s"Could not find property value for key [${prop}]")))
+            case Some(v) => (prop, v)
+          }
         }
-        val propFile = new File(curRuntime.baseDir, fileName)
-        propFile.getParentFile.mkdirs()
-        val content = new Properties()
-        if (propFile.exists()) {
-          content.load(new BufferedReader(new FileReader(propFile)))
-        }
+
         resolvedProps.foreach { case (k, v) => content.setProperty(k, v) }
         val writer = new FileWriter(propFile)
         try {

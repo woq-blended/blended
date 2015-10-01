@@ -91,7 +91,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
             p
           }
           val missing = mandatoryProps.filter(prop => Option(props.get(prop)).isEmpty)
-          missing.map(p => s"Missing mandatory property [${p}] in properties file: ${file}")
+          missing.map(p => s"Missing mandatory property [$p] in properties file: [$file]")
       }
     } else Nil
 
