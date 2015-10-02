@@ -33,10 +33,8 @@ class BrokerActivator extends DominoActivator
   whenBundleActive {
 	  val log = LoggerFactory.getLogger(classOf[BrokerActivator])
     
-    
     whenTypesafeConfigAvailable { (config, idSvc) =>
 
-      
       var brokerService: Option[BrokerService] = None
 
       val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()

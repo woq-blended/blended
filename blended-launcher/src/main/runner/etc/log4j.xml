@@ -11,7 +11,7 @@
     <param name="file" value="${blended.home}/log/boot.log" />
     <layout class="org.apache.log4j.PatternLayout">
       <param name="ConversionPattern"
-             value="%-5p | %d{yyyy-MM-dd HH:mm:ss:SSS} | %8.8r | %c-30.30{1} | %m%n" />
+             value="%-5p | %d{yyyy-MM-dd HH:mm:ss:SSS} | %8.8r | %-30.30c{1} | %m%n" />
     </layout>
   </appender>
 
