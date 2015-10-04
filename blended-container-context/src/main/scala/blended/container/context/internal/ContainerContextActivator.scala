@@ -16,18 +16,23 @@
 
 package blended.container.context.internal
 
+import java.util.Properties
+
 import blended.container.context.ContainerIdentifierService
 import domino.DominoActivator
-import java.util.UUID
 import org.slf4j.LoggerFactory
-import org.osgi.framework.ServiceRegistration
-import scala.util.Try
-import java.util.Properties
+import org.slf4j.bridge.SLF4JBridgeHandler
+
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 class ContainerContextActivator extends DominoActivator {
 
   whenBundleActive {
+
+    SLF4JBridgeHandler.removeHandlersForRootLogger()
+    SLF4JBridgeHandler.install()
+
     val log = LoggerFactory.getLogger(classOf[ContainerContextActivator])
 
     val containerContext = new ContainerContextImpl()
