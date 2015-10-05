@@ -55,7 +55,13 @@ class BlendedAkkaActivator extends DominoActivator {
     override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
 
     override def getActorSystemConfiguration(context: BundleContext): Config = {
-      ConfigFactory.parseFile(new File(containerContext.getContainerConfigDirectory, "application.conf"))
+
+      val sysProps = ConfigFactory.systemProperties()
+      val envProps = ConfigFactory.systemEnvironment()
+
+      ConfigFactory.parseFile(
+        new File(containerContext.getContainerConfigDirectory, "application.conf")
+      ).withFallback(sysProps).withFallback(envProps).resolve()
     }
   }
 

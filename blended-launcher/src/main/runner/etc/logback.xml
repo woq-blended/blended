@@ -40,7 +40,7 @@
     <appender-ref ref="FILE" />
   </root>
 
-  <logger name="blended" level="DEBUG" />
+  <logger name="blended" level="INFO" />
 
   <logger name="app" level="INFO">
     <appender-ref ref="APP" />

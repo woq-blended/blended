@@ -27,14 +27,17 @@ class ConfigLocator(configDirectory: String) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConfigLocator])
 
+  private[this] val sysProps = ConfigFactory.systemProperties()
+  private[this] val envProps = ConfigFactory.systemEnvironment()
+
   private[this] def config(fileName : String) : Config = {
     val file = new File(configDirectory, fileName)
     log.debug("Retrieving config from [{}]", file.getAbsolutePath())
 
     if (file.exists && file.isFile && file.canRead)
-      ConfigFactory.parseFile(file)
+      ConfigFactory.parseFile(file).withFallback(sysProps).withFallback(envProps).resolve()
     else
-      ConfigFactory.empty
+      ConfigFactory.empty()
   }
 
   def getConfig(id: String): Config = config(s"$id.conf") match {

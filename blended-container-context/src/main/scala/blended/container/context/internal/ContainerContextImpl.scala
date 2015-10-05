@@ -20,6 +20,7 @@ import java.util.Properties
 
 import blended.container.context.ContainerContext
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConverters._
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -83,6 +84,30 @@ class ContainerContextImpl() extends ContainerContext {
   override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath
 
   override def readConfig(configId: String): Properties = {
+
+    def resolveSystemProps(in : Properties) : Properties = {
+
+      val result = new Properties()
+
+      in.propertyNames().asScala.foreach { k=>
+        val key = k.toString()
+        var value = in.getProperty(key)
+
+        val regex = "[^\\$]*\\$\\{([^}]*)}".r
+
+        regex.findAllIn(value).matchData.map(_.group(1)).foreach { m =>
+          Option(System.getProperty(m)) match {
+            case Some(sysProp) =>  value = value.replaceFirst("\\$\\{" + m + "}", sysProp)
+            case None =>
+          }
+        }
+        result.setProperty(key, value)
+      }
+
+      result
+
+    }
+
     val props = new Properties()
     val f = new File(getConfigFile(configId))
 
@@ -108,7 +133,7 @@ class ContainerContextImpl() extends ContainerContext {
     }
 
     log.info("Read [{}] properties from [{}]", props.size(), f.getAbsolutePath())
-    props
+    resolveSystemProps(props)
   }
 
   override def writeConfig(configId: String, props: Properties): Unit = {
@@ -139,5 +164,5 @@ class ContainerContextImpl() extends ContainerContext {
     log.info("Exported configuration [{}]", configFile)
   }
 
-  private def getConfigFile(configId: String): String = new File(getContainerConfigDirectory(), s"${configId}.cfg").getPath()
+  private def getConfigFile(configId: String): String = new File(getContainerConfigDirectory(), s"$configId.cfg").getPath()
 }

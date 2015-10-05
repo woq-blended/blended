@@ -1,10 +1,17 @@
 #!/bin/sh
 
+function setenv() {
+
+  if [ -f $BLENDED_HOME/bin/setenv ] ; then
+    . $BLENDED_HOME/bin/setenv
+  fi
+}
+
 function blended_home() {
   
   home=$1
 
-  if [ x"$BLENDED_HOME" == "x" ]; then
+  if [ x"$BLENDED_HOME" == "x" ] ; then
     OLDDIR=$(pwd)
     dir="$(dirname $0)/.."
     cd $dir
@@ -16,6 +23,8 @@ function blended_home() {
 }
 
 export BLENDED_HOME=$(blended_home $BLENDED_HOME)
+setenv
+
 cd $BLENDED_HOME
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf"

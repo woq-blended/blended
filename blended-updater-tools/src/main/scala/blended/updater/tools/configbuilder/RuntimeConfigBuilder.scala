@@ -1,21 +1,13 @@
 package blended.updater.tools.configbuilder
 
 import java.io.File
-import com.typesafe.config.ConfigFactory
-import blended.updater.config.ConfigWriter
-import blended.updater.config.RuntimeConfig
-import de.tototec.cmdoption.CmdOption
-import de.tototec.cmdoption.CmdlineParser
-import scala.collection.JavaConverters._
+
+import blended.updater.config.{Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig}
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+
 import scala.collection.immutable._
-import scala.util.Failure
-import scala.util.Try
-import blended.updater.config.FeatureConfig
-import blended.updater.config.BundleConfig
-import blended.updater.config.Artifact
-import java.io.PrintWriter
-import blended.updater.config.LocalRuntimeConfig
-import com.typesafe.config.ConfigParseOptions
+import scala.util.{Failure, Try}
 
 object RuntimeConfigBuilder {
 
@@ -123,7 +115,7 @@ object RuntimeConfigBuilder {
     }
 
     lazy val mvnUrls = runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
-    if (debug) Console.err.println(s"Maven URLs: ${mvnUrls}")
+    if (debug) Console.err.println(s"Maven URLs: $mvnUrls")
 
     if (options.downloadMissing) {
 
@@ -137,15 +129,15 @@ object RuntimeConfigBuilder {
       val states = files.par.map {
         case (file, urls) =>
           if (!file.exists()) {
-            println(s"Downloading: ${file}")
+            println(s"Downloading: $file")
             //            file -> RuntimeConfig.download(url, file)
 
             urls.find { url =>
-              Console.err.println(s"Downloading ${file.getName()} from ${url}")
+              Console.err.println(s"Downloading ${file.getName()} from $url")
               RuntimeConfig.download(url, file).isSuccess
             }.map { url => file -> Try(file)
             }.getOrElse {
-              val msg = s"Could not download ${file.getName()} from: ${urls}"
+              val msg = s"Could not download ${file.getName()} from: $urls"
               Console.err.println(msg)
               sys.error(msg)
             }
@@ -154,7 +146,7 @@ object RuntimeConfigBuilder {
 
       val issues = states.collect {
         case (file, Failure(e)) =>
-          Console.err.println(s"Could not download: ${file} (${e.getClass.getSimpleName()}: ${e.getMessage()})")
+          Console.err.println(s"Could not download: $file (${e.getClass.getSimpleName()}: ${e.getMessage()})")
           e
       }
       if (!issues.isEmpty) {
@@ -199,4 +191,3 @@ object RuntimeConfigBuilder {
   }
 
 }
-

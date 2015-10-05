@@ -94,7 +94,7 @@
     <!-- library versions -->
 
     <activemq.version>5.10.1</activemq.version>
-    <camel.version>2.14.0</camel.version>
+    <camel.version>2.15.3</camel.version>
     <karaf.version>2.3.6</karaf.version>
     <hawtio.version>1.4.51</hawtio.version>
 
