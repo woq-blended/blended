@@ -44,6 +44,9 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
   def validate(includeResourceArchives: Boolean,
     explodedResourceArchives: Boolean,
     checkPropertiesFile: Boolean): Seq[String] = {
+
+    val configIssues = runtimeConfig.validate()
+
     val artifacts = runtimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
@@ -95,7 +98,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
       }
     } else Nil
 
-    val issues = artifactIssues ++ resourceIssues ++ propertyIssues
+    val issues = configIssues ++ artifactIssues ++ resourceIssues ++ propertyIssues
     issues
   }
 }

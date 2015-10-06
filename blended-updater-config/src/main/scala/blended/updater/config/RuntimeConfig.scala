@@ -30,6 +30,7 @@ import java.io.FileWriter
 import scala.util.Success
 import java.io.FileReader
 import java.io.BufferedReader
+import scala.util.Failure
 
 object RuntimeConfig {
 
@@ -50,7 +51,7 @@ object RuntimeConfig {
     val PROFILE_PROPERTY_KEYS = "blended.updater.profile.properties.keys"
   }
 
-  def read(config: Config, featureRepo: Seq[FeatureConfig] = Seq()): Try[RuntimeConfig] = Try {
+  def read(config: Config): Try[RuntimeConfig] = Try {
 
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
@@ -70,7 +71,6 @@ object RuntimeConfig {
     RuntimeConfig(
       name = config.getString("name"),
       version = config.getString("version"),
-      // framework = readBundle(config.getConfig("framework")),
       bundles =
         if (config.hasPath("bundles"))
           config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
@@ -83,19 +83,7 @@ object RuntimeConfig {
       features =
         if (config.hasPath("features"))
           config.getObjectList("features").asScala.map { f =>
-          val fc = f.toConfig()
-          if (fc.hasPath("bundles")) {
-            // read directly
-            FeatureConfig.read(fc).get
-          } else {
-            // lookup in repo
-            val fName = fc.getString("name")
-            val fVersion = fc.getString("version")
-            featureRepo.find(f => f.name == fName && f.version == fVersion) match {
-              case Some(f) => f
-              case None => sys.error(s"Could not find bundles for feature: ${fName}-${fVersion}")
-            }
-          }
+          FeatureConfig.read(f.toConfig()).get
         }.toList
         else Seq(),
       resources =
@@ -311,15 +299,19 @@ case class RuntimeConfig(
 
   import RuntimeConfig._
 
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
+    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
+    s",systemProperties=${systemProperties},features=${features},resources=${resources})"
+
   def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 
   def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
 
   def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
 
-  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.bundles)
+  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.allBundles)
 
-  val framework: BundleConfig = {
+  val framework: Try[BundleConfig] = Try {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
     require(fs.size == 1, "A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has: " + fs.size)
     fs.head
@@ -328,5 +320,13 @@ case class RuntimeConfig(
   def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
   def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
+
+  def validate(): Seq[String] = {
+    framework match {
+      case Success(_) => Seq()
+      case Failure(e) => Seq(e.getMessage())
+    }
+
+  }
 
 }

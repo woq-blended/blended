@@ -35,7 +35,7 @@ class RuntimeConfigTest
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get
+          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get.framework.get
         }
         assert(ex.isInstanceOf[ConfigException.ValidationFailed] || ex.isInstanceOf[IllegalArgumentException])
       }
