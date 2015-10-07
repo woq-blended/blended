@@ -10,17 +10,11 @@ import com.typesafe.config.ConfigFactory
 import scala.collection.immutable._
 
 case class FeatureConfig(
-    name: String,
-    version: String,
-    url: Option[String],
-    bundles: Seq[BundleConfig],
-    features: Seq[FeatureConfig]) {
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},url=${url},bundles=${bundles},features=${features})"
-
-  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.allBundles)
-
-}
+  name: String,
+  version: String,
+  url: Option[String],
+  bundles: Seq[BundleConfig],
+  features: Seq[FeatureConfig])
 
 object FeatureConfig {
   def apply(name: String,

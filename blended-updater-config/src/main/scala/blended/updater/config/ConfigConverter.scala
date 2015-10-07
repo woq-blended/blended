@@ -23,7 +23,7 @@ trait ConfigConverter {
       }
 
     LauncherConfig(
-      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.get.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.get.url).get)}",
+      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

@@ -91,8 +91,14 @@ case class LauncherConfig(
     bundles: Seq[LauncherConfig.BundleConfig],
     branding: Map[String, String]) {
 
-  override def toString = s"${getClass().getSimpleName()}(frameworkJar=${frameworkJar},systemProperties=${systemProperties}" +
-    s",frameworkProperties=${frameworkProperties},startLevel=${startLevel},defaultStartLevel=${defaultStartLevel}" +
-    s",bundles=${bundles},branding=${branding})"
+  override def toString = getClass().getSimpleName() +
+    "(frameworkJar=" + frameworkJar +
+    ",systemProperties=" + systemProperties +
+    ",frameworkProperties=" + frameworkProperties +
+    ",startLevel=" + startLevel +
+    ",defaultStartLevel=" + defaultStartLevel +
+    ",bundles=" + bundles +
+    ",branding=" + branding +
+    ")"
 }
 
