@@ -46,27 +46,27 @@
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.gogo.runtime</artifactId>
-			<version>0.16.2</version>
+			<version>${felix.gogo.runtime.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.gogo.shell</artifactId>
-			<version>0.10.0</version>
+			<version>${felix.gogo.shell.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.gogo.command</artifactId>
-			<version>0.14.0</version>
+			<version>${felix.gogo.command.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.metatype</artifactId>
-			<version>1.0.12</version>
+			<version>${felix.metatype.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.typesafe</groupId>
 			<artifactId>config</artifactId>
-			<version>1.2.1</version>
+			<version>${typesafe.config.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>${project.groupId}</groupId>
@@ -204,14 +204,39 @@
 		<!-- bledned-camel -->
 
 		<dependency>
-			<groupId>${project.groupId}</groupId>
-			<artifactId>blended.camel.utils</artifactId>
-			<version>${blended.version}</version>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-core</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-spring</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jms</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-http</artifactId>
+			<version>${camel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-servlet</artifactId>
+			<version>${camel.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel</groupId>
 			<artifactId>camel-servletlistener</artifactId>
 			<version>${camel.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.camel.utils</artifactId>
+			<version>${blended.version}</version>
 		</dependency>
 
 		<!-- blended-commons -->
@@ -342,17 +367,17 @@
 		<dependency>
 			<groupId>org.ops4j.base</groupId>
 			<artifactId>ops4j-base-lang</artifactId>
-			<version>1.4.0</version>
+			<version>${ops4j-base.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.swissbox</groupId>
 			<artifactId>pax-swissbox-core</artifactId>
-			<version>1.6.0</version>
+			<version>${pax-swissbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.swissbox</groupId>
 			<artifactId>pax-swissbox-optional-jcl</artifactId>
-			<version>1.6.0</version>
+			<version>${pax-swissbox.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ops4j.pax.web</groupId>
@@ -392,22 +417,22 @@
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-bundleutils</artifactId>
-			<version>3.16</version>
+			<version>${xbean.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-asm4-shaded</artifactId>
-			<version>3.16</version>
+			<version>${xbean.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-reflect</artifactId>
-			<version>3.16</version>
+			<version>${xbean.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-finder-shaded</artifactId>
-			<version>3.16</version>
+			<version>${xbean.version}</version>
 		</dependency>
 
 
@@ -421,7 +446,7 @@
 		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mail</artifactId>
-			<version>1.4.4</version>
+			<version>${javax.mail.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.geronimo.specs</groupId>
