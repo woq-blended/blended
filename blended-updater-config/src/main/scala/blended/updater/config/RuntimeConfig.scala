@@ -70,7 +70,6 @@ object RuntimeConfig {
     RuntimeConfig(
       name = config.getString("name"),
       version = config.getString("version"),
-      // framework = readBundle(config.getConfig("framework")),
       bundles =
         if (config.hasPath("bundles"))
           config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
@@ -310,6 +309,10 @@ case class RuntimeConfig(
     resources: Seq[Artifact] = Seq()) {
 
   import RuntimeConfig._
+
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
+    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
+    s",systemProperties=${systemProperties},features=${features},resources=${resources})"
 
   def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 

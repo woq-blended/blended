@@ -84,9 +84,7 @@ object RuntimeConfigBuilder {
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
       val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-      //      repoConfig.getObjectList("features").asScala.map { c =>
       FeatureConfig.read(featureConfig).get
-      //      }
     }
 
     val configFile = new File(options.configFile).getAbsoluteFile()
