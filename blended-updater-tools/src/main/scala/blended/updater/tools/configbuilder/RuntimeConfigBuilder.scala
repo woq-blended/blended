@@ -2,12 +2,12 @@ package blended.updater.tools.configbuilder
 
 import java.io.File
 
-import blended.updater.config.{Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig}
-import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
-import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+import blended.updater.config.{ Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig }
+import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
+import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
 
 import scala.collection.immutable._
-import scala.util.{Failure, Try}
+import scala.util.{ Failure, Try }
 
 object RuntimeConfigBuilder {
 
@@ -84,9 +84,7 @@ object RuntimeConfigBuilder {
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
       val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-      //      repoConfig.getObjectList("features").asScala.map { c =>
       FeatureConfig.read(featureConfig).get
-      //      }
     }
 
     val configFile = new File(options.configFile).getAbsoluteFile()
@@ -97,11 +95,13 @@ object RuntimeConfigBuilder {
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
     val config = ConfigFactory.parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val runtimeConfig = RuntimeConfig.read(config, features).get
-    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
+    val unresolvedRuntimeConfig = RuntimeConfig.read(config).get
+    //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
-    val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
-    println("runtime config with resolved features: " + resolvedRuntimeConfig)
+    val runtimeConfig = FragmentResolver.resolve(unresolvedRuntimeConfig, features).get
+    if(debug) Console.err.println("runtime config with resolved features: " + runtimeConfig)
+
+    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
 
     if (options.check) {
       val issues = localRuntimeConfig.validate(

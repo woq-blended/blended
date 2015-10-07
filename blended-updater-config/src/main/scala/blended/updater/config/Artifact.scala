@@ -7,9 +7,13 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
 case class Artifact(
-  url: String,
-  fileName: Option[String],
-  sha1Sum: Option[String])
+    url: String,
+    fileName: Option[String],
+    sha1Sum: Option[String]) {
+
+  override def toString(): String = s"${getClass().getSimpleName()}(url=${url},fileName=${fileName},sha1Sum=${sha1Sum})"
+
+}
 
 object Artifact {
   def apply(url: String,
