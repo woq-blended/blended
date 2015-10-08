@@ -29,7 +29,7 @@ object BundleConfig {
     BundleConfig(
       artifact = Artifact(fileName = Option(jarName), url = url, sha1Sum = Option(sha1Sum)),
       start = start,
-      startLevel = Option(startLevel)
+      startLevel = if(startLevel != null) Some(startLevel.intValue()) else None
     )
 
   def read(config: Config): Try[BundleConfig] = Try {

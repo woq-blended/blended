@@ -78,7 +78,7 @@
 		<dependency>
 			<groupId>de.tototec</groupId>
 			<artifactId>de.tototec.cmdoption</artifactId>
-			<version>0.4.2</version>
+			<version>${cmdoption.version}</version>
 		</dependency>
 
 		<dependency>

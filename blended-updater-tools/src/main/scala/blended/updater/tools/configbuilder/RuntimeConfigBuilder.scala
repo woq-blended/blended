@@ -1,13 +1,12 @@
 package blended.updater.tools.configbuilder
 
 import java.io.File
-
-import blended.updater.config.{Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig}
-import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
-import de.tototec.cmdoption.{CmdOption, CmdlineParser}
-
+import blended.updater.config.{ Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig }
+import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
+import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
 import scala.collection.immutable._
-import scala.util.{Failure, Try}
+import scala.util.{ Failure, Try }
+import blended.updater.config.FeatureResolver
 
 object RuntimeConfigBuilder {
 
@@ -95,11 +94,13 @@ object RuntimeConfigBuilder {
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
     val config = ConfigFactory.parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val runtimeConfig = RuntimeConfig.read(config, features).get
-    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
+    val unresolvedRuntimeConfig = RuntimeConfig.read(config).get
+    //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
-    val resolvedRuntimeConfig = FragmentResolver.resolve(runtimeConfig, features)
-    println("runtime config with resolved features: " + resolvedRuntimeConfig)
+    val runtimeConfig = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
+    if (debug) Console.err.println("runtime config with resolved features: " + runtimeConfig)
+
+    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
 
     if (options.check) {
       val issues = localRuntimeConfig.validate(
@@ -117,7 +118,7 @@ object RuntimeConfigBuilder {
 
     if (options.downloadMissing) {
 
-      val files = runtimeConfig.allBundles.map(b =>
+      val files = runtimeConfig.allBundles.distinct.map(b =>
         RuntimeConfig.bundleLocation(b, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption)
       ) ++
         runtimeConfig.resources.map(r =>
@@ -186,6 +187,12 @@ object RuntimeConfigBuilder {
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
       //        }
     }
+
+    val validation = newRuntimeConfig.validate()
+    if (!validation.isEmpty) {
+      sys.error("There are configuration errors:\n" + validation.mkString("\n"))
+    }
+
   }
 
 }

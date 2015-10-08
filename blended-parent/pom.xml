@@ -106,6 +106,7 @@
     <aries.jmx.version>1.1.1</aries.jmx.version>
     <aries.proxy.version>1.0.1</aries.proxy.version>
     <aries.util.version>1.1.0</aries.util.version>
+    <cmdoption.version>0.4.2</cmdoption.version>
     <commons.beanutils.version>1.8.3_2</commons.beanutils.version>
     <commons.codec.version>1.6.0</commons.codec.version>
     <commons.collections.version>3.2.1</commons.collections.version>

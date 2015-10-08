@@ -1,9 +1,9 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpec
-import scala.util.Try
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Success
+
+import org.scalatest.FreeSpec
 
 class MvnUrlTest extends FreeSpec {
 
