@@ -16,8 +16,8 @@
 
 package blended.launcher
 
-import java.io.File
-import java.net.URLClassLoader
+import java.io.{OutputStream, InputStream, File}
+import java.net._
 import java.util.ServiceLoader
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
@@ -109,7 +109,7 @@ object Launcher {
   def run(args: Array[String]): Unit = {
 
     val log = Logger[Launcher.type]
-
+    
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {

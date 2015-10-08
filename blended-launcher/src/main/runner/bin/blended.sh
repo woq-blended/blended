@@ -30,12 +30,15 @@ cd $BLENDED_HOME
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf"
 JAVA_OPTS="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml ${JAVA_OPTS}"
 JAVA_OPTS="-Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME} ${JAVA_OPTS}"
+JAVA_OPTS="-Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500 ${JAVA_OPTS}"
 
 RETVAL=2
 
 if [ -n "$DEBUG_PORT" ] ; then
   JAVA_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=y ${JAVA_OPTS}"
 fi
+
+$JAVA_HOME/bin/java -version
 
 while [ "x$RETVAL" == "x2" ]; do
 
