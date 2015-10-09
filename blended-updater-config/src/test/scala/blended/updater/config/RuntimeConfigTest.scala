@@ -1,6 +1,7 @@
 package blended.updater.config
 
 import org.scalatest.FreeSpecLike
+import org.scalatest.Matchers
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import scala.util.Success
@@ -12,6 +13,7 @@ import java.io.FileWriter
 
 class RuntimeConfigTest
     extends FreeSpecLike
+    with Matchers
     with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
@@ -35,7 +37,7 @@ class RuntimeConfigTest
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get
+          RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get.framework.get
         }
         assert(ex.isInstanceOf[ConfigException.ValidationFailed] || ex.isInstanceOf[IllegalArgumentException])
       }
@@ -63,6 +65,74 @@ class RuntimeConfigTest
       val bundle = BundleConfig(url = "mvn:group:file:1", start = false, startLevel = 0)
       val rc = RuntimeConfig(name = "test", version = "1", bundles = List(bundle), startLevel = 1, defaultStartLevel = 1)
       assert(rc.resolveFileName(bundle.url) === Success("file-1.jar"))
+    }
+
+  }
+
+  "A Config with features references" - {
+    val config = """
+      |name = name
+      |version = 1
+      |bundles = [{url = "mvn:base:bundle1:1"}]
+      |startLevel = 10
+      |defaultStartLevel = 10
+      |features = [
+      |  { name = feature1, version = 1 }
+      |  { name = feature2, version = 1 }
+      |]
+      |""".stripMargin
+
+    val feature1 = """
+      |name = feature1
+      |version = 1
+      |bundles = [{url = "mvn:feature1:bundle1:1"}]
+      |""".stripMargin
+
+    val feature2 = """
+      |name = feature2
+      |version = 1
+      |bundles = [{url = "mvn:feature2:bundle1:1"}]
+      |features = [{name = feature3, version = 1}]
+      |""".stripMargin
+
+    val feature3 = """
+      |name = feature3
+      |version = 1
+      |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
+      |""".stripMargin
+
+    "should read but not validate" in {
+      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
+      rcTry shouldBe a[Success[_]]
+
+      val rc = rcTry.get
+      rc.bundles should have size (1)
+      rc.features should have size (2)
+      rc.allBundles should have size (1)
+
+      val validate = rc.validate()
+      validate should have length (1)
+      validate.head should include("one bundle with startLevel '0'")
+    }
+
+    val resolver = FeatureResolver
+
+    "should resolve to a valid config" in {
+      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
+      rcTry shouldBe a[Success[_]]
+
+      val resolvedTry = resolver.resolve(rcTry.get, Seq(feature1, feature2, feature3).map(f => {
+        val fc = FeatureConfig.read(ConfigFactory.parseString(f))
+        fc shouldBe a[Success[_]]
+        fc.get
+      }))
+      resolvedTry shouldBe a[Success[_]]
+
+      val resolved = resolvedTry.get
+      resolved.bundles should have size (1)
+      resolved.allBundles should have size (4)
+      resolved.features should have size (2)
+      resolved.validate() shouldBe empty
     }
 
   }

@@ -1,39 +1,15 @@
-package blended.updater.tools.configbuilder
+package blended.updater.config
 
-import blended.updater.config.FeatureConfig
-import blended.updater.config.RuntimeConfig
 import scala.util.Try
 import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
-trait FragmentResolver {
-  import FragmentResolver._
-
-  def resolveFragments(runtimeConfig: RuntimeConfig, fragments: Seq[FeatureConfig]): Either[Seq[Fragment], Seq[FeatureConfig]] = {
-
-    val requested: Seq[FragmentRef] = runtimeConfig.features.map(f => FragmentRef(f.name, f.version, f.url))
-
-    var resolved: Map[FragmentRef, FeatureConfig] = Map()
-    var unresolved: Map[FragmentRef, Seq[FragmentRef]] = Map()
-    var unseen: Seq[FeatureConfig] = Seq()
-
-    var cont = true
-
-    while (cont) {
-
-    }
-
-    ???
-  }
-
-}
-
-object FragmentResolver {
+object FeatureResolver {
 
   case class FragmentRef(name: String, version: String, url: Option[String])
 
-  class ResolveContext(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]) {
+  class ResolveContext(features: Seq[FeatureConfig], mvnBaseUrl: Option[String] = None) {
 
     private[this] var cache: Map[FragmentRef, FeatureConfig] = Map()
 
@@ -44,10 +20,10 @@ object FragmentResolver {
     def fetchFeature(feature: FragmentRef): Option[FeatureConfig] = cache.get(feature).orElse {
       feature.url match {
         case None => None
-        case Some(unresolveUrl) =>
+        case Some(unresolveUrl) if mvnBaseUrl.isDefined =>
           Try {
-            val url = runtimeConfig.resolveBundleUrl(unresolveUrl).get
-            val file = File.createTempFile(runtimeConfig.resolveFileName(url).get, "")
+            val url = RuntimeConfig.resolveBundleUrl(unresolveUrl, mvnBaseUrl).get
+            val file = File.createTempFile(RuntimeConfig.resolveFileName(url).get, "")
             RuntimeConfig.download(url, file).get
             val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
             file.delete()
@@ -68,8 +44,7 @@ object FragmentResolver {
     def fragementRef = FragmentRef(fragment.name, fragment.version, fragment.url)
   }
 
-  def isResolved(feature: FeatureConfig): Boolean =
-    (!feature.bundles.isEmpty || !feature.features.isEmpty || feature.url.isEmpty)
+  def isResolved(feature: FeatureConfig): Boolean = (!feature.bundles.isEmpty || !feature.features.isEmpty)
 
   def flattenFragments(feature: FeatureConfig): Seq[FeatureConfig] =
     feature +: feature.features.flatMap(flattenFragments)
@@ -84,14 +59,13 @@ object FragmentResolver {
       context.fetchFeature(FragmentRef(feature.name, feature.version, feature.url)) match {
         case Some(fetchedFeature) =>
           fetchedFeature.copy(features = fetchedFeature.features.map(f => resolve(f, context).get))
-          fetchedFeature
         case None => sys.error("Could not resolve feature: " + feature)
       }
     }
   }
 
   def resolve(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]): Try[RuntimeConfig] = Try {
-    val context = new ResolveContext(runtimeConfig, features)
+    val context = new ResolveContext(features, runtimeConfig.mvnBaseUrl)
     runtimeConfig.copy(
       features = runtimeConfig.features.map(f => resolve(f, context).get)
     )

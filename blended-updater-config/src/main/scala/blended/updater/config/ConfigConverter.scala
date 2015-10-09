@@ -3,10 +3,13 @@ package blended.updater.config
 import java.io.File
 import scala.collection.immutable._
 import blended.launcher.config.LauncherConfig
+import org.slf4j.LoggerFactory
 
 trait ConfigConverter {
 
   import ConfigConverter._
+
+  private[this] val log = LoggerFactory.getLogger(classOf[ConfigConverter])
 
   def runtimeConfigToLauncherConfig(runtimeConfig: RuntimeConfig, profileDir: String): LauncherConfig = {
     import LauncherConfig._
@@ -20,10 +23,13 @@ trait ConfigConverter {
           location = s"${bundlePrefix}/${bc.jarName.getOrElse(runtimeConfig.resolveFileName(bc.url).get)}",
           start = bc.start,
           startLevel = bc.startLevel.getOrElse(runtimeConfig.defaultStartLevel))
-      }
+      }.
+      distinct
+
+    log.debug("Converted bundles: {}", allBundles)
 
     LauncherConfig(
-      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.url).get)}",
+      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.get.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.get.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

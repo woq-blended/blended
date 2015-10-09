@@ -10,9 +10,13 @@ case class BundleConfig(
     artifact: Artifact,
     start: Boolean,
     startLevel: Option[Int]) {
+
   def url: String = artifact.url
   def jarName: Option[String] = artifact.fileName
   def sha1Sum: Option[String] = artifact.sha1Sum
+
+  override def toString(): String = s"${getClass().getSimpleName()}(artifact=${artifact},start=${start},url=${url},startLevel=${startLevel})"
+
 }
 
 object BundleConfig {
@@ -25,7 +29,7 @@ object BundleConfig {
     BundleConfig(
       artifact = Artifact(fileName = Option(jarName), url = url, sha1Sum = Option(sha1Sum)),
       start = start,
-      startLevel = Option(startLevel)
+      startLevel = if(startLevel != null) Some(startLevel.intValue()) else None
     )
 
   def read(config: Config): Try[BundleConfig] = Try {
