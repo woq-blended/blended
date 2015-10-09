@@ -25,8 +25,11 @@ class CollectorActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
+      // retrieve config as early as possible
+      val config = ManagementCollectorConfig(cfg.config, contextPath = "mgmt")
+
       whenServicePresent[HttpService] { httpSvc =>
-        setupBundleActor(cfg, ManagementCollector.props(cfg, "mgmt"))
+        setupBundleActor(cfg, ManagementCollector.props(cfg = cfg, config))
       }
     }
   }

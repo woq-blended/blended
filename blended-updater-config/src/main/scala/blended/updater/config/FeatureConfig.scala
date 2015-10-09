@@ -22,7 +22,7 @@ case class FeatureConfig(
 
 }
 
-object FeatureConfig {
+object FeatureConfig extends ((String, String, Option[String], Seq[BundleConfig], Seq[FeatureConfig]) => FeatureConfig){
   def apply(name: String,
     version: String,
     url: String = null,

@@ -18,9 +18,12 @@ package blended.karaf.container.registry
 
 import blended.container.registry.protocol._
 import blended.persistence.protocol._
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 import org.slf4j.LoggerFactory
 import blended.mgmt.base.ServiceInfo
+import blended.updater.config.RuntimeConfig
+import scala.collection.immutable
+import blended.updater.config.BundleConfig
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
@@ -30,19 +33,20 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
   "ContainerInfo" should {
 
-	  val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
+    val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
+    val containerInfo = ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo))
+    val expectedJson = """{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
 
     "serialize to Json correctly" in {
-      val info = ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo))
-      val json = info.toJson
-      json.compactPrint should be("""{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}""")
+      val json = containerInfo.toJson
+      json.compactPrint should be(expectedJson)
     }
 
     "serialize from Json correctly" in {
-      val json = """{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}""".parseJson
+      val json = expectedJson.parseJson
       val info = json.convertTo[ContainerInfo]
 
-      info should be(ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo)))
+      info should be(containerInfo)
     }
 
     "create the Persistence Properties correctly" in {
@@ -51,10 +55,25 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
       val props = info.persistenceProperties
 
-      props._1 should be (info.getClass.getName.replaceAll("\\.", "_"))
-      props._2.size should be (2)
-      props._2(DataObject.PROP_UUID) should be (PersistenceProperty[String]("uuid"))
-      props._2("fooo") should be (PersistenceProperty[String]("bar"))
+      props._1 should be(info.getClass.getName.replaceAll("\\.", "_"))
+      props._2.size should be(2)
+      props._2(DataObject.PROP_UUID) should be(PersistenceProperty[String]("uuid"))
+      props._2("fooo") should be(PersistenceProperty[String]("bar"))
     }
+
+  }
+
+  "ContainerRegistryResponseOK" should {
+
+    val stageAction = StageProfile(
+      RuntimeConfig(name = "testprofile", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:g:a:v", startLevel = 0))))
+    val activateAction = ActivateProfile(profileName = "testprofile", profileVersion = "1")
+
+    val response = ContainerRegistryResponseOK("uuid", immutable.Seq(stageAction, activateAction))
+
+    "serialize and deserialize result in equal object" in {
+      response should be(response.toJson.compactPrint.parseJson.convertTo[ContainerRegistryResponseOK])
+    }
+
   }
 }

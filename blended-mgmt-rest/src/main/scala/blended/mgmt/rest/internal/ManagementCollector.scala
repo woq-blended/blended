@@ -17,12 +17,11 @@
 package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
-
-import akka.actor.{Actor, ActorRefFactory}
+import akka.actor.{ Actor, ActorRefFactory }
 import akka.util.Timeout
-import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
+import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
 import blended.container.registry.protocol._
-import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
 import spray.routing._
@@ -30,44 +29,64 @@ import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
 import scala.concurrent.duration._
 import akka.actor.Props
+import com.typesafe.config.Config
 
-trait CollectorService extends HttpService { this : SprayJsonSupport =>
+trait CollectorService extends HttpService { this: SprayJsonSupport =>
 
-  def processContainerInfo(info :ContainerInfo) : ContainerRegistryResponseOK
-
+  def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
+  
   val collectorRoute = {
 
     implicit val timeout = Timeout(1.second)
-    
+
     path("container") {
       post {
-        handleWith { info : ContainerInfo => processContainerInfo(info) }
+        handleWith { info: ContainerInfo => processContainerInfo(info) }
       }
     }
   }
 }
 
-object ManagementCollector {
+case class ManagementCollectorConfig(servletSettings: ConnectorSettings, routingSettings: RoutingSettings, contextPath: String) {
 
-  def props(cfg: OSGIActorConfig, contextPath: String): Props =  Props(new ManagementCollector(cfg, contextPath))
 }
 
-class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)
-  extends OSGIActor(cfg)
-  with CollectorService
-  with ProductionEventSource
-  with SprayJsonSupport {
+object ManagementCollectorConfig {
+  def apply(config: Config, contextPath: String): ManagementCollectorConfig = ManagementCollectorConfig(
+    servletSettings = ConnectorSettings(config).copy(rootPath = Path(s"/${contextPath}")),
+    routingSettings = RoutingSettings(config),
+    contextPath
+  )
+}
 
-  override implicit def actorRefFactory : ActorRefFactory = context
+object ManagementCollector {
+
+  def props(cfg: OSGIActorConfig, config: ManagementCollectorConfig): Props = Props(new ManagementCollector(cfg, config))
+}
+
+class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfig)
+    extends OSGIActor(cfg)
+    with CollectorService
+    with ProductionEventSource
+    with SprayJsonSupport {
+
+  type ContainerId = String
+  
+  // mutable vars
+  private[this] var cachedActions: Map[ContainerId, Seq[UpdateAction]] = Map()
+  
+  // Required by CollectorService
+  override implicit def actorRefFactory: ActorRefFactory = context
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
+    log.debug("Processing container info: {}", info)
     sendEvent(UpdateContainerInfo(info))
     ContainerRegistryResponseOK(info.containerId)
   }
 
   override def preStart(): Unit = {
-    implicit val servletSettings = ConnectorSettings(cfg.config).copy(rootPath = Path(s"/$contextPath"))
-    implicit val routingSettings = RoutingSettings(cfg.config)
+    val servletSettings = config.servletSettings
+    implicit val routingSettings = config.routingSettings
     implicit val routeLogger = LoggingContext.fromAdapter(log)
     implicit val exceptionHandler = ExceptionHandler.default
     implicit val rejectionHandler = RejectionHandler.Default
@@ -81,16 +100,15 @@ class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)
       override def actorSystem = actorSys
     }
 
-    servlet.providesService[Servlet] (
+    servlet.providesService[Servlet](
       "urlPatterns" -> "/",
-      "Webapp-Context" -> contextPath,
-      "Web-ContextPath" -> s"/$contextPath"
+      "Webapp-Context" -> config.contextPath,
+      "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
     context.become(runRoute(collectorRoute))
   }
 
-
-  def receive : Receive = Actor.emptyBehavior
+  def receive: Receive = Actor.emptyBehavior
 
 }

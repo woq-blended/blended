@@ -32,7 +32,8 @@ import java.io.FileReader
 import java.io.BufferedReader
 import scala.util.Failure
 
-object RuntimeConfig {
+object RuntimeConfig
+    extends ((String, String, Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], Seq[FeatureConfig], Seq[Artifact]) => RuntimeConfig) {
 
   val MvnPrefix = "mvn:"
 
@@ -53,9 +54,9 @@ object RuntimeConfig {
 
   def read(config: Config): Try[RuntimeConfig] = Try {
 
-    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    config.withFallback(optionals).checkValid(reference)
+        val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+        val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+        config.withFallback(optionals).checkValid(reference)
 
     def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
       if (default.isDefined && !config.hasPath(key)) {

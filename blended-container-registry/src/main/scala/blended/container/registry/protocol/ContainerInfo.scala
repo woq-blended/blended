@@ -20,8 +20,9 @@ import blended.persistence.protocol._
 import scala.collection.mutable
 import scala.collection.immutable
 import blended.mgmt.base.ServiceInfo
+import blended.updater.config.RuntimeConfig
 
-case class ContainerInfo (containerId : String, properties : Map[String, String], serviceInfos: immutable.Seq[ServiceInfo]) extends DataObject(containerId) {
+case class ContainerInfo(containerId: String, properties: Map[String, String], serviceInfos: immutable.Seq[ServiceInfo]) extends DataObject(containerId) {
   // TODO: implement serviceInfos persistence
   override def persistenceProperties: PersistenceProperties = {
     var builder =
@@ -33,7 +34,10 @@ case class ContainerInfo (containerId : String, properties : Map[String, String]
   }
 }
 
-case class UpdateContainerInfo (info: ContainerInfo)
-case class ContainerRegistryResponseOK (id: String)
+case class UpdateContainerInfo(info: ContainerInfo)
+case class ContainerRegistryResponseOK(id: String, actions: immutable.Seq[UpdateAction] = immutable.Seq())
 
+sealed trait UpdateAction
+final case class StageProfile(runtimeConfig: RuntimeConfig) extends UpdateAction
+final case class ActivateProfile(profileName: String, profileVersion: String) extends UpdateAction
 

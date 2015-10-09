@@ -39,7 +39,7 @@ class RuntimeConfigTest
         val ex = intercept[RuntimeException] {
           RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get.framework.get
         }
-        assert(ex.isInstanceOf[ConfigException.ValidationFailed] || ex.isInstanceOf[IllegalArgumentException])
+        assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
       }
     }
 

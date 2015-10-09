@@ -19,7 +19,7 @@ case class BundleConfig(
 
 }
 
-object BundleConfig {
+object BundleConfig extends ((Artifact, Boolean, Option[Int]) => BundleConfig) {
 
   def apply(url: String,
     jarName: String = null,
@@ -33,16 +33,22 @@ object BundleConfig {
     )
 
   def read(config: Config): Try[BundleConfig] = Try {
-    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    config.withFallback(optionals).checkValid(reference)
+    //    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+    //    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig.BundleConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+    //    config.withFallback(optionals).checkValid(reference)
 
     BundleConfig(
-      artifact = Artifact(
-        url = config.getString("url"),
-        fileName = if (config.hasPath("jarName")) Option(config.getString("jarName")) else None,
-        sha1Sum = if (config.hasPath("sha1Sum")) Option(config.getString("sha1Sum")) else None
-      ),
+      artifact = if (config.hasPath("artifact")) {
+        // read artifact
+        Artifact.read(config.getConfig("artifact")).get
+      } else {
+        // read legacy-structure directly
+        Artifact(
+          url = config.getString("url"),
+          fileName = if (config.hasPath("jarName")) Option(config.getString("jarName")) else None,
+          sha1Sum = if (config.hasPath("sha1Sum")) Option(config.getString("sha1Sum")) else None
+        )
+      },
       start = if (config.hasPath("start")) config.getBoolean("start") else false,
       startLevel = if (config.hasPath("startLevel")) Option(config.getInt("startLevel")) else None
     )
