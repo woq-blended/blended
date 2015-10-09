@@ -156,6 +156,7 @@
             <configuration>
               <srcProfile>${project.build.directory}/classes/profile.conf</srcProfile>
               <destDir>${project.build.directory}/classes</destDir>
+              <resolveFromDependencies>true</resolveFromDependencies>
             </configuration>
           </execution>
         </executions>

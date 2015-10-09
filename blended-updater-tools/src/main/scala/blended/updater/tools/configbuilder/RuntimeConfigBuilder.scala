@@ -5,8 +5,17 @@ import blended.updater.config.{ Artifact, BundleConfig, ConfigWriter, FeatureCon
 import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
 import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
 import scala.collection.immutable._
-import scala.util.{ Failure, Try }
 import blended.updater.config.FeatureResolver
+import scala.util.Failure
+import scala.util.Try
+import blended.updater.config.FeatureConfig
+import blended.updater.config.BundleConfig
+import blended.updater.config.Artifact
+import java.io.PrintWriter
+import blended.updater.config.LocalRuntimeConfig
+import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.MvnGav
+import scala.util.Success
 
 object RuntimeConfigBuilder {
 
@@ -51,6 +60,11 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("--debug"))
     var debug: Boolean = false
+
+    @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
+    def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts: Seq[(String, String)] = Seq()
+
   }
 
   def main(args: Array[String]): Unit = {
@@ -79,6 +93,12 @@ object RuntimeConfigBuilder {
     val debug = options.debug
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
+
+    val mvnGavs = options.mavenArtifacts.map {
+      case (gav, file) => MvnGav.parse(gav) -> file
+    }.collect {
+      case (Success(gav), file) => gav -> file
+    }
 
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
@@ -116,21 +136,23 @@ object RuntimeConfigBuilder {
     lazy val mvnUrls = runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
     if (debug) Console.err.println(s"Maven URLs: $mvnUrls")
 
+    def downloadUrls(b: Artifact): Seq[String] = {
+      val directUrl = MvnGavSupport.downloadUrls(mvnGavs, b, debug)
+      directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).to[Seq])
+    }
+
     if (options.downloadMissing) {
 
-      val files = runtimeConfig.allBundles.distinct.map(b =>
-        RuntimeConfig.bundleLocation(b, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption)
-      ) ++
-        runtimeConfig.resources.map(r =>
-          RuntimeConfig.resourceArchiveLocation(r, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(r.url, Option(baseUrl)).toOption)
-        )
+      val files = runtimeConfig.allBundles.distinct.map { b =>
+        RuntimeConfig.bundleLocation(b, dir) -> downloadUrls(b.artifact)
+      } ++ runtimeConfig.resources.map(r =>
+        RuntimeConfig.resourceArchiveLocation(r, dir) -> downloadUrls(r)
+      )
 
       val states = files.par.map {
         case (file, urls) =>
           if (!file.exists()) {
-            println(s"Downloading: $file")
-            //            file -> RuntimeConfig.download(url, file)
-
+            println(s"Downloading: ${file}")
             urls.find { url =>
               Console.err.println(s"Downloading ${file.getName()} from $url")
               RuntimeConfig.download(url, file).isSuccess

@@ -59,25 +59,25 @@ class MaterializeProfileMojo extends AbstractMojo {
     val localRepoUrl = Option(localRepositoryUrl).getOrElse(project.getProjectBuildingRequest.getLocalRepository.getUrl)
     val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
 
-    //    val repoArgs = if (resolveFromDependencies) {
-    //        project.getArtifacts.asScala.toArray.flatMap { a =>
-    //          Array("--maven-artifact",
-    //            s"${a.getGroupId}:${a.getArtifactId}:${Option(a.getClassifier).filter(_ != "jar").getOrElse("")}:${a.getVersion}:${Option(a.getType).getOrElse("")}",
-    //            a.getFile.getAbsolutePath)
-    //        }
-    //      } else {
-    //        Array("--maven-dir", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
-    //      }
+    val repoArgs = if (resolveFromDependencies) {
+      project.getArtifacts.asScala.toArray.flatMap { a =>
+        Array("--maven-artifact",
+          s"${a.getGroupId}:${a.getArtifactId}:${Option(a.getClassifier).filter(_ != "jar").getOrElse("")}:${a.getVersion}:${Option(a.getType).getOrElse("")}",
+          a.getFile.getAbsolutePath)
+      }
+    } else {
+      Array("--maven-url", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
+    }
 
     val profileArgs = Array(
+      "--debug",
       "-f", srcProfile.getAbsolutePath,
       "-o", targetProfile.getAbsolutePath,
-      "-d",
-      "-u",
-      "--maven-url", localRepoUrl
+      "--download-missing",
+      "--update-checksums"
     ) ++ featureFiles.toArray.flatMap { f =>
         Array("-r", f.getAbsolutePath)
-      } ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
+      } ++ repoArgs
     RuntimeConfigBuilder.run(profileArgs)
   }
 
