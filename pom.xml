@@ -184,11 +184,18 @@
       <modules>
         <module>blended-karaf-installer</module>
 
+<<<<<<< HEAD
 	<module>blended-updater-config</module>
 	<module>blended-launcher</module>
 	<module>blended-updater</module>
 	<module>blended-updater-tools</module>
 	<module>blended-updater-remote</module>
+=======
+        <module>blended-updater-config</module>
+        <module>blended-launcher</module>
+        <module>blended-updater</module>
+        <module>blended-updater-tools</module>
+>>>>>>> master
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>
@@ -221,9 +228,11 @@
 
         <module>blended-samples</module>
         <module>blended-activemq-defaultbroker</module>
+        <module>blended-activemq-client</module>
 
 	<module>blended-launcher-features</module>
 	<module>blended-launcher-demo</module>
+        <module>blended-launcher-broker</module>
 	<module>blended-demo-mgmt</module>
 
       </modules>

@@ -1,0 +1,17 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Export-Package:
+
+Bundle-Activator:\
+  ${bundle.namespace}.internal.AmqClientActivator
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
+
+Private-Package:\
+  ${bundle.namespace}.internal
