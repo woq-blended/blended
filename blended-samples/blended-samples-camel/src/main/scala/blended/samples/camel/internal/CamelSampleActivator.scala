@@ -32,7 +32,7 @@ class CamelSampleActivator extends DominoActivator {
     whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") { cf =>
 
       val ctxt = new DefaultCamelContext()
-      ctxt.setName("SampleContext")
+      ctxt.setName("BlendedSampleContext")
       ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
       ctxt.addRoutes(new RouteBuilder() {

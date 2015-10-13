@@ -35,59 +35,66 @@ class BrokerActivator extends DominoActivator
     
     whenTypesafeConfigAvailable { (config, idSvc) =>
 
-      var brokerService: Option[BrokerService] = None
+      if (!config.isEmpty()) {
+        var brokerService: Option[BrokerService] = None
 
-      val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
+        val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
 
-      val brokerName = config.getString("brokerName")
-      val uri = s"file://$cfgDir/${config.getString("file")}"
-      val provider = config.getString("provider")
+        val brokerName = config.getString("brokerName")
+        val uri = s"file://$cfgDir/${config.getString("file")}"
+        val provider = config.getString("provider")
 
-      log.info("Configuring Active MQ Broker from config [{}] with provider id [{}].", Array(uri, provider))
+        log.info("Configuring Active MQ Broker from config [{}] with provider id [{}].", Array(uri, provider))
 
-      val oldLoader = Thread.currentThread().getContextClassLoader()
+        val oldLoader = Thread.currentThread().getContextClassLoader()
 
-      try {
+        try {
 
-        BrokerFactory.setStartDefault(false)
+          BrokerFactory.setStartDefault(false)
 
-        Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
+          Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
 
-        brokerService = Some(new XBeanBrokerFactory().createBroker(new URI(uri)))
+          val brokerFactory = new XBeanBrokerFactory()
+          brokerFactory.setValidate(false)
 
-        brokerService.foreach { broker =>
-          broker.setBrokerName(brokerName)
-          broker.start()
-          broker.waitUntilStarted()
+          brokerService = Some(brokerFactory.createBroker(new URI(uri)))
 
-          log.info(s"ActiveMQ broker [$brokerName] started successfully.")
+          brokerService.foreach { broker =>
+            broker.setBrokerName(brokerName)
+            broker.start()
+            broker.waitUntilStarted()
 
-          val url = s"vm://$brokerName?create=false"
-          val amqCF = new ActiveMQConnectionFactory(url)
+            log.info(s"ActiveMQ broker [$brokerName] started successfully.")
 
-          val cf = new CachingConnectionFactory(amqCF)
+            val url = s"vm://$brokerName?create=false"
+            val amqCF = new ActiveMQConnectionFactory(url)
 
-          cf.providesService[ConnectionFactory](Map(
-            "provider" -> provider,
-            "brokerName" -> brokerName
-          ))
+            val cf = new CachingConnectionFactory(amqCF)
+
+            cf.providesService[ConnectionFactory](Map(
+              "provider" -> provider,
+              "brokerName" -> brokerName
+            ))
+          }
+
+        } catch {
+          case NonFatal(e) =>
+            log.error("Failed to configure broker from [{}]", Array(e, uri))
+            throw e
+        } finally {
+          Thread.currentThread().setContextClassLoader(oldLoader)
         }
 
-      } catch {
-        case NonFatal(e) =>
-          log.error("Failed to configure broker from [{}]", Array(e, uri))
-          throw e
-      } finally {
-        Thread.currentThread().setContextClassLoader(oldLoader)
-      }
-
-      onStop {
-        brokerService.foreach { broker =>
-          log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
-          broker.stop()
-          broker.waitUntilStopped()
+        onStop {
+          brokerService.foreach { broker =>
+            log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
+            broker.stop()
+            broker.waitUntilStopped()
+          }
+          brokerService = None
         }
-        brokerService = None
+      } else {
+        log.info("No broker configuration found. No broker started.")
       }
     }
   }

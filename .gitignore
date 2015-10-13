@@ -18,3 +18,4 @@ felix-cache
 .classpath
 libs/
 .mvn/maven.settings
+.mvn/maven.config

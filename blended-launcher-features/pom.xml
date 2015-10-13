@@ -201,6 +201,12 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.activemq.client</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
 		<!-- bledned-camel -->
 
 		<dependency>
@@ -327,6 +333,11 @@
 		<dependency>
 			<groupId>${project.groupId}.samples</groupId>
 			<artifactId>blended.samples.camel</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.wayofquality.blended.samples</groupId>
+			<artifactId>blended.samples.jms</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
 
