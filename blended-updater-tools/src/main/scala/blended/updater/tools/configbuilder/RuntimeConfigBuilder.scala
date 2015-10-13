@@ -191,11 +191,13 @@ object RuntimeConfigBuilder {
       def checkAndUpdateBundle(b: BundleConfig): BundleConfig =
         b.copy(artifact = checkAndUpdate(localRuntimeConfig.bundleLocation(b), b.artifact))
 
+      def checkAndUpdateFeatures(f: FeatureConfig): FeatureConfig =
+        f.copy(bundles = f.bundles.map(checkAndUpdateBundle),
+          features = f.features.map(checkAndUpdateFeatures))
+
       runtimeConfig.copy(
         bundles = runtimeConfig.bundles.map(checkAndUpdateBundle),
-        features = runtimeConfig.features.map { f =>
-          f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
-        },
+        features = runtimeConfig.features.map(checkAndUpdateFeatures),
         resources = runtimeConfig.resources.map(checkAndUpdateResource)
       )
     } else runtimeConfig
