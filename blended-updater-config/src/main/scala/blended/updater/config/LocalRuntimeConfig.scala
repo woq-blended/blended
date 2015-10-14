@@ -50,22 +50,26 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
     val artifacts = runtimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
-    val artifactIssues = artifacts.par.flatMap {
-      case (file, artifact) =>
-        val issue = if (!file.exists()) {
-          Some(s"Missing file: ${file.getName()}")
-        } else {
-          RuntimeConfig.digestFile(file) match {
-            case Some(d) =>
-              if (Option(d) != artifact.sha1Sum) {
-                Some(s"Invalid checksum of bundle jar: ${file.getName()}")
-              } else None
-            case None =>
-              Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
+    val artifactIssues = {
+      var checkedFiles: Map[File, String] = Map()
+      artifacts.par.flatMap {
+        case (file, artifact) =>
+          val issue = if (!file.exists()) {
+            Some(s"Missing file: ${file.getName()}")
+          } else {
+            checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)) match {
+              case Some(d) =>
+                checkedFiles += file -> d
+                if (Option(d) != artifact.sha1Sum) {
+                  Some(s"Invalid checksum of bundle jar: ${file.getName()}")
+                } else None
+              case None =>
+                Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
+            }
           }
-        }
-        issue.toList
-    }.seq
+          issue.toList
+      }.seq
+    }
 
     val resourceIssues = if (explodedResourceArchives) {
       runtimeConfig.resources.flatMap { artifact =>
