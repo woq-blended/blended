@@ -176,10 +176,12 @@ object RuntimeConfigBuilder {
     }
 
     val newRuntimeConfig = if (options.updateChecksums) {
+      var checkedFiles: Map[File, String] = Map()
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
-        RuntimeConfig.digestFile(file).map { checksum =>
+        checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)).map { checksum =>
+          checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
-            println(s"Updating checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
+            println(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
             r.copy(sha1Sum = Option(checksum))
           } else r
         }.getOrElse(r)
