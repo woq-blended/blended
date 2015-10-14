@@ -40,7 +40,7 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
                 .process(new Processor() {
                   override def process(exchange: Exchange): Unit = {
                     exchange.setOut(exchange.getIn())
-                    exchange.getOut().setHeader("SampleCounter", constant(msgCounter.getAndIncrement()))
+                    exchange.getOut().setHeader("SampleCounter", msgCounter.getAndIncrement().toString())
                   }
                 })
                 .to(s"activemq:${jmsSampleCfg.destination}")
