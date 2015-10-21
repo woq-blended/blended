@@ -51,9 +51,12 @@ object MgmtReporter {
   }
 
   case class MgmtReporterConfig(
-    registryUrl: String,
-    updateIntervalMsec: Long,
-    initialUpdateDelayMsec: Long)
+      registryUrl: String,
+      updateIntervalMsec: Long,
+      initialUpdateDelayMsec: Long) {
+
+    override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
+  }
 
   case object Tick
 

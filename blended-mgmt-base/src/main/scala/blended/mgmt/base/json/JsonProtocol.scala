@@ -39,7 +39,7 @@ trait JsonProtocol extends DefaultJsonProtocol {
     override def write(obj: UpdateAction): JsValue = obj match {
       case s: StageProfile => s.toJson
       case a: ActivateProfile => a.toJson
-      case _ => serializationError(s"Could not write object $obj")
+      case _ => serializationError(s"Could not write object ${obj}")
     }
     override def read(json: JsValue): UpdateAction = {
       val fields = json.asJsObject.fields.keySet
