@@ -139,6 +139,11 @@
       <artifactId>blended.persistence</artifactId>
       <version>${blended.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.updater.remote</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
 
   </dependencies>
 
