@@ -20,16 +20,23 @@ import akka.actor.Props
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
 import org.osgi.service.http.HttpService
+import org.slf4j.LoggerFactory
+import blended.updater.remote.RemoteUpdater
 
 class CollectorActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      // retrieve config as early as possible
-      val config = ManagementCollectorConfig(cfg.config, contextPath = "mgmt")
+      whenServicePresent[RemoteUpdater] { remoteUpdater =>
+        val log = LoggerFactory.getLogger(classOf[CollectorActivator])
 
-      whenServicePresent[HttpService] { httpSvc =>
-        setupBundleActor(cfg, ManagementCollector.props(cfg = cfg, config))
+        // retrieve config as early as possible
+        val config = ManagementCollectorConfig(cfg.config, contextPath = "mgmt", remoteUpdater = remoteUpdater)
+        log.debug("Config: {}", config)
+
+        whenServicePresent[HttpService] { httpSvc =>
+          setupBundleActor(cfg, ManagementCollector.props(cfg = cfg, config))
+        }
       }
     }
   }

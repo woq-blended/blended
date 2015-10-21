@@ -34,8 +34,12 @@ import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ContainerRegistryResponseOK
 import blended.mgmt.base.UpdateContainerInfo
 import blended.mgmt.base.UpdateAction
+import org.slf4j.LoggerFactory
+import blended.updater.remote.RemoteUpdater
 
 trait CollectorService extends HttpService { this: SprayJsonSupport =>
+
+  private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
@@ -45,21 +49,32 @@ trait CollectorService extends HttpService { this: SprayJsonSupport =>
 
     path("container") {
       post {
-        handleWith { info: ContainerInfo => processContainerInfo(info) }
+        handleWith { info: ContainerInfo =>
+          log.debug("Processing container info: {}", info)
+          val res = processContainerInfo(info)
+          log.debug("Processing result: {}", res)
+          res
+        }
       }
     }
   }
 }
 
-case class ManagementCollectorConfig(servletSettings: ConnectorSettings, routingSettings: RoutingSettings, contextPath: String) {
-  override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath})"
+case class ManagementCollectorConfig(
+    servletSettings: ConnectorSettings,
+    routingSettings: RoutingSettings,
+    contextPath: String,
+    remoteUpdater: RemoteUpdater) {
+
+  override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath},remoteUpdater=${remoteUpdater})"
 }
 
 object ManagementCollectorConfig {
-  def apply(config: Config, contextPath: String): ManagementCollectorConfig = ManagementCollectorConfig(
+  def apply(config: Config, contextPath: String, remoteUpdater: RemoteUpdater): ManagementCollectorConfig = ManagementCollectorConfig(
     servletSettings = ConnectorSettings(config).copy(rootPath = Path(s"/${contextPath}")),
     routingSettings = RoutingSettings(config),
-    contextPath
+    contextPath = contextPath,
+    remoteUpdater = remoteUpdater
   )
 }
 
@@ -76,6 +91,8 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
 
   type ContainerId = String
 
+  private[this] val mylog = LoggerFactory.getLogger(classOf[ManagementCollector])
+  
   // mutable vars
   private[this] var cachedActions: Map[ContainerId, Seq[UpdateAction]] = Map()
 
@@ -83,9 +100,12 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
   override implicit def actorRefFactory: ActorRefFactory = context
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
-    log.debug("Processing container info: {}", info)
+    mylog.debug("Processing container info: {}", info)
     sendEvent(UpdateContainerInfo(info))
-    ContainerRegistryResponseOK(info.containerId)
+    val updater = config.remoteUpdater
+    updater.removeResolvedActions(info)
+    val newActions = updater.getContainerActions(info.containerId)
+    ContainerRegistryResponseOK(info.containerId, newActions)
   }
 
   override def preStart(): Unit = {
