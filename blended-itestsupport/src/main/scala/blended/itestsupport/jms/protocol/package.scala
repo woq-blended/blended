@@ -20,8 +20,8 @@ import javax.jms.DeliveryMode
 
 import akka.actor.ActorRef
 
-package object protocol {
-  case class Connect(clientId: String, user: Option[String] = None, password : Option[String] = None)
+package protocol {
+  case class Connect(clientId: String, user: Option[String] = None, password: Option[String] = None)
   case class Connected(clientId: String)
 
   case object Disconnect
