@@ -49,6 +49,7 @@ import blended.updater.config.LocalRuntimeConfig
 import scala.util.Failure
 import scala.util.Success
 import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.ResolvedRuntimeConfig
 
 object Launcher {
 
@@ -161,7 +162,7 @@ object Launcher {
             Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
           }
           val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          val runtimeConfig = RuntimeConfig.read(config).get
+          val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
           val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
 
           var brandingProps = Map(

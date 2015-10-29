@@ -29,6 +29,7 @@ import blended.updater.config.LocalRuntimeConfig
 import com.typesafe.config.ConfigParseOptions
 import blended.mgmt.base.ServiceInfo
 import org.slf4j.LoggerFactory
+import blended.updater.config.ResolvedRuntimeConfig
 
 object Updater {
 
@@ -47,7 +48,9 @@ object Updater {
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
   final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
-  final case class RuntimeConfigs(requestId: String, staged: Seq[LocalRuntimeConfig], pending: Seq[LocalRuntimeConfig], invalid: Seq[LocalRuntimeConfig]) extends Reply
+  final case class RuntimeConfigs(requestId: String, staged: Seq[LocalRuntimeConfig], pending: Seq[LocalRuntimeConfig], invalid: Seq[LocalRuntimeConfig]) extends Reply {
+    override def toString(): String = s"${getClass().getSimpleName()}(requestId=${requestId},staged=${staged},pending=${pending},invalid=${invalid})"
+  }
 
   final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
   final case class RuntimeConfigAdded(requestId: String) extends Reply
@@ -133,6 +136,8 @@ object Updater {
 
   case class Profile(config: LocalRuntimeConfig, state: Profile.ProfileState) {
     def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
+    def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
+    def bundles: Seq[BundleConfig] = config.resolvedRuntimeConfig.allBundles
   }
 
 }
@@ -172,7 +177,6 @@ class Updater(
   private[this] var tickers: Seq[Cancellable] = Nil
   ////////////////////
 
-  // TODO: generate properties file
   private[this] def stageInProgress(state: State): Unit = {
     val id = state.requestId
     val config = state.config
@@ -233,7 +237,7 @@ class Updater(
       profile.state == Profile.Valid
     }.
       flatMap { profile =>
-        profile.config.runtimeConfig.allBundles.filter { b =>
+        profile.bundles.filter { b =>
           // same sha1sum
           b.sha1Sum == Some(sha1Sum)
         }.
@@ -318,9 +322,10 @@ class Updater(
           val version = versionDir.getName()
           val name = versionDir.getParentFile.getName()
           val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          val runtimeConfig = RuntimeConfig.read(config).get
+          val resolved = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
+          val runtimeConfig = resolved.runtimeConfig
           if (runtimeConfig.name == name && runtimeConfig.version == version) {
-            val issues = LocalRuntimeConfig(baseDir = versionDir, runtimeConfig = runtimeConfig).validate(
+            val issues = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved).validate(
               includeResourceArchives = false,
               explodedResourceArchives = true,
               checkPropertiesFile = true)
@@ -329,7 +334,7 @@ class Updater(
               case Seq() => Profile.Valid
               case issues => Profile.Pending(issues)
             }
-            List(Profile(LocalRuntimeConfig(runtimeConfig, versionDir), profileState))
+            List(Profile(LocalRuntimeConfig(resolved, versionDir), profileState))
           } else {
             log.warn(s"Profile name and version do not match directory names: ${profileFile}")
             List()
@@ -356,17 +361,20 @@ class Updater(
       val id = ProfileId(config.name, config.version)
       findConfig(id) match {
         case None =>
-          // TODO: stage
-
           val dir = new File(new File(installBaseDir, config.name), config.version)
           dir.mkdirs()
 
           val confFile = new File(dir, "profile.conf")
 
-          ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-          profiles += id -> Profile(LocalRuntimeConfig(config, dir), Profile.Pending(Seq("Never checked")))
+          config.resolve() match {
+            case Success(resolved) =>
+              ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
+              profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), Profile.Pending(Seq("Never checked")))
+              sender() ! RuntimeConfigAdded(reqId)
+            case Failure(e) =>
+              sender() ! RuntimeConfigAdditionFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
+          }
 
-          sender() ! RuntimeConfigAdded(reqId)
         case Some(`config`) =>
           sender() ! RuntimeConfigAdded(reqId)
         case Some(collision) =>
@@ -400,7 +408,7 @@ class Updater(
 
             // analyze config
 
-            val artifacts = config.runtimeConfig.allBundles.map { b =>
+            val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
               ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
             } ++
               config.runtimeConfig.resources.map { r =>

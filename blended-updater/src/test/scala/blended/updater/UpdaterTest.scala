@@ -25,6 +25,7 @@ import blended.updater.Updater.RuntimeConfigAdditionFailed
 import blended.updater.Updater.GetRuntimeConfigs
 import blended.updater.Updater.RuntimeConfigs
 import blended.updater.config.LocalRuntimeConfig
+import blended.updater.config.ResolvedRuntimeConfig
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -52,7 +53,7 @@ class UpdaterTest
 
           assert(!installBaseDir.exists())
 
-          val config = RuntimeConfig(
+          val config = ResolvedRuntimeConfig(RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
             bundles = Seq(BundleConfig(
               url = bundle1.toURI().toString(),
@@ -62,11 +63,11 @@ class UpdaterTest
             )),
             startLevel = 10,
             defaultStartLevel = 10
-          )
+          ))
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config)
+            updater ! AddRuntimeConfig(addId, config.runtimeConfig)
             fishForMessage() {
               case RuntimeConfigAdded(`addId`) => true
             }
@@ -106,7 +107,7 @@ class UpdaterTest
             }
           }
 
-          val config = RuntimeConfig(
+          val config = ResolvedRuntimeConfig(RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
             bundles = Seq(BundleConfig(
               url = bundle1.toURI().toString(),
@@ -116,11 +117,11 @@ class UpdaterTest
             )),
             startLevel = 10,
             defaultStartLevel = 10
-          )
+          ))
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config)
+            updater ! AddRuntimeConfig(addId, config.runtimeConfig)
             fishForMessage() {
               case RuntimeConfigAdded(`addId`) => true
             }
@@ -133,13 +134,13 @@ class UpdaterTest
           {
             val id = nextId()
             updater ! GetRuntimeConfigs(id)
-            fishForMessage() {
+            fishForMessage(hint = s"id: ${id}") {
               case Updater.RuntimeConfigs(`id`, Seq(), Seq(LocalRuntimeConfig(`config`, _)), Seq()) => true
             }
           }
 
           {
-            val config2 = config.copy(startLevel = 20)
+            val config2 = config.runtimeConfig.copy(startLevel = 20)
             val addId = nextId()
             updater ! AddRuntimeConfig(addId, config2)
             fishForMessage() {
@@ -237,7 +238,7 @@ class UpdaterTest
           )
 
           {
-            val config = RuntimeConfig(
+            val config = ResolvedRuntimeConfig(RuntimeConfig(
               name = "test-with-3-bundles", version = "1.0.0",
               bundles = Seq(
                 BundleConfig(
@@ -263,11 +264,11 @@ class UpdaterTest
                 )),
               startLevel = 10,
               defaultStartLevel = 10
-            )
+            ))
 
             {
               val addId = nextId()
-              updater ! AddRuntimeConfig(addId, config)
+              updater ! AddRuntimeConfig(addId, config.runtimeConfig)
 
               fishForMessage() {
                 case RuntimeConfigAdded(`addId`) => true
@@ -285,7 +286,7 @@ class UpdaterTest
             {
 
               val stageId = nextId()
-              updater ! StageRuntimeConfig(stageId, config.name, config.version)
+              updater ! StageRuntimeConfig(stageId, config.runtimeConfig.name, config.runtimeConfig.version)
               fishForMessage() {
                 case RuntimeConfigStaged(`stageId`) => true
               }
@@ -301,7 +302,7 @@ class UpdaterTest
             {
               val queryId = nextId()
               updater ! GetRuntimeConfigs(queryId)
-              fishForMessage() {
+              fishForMessage(hint = s"Query id: ${queryId}") {
                 case RuntimeConfigs(`queryId`, Seq(LocalRuntimeConfig(`config`, _)), Seq(), Seq()) => true
               }
             }
