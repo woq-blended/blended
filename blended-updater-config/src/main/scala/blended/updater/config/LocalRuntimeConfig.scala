@@ -10,7 +10,9 @@ import java.util.Properties
 import java.io.FileReader
 import scala.collection.immutable._
 
-case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
+case class LocalRuntimeConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, baseDir: File) {
+  
+  def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
   def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
 
@@ -45,9 +47,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
     explodedResourceArchives: Boolean,
     checkPropertiesFile: Boolean): Seq[String] = {
 
-    val configIssues = runtimeConfig.validate()
-
-    val artifacts = runtimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
+    val artifacts = resolvedRuntimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
     val artifactIssues = {
@@ -102,7 +102,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
       }
     } else Nil
 
-    val issues = configIssues ++ artifactIssues ++ resourceIssues ++ propertyIssues
+    val issues = artifactIssues ++ resourceIssues ++ propertyIssues
     issues
   }
 }

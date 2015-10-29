@@ -31,9 +31,10 @@ import scala.util.Success
 import java.io.FileReader
 import java.io.BufferedReader
 import scala.util.Failure
+import com.typesafe.config.ConfigObject
 
 object RuntimeConfig
-    extends ((String, String, Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], Seq[FeatureConfig], Seq[Artifact]) => RuntimeConfig) {
+    extends ((String, String, Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], Seq[FeatureRef], Seq[Artifact], Seq[FeatureConfig]) => RuntimeConfig) {
 
   val MvnPrefix = "mvn:"
 
@@ -84,12 +85,16 @@ object RuntimeConfig
       features =
         if (config.hasPath("features"))
           config.getObjectList("features").asScala.map { f =>
-          FeatureConfig.read(f.toConfig()).get
+          FeatureRef.fromConfig(f.toConfig()).get
         }.toList
         else Seq(),
       resources =
         if (config.hasPath("resources"))
           config.getObjectList("resources").asScala.map(r => Artifact.read(r.toConfig()).get).toList
+        else Seq(),
+      resolvedFeatures =
+        if (config.hasPath("resolvedFeatures"))
+          config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfig.read(r.toConfig()).get).toList
         else Seq()
     )
   }
@@ -104,8 +109,9 @@ object RuntimeConfig
       "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "features" -> runtimeConfig.features.map(FeatureConfig.toConfig).map(_.root().unwrapped()).asJava,
-      "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava
+      "features" -> runtimeConfig.features.map(FeatureRef.toConfig).map(_.root().unwrapped()).asJava,
+      "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava,
+      "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfig.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
     ConfigFactory.parseMap(config)
@@ -295,14 +301,15 @@ case class RuntimeConfig(
     properties: Map[String, String] = Map(),
     frameworkProperties: Map[String, String] = Map(),
     systemProperties: Map[String, String] = Map(),
-    features: Seq[FeatureConfig] = Seq(),
-    resources: Seq[Artifact] = Seq()) {
+    features: Seq[FeatureRef] = Seq(),
+    resources: Seq[Artifact] = Seq(),
+    resolvedFeatures: Seq[FeatureConfig] = Seq()) {
 
   import RuntimeConfig._
 
   override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
     s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
-    s",systemProperties=${systemProperties},features=${features},resources=${resources})"
+    s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"
 
   def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
 
@@ -310,24 +317,18 @@ case class RuntimeConfig(
 
   def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
 
-  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.allBundles)
-
-  val framework: Try[BundleConfig] = Try {
-    val fs = allBundles.filter(b => b.startLevel == Some(0))
-    require(fs.distinct.size == 1, s"A RuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}\n  ${fs.mkString("\n  ")}")
-    fs.head
-  }
-
   def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
 
-  def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
+  //    def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
 
-  def validate(): Seq[String] = {
-    framework match {
-      case Success(_) => Seq()
-      case Failure(e) => Seq(e.getMessage())
-    }
-
+  /**
+   * Try to create a [ResolvedRuntimeConfig]. This does not fetch missing [FeatureConfig]s.
+   * 
+   * @see [FeatureResolver] for a way to resolve missing features.
+   */
+  def resolve(features: Seq[FeatureConfig] = Seq()): Try[ResolvedRuntimeConfig] = Try {
+    ResolvedRuntimeConfig(this, features.to[Seq])
   }
 
 }
+

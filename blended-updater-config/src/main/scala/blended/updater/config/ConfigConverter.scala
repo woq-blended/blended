@@ -11,12 +11,13 @@ trait ConfigConverter {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConfigConverter])
 
-  def runtimeConfigToLauncherConfig(runtimeConfig: RuntimeConfig, profileDir: String): LauncherConfig = {
+  def runtimeConfigToLauncherConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, profileDir: String): LauncherConfig = {
     import LauncherConfig._
 
     val bundlePrefix = s"${profileDir}/bundles"
+    val runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
-    val allBundles = runtimeConfig.allBundles.
+    val allBundles = resolvedRuntimeConfig.allBundles.
       filter(b => b.startLevel != Some(0)).
       map { bc =>
         BundleConfig(
@@ -29,7 +30,7 @@ trait ConfigConverter {
     log.debug("Converted bundles: {}", allBundles)
 
     LauncherConfig(
-      frameworkJar = s"${bundlePrefix}/${runtimeConfig.framework.get.jarName.getOrElse(runtimeConfig.resolveFileName(runtimeConfig.framework.get.url).get)}",
+      frameworkJar = s"${bundlePrefix}/${resolvedRuntimeConfig.framework.jarName.getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.url).get)}",
       systemProperties = runtimeConfig.systemProperties,
       frameworkProperties = runtimeConfig.frameworkProperties,
       startLevel = runtimeConfig.startLevel,

@@ -9,25 +9,55 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import scala.collection.immutable._
 
+case class FeatureRef(
+    name: String,
+    version: String,
+    url: Option[String] = None) {
+
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},url=${url})"
+
+}
+
+object FeatureRef extends ((String, String, Option[String]) => FeatureRef) {
+
+  def toConfig(feature: FeatureRef): Config = {
+    val config = (Map(
+      "name" -> feature.name,
+      "version" -> feature.version
+    ) ++
+      feature.url.map(url => Map("url" -> url)).getOrElse(Map())
+    ).asJava
+    ConfigFactory.parseMap(config)
+  }
+
+  def fromConfig(config: Config): Try[FeatureRef] = Try {
+    FeatureRef(
+      name = config.getString("name"),
+      version = config.getString("version"),
+      url = if (config.hasPath("url")) Option(config.getString("path")) else None
+    )
+  }
+
+}
+
 case class FeatureConfig(
     name: String,
     version: String,
     url: Option[String],
     bundles: Seq[BundleConfig],
-    features: Seq[FeatureConfig]) {
+    features: Seq[FeatureRef]) {
 
   override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},url=${url},bundles=${bundles},features=${features})"
-
-  def allBundles: Seq[BundleConfig] = bundles ++ features.flatMap(_.allBundles)
-
+ 
+  def featureRef: FeatureRef = FeatureRef(name = name, version = version, url = url)
 }
 
-object FeatureConfig extends ((String, String, Option[String], Seq[BundleConfig], Seq[FeatureConfig]) => FeatureConfig) {
+object FeatureConfig extends ((String, String, Option[String], Seq[BundleConfig], Seq[FeatureRef]) => FeatureConfig) {
   def apply(name: String,
     version: String,
     url: String = null,
     bundles: Seq[BundleConfig] = null,
-    features: Seq[FeatureConfig] = null): FeatureConfig = {
+    features: Seq[FeatureRef] = null): FeatureConfig = {
     FeatureConfig(
       name = name,
       version = version,
@@ -49,7 +79,7 @@ object FeatureConfig extends ((String, String, Option[String], Seq[BundleConfig]
         } else Nil,
       features =
         if (config.hasPath("features")) {
-          config.getObjectList("features").asScala.map { f => FeatureConfig.read(f.toConfig()).get }.toList
+          config.getObjectList("features").asScala.map { f => FeatureRef.fromConfig(f.toConfig()).get }.toList
         } else Nil
     )
   }
@@ -61,7 +91,7 @@ object FeatureConfig extends ((String, String, Option[String], Seq[BundleConfig]
       featureConfig.url.map(url => Map("url" -> url)).getOrElse(Map()) ++
       {
         if (featureConfig.features.isEmpty) Map()
-        else Map("features" -> featureConfig.features.map(FeatureConfig.toConfig).map(_.root().unwrapped()).asJava)
+        else Map("features" -> featureConfig.features.map(FeatureRef.toConfig).map(_.root().unwrapped()).asJava)
       } ++
       {
         if (featureConfig.bundles.isEmpty) Map()
