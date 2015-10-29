@@ -17,15 +17,14 @@ class RemoteCommands(updater: RemoteUpdater) {
 
   def remoteShow(): String = {
     updater.getContainerIds.map { id =>
-      s"Outstanding actions of container with ID ${id}:\n${updater.getContainerActions(id).mkString("\n")}"
+      s"Update state of container with ID ${id}:\n${updater.getContainerState(id)}\n"
     }.mkString("\n")
   }
 
   def remoteShow(containerId: String): String = {
-    if (updater.getContainerIds().exists(_ == containerId)) {
-      s"Outstanding actions of container with ID ${containerId}:\n${updater.getContainerActions(containerId).mkString("\n")}"
-    } else {
-      s"Unknown container ID: ${containerId}"
+    updater.getContainerState(containerId) match {
+      case Some(state) => s"Update state of container with ID ${containerId}:\n${state}\n"
+      case None => s"Unknown container ID: ${containerId}"
     }
   }
 

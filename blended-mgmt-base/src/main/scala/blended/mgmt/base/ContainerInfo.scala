@@ -3,6 +3,9 @@ package blended.mgmt.base
 import scala.collection.immutable
 
 case class ContainerInfo(containerId: String, properties: Map[String, String], serviceInfos: immutable.Seq[ServiceInfo]) {
+  
+  override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},properties=${properties},serviceInfos={serviceInfos})"
+  
   //  // TODO: implement serviceInfos persistence
   //  override def persistenceProperties: PersistenceProperties = {
   //    var builder =

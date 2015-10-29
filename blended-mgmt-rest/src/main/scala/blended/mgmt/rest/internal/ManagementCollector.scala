@@ -103,7 +103,7 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
     mylog.debug("Processing container info: {}", info)
     sendEvent(UpdateContainerInfo(info))
     val updater = config.remoteUpdater
-    updater.removeResolvedActions(info)
+    updater.updateContainerState(info)
     val newActions = updater.getContainerActions(info.containerId)
     ContainerRegistryResponseOK(info.containerId, newActions)
   }
