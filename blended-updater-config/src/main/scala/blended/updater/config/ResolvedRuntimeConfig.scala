@@ -36,13 +36,13 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
     var seen = Set[(String, String)]()
     val conflicts = runtimeConfig.features.flatMap { f =>
       val key = f.name -> f.version
-      if (seen.contains(key)) Some(key)
+      if (seen.contains(key)) Some(s"${f.name}-${f.version}")
       else {
         seen += key
         None
       }
     }
-    require(conflicts.isEmpty, s"Contains no conflicting resolved features. Conflicts for feature ${conflicts.map(f -> s"'${f._1}-${f._2}'").mkString(" and ")}.")
+    require(conflicts.isEmpty, s"Contains no conflicting resolved features. Multiple features detected: ${conflicts.mkString(", ")}.")
 
   }
 
