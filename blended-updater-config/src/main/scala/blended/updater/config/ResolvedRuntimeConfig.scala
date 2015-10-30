@@ -9,11 +9,11 @@ import com.typesafe.config.ConfigFactory
 
 /**
  * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
- * 
+ *
  * If there are unresolved (transitive) features, this class construction throws with a [java.lang.IllegalArgumentException].
- * 
+ *
  * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
- *  
+ *
  */
 case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
@@ -31,6 +31,18 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
     // force evaluation of framework, which throws if invalid
     // framework
+
+    // check, that features do not conflict
+    var seen = Set[(String, String)]()
+    val conflicts = runtimeConfig.features.flatMap { f =>
+      val key = f.name -> f.version
+      if (seen.contains(key)) Some(key)
+      else {
+        seen += key
+        None
+      }
+    }
+    require(conflicts.isEmpty, s"Contains no conflicting resolved features. Conflicts for feature ${conflicts.map(f -> s"'${f._1}-${f._2}'").mkString(" and ")}.")
 
   }
 
