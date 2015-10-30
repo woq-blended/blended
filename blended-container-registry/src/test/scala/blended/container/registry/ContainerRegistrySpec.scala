@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package blended.karaf.container.registry
+package blended.container.registry.internal
 
-import akka.actor.Props
-import akka.testkit.{TestProbe, TestActorRef}
-import blended.akka.OSGIActorConfig
-import blended.container.context.{ContainerContext, ContainerIdentifierService}
-import blended.testsupport.TestActorSys
-import com.typesafe.config.ConfigFactory
-import org.mockito.Mockito._
-import org.osgi.framework.{Bundle, BundleContext}
+import org.mockito.Mockito.when
+import org.osgi.framework.Bundle
+import org.osgi.framework.BundleContext
+import org.scalatest.Finders
+import org.scalatest.Matchers
+import org.scalatest.WordSpec
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-import blended.mgmt.base.ContainerRegistryResponseOK
-import blended.container.registry.internal.ContainerRegistryImpl
-import blended.mgmt.base.UpdateContainerInfo
+
+import com.typesafe.config.ConfigFactory
+
+import akka.testkit.TestActorRef
+import akka.testkit.TestProbe
+import blended.akka.OSGIActorConfig
+import blended.container.context.ContainerContext
+import blended.container.context.ContainerIdentifierService
 import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.UpdateContainerInfo
+import blended.testsupport.TestActorSys
 
 class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 

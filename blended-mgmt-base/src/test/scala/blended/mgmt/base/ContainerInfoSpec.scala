@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package blended.karaf.container.registry
+package blended.mgmt.base
 
-import blended.persistence.protocol._
 import org.scalatest.{ Matchers, WordSpec }
-import org.slf4j.LoggerFactory
-import blended.mgmt.base.ServiceInfo
 import blended.updater.config.RuntimeConfig
 import scala.collection.immutable
 import blended.updater.config.BundleConfig
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.json._
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.ActivateProfile
-import blended.mgmt.base.ContainerRegistryResponseOK
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
@@ -42,11 +34,13 @@ class ContainerInfoSpec extends WordSpec with Matchers {
     val expectedJson = """{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
 
     "serialize to Json correctly" in {
+      import blended.mgmt.base.json._
       val json = containerInfo.toJson
       json.compactPrint should be(expectedJson)
     }
 
     "serialize from Json correctly" in {
+      import blended.mgmt.base.json._
       val json = expectedJson.parseJson
       val info = json.convertTo[ContainerInfo]
 
@@ -55,15 +49,15 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
     "create the Persistence Properties correctly" in {
       pending
-//
-//      val info = ContainerInfo("uuid", Map("fooo" -> "bar"), List())
-//
-//      val props = info.persistenceProperties
-//
-//      props._1 should be(info.getClass.getName.replaceAll("\\.", "_"))
-//      props._2.size should be(2)
-//      props._2(DataObject.PROP_UUID) should be(PersistenceProperty[String]("uuid"))
-//      props._2("fooo") should be(PersistenceProperty[String]("bar"))
+      //
+      //      val info = ContainerInfo("uuid", Map("fooo" -> "bar"), List())
+      //
+      //      val props = info.persistenceProperties
+      //
+      //      props._1 should be(info.getClass.getName.replaceAll("\\.", "_"))
+      //      props._2.size should be(2)
+      //      props._2(DataObject.PROP_UUID) should be(PersistenceProperty[String]("uuid"))
+      //      props._2("fooo") should be(PersistenceProperty[String]("bar"))
     }
 
   }
@@ -77,6 +71,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
     val response = ContainerRegistryResponseOK("uuid", immutable.Seq(stageAction, activateAction))
 
     "serialize and deserialize result in equal object" in {
+      import blended.mgmt.base.json._
       response should be(response.toJson.compactPrint.parseJson.convertTo[ContainerRegistryResponseOK])
     }
 
