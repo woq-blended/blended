@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
 
 import scala.concurrent.duration._
 
-package object protocol {
+package protocol {
 
   case class  IncrementCounter(val count : Int = 1)
   case object QueryCounter
