@@ -23,8 +23,6 @@ import blended.updater.config.BundleConfig
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
-  val log = LoggerFactory.getLogger(classOf[ContainerInfoSpec])
-
   import spray.json._
 
   "ContainerInfo" should {
