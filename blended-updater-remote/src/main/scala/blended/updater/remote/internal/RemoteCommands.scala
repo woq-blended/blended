@@ -5,12 +5,14 @@ import java.io.File
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.ConfigFactory
 import blended.mgmt.base.StageProfile
+import blended.mgmt.base.ActivateProfile
 
 class RemoteCommands(updater: RemoteUpdater) {
 
   def commands = Seq(
     "remoteShow" -> "Show update information about remote container",
-    "remoteStage" -> "Stage a profile",
+    "remoteStage" -> "Stage a profile for a remote container",
+    "remoteActivate" -> "Activate a profile for a remote container",
     "registerProfile" -> "Register a profile",
     "profiles" -> "Show all registered profiles"
   )
@@ -52,6 +54,11 @@ class RemoteCommands(updater: RemoteUpdater) {
         updater.addAction(containerId, StageProfile(rc))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${rc}")
     }
+  }
+
+  def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
+    updater.addAction(containerId, ActivateProfile(profileName, profileVersion))
+    println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 
 }
