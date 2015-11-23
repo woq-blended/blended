@@ -16,7 +16,6 @@
 
 package blended.util;
 
-import blended.util.XMLSupport;
 import org.junit.Assert;
 import org.junit.Test;
 import org.w3c.dom.Document;
