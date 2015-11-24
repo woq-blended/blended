@@ -54,10 +54,9 @@ class ContainerContextActivator extends DominoActivator {
         realKey -> v
     }
 
-    log.info("Container identifier is [{}]", uuid)
-    val idService = new ContainerIdentifierServiceImpl(containerContext, uuid, props)
-    val serviceReg = idService.providesService[ContainerIdentifierService]
+    (new ContainerIdentifierServiceImpl(containerContext, uuid, props)).providesService[ContainerIdentifierService]
 
+    log.info("Container identifier is [{}]", uuid)
     log.info("Profile home directory is [{}]", containerContext.getContainerDirectory())
   }
 

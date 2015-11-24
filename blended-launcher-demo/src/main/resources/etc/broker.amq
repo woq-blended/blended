@@ -30,7 +30,10 @@
     persistent="true"
     offlineDurableSubscriberTimeout="604800000"
     offlineDurableSubscriberTaskSchedule="86400000"
-    advisorySupport="false">
+    advisorySupport="false"
+    dataDirectory="amq"
+    tmpDataDirectory="amq/tmp"
+    >
 
     <amq:managementContext>
       <amq:managementContext createConnector="false"/>

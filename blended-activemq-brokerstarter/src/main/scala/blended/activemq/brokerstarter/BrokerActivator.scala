@@ -16,85 +16,33 @@
 
 package blended.activemq.brokerstarter
 
-import java.net.URI
-import javax.jms.ConnectionFactory
+import akka.actor.{ActorSystem, PoisonPill, Props}
+import blended.activemq.brokerstarter.internal.{BrokerControlActor, StartBroker, StopBroker}
+import blended.akka.OSGIActorConfig
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
-import org.apache.activemq.xbean.XBeanBrokerFactory
-import org.springframework.jms.connection.CachingConnectionFactory
-import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
 
 class BrokerActivator extends DominoActivator
   with TypesafeConfigWatching {
 
   whenBundleActive {
-	  val log = LoggerFactory.getLogger(classOf[BrokerActivator])
-    
-    whenTypesafeConfigAvailable { (config, idSvc) =>
+    val log = LoggerFactory.getLogger(classOf[BrokerActivator])
 
-      if (!config.isEmpty()) {
-        var brokerService: Option[BrokerService] = None
+    whenServicePresent[ActorSystem] { actorSys =>
 
-        val cfgDir = idSvc.getContainerContext().getContainerConfigDirectory()
+      val actor = actorSys.actorOf(Props[BrokerControlActor], bundleContext.getBundle().getSymbolicName())
 
-        val brokerName = config.getString("brokerName")
-        val uri = s"file://$cfgDir/${config.getString("file")}"
-        val provider = config.getString("provider")
+      onStop {
+        actor ! PoisonPill
+      }
 
-        log.info("Configuring Active MQ Broker from config [{}] with provider id [{}].", Array(uri, provider))
-
-        val oldLoader = Thread.currentThread().getContextClassLoader()
-
-        try {
-
-          BrokerFactory.setStartDefault(false)
-
-          Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
-
-          val brokerFactory = new XBeanBrokerFactory()
-          brokerFactory.setValidate(false)
-
-          brokerService = Some(brokerFactory.createBroker(new URI(uri)))
-
-          brokerService.foreach { broker =>
-            broker.setBrokerName(brokerName)
-            broker.start()
-            broker.waitUntilStarted()
-
-            log.info(s"ActiveMQ broker [$brokerName] started successfully.")
-
-            val url = s"vm://$brokerName?create=false"
-            val amqCF = new ActiveMQConnectionFactory(url)
-
-            val cf = new CachingConnectionFactory(amqCF)
-
-            cf.providesService[ConnectionFactory](Map(
-              "provider" -> provider,
-              "brokerName" -> brokerName
-            ))
-          }
-
-        } catch {
-          case NonFatal(e) =>
-            log.error("Failed to configure broker from [{}]", Array(e, uri))
-            throw e
-        } finally {
-          Thread.currentThread().setContextClassLoader(oldLoader)
-        }
+      whenTypesafeConfigAvailable { (cfg, idSvc) =>
+        actor ! StartBroker(OSGIActorConfig(bundleContext, actorSys, cfg, idSvc))
 
         onStop {
-          brokerService.foreach { broker =>
-            log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
-            broker.stop()
-            broker.waitUntilStopped()
-          }
-          brokerService = None
+          actor ! StopBroker
         }
-      } else {
-        log.info("No broker configuration found. No broker started.")
       }
     }
   }
