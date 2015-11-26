@@ -42,6 +42,7 @@ trait TestFile {
         os.print(content)
       } finally {
         os.flush()
+        fos.flush()
         try {
           fos.getFD().sync()
         } catch {
