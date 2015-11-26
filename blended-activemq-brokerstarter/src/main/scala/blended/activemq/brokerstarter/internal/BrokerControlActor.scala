@@ -19,7 +19,7 @@ class BrokerControlActor extends Actor
 
   private[this] var cleanUp : List[() => Unit] = List.empty
 
-  private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[CachingConnectionFactory]) = {
+  private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[ConnectionFactory]) = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -52,11 +52,9 @@ class BrokerControlActor extends Actor
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://$brokerName?create=false"
-        val amqCF = new ActiveMQConnectionFactory(url)
+        val amqCF : ConnectionFactory = new ActiveMQConnectionFactory(url)
 
-        val cf = new CachingConnectionFactory(amqCF)
-
-        val svcReg = cf.providesService[ConnectionFactory](Map(
+        val svcReg = amqCF.providesService[ConnectionFactory](Map(
           "provider" -> provider,
           "brokerName" -> brokerName
         ))
@@ -70,7 +68,7 @@ class BrokerControlActor extends Actor
     }
   }
 
-  private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[CachingConnectionFactory]) : Unit = {
+  private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[ConnectionFactory]) : Unit = {
     log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
     svcReg.unregister()
 
@@ -78,6 +76,12 @@ class BrokerControlActor extends Actor
     broker.waitUntilStopped()
 
     cleanUp = List.empty
+  }
+
+
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    log.error("Error starting Active MQ broker", reason)
+    super.preRestart(reason, message)
   }
 
   override def postStop(): Unit = cleanUp.foreach(t => t())
@@ -92,7 +96,7 @@ class BrokerControlActor extends Actor
       log.debug("Ignoring stop command for ActiveMQ as Broker is already stopped")
   }
 
-  def withBroker(broker: BrokerService, reg: ServiceRegistration[CachingConnectionFactory]) : Receive = {
+  def withBroker(broker: BrokerService, reg: ServiceRegistration[ConnectionFactory]) : Receive = {
     case StartBroker =>
       log.debug("Ignoring start command for ActiveMQ as Broker is already started")
     case StopBroker =>
