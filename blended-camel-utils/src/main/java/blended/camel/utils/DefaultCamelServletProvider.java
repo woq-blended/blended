@@ -16,7 +16,7 @@
 
 package blended.camel.utils;
 
-import org.apache.camel.component.http.CamelServlet;
+import org.apache.camel.http.common.CamelServlet;
 
 public class DefaultCamelServletProvider implements CamelServletProvider {
 
