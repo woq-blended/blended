@@ -16,7 +16,7 @@
 
 package blended.launcher
 
-import java.io.{OutputStream, InputStream, File}
+import java.io.{ OutputStream, InputStream, File }
 import java.net._
 import java.util.ServiceLoader
 import scala.collection.JavaConverters.mapAsJavaMapConverter
@@ -51,6 +51,8 @@ import scala.util.Success
 import com.typesafe.config.ConfigParseOptions
 
 object Launcher {
+
+  private lazy val log = Logger[Launcher.type]
 
   case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
@@ -97,6 +99,8 @@ object Launcher {
       run(args)
     } catch {
       case t: LauncherException =>
+        if (!t.getMessage().isEmpty())
+          Console.err.println(s"${t.getMessage()}")
         sys.exit(t.errorCode)
       case t: Throwable =>
         Console.err.println(s"Error: ${t.getMessage()}")
@@ -106,10 +110,7 @@ object Launcher {
     sys.exit(0)
   }
 
-  def run(args: Array[String]): Unit = {
-
-    val log = Logger[Launcher.type]
-    
+  def parseArgs(args: Array[String]): Try[Cmdline] = Try {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
@@ -120,106 +121,162 @@ object Launcher {
     }
 
     if (cmdline.help) {
-      cp.usage()
-      return
+      val sb = new java.lang.StringBuilder()
+      cp.usage(sb)
+      throw new LauncherException(sb.toString(), null, 0)
     }
 
-    val handleFrameworkRestart = cmdline.handleFrameworkRestart
+    cmdline
+  }
 
+  def createAndPrepareLaunch(configs: Configs, createProperties: Boolean): Launcher = {
+    val launcher = new Launcher(configs.launcherConfig)
+
+    val errors = configs.profileConfig match {
+      case Some(localConfig) =>
+        // if present, validate local RuntimeConfig
+        localConfig.validate(
+          includeResourceArchives = false,
+          explodedResourceArchives = true,
+          checkPropertiesFile = !createProperties
+        )
+      case None =>
+        // if no RuntimeConfig, just check existence of bundles
+        launcher.validate()
+    }
+
+    if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
+
+    if (createProperties) {
+      val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
+      RuntimeConfig.createPropertyFile(localConfig, None) match {
+        case None => // nothing to generate, ok
+        case Some(Success(f)) => // generated successfully, ok
+          Console.err.println(s"Created properties file for profile: ${f}")
+        case Some(Failure(e)) => sys.error(s"Could not reset properties file. ${e.getMessage()}")
+      }
+    }
+    launcher
+  }
+
+  def run(args: Array[String]): Unit = {
+    val cmdline = parseArgs(args).get
+    val handleFrameworkRestart = cmdline.handleFrameworkRestart
     var firstStart = true
     var retVal: Int = 0
+
     do {
-      case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
-
-      val configs = cmdline.configFile match {
-        case Some(configFile) =>
-          val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          Configs(LauncherConfig.read(config))
-        case None =>
-          val profileLookup = cmdline.profileLookup.map { pl =>
-            log.debug("About to read profile lookup file: " + pl)
-            val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-            ProfileLookup.read(c).map { pl =>
-              pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
-            }.get
-          }
-
-          val profile = profileLookup match {
-            case Some(pl) =>
-              s"${pl.profileBaseDir}/${pl.profileName}/${pl.profileVersion}"
-            case None =>
-              cmdline.profileDir match {
-                case Some(profile) => profile
-                case None =>
-                  sys.error("Either a config file or a profile dir or file or a profile lookup path must be given")
-              }
-          }
-
-          val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
-            profile -> new File(profile, "profile.conf")
-          } else {
-            Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
-          }
-          val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          val runtimeConfig = RuntimeConfig.read(config).get
-          val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
-
-          var brandingProps = Map(
-            RuntimeConfig.Properties.PROFILE_DIR -> profileDir
-          )
-          profileLookup.foreach { pl =>
-            brandingProps ++= Map(
-              RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
-              RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
-            )
-          }
-
-          Configs(
-            launcherConfig = launchConfig.copy(
-              branding = launchConfig.branding ++ brandingProps,
-              systemProperties = launchConfig.systemProperties + ("blended.container.home" -> profileDir)
-            ),
-            profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
-      }
-
-      val launcher = new Launcher(configs.launcherConfig)
-
+      val configs = readConfigs(cmdline)
       val createProperties = firstStart && cmdline.resetProfileProps
-      
-      val errors = configs.profileConfig match {
-        case Some(localConfig) =>
-          // if present, validate local RuntimeConfig
-          localConfig.validate(
-            includeResourceArchives = false,
-            explodedResourceArchives = true,
-            checkPropertiesFile = !createProperties
-          )
-        case None =>
-          // if no RuntimeConfig, just check existence of bundles
-          launcher.validate()
-      }
-
-      if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
-
-      if (createProperties) {
-        val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
-        RuntimeConfig.createPropertyFile(localConfig, None) match {
-          case None => // nothing to generate, ok
-          case Some(Success(f)) => // generated successfully, ok
-            Console.err.println(s"Created properties file for profile: ${f}")
-          case Some(Failure(e)) => sys.error(s"Could not reset properties file. ${e.getMessage()}")
-        }
-      }
-
+      val launcher = createAndPrepareLaunch(configs, createProperties)
       retVal = launcher.run()
-
       firstStart = false
     } while (handleFrameworkRestart && retVal == 2)
 
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
   }
 
+  case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
+
+  def readConfigs(cmdline: Cmdline): Configs = {
+    cmdline.configFile match {
+      case Some(configFile) =>
+        val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        Configs(LauncherConfig.read(config))
+      case None =>
+        val profileLookup = cmdline.profileLookup.map { pl =>
+          log.debug("About to read profile lookup file: " + pl)
+          val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+          ProfileLookup.read(c).map { pl =>
+            pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
+          }.get
+        }
+
+        val profile = profileLookup match {
+          case Some(pl) =>
+            s"${pl.profileBaseDir}/${pl.profileName}/${pl.profileVersion}"
+          case None =>
+            cmdline.profileDir match {
+              case Some(profile) => profile
+              case None =>
+                sys.error("Either a config file or a profile dir or file or a profile lookup path must be given")
+            }
+        }
+
+        val (profileDir, profileFile) = if (new File(profile).isDirectory()) {
+          profile -> new File(profile, "profile.conf")
+        } else {
+          Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
+        }
+        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        val runtimeConfig = RuntimeConfig.read(config).get
+        val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
+
+        var brandingProps = Map(
+          RuntimeConfig.Properties.PROFILE_DIR -> profileDir
+        )
+        profileLookup.foreach { pl =>
+          brandingProps ++= Map(
+            RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
+            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
+          )
+        }
+
+        Configs(
+          launcherConfig = launchConfig.copy(
+            branding = launchConfig.branding ++ brandingProps,
+            systemProperties = launchConfig.systemProperties + ("blended.container.home" -> profileDir)
+          ),
+          profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
+    }
+  }
+
   def apply(configFile: File): Launcher = new Launcher(LauncherConfig.read(configFile))
+
+  class RunningFramework(val framework: Framework) {
+
+    def awaitFrameworkStop(framwork: Framework): Int = {
+      val event = framework.waitForStop(0)
+      event.getType match {
+        case FrameworkEvent.ERROR =>
+          log.info("Framework has encountered an error: ", event.getThrowable)
+          1
+        case FrameworkEvent.STOPPED =>
+          log.info("Framework has been stopped by bundle " + event.getBundle)
+          0
+        case FrameworkEvent.STOPPED_UPDATE =>
+          log.info("Framework has been updated by " + event.getBundle + " and need a restart")
+          2
+        case _ =>
+          log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
+          0
+      }
+    }
+
+    val shutdownHook = new Thread("framework-shutdown-hook") {
+      override def run(): Unit = {
+        log.info("Catched kill signal: stopping framework")
+        framework.stop()
+        awaitFrameworkStop(framework)
+        BrandingProperties.setLastBrandingProperties(new Properties())
+      }
+    }
+
+    Runtime.getRuntime.addShutdownHook(shutdownHook)
+
+    def waitForStop(): Int = {
+      try {
+        awaitFrameworkStop(framework)
+      } catch {
+        case NonFatal(x) =>
+          log.error("Framework was interrupted. Cause: ", x)
+          1
+      } finally {
+        BrandingProperties.setLastBrandingProperties(new Properties())
+        Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
+      }
+    }
+  }
 
 }
 
@@ -350,45 +407,8 @@ class Launcher private (config: LauncherConfig) {
    */
   def run(): Int = {
     val framework = start()
-
-    def awaitFrameworkStop(framwork: Framework): Int = {
-      val event = framework.waitForStop(0)
-      event.getType match {
-        case FrameworkEvent.ERROR =>
-          log.info("Framework has encountered an error: ", event.getThrowable)
-          1
-        case FrameworkEvent.STOPPED =>
-          log.info("Framework has been stopped by bundle " + event.getBundle)
-          0
-        case FrameworkEvent.STOPPED_UPDATE =>
-          log.info("Framework has been updated by " + event.getBundle + " and need a restart")
-          2
-        case _ =>
-          log.info("Framework stopped. Reason: " + event.getType + " from bundle " + event.getBundle)
-          0
-      }
-    }
-
-    val shutdownHook = new Thread("framework-shutdown-hook") {
-      override def run(): Unit = {
-        log.info("Catched kill signal: stopping framework")
-        framework.stop()
-        awaitFrameworkStop(framework)
-        BrandingProperties.setLastBrandingProperties(new Properties())
-      }
-    }
-
-    try {
-      Runtime.getRuntime.addShutdownHook(shutdownHook)
-      awaitFrameworkStop(framework)
-    } catch {
-      case NonFatal(x) =>
-        log.error("Framework was interrupted. Cause: ", x)
-        1
-    } finally {
-      BrandingProperties.setLastBrandingProperties(new Properties())
-      Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
-    }
+    val handle = new RunningFramework(framework)
+    handle.waitForStop()
   }
 
 }
