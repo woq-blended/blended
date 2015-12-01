@@ -162,8 +162,6 @@
       <id>parent</id>
       <modules>
         <module>blended-parent</module>
-        <module>blended-karaf-parent</module>
-        <module>blended-karaf-branding</module>
       </modules>
     </profile>
 
@@ -182,8 +180,6 @@
     <profile>
       <id>build</id>
       <modules>
-        <module>blended-karaf-installer</module>
-
 	<module>blended-updater-config</module>
 	<module>blended-launcher</module>
 	<module>blended-updater</module>
@@ -198,9 +194,6 @@
         <module>blended-camel-utils</module>
 
         <module>blended-testsupport</module>
-
-        <module>blended-karaf-features</module>
-        <module>blended-karaf-branding</module>
 
         <module>blended-domino</module>
         <module>blended-akka</module>
@@ -235,13 +228,6 @@
       <id>testing</id>
       <modules>
         <module>blended-testing</module>
-      </modules>
-    </profile>
-
-    <profile>
-      <id>assembly</id>
-      <modules>
-        <module>blended-karaf-demo</module>
       </modules>
     </profile>
 
