@@ -5,8 +5,18 @@ import blended.updater.config.{ Artifact, BundleConfig, ConfigWriter, FeatureCon
 import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
 import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
 import scala.collection.immutable._
-import scala.util.{ Failure, Try }
 import blended.updater.config.FeatureResolver
+import scala.util.Failure
+import scala.util.Try
+import blended.updater.config.FeatureConfig
+import blended.updater.config.BundleConfig
+import blended.updater.config.Artifact
+import java.io.PrintWriter
+import blended.updater.config.LocalRuntimeConfig
+import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.MvnGav
+import scala.util.Success
+import blended.updater.config.ResolvedRuntimeConfig
 
 object RuntimeConfigBuilder {
 
@@ -51,6 +61,11 @@ object RuntimeConfigBuilder {
 
     @CmdOption(names = Array("--debug"))
     var debug: Boolean = false
+
+    @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
+    def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
+    var mavenArtifacts: Seq[(String, String)] = Seq()
+
   }
 
   def main(args: Array[String]): Unit = {
@@ -80,6 +95,12 @@ object RuntimeConfigBuilder {
 
     if (options.configFile.isEmpty()) sys.error("No config file given")
 
+    val mvnGavs = options.mavenArtifacts.map {
+      case (gav, file) => MvnGav.parse(gav) -> file
+    }.collect {
+      case (Success(gav), file) => gav -> file
+    }
+
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
       val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
@@ -97,10 +118,10 @@ object RuntimeConfigBuilder {
     val unresolvedRuntimeConfig = RuntimeConfig.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
-    val runtimeConfig = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
-    if (debug) Console.err.println("runtime config with resolved features: " + runtimeConfig)
+    val resolved = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
+    if (debug) Console.err.println("runtime config with resolved features: " + resolved)
 
-    val localRuntimeConfig = LocalRuntimeConfig(runtimeConfig, dir)
+    val localRuntimeConfig = LocalRuntimeConfig(resolved, dir)
 
     if (options.check) {
       val issues = localRuntimeConfig.validate(
@@ -113,24 +134,26 @@ object RuntimeConfigBuilder {
       }
     }
 
-    lazy val mvnUrls = runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
+    lazy val mvnUrls = resolved.runtimeConfig.properties.get(RuntimeConfig.Properties.MVN_REPO).toSeq ++ options.mavenUrls
     if (debug) Console.err.println(s"Maven URLs: $mvnUrls")
+
+    def downloadUrls(b: Artifact): Seq[String] = {
+      val directUrl = MvnGavSupport.downloadUrls(mvnGavs, b, debug)
+      directUrl.map(Seq(_)).getOrElse(mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption).to[Seq])
+    }
 
     if (options.downloadMissing) {
 
-      val files = runtimeConfig.allBundles.distinct.map(b =>
-        RuntimeConfig.bundleLocation(b, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(b.url, Option(baseUrl)).toOption)
-      ) ++
-        runtimeConfig.resources.map(r =>
-          RuntimeConfig.resourceArchiveLocation(r, dir) -> mvnUrls.flatMap(baseUrl => RuntimeConfig.resolveBundleUrl(r.url, Option(baseUrl)).toOption)
-        )
+      val files = resolved.allBundles.distinct.map { b =>
+        RuntimeConfig.bundleLocation(b, dir) -> downloadUrls(b.artifact)
+      } ++ resolved.runtimeConfig.resources.map(r =>
+        RuntimeConfig.resourceArchiveLocation(r, dir) -> downloadUrls(r)
+      )
 
       val states = files.par.map {
         case (file, urls) =>
           if (!file.exists()) {
-            println(s"Downloading: $file")
-            //            file -> RuntimeConfig.download(url, file)
-
+            println(s"Downloading: ${file}")
             urls.find { url =>
               Console.err.println(s"Downloading ${file.getName()} from $url")
               RuntimeConfig.download(url, file).isSuccess
@@ -154,10 +177,12 @@ object RuntimeConfigBuilder {
     }
 
     val newRuntimeConfig = if (options.updateChecksums) {
+      var checkedFiles: Map[File, String] = Map()
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
-        RuntimeConfig.digestFile(file).map { checksum =>
+        checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)).map { checksum =>
+          checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
-            println(s"Updating checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
+            println(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
             r.copy(sha1Sum = Option(checksum))
           } else r
         }.getOrElse(r)
@@ -170,29 +195,23 @@ object RuntimeConfigBuilder {
         b.copy(artifact = checkAndUpdate(localRuntimeConfig.bundleLocation(b), b.artifact))
 
       def checkAndUpdateFeatures(f: FeatureConfig): FeatureConfig =
-        f.copy(bundles = f.bundles.map(checkAndUpdateBundle),
-          features = f.features.map(checkAndUpdateFeatures))
+        f.copy(bundles = f.bundles.map(checkAndUpdateBundle))
 
-      runtimeConfig.copy(
-        bundles = runtimeConfig.bundles.map(checkAndUpdateBundle),
-        features = runtimeConfig.features.map(checkAndUpdateFeatures),
-        resources = runtimeConfig.resources.map(checkAndUpdateResource)
-      )
-    } else runtimeConfig
+      ResolvedRuntimeConfig(
+        resolved.runtimeConfig.copy(
+          bundles = resolved.runtimeConfig.bundles.map(checkAndUpdateBundle),
+          resolvedFeatures = resolved.allReferencedFeatures.map(checkAndUpdateFeatures),
+          resources = resolved.runtimeConfig.resources.map(checkAndUpdateResource)
+        )
+      ).runtimeConfig
+    } else resolved.runtimeConfig
 
     outFile match {
       case None =>
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
-        //        if (runtimeConfig != newRuntimeConfig) {
         Console.err.println("Writing config file: " + configFile)
         ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
-      //        }
-    }
-
-    val validation = newRuntimeConfig.validate()
-    if (!validation.isEmpty) {
-      sys.error("There are configuration errors:\n" + validation.mkString("\n"))
     }
 
   }

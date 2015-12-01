@@ -38,9 +38,9 @@ object FeatureBuilder {
     def setOutputDir(outputDir: String) = this.outputDir = Option(outputDir)
     var outputDir: Option[String] = None
 
-    @CmdOption(names = Array("-m", "--maven-dir"), args = Array("dir"), maxCount = -1)
-    def addMavenDir(mavenDir: String) = this.mavenDir ++= Seq(mavenDir)
-    var mavenDir: Seq[String] = Seq()
+    @CmdOption(names = Array("-m", "--maven-url", "--maven-dir"), args = Array("URL"), maxCount = -1)
+    def addMavenUrl(mavenDir: String) = this.mavenUrl ++= Seq(mavenDir)
+    var mavenUrl: Seq[String] = Seq()
 
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
     def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
@@ -67,7 +67,8 @@ object FeatureBuilder {
 
     override def toString: String = getClass().getSimpleName +
       "(outputDir=" + outputDir +
-      ",mavenDir=" + mavenDir +
+      ",mavenDir=" + mavenUrl +
+      ",mavenArtifacts=" + mavenArtifacts +
       ",downloadMissing=" + downloadMissing +
       ",discardInvalid=" + discardInvalid +
       ",unpdateChecksums=" + updateChecksums +
@@ -112,7 +113,7 @@ object FeatureBuilder {
     Console.err.println(s"Processing feature: ${feature.name} ${feature.version}")
 
     val bundles = feature.bundles
-    val mvnUrls = cmdline.mavenDir // .map { d => new File(d).getAbsoluteFile().toURI().toString() }
+    val mvnUrls = cmdline.mavenUrl // .map { d => new File(d).getAbsoluteFile().toURI().toString() }
     val mvnGavs = cmdline.mavenArtifacts.map {
       case (gav, file) => MvnGav.parse(gav) -> file
     }.collect {
@@ -139,16 +140,7 @@ object FeatureBuilder {
 
         if (!bundleFile.exists() && cmdline.downloadMissing) {
           // lookup in GAV
-          val mvnGav = MvnGav.parse(bundle.url.substring(RuntimeConfig.MvnPrefix.length()))
-          val directUrl = mvnGavs.find {
-            case (gav, _) => mvnGav.toOption.filter { _ == gav }.isDefined
-          }.map {
-            case (_, file) => new File(file).toURI().toString()
-          }
-
-          if (debug && !mvnGavs.isEmpty && directUrl.isEmpty) {
-            Console.err.println(s"Could not find artifact [${mvnGav}] in given artifact list")
-          }
+          val directUrl = MvnGavSupport.downloadUrls(mvnGavs, bundle.artifact, debug)
 
           val urls =
             if (directUrl.isDefined) directUrl.toSeq

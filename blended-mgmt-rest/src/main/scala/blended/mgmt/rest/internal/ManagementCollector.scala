@@ -17,12 +17,11 @@
 package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
-
-import akka.actor.{Actor, ActorRefFactory}
+import akka.actor.{ Actor, ActorRefFactory }
 import akka.util.Timeout
-import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
-import blended.container.registry.protocol._
-import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
+import blended.mgmt.base.json._
+import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
 import spray.routing._
@@ -30,44 +29,88 @@ import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
 import scala.concurrent.duration._
 import akka.actor.Props
+import com.typesafe.config.Config
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.UpdateContainerInfo
+import blended.mgmt.base.UpdateAction
+import org.slf4j.LoggerFactory
+import blended.updater.remote.RemoteUpdater
 
-trait CollectorService extends HttpService { this : SprayJsonSupport =>
+trait CollectorService extends HttpService { this: SprayJsonSupport =>
 
-  def processContainerInfo(info :ContainerInfo) : ContainerRegistryResponseOK
+  private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
+
+  def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
   val collectorRoute = {
 
     implicit val timeout = Timeout(1.second)
-    
+
     path("container") {
       post {
-        handleWith { info : ContainerInfo => processContainerInfo(info) }
+        handleWith { info: ContainerInfo =>
+          log.debug("Processing container info: {}", info)
+          val res = processContainerInfo(info)
+          log.debug("Processing result: {}", res)
+          res
+        }
       }
     }
   }
 }
 
-object ManagementCollector {
+case class ManagementCollectorConfig(
+    servletSettings: ConnectorSettings,
+    routingSettings: RoutingSettings,
+    contextPath: String,
+    remoteUpdater: RemoteUpdater) {
 
-  def props(cfg: OSGIActorConfig, contextPath: String): Props =  Props(new ManagementCollector(cfg, contextPath))
+  override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath},remoteUpdater=${remoteUpdater})"
 }
 
-class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)
-  extends OSGIActor(cfg)
-  with CollectorService
-  with ProductionEventSource
-  with SprayJsonSupport {
+object ManagementCollectorConfig {
+  def apply(config: Config, contextPath: String, remoteUpdater: RemoteUpdater): ManagementCollectorConfig = ManagementCollectorConfig(
+    servletSettings = ConnectorSettings(config).copy(rootPath = Path(s"/${contextPath}")),
+    routingSettings = RoutingSettings(config),
+    contextPath = contextPath,
+    remoteUpdater = remoteUpdater
+  )
+}
 
-  override implicit def actorRefFactory : ActorRefFactory = context
+object ManagementCollector {
+
+  def props(cfg: OSGIActorConfig, config: ManagementCollectorConfig): Props = Props(new ManagementCollector(cfg, config))
+}
+
+class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfig)
+    extends OSGIActor(cfg)
+    with CollectorService
+    with ProductionEventSource
+    with SprayJsonSupport {
+
+  type ContainerId = String
+
+  private[this] val mylog = LoggerFactory.getLogger(classOf[ManagementCollector])
+  
+  // mutable vars
+  private[this] var cachedActions: Map[ContainerId, Seq[UpdateAction]] = Map()
+
+  // Required by CollectorService
+  override implicit def actorRefFactory: ActorRefFactory = context
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
+    mylog.debug("Processing container info: {}", info)
     sendEvent(UpdateContainerInfo(info))
-    ContainerRegistryResponseOK(info.containerId)
+    val updater = config.remoteUpdater
+    updater.updateContainerState(info)
+    val newActions = updater.getContainerActions(info.containerId)
+    ContainerRegistryResponseOK(info.containerId, newActions)
   }
 
   override def preStart(): Unit = {
-    implicit val servletSettings = ConnectorSettings(cfg.config).copy(rootPath = Path(s"/$contextPath"))
-    implicit val routingSettings = RoutingSettings(cfg.config)
+    val servletSettings = config.servletSettings
+    implicit val routingSettings = config.routingSettings
     implicit val routeLogger = LoggingContext.fromAdapter(log)
     implicit val exceptionHandler = ExceptionHandler.default
     implicit val rejectionHandler = RejectionHandler.Default
@@ -81,16 +124,15 @@ class ManagementCollector(cfg: OSGIActorConfig, contextPath: String)
       override def actorSystem = actorSys
     }
 
-    servlet.providesService[Servlet] (
+    servlet.providesService[Servlet](
       "urlPatterns" -> "/",
-      "Webapp-Context" -> contextPath,
-      "Web-ContextPath" -> s"/$contextPath"
+      "Webapp-Context" -> config.contextPath,
+      "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
     context.become(runRoute(collectorRoute))
   }
 
-
-  def receive : Receive = Actor.emptyBehavior
+  def receive: Receive = Actor.emptyBehavior
 
 }

@@ -9,9 +9,11 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
 case class ProfileLookup(
-  profileName: String,
-  profileVersion: String,
-  profileBaseDir: File)
+    profileName: String,
+    profileVersion: String,
+    profileBaseDir: File) {
+  override def toString(): String = s"${getClass.getSimpleName}(profileName=${profileName},profileVersion=${profileVersion},profileBaseDir=${profileBaseDir})"
+}
 
 object ProfileLookup {
   def read(config: Config): Try[ProfileLookup] = Try {

@@ -1,6 +1,6 @@
 package blended.akka
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ ActorRef, Props }
 import blended.akka.internal.ActorSystemCapsule
 import blended.akka.protocol.BundleActorStarted
 import domino.DominoImplicits
@@ -31,13 +31,7 @@ trait ActorSystemWatching extends DominoImplicits {
   def setupBundleActor(system: ActorSystem, props: Props): ActorRef = {
     val actorName = bundleContext.getBundle().getSymbolicName()
     log.debug("About to create bundle actor for bundle: {}", actorName)
-    val actorRef =
-      //    try {
-      system.actorOf(props, actorName)
-    //    } catch {
-    //      case e: InvalidActorNameException =>
-    //        sys.error(s"Another actor registered with the same name: [${actorName}]. Cannot register multiple bundle actors.")
-    //    }
+    val actorRef = system.actorOf(props, actorName)
     system.eventStream.publish(BundleActorStarted(actorName))
 
     capsuleContext.addCapsule(new Capsule {

@@ -16,7 +16,7 @@
 
 package blended.itestsupport.jmx
 
-package object protocol {
+package protocol {
   case object Connect
   case object Connected
   case object Disconnect

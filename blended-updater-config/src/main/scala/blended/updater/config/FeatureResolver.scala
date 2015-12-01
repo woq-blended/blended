@@ -7,17 +7,11 @@ import com.typesafe.config.ConfigParseOptions
 
 object FeatureResolver {
 
-  case class FragmentRef(name: String, version: String, url: Option[String])
-
   class ResolveContext(features: Seq[FeatureConfig], mvnBaseUrl: Option[String] = None) {
 
-    private[this] var cache: Map[FragmentRef, FeatureConfig] = Map()
+    private[this] var cache: Seq[FeatureConfig] = features
 
-    features.flatMap(flattenFragments).filter(isResolved).foreach { f =>
-      cache += FragmentRef(f.name, f.version, f.url) -> f
-    }
-
-    def fetchFeature(feature: FragmentRef): Option[FeatureConfig] = cache.get(feature).orElse {
+    def fetchFeature(feature: FeatureRef): Option[FeatureConfig] = cache.find(c => c.name == feature.name && c.version == feature.version).orElse {
       feature.url match {
         case None => None
         case Some(unresolveUrl) if mvnBaseUrl.isDefined =>
@@ -30,7 +24,7 @@ object FeatureResolver {
             FeatureConfig.read(config).get
           }.toOption.map { fetched =>
             synchronized {
-              cache += feature -> fetched
+              cache ++= Seq(fetched)
               fetched
             }
           }
@@ -39,35 +33,20 @@ object FeatureResolver {
   }
 
   sealed trait Fragment
-  final case class Unresolved(fragmentRef: FragmentRef) extends Fragment
+  final case class Unresolved(fragmentRef: FeatureRef) extends Fragment
   final case class Resolved(fragment: FeatureConfig) extends Fragment {
-    def fragementRef = FragmentRef(fragment.name, fragment.version, fragment.url)
+    def fragementRef = FeatureRef(fragment.name, fragment.version, fragment.url)
   }
 
-  def isResolved(feature: FeatureConfig): Boolean = (!feature.bundles.isEmpty || !feature.features.isEmpty)
-
-  def flattenFragments(feature: FeatureConfig): Seq[FeatureConfig] =
-    feature +: feature.features.flatMap(flattenFragments)
-
-  def findUnresolved(feature: FeatureConfig): Seq[FeatureConfig] =
-    flattenFragments(feature).filterNot(isResolved)
-
-  def resolve(feature: FeatureConfig, context: ResolveContext): Try[FeatureConfig] = Try {
-    if (isResolved(feature))
-      feature
-    else {
-      context.fetchFeature(FragmentRef(feature.name, feature.version, feature.url)) match {
-        case Some(fetchedFeature) =>
-          fetchedFeature.copy(features = fetchedFeature.features.map(f => resolve(f, context).get))
-        case None => sys.error("Could not resolve feature: " + feature)
-      }
+  def resolve(feature: FeatureRef, context: ResolveContext): Try[Seq[FeatureConfig]] = Try {
+    context.fetchFeature(feature) match {
+      case Some(fetchedFeature) => Seq(fetchedFeature) ++ fetchedFeature.features.flatMap(f => resolve(f, context).get)
+      case None => sys.error("Could not resolve feature: " + feature)
     }
   }
 
-  def resolve(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]): Try[RuntimeConfig] = Try {
-    val context = new ResolveContext(features, runtimeConfig.mvnBaseUrl)
-    runtimeConfig.copy(
-      features = runtimeConfig.features.map(f => resolve(f, context).get)
-    )
+  def resolve(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]): Try[ResolvedRuntimeConfig] = Try {
+    val context = new ResolveContext(runtimeConfig.resolvedFeatures ++ features, runtimeConfig.mvnBaseUrl)
+    ResolvedRuntimeConfig(runtimeConfig, runtimeConfig.features.flatMap(f => resolve(f, context).get))
   }
 }

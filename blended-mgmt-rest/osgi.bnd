@@ -12,8 +12,9 @@ Import-Package: \
   spray.routing.directives,\
   spray.servlet,\
   shapeless,\
-  blended.spray.servlet,\
   *
+
+#  blended.spray.servlet,\
 
 Private-Package: \
   ${bundle.namespace}.internal

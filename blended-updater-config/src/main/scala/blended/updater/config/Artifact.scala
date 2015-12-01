@@ -15,7 +15,7 @@ case class Artifact(
 
 }
 
-object Artifact {
+object Artifact extends ((String, Option[String], Option[String]) => Artifact) {
   def apply(url: String,
     fileName: String = null,
     sha1Sum: String = null): Artifact = {

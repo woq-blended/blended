@@ -38,9 +38,11 @@ blended-testsupport \
 blended-updater \
 blended-updater-config \
 blended-updater-tools \
+blended-updater-remote \
 blended-updater-maven-plugin \
 blended-launcher-features \
 blended-launcher-demo \
+blended-demo-mgmt \
 blended-util"
 
 genForProjects="$projects"

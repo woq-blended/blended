@@ -17,12 +17,13 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
-import blended.container.registry.protocol._
-import blended.container.registry.protocol.{ContainerRegistryResponseOK, ContainerInfo}
+import blended.mgmt.base.json._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import spray.httpx.SprayJsonSupport
 import spray.testkit.ScalatestRouteTest
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
 
 class ManagementCollectorSpec
   extends WordSpec

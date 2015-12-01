@@ -23,7 +23,7 @@ import akka.pattern.pipe
 import blended.akka.{ OSGIActor, OSGIActorConfig }
 import blended.mgmt.base.ServiceInfo
 import blended.container.context.ContainerIdentifierService
-import blended.container.registry.protocol._
+import blended.mgmt.base.json._
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
@@ -35,6 +35,8 @@ import scala.util.{ Try, Success, Failure }
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
 
 object MgmtReporter {
 
@@ -49,9 +51,12 @@ object MgmtReporter {
   }
 
   case class MgmtReporterConfig(
-    registryUrl: String,
-    updateIntervalMsec: Long,
-    initialUpdateDelayMsec: Long)
+      registryUrl: String,
+      updateIntervalMsec: Long,
+      initialUpdateDelayMsec: Long) {
+
+    override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
+  }
 
   case object Tick
 
@@ -117,7 +122,13 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
         pipeline { Post(config.registryUrl, info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
       }
 
-    case ContainerRegistryResponseOK(id) => log.info("Reported [{}] to management node", id)
+    case ContainerRegistryResponseOK(id, actions) =>
+      log.info("Reported [{}] to management node", id)
+      if (!actions.isEmpty) {
+        log.info("Received {} update actions from management node: {}", actions.size, actions)
+        // TODO: sent actions to updater
+        
+      }
 
     case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>
       log.debug("Update service info for: {}", name)

@@ -14,18 +14,10 @@
  * limitations under the License.
  */
 
-package blended.container.registry.protocol
-
-import blended.mgmt.base.ServiceInfo
-import spray.json.{DefaultJsonProtocol, RootJsonFormat}
+package blended.mgmt.base
 
 /**
- * Defines type-classes to de-/serialization of protocol classes.
+ * Inherits the specific JSON de-/serialization type-classes from [JsonProtocol].
  */
-trait JsonProtocol extends DefaultJsonProtocol {
-  implicit val serviceInfoFormat: RootJsonFormat[ServiceInfo] = jsonFormat4(ServiceInfo)
-  implicit val containerInfoFormat: RootJsonFormat[ContainerInfo] = jsonFormat3(ContainerInfo)
-  implicit val responseFormat: RootJsonFormat[ContainerRegistryResponseOK] = jsonFormat1(ContainerRegistryResponseOK)
+package object json extends JsonProtocol {
 }
-
-object JsonProtocol extends JsonProtocol

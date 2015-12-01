@@ -126,7 +126,7 @@ case class ContainerUnderTest(
     }
 
     val cred = (user, pwd) match {
-      case (None, None) => ""
+      case (None, _) => ""
       case (Some(u), None) => s"$u@"
       case (Some(u), Some(p)) => s"$u:$p@"
     }

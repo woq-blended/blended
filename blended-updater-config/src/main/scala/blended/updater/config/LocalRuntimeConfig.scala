@@ -10,7 +10,9 @@ import java.util.Properties
 import java.io.FileReader
 import scala.collection.immutable._
 
-case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
+case class LocalRuntimeConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, baseDir: File) {
+  
+  def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
   def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
 
@@ -45,27 +47,29 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
     explodedResourceArchives: Boolean,
     checkPropertiesFile: Boolean): Seq[String] = {
 
-    val configIssues = runtimeConfig.validate()
-
-    val artifacts = runtimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
+    val artifacts = resolvedRuntimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
       (if (includeResourceArchives) runtimeConfig.resources.map(r => resourceArchiveLocation(r) -> r) else Seq())
 
-    val artifactIssues = artifacts.par.flatMap {
-      case (file, artifact) =>
-        val issue = if (!file.exists()) {
-          Some(s"Missing file: ${file.getName()}")
-        } else {
-          RuntimeConfig.digestFile(file) match {
-            case Some(d) =>
-              if (Option(d) != artifact.sha1Sum) {
-                Some(s"Invalid checksum of bundle jar: ${file.getName()}")
-              } else None
-            case None =>
-              Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
+    val artifactIssues = {
+      var checkedFiles: Map[File, String] = Map()
+      artifacts.par.flatMap {
+        case (file, artifact) =>
+          val issue = if (!file.exists()) {
+            Some(s"Missing file: ${file.getName()}")
+          } else {
+            checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)) match {
+              case Some(d) =>
+                checkedFiles += file -> d
+                if (Option(d) != artifact.sha1Sum) {
+                  Some(s"Invalid checksum of bundle jar: ${file.getName()}")
+                } else None
+              case None =>
+                Some(s"Could not evaluate checksum of bundle jar: ${file.getName()}")
+            }
           }
-        }
-        issue.toList
-    }.seq
+          issue.toList
+      }.seq
+    }
 
     val resourceIssues = if (explodedResourceArchives) {
       runtimeConfig.resources.flatMap { artifact =>
@@ -98,7 +102,7 @@ case class LocalRuntimeConfig(runtimeConfig: RuntimeConfig, baseDir: File) {
       }
     } else Nil
 
-    val issues = configIssues ++ artifactIssues ++ resourceIssues ++ propertyIssues
+    val issues = artifactIssues ++ resourceIssues ++ propertyIssues
     issues
   }
 }

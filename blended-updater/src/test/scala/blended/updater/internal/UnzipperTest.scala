@@ -39,7 +39,6 @@ class UnzipperTest extends FreeSpec
         assert(fileSelector("dir1/file1") === false)
 
         val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
-        println("unpacked files: " + files.get)
         assert(listFilesRecursive(dir).toSet === Set("dir2"))
       }
     }
@@ -50,7 +49,6 @@ class UnzipperTest extends FreeSpec
         val fileSelector = { fileName: String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
 
         val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
-        println("unpacked files: " + files.get)
         assert(listFilesRecursive(dir).toSet === Set("dir1", "dir1/file2a.txt", "dir2", "file1.txt"))
       }
     }
@@ -64,7 +62,6 @@ class UnzipperTest extends FreeSpec
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map("VERSION" -> "1.0.0"),
           failOnMissing = true
         )))
-        println("unpacked files: " + files)
         assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
         assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-1.0.0\"", ""))
       }
@@ -75,7 +72,6 @@ class UnzipperTest extends FreeSpec
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
           failOnMissing = true
         )))
-        println("unpacked files: " + files)
         assert(files.isFailure)
         assert(files.isInstanceOf[Failure[_]])
         assert(files.asInstanceOf[Failure[_]].exception.getMessage.contains("Could not unzip file"))
@@ -88,7 +84,6 @@ class UnzipperTest extends FreeSpec
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
           failOnMissing = false
         )))
-        println("unpacked files: " + files)
         assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
         assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))
       }
