@@ -7,6 +7,7 @@ import scala.util.Try
 import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import scala.collection.JavaConverters._
 
 object JvmLauncher {
 
@@ -141,13 +142,13 @@ class JvmLauncher() {
 
     val command = Array(java) ++ cpArgs ++ arguments
 
-    val env: Map[String, String] = Map()
+    // val env: Map[String, String] = Map()
 
     val pb = new ProcessBuilder(command: _*)
     log.debug("Run command: " + command.mkString(" "))
-    // if directory is not absolute, Path will make it so, relative to the project directory.
+    pb.environment().putAll(sys.env.asJava)
     pb.directory(directory)
-    if (!env.isEmpty) env.foreach { case (k, v) => pb.environment().put(k, v) }
+    // if (!env.isEmpty) env.foreach { case (k, v) => pb.environment().put(k, v) }
     val p = pb.start
 
     return new RunningProcess(p, errorsIntoOutput, interactive)

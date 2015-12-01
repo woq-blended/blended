@@ -35,7 +35,7 @@ object LauncherServiceWindows {
         println("Starting framework")
         val cmdline = Launcher.parseArgs(args).get
         val configs = Launcher.readConfigs(cmdline)
-        val launcher = Launcher.createAndPrepareLaunch(configs, cmdline.resetProfileProps)
+        val launcher = Launcher.createAndPrepareLaunch(configs, cmdline.resetProfileProps || cmdline.initProfileProps, cmdline.initProfileProps)
         val f = new RunningFramework(launcher.start())
         framework = Option(f)
         val retVal = f.waitForStop()
