@@ -249,6 +249,11 @@
 			<artifactId>blended.camel.utils</artifactId>
 			<version>${blended.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.jms.utils</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
 
 		<!-- blended-commons -->
 

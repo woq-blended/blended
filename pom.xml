@@ -192,7 +192,8 @@
         <module>blended-util</module>
         <module>blended-jmx</module>
         <module>blended-camel-utils</module>
-
+        <module>blended-jms-utils</module>
+   
         <module>blended-testsupport</module>
 
         <module>blended-domino</module>
