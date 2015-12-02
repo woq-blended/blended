@@ -90,9 +90,16 @@ object Launcher {
 
     @CmdOption(names = Array("--reset-profile-props"),
       description = "Try to recreate the profile properties file before starting a profile",
-      conflictsWith = Array("--config")
+      conflictsWith = Array("--config", "--init-profile-props")
     )
     var resetProfileProps: Boolean = false
+
+    @CmdOption(names = Array("--init-profile-props"),
+      description = "Try to initially create the profile properties file (if missing) before starting a profile",
+      conflictsWith = Array("--config", "--reset-profile-props")
+    )
+    var initProfileProps: Boolean = false
+
   }
 
   def main(args: Array[String]): Unit = {
@@ -130,7 +137,7 @@ object Launcher {
     cmdline
   }
 
-  def createAndPrepareLaunch(configs: Configs, createProperties: Boolean): Launcher = {
+  def createAndPrepareLaunch(configs: Configs, createProperties: Boolean, onlyIfMissing: Boolean): Launcher = {
     val launcher = new Launcher(configs.launcherConfig)
 
     val errors = configs.profileConfig match {
@@ -150,7 +157,7 @@ object Launcher {
 
     if (createProperties) {
       val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
-      RuntimeConfig.createPropertyFile(localConfig, None) match {
+      RuntimeConfig.createPropertyFile(localConfig, None, onlyIfMissing) match {
         case None => // nothing to generate, ok
         case Some(Success(f)) => // generated successfully, ok
           Console.err.println(s"Created properties file for profile: ${f}")
@@ -168,8 +175,8 @@ object Launcher {
 
     do {
       val configs = readConfigs(cmdline)
-      val createProperties = firstStart && cmdline.resetProfileProps
-      val launcher = createAndPrepareLaunch(configs, createProperties)
+      val createProperties = firstStart && (cmdline.resetProfileProps || cmdline.initProfileProps)
+      val launcher = createAndPrepareLaunch(configs, createProperties, cmdline.initProfileProps)
       retVal = launcher.run()
       firstStart = false
     } while (handleFrameworkRestart && retVal == 2)
