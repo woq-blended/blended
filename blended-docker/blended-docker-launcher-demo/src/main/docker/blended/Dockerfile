@@ -15,7 +15,7 @@ USER blended
 ENV JAVA_HOME /opt/java
 ENV PATH ${PATH}:${JAVA_HOME}/bin
 
-ENTRYPOINT ["/bin/sh", "/opt/${docker.target}/bin/blended.sh", "--reset-profile-props"]
+ENTRYPOINT ["/bin/sh", "/opt/${docker.target}/bin/blended.sh"]
 
 EXPOSE 1883
 EXPOSE 8181

@@ -5,13 +5,14 @@ import javax.jms.ConnectionFactory
 
 import akka.actor.{Actor, ActorLogging}
 import blended.akka.OSGIActorConfig
+import blended.jms.utils.BlendedSingleConnectionFactory
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
-import org.springframework.jms.connection.CachingConnectionFactory
+
 import scala.language.reflectiveCalls
 
 class BrokerControlActor extends Actor
@@ -53,8 +54,9 @@ class BrokerControlActor extends Actor
 
         val url = s"vm://$brokerName?create=false"
         val amqCF : ConnectionFactory = new ActiveMQConnectionFactory(url)
+        val cf : ConnectionFactory = new BlendedSingleConnectionFactory(cfg, amqCF, provider, 60)
 
-        val svcReg = amqCF.providesService[ConnectionFactory](Map(
+        val svcReg = cf.providesService[ConnectionFactory](Map(
           "provider" -> provider,
           "brokerName" -> brokerName
         ))

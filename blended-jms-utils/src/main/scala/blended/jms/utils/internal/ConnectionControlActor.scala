@@ -1,13 +1,10 @@
 package blended.jms.utils.internal
 
 import java.util.concurrent.TimeUnit
-import javax.jms.{Session, Connection, ConnectionFactory}
+import javax.jms.{Connection, ConnectionFactory, Session}
 
-import akka.actor.{Cancellable, ActorLogging, Actor}
+import akka.actor.{Actor, ActorLogging, Cancellable}
 import blended.jms.utils.BlendedJMSConnection
-import org.apache.camel.CamelContext
-import org.apache.camel.component.jms.JmsComponent
-import org.apache.camel.impl.DefaultCamelContext
 
 import scala.concurrent.duration.Duration
 
@@ -27,20 +24,21 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
     log.debug(s"Initialising Connection controller [$provider]")
     val schedule = Duration(interval, TimeUnit.SECONDS)
     timer = Some(context.system.scheduler.schedule(schedule, schedule, self, CheckConnection))
+
+    connect()
   }
 
-  override def postStop(): Unit = {
-    conn.foreach { c =>
-      log.info(s"Closing connection for provider [$provider]")
-      c.connection.close()
-    }
-
-    conn = None
-
+  override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
+    disconnect()
 
     timer.foreach(_.cancel())
     timer = None
 
+    super.preRestart(reason, message)
+  }
+
+  override def postStop(): Unit = {
+    disconnect()
     super.postStop()
   }
 
@@ -62,20 +60,31 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
 
   override def receive : Receive = {
     case GetConnection =>
-      val c = conn match {
-        case None =>
-          log.debug(s"Creating connection to JMS provider [$provider]")
-          val connection = new BlendedJMSConnection(cf.createConnection())
-          connection.start()
-          conn = Some(connection)
-          connection
-        case Some(connection) =>
-          log.debug(s"Reusing connection for provider [$provider].")
-          connection
-      }
-
-      sender ! c
+      sender ! connect()
     case CheckConnection =>
       checkConnection
+  }
+
+  private[this] def connect() : Connection = {
+    conn match {
+      case None =>
+        log.debug(s"Creating connection to JMS provider [$provider]")
+        val connection = new BlendedJMSConnection(cf.createConnection())
+        connection.start()
+        conn = Some(connection)
+        connection
+      case Some(conn) =>
+        log.debug(s"Reusing connection for provider [$provider].")
+        conn
+    }
+  }
+
+  private[this] def disconnect() : Unit = {
+    conn.foreach { c =>
+      log.info(s"Closing connection for provider [$provider]")
+      c.connection.close()
+    }
+
+    conn = None
   }
 }
