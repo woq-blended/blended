@@ -26,4 +26,4 @@ cd ..
 
 build clean install -P parent
 build clean install -P updater
-build clean install -P build,assembly
+build clean install -P build
