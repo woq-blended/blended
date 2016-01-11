@@ -37,10 +37,13 @@ class BlendedSingleConnectionFactory(
 
       val futConn = for {
         controller <- cfg.system.actorSelection(s"/user/$con").resolveOne()
-        conn <- (controller ? GetConnection).mapTo[Connection]
+        conn <- (controller ? GetConnection).mapTo[Option[Connection]]
       } yield conn
 
-      Await.result(futConn, timeout.duration)
+      Await.result(futConn, timeout.duration) match {
+        case Some(c) => c
+        case None => throw new Exception(s"Error connecting to $provider.")
+      }
     } catch {
       case e: Exception => {
         val jmsEx = new JMSException("Error getting Connection Factory")

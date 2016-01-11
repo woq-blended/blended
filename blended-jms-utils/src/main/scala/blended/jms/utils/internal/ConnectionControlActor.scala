@@ -6,7 +6,7 @@ import javax.jms.{Connection, ConnectionFactory, Session}
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import blended.jms.utils.BlendedJMSConnection
 
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 object ConnectionControlActor {
 
@@ -42,17 +42,23 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
     super.postStop()
   }
 
-  def checkConnection : Unit = conn.foreach { c =>
+  def checkConnection : Unit = {
 
-    var session : Option[Session] = None
+    var session: Option[Session] = None
 
     try {
       log.debug(s"Checking connection for provider [$provider]")
-      session = Some(c.createSession(false, Session.AUTO_ACKNOWLEDGE))
-      session.foreach { s =>
-        val producer = s.createProducer(s.createTopic("blended.ping"))
-        producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
+      connect().foreach { c =>
+        val session = Some(c.createSession(false, Session.AUTO_ACKNOWLEDGE))
+        session.foreach { s =>
+          val producer = s.createProducer(s.createTopic("blended.ping"))
+          producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
+        }
       }
+    } catch {
+      case e =>
+        disconnect()
+        context.system.scheduler.scheduleOnce(5.seconds, self, CheckConnection)
     } finally {
       session.foreach(_.close())
     }
@@ -65,15 +71,22 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
       checkConnection
   }
 
-  private[this] def connect() : Connection = {
+  private[this] def connect() : Option[Connection] = {
     conn match {
       case None =>
-        log.debug(s"Creating connection to JMS provider [$provider]")
-        val connection = new BlendedJMSConnection(cf.createConnection())
-        connection.start()
-        conn = Some(connection)
-        connection
-      case Some(conn) =>
+        try {
+          log.debug(s"Creating connection to JMS provider [$provider]")
+          val connection = new BlendedJMSConnection(cf.createConnection())
+          connection.start()
+          conn = Some(connection)
+        } catch {
+          case e =>
+            log.debug(s"Error connecting to JMS provider [$provider].", e)
+            context.system.scheduler.scheduleOnce(5.seconds, self, CheckConnection)
+            conn = None
+        }
+        conn
+      case Some(c) =>
         log.debug(s"Reusing connection for provider [$provider].")
         conn
     }
