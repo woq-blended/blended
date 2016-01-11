@@ -409,6 +409,7 @@
                 <fork>true</fork>
                 <recompileMode>incremental</recompileMode>
                 <useZincServer>true</useZincServer>
+                <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
                 <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
                 <args>
                   <arg>-deprecation</arg>
@@ -433,6 +434,7 @@
                 <fork>true</fork>
                 <recompileMode>incremental</recompileMode>
                 <useZincServer>true</useZincServer>
+                <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
                 <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
                 <args>
                   <arg>-deprecation</arg>
