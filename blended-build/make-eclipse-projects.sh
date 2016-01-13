@@ -15,6 +15,7 @@ blended-container-context \
 blended-container-registry \
 blended-domino \
 blended-itestsupport \
+blended-jms-utils \
 blended-jmx \
 blended-jolokia \
 blended-karaf-branding \
