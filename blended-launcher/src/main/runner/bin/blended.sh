@@ -32,26 +32,37 @@ JAVA_OPTS="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml ${JAVA_OP
 JAVA_OPTS="-Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME} ${JAVA_OPTS}"
 JAVA_OPTS="-Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500 ${JAVA_OPTS}"
 
-RETVAL=2
-
 if [ -n "$DEBUG_PORT" ] ; then
   JAVA_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=y ${JAVA_OPTS}"
 fi
 
+# colun-separated
+OUTER_CP="${BLENDED_HOME}/lib/*"
+# semicolon-separated
+INNER_CP="\
+${BLENDED_HOME}/etc;\
+${BLENDED_HOME}/lib/blended.launcher-1.2-SNAPSHOT.jar;\
+${BLENDED_HOME}/lib/config-1.2.1.jar;\
+${BLENDED_HOME}/lib/org.osgi.core-5.0.0.jar;\
+${BLENDED_HOME}/lib/blended.updater.config-1.2-SNAPSHOT.jar;\
+${BLENDED_HOME}/lib/de.tototec.cmdoption-0.4.2.jar;\
+${BLENDED_HOME}/lib/scala-library-2.10.5.jar;\
+${BLENDED_HOME}/lib/slf4j-api-1.7.12.jar;\
+${BLENDED_HOME}/lib/logback-core-1.1.3.jar;\
+${BLENDED_HOME}/lib/logback-classic-1.1.3.jar;\
+"
+
 $JAVA_HOME/bin/java -version
 
-while [ "x$RETVAL" == "x2" ]; do
-
-${JAVA_HOME}/bin/java\
+exec ${JAVA_HOME}/bin/java\
  $JAVA_OPTS\
  -cp\
- "${BLENDED_HOME}/etc:${BLENDED_HOME}/lib/*"\
- blended.launcher.Launcher\
+ "${OUTER_CP}"\
+ blended.launcher.jvmrunner.JvmLauncher\
+ start\
+ "-cp=${INNER_CP}"\
+ -- \
+ blended.launcher.Launcher \
  --framework-restart 0\
  ${LAUNCHER_OPTS}\
- "$@" && RETVAL=$? || RETVAL=$?
-
-done
-
-unset BLENDED_HOME
-unset RETVAL
+ "$@"

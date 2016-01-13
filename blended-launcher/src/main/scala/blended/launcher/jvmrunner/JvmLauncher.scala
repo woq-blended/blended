@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
 object JvmLauncher {
 
   private[this] lazy val log = LoggerFactory.getLogger("blended.launcher.jvmrunner.JvmLauncher")
-  
+
   private[this] lazy val launcher = new JvmLauncher()
 
   def main(args: Array[String]): Unit = {
@@ -88,10 +88,10 @@ class JvmLauncher() {
   }
 
   case class Config(
-    classpath: Seq[File] = Seq(),
-    otherArgs: Seq[String] = Seq(),
-    action: Option[String] = None) {
-    
+      classpath: Seq[File] = Seq(),
+      otherArgs: Seq[String] = Seq(),
+      action: Option[String] = None) {
+
     override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
   }
 
@@ -127,7 +127,7 @@ class JvmLauncher() {
 
     log.debug("About to run Java process")
 
-    // TODO: lookup java by JAVA_HOME env variable
+    // lookup java by JAVA_HOME env variable
     val javaHome = System.getenv("JAVA_HOME")
     val java =
       if (javaHome != null) s"${javaHome}/bin/java"
@@ -140,7 +140,10 @@ class JvmLauncher() {
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
-    val command = Array(java) ++ cpArgs ++ arguments
+    val propArgs = System.getProperties.asScala.map(p => s"-D${p._1}=${p._2}").toArray[String]
+    log.debug("Using property args: " + cpArgs.mkString(" "))
+
+    val command = Array(java) ++ cpArgs ++ propArgs ++ arguments
 
     // val env: Map[String, String] = Map()
 
@@ -269,6 +272,5 @@ class JvmLauncher() {
    * Converts a Seq of files into a string containing the absolute file paths concatenated with the platform specific path separator (":" on Unix, ";" on Windows).
    */
   def pathAsArg(paths: Seq[File]): String = paths.map(p => p.getPath).mkString(File.pathSeparator)
-
 
 }
