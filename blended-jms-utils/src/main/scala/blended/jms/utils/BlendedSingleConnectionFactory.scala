@@ -26,8 +26,6 @@ class BlendedSingleConnectionFactory(
   private[this] val con = s"JMS-$provider"
   private[this] val actor = cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, pingInterval)), con)
 
-  log.debug(s"Created Connection control actor [$actor]")
-
   @throws[JMSException]
   override def createConnection(): Connection = {
 

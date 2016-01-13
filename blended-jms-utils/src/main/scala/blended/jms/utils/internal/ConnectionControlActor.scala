@@ -6,6 +6,7 @@ import javax.jms.{Connection, ConnectionFactory, Session}
 import akka.actor.{Actor, ActorLogging, Cancellable}
 import blended.jms.utils.BlendedJMSConnection
 
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 object ConnectionControlActor {
@@ -18,49 +19,44 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
 
   private[this] implicit val eCtxt = context.system.dispatcher
   private[this] var conn : Option[BlendedJMSConnection] = None
-  private[this] var timer : Option[Cancellable] = None
+
+  private[this] val retry = 5.seconds
+  private[this] val schedule = Duration(interval, TimeUnit.SECONDS)
+
 
   override def preStart(): Unit = {
     log.debug(s"Initialising Connection controller [$provider]")
-    val schedule = Duration(interval, TimeUnit.SECONDS)
-    timer = Some(context.system.scheduler.schedule(schedule, schedule, self, CheckConnection))
 
+    context.system.scheduler.scheduleOnce(schedule, self, CheckConnection)
     connect()
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
-    disconnect()
-
-    timer.foreach(_.cancel())
-    timer = None
-
+    log.debug(s"Error encountered in ConnectionControlActor [${reason.getMessage}], restarting ...")
     super.preRestart(reason, message)
   }
 
   override def postStop(): Unit = {
+    log.debug(s"Stopping Connection Control Actor for provider [$provider].")
     disconnect()
     super.postStop()
   }
 
-  def checkConnection : Unit = {
-
-    var session: Option[Session] = None
+  def checkConnection() : Unit = {
 
     try {
-      log.debug(s"Checking connection for provider [$provider]")
-      connect().foreach { c =>
-        val session = Some(c.createSession(false, Session.AUTO_ACKNOWLEDGE))
-        session.foreach { s =>
-          val producer = s.createProducer(s.createTopic("blended.ping"))
-          producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
-        }
+      val check = Await.result(ping(), 3.seconds)
+
+      check match {
+        case Right(_) =>
+        case Left(t) => throw t
       }
+      context.system.scheduler.scheduleOnce(schedule, self, CheckConnection)
     } catch {
-      case e =>
+      case e : Throwable =>
+        log.debug(s"Error sending connection ping for provider [$provider]. Reconnecting ...")
         disconnect()
         context.system.scheduler.scheduleOnce(5.seconds, self, CheckConnection)
-    } finally {
-      session.foreach(_.close())
     }
   }
 
@@ -68,7 +64,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
     case GetConnection =>
       sender ! connect()
     case CheckConnection =>
-      checkConnection
+      checkConnection()
   }
 
   private[this] def connect() : Option[Connection] = {
@@ -82,7 +78,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
         } catch {
           case e =>
             log.debug(s"Error connecting to JMS provider [$provider].", e)
-            context.system.scheduler.scheduleOnce(5.seconds, self, CheckConnection)
             conn = None
         }
         conn
@@ -94,10 +89,45 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, interval: 
 
   private[this] def disconnect() : Unit = {
     conn.foreach { c =>
-      log.info(s"Closing connection for provider [$provider]")
-      c.connection.close()
+      log.debug(s"Closing connection for provider [$provider]")
+
+      Future {
+        scala.concurrent.blocking { c.connection.close() }
+        log.debug(s"Connection closed for provider [$provider]")
+      }
     }
 
     conn = None
+  }
+
+  private[this] def ping() : Future[Either[Throwable,Boolean]] = {
+
+    Future {
+      var session: Option[Session] = None
+
+      try {
+        log.debug(s"Checking connection for provider [$provider]")
+        connect() match {
+          case None =>
+            throw new Exception("No current connection available")
+          case Some(c) =>
+            session = Some(c.createSession(false, Session.AUTO_ACKNOWLEDGE))
+            session.foreach { s =>
+              val producer = s.createProducer(s.createTopic("blended.ping"))
+              producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
+              producer.close()
+            }
+            Right(true)
+        }
+      } catch {
+        case e : Throwable =>
+          log.debug(s"Error sending connection ping for provider [$provider]. Reconnecting ...")
+          disconnect()
+          context.system.scheduler.scheduleOnce(5.seconds, self, CheckConnection)
+          Left(e)
+      } finally {
+        session.foreach(_.close())
+      }
+    }
   }
 }

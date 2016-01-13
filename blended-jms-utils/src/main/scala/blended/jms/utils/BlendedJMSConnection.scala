@@ -8,12 +8,12 @@ class BlendedJMSConnection(conn: Connection) extends Connection {
 
   private[this] val log = LoggerFactory.getLogger(classOf[BlendedJMSConnection])
 
-  def connection = conn
+  protected[utils] def connection = conn
 
   override def createDurableConnectionConsumer(topic: Topic, s: String, s1: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer =
     conn.createDurableConnectionConsumer(topic, s, s1, serverSessionPool, i)
 
-  override def stop(): Unit = log.debug("Ignoring call to connection.close()")
+  override def stop(): Unit = log.debug("Ignoring call to connection.stop()")
 
   override def createSession(b: Boolean, i: Int): Session = conn.createSession(b, i)
 
