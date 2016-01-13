@@ -7,7 +7,7 @@ import org.osgi.framework.ServiceRegistration
 
 class RemoteUpdaterActivator extends DominoActivator {
   whenBundleActive {
-    // TODO: only register in configured so
+    // TODO: only register if configured so
     val remoteUpdater = new RemoteUpdater with TransientPersistor
     remoteUpdater.providesService[RemoteUpdater]
 

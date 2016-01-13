@@ -9,6 +9,7 @@ import akka.actor.ActorRef
 import akka.actor.Cancellable
 import akka.actor.Props
 import akka.event.LoggingReceive
+import akka.pattern.ask
 import akka.routing.BalancingPool
 import blended.launcher.config.LauncherConfig
 import blended.updater.config.Artifact
@@ -30,6 +31,10 @@ import com.typesafe.config.ConfigParseOptions
 import blended.mgmt.base.ServiceInfo
 import org.slf4j.LoggerFactory
 import blended.updater.config.ResolvedRuntimeConfig
+import blended.mgmt.base.UpdateAction
+import blended.mgmt.base.StageProfile
+import akka.util.Timeout
+import blended.mgmt.base.ActivateProfile
 
 object Updater {
 
@@ -284,17 +289,47 @@ class Updater(
       log.info("Publishing of service infos is disabled")
     }
 
-    super.preStart()
+    context.system.eventStream.subscribe(context.self, classOf[UpdateAction])
 
+    super.preStart()
   }
 
   override def postStop(): Unit = {
+
+    context.system.eventStream.unsubscribe(context.self)
+
     tickers.foreach { t =>
       log.info("Disabling ticker: {}", t)
       t.cancel()
     }
     tickers = Nil
     super.postStop()
+  }
+
+  def event(event: UpdateAction): Unit = event match {
+    case StageProfile(runtimeConfig) =>
+      log.debug("Received stage profile request (via event stream) for {}-{}",
+        Array(runtimeConfig.name, runtimeConfig.version))
+
+      implicit val ec = context.system.dispatcher
+      val timeout = new Timeout(10, TimeUnit.MINUTES)
+
+      self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
+        log.debug("Finished stage profile request (via event stream) for {}-{} with result: {}",
+          Array(runtimeConfig.name, runtimeConfig.version, x))
+      }
+
+    case ActivateProfile(name, version) =>
+      log.debug("Received activate profile request (via event stream) for {}-{}",
+        Array(name, version))
+
+      implicit val ec = context.system.dispatcher
+      val timeout = new Timeout(10, TimeUnit.MINUTES)
+
+      self.ask(ActivateRuntimeConfig(nextId(), name, version))(timeout).onComplete { x =>
+        log.debug("Finished activation profile request (via event stream) for {}-{} with result: {}",
+          Array(name, version, x))
+      }
   }
 
   def protocol(msg: Protocol): Unit = msg match {
@@ -359,6 +394,7 @@ class Updater(
 
     case AddRuntimeConfig(reqId, config) =>
       val id = ProfileId(config.name, config.version)
+      val req = sender()
       findConfig(id) match {
         case None =>
           val dir = new File(new File(installBaseDir, config.name), config.version)
@@ -370,15 +406,15 @@ class Updater(
             case Success(resolved) =>
               ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
               profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), Profile.Pending(Seq("Never checked")))
-              sender() ! RuntimeConfigAdded(reqId)
+              req ! RuntimeConfigAdded(reqId)
             case Failure(e) =>
-              sender() ! RuntimeConfigAdditionFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
+              req ! RuntimeConfigAdditionFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
           }
 
         case Some(`config`) =>
-          sender() ! RuntimeConfigAdded(reqId)
+          req ! RuntimeConfigAdded(reqId)
         case Some(collision) =>
-          sender() ! RuntimeConfigAdditionFailed(reqId, "A different runtime config is already present under the same coordinates")
+          req ! RuntimeConfigAdditionFailed(reqId, "A different runtime config is already present under the same coordinates")
       }
 
     case StageNextRuntimeConfig(reqId) =>
@@ -475,6 +511,11 @@ class Updater(
   }
 
   override def receive: Actor.Receive = LoggingReceive {
+
+    // from event stream
+    case e: UpdateAction => event(e)
+
+    // direct protocol
     case p: Protocol => protocol(p)
 
     case PublishServiceInfo =>

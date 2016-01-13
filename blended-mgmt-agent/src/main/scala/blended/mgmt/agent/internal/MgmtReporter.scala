@@ -37,6 +37,7 @@ import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
 import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ContainerRegistryResponseOK
+import com.typesafe.config.ConfigFactory
 
 object MgmtReporter {
 
@@ -126,8 +127,10 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
       log.info("Reported [{}] to management node", id)
       if (!actions.isEmpty) {
         log.info("Received {} update actions from management node: {}", actions.size, actions)
-        // TODO: sent actions to updater
-        
+        actions.foreach { action =>
+          log.debug("Publishing event: {}", action)
+          context.system.eventStream.publish(action)
+        }
       }
 
     case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>

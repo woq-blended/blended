@@ -543,6 +543,11 @@
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-osgi</artifactId>
+        <version>${activemq.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 

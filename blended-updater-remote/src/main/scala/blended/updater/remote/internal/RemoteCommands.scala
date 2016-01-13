@@ -6,6 +6,9 @@ import blended.updater.config.RuntimeConfig
 import com.typesafe.config.ConfigFactory
 import blended.mgmt.base.StageProfile
 import blended.mgmt.base.ActivateProfile
+import blended.updater.remote.ContainerState
+import blended.mgmt.base.StageProfile
+import java.util.Date
 
 class RemoteCommands(updater: RemoteUpdater) {
 
@@ -17,9 +20,23 @@ class RemoteCommands(updater: RemoteUpdater) {
     "profiles" -> "Show all registered profiles"
   )
 
+  def renderContainerState(state: ContainerState): String = {
+    s"""Container ID: ${state.containerId}
+      |  active profile: ${state.activeProfile.mkString}
+      |  valid profiles: ${state.validProfiles.mkString(", ")}
+      |  invalid profiles: ${state.invalidProfiles.mkString(", ")}
+      |  outstanding actions: ${
+      state.outstandingActions.map {
+        case StageProfile(p) => s"stage ${p.name}-${p.version}"
+        case ActivateProfile(n, v) => s"activate ${n}-${v}"
+      }.mkString(", ")
+    }
+      |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
+  }
+
   def remoteShow(): String = {
     updater.getContainerIds.map { id =>
-      s"Update state of container with ID ${id}:\n${updater.getContainerState(id)}\n"
+      s"Update state of container with ID ${id}:\n${updater.getContainerState(id).map(renderContainerState)}\n"
     }.mkString("\n")
   }
 

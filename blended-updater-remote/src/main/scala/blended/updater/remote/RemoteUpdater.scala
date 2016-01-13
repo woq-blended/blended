@@ -7,6 +7,7 @@ import blended.mgmt.base.StageProfile
 import blended.mgmt.base.UpdateAction
 import blended.mgmt.base.ActivateProfile
 import org.slf4j.LoggerFactory
+import java.util.Date
 
 trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor =>
 
@@ -25,6 +26,7 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
 
   def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
     log.debug(s"About to analyze update properties from container info: ${containerInfo}")
+    val timeStamp = System.currentTimeMillis()
     val state = self.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
     val props = containerInfo.serviceInfos.find(_.name.endsWith("/blended.updater")).map(si => si.props).getOrElse(Map())
@@ -42,7 +44,8 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
       activeProfile = active,
       validProfiles = valid,
       invalidProfiles = invalid,
-      outstandingActions = newUpdateActions
+      outstandingActions = newUpdateActions,
+      syncTimeStamp = Some(timeStamp)
     )
     self.updateContainerState(newState)
     newState
@@ -67,10 +70,11 @@ case class ContainerState(
     outstandingActions: immutable.Seq[UpdateAction] = immutable.Seq(),
     activeProfile: Option[String] = None,
     validProfiles: immutable.Seq[String] = immutable.Seq(),
-    invalidProfiles: immutable.Seq[String] = immutable.Seq()) {
+    invalidProfiles: immutable.Seq[String] = immutable.Seq(),
+    syncTimeStamp: Option[Long] = None) {
 
   override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},outstandingActions=${outstandingActions}" +
-    s",activeProfile=${activeProfile},validProfiles=${validProfiles},invalidProfiles=${invalidProfiles})"
+    s",activeProfile=${activeProfile},validProfiles=${validProfiles},invalidProfiles=${invalidProfiles},syncTimeStamp=${syncTimeStamp.map(s => new Date(s))})"
 
 }
 
