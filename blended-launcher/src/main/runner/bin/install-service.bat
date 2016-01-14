@@ -34,10 +34,11 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --StartMode=jvm ^
   --StopMode=jvm ^
   --StartClass=%CLASS% ^
-  --StartParams="start;-cp='%CP%';--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-profile-props;--framework-restart;false" ^
+  --StartParams="start;-jvmOpt=-Xmx512m;-cp='%CP%';--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-profile-props;--framework-restart;false" ^
   --JvmOptions="-Dlogback.configurationFile=%BLENDED_HOME%/etc/logback.xml" ^
   ++JvmOptions="-Dsun.net.client.defaultConnectTimeout=500" ^
   ++JvmOptions="-Dsun.net.client.defaultReadTimeout=500" ^
+  ++JvmOptions="-Xmx24m" ^
   --StopClass=%CLASS% ^
   --StopParams="stop" ^
   --Classpath="%CP%" ^
