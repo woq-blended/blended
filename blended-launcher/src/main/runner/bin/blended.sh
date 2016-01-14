@@ -27,13 +27,21 @@ setenv
 
 cd $BLENDED_HOME
 
+
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
-JAVA_OPTS="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml ${JAVA_OPTS}"
-JAVA_OPTS="-Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME} ${JAVA_OPTS}"
-JAVA_OPTS="-Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500 ${JAVA_OPTS}"
+
+# Options for the service daemen JVM (outer) with controls the container JVM
+JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
+JAVA_OPTS="${JAVA_OPTS} -Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml"
+JAVA_OPTS="${JAVA_OPTS} -Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME}"
+JAVA_OPTS="${JAVA_OPTS} -Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500"
+
+# Options for the container JVM (inner) started/managed by the service daemon JVM
+# Use prefix "-jvmOpt=" to mark JVM options for the container JVM
+#CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Xmx1024m"
 
 if [ -n "$DEBUG_PORT" ] ; then
-  JAVA_OPTS="-Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=y ${JAVA_OPTS}"
+  CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Xdebug -jvmOpt=-Xrunjdwp:server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=y ${JAVA_OPTS}"
 fi
 
 # colun-separated
@@ -60,6 +68,7 @@ exec ${JAVA_HOME}/bin/java\
  "${OUTER_CP}"\
  blended.launcher.jvmrunner.JvmLauncher\
  start\
+ ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
  -- \
  blended.launcher.Launcher \

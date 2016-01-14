@@ -8,10 +8,11 @@ import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import scala.collection.JavaConverters._
+import blended.launcher.internal.Logger
 
 object JvmLauncher {
 
-  private[this] lazy val log = LoggerFactory.getLogger("blended.launcher.jvmrunner.JvmLauncher")
+  private[this] lazy val log = Logger[JvmLauncher.type]
 
   private[this] lazy val launcher = new JvmLauncher()
 
@@ -27,11 +28,11 @@ object JvmLauncher {
 
 class JvmLauncher() {
 
-  private[this] lazy val log = LoggerFactory.getLogger(classOf[JvmLauncher])
+  private[this] lazy val log = Logger[JvmLauncher]
 
   private[this] var runningProcess: Option[RunningProcess] = None
 
-  val shutdownHook = new Thread("framework-shutdown-hook") {
+  val shutdownHook = new Thread("jvm-launcher-shutdown-hook") {
     override def run(): Unit = {
       log.info("Catched shutdown. Stopping process")
       runningProcess foreach { p =>
@@ -43,7 +44,7 @@ class JvmLauncher() {
 
   def run(args: Array[String]): Int = {
     val config = checkConfig(parse(args)).get
-    log.debug("config: {}", config)
+    log.debug("config: " + config)
     config.action match {
       case Some("start") =>
         log.debug("Request: start process")
@@ -61,14 +62,15 @@ class JvmLauncher() {
 
               val p = startJava(
                 classpath = config.classpath,
+                jvmOpts = config.jvmOpts.toArray,
                 arguments = config.otherArgs.toArray,
                 interactive = true,
                 errorsIntoOutput = false,
                 directory = new File(".").getAbsoluteFile())
-              log.debug("Process started: {}", p)
+              log.debug("Process started: " + p)
               runningProcess = Option(p)
               retVal = p.waitFor
-              log.debug("Process finished with return code: {}", retVal)
+              log.debug("Process finished with return code: " + retVal)
               runningProcess = None
             } while (retVal == 2)
             retVal
@@ -90,7 +92,8 @@ class JvmLauncher() {
   case class Config(
       classpath: Seq[File] = Seq(),
       otherArgs: Seq[String] = Seq(),
-      action: Option[String] = None) {
+      action: Option[String] = None,
+      jvmOpts: Seq[String] = Seq()) {
 
     override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
   }
@@ -106,8 +109,12 @@ class JvmLauncher() {
       case Seq("stop", rest @ _*) if initialConfig.action.isEmpty =>
         parse(rest, initialConfig.copy(action = Option("stop")))
       case Seq(cp, rest @ _*) if initialConfig.classpath.isEmpty && cp.startsWith("-cp=") =>
+        // Also support ":" on non-windows platform
         val cps = cp.substring("-cp=".length).split("[;]").toSeq.map(_.trim()).filter(!_.isEmpty).map(new File(_))
         parse(rest, initialConfig.copy(classpath = cps))
+      case Seq(jvmOpt, rest @ _*) if jvmOpt.startsWith("-jvmOpt=") =>
+        val opt = jvmOpt.substring("-jvmOpt=".length).trim()
+        parse(rest, initialConfig.copy(jvmOpts = initialConfig.jvmOpts ++ Seq(opt).filter(!_.isEmpty)))
       case _ =>
         sys.error("Cannot parse arguments: " + args)
     }
@@ -120,6 +127,7 @@ class JvmLauncher() {
   }
 
   def startJava(classpath: Seq[File],
+    jvmOpts: Array[String],
     arguments: Array[String],
     interactive: Boolean = false,
     errorsIntoOutput: Boolean = true,
@@ -143,7 +151,7 @@ class JvmLauncher() {
     val propArgs = System.getProperties.asScala.map(p => s"-D${p._1}=${p._2}").toArray[String]
     log.debug("Using property args: " + cpArgs.mkString(" "))
 
-    val command = Array(java) ++ cpArgs ++ propArgs ++ arguments
+    val command = Array(java) ++ cpArgs ++ jvmOpts ++ propArgs ++ arguments
 
     // val env: Map[String, String] = Map()
 
