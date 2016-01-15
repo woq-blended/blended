@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+#       /etc/rc.d/init.d/blended
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+SERVICENAME="blended"
+PIDFILE="/var/run/PID"
+SERVICE="/opt/blended/bin/blended.sh"
+STOP_TIMEOUT=30
+LOGFILE="/var/log/daemon_${SERVICENAME}.log"
+
+start() {
+        echo -n "Starting ${SERVICENAME}: "
+        if [ -f "${PIDFILE}" ] ; then
+          # show error message
+          echo warn: "${SERVICENAME} is already started. PID file already exists: ${PIDFILE}" 1>&2
+          return 0
+        fi 
+        # run in background
+        ${SERVICE} >> ${LOGFILE} 2>&1 &
+        RESULT=$?
+        if [ "${RESULT}" = "0" ] ; then
+          PID=$!
+          echo "$PID" > "$PIDFILE"
+        fi
+        return ${RESULT}
+}
+
+stop() {
+        echo -n "Shutting down ${SERVICENAME}: "
+        if [ ! -f "${PIDFILE}" ] ; then
+          echo warn: "${SERVICENAME} is already stopped. PID file does not exist: ${PIDFILE}" 1>&2
+          return 0
+        fi
+        PID=$(cat "$PIDFILE")
+        for i in 1 $(seq 2 1 ${STOP_TIMEOUT}); do
+          kill $PID > /dev/null 2>&1
+          RESULT=$?
+          if [ "${RESULT}" = "0" ]; then
+            sleep 1
+          else
+            # cleanup
+            rm -f ${PIDFILE}
+            break
+          fi
+        done
+        return ${RESULT}
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    condrestart)
+        if [ -f ${PIDFILE} ] ; then
+          stop
+          start
+        fi
+        ;;
+    *)
+        echo "Usage: ${SERVICENAME} {start|stop|restart|condrestart}"
+        exit 1
+        ;;
+esac
+
+exit $?
