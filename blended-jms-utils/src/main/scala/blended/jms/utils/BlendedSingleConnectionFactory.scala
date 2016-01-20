@@ -29,8 +29,6 @@ class BlendedSingleConnectionFactory(
   @throws[JMSException]
   override def createConnection(): Connection = {
 
-    log.debug(s"creating connection for provider [$provider]")
-
     try {
 
       val futConn = for {
