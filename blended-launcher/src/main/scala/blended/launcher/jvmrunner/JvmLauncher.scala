@@ -162,7 +162,7 @@ class JvmLauncher() {
     // if (!env.isEmpty) env.foreach { case (k, v) => pb.environment().put(k, v) }
     val p = pb.start
 
-    return new RunningProcess(p, errorsIntoOutput, interactive)
+    new RunningProcess(p, errorsIntoOutput, interactive)
   }
 
   class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: Boolean) {
