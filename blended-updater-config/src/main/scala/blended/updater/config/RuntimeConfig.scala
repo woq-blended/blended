@@ -2,9 +2,12 @@ package blended.updater.config
 
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import java.io.BufferedReader
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.FileReader
+import java.io.FileWriter
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -12,29 +15,24 @@ import java.nio.file.StandardCopyOption
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
+import java.util.Properties
+
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.immutable
 import scala.collection.immutable.Map
-import scala.collection.immutable.Seq
+import scala.util.Success
 import scala.util.Try
 import scala.util.control.NonFatal
+
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
-import java.io.PrintStream
-import scala.io.Source
-import java.util.Properties
-import java.io.FileWriter
-import scala.util.Success
-import java.io.FileReader
-import java.io.BufferedReader
-import scala.util.Failure
-import com.typesafe.config.ConfigObject
 
 object RuntimeConfig
-    extends ((String, String, Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], Seq[FeatureRef], Seq[Artifact], Seq[FeatureConfig]) => RuntimeConfig) {
+    extends ((String, String, immutable.Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], immutable.Seq[FeatureRef], immutable.Seq[Artifact], immutable.Seq[FeatureConfig]) => RuntimeConfig) {
 
   val MvnPrefix = "mvn:"
 
@@ -76,7 +74,7 @@ object RuntimeConfig
       bundles =
         if (config.hasPath("bundles"))
           config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
-        else Seq(),
+        else immutable.Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
       properties = properties,
@@ -87,15 +85,15 @@ object RuntimeConfig
           config.getObjectList("features").asScala.map { f =>
           FeatureRef.fromConfig(f.toConfig()).get
         }.toList
-        else Seq(),
+        else immutable.Seq(),
       resources =
         if (config.hasPath("resources"))
           config.getObjectList("resources").asScala.map(r => Artifact.read(r.toConfig()).get).toList
-        else Seq(),
+        else immutable.Seq(),
       resolvedFeatures =
         if (config.hasPath("resolvedFeatures"))
           config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfig.read(r.toConfig()).get).toList
-        else Seq()
+        else immutable.Seq()
     )
   }
 
@@ -233,7 +231,7 @@ object RuntimeConfig
 
   def getPropertyFileProvider(
     curRuntime: RuntimeConfig,
-    prevRuntime: Option[LocalRuntimeConfig]): Try[Seq[PropertyProvider]] = Try {
+    prevRuntime: Option[LocalRuntimeConfig]): Try[immutable.Seq[PropertyProvider]] = Try {
     curRuntime.properties.get(Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
       case "env" => Some(new EnvPropertyProvider())
       case "sysprop" => Some(new SystemPropertyProvider())
@@ -303,15 +301,15 @@ object RuntimeConfig
 case class RuntimeConfig(
     name: String,
     version: String,
-    bundles: Seq[BundleConfig] = Seq(),
+    bundles: immutable.Seq[BundleConfig] = immutable.Seq(),
     startLevel: Int,
     defaultStartLevel: Int,
     properties: Map[String, String] = Map(),
     frameworkProperties: Map[String, String] = Map(),
     systemProperties: Map[String, String] = Map(),
-    features: Seq[FeatureRef] = Seq(),
-    resources: Seq[Artifact] = Seq(),
-    resolvedFeatures: Seq[FeatureConfig] = Seq()) {
+    features: immutable.Seq[FeatureRef] = immutable.Seq(),
+    resources: immutable.Seq[Artifact] = immutable.Seq(),
+    resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
 
   import RuntimeConfig._
 
@@ -334,8 +332,8 @@ case class RuntimeConfig(
    *
    * @see [FeatureResolver] for a way to resolve missing features.
    */
-  def resolve(features: Seq[FeatureConfig] = Seq()): Try[ResolvedRuntimeConfig] = Try {
-    ResolvedRuntimeConfig(this, features.to[Seq])
+  def resolve(features: immutable.Seq[FeatureConfig] = immutable.Seq()): Try[ResolvedRuntimeConfig] = Try {
+    ResolvedRuntimeConfig(this, features.to[immutable.Seq])
   }
 
 }
