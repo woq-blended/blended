@@ -31,6 +31,46 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
+case class RuntimeConfig(
+    name: String,
+    version: String,
+    bundles: immutable.Seq[BundleConfig] = immutable.Seq(),
+    startLevel: Int,
+    defaultStartLevel: Int,
+    properties: Map[String, String] = Map(),
+    frameworkProperties: Map[String, String] = Map(),
+    systemProperties: Map[String, String] = Map(),
+    features: immutable.Seq[FeatureRef] = immutable.Seq(),
+    resources: immutable.Seq[Artifact] = immutable.Seq(),
+    resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
+
+  import RuntimeConfig._
+
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
+    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
+    s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"
+
+  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
+
+  def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
+
+  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
+
+  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
+
+  //    def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
+
+  /**
+   * Try to create a [ResolvedRuntimeConfig]. This does not fetch missing [FeatureConfig]s.
+   *
+   * @see [FeatureResolver] for a way to resolve missing features.
+   */
+  def resolve(features: immutable.Seq[FeatureConfig] = immutable.Seq()): Try[ResolvedRuntimeConfig] = Try {
+    ResolvedRuntimeConfig(this, features.to[immutable.Seq])
+  }
+
+}
+
 object RuntimeConfig
     extends ((String, String, immutable.Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], immutable.Seq[FeatureRef], immutable.Seq[Artifact], immutable.Seq[FeatureConfig]) => RuntimeConfig) {
 
@@ -262,8 +302,7 @@ object RuntimeConfig
       if (propFile.exists() && onlyIfMisssing) {
         // nothing to create, as the file already exists
         None
-      }
-      else {
+      } else {
         propFile.getParentFile.mkdirs()
         val content = new Properties()
         if (propFile.exists()) {
@@ -297,44 +336,3 @@ object RuntimeConfig
   }
 
 }
-
-case class RuntimeConfig(
-    name: String,
-    version: String,
-    bundles: immutable.Seq[BundleConfig] = immutable.Seq(),
-    startLevel: Int,
-    defaultStartLevel: Int,
-    properties: Map[String, String] = Map(),
-    frameworkProperties: Map[String, String] = Map(),
-    systemProperties: Map[String, String] = Map(),
-    features: immutable.Seq[FeatureRef] = immutable.Seq(),
-    resources: immutable.Seq[Artifact] = immutable.Seq(),
-    resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
-
-  import RuntimeConfig._
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
-    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
-    s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"
-
-  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
-
-  def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
-
-  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
-
-  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
-
-  //    def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
-
-  /**
-   * Try to create a [ResolvedRuntimeConfig]. This does not fetch missing [FeatureConfig]s.
-   *
-   * @see [FeatureResolver] for a way to resolve missing features.
-   */
-  def resolve(features: immutable.Seq[FeatureConfig] = immutable.Seq()): Try[ResolvedRuntimeConfig] = Try {
-    ResolvedRuntimeConfig(this, features.to[immutable.Seq])
-  }
-
-}
-
