@@ -6,6 +6,9 @@ import scala.util.Try
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
+/**
+ * A downloadable resource file with optional checksum.
+ */
 case class Artifact(
     url: String,
     fileName: Option[String],

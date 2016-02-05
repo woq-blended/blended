@@ -10,6 +10,9 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
 
+/**
+ * Helper to write [[Config]] to files or streams.
+ */
 trait ConfigWriter {
 
   def write(config: Config, file: File, path: Option[String]): Unit = {
