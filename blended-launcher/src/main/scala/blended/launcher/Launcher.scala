@@ -102,6 +102,11 @@ object Launcher {
 
   }
 
+  /**
+   * Entry point of the launcher application.
+   * 
+   * This methods will explicitly exit the VM! 
+   */
   def main(args: Array[String]): Unit = {
     try {
       run(args)
@@ -167,6 +172,12 @@ object Launcher {
     launcher
   }
 
+  /**
+   * Use this method instead of `main` if you do not want to exit the VM
+   * and instead get an [LauncherException] in case of a error.
+   * 
+   * @throws LauncherException
+   */
   def run(args: Array[String]): Unit = {
     val cmdline = parseArgs(args).get
     val handleFrameworkRestart = cmdline.handleFrameworkRestart
@@ -186,6 +197,9 @@ object Launcher {
 
   case class Configs(launcherConfig: LauncherConfig, profileConfig: Option[LocalRuntimeConfig] = None)
 
+  /**
+   * Parse the command line and wrap the result into a [[Configs]] object.
+   */
   def readConfigs(cmdline: Cmdline): Configs = {
     cmdline.configFile match {
       case Some(configFile) =>

@@ -10,8 +10,10 @@ import java.util.Properties
 import java.io.FileReader
 import scala.collection.immutable._
 
-case class LocalRuntimeConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, baseDir: File) {
-  
+case class LocalRuntimeConfig(
+    resolvedRuntimeConfig: ResolvedRuntimeConfig,
+    baseDir: File) {
+
   def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
   def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
@@ -43,7 +45,8 @@ case class LocalRuntimeConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, base
     file
   }
 
-  def validate(includeResourceArchives: Boolean,
+  def validate(
+    includeResourceArchives: Boolean,
     explodedResourceArchives: Boolean,
     checkPropertiesFile: Boolean): Seq[String] = {
 

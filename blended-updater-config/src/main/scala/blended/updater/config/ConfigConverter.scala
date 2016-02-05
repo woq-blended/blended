@@ -5,6 +5,9 @@ import scala.collection.immutable._
 import blended.launcher.config.LauncherConfig
 import org.slf4j.LoggerFactory
 
+/**
+ * Convert between [[LauncherConfig]] and [[ResolvedRuntimeConfig]].
+ */
 trait ConfigConverter {
 
   import ConfigConverter._
