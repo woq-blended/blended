@@ -6,6 +6,20 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
+case class LauncherConfig(
+    frameworkJar: String,
+    systemProperties: Map[String, String],
+    frameworkProperties: Map[String, String],
+    startLevel: Int,
+    defaultStartLevel: Int,
+    bundles: Seq[LauncherConfig.BundleConfig],
+    branding: Map[String, String]) {
+
+  override def toString = s"${getClass().getSimpleName()}(frameworkJar=${frameworkJar},systemProperties=${systemProperties}" +
+    s",frameworkProperties=${frameworkProperties},startLevel=${startLevel},defaultStartLevel=${defaultStartLevel}" +
+    s",bundles=${bundles},branding=${branding})"
+}
+
 object LauncherConfig {
 
   case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
@@ -81,18 +95,3 @@ object LauncherConfig {
   }
 
 }
-
-case class LauncherConfig(
-    frameworkJar: String,
-    systemProperties: Map[String, String],
-    frameworkProperties: Map[String, String],
-    startLevel: Int,
-    defaultStartLevel: Int,
-    bundles: Seq[LauncherConfig.BundleConfig],
-    branding: Map[String, String]) {
-
-  override def toString = s"${getClass().getSimpleName()}(frameworkJar=${frameworkJar},systemProperties=${systemProperties}" +
-    s",frameworkProperties=${frameworkProperties},startLevel=${startLevel},defaultStartLevel=${defaultStartLevel}" +
-    s",bundles=${bundles},branding=${branding})"
-}
-
