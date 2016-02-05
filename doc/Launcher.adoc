@@ -1,0 +1,16 @@
+= Blended Launcher Overview
+
+FeatureConfig::
+Configuration of plugin- and feature-IDs needed to provide a specific feature.
+
+RuntimeConfig::
+Configuration of various settings and plugin- and feature-IDs needed to provide a runnable OSGi container. 
+
+ResolvedRuntimeConfig::
+A RuntimeConfig, in which are all references to feature-IDs are also embedded in their resolved form (FeatureConfig).
+
+OverlayConfig::
+Configuration of additional configuration generators.
+
+LocalRuntimeConfig::
+A materialized and resolved RuntimeConfig with optional applied Overlays.

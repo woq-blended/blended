@@ -1,0 +1,10 @@
+= Blended Updater
+
+The blended container comes with a bundled update mechanism. With the updater, it is possible to update the container and re-launch with an new launch configuration.
+
+== The Container Layout
+
+`$BLENDED_HOME`
+
+== The Update-Process
+
