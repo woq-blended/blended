@@ -7,13 +7,15 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
 /**
- * A bundles with a start configuration.
+ * A bundles with a start configuration. 
+ * Used as part of [[RuntimeConfig]] oder [[FeatureConfig]].
  * 
  * @param artifact The artifact (file).
  * @param start `true` if the bundle should be auto-started on container start.
  * @param startLevel The start level of this bundle.
  * 
  * @see [[RuntimeConfig]]
+ * @see [[FeatureConfig]]
  */
 case class BundleConfig(
     artifact: Artifact,
