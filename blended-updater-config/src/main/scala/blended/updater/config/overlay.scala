@@ -21,6 +21,10 @@ final case class OverlayConfig(
 
   }
 
+  def validate(): Seq[String] = {
+    OverlayConfig.findCollisions(generatedConfigs)
+  }
+
   override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},generatedConfigs=${generatedConfigs})"
 
 }
@@ -55,9 +59,11 @@ final case class LocalOverlays(overlays: immutable.Seq[OverlayConfig], profileDi
 
   // TODO: check collisions
   def validate(): Seq[String] = {
-    overlays.groupBy(_.name).collect {
+    val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
     }.toList
+    val generatorIssues = OverlayConfig.findCollisions(overlays.flatMap(_.generatedConfigs))
+    nameIssues ++ generatorIssues
   }
 
   /**

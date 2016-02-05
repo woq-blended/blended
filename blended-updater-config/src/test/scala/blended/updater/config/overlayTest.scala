@@ -3,6 +3,7 @@ package blended.updater.config
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers
 import java.io.File
+import com.typesafe.config.ConfigFactory
 
 class OverlaysTest extends FreeSpec with Matchers {
 
@@ -30,24 +31,49 @@ class OverlaysTest extends FreeSpec with Matchers {
     }
   }
 
-  "OverlayConfig validation" - {
-
+  "LocalOverlays validation" - {
     "detects overlays with same name" in {
       val o1_1 = OverlayConfig("overlay1", "1")
       val o1_2 = OverlayConfig("overlay1", "2")
       val o2_1 = OverlayConfig("overlay2", "1")
       val overlays = LocalOverlays(overlays = List(o1_1, o1_2, o2_1), profileDir = new File("."))
-      overlays.validate() should have size 1
       overlays.validate() shouldEqual Seq("More than one overlay with name 'overlay1' detected")
     }
-    
 
-    "Multiple overlays with same name should not be allowed" in {
-      pending
+    "detects overlays with conflicting generators" in {
+      val config1 = ConfigFactory.parseString("key=val1")
+      val o1 = OverlayConfig(
+        name = "o1", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+        )
+      )
+      val config2 = ConfigFactory.parseString("key=val2")
+      val o2 = OverlayConfig(
+        name = "o2", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+        )
+      )
+      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
+      overlays.validate() should have size 1
+      overlays.validate() shouldEqual Seq("Double defined config key found: key")
+
     }
+  }
 
-    "Overlays with conflicting generators should not be allowed" in {
-      pending
+  "OverlayConfig validation" - {
+    "detects conflicting generators" in {
+      val config1 = ConfigFactory.parseString("key=val1")
+      val config2 = ConfigFactory.parseString("key=val2")
+      val overlay = OverlayConfig(
+        name = "o", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1),
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+        )
+      )
+      overlay.validate() shouldEqual Seq("Double defined config key found: key")
     }
 
   }
