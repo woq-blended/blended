@@ -4,30 +4,37 @@ import org.scalatest.FreeSpec
 import org.scalatest.Matchers
 import java.io.File
 import com.typesafe.config.ConfigFactory
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeletePolicy
+import blended.testsupport.TestFile.DeleteWhenNoFailure
 
-class OverlaysTest extends FreeSpec with Matchers {
+class OverlaysTest extends FreeSpec with Matchers with TestFile {
 
-  "An empty LocalOverlays" - {
-    "materializes not into the same directory" in {
-      val dir = new File(".")
-      val oDir = LocalOverlays.materializedDir(overlays = Nil, profileDir = dir)
-      oDir shouldBe dir
-    }
-  }
+  implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
 
-  "A non-empty LocalOverlays" - {
-    "materializes into a sub directory" in {
-      val dir = new File(".")
-      val oDir = LocalOverlays.materializedDir(overlays = List(OverlayRef("o", "1")), profileDir = dir)
-      oDir.getPath() startsWith dir.getPath()
-      oDir.getPath().length() > dir.getPath().length()
+  "Overlay materialized dir for " - {
+    "an empty LocalOverlays" - {
+      "materializes not into the same directory" in {
+        val dir = new File(".")
+        val oDir = LocalOverlays.materializedDir(overlays = Nil, profileDir = dir)
+        oDir shouldBe dir
+      }
     }
 
-    "materializes into same sub dir even if the overlays have different order" in {
-      val dir = new File(".")
-      val o1Dir = LocalOverlays.materializedDir(overlays = List(OverlayRef("o", "1"), OverlayRef("p", "1")), profileDir = dir)
-      val o2Dir = LocalOverlays.materializedDir(overlays = List(OverlayRef("p", "1"), OverlayRef("o", "1")), profileDir = dir)
-      o1Dir shouldBe o2Dir
+    "a non-empty LocalOverlays" - {
+      "materializes into a sub directory" in {
+        val dir = new File(".")
+        val oDir = LocalOverlays.materializedDir(overlays = List(OverlayRef("o", "1")), profileDir = dir)
+        oDir.getPath() startsWith dir.getPath()
+        oDir.getPath().length() > dir.getPath().length()
+      }
+
+      "materializes into same sub dir even if the overlays have different order" in {
+        val dir = new File(".")
+        val o1Dir = LocalOverlays.materializedDir(overlays = List(OverlayRef("o", "1"), OverlayRef("p", "1")), profileDir = dir)
+        val o2Dir = LocalOverlays.materializedDir(overlays = List(OverlayRef("p", "1"), OverlayRef("o", "1")), profileDir = dir)
+        o1Dir shouldBe o2Dir
+      }
     }
   }
 
@@ -78,7 +85,64 @@ class OverlaysTest extends FreeSpec with Matchers {
 
   }
 
-  "OverlayConfig file generator" - {
+  "LocalOverlays file generator" - {
+    "generates nothing if no generators are present" in {
+      val o1 = OverlayConfig("overlay1", "1")
+      val o2 = OverlayConfig("overlay2", "1")
+      withTestDir() { dir =>
+        val overlays = LocalOverlays(List(o1, o2), dir)
+        overlays.materialize().isSuccess shouldBe true
+        overlays.materializedDir.listFiles() shouldBe null
+      }
+    }
+
+    "generates one config file with merged content" in {
+      val config1 = ConfigFactory.parseString("key1=val1")
+      val o1 = OverlayConfig(
+        name = "o1", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+        )
+      )
+      val config2 = ConfigFactory.parseString("key2=val2")
+      val o2 = OverlayConfig(
+        name = "o2", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+        )
+      )
+      withTestDir() { dir =>
+        val overlays = LocalOverlays(List(o1, o2), dir)
+        overlays.materialize().isSuccess shouldBe true
+        val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
+        overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
+        val expectedConfigFile = new File(expectedEtcDir, "application_overlay.conf")
+        expectedEtcDir.listFiles() shouldBe Array(expectedConfigFile)
+        ConfigFactory.parseFile(expectedConfigFile).getString("key1") shouldBe "val1"
+        ConfigFactory.parseFile(expectedConfigFile).getString("key2") shouldBe "val2"
+      }
+    }
+
+    "generates nothing and aborts when configs have conflicts" in {
+      val config1 = ConfigFactory.parseString("key1=val1")
+      val o1 = OverlayConfig(
+        name = "o1", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+        )
+      )
+      val config2 = ConfigFactory.parseString("key1=val2")
+      val o2 = OverlayConfig(
+        name = "o2", version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+        )
+      )
+      withTestDir() { dir =>
+        val overlays = LocalOverlays(List(o1, o2), dir)
+        overlays.materialize().isFailure shouldBe true
+      }
+    }
 
   }
 }

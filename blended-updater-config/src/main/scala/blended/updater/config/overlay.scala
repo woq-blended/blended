@@ -4,6 +4,10 @@ import com.typesafe.config.Config
 import _root_.scala.collection.immutable
 import java.io.File
 import scala.collection.JavaConverters._
+import scala.util.Try
+import scala.util.Left
+import scala.util.Right
+import com.typesafe.config.ConfigFactory
 
 final case class OverlayRef(name: String, version: String) {
   override def toString(): String = name + ":" + version
@@ -32,9 +36,16 @@ final case class OverlayConfig(
 final object OverlayConfig {
 
   def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
+    aggregateGeneratedConfigs(generatedConfigs) match {
+      case Left(issues) => issues
+      case _ => Nil
+    }
+  }
+
+  def aggregateGeneratedConfigs(generatedConfigs: Seq[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
     // seen configurations per target file
     var fileToConfig: Map[String, Map[String, Object]] = Map()
-    generatedConfigs.flatMap { gc =>
+    val issues = generatedConfigs.flatMap { gc =>
       val newConfig = gc.config.root().unwrapped().asScala.toMap
       fileToConfig.get(gc.configFile) match {
         case None =>
@@ -48,6 +59,7 @@ final object OverlayConfig {
           collisions.map(c => s"Double defined config key found: ${c}")
       }
     }
+    if (issues.isEmpty) Right(fileToConfig) else Left(issues)
   }
 
 }
@@ -70,6 +82,22 @@ final case class LocalOverlays(overlays: immutable.Seq[OverlayConfig], profileDi
    * The location of the final applied set of overlays.
    */
   def materializedDir: File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
+
+  def materialize(): Try[Unit] = Try {
+    val dir = materializedDir
+    OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+      case Left(issues) =>
+        sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
+      case Right(configByFile) =>
+        configByFile.foreach {
+          case (fileName, config) =>
+            val file = new File(dir, fileName)
+            file.getParentFile().mkdirs()
+            val configFileContent = ConfigFactory.parseMap(config.asJava)
+            ConfigWriter.write(configFileContent, file, None)
+        }
+    }
+  }
 
 }
 
