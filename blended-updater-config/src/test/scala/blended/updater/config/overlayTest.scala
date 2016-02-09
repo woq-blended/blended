@@ -7,10 +7,74 @@ import com.typesafe.config.ConfigFactory
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeletePolicy
 import blended.testsupport.TestFile.DeleteWhenNoFailure
+import scala.collection.JavaConverters._
+import scala.util.Success
 
 class OverlaysTest extends FreeSpec with Matchers with TestFile {
 
   implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
+
+  "Serialization of OverlayConfig" - {
+    "deserializes a config file" in {
+      withTestFile(
+        """name: overlay
+          |version: 1
+          |configGenerator {
+          |  file1 {
+          |    file1key: value
+          |  }
+          |  etc/file2 {
+          |    file2key: value
+          |  }
+          |}""".stripMargin) { file =>
+          val config = ConfigFactory.parseFile(file).resolve()
+          val read = OverlayConfig.read(config)
+          read.isSuccess shouldEqual true
+          read.get.name shouldEqual "overlay"
+          read.get.version shouldEqual "1"
+          read.get.generatedConfigs.toSet shouldEqual Set(
+            GeneratedConfig(
+              configFile = "file1",
+              config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+            ),
+            GeneratedConfig(
+              configFile = "etc/file2",
+              config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+            )
+          )
+        }
+    }
+
+    "serializes and desializes to the same config" in {
+      val c = OverlayConfig(
+        name = "overlay",
+        version = "1",
+        generatedConfigs = List(
+          GeneratedConfig(
+            configFile = "file1",
+            config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+          ),
+          GeneratedConfig(
+            configFile = "etc/file2",
+            config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+          )
+        ))
+      val read = OverlayConfig.read(OverlayConfig.toConfig(c))
+      read.isSuccess shouldEqual true
+      read.get.name shouldEqual "overlay"
+      read.get.version shouldEqual "1"
+      read.get.generatedConfigs.toSet shouldEqual Set(
+        GeneratedConfig(
+          configFile = "file1",
+          config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+        ),
+        GeneratedConfig(
+          configFile = "etc/file2",
+          config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+        )
+      )
+    }
+  }
 
   "Overlay materialized dir for " - {
     "an empty LocalOverlays" - {

@@ -8,6 +8,7 @@ import scala.util.Try
 import scala.util.Left
 import scala.util.Right
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigObject
 
 final case class OverlayRef(name: String, version: String) {
   override def toString(): String = name + ":" + version
@@ -19,11 +20,6 @@ final case class OverlayConfig(
     generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) {
 
   def overlayRef: OverlayRef = OverlayRef(name, version)
-
-  // TODO: check collision free generators
-  {
-
-  }
 
   def validate(): Seq[String] = {
     OverlayConfig.findCollisions(generatedConfigs)
@@ -60,6 +56,32 @@ final object OverlayConfig {
       }
     }
     if (issues.isEmpty) Right(fileToConfig) else Left(issues)
+  }
+
+  def read(config: Config): Try[OverlayConfig] = Try {
+    OverlayConfig(
+      name = config.getString("name"),
+      version = config.getString("version"),
+      generatedConfigs = if (config.hasPath("configGenerator")) {
+        val gens = config.getObject("configGenerator").entrySet().asScala
+        gens.map { entry =>
+          val fileName = entry.getKey()
+          val genConfig = entry.getValue().asInstanceOf[ConfigObject].toConfig()
+          GeneratedConfig(configFile = fileName, config = genConfig)
+        }.toList
+      } else Nil
+    )
+  }
+
+  def toConfig(overlayConfig: OverlayConfig): Config = {
+    val config = Map(
+      "name" -> overlayConfig.name,
+      "version" -> overlayConfig.version,
+      "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
+        genConfig.configFile -> genConfig.config.root().unwrapped()
+      }.toMap.asJava
+    ).asJava
+    ConfigFactory.parseMap(config)
   }
 
 }
