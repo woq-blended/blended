@@ -107,7 +107,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1_1 = OverlayConfig("overlay1", "1")
       val o1_2 = OverlayConfig("overlay1", "2")
       val o2_1 = OverlayConfig("overlay2", "1")
-      val overlays = LocalOverlays(overlays = List(o1_1, o1_2, o2_1), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = Set(o1_1, o1_2, o2_1), profileDir = new File("."))
       overlays.validate() shouldEqual Seq("More than one overlay with name 'overlay1' detected")
     }
 
@@ -126,7 +126,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
         )
       )
-      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
       overlays.validate() should have size 1
       overlays.validate() shouldEqual Seq("Double defined config key found: key")
 
@@ -154,7 +154,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig("overlay1", "1")
       val o2 = OverlayConfig("overlay2", "1")
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         overlays.materializedDir.listFiles() shouldBe null
       }
@@ -176,7 +176,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
         overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
@@ -203,7 +203,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isFailure shouldBe true
       }
     }

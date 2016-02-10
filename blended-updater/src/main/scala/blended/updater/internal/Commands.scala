@@ -3,13 +3,10 @@ package blended.updater.internal
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
-
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
-
 import com.typesafe.config.ConfigFactory
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
@@ -23,12 +20,16 @@ import blended.updater.Updater.RuntimeConfigStaged
 import blended.updater.Updater.RuntimeConfigStagingFailed
 import blended.updater.config.LocalRuntimeConfig
 import blended.updater.config.RuntimeConfig
+import blended.updater.config.OverlayConfig
+import blended.updater.Updater.OperationSucceeded
+import blended.updater.Updater.OperationFailed
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
 
   val commandsWithDescription = Seq(
     "show" -> "Show all known profiles",
-    "add" -> "Add a new profile",
+    "registerProfile" -> "Add a new profile",
+    "registerOverlay" -> "Add a new overlay",
     "stage" -> "Stage a profile",
     "activate" -> "Activate a profile"
   )
@@ -52,7 +53,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       "invalid: " + configs.invalid.map(format).mkString(", ")
   }
 
-  def add(file: File): AnyRef = {
+  def registerProfile(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file).resolve()
     val runtimeConfig = RuntimeConfig.read(config).get
     println("About to add: " + runtimeConfig)
@@ -69,12 +70,31 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
           "Error: " + x
       }
   }
+  
+  def registerOverlay(file: File): AnyRef = {
+    val config = ConfigFactory.parseFile(file).resolve()
+    val overlayConfig = OverlayConfig.read(config).get
+    println("About to add: " + overlayConfig)
+    
+    implicit val timeout = Timeout(5, SECONDS)
+    val reqId = UUID.randomUUID().toString()
+    Await.result(
+      ask(updater, Updater.AddOverlayConfig(reqId, overlayConfig)), timeout.duration) match {
+        case OperationSucceeded(`reqId`) =>
+          "Added: " + overlayConfig
+        case OperationFailed(`reqId`, error) =>
+          "Failed: " + error
+        case x =>
+          "Error: " + x
+      }
+  }
 
   def stage(name: String, version: String): AnyRef = {
     implicit val timeout = Timeout(1, HOURS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.StageRuntimeConfig(reqId, name, version)), timeout.duration) match {
+        // TODO: support overlays
+      ask(updater, Updater.StageRuntimeConfig(reqId, name, version, overlays = Set())), timeout.duration) match {
         case RuntimeConfigStaged(`reqId`) =>
           "Staged: " + name + " " + version
         case RuntimeConfigStagingFailed(`reqId`, reason) =>
@@ -90,7 +110,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateRuntimeConfig(reqId, name, version)), timeout.duration) match {
+          ask(updater, Updater.ActivateRuntimeConfig(reqId, name, version, Set())), timeout.duration) match {
             case RuntimeConfigActivated(`reqId`) =>
               "Activated: " + name + " " + version
             case RuntimeConfigActivationFailed(`reqId`, reason) =>

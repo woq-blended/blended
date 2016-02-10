@@ -4,7 +4,32 @@ The blended container comes with a bundled update mechanism. With the updater, i
 
 == The Container Layout
 
-`$BLENDED_HOME`
+* `$BLENDED_HOME/` -- The base directory, determined from the `$BLENDED_HOME` environment variable.
+** `bin/`
+*** `blended.sh`
+** `etc/`
+*** `logback.conf`
+** `profiles/`
+*** `<name>/`
+**** `<version>`/
+***** `profile.conf`
+***** `bundles/`
+** `overlays/`
 
-== The Update-Process
+== The Updater Protocol
 
+All protocol messages require a client-initiated `requestId`, which can be used to identify the reply messages.
+
+.The supported protocol messages
+
+`GetRuntimeConfigs` :: Get the currently known runtime configs of the container. +
+Returns a `RuntimeConfigs`.
+
+`AddRuntimeConfig` :: Registers a new runtime configuration to the container.
+The container tries to download the required artifacts automatically. +
+Return a `RuntimeConfigAdded` or `RuntimeConfigAdditionFailed`.
+
+`ScanForRuntimeConfigs` :: Instructs the updater to drop all runtime state and scan the local installation path for runtime configurations.
+Already evaluated validation states need to be re-evaluated.
+
+`StageRuntimeConfig` :: Instruct the updater to download and install a runtime configuration.

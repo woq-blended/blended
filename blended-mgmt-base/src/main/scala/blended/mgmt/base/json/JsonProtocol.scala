@@ -14,6 +14,15 @@ import blended.mgmt.base.ActivateProfile
 import blended.mgmt.base.UpdateAction
 import blended.mgmt.base.ContainerRegistryResponseOK
 import blended.updater.config.FeatureRef
+import blended.updater.config.OverlayConfig
+import blended.updater.config.OverlayRef
+import blended.updater.config.GeneratedConfig
+import blended.updater.config.GeneratedConfig
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigRenderOptions
+import spray.json.JsonParser
+import spray.json.ParserInput
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.
@@ -33,9 +42,22 @@ trait JsonProtocol extends DefaultJsonProtocol {
       "startLevel", "defaultStartLevel",
       "properties", "frameworkProperties", "systemProperties",
       "features", "resources", "resolvedFeatures")
+  implicit val overlayRefFormat: RootJsonFormat[OverlayRef] = jsonFormat2(OverlayRef)
+  implicit val configFormat: RootJsonFormat[Config] = new RootJsonFormat[Config] {
+    override def write(obj: Config): JsValue = {
+      val json = obj.root().render(ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(true))
+      JsonParser.apply(ParserInput(json))
+    }
+    override def read(json: JsValue): Config = {
+      ConfigFactory.parseString(json.toString())
+    }
+  }
+  implicit val generatedConfigFormat: RootJsonFormat[GeneratedConfig] = jsonFormat2(GeneratedConfig)
 
-  implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat1(StageProfile)
-  implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat2(ActivateProfile)
+  implicit val overlayConfigFormat: RootJsonFormat[OverlayConfig] = jsonFormat3(OverlayConfig)
+
+  implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat2(StageProfile)
+  implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat3(ActivateProfile)
   implicit val updateActionFormat: RootJsonFormat[UpdateAction] = new RootJsonFormat[UpdateAction] {
     import spray.json._
     override def write(obj: UpdateAction): JsValue = obj match {

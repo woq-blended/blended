@@ -16,14 +16,20 @@
 
 package blended.launcher
 
-import java.io.{ OutputStream, InputStream, File }
-import java.net._
+import java.io.File
+import java.net.URLClassLoader
+import java.util.Hashtable
+import java.util.Properties
 import java.util.ServiceLoader
+
 import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.immutable.Seq
 import scala.collection.immutable.Map
+import scala.collection.immutable.Seq
+import scala.util.Failure
+import scala.util.Success
 import scala.util.Try
 import scala.util.control.NonFatal
+
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -33,23 +39,21 @@ import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
-import blended.launcher.internal.Logger
+
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
+
+import Launcher.InstalledBundle
 import blended.launcher.config.LauncherConfig
+import blended.launcher.internal.Logger
+import blended.updater.config.ConfigConverter
+import blended.updater.config.LocalRuntimeConfig
+import blended.updater.config.ProfileLookup
+import blended.updater.config.ResolvedRuntimeConfig
+import blended.updater.config.RuntimeConfig
 import de.tototec.cmdoption.CmdOption
 import de.tototec.cmdoption.CmdlineParser
 import de.tototec.cmdoption.CmdlineParserException
-import blended.updater.config.ConfigConverter
-import com.typesafe.config.ConfigFactory
-import blended.updater.config.RuntimeConfig
-import java.util.Properties
-import blended.updater.config.ProfileLookup
-import blended.launcher.runtime.Branding
-import java.util.Hashtable
-import blended.updater.config.LocalRuntimeConfig
-import scala.util.Failure
-import scala.util.Success
-import com.typesafe.config.ConfigParseOptions
-import blended.updater.config.ResolvedRuntimeConfig
 
 object Launcher {
 
@@ -75,7 +79,7 @@ object Launcher {
     )
     def setProfileDir(dir: String): Unit = profileDir = Option(dir)
     var profileDir: Option[String] = None
-
+    
     @CmdOption(names = Array("--framework-restart", "-r"), args = Array("BOOLEAN"),
       description = "Should the launcher restart the framework after updates." +
         " If disabled and the framework was updated, the exit code is 2.")
@@ -216,7 +220,7 @@ object Launcher {
 
         val profile = profileLookup match {
           case Some(pl) =>
-            s"${pl.profileBaseDir}/${pl.profileName}/${pl.profileVersion}"
+            pl.materializedDir.getPath()
           case None =>
             cmdline.profileDir match {
               case Some(profile) => profile

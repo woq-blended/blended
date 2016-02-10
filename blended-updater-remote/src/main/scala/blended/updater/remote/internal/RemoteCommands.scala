@@ -27,8 +27,9 @@ class RemoteCommands(updater: RemoteUpdater) {
       |  invalid profiles: ${state.invalidProfiles.mkString(", ")}
       |  outstanding actions: ${
       state.outstandingActions.map {
-        case StageProfile(p) => s"stage ${p.name}-${p.version}"
-        case ActivateProfile(n, v) => s"activate ${n}-${v}"
+        // TODO: overlays
+        case StageProfile(p, o) => s"stage ${p.name}-${p.version}"
+        case ActivateProfile(n, v, o) => s"activate ${n}-${v}"
       }.mkString(", ")
     }
       |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
@@ -68,13 +69,15 @@ class RemoteCommands(updater: RemoteUpdater) {
     updater.getRuntimeConfigs().find(rc => rc.name == profileName && rc.version == profileVersion) match {
       case None => println(s"Profile '${profileName}-${profileVersion}' not found")
       case Some(rc) =>
-        updater.addAction(containerId, StageProfile(rc))
+        // FIXME: support for overlay 
+        updater.addAction(containerId, StageProfile(rc, Set()))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${rc}")
     }
   }
 
   def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
-    updater.addAction(containerId, ActivateProfile(profileName, profileVersion))
+    // FIXME: support for overlays
+    updater.addAction(containerId, ActivateProfile(profileName, profileVersion, Set()))
     println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 

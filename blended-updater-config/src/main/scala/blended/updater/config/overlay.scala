@@ -17,7 +17,9 @@ final case class OverlayRef(name: String, version: String) {
 final case class OverlayConfig(
     name: String,
     version: String,
-    generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) {
+    generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) extends Ordered[OverlayConfig] {
+
+  override def compare(other: OverlayConfig): Int = s"${name}:${version}".compare(s"${other.name}:${other.version}")
 
   def overlayRef: OverlayRef = OverlayRef(name, version)
 
@@ -29,7 +31,7 @@ final case class OverlayConfig(
 
 }
 
-final object OverlayConfig {
+final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig]) => OverlayConfig) {
 
   def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
     aggregateGeneratedConfigs(generatedConfigs) match {
@@ -38,7 +40,7 @@ final object OverlayConfig {
     }
   }
 
-  def aggregateGeneratedConfigs(generatedConfigs: Seq[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
+  def aggregateGeneratedConfigs(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
     // seen configurations per target file
     var fileToConfig: Map[String, Map[String, Object]] = Map()
     val issues = generatedConfigs.flatMap { gc =>
@@ -55,7 +57,7 @@ final object OverlayConfig {
           collisions.map(c => s"Double defined config key found: ${c}")
       }
     }
-    if (issues.isEmpty) Right(fileToConfig) else Left(issues)
+    if (issues.isEmpty) Right(fileToConfig) else Left(issues.toList)
   }
 
   def read(config: Config): Try[OverlayConfig] = Try {
@@ -89,14 +91,16 @@ final object OverlayConfig {
 /**
  * A materialized set of overlays.
  */
-final case class LocalOverlays(overlays: immutable.Seq[OverlayConfig], profileDir: File) {
+final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
+
+  def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
 
   // TODO: check collisions
   def validate(): Seq[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
     }.toList
-    val generatorIssues = OverlayConfig.findCollisions(overlays.flatMap(_.generatedConfigs))
+    val generatorIssues = OverlayConfig.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
     nameIssues ++ generatorIssues
   }
 
@@ -124,11 +128,11 @@ final case class LocalOverlays(overlays: immutable.Seq[OverlayConfig], profileDi
 }
 
 final object LocalOverlays {
-  def materializedDir(overlays: Seq[OverlayRef], profileDir: File): File = {
+  def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
     if (overlays.isEmpty) {
       profileDir
     } else {
-      val overlayParts = overlays.map(o => s"${o.name}-${o.version}").distinct.sorted
+      val overlayParts = overlays.toList.map(o => s"${o.name}-${o.version}").distinct.sorted
       new File(profileDir, overlayParts.mkString("/"))
     }
   }

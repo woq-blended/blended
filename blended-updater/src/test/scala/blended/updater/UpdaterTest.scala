@@ -193,7 +193,7 @@ class UpdaterTest
 
           {
             val stageId = nextId()
-            updater ! StageRuntimeConfig(stageId, config.name, config.version)
+            updater ! StageRuntimeConfig(stageId, config.name, config.version, overlays = Set())
             fishForMessage() {
               case RuntimeConfigStaged(`stageId`) => true
             }
@@ -286,7 +286,7 @@ class UpdaterTest
             {
 
               val stageId = nextId()
-              updater ! StageRuntimeConfig(stageId, config.runtimeConfig.name, config.runtimeConfig.version)
+              updater ! StageRuntimeConfig(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set())
               fishForMessage() {
                 case RuntimeConfigStaged(`stageId`) => true
               }
@@ -311,7 +311,7 @@ class UpdaterTest
               assert(restarted === false)
               assert(curNameVersion === None)
               val reqId = nextId()
-              updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0")
+              updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0", Set())
               fishForMessage() {
                 case RuntimeConfigActivated(`reqId`) => true
               }

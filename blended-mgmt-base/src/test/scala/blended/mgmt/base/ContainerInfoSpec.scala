@@ -33,6 +33,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
     "serialize to Json correctly" in {
       import blended.mgmt.base.json._
+      //      import blended.mgmt.base.json.JsonProtocol._
       val json = containerInfo.toJson
       json.compactPrint should be(expectedJson)
     }
@@ -63,8 +64,10 @@ class ContainerInfoSpec extends WordSpec with Matchers {
   "ContainerRegistryResponseOK" should {
 
     val stageAction = StageProfile(
-      RuntimeConfig(name = "testprofile", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:g:a:v", startLevel = 0))))
-    val activateAction = ActivateProfile(profileName = "testprofile", profileVersion = "1")
+      runtimeConfig = RuntimeConfig(name = "testprofile", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:g:a:v", startLevel = 0))),
+      overlays = Set()
+    )
+    val activateAction = ActivateProfile(profileName = "testprofile", profileVersion = "1", overlays = Set())
 
     val response = ContainerRegistryResponseOK("uuid", immutable.Seq(stageAction, activateAction))
 

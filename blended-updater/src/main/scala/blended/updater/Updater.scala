@@ -1,7 +1,7 @@
 package blended.updater
 
-import java.io.File
 import java.util.UUID
+import java.io.File
 import java.util.concurrent.TimeUnit
 import akka.actor.Actor
 import akka.actor.ActorLogging
@@ -35,6 +35,10 @@ import blended.mgmt.base.UpdateAction
 import blended.mgmt.base.StageProfile
 import akka.util.Timeout
 import blended.mgmt.base.ActivateProfile
+import blended.updater.config.OverlayConfig
+import scala.collection.immutable
+import blended.updater.config.OverlayRef
+import blended.updater.config.LocalOverlays
 
 object Updater {
 
@@ -53,7 +57,12 @@ object Updater {
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    */
   final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
-  final case class RuntimeConfigs(requestId: String, staged: Seq[LocalRuntimeConfig], pending: Seq[LocalRuntimeConfig], invalid: Seq[LocalRuntimeConfig]) extends Reply {
+  final case class RuntimeConfigs(
+    requestId: String,
+    staged: Seq[LocalRuntimeConfig],
+    pending: Seq[LocalRuntimeConfig],
+    invalid: Seq[LocalRuntimeConfig])
+      extends Reply {
     override def toString(): String = s"${getClass().getSimpleName()}(requestId=${requestId},staged=${staged},pending=${pending},invalid=${invalid})"
   }
 
@@ -61,15 +70,23 @@ object Updater {
   final case class RuntimeConfigAdded(requestId: String) extends Reply
   final case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
 
+  final case class AddOverlayConfig(override val requestId: String, overlayConfig: OverlayConfig) extends Protocol
+
+  final case class OperationSucceeded(requestId: String) extends Reply
+  final case class OperationFailed(requestId: String, reason: String) extends Reply
+
   final case class ScanForRuntimeConfigs(override val requestId: String) extends Protocol
 
+  // TODO: Rename StageRuntimeConfig to StageProfile
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageRuntimeConfig(override val requestId: String, name: String, version: String) extends Protocol
-  final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
+  final case class StageRuntimeConfig(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
+
   final case class RuntimeConfigStaged(requestId: String) extends Reply
   final case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
 
-  final case class ActivateRuntimeConfig(override val requestId: String, name: String, version: String) extends Protocol
+  final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
+
+  final case class ActivateRuntimeConfig(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
   final case class RuntimeConfigActivated(requestId: String) extends Reply
   final case class RuntimeConfigActivationFailed(requestId: String, reason: String) extends Reply
 
@@ -117,9 +134,10 @@ object Updater {
       artifactsToCheck: Seq[ArtifactInProgress],
       pendingArtifactsToUnpack: Seq[ArtifactInProgress],
       artifactsToUnpack: Seq[ArtifactInProgress],
+      overlays: LocalOverlays,
       issues: Seq[String]) {
 
-    val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
+    val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 
     def progress(): Int = {
       val allBundlesSize = config.runtimeConfig.bundles.size
@@ -130,17 +148,18 @@ object Updater {
 
   }
 
-  case class ProfileId(name: String, version: String)
+  case class ProfileId(name: String, version: String, overlays: Set[OverlayRef])
 
   object Profile {
     sealed trait ProfileState
-    case class Pending(issues: Seq[String]) extends ProfileState
-    case class Invalid(issues: Seq[String]) extends ProfileState
-    case object Valid extends ProfileState
+    final case class Pending(issues: Seq[String]) extends ProfileState
+    final case class Invalid(issues: Seq[String]) extends ProfileState
+    final case object Resolved extends ProfileState
+    final case object Staged extends ProfileState
   }
 
-  case class Profile(config: LocalRuntimeConfig, state: Profile.ProfileState) {
-    def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version)
+  case class Profile(config: LocalRuntimeConfig, overlays: LocalOverlays, state: Profile.ProfileState) {
+    def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
     def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
     def bundles: Seq[BundleConfig] = config.resolvedRuntimeConfig.allBundles
   }
@@ -217,10 +236,10 @@ class Updater(
 
       stagingInProgress = stagingInProgress.filterKeys(id != _)
       val (profileState, msg) = finalIssues match {
-        case Seq() => Profile.Valid -> RuntimeConfigStaged(id)
+        case Seq() => Profile.Staged -> RuntimeConfigStaged(id)
         case issues => Profile.Invalid(issues) -> RuntimeConfigStagingFailed(id, issues.mkString("; "))
       }
-      profiles += state.profileId -> Profile(state.config, profileState)
+      profiles += state.profileId -> Profile(state.config, state.overlays, profileState)
       state.requestActor ! msg
     } else {
       stagingInProgress += id -> state
@@ -239,7 +258,7 @@ class Updater(
   def findLocalResource(name: String, sha1Sum: String): Option[File] =
     profiles.values.filter { profile =>
       // only valid profiles
-      profile.state == Profile.Valid
+      profile.state == Profile.Staged
     }.
       flatMap { profile =>
         profile.bundles.filter { b =>
@@ -307,7 +326,7 @@ class Updater(
   }
 
   def event(event: UpdateAction): Unit = event match {
-    case StageProfile(runtimeConfig) =>
+    case StageProfile(runtimeConfig, overlayConfigs) =>
       log.debug("Received stage profile request (via event stream) for {}-{}",
         Array(runtimeConfig.name, runtimeConfig.version))
 
@@ -319,14 +338,14 @@ class Updater(
           Array(runtimeConfig.name, runtimeConfig.version, x))
       }
 
-    case ActivateProfile(name, version) =>
+    case ActivateProfile(name, version, overlays) =>
       log.debug("Received activate profile request (via event stream) for {}-{}",
         Array(name, version))
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
-      self.ask(ActivateRuntimeConfig(nextId(), name, version))(timeout).onComplete { x =>
+      self.ask(ActivateRuntimeConfig(nextId(), name, version, overlays))(timeout).onComplete { x =>
         log.debug("Finished activation profile request (via event stream) for {}-{} with result: {}",
           Array(name, version, x))
       }
@@ -366,10 +385,10 @@ class Updater(
               checkPropertiesFile = true)
             log.debug(s"Validation result for [${name}-${version}]: ${issues.mkString(";")}")
             val profileState = issues match {
-              case Seq() => Profile.Valid
+              case Seq() => Profile.Staged
               case issues => Profile.Pending(issues)
             }
-            List(Profile(LocalRuntimeConfig(resolved, versionDir), profileState))
+            List(Profile(LocalRuntimeConfig(resolved, versionDir), LocalOverlays(Set(), versionDir), profileState))
           } else {
             log.warn(s"Profile name and version do not match directory names: ${profileFile}")
             List()
@@ -384,16 +403,17 @@ class Updater(
 
       profiles = foundProfiles.map { profile => profile.profileId -> profile }.toMap
 
+    // FIXME: add GetProfiles
     case GetRuntimeConfigs(reqId) =>
       val ps = profiles.values.toList
       sender() ! RuntimeConfigs(reqId,
-        staged = ps.collect { case Profile(config, Profile.Valid) => config },
-        pending = ps.collect { case Profile(config, Profile.Pending(_)) => config },
-        invalid = ps.collect { case Profile(config, Profile.Invalid(_)) => config }
+        staged = ps.collect { case Profile(config, ignoredOverlays, Profile.Staged) => config },
+        pending = ps.collect { case Profile(config, ignoredOverlays, Profile.Pending(_)) => config },
+        invalid = ps.collect { case Profile(config, ignoredOverlays, Profile.Invalid(_)) => config }
       )
 
     case AddRuntimeConfig(reqId, config) =>
-      val id = ProfileId(config.name, config.version)
+      val id = ProfileId(config.name, config.version, Set())
       val req = sender()
       findConfig(id) match {
         case None =>
@@ -402,10 +422,12 @@ class Updater(
 
           val confFile = new File(dir, "profile.conf")
 
+          val overlays = LocalOverlays(Set(), dir)
+
           config.resolve() match {
             case Success(resolved) =>
               ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-              profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), Profile.Pending(Seq("Never checked")))
+              profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), overlays, Profile.Pending(Seq("Never checked")))
               req ! RuntimeConfigAdded(reqId)
             case Failure(e) =>
               req ! RuntimeConfigAdditionFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
@@ -420,22 +442,24 @@ class Updater(
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
         profiles.toIterator.collect {
-          case (id, Profile(_, Profile.Pending(_))) =>
+          case (id, Profile(_, _, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
-            self ! StageRuntimeConfig(nextId(), id.name, id.version)
+            self ! StageRuntimeConfig(nextId(), id.name, id.version, overlays = Set())
         }.take(1)
       }
 
-    case StageRuntimeConfig(reqId, name, version) =>
-      profiles.get(ProfileId(name, version)) match {
+    case StageRuntimeConfig(reqId, name, version, overlays) =>
+      // TODO: process overlays
+
+      profiles.get(ProfileId(name, version, overlays)) match {
         case None =>
           sender() ! RuntimeConfigStagingFailed(reqId, s"No such runtime configuration found: ${name} ${version}")
 
-        case Some(Profile(config, Profile.Valid)) =>
+        case Some(Profile(config, localOverlays, Profile.Staged)) =>
           // already staged
           sender() ! RuntimeConfigStaged(reqId)
 
-        case Some(Profile(config, state)) =>
+        case Some(Profile(config, localOverlays, state)) =>
           val reqActor = sender()
           if (stagingInProgress.contains(reqId)) {
             log.error("Duplicate id detected. Dropping request: {}", msg)
@@ -480,15 +504,16 @@ class Updater(
               artifactsToCheck = existingWithId,
               pendingArtifactsToUnpack = pendingUnpacks,
               artifactsToUnpack = Seq(),
+              overlays = localOverlays,
               issues = Seq()))
           }
 
       }
 
-    case ActivateRuntimeConfig(reqId, name: String, version: String) =>
+    case ActivateRuntimeConfig(reqId, name, version, overlays) =>
       val requestingActor = sender()
-      profiles.get(ProfileId(name, version)) match {
-        case Some(Profile(LocalRuntimeConfig(config, dir), Profile.Valid)) =>
+      profiles.get(ProfileId(name, version, overlays)) match {
+        case Some(Profile(LocalRuntimeConfig(config, dir), LocalOverlays(overlayConfigs, oDir), Profile.Staged)) =>
           // write config
           log.debug("About to activate new profile for next startup: {}-{}", Array(name, version))
           val success = profileUpdater(name, version)
@@ -523,9 +548,15 @@ class Updater(
 
       val props = Map(
         "profile.active" -> findActiveConfig().map(lrc => s"${lrc.runtimeConfig.name}-${lrc.runtimeConfig.version}").getOrElse(""),
-        "profiles.valid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Valid)) => s"$name-$version" }.mkString(","),
-        "profiles.invalid" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Invalid(_))) => s"$name-$version" }.mkString(","),
-        "profiles.pending" -> profiles.collect { case (ProfileId(name, version), Profile(config, Profile.Pending(_))) => s"$name-$version" }.mkString(",")
+        "profiles.valid" -> profiles.collect {
+          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Staged)) => s"$name-$version"
+        }.mkString(","),
+        "profiles.invalid" -> profiles.collect {
+          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Invalid(_))) => s"$name-$version"
+        }.mkString(","),
+        "profiles.pending" -> profiles.collect {
+          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Pending(_))) => s"$name-$version"
+        }.mkString(",")
       ).filter { case (k, v) => !v.isEmpty() }
 
       val serviceInfo = ServiceInfo(
