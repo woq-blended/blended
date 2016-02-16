@@ -16,7 +16,7 @@ class BlendedSingleConnectionFactory(
   cfg : OSGIActorConfig,
   cf: ConnectionFactory,
   provider : String,
-  pingInterval : Int
+  config : BlendedJMSConnectionConfig
 ) extends ConnectionFactory {
 
   private[this] implicit val eCtxt = cfg.system.dispatcher
@@ -24,7 +24,7 @@ class BlendedSingleConnectionFactory(
   private[this] val log : Logger = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
 
   private[this] val con = s"JMS-$provider"
-  private[this] val actor = cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, pingInterval)), con)
+  private[this] val actor = cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, config)), con)
 
   @throws[JMSException]
   override def createConnection(): Connection = {
