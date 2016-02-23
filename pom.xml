@@ -30,7 +30,7 @@
   <name>${project.artifactId}</name>
   <url>https://github.com/woq-blended/blended</url>
 
-  <description>A collection of bundles to develop OSGi application on top of Apache Karaf, Scala and Akka.</description>
+  <description>A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.</description>
 
   <licenses>
     <license>
