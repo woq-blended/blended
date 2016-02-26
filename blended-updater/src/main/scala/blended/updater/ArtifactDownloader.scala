@@ -30,25 +30,32 @@ class ArtifactDownloader()
 
       val url = artifact.url
 
-      def fileOk(): Boolean = artifact.sha1Sum match {
-        case None => file.exists()
-        case Some(sha1) => file.exists() && (RuntimeConfig.digestFile(file) == sha1)
+      def fileIssue(): Option[String] = {
+        if (!file.exists()) Some(s"File does not exist: ${file}")
+        else artifact.sha1Sum match {
+          case None => None
+          case Some(sha1) => RuntimeConfig.digestFile(file) match {
+            case Some(`sha1`) => None
+            case Some(fileSha1) => Some(s"File checksum ${fileSha1} does not match ${sha1}")
+            case None => Some(s"Chould not verify checksum of file ${file}")
+          }
+        }
       }
 
-      if (fileOk()) {
-        sender() ! DownloadFinished(reqId)
-      } else {
-        RuntimeConfig.download(url, file) match {
-          case Success(f) =>
-            if (fileOk()) {
-              sender() ! DownloadFinished(reqId)
-            } else {
-              sender() ! DownloadFailed(reqId, "Invalid checksum")
-            }
-          case Failure(e) =>
-            log.error("Could not download file {} from {}", file, url, e)
-            sender() ! DownloadFailed(reqId, s"Could not download file ${file} from ${url}. Error: ${e.getMessage()}")
-        }
+      fileIssue() match {
+        case None =>
+          sender() ! DownloadFinished(reqId)
+        case Some(_) =>
+          RuntimeConfig.download(url, file) match {
+            case Success(f) =>
+              fileIssue() match {
+                case None => sender() ! DownloadFinished(reqId)
+                case Some(issue) => sender() ! DownloadFailed(reqId, issue)
+              }
+            case Failure(e) =>
+              log.error("Could not download file {} from {}", file, url, e)
+              sender() ! DownloadFailed(reqId, s"Could not download file ${file} from ${url}. Error: ${e.getMessage()}")
+          }
       }
   }
 }
