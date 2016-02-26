@@ -192,8 +192,8 @@ object RuntimeConfig
 
       val tmpFile = File.createTempFile(s".${file.getName()}", "", parentDir)
       try {
-
-        val outStream = new BufferedOutputStream(new FileOutputStream(tmpFile))
+        val fileStream = new FileOutputStream(tmpFile)
+        val outStream = new BufferedOutputStream(fileStream)
         try {
 
           val connection = new URL(url).openConnection
@@ -201,25 +201,23 @@ object RuntimeConfig
           val inStream = new BufferedInputStream(connection.getInputStream())
           try {
             val bufferSize = 1024
-            var break = false
-            var len = 0
             var buffer = new Array[Byte](bufferSize)
 
-            while (!break) {
-              inStream.read(buffer, 0, bufferSize) match {
-                case x if x < 0 => break = true
-                case count => {
-                  len = len + count
-                  outStream.write(buffer, 0, count)
-                }
+            while (inStream.read(buffer, 0, bufferSize) match {
+              case count if count < 0 => false
+              case count => {
+                outStream.write(buffer, 0, count)
+                true
               }
-            }
+            }) {}
           } finally {
             inStream.close()
           }
         } finally {
           outStream.flush()
           outStream.close()
+          fileStream.flush()
+          fileStream.close()
         }
 
         Files.move(Paths.get(tmpFile.toURI()), Paths.get(file.toURI()),
