@@ -9,9 +9,13 @@ import scala.util.Left
 import scala.util.Right
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
+import scala.util.Failure
+import org.slf4j.LoggerFactory
+import scala.util.Success
 
-final case class OverlayRef(name: String, version: String) {
+final case class OverlayRef(name: String, version: String) extends Ordered[OverlayRef] {
   override def toString(): String = name + ":" + version
+  override def compare(other: OverlayRef): Int = toString().compare(other.toString())
 }
 
 final case class OverlayConfig(
@@ -19,7 +23,7 @@ final case class OverlayConfig(
     version: String,
     generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) extends Ordered[OverlayConfig] {
 
-  override def compare(other: OverlayConfig): Int = s"${name}:${version}".compare(s"${other.name}:${other.version}")
+  override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
 
   def overlayRef: OverlayRef = OverlayRef(name, version)
 
@@ -128,6 +132,9 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
 }
 
 final object LocalOverlays {
+
+  lazy val log = LoggerFactory.getLogger(classOf[LocalOverlays].getName())
+
   def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
     if (overlays.isEmpty) {
       profileDir
@@ -136,6 +143,47 @@ final object LocalOverlays {
       new File(profileDir, overlayParts.mkString("/"))
     }
   }
+
+  def preferredConfigFile(overlays: Iterable[OverlayRef], profileDir: File): File = {
+    val overlayPart =
+      if (overlays.isEmpty) "base"
+      else overlays.toList.map(o => s"${o.name}-${o.version}").distinct.sorted.mkString("_")
+
+    new File(profileDir, s"overlays/${overlayPart}.conf")
+  }
+
+  def read(config: Config, profileDir: File): Try[LocalOverlays] = Try {
+    LocalOverlays(
+      profileDir = profileDir,
+      overlays = config.getObjectList("overlays").asScala.map { c =>
+        OverlayConfig.read(c.toConfig()).get
+      }.toSet
+    )
+  }
+
+  def toConfig(localOverlays: LocalOverlays): Config = {
+    val config = (Map(
+      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfig.toConfig).map(_.root().unwrapped()).asJava
+    ).asJava)
+    ConfigFactory.parseMap(config)
+  }
+
+  def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
+    val overlaysDir = new File(profileDir, "overlays")
+    val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
+    val localOverlays = candidates.toList.flatMap { file =>
+      val overlay = Try(ConfigFactory.parseFile(file)).flatMap(c => LocalOverlays.read(c, profileDir))
+      overlay match {
+        case Success(localOverlays) =>
+          List(localOverlays)
+        case Failure(e) =>
+          log.error("Could not read overlay config file: {}", Array(file, e))
+          List()
+      }
+    }
+    localOverlays
+  }
+
 }
 
 case class GeneratedConfig(configFile: String, config: Config) {
