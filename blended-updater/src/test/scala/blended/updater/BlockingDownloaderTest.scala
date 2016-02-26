@@ -45,7 +45,7 @@ class BlockingDownloaderTest
     }
   }
 
-  "DownloadActor" - {
+  "BlockingDownloader" - {
     "Download of a local file should work" in {
       val id = nextId()
       withTestFiles("content", "") { (file, target) =>
