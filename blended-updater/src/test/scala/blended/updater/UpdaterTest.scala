@@ -26,6 +26,7 @@ import blended.updater.Updater.GetRuntimeConfigs
 import blended.updater.Updater.RuntimeConfigs
 import blended.updater.config.LocalRuntimeConfig
 import blended.updater.config.ResolvedRuntimeConfig
+import blended.updater.Updater.RuntimeConfigStagingFailed
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -194,7 +195,7 @@ class UpdaterTest
           {
             val stageId = nextId()
             updater ! StageRuntimeConfig(stageId, config.name, config.version, overlays = Set())
-            fishForMessage() {
+            fishForMessage(hint = s"Waiting for: ${RuntimeConfigStaged(stageId)}") {
               case RuntimeConfigStaged(`stageId`) => true
             }
           }
@@ -287,7 +288,7 @@ class UpdaterTest
 
               val stageId = nextId()
               updater ! StageRuntimeConfig(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set())
-              fishForMessage() {
+              fishForMessage(hint = s"waiting for: ${RuntimeConfigStaged(stageId)}") {
                 case RuntimeConfigStaged(`stageId`) => true
               }
 
