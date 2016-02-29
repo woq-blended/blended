@@ -55,7 +55,7 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
           fileToConfig += gc.configFile -> newConfig
           Seq()
         case Some(existingConfig) =>
-          // TODO: check collisions
+          // check collisions
           val collisions = existingConfig.keySet.intersect(newConfig.keySet)
           fileToConfig += gc.configFile -> (existingConfig ++ newConfig)
           collisions.map(c => s"Double defined config key found: ${c}")
@@ -99,7 +99,6 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
 
   def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
 
-  // TODO: check collisions
   def validate(): Seq[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
@@ -113,19 +112,42 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def materializedDir: File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
 
-  def materialize(): Try[Unit] = Try {
+  def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
-        configByFile.foreach {
+        configByFile.map {
           case (fileName, config) =>
             val file = new File(dir, fileName)
             file.getParentFile().mkdirs()
             val configFileContent = ConfigFactory.parseMap(config.asJava)
             ConfigWriter.write(configFileContent, file, None)
-        }
+            file
+        }.toList
+    }
+  }
+
+  /**
+   * The files that would be generated
+   */
+  def materializedFiles(): Try[immutable.Seq[File]] = Try {
+    val dir = materializedDir
+    OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+      case Left(issues) =>
+        sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
+      case Right(configByFile) =>
+        configByFile.map {
+          case (fileName, config) => new File(dir, fileName)
+        }.toList
+    }
+  }
+
+  def isMaterialized(): Boolean = {
+    materializedFiles() match {
+      case Success(files) => files.forall { f => f.exists() && f.isFile() }
+      case _ => false
     }
   }
 
@@ -186,6 +208,4 @@ final object LocalOverlays {
 
 }
 
-case class GeneratedConfig(configFile: String, config: Config) {
-
-}
+case class GeneratedConfig(configFile: String, config: Config)
