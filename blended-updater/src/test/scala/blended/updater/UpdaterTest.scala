@@ -11,22 +11,19 @@ import akka.testkit.TestKit
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeleteNever
 import blended.updater.Updater.AddRuntimeConfig
-import blended.updater.Updater.StageRuntimeConfig
-import blended.updater.Updater.RuntimeConfigStaged
+import blended.updater.Updater.StageProfile
 import blended.updater.Updater.ActivateRuntimeConfig
-import blended.updater.Updater.RuntimeConfigAdded
 import blended.updater.Updater.GetProgress
 import blended.updater.Updater.Progress
-import blended.updater.Updater.RuntimeConfigActivated
 import blended.updater.config.RuntimeConfig
 import blended.launcher.config.LauncherConfig
 import blended.updater.config.BundleConfig
-import blended.updater.Updater.RuntimeConfigAdditionFailed
 import blended.updater.Updater.GetRuntimeConfigs
 import blended.updater.Updater.RuntimeConfigs
 import blended.updater.config.LocalRuntimeConfig
 import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.Updater.RuntimeConfigStagingFailed
+import blended.updater.Updater.OperationSucceeded
+import blended.updater.Updater.OperationFailed
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -70,7 +67,7 @@ class UpdaterTest
             val addId = nextId()
             updater ! AddRuntimeConfig(addId, config.runtimeConfig)
             fishForMessage() {
-              case RuntimeConfigAdded(`addId`) => true
+              case OperationSucceeded(`addId`) => true
             }
           }
           assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
@@ -124,7 +121,7 @@ class UpdaterTest
             val addId = nextId()
             updater ! AddRuntimeConfig(addId, config.runtimeConfig)
             fishForMessage() {
-              case RuntimeConfigAdded(`addId`) => true
+              case OperationSucceeded(`addId`) => true
             }
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
@@ -145,7 +142,7 @@ class UpdaterTest
             val addId = nextId()
             updater ! AddRuntimeConfig(addId, config2)
             fishForMessage() {
-              case RuntimeConfigAdditionFailed(`addId`, _) => true
+              case OperationFailed(`addId`, _) => true
             }
           }
 
@@ -184,7 +181,7 @@ class UpdaterTest
             val addId = nextId()
             updater ! AddRuntimeConfig(addId, config)
             fishForMessage() {
-              case RuntimeConfigAdded(`addId`) => true
+              case OperationSucceeded(`addId`) => true
             }
           }
           assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
@@ -194,9 +191,9 @@ class UpdaterTest
 
           {
             val stageId = nextId()
-            updater ! StageRuntimeConfig(stageId, config.name, config.version, overlays = Set())
-            fishForMessage(hint = s"Waiting for: ${RuntimeConfigStaged(stageId)}") {
-              case RuntimeConfigStaged(`stageId`) => true
+            updater ! StageProfile(stageId, config.name, config.version, overlays = Set())
+            fishForMessage(hint = s"Waiting for: ${OperationSucceeded(stageId)}") {
+              case OperationSucceeded(`stageId`) => true
             }
           }
 
@@ -272,7 +269,7 @@ class UpdaterTest
               updater ! AddRuntimeConfig(addId, config.runtimeConfig)
 
               fishForMessage() {
-                case RuntimeConfigAdded(`addId`) => true
+                case OperationSucceeded(`addId`) => true
               }
             }
 
@@ -287,9 +284,9 @@ class UpdaterTest
             {
 
               val stageId = nextId()
-              updater ! StageRuntimeConfig(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set())
-              fishForMessage(hint = s"waiting for: ${RuntimeConfigStaged(stageId)}") {
-                case RuntimeConfigStaged(`stageId`) => true
+              updater ! StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set())
+              fishForMessage(hint = s"waiting for: ${OperationSucceeded(stageId)}") {
+                case OperationSucceeded(`stageId`) => true
               }
 
               assert(installBaseDir.list().toSet === Set("test-with-3-bundles"))
@@ -314,7 +311,7 @@ class UpdaterTest
               val reqId = nextId()
               updater ! ActivateRuntimeConfig(reqId, "test-with-3-bundles", "1.0.0", Set())
               fishForMessage() {
-                case RuntimeConfigActivated(`reqId`) => true
+                case OperationSucceeded(`reqId`) => true
               }
               // restart happens after the message, so we wait
               assert(curNameVersion === Some("test-with-3-bundles" -> "1.0.0"))

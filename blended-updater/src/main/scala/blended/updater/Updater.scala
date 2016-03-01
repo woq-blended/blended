@@ -32,7 +32,7 @@ import blended.mgmt.base.ServiceInfo
 import org.slf4j.LoggerFactory
 import blended.updater.config.ResolvedRuntimeConfig
 import blended.mgmt.base.UpdateAction
-import blended.mgmt.base.StageProfile
+import blended.mgmt.base.{StageProfile => UAStageProfile}
 import akka.util.Timeout
 import blended.mgmt.base.ActivateProfile
 import blended.updater.config.OverlayConfig
@@ -65,6 +65,8 @@ class Updater(
   private[this] var stagingInProgress: Map[String, State] = Map()
 
   private[this] var profiles: Map[ProfileId, Profile] = Map()
+
+  private[this] var overlayConfigs: Set[OverlayConfig] = Set()
 
   private[this] var tickers: Seq[Cancellable] = Nil
   ////////////////////
@@ -104,8 +106,8 @@ class Updater(
 
       stagingInProgress = stagingInProgress.filterKeys(id != _)
       val (profileState, msg) = finalIssues match {
-        case Seq() => Profile.Staged -> RuntimeConfigStaged(id)
-        case issues => Profile.Invalid(issues) -> RuntimeConfigStagingFailed(id, issues.mkString("; "))
+        case Seq() => Profile.Staged -> OperationSucceeded(id)
+        case issues => Profile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
       }
       profiles += state.profileId -> Profile(state.config, state.overlays, profileState)
       state.requestActor ! msg
@@ -150,7 +152,7 @@ class Updater(
 
   override def preStart(): Unit = {
     log.info("Initiating initial scanning for profiles")
-    self ! ScanForRuntimeConfigs(UUID.randomUUID().toString())
+    self ! ScanForRuntimeConfigs
 
     if (config.autoStagingIntervalMSec > 0) {
       log.info(s"Enabling auto-staging with interval [${config.autoStagingIntervalMSec}] and initial delay [${config.autoStagingDelayMSec}]")
@@ -193,8 +195,8 @@ class Updater(
     super.postStop()
   }
 
-  def event(event: UpdateAction): Unit = event match {
-    case StageProfile(runtimeConfig, overlayConfigs) =>
+  def handleUpdateAction(event: UpdateAction): Unit = event match {
+    case UAStageProfile(runtimeConfig, overlayConfigs) =>
       log.debug("Received stage profile request (via event stream) for {}-{}",
         Array(runtimeConfig.name, runtimeConfig.version))
 
@@ -221,111 +223,6 @@ class Updater(
 
   def handleProtocol(msg: Protocol): Unit = msg match {
 
-    case ScanForRuntimeConfigs(reqId) =>
-      log.info("Scanning for profiles in: {}", installBaseDir)
-
-      // profileFiles
-      val runtimeConfigFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
-        flatMap { nameDir =>
-          Option(nameDir.listFiles).getOrElse(Array()).toList.
-            flatMap { versionDir =>
-              val profileFile = new File(versionDir, "profile.conf")
-              if (profileFile.exists()) Some(profileFile)
-              else None
-            }
-        }
-
-      log.info("Found potential runtime configs : {}", runtimeConfigFiles)
-
-      // read configs
-      val runtimeConfigsWithIssues = runtimeConfigFiles.flatMap { runtimeConfigFile =>
-        Try {
-          val versionDir = runtimeConfigFile.getParentFile()
-          val version = versionDir.getName()
-          val name = versionDir.getParentFile.getName()
-
-          val config = ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          val resolved = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
-          val runtimeConfig = resolved.runtimeConfig
-
-          // consistency checks
-          if (runtimeConfig.name == name && runtimeConfig.version == version) {
-            val issues = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved).validate(
-              includeResourceArchives = false,
-              explodedResourceArchives = true,
-              checkPropertiesFile = true).toList
-            log.debug("Found runtime config: {}", runtimeConfig)
-            log.debug("Runtime config issues: {}", issues)
-            List(LocalRuntimeConfig(resolved, versionDir) -> issues)
-          } else {
-            log.warn(s"Profile name and version do not match directory names: ${runtimeConfigFile}")
-            List()
-          }
-        }.getOrElse {
-          log.warn(s"Could not read profile file: ${runtimeConfigFile}")
-          List()
-        }
-      }
-      log.info(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
-
-      def profileState(issues: Seq[String]): Profile.ProfileState = issues match {
-        case Seq() => Profile.Staged
-        case issues => Profile.Pending(issues)
-      }
-
-      val fullProfiles = runtimeConfigsWithIssues.flatMap {
-        case (localRuntimeConfig, issues) =>
-          val profileDir = localRuntimeConfig.baseDir
-
-          // scan for overlays
-          val overlayDir = new File(profileDir, "overlays")
-          val overlayFiles = Option(overlayDir.listFiles()).getOrElse(Array()).filter(f => f.getName().endsWith(".conf")).toList
-          if (overlayFiles.isEmpty) {
-            log.info("Could not found any overlay configs for profile: {}", localRuntimeConfig.profileFileLocation)
-            log.info("Migrating legacy profile. Generating base overlay config")
-            // We create a transient base overlay
-            // TODO: Remove timely
-            List(Profile(localRuntimeConfig, LocalOverlays(Set(), profileDir), profileState(issues)))
-
-          } else overlayFiles.flatMap { file =>
-            Try {
-              ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-            }.flatMap { c =>
-              LocalOverlays.read(c, profileDir)
-            } match {
-              case Failure(e) =>
-                log.error(s"Could not load overlay config file: ${file}", e)
-                None
-              case Success(localOverlays) =>
-                val canonicalFile = LocalOverlays.preferredConfigFile(localOverlays.overlays.map(_.overlayRef), profileDir)
-                if (canonicalFile != file) {
-                  log.error("Skipping found overlays file because filename does not match the expected file name: {}", file)
-                  List()
-                } else {
-                  val overlayIssues = localOverlays.validate() match {
-                    case Seq() =>
-                      // no conflicts, now check if already materialized
-                      if (localOverlays.isMaterialized()) {
-                        List("Overlays not materialized")
-                      } else {
-                        List()
-                      }
-                    case issues =>
-                      log.error("Skipping found overlays file because it is not valid: {}. Issue: {}",
-                        Array(file, issues.mkString(" / ")))
-                      issues.toList
-                  }
-                  log.debug("Found overlay:", localOverlays)
-                  log.debug("Found overlay issues: {}", issues)
-                  List(Profile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
-                }
-            }
-          }
-      }
-
-      profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
-      log.debug("Profiles (after scan): {}", profiles)
-
     // FIXME: add GetProfiles
     case GetRuntimeConfigs(reqId) =>
       val ps = profiles.values.toList
@@ -334,6 +231,9 @@ class Updater(
         pending = ps.collect { case Profile(config, ignoredOverlays, Profile.Pending(_)) => config },
         invalid = ps.collect { case Profile(config, ignoredOverlays, Profile.Invalid(_)) => config }
       )
+
+    case AddOverlayConfig(reqId, config) =>
+    // TODO: persist overlay
 
     case AddRuntimeConfig(reqId, config) =>
       val id = ProfileId(config.name, config.version, Set())
@@ -351,17 +251,17 @@ class Updater(
             case Success(resolved) =>
               ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
               profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), overlays, Profile.Pending(Seq("Never checked")))
-              req ! RuntimeConfigAdded(reqId)
+              req ! OperationSucceeded(reqId)
             case Failure(e) =>
-              req ! RuntimeConfigAdditionFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
+              req ! OperationFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
           }
 
         // TODO: also create overlay files
 
         case Some(`config`) =>
-          req ! RuntimeConfigAdded(reqId)
+          req ! OperationSucceeded(reqId)
         case Some(collision) =>
-          req ! RuntimeConfigAdditionFailed(reqId, "A different runtime config is already present under the same coordinates")
+          req ! OperationFailed(reqId, "A different runtime config is already present under the same coordinates")
       }
 
     case StageNextRuntimeConfig(reqId) =>
@@ -369,20 +269,20 @@ class Updater(
         profiles.toIterator.collect {
           case (id @ ProfileId(name, version, overlays), Profile(_, _, Profile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
-            self ! StageRuntimeConfig(nextId(), name, version, overlays = overlays)
+            self ! StageProfile(nextId(), name, version, overlays = overlays)
         }.take(1)
       }
 
-    case StageRuntimeConfig(reqId, name, version, overlays) =>
+    case StageProfile(reqId, name, version, overlays) =>
       // TODO: process overlays
 
       profiles.get(ProfileId(name, version, overlays)) match {
         case None =>
-          sender() ! RuntimeConfigStagingFailed(reqId, s"No such runtime configuration found: ${name} ${version}")
+          sender() ! OperationFailed(reqId, s"No such runtime configuration found: ${name} ${version}")
 
         case Some(Profile(config, localOverlays, Profile.Staged)) =>
           // already staged
-          sender() ! RuntimeConfigStaged(reqId)
+          sender() ! OperationSucceeded(reqId)
 
         case Some(Profile(config, localOverlays, state)) =>
           val reqActor = sender()
@@ -429,13 +329,13 @@ class Updater(
           log.debug("About to activate new profile for next startup: {}-{}", Array(name, version))
           val success = profileUpdater(name, version)
           if (success) {
-            requestingActor ! RuntimeConfigActivated(reqId)
+            requestingActor ! OperationSucceeded(reqId)
             restartFramework()
           } else {
-            requestingActor ! RuntimeConfigActivationFailed(reqId, "Could not update next startup profile")
+            requestingActor ! OperationFailed(reqId, "Could not update next startup profile")
           }
         case _ =>
-          requestingActor ! RuntimeConfigActivationFailed(reqId, "No such staged runtime configuration found")
+          requestingActor ! OperationFailed(reqId, "No such staged runtime configuration found")
       }
 
     case GetProgress(reqId) =>
@@ -446,13 +346,162 @@ class Updater(
 
   }
 
+  def scanForOverlayConfigs(): List[OverlayConfig] = {
+    val overlayBaseDir = new File(installBaseDir.getParentFile(), "overlays")
+    log.debug("Scanning for overlays configs in: {}", overlayBaseDir)
+
+    val confFiles = Option(overlayBaseDir.listFiles).getOrElse(Array()).
+      filter(f => f.isFile() && f.getName().endsWith(".conf"))
+
+    val configs = confFiles.toList.flatMap { file =>
+      Try { ConfigFactory.parseFile(file).resolve() }.
+        flatMap(OverlayConfig.read) match {
+          case Success(overlayConfig) =>
+            List(overlayConfig)
+          case Failure(e) =>
+            log.error("Could not parse overlay config file: {}", Array(file, e))
+            List()
+        }
+    }
+
+    log.info("Found overlay configs : {}", configs)
+
+    configs
+
+  }
+
+  def scanForRuntimeConfigs(): List[LocalRuntimeConfig] = {
+    log.debug("Scanning for runtime configs in {}", installBaseDir)
+
+    val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
+      flatMap { nameDir =>
+        Option(nameDir.listFiles).getOrElse(Array()).toList.
+          flatMap { versionDir =>
+            val profileFile = new File(versionDir, "profile.conf")
+            if (profileFile.exists()) Some(profileFile)
+            else None
+          }
+      }
+
+    log.info("Found potential runtime configs : {}", configFiles)
+
+    // read configs
+    val runtimeConfigs = configFiles.flatMap { runtimeConfigFile =>
+      Try {
+        val versionDir = runtimeConfigFile.getParentFile()
+        val version = versionDir.getName()
+        val name = versionDir.getParentFile.getName()
+
+        val config = ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+        val resolved = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
+        val local = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved)
+
+        // consistency checks
+        if (local.runtimeConfig.name == name && local.runtimeConfig.version == version) {
+          List(local)
+        } else {
+          log.warn(s"Profile name and version do not match directory names: ${runtimeConfigFile}")
+          List()
+        }
+      }.getOrElse {
+        log.warn(s"Could not read profile file: ${runtimeConfigFile}")
+        List()
+      }
+    }
+    log.info(s"Found runtime configs: ${runtimeConfigs}")
+
+    runtimeConfigs
+  }
+
+  def scanForProfiles(): List[Profile] = {
+    log.debug("Scanning for profiles in: {}", installBaseDir)
+
+    val runtimeConfigsWithIssues = scanForRuntimeConfigs().flatMap { localConfig =>
+      val issues = localConfig.validate(
+        includeResourceArchives = false,
+        explodedResourceArchives = true,
+        checkPropertiesFile = true).toList
+      log.debug("Found runtime config: {}", localConfig)
+      log.debug("Runtime config issues: {}", issues)
+      List(localConfig -> issues)
+
+    }
+
+    log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
+
+    def profileState(issues: Seq[String]): Profile.ProfileState = issues match {
+      case Seq() => Profile.Staged
+      case issues => Profile.Pending(issues)
+    }
+
+    val fullProfiles = runtimeConfigsWithIssues.flatMap {
+      case (localRuntimeConfig, issues) =>
+        val profileDir = localRuntimeConfig.baseDir
+
+        // scan for overlays
+        val overlayDir = new File(profileDir, "overlays")
+        val overlayFiles = Option(overlayDir.listFiles()).getOrElse(Array()).filter(f => f.getName().endsWith(".conf")).toList
+        if (overlayFiles.isEmpty) {
+          log.info("Could not found any overlay configs for profile: {}", localRuntimeConfig.profileFileLocation)
+          log.info("Migrating legacy profile. Generating base overlay config")
+          // We create a transient base overlay
+          // TODO: Remove timely
+          List(Profile(localRuntimeConfig, LocalOverlays(Set(), profileDir), profileState(issues)))
+
+        } else overlayFiles.flatMap { file =>
+          Try {
+            ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+          }.flatMap { c =>
+            LocalOverlays.read(c, profileDir)
+          } match {
+            case Failure(e) =>
+              log.error(s"Could not load overlay config file: ${file}", e)
+              None
+            case Success(localOverlays) =>
+              val canonicalFile = LocalOverlays.preferredConfigFile(localOverlays.overlays.map(_.overlayRef), profileDir)
+              if (canonicalFile != file) {
+                log.error("Skipping found overlays file because filename does not match the expected file name: {}", file)
+                List()
+              } else {
+                val overlayIssues = localOverlays.validate() match {
+                  case Seq() =>
+                    // no conflicts, now check if already materialized
+                    if (localOverlays.isMaterialized()) {
+                      List("Overlays not materialized")
+                    } else {
+                      List()
+                    }
+                  case issues =>
+                    log.error("Skipping found overlays file because it is not valid: {}. Issue: {}",
+                      Array(file, issues.mkString(" / ")))
+                    issues.toList
+                }
+                log.debug("Found overlay:", localOverlays)
+                log.debug("Found overlay issues: {}", issues)
+                List(Profile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
+              }
+          }
+        }
+    }
+
+    fullProfiles
+  }
+
   override def receive: Actor.Receive = LoggingReceive {
 
     // from event stream
-    case e: UpdateAction => event(e)
+    case e: UpdateAction => handleUpdateAction(e)
 
     // direct protocol
     case p: Protocol => handleProtocol(p)
+
+    case ScanForOverlayConfigs =>
+      overlayConfigs = scanForOverlayConfigs().toSet
+
+    case ScanForRuntimeConfigs =>
+      val fullProfiles = scanForProfiles()
+      profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
+      log.debug("Profiles (after scan): {}", profiles)
 
     case PublishServiceInfo =>
       log.debug("About to gather service infos")
@@ -544,15 +593,22 @@ object Updater {
     def requestId: String
   }
   /**
-   * Supported Replies by the [[Updater]] actor.
-   */
-  sealed trait Reply
-
-  /**
    * Request lists of runtime configurations. Replied with [RuntimeConfigs].
    * FIXME: rename to GetProfiles
    */
   final case class GetRuntimeConfigs(override val requestId: String) extends Protocol
+  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
+
+  final case class AddOverlayConfig(override val requestId: String, overlayConfig: OverlayConfig) extends Protocol
+
+  // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
+  final case class StageProfile(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
+
+  /**
+   * Supported Replies by the [[Updater]] actor.
+   */
+  sealed trait Reply
+
   final case class RuntimeConfigs(
     requestId: String,
     staged: Seq[LocalRuntimeConfig],
@@ -562,32 +618,22 @@ object Updater {
     override def toString(): String = s"${getClass().getSimpleName()}(requestId=${requestId},staged=${staged},pending=${pending},invalid=${invalid})"
   }
 
-  final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
-  final case class RuntimeConfigAdded(requestId: String) extends Reply
-  final case class RuntimeConfigAdditionFailed(requestId: String, reason: String) extends Reply
-
-  // final case class AddOverlayConfig(override val requestId: String, overlayConfig: OverlayConfig) extends Protocol
-
   final case class OperationSucceeded(requestId: String) extends Reply
   final case class OperationFailed(requestId: String, reason: String) extends Reply
 
   /**
    * Scans the profile directory for existing runtime configurations and replaces the internal state of this actor with the result.
    */
-  final case class ScanForRuntimeConfigs(override val requestId: String) extends Protocol
+  final case object ScanForRuntimeConfigs
 
-  // TODO: Rename StageRuntimeConfig to StageProfile
-  // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageRuntimeConfig(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
-
-  final case class RuntimeConfigStaged(requestId: String) extends Reply
-  final case class RuntimeConfigStagingFailed(requestId: String, reason: String) extends Reply
+  /**
+   * Scan the overlays directory for existing overlay configurations and replaces the internal state  of this actor with the found result.
+   */
+  final case object ScanForOverlayConfigs
 
   final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
 
   final case class ActivateRuntimeConfig(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
-  final case class RuntimeConfigActivated(requestId: String) extends Reply
-  final case class RuntimeConfigActivationFailed(requestId: String, reason: String) extends Reply
 
   final case class GetProgress(override val requestId: String) extends Protocol
   final case class Progress(requestId: String, progress: Int) extends Reply
