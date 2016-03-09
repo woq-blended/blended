@@ -5,20 +5,24 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 import java.io.PrintStream
-
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
+import org.slf4j.LoggerFactory
 
 /**
  * Helper to write [[Config]] to files or streams.
  */
 trait ConfigWriter {
+  
+  private[this] val log = LoggerFactory.getLogger(classOf[ConfigWriter])
 
   def write(config: Config, file: File, path: Option[String]): Unit = {
     file.getParentFile() match {
       case null =>
-      case parent => parent.mkdirs()
+      case parent => 
+        log.debug("Creating dir: {}",parent)
+        parent.mkdirs()
     }
     val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
     try {

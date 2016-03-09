@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory
 import scala.util.Success
 
 final case class OverlayRef(name: String, version: String) extends Ordered[OverlayRef] {
-  override def toString(): String = name + ":" + version
+  override def toString(): String = name + "-" + version
   override def compare(other: OverlayRef): Int = toString().compare(other.toString())
 }
 

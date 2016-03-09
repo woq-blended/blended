@@ -17,38 +17,55 @@ import blended.updater.config.RuntimeConfig
 import blended.updater.config.OverlayConfig
 import blended.updater.Updater.OperationSucceeded
 import blended.updater.Updater.OperationFailed
+import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.OverlayRef
+import scala.annotation.varargs
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
 
   val commandsWithDescription = Seq(
-    "show" -> "Show all known profiles",
+    "showProfiles" -> "Show all (staged) profiles",
+    "showRuntimeConfigs" -> "Show all known runtime configs",
+    "showOverlays" -> "Show all known overlays",
     "registerProfile" -> "Add a new profile",
     "registerOverlay" -> "Add a new overlay",
-    "stage" -> "Stage a profile",
-    "activate" -> "Activate a profile"
+    "stageProfile" -> "Stage a profile",
+    "activateProfile" -> "Activate a profile"
   )
 
-  def show(): AnyRef = {
+  def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
     val configs = Await.result(
-      ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
-      timeout.duration)
+      ask(updater, Updater.GetProfileIds(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
 
-    def format(config: LocalRuntimeConfig): String = {
-      val activeSuffix = env match {
-        case Some(e) if e.launchedProfileName == config.runtimeConfig.name && e.launchedProfileVersion == config.runtimeConfig.version => " [active]"
-        case _ => ""
-      }
-      s"${config.runtimeConfig.name}-${config.runtimeConfig.version}${activeSuffix}"
-    }
-
-    "staged: " + configs.staged.map(format).mkString(", ") + "\n" +
-      "pending: " + configs.pending.map(format).mkString(", ") + "\n" +
-      "invalid: " + configs.invalid.map(format).mkString(", ")
+    s"${configs.size} profiles:\n${configs.mkString("\n")}"
   }
 
-  def registerProfile(file: File): AnyRef = {
-    val config = ConfigFactory.parseFile(file).resolve()
+  def showRuntimeConfigs(): AnyRef = {
+    implicit val timeout = Timeout(5, SECONDS)
+    val configs = Await.result(
+      ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
+
+    s"${configs.size} runtime configs:\n${
+      configs.toList.map {
+        case LocalRuntimeConfig(c, _) => s"${c.runtimeConfig.name}-${c.runtimeConfig.version}"
+      }.sorted.mkString("\n")
+    }"
+  }
+
+  def showOverlays(): AnyRef = {
+    implicit val timeout = Timeout(5, SECONDS)
+    val configs = Await.result(
+      ask(updater, Updater.GetOverlays(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
+
+    s"${configs.size} profiles:\n${configs.mkString("\n")}"
+  }
+
+  def registerRuntimeConfig(file: File): AnyRef = {
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val runtimeConfig = RuntimeConfig.read(config).get
     println("About to add: " + runtimeConfig)
 
@@ -65,28 +82,57 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  def stage(name: String, version: String): AnyRef = {
-    implicit val timeout = Timeout(1, HOURS)
+  def registerOverlay(file: File): AnyRef = {
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+    val overlayConfig = OverlayConfig.read(config).get
+    println("About to add: " + overlayConfig)
+
+    implicit val timeout = Timeout(5, SECONDS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-        // TODO: support overlays
-      ask(updater, Updater.StageProfile(reqId, name, version, overlays = Set())), timeout.duration) match {
+      ask(updater, Updater.AddOverlayConfig(reqId, overlayConfig)), timeout.duration) match {
         case OperationSucceeded(`reqId`) =>
-          "Staged: " + name + " " + version
-        case OperationFailed(`reqId`, reason) =>
-          "Failed: " + reason
+          "Added: " + overlayConfig
+        case OperationFailed(`reqId`, error) =>
+          "Failed: " + error
         case x =>
           "Error: " + x
       }
   }
 
-  def activate(name: String, version: String): AnyRef = {
+  @varargs
+  def stageProfile(rcName: String, rcVersion: String, overlayNameVersion: String*): AnyRef = {
+    if (overlayNameVersion.size % 2 != 0) {
+      sys.error(s"Missing version for overlay ${overlayNameVersion.last}")
+    }
+    val overlays = overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toSet
+    val overlaysAsString =
+      if (overlays.isEmpty) ""
+      else overlays.toList.sorted.map(o => s"${o.name}-${o.version}").mkString(" with ", " with ", "")
+
+    val asString = s"${rcName}-${rcVersion}${overlaysAsString}"
+
+    implicit val timeout = Timeout(1, HOURS)
+    val reqId = UUID.randomUUID().toString()
+    Await.result(
+      // TODO: support overlays
+      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays)), timeout.duration) match {
+        case OperationSucceeded(`reqId`) =>
+          "Staged: " + asString
+        case OperationFailed(`reqId`, reason) =>
+          "Stage failed: " + asString + "\nReason: " + reason
+        case x =>
+          "Stage failed: " + asString + "\nError: " + x
+      }
+  }
+
+  def activateProfile(name: String, version: String): AnyRef = {
     env match {
       case Some(UpdateEnv(_, _, Some(lookupFile), _, _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateRuntimeConfig(reqId, name, version, Set())), timeout.duration) match {
+          ask(updater, Updater.ActivateProfile(reqId, name, version, Set())), timeout.duration) match {
             case OperationSucceeded(`reqId`) =>
               "Activated: " + name + " " + version
             case OperationFailed(`reqId`, reason) =>
