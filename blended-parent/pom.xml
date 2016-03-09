@@ -96,7 +96,7 @@
     <activemq.version>5.13.0</activemq.version>
     <camel.version>2.16.1</camel.version>
     <karaf.version>2.3.6</karaf.version>
-    <hawtio.version>1.4.22</hawtio.version>
+    <hawtio.version>1.5-SNAPSHOT</hawtio.version>
 
     <!--used -->
     <activeio.version>3.1.4</activeio.version>
@@ -120,7 +120,7 @@
     <cxf.version>2.7.6</cxf.version>
     <cglib.version>2.2.0</cglib.version>
     <docker-java.version>1.0.0</docker-java.version>
-    <domino.version>1.1.0</domino.version>
+    <domino.version>1.1.1</domino.version>
     <felix.ca.version>1.8.6</felix.ca.version>
     <felix.cm.version>1.6.0</felix.cm.version>
     <felix.event.version>1.3.2</felix.event.version>
@@ -143,7 +143,7 @@
     <jetty.version>7.6.8.v20121106</jetty.version>
     <jledit.version>0.2.0</jledit.version>
     <joda-time.version>1.6.2</joda-time.version>
-    <jolokia.version>1.2.2</jolokia.version>
+    <jolokia.version>1.3.3</jolokia.version>
     <jsch.version>0.1.48_1</jsch.version>
     <json-lenses.version>0.5.4</json-lenses.version>
     <junit.version>4.11</junit.version>
