@@ -42,7 +42,7 @@ import blended.updater.config.LocalOverlays
 
 class Updater(
   installBaseDir: File,
-  profileUpdater: (String, String) => Boolean,
+  profileActivator: ProfileActivator,
   restartFramework: () => Unit,
   config: UpdaterConfig,
   launchedProfileDir: Option[File])
@@ -79,7 +79,7 @@ class Updater(
     log.debug("Progress: {} for reqestId: {}", progress, id)
 
     // TODO: generate config files (overlay)
-    
+
     if (state.artifactsToDownload.isEmpty && state.issues.isEmpty && !state.pendingArtifactsToUnpack.isEmpty) {
       // start unpacking
       state.pendingArtifactsToUnpack.foreach { a =>
@@ -121,11 +121,17 @@ class Updater(
 
   def findConfig(id: ProfileId): Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
 
+  @deprecated
   def findActiveConfig(): Option[LocalRuntimeConfig] = launchedProfileDir.flatMap { dir =>
     val absDir = dir.getAbsoluteFile()
     profiles.values.find { profile =>
       profile.config.baseDir.getAbsoluteFile() == absDir
     }.map(_.config)
+  }
+
+  def findActiveProfile(): Option[Profile] = {
+    // FIXME
+    None
   }
 
   def findLocalResource(name: String, sha1Sum: String): Option[File] =
@@ -267,36 +273,6 @@ class Updater(
           }
       }
 
-    //      // FIXME : move parts to stage msg
-    //
-    //      val id = ProfileId(config.name, config.version, Set())
-    //      val req = sender()
-    //      findConfig(id) match {
-    //        case None =>
-    //          val dir = new File(new File(installBaseDir, config.name), config.version)
-    //          dir.mkdirs()
-    //
-    //          val confFile = new File(dir, "profile.conf")
-    //
-    //          val overlays = LocalOverlays(Set(), dir)
-    //
-    //          config.resolve() match {
-    //            case Success(resolved) =>
-    //              ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
-    //              profiles += id -> Profile(LocalRuntimeConfig(resolved, dir), overlays, Profile.Pending(Seq("Never checked")))
-    //              req ! OperationSucceeded(reqId)
-    //            case Failure(e) =>
-    //              req ! OperationFailed(reqId, s"Given runtime config can't be resolved: ${e.getMessage}")
-    //          }
-    //
-    //        // TODO: also create overlay files
-    //
-    //        case Some(`config`) =>
-    //          req ! OperationSucceeded(reqId)
-    //        case Some(collision) =>
-    //          req ! OperationFailed(reqId, "A different runtime config is already present under the same coordinates")
-    //      }
-
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
         profiles.toIterator.collect {
@@ -341,7 +317,7 @@ class Updater(
         case profile @ Profile(config, localOverlays, state) =>
           log.debug("About to stage profile: {}", profile.profileId)
 
-          val overlayFiles = localOverlays.materializedFiles()
+          val overlayFiles = localOverlays.materialize()
 
           // TODO: add validation logic here, if valid, persist overlay file
           val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
@@ -380,7 +356,6 @@ class Updater(
                   pendingArtifactsToUnpack = pendingUnpacks,
                   artifactsToUnpack = Seq(),
                   overlays = localOverlays,
-                  pendingOverlayFiles = generateFiles,
                   issues = Seq()))
 
             }
@@ -392,10 +367,10 @@ class Updater(
     case ActivateProfile(reqId, name, version, overlays) =>
       val requestingActor = sender()
       profiles.get(ProfileId(name, version, overlays)) match {
-        case Some(Profile(LocalRuntimeConfig(config, dir), LocalOverlays(overlayConfigs, oDir), Profile.Staged)) =>
+        case Some(Profile(LocalRuntimeConfig(config, dir), localOverlays, Profile.Staged)) =>
           // write config
           log.debug("About to activate new profile for next startup: {}-{}", Array(name, version))
-          val success = profileUpdater(name, version)
+          val success = profileActivator(name, version, localOverlays.overlayRefs)
           if (success) {
             requestingActor ! OperationSucceeded(reqId)
             restartFramework()
@@ -720,14 +695,14 @@ object Updater {
 
   def props(
     baseDir: File,
-    profileUpdater: (String, String) => Boolean,
+    profileActivator: ProfileActivator,
     restartFramework: () => Unit,
     config: UpdaterConfig,
     launchedProfileDir: File = null): Props = {
 
     Props(new Updater(
       installBaseDir = baseDir,
-      profileUpdater = profileUpdater,
+      profileActivator = profileActivator,
       restartFramework = restartFramework,
       config,
       Option(launchedProfileDir)
@@ -750,16 +725,15 @@ object Updater {
       pendingArtifactsToUnpack: Seq[ArtifactInProgress],
       artifactsToUnpack: Seq[ArtifactInProgress],
       overlays: LocalOverlays,
-      pendingOverlayFiles: Seq[File],
       issues: Seq[String]) {
 
     val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 
     def progress(): Int = {
-      val allBundlesSize = config.runtimeConfig.bundles.size + overlays.materializedFiles().get.size
-      val todos = artifactsToDownload.size + pendingOverlayFiles.size
-      if (allBundlesSize > 0)
-        (100 / allBundlesSize) * (allBundlesSize - todos)
+      val all = config.runtimeConfig.bundles.size
+      val todos = artifactsToDownload.size
+      if (all > 0)
+        (100 / all) * (all - todos)
       else 100
     }
 

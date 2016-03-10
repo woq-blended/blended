@@ -128,7 +128,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def activateProfile(name: String, version: String): AnyRef = {
     env match {
-      case Some(UpdateEnv(_, _, Some(lookupFile), _, _)) =>
+      case Some(UpdateEnv(_, _, Some(lookupFile), _, _, _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(

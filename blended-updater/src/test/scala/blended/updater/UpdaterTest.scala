@@ -37,6 +37,10 @@ class UpdaterTest
 
   implicit val deletePolicy = DeleteNever
 
+  val dummyProfileActivator = new ProfileActivator {
+    def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = true
+  }
+
   override def afterAll {
     TestKit.shutdownActorSystem(system)
   }
@@ -49,7 +53,7 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
-            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
             s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
@@ -95,7 +99,7 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
-            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
             s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
@@ -162,7 +166,7 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
-            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
             s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
@@ -221,7 +225,7 @@ class UpdaterTest
 
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
-            Updater.props(installBaseDir, { (n, v) => true }, { () => }, config = UpdaterConfig.default),
+            Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
             s"updater-${nextId()}")
 
           assert(!installBaseDir.exists())
@@ -280,9 +284,11 @@ class UpdaterTest
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0").list().toSet ===
-              Set("profile.conf", "overlays", "bundles"))
+              Set("profile.conf", "overlays", "bundles", "o-1"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/bundles").list().toSet ===
               Set("org.osgi.core-5.0.0.jar"))
+            assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/o-1").list().toSet ===
+            Set("application_overlay.conf"))
           }
 
           {
@@ -297,7 +303,7 @@ class UpdaterTest
       }
 
     }
-    
+
     "stage with conflicting overlay should fail" in {
       pending
     }
@@ -321,9 +327,11 @@ class UpdaterTest
           val updater = system.actorOf(
             Updater.props(
               installBaseDir,
-              { (n, v) =>
-                curNameVersion = Some(n -> v)
-                true
+              new ProfileActivator {
+                def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = {
+                  curNameVersion = Some(name -> version)
+                  true
+                }
               },
               () => restarted = true,
               config = UpdaterConfig.default),

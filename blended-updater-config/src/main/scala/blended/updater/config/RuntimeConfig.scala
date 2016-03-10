@@ -81,6 +81,7 @@ object RuntimeConfig
     val PROFILE_DIR = "blended.updater.profile.dir"
     val PROFILE_NAME = "blended.updater.profile.name"
     val PROFILE_VERSION = "blended.updater.profile.version"
+    val OVERLAYS = "blended.updater.profile.overlays"
     val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
     val MVN_REPO = "blended.updater.mvn.url"
     /** A properties file relative to the profile dir */
