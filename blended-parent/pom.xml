@@ -163,7 +163,7 @@
     <pax-swissbox.version>1.7.0</pax-swissbox.version>
     <pax-web.version>3.1.0</pax-web.version>
     <protobuf.version>2.5.0</protobuf.version>
-    <scala.micro.version>5</scala.micro.version>
+    <scala.micro.version>6</scala.micro.version>
     <scala.version>2.10</scala.version>
     <scalacheck.version>1.11.4</scalacheck.version>
     <scalactic.version>2.2.4</scalactic.version>
