@@ -190,6 +190,7 @@ object Launcher {
 
     do {
       val configs = readConfigs(cmdline)
+      log.debug(s"Configs: ${configs}")
       val createProperties = firstStart && (cmdline.resetProfileProps || cmdline.initProfileProps)
       val launcher = createAndPrepareLaunch(configs, createProperties, cmdline.initProfileProps)
       retVal = launcher.run()
@@ -207,6 +208,7 @@ object Launcher {
   def readConfigs(cmdline: Cmdline): Configs = {
     cmdline.configFile match {
       case Some(configFile) =>
+        log.debug(s"About to read configFile: ${configFile}")
         val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         Configs(LauncherConfig.read(config))
       case None =>
@@ -244,7 +246,8 @@ object Launcher {
         profileLookup.foreach { pl =>
           brandingProps ++= Map(
             RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
-            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
+            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath(),
+            RuntimeConfig.Properties.OVERLAYS -> pl.overlays.map(or => s"${or.name}:${or.version}").mkString(",")
           )
         }
 

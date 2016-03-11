@@ -45,7 +45,8 @@ class Updater(
   profileActivator: ProfileActivator,
   restartFramework: () => Unit,
   config: UpdaterConfig,
-  launchedProfileDir: Option[File])
+  launchedProfileDir: Option[File],
+  launchedProfileId: Option[Updater.ProfileId])
     extends Actor
     with ActorLogging {
   import Updater._
@@ -365,19 +366,23 @@ class Updater(
       }
 
     case ActivateProfile(reqId, name, version, overlays) =>
+      val profileId = ProfileId(name, version, overlays)
+      log.debug("Requested activate profile with id: {}", profileId)
       val requestingActor = sender()
-      profiles.get(ProfileId(name, version, overlays)) match {
-        case Some(Profile(LocalRuntimeConfig(config, dir), localOverlays, Profile.Staged)) =>
+      profiles.get(profileId) match {
+        case Some(Profile(_, _, Profile.Staged)) =>
           // write config
-          log.debug("About to activate new profile for next startup: {}-{}", Array(name, version))
-          val success = profileActivator(name, version, localOverlays.overlayRefs)
+          log.debug("About to activate new profile for next startup: {}", profileId)
+          val success = profileActivator(name, version, profileId.overlays)
           if (success) {
             requestingActor ! OperationSucceeded(reqId)
             restartFramework()
           } else {
             requestingActor ! OperationFailed(reqId, "Could not update next startup profile")
           }
-        case _ =>
+        case r =>
+          log.debug("Could not find staged profile with id {} but: {}", Array(profileId, r): _*)
+          log.trace("All known profiles: {}", profiles.keySet)
           requestingActor ! OperationFailed(reqId, "No such staged runtime configuration found")
       }
 
@@ -698,14 +703,16 @@ object Updater {
     profileActivator: ProfileActivator,
     restartFramework: () => Unit,
     config: UpdaterConfig,
-    launchedProfileDir: File = null): Props = {
+    launchedProfileDir: File = null,
+    launchedProfileId: ProfileId = null): Props = {
 
     Props(new Updater(
       installBaseDir = baseDir,
       profileActivator = profileActivator,
       restartFramework = restartFramework,
       config,
-      Option(launchedProfileDir)
+      Option(launchedProfileDir),
+      Option(launchedProfileId)
     ))
   }
 

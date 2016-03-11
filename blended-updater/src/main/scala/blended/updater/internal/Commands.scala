@@ -20,8 +20,11 @@ import blended.updater.Updater.OperationFailed
 import com.typesafe.config.ConfigParseOptions
 import blended.updater.config.OverlayRef
 import scala.annotation.varargs
+import org.slf4j.LoggerFactory
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[Commands])
 
   val commandsWithDescription = Seq(
     "showProfiles" -> "Show all (staged) profiles",
@@ -35,11 +38,20 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
-    val configs = Await.result(
-      ask(updater, Updater.GetProfileIds(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+    val activeProfile = env.map(env => Updater.ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(Set())))
+    log.debug("acitive profile: {}", activeProfile)
+
+    val profiles = Await.result(
+      ask(updater, Updater.GetProfiles(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
       timeout.duration).result
 
-    s"${configs.size} profiles:\n${configs.mkString("\n")}"
+    s"${profiles.size} profiles:\n${
+      profiles.map {
+        case p: Updater.Profile =>
+          val activePart = if (activeProfile.exists(_ == p.profileId)) " (active)" else ""
+          p.profileId + ": " + p.state + activePart
+      }.mkString("\n")
+    }"
   }
 
   def showRuntimeConfigs(): AnyRef = {
@@ -100,12 +112,16 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  @varargs
-  def stageProfile(rcName: String, rcVersion: String, overlayNameVersion: String*): AnyRef = {
+  def parseOverlays(overlayNameVersion: Seq[String]): Set[OverlayRef] = {
     if (overlayNameVersion.size % 2 != 0) {
       sys.error(s"Missing version for overlay ${overlayNameVersion.last}")
     }
-    val overlays = overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toSet
+    overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toSet
+  }
+
+  @varargs
+  def stageProfile(rcName: String, rcVersion: String, overlayNameVersion: String*): AnyRef = {
+    val overlays = parseOverlays(overlayNameVersion)
     val overlaysAsString =
       if (overlays.isEmpty) ""
       else overlays.toList.sorted.map(o => s"${o.name}-${o.version}").mkString(" with ", " with ", "")
@@ -126,19 +142,27 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  def activateProfile(name: String, version: String): AnyRef = {
+  @varargs
+  def activateProfile(name: String, version: String, overlayNameVersion: String*): AnyRef = {
+    val overlays = parseOverlays(overlayNameVersion)
+    val overlaysAsString =
+      if (overlays.isEmpty) ""
+      else overlays.toList.sorted.map(o => s"${o.name}-${o.version}").mkString(" with ", " with ", "")
+
+    val asString = s"${name}-${version}${overlaysAsString}"
+
     env match {
       case Some(UpdateEnv(_, _, Some(lookupFile), _, _, _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateProfile(reqId, name, version, Set())), timeout.duration) match {
+          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays)), timeout.duration) match {
             case OperationSucceeded(`reqId`) =>
-              "Activated: " + name + " " + version
+              "Activated: " + asString
             case OperationFailed(`reqId`, reason) =>
-              "Failed: " + reason
+              "Activation failed: " + asString + "\nReason: " + reason
             case x =>
-              "Error: " + x
+              "Activation failed: " + asString + "\nError: " + x
           }
       case _ =>
         sys.error("No updateable environment detected. No profile lookup file defined.")

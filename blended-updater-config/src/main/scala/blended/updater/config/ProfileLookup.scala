@@ -37,7 +37,8 @@ case class ProfileLookup(
    */
   def materializedDir: File = {
     val pureProfileDir = new File(profileBaseDir, s"${profileName}/${profileVersion}")
-    LocalOverlays.materializedDir(overlays, pureProfileDir)
+    // LocalOverlays.materializedDir(overlays, pureProfileDir)
+    pureProfileDir
   }
 
 }
@@ -52,8 +53,8 @@ object ProfileLookup {
     val profileVersion = config.getString("profile.version")
     val profileBaseDir = new File(config.getString("profile.baseDir"))
     val overlays =
-      if (config.hasPath("overlays"))
-        config.getStringList("overlays").asScala.map { o =>
+      if (config.hasPath("profile.overlays"))
+        config.getStringList("profile.overlays").asScala.map { o =>
           o.split("[:]", 2) match {
             case Array(n, v) => OverlayRef(n, v)
             case invalid => sys.error("Invalid overlay id: " + invalid)
@@ -77,7 +78,7 @@ object ProfileLookup {
       "profile.name" -> profileLookup.profileName,
       "profile.version" -> profileLookup.profileVersion,
       "profile.baseDir" -> profileLookup.profileBaseDir.getPath(),
-      "overlays" -> profileLookup.overlays.map(o => s"${o.name}:${o.version}").asJava
+      "profile.overlays" -> profileLookup.overlays.map(o => s"${o.name}:${o.version}").asJava
     ).asJava
 
     ConfigFactory.parseMap(config)

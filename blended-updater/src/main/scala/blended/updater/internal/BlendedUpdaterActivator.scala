@@ -81,7 +81,10 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
               profileActivator = profileActivator,
               restartFramework = restartFrameworkAction,
               config = UpdaterConfig.fromConfig(cfg.config),
-              launchedProfileDir = updateEnv.launchedProfileDir.orNull
+              launchedProfileDir = updateEnv.launchedProfileDir.orNull,
+              launchedProfileId = updateEnv.overlays.map { overlayRefs =>
+                Updater.ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion, overlayRefs)
+              }.orNull
             )
           )
 
