@@ -119,7 +119,7 @@
     <cxf.version>2.7.6</cxf.version>
     <cglib.version>2.2.0</cglib.version>
     <docker-java.version>1.0.0</docker-java.version>
-    <domino.version>1.1.0</domino.version>
+    <domino.version>1.1.1</domino.version>
     <felix.ca.version>1.8.6</felix.ca.version>
     <felix.cm.version>1.6.0</felix.cm.version>
     <felix.event.version>1.3.2</felix.event.version>

@@ -1,6 +1,8 @@
 package blended.updater.internal
 
 import java.io.File
+import org.slf4j.LoggerFactory
+
 import scala.reflect.runtime.universe
 import scala.util.Failure
 import scala.util.Success
@@ -25,6 +27,8 @@ case class UpdateEnv(
   overlays: Option[Set[OverlayRef]])
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 

@@ -4,9 +4,10 @@ import javax.jms.ConnectionFactory
 
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
+import domino.logging.Logging
 import org.apache.activemq.ActiveMQConnectionFactory
 
-class AmqClientActivator extends DominoActivator with TypesafeConfigWatching {
+class AmqClientActivator extends DominoActivator with TypesafeConfigWatching with Logging {
 
   whenBundleActive {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
