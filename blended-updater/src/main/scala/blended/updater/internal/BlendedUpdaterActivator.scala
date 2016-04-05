@@ -3,6 +3,8 @@ package blended.updater.internal
 import java.io.File
 import org.slf4j.LoggerFactory
 
+import org.slf4j.LoggerFactory
+
 import scala.reflect.runtime.universe
 import scala.util.Failure
 import scala.util.Success
@@ -31,6 +33,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
   private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
+  private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>

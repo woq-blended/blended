@@ -30,7 +30,7 @@
   <name>${project.artifactId}</name>
   <url>https://github.com/woq-blended/blended</url>
   <description>Common Settings and configurations for all blended modules.</description>
-  
+
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -95,7 +95,7 @@
 
     <activemq.version>5.13.0</activemq.version>
     <camel.version>2.16.1</camel.version>
-    <hawtio.version>1.4.22</hawtio.version>
+    <hawtio.version>1.4.61</hawtio.version>
 
     <!--used -->
     <activeio.version>3.1.4</activeio.version>
@@ -142,7 +142,7 @@
     <jetty.version>7.6.8.v20121106</jetty.version>
     <jledit.version>0.2.0</jledit.version>
     <joda-time.version>1.6.2</joda-time.version>
-    <jolokia.version>1.2.2</jolokia.version>
+    <jolokia.version>1.3.3</jolokia.version>
     <jsch.version>0.1.48_1</jsch.version>
     <json-lenses.version>0.5.4</json-lenses.version>
     <junit.version>4.11</junit.version>
@@ -267,7 +267,7 @@
             </includes>
           </configuration>
         </plugin>
-    
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -288,7 +288,7 @@
             </execution>
           </executions>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-gpg-plugin</artifactId>
@@ -513,7 +513,7 @@
 
       </plugins>
     </pluginManagement>
-    
+
     <plugins>
 
       <plugin>
@@ -601,7 +601,7 @@
 
     <profile>
       <id>release</id>
-      <activation> 
+      <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
 
@@ -648,5 +648,3 @@
   </profiles>
 
 </project>
-
-
