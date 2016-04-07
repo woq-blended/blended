@@ -13,15 +13,29 @@ import scala.util.Failure
 import org.slf4j.LoggerFactory
 import scala.util.Success
 
+/**
+  * A reference to an overlay config.
+  *
+  * @param name    The name of the overlay.
+  * @param version The version of the overlay.
+  */
 final case class OverlayRef(name: String, version: String) extends Ordered[OverlayRef] {
   override def toString(): String = name + "-" + version
+
   override def compare(other: OverlayRef): Int = toString().compare(other.toString())
 }
 
+/**
+  * Definition of an overlay.
+  *
+  * @param name             The name of the overlay.
+  * @param version          The version of the overlay.
+  * @param generatedConfigs The config file generators.
+  */
 final case class OverlayConfig(
-    name: String,
-    version: String,
-    generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) extends Ordered[OverlayConfig] {
+                                name: String,
+                                version: String,
+                                generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) extends Ordered[OverlayConfig] {
 
   override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
 
@@ -35,6 +49,9 @@ final case class OverlayConfig(
 
 }
 
+/**
+  * Companion for [[OverlayConfig]] containing common useful operations.
+  */
 final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig]) => OverlayConfig) {
 
   def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
@@ -93,12 +110,23 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
 }
 
 /**
- * A materialized set of overlays.
- */
+  * A materialized set of overlays.
+  * The overlays are materialized to the given `profileDir` directory.
+  *
+  * @param overlays   Alls involved overlay config.
+  * @param profileDir The profile directory.
+  */
 final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
 
   def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
 
+  /**
+    * Validate this set of overlays.
+    * Validation checks for collisions of config names and config settings.
+    *
+    * @return A collection of validation errors, if any.
+    *         If this is empty, the validation was successful.
+    */
   def validate(): Seq[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
@@ -108,10 +136,15 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
   }
 
   /**
-   * The location of the final applied set of overlays.
-   */
+    * The location of the final applied set of overlays.
+    */
   def materializedDir: File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
 
+  /**
+    * Materializes the given local overlays.
+    *
+    * @return The `Success` with the materialized config files or `Failure` in case of any unrecoverable error.
+    */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
@@ -130,8 +163,8 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
   }
 
   /**
-   * The files that would be generated
-   */
+    * The files that would be generated
+    */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
@@ -208,4 +241,11 @@ final object LocalOverlays {
 
 }
 
+/**
+  * Definition of a config file generator.
+  * The generator has a file name (relative to the profile) and will write the given config into the config file.
+  *
+  * @param configFile The relative config file name.
+  * @param config     The config to be written into the config file.
+  */
 case class GeneratedConfig(configFile: String, config: Config)
