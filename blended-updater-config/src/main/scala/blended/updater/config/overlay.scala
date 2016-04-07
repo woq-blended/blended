@@ -1,24 +1,27 @@
 package blended.updater.config
 
-import com.typesafe.config.Config
-import _root_.scala.collection.immutable
 import java.io.File
-import scala.collection.JavaConverters._
-import scala.util.Try
-import scala.util.Left
-import scala.util.Right
+
+import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigObject
-import scala.util.Failure
 import org.slf4j.LoggerFactory
+
+import _root_.scala.collection.immutable
+import scala.collection.JavaConverters._
+import scala.collection.immutable.Map
+import scala.util.Failure
+import scala.util.Left
+import scala.util.Right
 import scala.util.Success
+import scala.util.Try
 
 /**
-  * A reference to an overlay config.
-  *
-  * @param name    The name of the overlay.
-  * @param version The version of the overlay.
-  */
+ * A reference to an overlay config.
+ *
+ * @param name    The name of the overlay.
+ * @param version The version of the overlay.
+ */
 final case class OverlayRef(name: String, version: String) extends Ordered[OverlayRef] {
   override def toString(): String = name + "-" + version
 
@@ -26,16 +29,18 @@ final case class OverlayRef(name: String, version: String) extends Ordered[Overl
 }
 
 /**
-  * Definition of an overlay.
-  *
-  * @param name             The name of the overlay.
-  * @param version          The version of the overlay.
-  * @param generatedConfigs The config file generators.
-  */
+ * Definition of an overlay.
+ *
+ * @param name             The name of the overlay.
+ * @param version          The version of the overlay.
+ * @param generatedConfigs The config file generators.
+ */
 final case class OverlayConfig(
                                 name: String,
                                 version: String,
-                                generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq()) extends Ordered[OverlayConfig] {
+                                generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
+                                properties: Map[String, String] = Map()
+                              ) extends Ordered[OverlayConfig] {
 
   override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
 
@@ -50,9 +55,9 @@ final case class OverlayConfig(
 }
 
 /**
-  * Companion for [[OverlayConfig]] containing common useful operations.
-  */
-final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig]) => OverlayConfig) {
+ * Companion for [[OverlayConfig]] containing common useful operations.
+ */
+final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig], Map[String, String]) => OverlayConfig) {
 
   def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
     aggregateGeneratedConfigs(generatedConfigs) match {
@@ -81,7 +86,18 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
     if (issues.isEmpty) Right(fileToConfig) else Left(issues.toList)
   }
 
+
   def read(config: Config): Try[OverlayConfig] = Try {
+
+    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
+      if (default.isDefined && !config.hasPath(key)) {
+        default.get.apply()
+      } else {
+        config.getConfig(key).entrySet().asScala.map {
+          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
+        }.toMap
+      }
+
     OverlayConfig(
       name = config.getString("name"),
       version = config.getString("version"),
@@ -92,7 +108,8 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
           val genConfig = entry.getValue().asInstanceOf[ConfigObject].toConfig()
           GeneratedConfig(configFile = fileName, config = genConfig)
         }.toList
-      } else Nil
+      } else Nil,
+      properties = configAsMap("properties", Some(() => Map()))
     )
   }
 
@@ -102,7 +119,8 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
       "version" -> overlayConfig.version,
       "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
         genConfig.configFile -> genConfig.config.root().unwrapped()
-      }.toMap.asJava
+      }.toMap.asJava,
+      "properties" -> overlayConfig.properties.asJava
     ).asJava
     ConfigFactory.parseMap(config)
   }
@@ -110,41 +128,55 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
 }
 
 /**
-  * A materialized set of overlays.
-  * The overlays are materialized to the given `profileDir` directory.
-  *
-  * @param overlays   Alls involved overlay config.
-  * @param profileDir The profile directory.
-  */
+ * A materialized set of overlays.
+ * The overlays are materialized to the given `profileDir` directory.
+ *
+ * @param overlays   Alls involved overlay config.
+ * @param profileDir The profile directory.
+ */
 final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
 
   def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
 
   /**
-    * Validate this set of overlays.
-    * Validation checks for collisions of config names and config settings.
-    *
-    * @return A collection of validation errors, if any.
-    *         If this is empty, the validation was successful.
-    */
+   * Validate this set of overlays.
+   * Validation checks for collisions of config names and config settings.
+   *
+   * @return A collection of validation errors, if any.
+   *         If this is empty, the validation was successful.
+   */
   def validate(): Seq[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
     }.toList
+    var seenPropsAndConfigNames = Set[(String, String)]()
+    val propIssues = overlays.toSeq.flatMap { o =>
+      val occ = s"${o.name}-${o.version}"
+      o.properties.keySet.toSeq.flatMap { p =>
+        seenPropsAndConfigNames.find(_._1 == p) match {
+          case Some(first) =>
+            val showOcc = List(first._2, occ).sorted.mkString(", ")
+            List(s"Duplicate property definitions detected. Property: ${p} Occurences: ${showOcc}")
+          case None =>
+            seenPropsAndConfigNames += p -> occ
+            List()
+        }
+      }
+    }
     val generatorIssues = OverlayConfig.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
-    nameIssues ++ generatorIssues
+    nameIssues ++ propIssues ++ generatorIssues
   }
 
   /**
-    * The location of the final applied set of overlays.
-    */
+   * The location of the final applied set of overlays.
+   */
   def materializedDir: File = LocalOverlays.materializedDir(overlays.map(_.overlayRef), profileDir)
 
   /**
-    * Materializes the given local overlays.
-    *
-    * @return The `Success` with the materialized config files or `Failure` in case of any unrecoverable error.
-    */
+   * Materializes the given local overlays.
+   *
+   * @return The `Success` with the materialized config files or `Failure` in case of any unrecoverable error.
+   */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
@@ -163,8 +195,8 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
   }
 
   /**
-    * The files that would be generated
-    */
+   * The files that would be generated
+   */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
     OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
@@ -182,6 +214,17 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
       case Success(files) => files.forall { f => f.exists() && f.isFile() }
       case _ => false
     }
+  }
+
+  /**
+   * Return the aggregated properties of the overlay configs.
+   * You need to ensure there are no conflicting properties with `validate`,
+   * otherwise some properties might be override and thus lost.
+   *
+   * @return The properties map.
+   */
+  def properties: Map[String, String] = {
+    overlays.toSeq.sorted.flatMap(o => o.properties).toMap
   }
 
 }
@@ -242,10 +285,10 @@ final object LocalOverlays {
 }
 
 /**
-  * Definition of a config file generator.
-  * The generator has a file name (relative to the profile) and will write the given config into the config file.
-  *
-  * @param configFile The relative config file name.
-  * @param config     The config to be written into the config file.
-  */
+ * Definition of a config file generator.
+ * The generator has a file name (relative to the profile) and will write the given config into the config file.
+ *
+ * @param configFile The relative config file name.
+ * @param config     The config to be written into the config file.
+ */
 case class GeneratedConfig(configFile: String, config: Config)

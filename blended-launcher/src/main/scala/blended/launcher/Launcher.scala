@@ -22,14 +22,19 @@ import java.util.Hashtable
 import java.util.Properties
 import java.util.ServiceLoader
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.immutable.Map
-import scala.collection.immutable.Seq
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import scala.util.control.NonFatal
-
+import blended.launcher.config.LauncherConfig
+import blended.launcher.internal.Logger
+import blended.updater.config.ConfigConverter
+import blended.updater.config.LocalOverlays
+import blended.updater.config.LocalRuntimeConfig
+import blended.updater.config.ProfileLookup
+import blended.updater.config.ResolvedRuntimeConfig
+import blended.updater.config.RuntimeConfig
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
+import de.tototec.cmdoption.CmdOption
+import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.CmdlineParserException
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -40,20 +45,13 @@ import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
 
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-
-import Launcher.InstalledBundle
-import blended.launcher.config.LauncherConfig
-import blended.launcher.internal.Logger
-import blended.updater.config.ConfigConverter
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.ProfileLookup
-import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.config.RuntimeConfig
-import de.tototec.cmdoption.CmdOption
-import de.tototec.cmdoption.CmdlineParser
-import de.tototec.cmdoption.CmdlineParserException
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.immutable.Map
+import scala.collection.immutable.Seq
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
+import scala.util.control.NonFatal
 
 object Launcher {
 
@@ -68,6 +66,7 @@ object Launcher {
       conflictsWith = Array("--profile", "--profile-lookup")
     )
     def setPonfigFile(file: String): Unit = configFile = Option(file)
+
     var configFile: Option[String] = None
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
@@ -78,8 +77,9 @@ object Launcher {
       conflictsWith = Array("--profile-lookup", "--config")
     )
     def setProfileDir(dir: String): Unit = profileDir = Option(dir)
+
     var profileDir: Option[String] = None
-    
+
     @CmdOption(names = Array("--framework-restart", "-r"), args = Array("BOOLEAN"),
       description = "Should the launcher restart the framework after updates." +
         " If disabled and the framework was updated, the exit code is 2.")
@@ -90,6 +90,7 @@ object Launcher {
       conflictsWith = Array("--profile", "--config")
     )
     def setProfileLookup(file: String): Unit = profileLookup = Option(file)
+
     var profileLookup: Option[String] = None
 
     @CmdOption(names = Array("--reset-profile-props"),
@@ -108,8 +109,8 @@ object Launcher {
 
   /**
    * Entry point of the launcher application.
-   * 
-   * This methods will explicitly exit the VM! 
+   *
+   * This methods will explicitly exit the VM!
    */
   def main(args: Array[String]): Unit = {
     try {
@@ -179,7 +180,7 @@ object Launcher {
   /**
    * Use this method instead of `main` if you do not want to exit the VM
    * and instead get an [LauncherException] in case of a error.
-   * 
+   *
    * @throws LauncherException
    */
   def run(args: Array[String]): Unit = {
@@ -243,18 +244,30 @@ object Launcher {
         var brandingProps = Map(
           RuntimeConfig.Properties.PROFILE_DIR -> profileDir
         )
+        var overlayProps = Map[String, String]()
+
         profileLookup.foreach { pl =>
           brandingProps ++= Map(
             RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
             RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath(),
             RuntimeConfig.Properties.OVERLAYS -> pl.overlays.map(or => s"${or.name}:${or.version}").mkString(",")
           )
+
+          val knownOverlays = LocalOverlays.findLocalOverlays(pl.profileBaseDir.getAbsoluteFile())
+          knownOverlays.find(ko => ko.overlayRefs == pl.overlays.toSet) match {
+            case None =>
+              sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
+            case Some(localOverlays) =>
+              val newOverlayProps = localOverlays.properties
+              log.debug("Found overlay provided properties: " + newOverlayProps)
+              overlayProps ++= newOverlayProps
+          }
         }
 
         Configs(
           launcherConfig = launchConfig.copy(
             branding = launchConfig.branding ++ brandingProps,
-            systemProperties = launchConfig.systemProperties + ("blended.container.home" -> profileDir)
+            systemProperties = (launchConfig.systemProperties ++ overlayProps) + ("blended.container.home" -> profileDir)
           ),
           profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
     }
@@ -302,14 +315,17 @@ object Launcher {
           1
       } finally {
         BrandingProperties.setLastBrandingProperties(new Properties())
-        Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
+        Try {
+          Runtime.getRuntime.removeShutdownHook(shutdownHook)
+        }
       }
     }
   }
 
 }
 
-class Launcher private (config: LauncherConfig) {
+class Launcher private(config: LauncherConfig) {
+
   import Launcher._
 
   private[this] val log = Logger[Launcher]
@@ -420,7 +436,7 @@ class Launcher private (config: LauncherConfig) {
       log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
       log.info("Resolving installed bundles")
       val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
-      frameworkWiring.resolveBundles(null /* all bundles */ )
+      frameworkWiring.resolveBundles(null /* all bundles */)
       val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
       log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
     }

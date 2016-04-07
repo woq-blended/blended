@@ -54,7 +54,7 @@ trait JsonProtocol extends DefaultJsonProtocol {
   }
   implicit val generatedConfigFormat: RootJsonFormat[GeneratedConfig] = jsonFormat2(GeneratedConfig)
 
-  implicit val overlayConfigFormat: RootJsonFormat[OverlayConfig] = jsonFormat3(OverlayConfig)
+  implicit val overlayConfigFormat: RootJsonFormat[OverlayConfig] = jsonFormat4(OverlayConfig)
 
   implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat2(StageProfile)
   implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat3(ActivateProfile)

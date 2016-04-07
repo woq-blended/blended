@@ -111,6 +111,13 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       overlays.validate() shouldEqual Seq("More than one overlay with name 'overlay1' detected")
     }
 
+    "detects overlays with conflicting propetries" in {
+      val o1 = OverlayConfig("o1", "1", properties = Map("P1" -> "V1"))
+      val o2 = OverlayConfig("o2", "1", properties = Map("P1" -> "V2"))
+      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
+      overlays.validate() shouldEqual Seq("Duplicate property definitions detected. Property: P1 Occurences: o1-1, o2-1")
+    }
+
     "detects overlays with conflicting generators" in {
       val config1 = ConfigFactory.parseString("key=val1")
       val o1 = OverlayConfig(
