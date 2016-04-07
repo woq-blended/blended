@@ -33,7 +33,6 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
   private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
-  private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
