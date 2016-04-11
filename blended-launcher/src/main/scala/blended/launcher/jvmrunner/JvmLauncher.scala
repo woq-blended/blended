@@ -82,7 +82,6 @@ class JvmLauncher() {
                     props.load(inStream)
                   }
                   sysPropsFile.delete()
-                  // println("SYSTEM PROPERTIES: " + props)
                   props.asScala.toList.toMap
                 } else {
                   log.error("Could not retrieve jvm properties")
@@ -90,9 +89,12 @@ class JvmLauncher() {
                 }
               }
 
+              val xmsOpt = sysProps.collect { case ("blended.launcher.jvm.xms", x) => s"-Xms${x}" }
+              val xmxOpt = sysProps.collect { case ("blended.launcher.jvm.xmx", x) => s"-Xmx${x}" }
+
               val p = startJava(
                 classpath = config.classpath,
-                jvmOpts = (config.jvmOpts ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
+                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
                 arguments = config.otherArgs.toArray,
                 interactive = true,
                 errorsIntoOutput = false,
@@ -121,10 +123,10 @@ class JvmLauncher() {
   }
 
   case class Config(
-                     classpath: Seq[File] = Seq(),
-                     otherArgs: Seq[String] = Seq(),
-                     action: Option[String] = None,
-                     jvmOpts: Seq[String] = Seq()) {
+    classpath: Seq[File] = Seq(),
+    otherArgs: Seq[String] = Seq(),
+    action: Option[String] = None,
+    jvmOpts: Seq[String] = Seq()) {
 
     override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
   }
@@ -158,11 +160,11 @@ class JvmLauncher() {
   }
 
   def startJava(classpath: Seq[File],
-                jvmOpts: Array[String],
-                arguments: Array[String],
-                interactive: Boolean = false,
-                errorsIntoOutput: Boolean = true,
-                directory: File = new File(".")): RunningProcess = {
+    jvmOpts: Array[String],
+    arguments: Array[String],
+    interactive: Boolean = false,
+    errorsIntoOutput: Boolean = true,
+    directory: File = new File(".")): RunningProcess = {
 
     log.debug("About to run Java process")
 
