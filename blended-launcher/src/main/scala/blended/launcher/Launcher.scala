@@ -256,7 +256,9 @@ object Launcher {
           val knownOverlays = LocalOverlays.findLocalOverlays(pl.profileBaseDir.getAbsoluteFile())
           knownOverlays.find(ko => ko.overlayRefs == pl.overlays.toSet) match {
             case None =>
-              sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
+              if (!pl.overlays.isEmpty) {
+                sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
+              }
             case Some(localOverlays) =>
               val newOverlayProps = localOverlays.properties
               log.debug("Found overlay provided properties: " + newOverlayProps)
