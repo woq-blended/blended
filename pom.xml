@@ -219,7 +219,6 @@
 
 	<module>blended-launcher-features</module>
 	<module>blended-launcher-demo</module>
-        <module>blended-launcher-broker</module>
 	<module>blended-demo-mgmt</module>
 
       </modules>
