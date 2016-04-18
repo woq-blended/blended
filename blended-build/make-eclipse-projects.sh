@@ -2,7 +2,7 @@
 
 set -e
 
-blendedVersion="2.0-RC1"
+blendedVersion="2.0-SNAPSHOT"
 classesDir="target-eclipse/classes"
 testClassesDir="target-eclipse/test-classes"
 libsDir="target-eclipse/libs"

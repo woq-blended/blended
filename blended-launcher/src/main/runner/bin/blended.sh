@@ -27,7 +27,7 @@ setenv
 
 cd $BLENDED_HOME
 
-BLENDED_VERSION="2.0-RC1"
+BLENDED_VERSION="2.0-SNAPSHOT"
 
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"

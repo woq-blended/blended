@@ -7,7 +7,7 @@ TOOLDIR="$(dirname "$0")"
 M2REPO="${TOOLDIR}/../../mvn/m2repo"
 #M2REPO="/Users/andreas/.m2/repository"
 
-BLENDED_VERSION="2.0-RC1"
+BLENDED_VERSION="2.0-SNAPSHOT"
 
 java\
  -classpath\

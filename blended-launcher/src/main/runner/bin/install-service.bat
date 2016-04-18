@@ -2,7 +2,7 @@
 set SCRIPTPATH=%~dp0
 set BLENDED_HOME=%SCRIPTPATH%..
 
-set BLENDED_VERSION=2.0-RC1
+set BLENDED_VERSION=2.0-SNAPSHOT
 
 set JAVA_HOME=%BLENDED_HOME%\jre
 rem Das muss die Server VM sein!

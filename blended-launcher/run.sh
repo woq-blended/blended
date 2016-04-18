@@ -6,7 +6,7 @@ TOOLDIR="$(dirname "$0")"
 REPO="/Users/andreas/.m2/repository"
 
 BLENDED_HOME=${TOOLDIR}/../blended-launcher-demo/target/classes
-BLENDED_VERSION="2.0-RC1"
+BLENDED_VERSION="2.0-SNAPSHOT"
 
 RETVAL=2
 
