@@ -36,8 +36,8 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
 
     val newUpdateActions = state.outstandingActions.filter {
       // TODO: support for overlays
-      case ActivateProfile(n, v, o) => !active.exists(_ == s"${n}-${v}")
-      case StageProfile(rc, oc) => !valid.exists(_ == s"${rc.name}-${rc.version}")
+      case ActivateProfile(n, v, o, _) => !active.exists(_ == s"${n}-${v}")
+      case StageProfile(n, v, oc, _) => !valid.exists(_ == s"${n}-${v}")
       case _ => true
     }
 

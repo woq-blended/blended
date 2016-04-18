@@ -1,5 +1,7 @@
 package blended.mgmt.base.json
 
+import blended.mgmt.base.AddOverlayConfig
+import blended.mgmt.base.AddRuntimeConfig
 import blended.mgmt.base.ServiceInfo
 import blended.mgmt.base.ContainerInfo
 import blended.updater.config.RuntimeConfig
@@ -36,7 +38,7 @@ trait JsonProtocol extends DefaultJsonProtocol {
   implicit val featureRefFormat: RootJsonFormat[FeatureRef] = jsonFormat3(FeatureRef)
   implicit val featureConfigFormat: RootJsonFormat[FeatureConfig] = jsonFormat5(FeatureConfig)
   implicit val runtimeConfigFormat: RootJsonFormat[RuntimeConfig] =
-    // RuntimeConfig has an additional derived val confuses automatic field extraction 
+  // RuntimeConfig has an additional derived val confuses automatic field extraction
     jsonFormat(RuntimeConfig,
       "name", "version", "bundles",
       "startLevel", "defaultStartLevel",
@@ -48,6 +50,7 @@ trait JsonProtocol extends DefaultJsonProtocol {
       val json = obj.root().render(ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(true))
       JsonParser.apply(ParserInput(json))
     }
+
     override def read(json: JsValue): Config = {
       ConfigFactory.parseString(json.toString())
     }
@@ -56,21 +59,37 @@ trait JsonProtocol extends DefaultJsonProtocol {
 
   implicit val overlayConfigFormat: RootJsonFormat[OverlayConfig] = jsonFormat4(OverlayConfig)
 
-  implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat2(StageProfile)
-  implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat3(ActivateProfile)
+  implicit val stageProfileFormat: RootJsonFormat[StageProfile] = jsonFormat4(StageProfile)
+  implicit val activateProfileFormat: RootJsonFormat[ActivateProfile] = jsonFormat4(ActivateProfile)
+  implicit val addRuntimeConfigFormat: RootJsonFormat[AddRuntimeConfig] = jsonFormat2(AddRuntimeConfig)
+  implicit val addOverlayConfigFormat: RootJsonFormat[AddOverlayConfig] = jsonFormat2(AddOverlayConfig)
+
   implicit val updateActionFormat: RootJsonFormat[UpdateAction] = new RootJsonFormat[UpdateAction] {
+
     import spray.json._
+
     override def write(obj: UpdateAction): JsValue = obj match {
-      case s: StageProfile => s.toJson
+      case a: StageProfile => a.toJson
       case a: ActivateProfile => a.toJson
+      case a: AddRuntimeConfig => a.toJson
+      case a: AddOverlayConfig => a.toJson
       case _ => serializationError(s"Could not write object ${obj}")
     }
-    override def read(json: JsValue): UpdateAction = {
-      val fields = json.asJsObject.fields.keySet
 
-      if (fields.contains("runtimeConfig")) stageProfileFormat.read(json)
-      else if (fields.contains("profileName")) activateProfileFormat.read(json)
-      else deserializationError("UpdateAction expected")
+    override def read(json: JsValue): UpdateAction = {
+      val stageProfile = classOf[StageProfile].getSimpleName()
+      val activateProfile = classOf[ActivateProfile].getSimpleName()
+      val addRuntimeConfig = classOf[AddRuntimeConfig].getSimpleName()
+      val addOverlayConfig = classOf[AddOverlayConfig].getSimpleName()
+      
+      json.asJsObject.fields.get("kind") match {
+        case Some(JsString(`stageProfile`)) => stageProfileFormat.read(json)
+        case Some(JsString(`activateProfile`)) => activateProfileFormat.read(json)
+        case Some(JsString(`addRuntimeConfig`)) => addRuntimeConfigFormat.read(json)
+        case Some(JsString(`addOverlayConfig`)) => addOverlayConfigFormat.read(json)
+        case _ => deserializationError("UpdateAction expected")
+      }
+
     }
   }
 

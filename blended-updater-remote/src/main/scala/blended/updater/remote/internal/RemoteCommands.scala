@@ -1,5 +1,7 @@
 package blended.updater.remote.internal
 
+import blended.mgmt.base.AddOverlayConfig
+import blended.mgmt.base.AddRuntimeConfig
 import blended.updater.remote.RemoteUpdater
 import java.io.File
 import blended.updater.config.RuntimeConfig
@@ -22,17 +24,19 @@ class RemoteCommands(updater: RemoteUpdater) {
 
   def renderContainerState(state: ContainerState): String = {
     s"""Container ID: ${state.containerId}
-      |  active profile: ${state.activeProfile.mkString}
-      |  valid profiles: ${state.validProfiles.mkString(", ")}
-      |  invalid profiles: ${state.invalidProfiles.mkString(", ")}
-      |  outstanding actions: ${
+        |  active profile: ${state.activeProfile.mkString}
+        |  valid profiles: ${state.validProfiles.mkString(", ")}
+        |  invalid profiles: ${state.invalidProfiles.mkString(", ")}
+        |  outstanding actions: ${
       state.outstandingActions.map {
         // TODO: overlays
-        case StageProfile(p, o) => s"stage ${p.name}-${p.version}"
-        case ActivateProfile(n, v, o) => s"activate ${n}-${v}"
+        case AddRuntimeConfig(rc, _) => s"add runtime config ${rc.name}-${rc.version}"
+        case AddOverlayConfig(oc, _) => s"add overlay config ${oc.name}-${oc.version}"
+        case StageProfile(n, v, o, _) => s"stage ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
+        case ActivateProfile(n, v, o, _) => s"activate ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
       }.mkString(", ")
     }
-      |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
+        |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
   }
 
   def remoteShow(): String = {
@@ -69,9 +73,10 @@ class RemoteCommands(updater: RemoteUpdater) {
     updater.getRuntimeConfigs().find(rc => rc.name == profileName && rc.version == profileVersion) match {
       case None => println(s"Profile '${profileName}-${profileVersion}' not found")
       case Some(rc) =>
-        // FIXME: support for overlay 
-        updater.addAction(containerId, StageProfile(rc, Set()))
-        println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${rc}")
+        // FIXME: support for overlay
+        updater.addAction(containerId, AddRuntimeConfig(rc))
+        updater.addAction(containerId, StageProfile(profileName, profileVersion, Set()))
+        println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${profileName}-${profileVersion}")
     }
   }
 

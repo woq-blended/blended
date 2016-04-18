@@ -15,6 +15,8 @@ import akka.routing.BalancingPool
 import akka.util.Timeout
 import blended.mgmt.base.ServiceInfo
 import blended.mgmt.base.UpdateAction
+import blended.mgmt.base.{AddRuntimeConfig => UAAddRuntimeConfig}
+import blended.mgmt.base.{AddOverlayConfig => UAAddOverlayConfig}
 import blended.mgmt.base.{ActivateProfile => UAActivateProfile}
 import blended.mgmt.base.{StageProfile => UAStageProfile}
 import blended.updater.config.Artifact
@@ -37,12 +39,12 @@ import scala.util.Success
 import scala.util.Try
 
 class Updater(
-               installBaseDir: File,
-               profileActivator: ProfileActivator,
-               restartFramework: () => Unit,
-               config: UpdaterConfig,
-               launchedProfileDir: Option[File],
-               launchedProfileId: Option[Updater.ProfileId])
+  installBaseDir: File,
+  profileActivator: ProfileActivator,
+  restartFramework: () => Unit,
+  config: UpdaterConfig,
+  launchedProfileDir: Option[File],
+  launchedProfileId: Option[Updater.ProfileId])
   extends Actor
     with ActorLogging {
 
@@ -203,28 +205,52 @@ class Updater(
   }
 
   def handleUpdateAction(event: UpdateAction): Unit = event match {
-    case UAStageProfile(runtimeConfig, overlayConfigs) =>
-      log.debug("Received stage profile request (via event stream) for {}-{}",
+    case UAAddRuntimeConfig(runtimeConfig, _) =>
+      log.debug("Received add runtime config request (via event stream) for {}-{}",
         Array(runtimeConfig.name, runtimeConfig.version))
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
-        log.debug("Finished stage profile request (via event stream) for {}-{} with result: {}",
+        log.debug("Finished add runtime config request (via event stream) for {}-{} with result: {}",
           Array(runtimeConfig.name, runtimeConfig.version, x))
       }
 
-    case UAActivateProfile(name, version, overlays) =>
-      log.debug("Received activate profile request (via event stream) for {}-{}",
-        Array(name, version))
+    case UAAddOverlayConfig(overlayConfig, _) =>
+      log.debug("Received add overlay config request (via event stream) for {}-{}",
+        Array(overlayConfig.name, overlayConfig.version))
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
-      self.ask(ActivateProfile(nextId(), name, version, overlays))(timeout).onComplete { x =>
-        log.debug("Finished activation profile request (via event stream) for {}-{} with result: {}",
-          Array(name, version, x))
+      self.ask(AddOverlayConfig(nextId(), overlayConfig))(timeout).onComplete { x =>
+        log.debug("Finished add overlay config request (via event stream) for {}-{} with result: {}",
+          Array(overlayConfig.name, overlayConfig.version, x))
+      }
+
+    case UAStageProfile(name, version, overlayRefs, _) =>
+      log.debug("Received stage profile request (via event stream) for {}-{} and overlays: ",
+        Array(name, version, overlayRefs))
+
+      implicit val ec = context.system.dispatcher
+      val timeout = new Timeout(10, TimeUnit.MINUTES)
+
+      self.ask(StageProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
+        log.debug("Finished stage profile request (via event stream) for {}-{} and overlays {} with result: {}",
+          Array(name, version, overlayRefs, x))
+      }
+
+    case UAActivateProfile(name, version, overlayRefs, _) =>
+      log.debug("Received activate profile request (via event stream) for {}-{} and overlays: {}",
+        Array(name, version, overlayRefs))
+
+      implicit val ec = context.system.dispatcher
+      val timeout = new Timeout(10, TimeUnit.MINUTES)
+
+      self.ask(ActivateProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
+        log.debug("Finished activation profile request (via event stream) for {}-{} and overlays {} with result: {}",
+          Array(name, version, overlayRefs, x))
       }
   }
 
@@ -705,12 +731,12 @@ object Updater {
   final case class OperationFailed(requestId: String, reason: String) extends Reply
 
   def props(
-             baseDir: File,
-             profileActivator: ProfileActivator,
-             restartFramework: () => Unit,
-             config: UpdaterConfig,
-             launchedProfileDir: File = null,
-             launchedProfileId: ProfileId = null): Props = {
+    baseDir: File,
+    profileActivator: ProfileActivator,
+    restartFramework: () => Unit,
+    config: UpdaterConfig,
+    launchedProfileDir: File = null,
+    launchedProfileId: ProfileId = null): Props = {
 
     Props(new Updater(
       installBaseDir = baseDir,
@@ -731,14 +757,14 @@ object Updater {
    * Internal working state of in-progress stagings.
    */
   private case class State(
-                            requestId: String,
-                            requestActor: ActorRef,
-                            config: LocalRuntimeConfig,
-                            artifactsToDownload: Seq[ArtifactInProgress],
-                            pendingArtifactsToUnpack: Seq[ArtifactInProgress],
-                            artifactsToUnpack: Seq[ArtifactInProgress],
-                            overlays: LocalOverlays,
-                            issues: Seq[String]) {
+    requestId: String,
+    requestActor: ActorRef,
+    config: LocalRuntimeConfig,
+    artifactsToDownload: Seq[ArtifactInProgress],
+    pendingArtifactsToUnpack: Seq[ArtifactInProgress],
+    artifactsToUnpack: Seq[ArtifactInProgress],
+    overlays: LocalOverlays,
+    issues: Seq[String]) {
 
     val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 

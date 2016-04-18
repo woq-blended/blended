@@ -16,7 +16,7 @@
 
 package blended.mgmt.base
 
-import org.scalatest.{ Matchers, WordSpec }
+import org.scalatest.{Matchers, WordSpec}
 import blended.updater.config.RuntimeConfig
 import scala.collection.immutable
 import blended.updater.config.BundleConfig
@@ -28,8 +28,8 @@ class ContainerInfoSpec extends WordSpec with Matchers {
   "ContainerInfo" should {
 
     val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
-    val containerInfo = ContainerInfo("uuid", Map("fooo" -> "bar"), List(serviceInfo))
-    val expectedJson = """{"containerId":"uuid","properties":{"fooo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
+    val containerInfo = ContainerInfo("uuid", Map("foo" -> "bar"), List(serviceInfo))
+    val expectedJson = """{"containerId":"uuid","properties":{"foo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
 
     "serialize to Json correctly" in {
       import blended.mgmt.base.json._
@@ -63,13 +63,13 @@ class ContainerInfoSpec extends WordSpec with Matchers {
 
   "ContainerRegistryResponseOK" should {
 
-    val stageAction = StageProfile(
-      runtimeConfig = RuntimeConfig(name = "testprofile", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:g:a:v", startLevel = 0))),
-      overlays = Set()
-    )
+    val runtimeConfig = RuntimeConfig(name = "testprofile", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:g:a:v", startLevel = 0)))
+
+    val addAction = AddRuntimeConfig(runtimeConfig)
+    val stageAction = StageProfile(runtimeConfig.name, runtimeConfig.version, overlays = Set())
     val activateAction = ActivateProfile(profileName = "testprofile", profileVersion = "1", overlays = Set())
 
-    val response = ContainerRegistryResponseOK("uuid", immutable.Seq(stageAction, activateAction))
+    val response = ContainerRegistryResponseOK("uuid", immutable.Seq(addAction, stageAction, activateAction))
 
     "serialize and deserialize result in equal object" in {
       import blended.mgmt.base.json._
