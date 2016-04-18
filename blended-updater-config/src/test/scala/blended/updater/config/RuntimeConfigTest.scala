@@ -108,20 +108,20 @@ class RuntimeConfigTest
       fc.get
     })
 
-//    "should read but not validate" in {
-//      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
-//      rcTry shouldBe a[Success[_]]
-//
-//      val rc = rcTry.get
-//      val rrc = ResolvedRuntimeConfig(rc, features.take(1))
-//      rc.bundles should have size (1)
-//      rc.features should have size (2)
-//      rrc.allBundles should have size (1)
-//
-//      val validate = rrc.validate()
-//      validate should have length (1)
-//      validate.head should include("one bundle with startLevel '0'")
-//    }
+    //    "should read but not validate" in {
+    //      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
+    //      rcTry shouldBe a[Success[_]]
+    //
+    //      val rc = rcTry.get
+    //      val rrc = ResolvedRuntimeConfig(rc, features.take(1))
+    //      rc.bundles should have size (1)
+    //      rc.features should have size (2)
+    //      rrc.allBundles should have size (1)
+    //
+    //      val validate = rrc.validate()
+    //      validate should have length (1)
+    //      validate.head should include("one bundle with startLevel '0'")
+    //    }
 
     val resolver = FeatureResolver
 
@@ -265,6 +265,19 @@ class RuntimeConfigTest
         )
         assert(res === Some(Success(expectedTargetFile)))
         assert(Source.fromFile(expectedTargetFile).getLines.drop(2).toSet === Set("test.prop=NEW_VALUE", "test.prop2=TEST_PROP2"))
+      }
+    }
+  }
+
+  "Download" - {
+    1.to(10).foreach { i =>
+      s"should download a local file (try ${i})" in {
+        withTestFiles("content", "") { (file, target) =>
+          assert(Source.fromFile(file).getLines().toList === List("content"), "Precondition failed")
+          val result = RuntimeConfig.download(file.toURI().toString(), target)
+          assert(result === Success(target))
+          assert(Source.fromFile(target).getLines().toList === List("content"))
+        }
       }
     }
   }

@@ -19,8 +19,9 @@ import java.util.UUID
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeleteWhenNoFailure
 import blended.testsupport.TestFile.DeletePolicy
+import blended.updater.config.Artifact
 
-class BlockingDownloaderTest
+class ArtifactDownloaderTest
     extends TestKit(ActorSystem("test"))
     with FreeSpecLike
     with ImplicitSender
@@ -33,29 +34,18 @@ class BlockingDownloaderTest
     TestKit.shutdownActorSystem(system)
   }
 
-  "Reference" - {
-    "Download a local file" in {
-      withTestFiles("content", "") { (file, target) =>
-        import sys.process._
-        file.#>(target).!
-        Thread.sleep(1)
-        val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
-        assert("content" === downloadedContent)
-      }
-    }
-  }
-
-  "DownloadActor" - {
-    "Download of a local file should work" in {
+  "ArtifactDownloader" - {
+    "Download of a local file (without checksum) should work" in {
       val id = nextId()
       withTestFiles("content", "") { (file, target) =>
-        val actorRef = system.actorOf(BlockingDownloader.props())
-        actorRef ! BlockingDownloader.Download(id, file.toURI().toString(), target)
-        val msg = expectMsgType[BlockingDownloader.DownloadFinished]
-        assert(msg.url === file.toURI().toString())
-        assert(msg.file === target)
-        val downloadedContent = Source.fromFile(target).getLines().mkString("\n")
-        assert("content" === downloadedContent)
+        assert(Source.fromFile(file).getLines().toList === List("content"), "Precondition failed")
+        target.delete()
+        val actorRef = system.actorOf(ArtifactDownloader.props())
+        actorRef ! ArtifactDownloader.Download(id, Artifact(url = file.toURI().toString()), target)
+        fishForMessage() {
+          case ArtifactDownloader.DownloadFinished(`id`) => true
+        }
+        assert(Source.fromFile(target).getLines().toList === List("content"))
       }
     }
 
@@ -63,12 +53,13 @@ class BlockingDownloaderTest
       val id = nextId()
       withTestFiles("content", "") { (file, target) =>
         file.delete()
-        val actorRef = system.actorOf(BlockingDownloader.props())
-        actorRef ! BlockingDownloader.Download(id, file.toURI().toString(), target)
-        val msg = expectMsgPF() {
-          case BlockingDownloader.DownloadFailed(id, msg, file, ex) => (msg, ex)
+        target.delete()
+        val actorRef = system.actorOf(ArtifactDownloader.props())
+        val artifact = Artifact(url = file.toURI().toString())
+        actorRef ! ArtifactDownloader.Download(id, artifact, target)
+        fishForMessage() {
+          case ArtifactDownloader.DownloadFailed(`id`, ex) => true
         }
-        assert(msg._1 === file.toURI().toString())
       }
     }
 

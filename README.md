@@ -5,7 +5,7 @@
 
 # Project Blended
 
-This project is dedicated to provide reusable components for developing OSGI based application. It builds on top of Karaf, Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray. 
+This project is dedicated to provide reusable components for developing OSGI based application. It builds on top of Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray. 
 
 The project documentation has moved to its own [github pages repository](https://github.com/woq/woq.github.io) and is live at [http://www.wayofquality.de/projects/blended](http://www.wayofquality.de/projects/blended). We are currently busy getting the initial use cases documented. Stay tuned for more to come ...
 

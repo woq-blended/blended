@@ -16,14 +16,27 @@
 
 package blended.launcher
 
-import java.io.{ OutputStream, InputStream, File }
-import java.net._
+import java.io.File
+import java.io.FileOutputStream
+import java.net.URLClassLoader
+import java.util.Hashtable
+import java.util.Properties
 import java.util.ServiceLoader
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.immutable.Seq
-import scala.collection.immutable.Map
-import scala.util.Try
-import scala.util.control.NonFatal
+
+import blended.launcher.config.LauncherConfig
+import blended.launcher.internal.ARM
+import blended.launcher.internal.Logger
+import blended.updater.config.ConfigConverter
+import blended.updater.config.LocalOverlays
+import blended.updater.config.LocalRuntimeConfig
+import blended.updater.config.ProfileLookup
+import blended.updater.config.ResolvedRuntimeConfig
+import blended.updater.config.RuntimeConfig
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
+import de.tototec.cmdoption.CmdOption
+import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.CmdlineParserException
 import org.osgi.framework.Bundle
 import org.osgi.framework.Constants
 import org.osgi.framework.FrameworkEvent
@@ -33,23 +46,14 @@ import org.osgi.framework.launch.FrameworkFactory
 import org.osgi.framework.startlevel.BundleStartLevel
 import org.osgi.framework.startlevel.FrameworkStartLevel
 import org.osgi.framework.wiring.FrameworkWiring
-import blended.launcher.internal.Logger
-import blended.launcher.config.LauncherConfig
-import de.tototec.cmdoption.CmdOption
-import de.tototec.cmdoption.CmdlineParser
-import de.tototec.cmdoption.CmdlineParserException
-import blended.updater.config.ConfigConverter
-import com.typesafe.config.ConfigFactory
-import blended.updater.config.RuntimeConfig
-import java.util.Properties
-import blended.updater.config.ProfileLookup
-import blended.launcher.runtime.Branding
-import java.util.Hashtable
-import blended.updater.config.LocalRuntimeConfig
+
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.immutable.Map
+import scala.collection.immutable.Seq
 import scala.util.Failure
 import scala.util.Success
-import com.typesafe.config.ConfigParseOptions
-import blended.updater.config.ResolvedRuntimeConfig
+import scala.util.Try
+import scala.util.control.NonFatal
 
 object Launcher {
 
@@ -64,6 +68,7 @@ object Launcher {
       conflictsWith = Array("--profile", "--profile-lookup")
     )
     def setPonfigFile(file: String): Unit = configFile = Option(file)
+
     var configFile: Option[String] = None
 
     @CmdOption(names = Array("--help", "-h"), description = "Show this help", isHelp = true)
@@ -74,6 +79,7 @@ object Launcher {
       conflictsWith = Array("--profile-lookup", "--config")
     )
     def setProfileDir(dir: String): Unit = profileDir = Option(dir)
+
     var profileDir: Option[String] = None
 
     @CmdOption(names = Array("--framework-restart", "-r"), args = Array("BOOLEAN"),
@@ -86,6 +92,7 @@ object Launcher {
       conflictsWith = Array("--profile", "--config")
     )
     def setProfileLookup(file: String): Unit = profileLookup = Option(file)
+
     var profileLookup: Option[String] = None
 
     @CmdOption(names = Array("--reset-profile-props"),
@@ -100,12 +107,18 @@ object Launcher {
     )
     var initProfileProps: Boolean = false
 
+    @CmdOption(names = Array("--write-system-properties"),
+      args = Array("FILE"),
+      description = "Show the additional system properties this launch configuration wants to set and exit")
+    def setWriteSystemProperties(file: String): Unit = writeSystemProperties = Option(new File(file).getAbsoluteFile())
+
+    var writeSystemProperties: Option[File] = None
   }
 
   /**
    * Entry point of the launcher application.
-   * 
-   * This methods will explicitly exit the VM! 
+   *
+   * This methods will explicitly exit the VM!
    */
   def main(args: Array[String]): Unit = {
     try {
@@ -175,7 +188,7 @@ object Launcher {
   /**
    * Use this method instead of `main` if you do not want to exit the VM
    * and instead get an [LauncherException] in case of a error.
-   * 
+   *
    * @throws LauncherException
    */
   def run(args: Array[String]): Unit = {
@@ -186,10 +199,20 @@ object Launcher {
 
     do {
       val configs = readConfigs(cmdline)
-      val createProperties = firstStart && (cmdline.resetProfileProps || cmdline.initProfileProps)
-      val launcher = createAndPrepareLaunch(configs, createProperties, cmdline.initProfileProps)
-      retVal = launcher.run()
-      firstStart = false
+      log.debug(s"Configs: ${configs}")
+      if (cmdline.writeSystemProperties.isDefined) {
+        val fileProps = new Properties();
+        configs.launcherConfig.systemProperties.foreach { case (k, v) => fileProps.setProperty(k, v) }
+        ARM.using(new FileOutputStream(cmdline.writeSystemProperties.get)) { stream =>
+          fileProps.store(stream, "Generated by Launcher")
+        }
+        retVal = 0
+      } else {
+        val createProperties = firstStart && (cmdline.resetProfileProps || cmdline.initProfileProps)
+        val launcher = createAndPrepareLaunch(configs, createProperties, cmdline.initProfileProps)
+        retVal = launcher.run()
+        firstStart = false
+      }
     } while (handleFrameworkRestart && retVal == 2)
 
     if (retVal != 0) throw new LauncherException("", errorCode = retVal)
@@ -203,6 +226,7 @@ object Launcher {
   def readConfigs(cmdline: Cmdline): Configs = {
     cmdline.configFile match {
       case Some(configFile) =>
+        log.debug(s"About to read configFile: ${configFile}")
         val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         Configs(LauncherConfig.read(config))
       case None =>
@@ -216,7 +240,7 @@ object Launcher {
 
         val profile = profileLookup match {
           case Some(pl) =>
-            s"${pl.profileBaseDir}/${pl.profileName}/${pl.profileVersion}"
+            pl.materializedDir.getPath()
           case None =>
             cmdline.profileDir match {
               case Some(profile) => profile
@@ -237,17 +261,32 @@ object Launcher {
         var brandingProps = Map(
           RuntimeConfig.Properties.PROFILE_DIR -> profileDir
         )
+        var overlayProps = Map[String, String]()
+
         profileLookup.foreach { pl =>
           brandingProps ++= Map(
             RuntimeConfig.Properties.PROFILE_LOOKUP_FILE -> new File(cmdline.profileLookup.get).getAbsolutePath(),
-            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath()
+            RuntimeConfig.Properties.PROFILES_BASE_DIR -> pl.profileBaseDir.getAbsolutePath(),
+            RuntimeConfig.Properties.OVERLAYS -> pl.overlays.map(or => s"${or.name}:${or.version}").mkString(",")
           )
+
+          val knownOverlays = LocalOverlays.findLocalOverlays(pl.profileBaseDir.getAbsoluteFile())
+          knownOverlays.find(ko => ko.overlayRefs == pl.overlays.toSet) match {
+            case None =>
+              if (!pl.overlays.isEmpty) {
+                sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
+              }
+            case Some(localOverlays) =>
+              val newOverlayProps = localOverlays.properties
+              log.debug("Found overlay provided properties: " + newOverlayProps)
+              overlayProps ++= newOverlayProps
+          }
         }
 
         Configs(
           launcherConfig = launchConfig.copy(
             branding = launchConfig.branding ++ brandingProps,
-            systemProperties = launchConfig.systemProperties + ("blended.container.home" -> profileDir)
+            systemProperties = (launchConfig.systemProperties ++ overlayProps) + ("blended.container.home" -> profileDir)
           ),
           profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
     }
@@ -295,14 +334,17 @@ object Launcher {
           1
       } finally {
         BrandingProperties.setLastBrandingProperties(new Properties())
-        Try { Runtime.getRuntime.removeShutdownHook(shutdownHook) }
+        Try {
+          Runtime.getRuntime.removeShutdownHook(shutdownHook)
+        }
       }
     }
   }
 
 }
 
-class Launcher private (config: LauncherConfig) {
+class Launcher private(config: LauncherConfig) {
+
   import Launcher._
 
   private[this] val log = Logger[Launcher]
@@ -413,7 +455,7 @@ class Launcher private (config: LauncherConfig) {
       log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
       log.info("Resolving installed bundles")
       val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
-      frameworkWiring.resolveBundles(null /* all bundles */ )
+      frameworkWiring.resolveBundles(null /* all bundles */)
       val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
       log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
     }

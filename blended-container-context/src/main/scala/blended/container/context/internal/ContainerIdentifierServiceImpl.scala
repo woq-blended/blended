@@ -19,6 +19,7 @@ class ContainerIdentifierServiceImpl(containerContext: ContainerContext, uuid: S
   override def getUUID(): String = uuid
 
   override def getProperties(): Properties = {
+    // always create a new Properties, as it is mutable
     val export = new Properties()
     props.foreach {
       case (k, v) =>

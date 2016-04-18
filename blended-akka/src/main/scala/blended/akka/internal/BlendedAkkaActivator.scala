@@ -21,8 +21,8 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
-import com.typesafe.config.{Config, ConfigFactory}
-import blended.container.context.{ContainerIdentifierService, ContainerContext}
+import com.typesafe.config.{ Config, ConfigFactory }
+import blended.container.context.{ ContainerIdentifierService, ContainerContext }
 import domino.capsule.Capsule
 import domino.DominoActivator
 import org.osgi.framework.BundleContext
@@ -37,13 +37,13 @@ object BlendedAkkaActivator {
 class BlendedAkkaActivator extends DominoActivator {
 
   private class AkkaCapsule(bundleContext: BundleContext, containerContext: ContainerContext)
-    extends ActorSystemActivator with Capsule {
+      extends ActorSystemActivator with Capsule {
 
     override def start(): Unit = start(bundleContext)
 
     override def stop(): Unit = stop(bundleContext)
 
-    def configure(osgiContext: BundleContext, system: ActorSystem) : Unit = {
+    def configure(osgiContext: BundleContext, system: ActorSystem): Unit = {
       val log = system.log
 
       log info "Registering Actor System as Service."
@@ -54,15 +54,7 @@ class BlendedAkkaActivator extends DominoActivator {
 
     override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
 
-    override def getActorSystemConfiguration(context: BundleContext): Config = {
-
-      val sysProps = ConfigFactory.systemProperties()
-      val envProps = ConfigFactory.systemEnvironment()
-
-      ConfigFactory.parseFile(
-        new File(containerContext.getContainerConfigDirectory, "application.conf")
-      ).withFallback(sysProps).withFallback(envProps).resolve()
-    }
+    override def getActorSystemConfiguration(context: BundleContext): Config = containerContext.getContainerConfig()
   }
 
   whenBundleActive {

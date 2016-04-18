@@ -20,10 +20,10 @@ function build {
 
 cd blended-parent
 
-build clean install
+build clean install "$@"
 
 cd ..
 
-build clean install -P parent
-build clean install -P updater
-build clean install -P build
+build clean install -P parent "$@"
+build clean install -P updater "$@"
+build clean install -P build "$@"

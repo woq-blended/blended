@@ -3,57 +3,81 @@ package blended.updater.internal
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
-
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
-
 import com.typesafe.config.ConfigFactory
-
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
 import blended.updater.Updater
-import blended.updater.Updater.RuntimeConfigActivated
-import blended.updater.Updater.RuntimeConfigActivationFailed
-import blended.updater.Updater.RuntimeConfigAdded
-import blended.updater.Updater.RuntimeConfigAdditionFailed
-import blended.updater.Updater.RuntimeConfigStaged
-import blended.updater.Updater.RuntimeConfigStagingFailed
 import blended.updater.config.LocalRuntimeConfig
 import blended.updater.config.RuntimeConfig
+import blended.updater.config.OverlayConfig
+import blended.updater.Updater.OperationSucceeded
+import blended.updater.Updater.OperationFailed
+import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.OverlayRef
+import scala.annotation.varargs
+import org.slf4j.LoggerFactory
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
 
+  private[this] val log = LoggerFactory.getLogger(classOf[Commands])
+
   val commandsWithDescription = Seq(
-    "show" -> "Show all known profiles",
-    "add" -> "Add a new profile",
-    "stage" -> "Stage a profile",
-    "activate" -> "Activate a profile"
+    "showProfiles" -> "Show all (staged) profiles",
+    "showRuntimeConfigs" -> "Show all known runtime configs",
+    "showOverlays" -> "Show all known overlays",
+    "registerProfile" -> "Add a new profile",
+    "registerOverlay" -> "Add a new overlay",
+    "stageProfile" -> "Stage a profile",
+    "activateProfile" -> "Activate a profile"
   )
 
-  def show(): AnyRef = {
+  def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
-    val configs = Await.result(
-      ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.RuntimeConfigs],
-      timeout.duration)
+    val activeProfile = env.map(env => Updater.ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(Set())))
+    log.debug("acitive profile: {}", activeProfile)
 
-    def format(config: LocalRuntimeConfig): String = {
-      val activeSuffix = env match {
-        case Some(e) if e.launchedProfileName == config.runtimeConfig.name && e.launchedProfileVersion == config.runtimeConfig.version => " [active]"
-        case _ => ""
-      }
-      s"${config.runtimeConfig.name}-${config.runtimeConfig.version}${activeSuffix}"
-    }
+    val profiles = Await.result(
+      ask(updater, Updater.GetProfiles(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
 
-    "staged: " + configs.staged.map(format).mkString(", ") + "\n" +
-      "pending: " + configs.pending.map(format).mkString(", ") + "\n" +
-      "invalid: " + configs.invalid.map(format).mkString(", ")
+    s"${profiles.size} profiles:\n${
+      profiles.map {
+        case p: Updater.Profile =>
+          val activePart = if (activeProfile.exists(_ == p.profileId)) " (active)" else ""
+          p.profileId + ": " + p.state + activePart
+      }.mkString("\n")
+    }"
   }
 
-  def add(file: File): AnyRef = {
-    val config = ConfigFactory.parseFile(file).resolve()
+  def showRuntimeConfigs(): AnyRef = {
+    implicit val timeout = Timeout(5, SECONDS)
+    val configs = Await.result(
+      ask(updater, Updater.GetRuntimeConfigs(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
+
+    s"${configs.size} runtime configs:\n${
+      configs.toList.map {
+        case LocalRuntimeConfig(c, _) => s"${c.runtimeConfig.name}-${c.runtimeConfig.version}"
+      }.sorted.mkString("\n")
+    }"
+  }
+
+  def showOverlays(): AnyRef = {
+    implicit val timeout = Timeout(5, SECONDS)
+    val configs = Await.result(
+      ask(updater, Updater.GetOverlays(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
+      timeout.duration).result
+
+    s"${configs.size} profiles:\n${configs.mkString("\n")}"
+  }
+
+  def registerRuntimeConfig(file: File): AnyRef = {
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val runtimeConfig = RuntimeConfig.read(config).get
     println("About to add: " + runtimeConfig)
 
@@ -61,42 +85,84 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     val reqId = UUID.randomUUID().toString()
     Await.result(
       ask(updater, Updater.AddRuntimeConfig(reqId, runtimeConfig)), timeout.duration) match {
-        case RuntimeConfigAdded(`reqId`) =>
+        case OperationSucceeded(`reqId`) =>
           "Added: " + runtimeConfig
-        case RuntimeConfigAdditionFailed(`reqId`, error) =>
+        case OperationFailed(`reqId`, error) =>
           "Failed: " + error
         case x =>
           "Error: " + x
       }
   }
 
-  def stage(name: String, version: String): AnyRef = {
-    implicit val timeout = Timeout(1, HOURS)
+  def registerOverlay(file: File): AnyRef = {
+    val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+    val overlayConfig = OverlayConfig.read(config).get
+    println("About to add: " + overlayConfig)
+
+    implicit val timeout = Timeout(5, SECONDS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.StageRuntimeConfig(reqId, name, version)), timeout.duration) match {
-        case RuntimeConfigStaged(`reqId`) =>
-          "Staged: " + name + " " + version
-        case RuntimeConfigStagingFailed(`reqId`, reason) =>
-          "Failed: " + reason
+      ask(updater, Updater.AddOverlayConfig(reqId, overlayConfig)), timeout.duration) match {
+        case OperationSucceeded(`reqId`) =>
+          "Added: " + overlayConfig
+        case OperationFailed(`reqId`, error) =>
+          "Failed: " + error
         case x =>
           "Error: " + x
       }
   }
 
-  def activate(name: String, version: String): AnyRef = {
+  def parseOverlays(overlayNameVersion: Seq[String]): Set[OverlayRef] = {
+    if (overlayNameVersion.size % 2 != 0) {
+      sys.error(s"Missing version for overlay ${overlayNameVersion.last}")
+    }
+    overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toSet
+  }
+
+  @varargs
+  def stageProfile(rcName: String, rcVersion: String, overlayNameVersion: String*): AnyRef = {
+    val overlays = parseOverlays(overlayNameVersion)
+    val overlaysAsString =
+      if (overlays.isEmpty) ""
+      else overlays.toList.sorted.map(o => s"${o.name}-${o.version}").mkString(" with ", " with ", "")
+
+    val asString = s"${rcName}-${rcVersion}${overlaysAsString}"
+
+    implicit val timeout = Timeout(1, HOURS)
+    val reqId = UUID.randomUUID().toString()
+    Await.result(
+      // TODO: support overlays
+      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays)), timeout.duration) match {
+        case OperationSucceeded(`reqId`) =>
+          "Staged: " + asString
+        case OperationFailed(`reqId`, reason) =>
+          "Stage failed: " + asString + "\nReason: " + reason
+        case x =>
+          "Stage failed: " + asString + "\nError: " + x
+      }
+  }
+
+  @varargs
+  def activateProfile(name: String, version: String, overlayNameVersion: String*): AnyRef = {
+    val overlays = parseOverlays(overlayNameVersion)
+    val overlaysAsString =
+      if (overlays.isEmpty) ""
+      else overlays.toList.sorted.map(o => s"${o.name}-${o.version}").mkString(" with ", " with ", "")
+
+    val asString = s"${name}-${version}${overlaysAsString}"
+
     env match {
-      case Some(UpdateEnv(_, _, Some(lookupFile), _, _)) =>
+      case Some(UpdateEnv(_, _, Some(lookupFile), _, _, _)) =>
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateRuntimeConfig(reqId, name, version)), timeout.duration) match {
-            case RuntimeConfigActivated(`reqId`) =>
-              "Activated: " + name + " " + version
-            case RuntimeConfigActivationFailed(`reqId`, reason) =>
-              "Failed: " + reason
+          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays)), timeout.duration) match {
+            case OperationSucceeded(`reqId`) =>
+              "Activated: " + asString
+            case OperationFailed(`reqId`, reason) =>
+              "Activation failed: " + asString + "\nReason: " + reason
             case x =>
-              "Error: " + x
+              "Activation failed: " + asString + "\nError: " + x
           }
       case _ =>
         sys.error("No updateable environment detected. No profile lookup file defined.")

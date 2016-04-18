@@ -30,7 +30,7 @@
   <name>${project.artifactId}</name>
   <url>https://github.com/woq-blended/blended</url>
   <description>Common Settings and configurations for all blended modules.</description>
-  
+
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -95,7 +95,6 @@
 
     <activemq.version>5.13.0</activemq.version>
     <camel.version>2.16.1</camel.version>
-    <karaf.version>2.3.6</karaf.version>
     <hawtio.version>1.4.61</hawtio.version>
 
     <!--used -->
@@ -164,7 +163,7 @@
     <pax-swissbox.version>1.7.0</pax-swissbox.version>
     <pax-web.version>3.1.0</pax-web.version>
     <protobuf.version>2.5.0</protobuf.version>
-    <scala.micro.version>5</scala.micro.version>
+    <scala.micro.version>6</scala.micro.version>
     <scala.version>2.10</scala.version>
     <scalacheck.version>1.11.4</scalacheck.version>
     <scalactic.version>2.2.4</scalactic.version>
@@ -268,7 +267,7 @@
             </includes>
           </configuration>
         </plugin>
-    
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
@@ -289,7 +288,7 @@
             </execution>
           </executions>
         </plugin>
-        
+
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-gpg-plugin</artifactId>
@@ -500,6 +499,7 @@
           <configuration>
             <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
             <junitxml>.</junitxml>
+            <stdout>FT</stdout>
           </configuration>
           <executions>
             <execution>
@@ -513,7 +513,7 @@
 
       </plugins>
     </pluginManagement>
-    
+
     <plugins>
 
       <plugin>
@@ -601,7 +601,7 @@
 
     <profile>
       <id>release</id>
-      <activation> 
+      <activation>
         <activeByDefault>false</activeByDefault>
       </activation>
 
@@ -648,5 +648,3 @@
   </profiles>
 
 </project>
-
-

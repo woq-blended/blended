@@ -1,8 +1,12 @@
 package blended.launcher.jvmrunner
 
 import java.io.File
+import java.io.FileInputStream
 import java.io.OutputStream
 import java.io.InputStream
+import java.util.Properties
+import blended.launcher.internal.ARM
+
 import scala.util.Try
 import scala.util.control.NonFatal
 import org.slf4j.LoggerFactory
@@ -55,18 +59,47 @@ class JvmLauncher() {
           case None =>
             var retVal = 1
             do {
-              if (retVal == 2)
+              if (retVal == 2) {
                 log.debug("About to restart process")
-              else
+              } else {
                 log.debug("About to start process")
+              }
+
+              val sysProps: Map[String, String] = {
+                val sysPropsFile = File.createTempFile("jvmlauncher", ".properties")
+                val p = startJava(
+                  classpath = config.classpath,
+                  jvmOpts = config.jvmOpts.toArray,
+                  arguments = config.otherArgs.toArray ++ Array("--write-system-properties", sysPropsFile.getAbsolutePath()),
+                  interactive = false,
+                  errorsIntoOutput = false,
+                  directory = new File(".").getAbsoluteFile()
+                )
+                val retVal = p.waitFor
+                if (retVal == 0) {
+                  val props = new Properties()
+                  ARM.using(new FileInputStream(sysPropsFile)) { inStream =>
+                    props.load(inStream)
+                  }
+                  sysPropsFile.delete()
+                  props.asScala.toList.toMap
+                } else {
+                  log.error("Could not retrieve jvm properties")
+                  Map()
+                }
+              }
+
+              val xmsOpt = sysProps.collect { case ("blended.launcher.jvm.xms", x) => s"-Xms${x}" }
+              val xmxOpt = sysProps.collect { case ("blended.launcher.jvm.xmx", x) => s"-Xmx${x}" }
 
               val p = startJava(
                 classpath = config.classpath,
-                jvmOpts = config.jvmOpts.toArray,
+                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
                 arguments = config.otherArgs.toArray,
                 interactive = true,
                 errorsIntoOutput = false,
-                directory = new File(".").getAbsoluteFile())
+                directory = new File(".").getAbsoluteFile()
+              )
               log.debug("Process started: " + p)
               runningProcess = Option(p)
               retVal = p.waitFor
@@ -90,10 +123,10 @@ class JvmLauncher() {
   }
 
   case class Config(
-      classpath: Seq[File] = Seq(),
-      otherArgs: Seq[String] = Seq(),
-      action: Option[String] = None,
-      jvmOpts: Seq[String] = Seq()) {
+    classpath: Seq[File] = Seq(),
+    otherArgs: Seq[String] = Seq(),
+    action: Option[String] = None,
+    jvmOpts: Seq[String] = Seq()) {
 
     override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
   }
@@ -175,6 +208,7 @@ class JvmLauncher() {
 
     val outThread = new Thread("StreamCopyThread") {
       setDaemon(true)
+
       override def run {
         try {
           while (true) {
@@ -235,6 +269,7 @@ class JvmLauncher() {
   def asyncCopy(in: InputStream, out: OutputStream, immediately: Boolean = false): Thread =
     new Thread("StreamCopyThread") {
       setDaemon(true)
+
       override def run {
         try {
           copy(in, out, immediately)
@@ -244,6 +279,7 @@ class JvmLauncher() {
         }
         out.flush()
       }
+
       start
     }
 
@@ -267,7 +303,7 @@ class JvmLauncher() {
     } else {
       val buf = new Array[Byte](1024)
       var len = 0
-      while ({
+      while ( {
         len = in.read(buf)
         len > 0
       }) {

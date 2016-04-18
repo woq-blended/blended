@@ -17,10 +17,11 @@ package blended.container.context.internal
 
 import java.io.{BufferedInputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
 import java.util.Properties
-
 import blended.container.context.ContainerContext
 import org.slf4j.LoggerFactory
 import scala.collection.JavaConverters._
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -83,6 +84,17 @@ class ContainerContextImpl() extends ContainerContext {
 
   override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath
 
+  override def getContainerConfig(): Config = {
+    val sysProps = ConfigFactory.systemProperties()
+    val envProps = ConfigFactory.systemEnvironment()
+
+    // TODO: also read overlay config
+    ConfigFactory.parseFile(
+      new File(getContainerConfigDirectory, "application.conf")
+    ).withFallback(sysProps).withFallback(envProps).resolve()
+  }
+  
+  @deprecated
   override def readConfig(configId: String): Properties = {
 
     def resolveSystemProps(in : Properties) : Properties = {
@@ -136,6 +148,7 @@ class ContainerContextImpl() extends ContainerContext {
     resolveSystemProps(props)
   }
 
+  @deprecated
   override def writeConfig(configId: String, props: Properties): Unit = {
     val configFile = new File(getConfigFile(configId))
 

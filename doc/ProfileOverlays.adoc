@@ -1,0 +1,42 @@
+= Blended Launcher / Profile Overlays
+
+Blended comes with it's own launcher, which is required to be used to gain the full feature support.
+
+== Migration to Overlays
+
+(this part of the documentation need to be rewritten once the overlay feature is implemented)
+
+Currently, the launcher and updater supports plain profiles, identified by name and version.
+
+This concept needs to be extended by overlays.
+
+An overlay consists of:
+
+* name and version (= overlay id)
+* framework properties
+* system properties
+* properties
+* config generators
+
+An overlay does not change the framework nor the bundles and features of a profile.
+
+=== Applying an overlay
+
+Changing or setting an overlay to an profile is the same process as installing another profile.
+
+Multiple overlays can be applied to a profile, but the following criteria must be true:
+
+* All overlay must have distinct names
+* All criteria must have disjunct settings (properties and generators). especially:
+** a same property cannot be part of more than one applied overlay
+** a same config entry for the same generated file cannot be part of more than one applied overlay
+
+=== config generator
+
+A config generator consists of:
+
+* a target file
+* a set of config entries to be generated into that file
+
+At installation time, the config generator create the target file with the given set of config entries.
+

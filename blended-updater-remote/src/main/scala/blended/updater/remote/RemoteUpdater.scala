@@ -35,8 +35,9 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
     val invalid = props.get("profiles.invalid").toList.flatMap(_.split(",")).map(_.trim()).filter(!_.isEmpty())
 
     val newUpdateActions = state.outstandingActions.filter {
-      case ActivateProfile(n, v) => !active.exists(_ == s"${n}-${v}")
-      case StageProfile(rc) => !valid.exists(_ == s"${rc.name}-${rc.version}")
+      // TODO: support for overlays
+      case ActivateProfile(n, v, o, _) => !active.exists(_ == s"${n}-${v}")
+      case StageProfile(n, v, oc, _) => !valid.exists(_ == s"${n}-${v}")
       case _ => true
     }
 
