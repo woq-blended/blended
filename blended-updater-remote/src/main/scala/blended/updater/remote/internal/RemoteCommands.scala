@@ -19,7 +19,8 @@ class RemoteCommands(updater: RemoteUpdater) {
     "remoteStage" -> "Stage a profile for a remote container",
     "remoteActivate" -> "Activate a profile for a remote container",
     "registerProfile" -> "Register a profile",
-    "profiles" -> "Show all registered profiles"
+    "profiles" -> "Show all registered profiles",
+    "overlays" -> "Show all registered overlays"
   )
 
   def renderContainerState(state: ContainerState): String = {
@@ -54,6 +55,10 @@ class RemoteCommands(updater: RemoteUpdater) {
 
   def profiles(): String = {
     updater.getRuntimeConfigs().map(rc => s"${rc.name}-${rc.version}").mkString("\n")
+  }
+
+  def overlays(): String = {
+    updater.getOverlayConfigs().map(oc => s"${oc.name}-${oc.version}").mkString("\n")
   }
 
   def registerProfile(profileFile: String): Unit = {
