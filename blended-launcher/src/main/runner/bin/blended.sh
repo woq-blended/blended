@@ -27,6 +27,8 @@ setenv
 
 cd $BLENDED_HOME
 
+BLENDED_VERSION="2.0-RC1"
+
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 
@@ -49,10 +51,10 @@ OUTER_CP="${BLENDED_HOME}/lib/*"
 # semicolon-separated
 INNER_CP="\
 ${BLENDED_HOME}/etc;\
-${BLENDED_HOME}/lib/blended.launcher-1.2-SNAPSHOT.jar;\
+${BLENDED_HOME}/lib/blended.launcher-${BLENDED_VERSION}.jar;\
 ${BLENDED_HOME}/lib/config-1.2.1.jar;\
 ${BLENDED_HOME}/lib/org.osgi.core-5.0.0.jar;\
-${BLENDED_HOME}/lib/blended.updater.config-1.2-SNAPSHOT.jar;\
+${BLENDED_HOME}/lib/blended.updater.config-${BLENDED_VERSION}.jar;\
 ${BLENDED_HOME}/lib/de.tototec.cmdoption-0.4.2.jar;\
 ${BLENDED_HOME}/lib/scala-library-2.10.5.jar;\
 ${BLENDED_HOME}/lib/slf4j-api-1.7.12.jar;\

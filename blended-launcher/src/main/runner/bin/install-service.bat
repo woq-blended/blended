@@ -2,6 +2,8 @@
 set SCRIPTPATH=%~dp0
 set BLENDED_HOME=%SCRIPTPATH%..
 
+set BLENDED_VERSION=2.0-RC1
+
 set JAVA_HOME=%BLENDED_HOME%\jre
 rem Das muss die Server VM sein!
 rem Wenn client VM, dann fehlt eine Windows DLL msvcr71.dll
@@ -14,10 +16,10 @@ set SERVICE_ENV=BLENDED_HOME=%BLENDED_HOME%;JAVA_HOME=%JAVA_HOME%
 if defined BLENDED_ENV set SERVICE_ENV=%SERVICE_ENV%;%BLENDED_ENV%
 
 set CP=%BLENDED_HOME%/etc^
-;%BLENDED_HOME%/lib/blended.launcher-1.2-SNAPSHOT.jar^
+;%BLENDED_HOME%/lib/blended.launcher-%BLENDED_VERSION%.jar^
 ;%BLENDED_HOME%/lib/config-1.2.1.jar^
 ;%BLENDED_HOME%/lib/org.osgi.core-5.0.0.jar^
-;%BLENDED_HOME%/lib/blended.updater.config-1.2-SNAPSHOT.jar^
+;%BLENDED_HOME%/lib/blended.updater.config-%BLENDED_VERSION%.jar^
 ;%BLENDED_HOME%/lib/de.tototec.cmdoption-0.4.2.jar^
 ;%BLENDED_HOME%/lib/scala-library-2.10.5.jar^
 ;%BLENDED_HOME%/lib/slf4j-api-1.7.12.jar^

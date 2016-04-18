@@ -6,6 +6,7 @@ TOOLDIR="$(dirname "$0")"
 REPO="/Users/andreas/.m2/repository"
 
 BLENDED_HOME=${TOOLDIR}/../blended-launcher-demo/target/classes
+BLENDED_VERSION="2.0-RC1"
 
 RETVAL=2
 
@@ -14,8 +15,8 @@ while [ "x$RETVAL" == "x2" ]; do
 java\
  $JAVA_OPTS\
  -cp\
- "${TOOLDIR}/target/blended.launcher-1.2-SNAPSHOT.jar"\
-:"${TOOLDIR}/../blended-updater-config/target/blended.updater.config-1.2-SNAPSHOT.jar"\
+ "${TOOLDIR}/target/blended.launcher-${BLENDED_VERSION}.jar"\
+:"${TOOLDIR}/../blended-updater-config/target/blended.updater.config-${BLENDED_VERSION}.jar"\
 :"${REPO}/de/tototec/de.tototec.cmdoption/0.4.2/de.tototec.cmdoption-0.4.2.jar"\
 :"${REPO}/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.jar"\
 :"${REPO}/org/osgi/org.osgi.core/5.0.0/org.osgi.core-5.0.0.jar"\
