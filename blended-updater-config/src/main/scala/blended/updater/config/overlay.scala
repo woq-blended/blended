@@ -36,11 +36,11 @@ final case class OverlayRef(name: String, version: String) extends Ordered[Overl
  * @param generatedConfigs The config file generators.
  */
 final case class OverlayConfig(
-                                name: String,
-                                version: String,
-                                generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
-                                properties: Map[String, String] = Map()
-                              ) extends Ordered[OverlayConfig] {
+  name: String,
+  version: String,
+  generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
+  properties: Map[String, String] = Map()
+) extends Ordered[OverlayConfig] {
 
   override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
 
@@ -102,10 +102,10 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
       name = config.getString("name"),
       version = config.getString("version"),
       generatedConfigs = if (config.hasPath("configGenerator")) {
-        val gens = config.getObject("configGenerator").entrySet().asScala
-        gens.map { entry =>
-          val fileName = entry.getKey()
-          val genConfig = entry.getValue().asInstanceOf[ConfigObject].toConfig()
+        config.getObjectList("configGenerator").asScala.map { gen =>
+          val genConf = gen.toConfig()
+          val fileName = genConf.getString("file")
+          val genConfig = genConf.getObject("config").toConfig()
           GeneratedConfig(configFile = fileName, config = genConfig)
         }.toList
       } else Nil,
@@ -118,8 +118,11 @@ final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConf
       "name" -> overlayConfig.name,
       "version" -> overlayConfig.version,
       "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
-        genConfig.configFile -> genConfig.config.root().unwrapped()
-      }.toMap.asJava,
+        Map(
+          "file" -> genConfig.configFile,
+          "config" -> genConfig.config.root().unwrapped()
+        ).asJava
+      }.asJava,
       "properties" -> overlayConfig.properties.asJava
     ).asJava
     ConfigFactory.parseMap(config)
