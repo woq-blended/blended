@@ -457,7 +457,7 @@ class Updater(
           }
       }
 
-    log.info("Found potential runtime configs : {}", configFiles)
+    log.debug("Found potential runtime config files: {}", configFiles)
 
     // read configs
     val runtimeConfigs = configFiles.flatMap { runtimeConfigFile =>
@@ -482,21 +482,22 @@ class Updater(
         List()
       }
     }
-    log.info(s"Found runtime configs: ${runtimeConfigs}")
+    log.info(s"Found runtime configs: ${runtimeConfigs.zipWithIndex.map(wi => s"${wi._2}: ${wi._1}").mkString("\n")}")
 
     runtimeConfigs
   }
 
-  def scanForProfiles(): List[Profile] = {
+  def scanForProfiles(runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[Profile] = {
     log.debug("Scanning for profiles in: {}", installBaseDir)
 
-    val runtimeConfigsWithIssues = scanForRuntimeConfigs().flatMap { localConfig =>
+    val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs()).toList
+
+    val runtimeConfigsWithIssues = rcs.flatMap { localConfig =>
       val issues = localConfig.validate(
         includeResourceArchives = false,
         explodedResourceArchives = true,
         checkPropertiesFile = true).toList
-      log.debug("Found runtime config: {}", localConfig)
-      log.debug("Runtime config issues: {}", issues)
+      log.debug(s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: {}", issues)
       List(localConfig -> issues)
 
     }
@@ -516,10 +517,10 @@ class Updater(
         val overlayDir = new File(profileDir, "overlays")
         val overlayFiles = Option(overlayDir.listFiles()).getOrElse(Array()).filter(f => f.getName().endsWith(".conf")).toList
         if (overlayFiles.isEmpty) {
-          log.info("Could not found any overlay configs for profile: {}", localRuntimeConfig.profileFileLocation)
+          log.warn("Could not found any overlay configs for profile: {}", localRuntimeConfig.profileFileLocation)
           //          log.info("Migrating legacy profile. Generating base overlay config")
           //          // We create a transient base overlay
-          //          // TODO: Remove timely
+          // TODO: Remove timely
           //          List(Profile(localRuntimeConfig, LocalOverlays(Set(), profileDir), profileState(issues)))
           List()
         } else overlayFiles.flatMap { file =>
@@ -571,9 +572,10 @@ class Updater(
 
     case Scan =>
       overlayConfigs = scanForOverlayConfigs().toSet
-      runtimeConfigs = scanForRuntimeConfigs().toSet
+      val rcs = scanForRuntimeConfigs()
+      runtimeConfigs = rcs.toSet
 
-      val fullProfiles = scanForProfiles()
+      val fullProfiles = scanForProfiles(Option(rcs))
       profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
       log.debug("Profiles (after scan): {}", profiles)
 
