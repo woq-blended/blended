@@ -18,12 +18,6 @@ blended-itestsupport \
 blended-jms-utils \
 blended-jmx \
 blended-jolokia \
-blended-karaf-branding \
-blended-karaf-central \
-blended-karaf-demo \
-blended-karaf-features \
-blended-karaf-installer \
-blended-karaf-parent \
 blended-launcher \
 blended-mgmt-base \
 blended-mgmt-agent \
