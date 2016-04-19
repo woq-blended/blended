@@ -6,6 +6,7 @@ import java.io.OutputStream
 import java.io.InputStream
 import java.util.Properties
 import blended.launcher.internal.ARM
+import blended.updater.config.OverlayConfig
 
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -89,8 +90,8 @@ class JvmLauncher() {
                 }
               }
 
-              val xmsOpt = sysProps.collect { case ("blended.launcher.jvm.xms", x) => s"-Xms${x}" }
-              val xmxOpt = sysProps.collect { case ("blended.launcher.jvm.xmx", x) => s"-Xmx${x}" }
+              val xmsOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
+              val xmxOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
 
               val p = startJava(
                 classpath = config.classpath,

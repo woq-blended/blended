@@ -59,6 +59,11 @@ final case class OverlayConfig(
  */
 final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig], Map[String, String]) => OverlayConfig) {
 
+  object Properties {
+    val JVM_MAX_MEM = "blended.launcher.jvm.xmx"
+    val JVM_USE_MEM = "blended.launcher.jvm.xms"
+  }
+
   def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
     aggregateGeneratedConfigs(generatedConfigs) match {
       case Left(issues) => issues
