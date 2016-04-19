@@ -30,6 +30,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     "showProfiles" -> "Show all (staged) profiles",
     "showRuntimeConfigs" -> "Show all known runtime configs",
     "showOverlays" -> "Show all known overlays",
+    "registerRuntimeConfig" -> "Add a new runtime config",
     "registerProfile" -> "Add a new profile",
     "registerOverlay" -> "Add a new overlay",
     "stageProfile" -> "Stage a profile",
@@ -73,8 +74,10 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       ask(updater, Updater.GetOverlays(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
       timeout.duration).result
 
-    s"${configs.size} profiles:\n${configs.mkString("\n")}"
+    s"${configs.size} overlay configs:\n${configs.mkString("\n")}"
   }
+
+  def registerProfile(file: File): AnyRef = registerRuntimeConfig(file)
 
   def registerRuntimeConfig(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
