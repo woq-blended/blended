@@ -4,7 +4,6 @@ import java.io.File
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigObject
 import org.slf4j.LoggerFactory
 
 import _root_.scala.collection.immutable
@@ -173,12 +172,3 @@ final object LocalOverlays {
   }
 
 }
-
-/**
- * Definition of a config file generator.
- * The generator has a file name (relative to the profile) and will write the given config into the config file.
- *
- * @param configFile The relative config file name.
- * @param config     The config to be written into the config file.
- */
-case class GeneratedConfig(configFile: String, config: Config)
