@@ -270,7 +270,7 @@ object Launcher {
             RuntimeConfig.Properties.OVERLAYS -> pl.overlays.map(or => s"${or.name}:${or.version}").mkString(",")
           )
 
-          val knownOverlays = LocalOverlays.findLocalOverlays(pl.profileBaseDir.getAbsoluteFile())
+          val knownOverlays = LocalOverlays.findLocalOverlays(new File(profileDir).getAbsoluteFile())
           knownOverlays.find(ko => ko.overlayRefs == pl.overlays.toSet) match {
             case None =>
               if (!pl.overlays.isEmpty) {
