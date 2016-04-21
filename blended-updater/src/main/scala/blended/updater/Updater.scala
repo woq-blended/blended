@@ -542,9 +542,9 @@ class Updater(
                   case Seq() =>
                     // no conflicts, now check if already materialized
                     if (localOverlays.isMaterialized()) {
-                      List("Overlays not materialized")
-                    } else {
                       List()
+                    } else {
+                      List("Overlays not materialized")
                     }
                   case issues =>
                     log.error("Skipping found overlays file because it is not valid: {}. Issue: {}",
