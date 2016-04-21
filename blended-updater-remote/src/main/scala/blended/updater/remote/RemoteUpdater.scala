@@ -1,6 +1,7 @@
 package blended.updater.remote
 
 import blended.mgmt.base.ContainerInfo
+import blended.updater.config.OverlayConfig
 import blended.updater.config.RuntimeConfig
 import scala.collection.immutable
 import blended.mgmt.base.StageProfile
@@ -9,7 +10,8 @@ import blended.mgmt.base.ActivateProfile
 import org.slf4j.LoggerFactory
 import java.util.Date
 
-trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor =>
+trait RemoteUpdater {
+  self: RuntimeConfigPersistor with ContainerStatePersistor with OverlayConfigPersistor =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[RemoteUpdater])
 
@@ -19,7 +21,11 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
     val state = self.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
     val actions = state.outstandingActions
     val newActions =
-      if (!actions.exists { _ == action }) { actions ++ immutable.Seq(action) }
+      if (!actions.exists {
+        _ == action
+      }) {
+        actions ++ immutable.Seq(action)
+      }
       else actions
     self.updateContainerState(state.copy(outstandingActions = newActions))
   }
@@ -64,15 +70,17 @@ trait RemoteUpdater { self: RuntimeConfigPersistor with ContainerStatePersistor 
 
   def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = self.findRuntimeConfigs()
 
+  def getOverlayConfigs(): immutable.Seq[OverlayConfig] = self.findOverlayConfigs()
+
 }
 
 case class ContainerState(
-    containerId: String,
-    outstandingActions: immutable.Seq[UpdateAction] = immutable.Seq(),
-    activeProfile: Option[String] = None,
-    validProfiles: immutable.Seq[String] = immutable.Seq(),
-    invalidProfiles: immutable.Seq[String] = immutable.Seq(),
-    syncTimeStamp: Option[Long] = None) {
+  containerId: String,
+  outstandingActions: immutable.Seq[UpdateAction] = immutable.Seq(),
+  activeProfile: Option[String] = None,
+  validProfiles: immutable.Seq[String] = immutable.Seq(),
+  invalidProfiles: immutable.Seq[String] = immutable.Seq(),
+  syncTimeStamp: Option[Long] = None) {
 
   override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},outstandingActions=${outstandingActions}" +
     s",activeProfile=${activeProfile},validProfiles=${validProfiles},invalidProfiles=${invalidProfiles},syncTimeStamp=${syncTimeStamp.map(s => new Date(s))})"
@@ -81,7 +89,9 @@ case class ContainerState(
 
 trait ContainerStatePersistor {
   def findAllContainerStates(): immutable.Seq[ContainerState]
+
   def findContainerState(containerId: String): Option[ContainerState]
+
   def updateContainerState(containerState: ContainerState): Unit
 }
 
@@ -90,7 +100,14 @@ trait ContainerStatePersistor {
  */
 trait RuntimeConfigPersistor {
   def persistRuntimeConfig(runtimeConfig: RuntimeConfig): Unit
+
   def findRuntimeConfigs(): immutable.Seq[RuntimeConfig]
+}
+
+trait OverlayConfigPersistor {
+  def persistOverlayConfig(overlayConfig: OverlayConfig): Unit
+
+  def findOverlayConfigs(): immutable.Seq[OverlayConfig]
 }
 
 trait TransientRuntimeConfigPersistor extends RuntimeConfigPersistor {
@@ -100,6 +117,16 @@ trait TransientRuntimeConfigPersistor extends RuntimeConfigPersistor {
   override def persistRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = state += runtimeConfig
 
   override def findRuntimeConfigs(): immutable.Seq[RuntimeConfig] = state.to[immutable.Seq]
+}
+
+
+trait TransientOverlayConfigPersistor extends OverlayConfigPersistor {
+
+  private[this] var state: immutable.Set[OverlayConfig] = Set()
+
+  override def persistOverlayConfig(overlayConfig: OverlayConfig): Unit = state += overlayConfig
+
+  override def findOverlayConfigs(): immutable.Seq[OverlayConfig] = state.to[immutable.Seq]
 }
 
 trait TransientContainerStatePersistor extends ContainerStatePersistor {
@@ -122,4 +149,5 @@ trait TransientContainerStatePersistor extends ContainerStatePersistor {
 
 trait TransientPersistor
   extends TransientRuntimeConfigPersistor
-  with TransientContainerStatePersistor
+    with TransientContainerStatePersistor
+    with TransientOverlayConfigPersistor

@@ -6,6 +6,7 @@ import java.io.OutputStream
 import java.io.InputStream
 import java.util.Properties
 import blended.launcher.internal.ARM
+import blended.updater.config.OverlayConfig
 
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -76,21 +77,23 @@ class JvmLauncher() {
                   directory = new File(".").getAbsoluteFile()
                 )
                 val retVal = p.waitFor
-                if (retVal == 0) {
-                  val props = new Properties()
+                if (retVal != 0) {
+                  log.error(s"The launcher-process to retrieve the JVM properties exited with an unexpected return code: ${retVal}. We try to read the properties file anyway!")
+                }
+                val props = new Properties()
+                Try {
                   ARM.using(new FileInputStream(sysPropsFile)) { inStream =>
                     props.load(inStream)
                   }
-                  sysPropsFile.delete()
-                  props.asScala.toList.toMap
-                } else {
-                  log.error("Could not retrieve jvm properties")
-                  Map()
+                }.recover {
+                  case e: Throwable => log.error("Could not read properties file", e)
                 }
+                sysPropsFile.delete()
+                props.asScala.toList.toMap
               }
 
-              val xmsOpt = sysProps.collect { case ("blended.launcher.jvm.xms", x) => s"-Xms${x}" }
-              val xmxOpt = sysProps.collect { case ("blended.launcher.jvm.xmx", x) => s"-Xmx${x}" }
+              val xmsOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
+              val xmxOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
 
               val p = startJava(
                 classpath = config.classpath,
@@ -171,7 +174,9 @@ class JvmLauncher() {
     // lookup java by JAVA_HOME env variable
     val javaHome = System.getenv("JAVA_HOME")
     val java =
-      if (javaHome != null) s"${javaHome}/bin/java"
+      if (javaHome != null) s"${
+        javaHome
+      }/bin/java"
       else "java"
     log.debug("Using java executable: " + java)
 
@@ -181,8 +186,12 @@ class JvmLauncher() {
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
-    val propArgs = System.getProperties.asScala.map(p => s"-D${p._1}=${p._2}").toArray[String]
-    log.debug("Using property args: " + cpArgs.mkString(" "))
+    val propArgs = System.getProperties.asScala.map(p => s"-D${
+      p._1
+    }=${
+      p._2
+    }").toArray[String]
+    log.debug("Using property args: " + propArgs.mkString(" "))
 
     val command = Array(java) ++ cpArgs ++ jvmOpts ++ propArgs ++ arguments
 

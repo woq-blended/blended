@@ -19,14 +19,20 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       withTestFile(
         """name: overlay
           |version: 1
-          |configGenerator {
-          |  file1 {
-          |    file1key: value
+          |configGenerator = [
+          |  {
+          |    file = file1
+          |    config = {
+          |      file1key: value
+          |    }
+          |  },
+          |  {
+          |    file = etc/file2.conf
+          |    config = {
+          |      file2key: value
+          |    }
           |  }
-          |  etc/file2 {
-          |    file2key: value
-          |  }
-          |}""".stripMargin) { file =>
+          |]""".stripMargin) { file =>
           val config = ConfigFactory.parseFile(file).resolve()
           val read = OverlayConfig.read(config)
           read.isSuccess shouldEqual true
@@ -38,7 +44,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
               config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
             ),
             GeneratedConfig(
-              configFile = "etc/file2",
+              configFile = "etc/file2.conf",
               config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
             )
           )

@@ -4,7 +4,6 @@ import java.io.File
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigObject
 import org.slf4j.LoggerFactory
 
 import _root_.scala.collection.immutable
@@ -16,116 +15,6 @@ import scala.util.Right
 import scala.util.Success
 import scala.util.Try
 
-/**
- * A reference to an overlay config.
- *
- * @param name    The name of the overlay.
- * @param version The version of the overlay.
- */
-final case class OverlayRef(name: String, version: String) extends Ordered[OverlayRef] {
-  override def toString(): String = name + "-" + version
-
-  override def compare(other: OverlayRef): Int = toString().compare(other.toString())
-}
-
-/**
- * Definition of an overlay.
- *
- * @param name             The name of the overlay.
- * @param version          The version of the overlay.
- * @param generatedConfigs The config file generators.
- */
-final case class OverlayConfig(
-                                name: String,
-                                version: String,
-                                generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
-                                properties: Map[String, String] = Map()
-                              ) extends Ordered[OverlayConfig] {
-
-  override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
-
-  def overlayRef: OverlayRef = OverlayRef(name, version)
-
-  def validate(): Seq[String] = {
-    OverlayConfig.findCollisions(generatedConfigs)
-  }
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},generatedConfigs=${generatedConfigs})"
-
-}
-
-/**
- * Companion for [[OverlayConfig]] containing common useful operations.
- */
-final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig], Map[String, String]) => OverlayConfig) {
-
-  def findCollisions(generatedConfigs: Seq[GeneratedConfig]): Seq[String] = {
-    aggregateGeneratedConfigs(generatedConfigs) match {
-      case Left(issues) => issues
-      case _ => Nil
-    }
-  }
-
-  def aggregateGeneratedConfigs(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
-    // seen configurations per target file
-    var fileToConfig: Map[String, Map[String, Object]] = Map()
-    val issues = generatedConfigs.flatMap { gc =>
-      val newConfig = gc.config.root().unwrapped().asScala.toMap
-      fileToConfig.get(gc.configFile) match {
-        case None =>
-          // no collision
-          fileToConfig += gc.configFile -> newConfig
-          Seq()
-        case Some(existingConfig) =>
-          // check collisions
-          val collisions = existingConfig.keySet.intersect(newConfig.keySet)
-          fileToConfig += gc.configFile -> (existingConfig ++ newConfig)
-          collisions.map(c => s"Double defined config key found: ${c}")
-      }
-    }
-    if (issues.isEmpty) Right(fileToConfig) else Left(issues.toList)
-  }
-
-
-  def read(config: Config): Try[OverlayConfig] = Try {
-
-    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-      if (default.isDefined && !config.hasPath(key)) {
-        default.get.apply()
-      } else {
-        config.getConfig(key).entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap
-      }
-
-    OverlayConfig(
-      name = config.getString("name"),
-      version = config.getString("version"),
-      generatedConfigs = if (config.hasPath("configGenerator")) {
-        val gens = config.getObject("configGenerator").entrySet().asScala
-        gens.map { entry =>
-          val fileName = entry.getKey()
-          val genConfig = entry.getValue().asInstanceOf[ConfigObject].toConfig()
-          GeneratedConfig(configFile = fileName, config = genConfig)
-        }.toList
-      } else Nil,
-      properties = configAsMap("properties", Some(() => Map()))
-    )
-  }
-
-  def toConfig(overlayConfig: OverlayConfig): Config = {
-    val config = Map(
-      "name" -> overlayConfig.name,
-      "version" -> overlayConfig.version,
-      "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
-        genConfig.configFile -> genConfig.config.root().unwrapped()
-      }.toMap.asJava,
-      "properties" -> overlayConfig.properties.asJava
-    ).asJava
-    ConfigFactory.parseMap(config)
-  }
-
-}
 
 /**
  * A materialized set of overlays.
@@ -269,6 +158,7 @@ final object LocalOverlays {
   def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
     val overlaysDir = new File(profileDir, "overlays")
     val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
+    log.debug(s"About to find local overlays. Candidates: ${candidates}")
     val localOverlays = candidates.toList.flatMap { file =>
       val overlay = Try(ConfigFactory.parseFile(file)).flatMap(c => LocalOverlays.read(c, profileDir))
       overlay match {
@@ -283,12 +173,3 @@ final object LocalOverlays {
   }
 
 }
-
-/**
- * Definition of a config file generator.
- * The generator has a file name (relative to the profile) and will write the given config into the config file.
- *
- * @param configFile The relative config file name.
- * @param config     The config to be written into the config file.
- */
-case class GeneratedConfig(configFile: String, config: Config)
