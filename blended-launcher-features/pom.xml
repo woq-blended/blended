@@ -612,40 +612,6 @@
 			<version>${blended.version}</version>
 		</dependency>
 
-    <!-- UNSORTED -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.neo4j.api</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.jolokia</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-api</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-service</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
-
-
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-log4j2</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
-
 	</dependencies>
 
 	<build>
