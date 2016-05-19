@@ -22,14 +22,9 @@ import java.io.OutputStream;
 
 public class FileReader {
 
-  public static byte[] readFile(final String location) throws Exception {
+  public static byte[] readStream(InputStream is) throws Exception {
 
-    final InputStream is = ResourceResolver.openFile(location);
     final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-    if (is == null) {
-      throw new Exception("Unable to read [" + location + "]");
-    }
 
     StreamCopySupport.copyStream(is, bos);
 
@@ -37,6 +32,12 @@ public class FileReader {
     safeClose(bos);
 
     return bos.toByteArray();
+  }
+
+  public static byte[] readFile(final String location) throws Exception {
+
+    final InputStream is = ResourceResolver.openFile(location);
+    return readStream(is);
   }
 
   private static void safeClose(final InputStream is) {

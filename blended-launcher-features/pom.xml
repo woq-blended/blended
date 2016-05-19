@@ -586,35 +586,37 @@
 			<version>${jersey.version}</version>
 		</dependency>
 
-		<!-- UNSORTED -->
+		<!-- blended managment -->
 
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.persistence</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.mgmt.agent</artifactId>
+      <version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.container.registry</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.mgmt.rest</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.persistence</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
+    <!-- UNSORTED -->
 
 		<!-- <dependency> -->
 		<!-- <groupId>${project.groupId}</groupId> -->
 		<!-- <artifactId>blended.neo4j.api</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.container.registry</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.mgmt.agent</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.mgmt.rest</artifactId> -->
 		<!-- <version>${blended.version}</version> -->
 		<!-- </dependency> -->
 
