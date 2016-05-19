@@ -17,33 +17,44 @@
 package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
-import akka.actor.{ Actor, ActorRefFactory }
+
+import akka.actor.Actor
+import akka.actor.ActorRefFactory
+import akka.actor.Props
 import akka.util.Timeout
-import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
+import blended.akka.OSGIActor
+import blended.akka.OSGIActorConfig
+import blended.akka.ProductionEventSource
+import blended.mgmt.base.ContainerInfo
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.RemoteContainerState
+import blended.mgmt.base.UpdateContainerInfo
 import blended.mgmt.base.json._
-import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
+import blended.spray.SprayOSGIBridge
+import blended.spray.SprayOSGIServlet
+import blended.updater.remote.RemoteUpdater
+import com.typesafe.config.Config
+import org.slf4j.LoggerFactory
+import spray.http.MediaTypes
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
 import spray.routing._
 import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
-import scala.concurrent.duration._
-import akka.actor.Props
-import com.typesafe.config.Config
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
-import blended.mgmt.base.UpdateContainerInfo
-import blended.mgmt.base.UpdateAction
-import org.slf4j.LoggerFactory
-import blended.updater.remote.RemoteUpdater
 
-trait CollectorService extends HttpService { this: SprayJsonSupport =>
+import scala.collection.immutable
+import scala.concurrent.duration._
+
+trait CollectorService extends HttpService {
+  this: SprayJsonSupport =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
-  val collectorRoute = {
+  def getCurrentState(): immutable.Seq[RemoteContainerState]
+
+  def collectorRoute: Route = {
 
     implicit val timeout = Timeout(1.second)
 
@@ -58,13 +69,29 @@ trait CollectorService extends HttpService { this: SprayJsonSupport =>
       }
     }
   }
+
+  def infoRoute: Route = {
+    path("container") {
+      get {
+        respondWithMediaType(MediaTypes.`application/json`) {
+          complete {
+            log.debug("About to provide container infos")
+            val res = getCurrentState()
+            log.debug("Result: {}", res)
+            res
+          }
+        }
+      }
+    }
+  }
+
 }
 
 case class ManagementCollectorConfig(
-    servletSettings: ConnectorSettings,
-    routingSettings: RoutingSettings,
-    contextPath: String,
-    remoteUpdater: RemoteUpdater) {
+  servletSettings: ConnectorSettings,
+  routingSettings: RoutingSettings,
+  contextPath: String,
+  remoteUpdater: RemoteUpdater) {
 
   override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath},remoteUpdater=${remoteUpdater})"
 }
@@ -84,7 +111,7 @@ object ManagementCollector {
 }
 
 class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfig)
-    extends OSGIActor(cfg)
+  extends OSGIActor(cfg)
     with CollectorService
     with ProductionEventSource
     with SprayJsonSupport {
@@ -92,9 +119,8 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
   type ContainerId = String
 
   private[this] val mylog = LoggerFactory.getLogger(classOf[ManagementCollector])
-  
-  // mutable vars
-  private[this] var cachedActions: Map[ContainerId, Seq[UpdateAction]] = Map()
+
+  private[this] var containerStates: Map[ContainerId, RemoteContainerState] = Map()
 
   // Required by CollectorService
   override implicit def actorRefFactory: ActorRefFactory = context
@@ -103,8 +129,8 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
     mylog.debug("Processing container info: {}", info)
     sendEvent(UpdateContainerInfo(info))
     val updater = config.remoteUpdater
-    updater.updateContainerState(info)
     val newActions = updater.getContainerActions(info.containerId)
+    containerStates += info.containerId -> RemoteContainerState(info, newActions)
     ContainerRegistryResponseOK(info.containerId, newActions)
   }
 
@@ -120,7 +146,9 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
 
     val servlet = new SprayOSGIServlet with SprayOSGIBridge {
       override def routeActor = routingActor
+
       override def connectorSettings = servletSettings
+
       override def actorSystem = actorSys
     }
 
@@ -130,9 +158,13 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
       "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
-    context.become(runRoute(collectorRoute))
+    context.become(runRoute(collectorRoute ~ infoRoute))
   }
 
   def receive: Receive = Actor.emptyBehavior
 
+  override def getCurrentState(): immutable.Seq[RemoteContainerState] = {
+    mylog.debug("About to send state: {}", containerStates)
+    containerStates.values.toList
+  }
 }

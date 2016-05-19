@@ -19,3 +19,4 @@ case class ContainerInfo(containerId: String, properties: Map[String, String], s
 
 case class ContainerRegistryResponseOK(id: String, actions: immutable.Seq[UpdateAction] = immutable.Seq())
 
+case class RemoteContainerState(containerInfo: ContainerInfo, outstandingUpdateActions: immutable.Seq[UpdateAction])

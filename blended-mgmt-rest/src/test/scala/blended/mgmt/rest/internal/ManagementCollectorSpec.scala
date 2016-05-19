@@ -17,6 +17,7 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
+import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.json._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
@@ -25,15 +26,18 @@ import spray.testkit.ScalatestRouteTest
 import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ContainerRegistryResponseOK
 
+import scala.collection.immutable.Seq
+
 class ManagementCollectorSpec
   extends WordSpec
-  with Matchers
-  with MockitoSugar
-  with ScalatestRouteTest
-  with CollectorService
-  with SprayJsonSupport {
+    with Matchers
+    with MockitoSugar
+    with ScalatestRouteTest
+    with CollectorService
+    with SprayJsonSupport {
 
-  val testLatch = TestLatch(1)
+  val testPostLatch = TestLatch(1)
+  val testGetLatch = TestLatch(1)
 
   "The Management collector" should {
 
@@ -41,14 +45,27 @@ class ManagementCollectorSpec
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List())) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
-      testLatch.isOpen should be (true)
+      testPostLatch.isOpen should be(true)
     }
+
+    "handle a GET for container info" in {
+      Get("/container") ~> infoRoute ~> check {
+        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List()), List())))
+      }
+      testGetLatch.isOpen should be(true)
+    }
+
   }
 
   override implicit def actorRefFactory = system
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
-    testLatch.countDown()
+    testPostLatch.countDown()
     ContainerRegistryResponseOK(info.containerId)
+  }
+
+  override def getCurrentState(): Seq[RemoteContainerState] = {
+    testGetLatch.countDown()
+    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List()), List()))
   }
 }

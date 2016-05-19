@@ -25,10 +25,11 @@ import blended.updater.remote.RemoteUpdater
 
 class CollectorActivator extends DominoActivator with ActorSystemWatching {
 
+  val log = LoggerFactory.getLogger(classOf[CollectorActivator])
+
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
       whenServicePresent[RemoteUpdater] { remoteUpdater =>
-        val log = LoggerFactory.getLogger(classOf[CollectorActivator])
 
         // retrieve config as early as possible
         val config = ManagementCollectorConfig(cfg.config, contextPath = "mgmt", remoteUpdater = remoteUpdater)

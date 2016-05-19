@@ -1,30 +1,30 @@
 package blended.mgmt.base.json
 
+import blended.mgmt.base.ActivateProfile
 import blended.mgmt.base.AddOverlayConfig
 import blended.mgmt.base.AddRuntimeConfig
-import blended.mgmt.base.ServiceInfo
 import blended.mgmt.base.ContainerInfo
-import blended.updater.config.RuntimeConfig
+import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.RemoteContainerState
+import blended.mgmt.base.ServiceInfo
+import blended.mgmt.base.StageProfile
+import blended.mgmt.base.UpdateAction
 import blended.updater.config.Artifact
 import blended.updater.config.BundleConfig
 import blended.updater.config.FeatureConfig
-import spray.json.DefaultJsonProtocol
-import spray.json.JsValue
-import spray.json.RootJsonFormat
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.ActivateProfile
-import blended.mgmt.base.UpdateAction
-import blended.mgmt.base.ContainerRegistryResponseOK
 import blended.updater.config.FeatureRef
+import blended.updater.config.GeneratedConfig
 import blended.updater.config.OverlayConfig
 import blended.updater.config.OverlayRef
-import blended.updater.config.GeneratedConfig
-import blended.updater.config.GeneratedConfig
+import blended.updater.config.RuntimeConfig
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigRenderOptions
+import spray.json.DefaultJsonProtocol
+import spray.json.JsValue
 import spray.json.JsonParser
 import spray.json.ParserInput
+import spray.json.RootJsonFormat
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.
@@ -94,6 +94,8 @@ trait JsonProtocol extends DefaultJsonProtocol {
   }
 
   implicit val responseFormat: RootJsonFormat[ContainerRegistryResponseOK] = jsonFormat2(ContainerRegistryResponseOK)
+
+  implicit val remoteContainerState: RootJsonFormat[RemoteContainerState] = jsonFormat2(RemoteContainerState)
 }
 
 object JsonProtocol extends JsonProtocol

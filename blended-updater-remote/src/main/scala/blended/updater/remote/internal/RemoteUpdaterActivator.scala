@@ -14,7 +14,7 @@ class RemoteUpdaterActivator extends DominoActivator {
     def registerCommands(srv: AnyRef, cmds: Seq[(String, String)]): ServiceRegistration[Object] = {
       val (commands, descriptions) = cmds.unzip
       srv.providesService[Object](
-        "osgi.command.scope" -> "blended.updater",
+        "osgi.command.scope" -> "blended.updater.remote",
         "osgi.command.function" -> commands.toArray,
         "blended.osgi.command.description" -> descriptions.toArray
       )
