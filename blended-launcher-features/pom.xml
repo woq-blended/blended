@@ -612,6 +612,20 @@
 			<version>${blended.version}</version>
 		</dependency>
 
+		<!-- blended-security -->
+
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.security</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

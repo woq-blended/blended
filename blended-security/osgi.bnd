@@ -1,0 +1,15 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator: \
+  ${bundle.namespace}.internal.SecurityActivator
+
+Import-Package: \
+  *
+
+Private-Package: \
+  ${bundle.namespace}.internal
+
