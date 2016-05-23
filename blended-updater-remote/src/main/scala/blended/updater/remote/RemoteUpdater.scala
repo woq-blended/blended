@@ -72,6 +72,8 @@ trait RemoteUpdater {
 
   def getOverlayConfigs(): immutable.Seq[OverlayConfig] = self.findOverlayConfigs()
 
+  def registerOverlayConfig(overlayConfig: OverlayConfig): Unit = self.persistOverlayConfig(overlayConfig)
+
 }
 
 case class ContainerState(

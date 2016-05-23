@@ -1,0 +1,28 @@
+= Blended REST API
+
+== mgmt: Management API via `blended.mgmt.rest`
+
+GET `/mgmt/container`::
+Description: List all known remote container states. +
+Response: `Seq[RemoteContainerState]`
+
+
+POST `mgmt/container`::
+Description: Add new or update container info. +
+Parameter: `ContainerInfo`
+
+GET `mgmt/overlayConfig`::
+Description: List all registered overlay configs. +
+Response: `Seq[OverlayConfig]`
+
+POST `mgmt/overlayConfig`::
+Description: Registers a new overlay config. +
+Parameter: `OverlayConfig`
+
+GET `mgmt/runtimeConfig`::
+Description: List all registered overlay configs. +
+Response: `Seq[RuntimeConfig]`
+
+POST `mgmt/runtimeConfig`::
+Description: Registers a new runtime config. +
+Parameter: `RuntimeConfig`

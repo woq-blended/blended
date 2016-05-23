@@ -32,16 +32,25 @@ import blended.mgmt.base.UpdateContainerInfo
 import blended.mgmt.base.json._
 import blended.spray.SprayOSGIBridge
 import blended.spray.SprayOSGIServlet
+import blended.updater.config.OverlayConfig
+import blended.updater.config.RuntimeConfig
 import blended.updater.remote.RemoteUpdater
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
+import spray.http.HttpResponse
 import spray.http.MediaTypes
+import spray.http.StatusCodes
 import spray.http.Uri.Path
 import spray.httpx.SprayJsonSupport
+import spray.httpx.marshalling.ToResponseMarshallable
+import spray.httpx.marshalling.ToResponseMarshaller
+import spray.httpx.unmarshalling.FromRequestUnmarshaller
 import spray.routing._
 import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
 
+import scala.collection.immutable
+import scala.collection.immutable
 import scala.collection.immutable
 import scala.concurrent.duration._
 
@@ -53,6 +62,15 @@ trait CollectorService extends HttpService {
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
   def getCurrentState(): immutable.Seq[RemoteContainerState]
+
+  def registerRuntimeConfig(rc: RuntimeConfig): Unit
+
+  def registerOverlayConfig(oc: OverlayConfig): Unit
+
+  def getRuntimeConfigs(): immutable.Seq[RuntimeConfig]
+
+  def getOverlayConfigs(): immutable.Seq[OverlayConfig]
+
 
   def version: String
 
@@ -72,11 +90,11 @@ trait CollectorService extends HttpService {
 
     path("container") {
       post {
-        handleWith { info: ContainerInfo =>
+        entity(as[ContainerInfo]) { info =>
           log.debug("Processing container info: {}", info)
           val res = processContainerInfo(info)
           log.debug("Processing result: {}", res)
-          res
+          complete(res)
         }
       }
     }
@@ -94,6 +112,42 @@ trait CollectorService extends HttpService {
           }
         }
       }
+    }
+  }
+
+  def runtimeConfigRoute: Route = {
+    path("runtimeConfig") {
+      get {
+        respondWithMediaType(MediaTypes.`application/json`) {
+          complete {
+            getRuntimeConfigs()
+          }
+        }
+      } ~
+        post {
+          entity(as[RuntimeConfig]) { rc =>
+            registerRuntimeConfig(rc)
+            complete(s"Registered ${rc.name}-${rc.version}")
+          }
+        }
+    }
+  }
+
+  def overlayConfigRoute: Route = {
+    path("overlayConfig") {
+      get {
+        respondWithMediaType(MediaTypes.`application/json`) {
+          complete {
+            getOverlayConfigs()
+          }
+        }
+      } ~
+        post {
+          entity(as[OverlayConfig]) { oc =>
+            registerOverlayConfig(oc)
+            complete(s"Registered ${oc.name}-${oc.version}")
+          }
+        }
     }
   }
 
@@ -170,7 +224,7 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
       "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
-    context.become(runRoute(collectorRoute ~ infoRoute ~ versionRoute))
+    context.become(runRoute(collectorRoute ~ infoRoute ~ versionRoute ~ runtimeConfigRoute ~ overlayConfigRoute))
   }
 
   def receive: Receive = Actor.emptyBehavior
@@ -181,4 +235,12 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
   }
 
   override def version: String = cfg.bundleContext.getBundle().getVersion().toString()
+
+  override def registerRuntimeConfig(rc: RuntimeConfig): Unit = config.remoteUpdater.registerRuntimeConfig(rc)
+
+  override def registerOverlayConfig(oc: OverlayConfig): Unit = config.remoteUpdater.registerOverlayConfig(oc)
+
+  override def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = config.remoteUpdater.getRuntimeConfigs()
+
+  override def getOverlayConfigs(): immutable.Seq[OverlayConfig] = config.remoteUpdater.getOverlayConfigs()
 }

@@ -19,6 +19,8 @@ package blended.mgmt.rest.internal
 import akka.testkit.TestLatch
 import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.json._
+import blended.updater.config.OverlayConfig
+import blended.updater.config.RuntimeConfig
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import spray.httpx.SprayJsonSupport
@@ -76,4 +78,12 @@ class ManagementCollectorSpec
   }
 
   override def version: String = "TEST"
+
+  override def registerRuntimeConfig(rc: RuntimeConfig): Unit = ???
+
+  override def getOverlayConfigs(): Seq[OverlayConfig] = ???
+
+  override def getRuntimeConfigs(): Seq[RuntimeConfig] = ???
+
+  override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
 }
