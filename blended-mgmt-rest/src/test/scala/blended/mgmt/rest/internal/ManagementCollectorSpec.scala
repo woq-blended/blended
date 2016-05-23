@@ -41,18 +41,24 @@ class ManagementCollectorSpec
 
   "The Management collector" should {
 
-    "handle a posted container info" in {
+    "POST /container returns a registry response" in {
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List())) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       testPostLatch.isOpen should be(true)
     }
 
-    "handle a GET for container info" in {
+    "GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
         responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List()), List())))
       }
       testGetLatch.isOpen should be(true)
+    }
+
+    "GET version returns the version" in {
+      Get("/version") ~> versionRoute ~> check {
+        responseAs[String] should be ("TEST")
+      }
     }
 
   }
@@ -68,4 +74,6 @@ class ManagementCollectorSpec
     testGetLatch.countDown()
     List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List()), List()))
   }
+
+  override def version: String = "TEST"
 }

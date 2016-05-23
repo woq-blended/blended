@@ -54,6 +54,18 @@ trait CollectorService extends HttpService {
 
   def getCurrentState(): immutable.Seq[RemoteContainerState]
 
+  def version: String
+
+  def versionRoute: Route = {
+    path("version") {
+      get {
+        complete {
+          version
+        }
+      }
+    }
+  }
+
   def collectorRoute: Route = {
 
     implicit val timeout = Timeout(1.second)
@@ -158,7 +170,7 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
       "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
-    context.become(runRoute(collectorRoute ~ infoRoute))
+    context.become(runRoute(collectorRoute ~ infoRoute ~ versionRoute))
   }
 
   def receive: Receive = Actor.emptyBehavior
@@ -167,4 +179,6 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
     mylog.debug("About to send state: {}", containerStates)
     containerStates.values.toList
   }
+
+  override def version: String = cfg.bundleContext.getBundle().getVersion().toString()
 }
