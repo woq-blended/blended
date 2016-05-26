@@ -28,7 +28,7 @@
       <type>war</type>
     </dependency>
 
-<!--    <dependency>
+    <dependency>
       <groupId>org.jolokia</groupId>
       <artifactId>jolokia-core</artifactId>
       <version>${jolokia.version}</version>
@@ -76,7 +76,7 @@
       <version>1.6</version>
       <scope>system</scope>
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
-    </dependency> -->
+    </dependency>
   </dependencies>
 
   <build>
@@ -104,7 +104,7 @@
         <executions>
           <execution>
             <id>bundle-manifest</id>
-            <phase>process-classes</phase>
+            <phase>prepare-package</phase>
             <goals>
               <goal>manifest</goal>
             </goals>
