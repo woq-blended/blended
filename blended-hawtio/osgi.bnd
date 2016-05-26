@@ -1,0 +1,5 @@
+Bundle-Name: ${project.description}
+Bundle-SymbolicName: ${project.artifactId}
+
+Webapp-Context: ${context}
+Web-ContextPath: ${context}

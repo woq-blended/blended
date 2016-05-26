@@ -36,6 +36,12 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.shiro</groupId>
+      <artifactId>shiro-web</artifactId>
+      <version>${shiro.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.akka</artifactId>
       <version>${project.version}</version>

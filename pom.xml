@@ -180,11 +180,11 @@
     <profile>
       <id>build</id>
       <modules>
-	<module>blended-updater-config</module>
-	<module>blended-launcher</module>
-	<module>blended-updater</module>
-	<module>blended-updater-tools</module>
-	<module>blended-updater-remote</module>
+	      <module>blended-updater-config</module>
+	      <module>blended-launcher</module>
+	      <module>blended-updater</module>
+        <module>blended-updater-tools</module>
+        <module>blended-updater-remote</module>
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>
@@ -213,6 +213,7 @@
         <!--module>blended-persistence-neo4j</module>
         <module>blended-persistence-h2</module-->
 
+        <module>blended-hawtio</module>
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>
 
