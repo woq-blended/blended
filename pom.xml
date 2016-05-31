@@ -206,6 +206,7 @@
         <module>blended-spray</module>
 
         <module>blended-security</module>
+        <module>blended-security-boot</module>
 
         <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
@@ -213,7 +214,6 @@
         <!--module>blended-persistence-neo4j</module>
         <module>blended-persistence-h2</module-->
 
-        <module>blended-hawtio</module>
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>
 

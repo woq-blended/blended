@@ -1,0 +1,11 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Export-Package: ${bundle.symbolicName}
+
+Import-Package:
+
+Fragment-Host: system.bundle;extension:=framework

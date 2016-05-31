@@ -15,11 +15,11 @@
   </parent>
 
   <name>${project.artifactId}</name>
-  <artifactId>blended.security</artifactId>
+  <artifactId>blended.security.boot</artifactId>
   <packaging>bundle</packaging>
   
   <description>
-    Configuration bundle for the Apache Shiro security framework.
+    A Shiro Login Module for the blended Container.
   </description>
 
   <properties>
@@ -30,27 +30,9 @@
   <dependencies>
 
     <dependency>
-      <groupId>de.wayofquality.blended</groupId>
-      <artifactId>blended.security.boot</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-core</artifactId>
-      <version>${shiro.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.shiro</groupId>
-      <artifactId>shiro-web</artifactId>
-      <version>${shiro.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.akka</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <version>${osgi.core.version}</version>
     </dependency>
 
     <dependency>

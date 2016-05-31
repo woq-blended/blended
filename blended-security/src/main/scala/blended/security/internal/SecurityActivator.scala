@@ -1,6 +1,9 @@
 package blended.security.internal
 
+import javax.security.auth.login.Configuration
+
 import blended.container.context.ContainerIdentifierService
+import blended.security.boot.BlendedLoginModule
 import domino.DominoActivator
 import org.apache.shiro.SecurityUtils
 import org.apache.shiro.authc.UsernamePasswordToken
@@ -15,6 +18,12 @@ class SecurityActivator extends DominoActivator {
   whenBundleActive {
 
     whenServicePresent[ContainerIdentifierService] { idSvc =>
+
+      log.info("Initialising Blended Login Module")
+      BlendedLoginModule.init(bundleContext)
+
+      log.info("Initialising security manager.")
+      Configuration.setConfiguration(new BlendedConfiguration(bundleContext))
 
       val factory = new IniSecurityManagerFactory(s"file:${idSvc.getContainerContext().getContainerConfigDirectory()}/shiro.ini")
       val secMgr = factory.getInstance()

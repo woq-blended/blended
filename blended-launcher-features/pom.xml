@@ -29,6 +29,11 @@
 			<version>5.0.0</version>
 		</dependency>
 		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.security.boot</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<version>${felix.ca.version}</version>
@@ -367,16 +372,10 @@
 		<!-- blended-hawtio -->
 
 		<dependency>
-			<groupId>de.wayofquality.blended</groupId>
-			<artifactId>blended.hawtio</artifactId>
-			<version>${blended.version}</version>
+			<groupId>io.hawt</groupId>
+			<artifactId>hawtio-web</artifactId>
+			<version>${hawtio.version}</version>
 			<type>war</type>
-		</dependency>
-
-		<dependency>
-			<groupId>org.fusesource.insight</groupId>
-			<artifactId>insight-log</artifactId>
-			<version>7.2.0.redhat-060</version>
 		</dependency>
 
 		<!-- blended-http -->
@@ -582,7 +581,7 @@
 			<version>${jersey.version}</version>
 		</dependency>
 
-		<!-- blended managment -->
+		<!-- blended management -->
 
     <dependency>
       <groupId>${project.groupId}</groupId>

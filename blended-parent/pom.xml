@@ -84,6 +84,8 @@
     <bundle.plugin.version>3.0.1</bundle.plugin.version>
     <bndtool.version>3.2.0</bndtool.version>
 
+    <war.plugin.version>2.6</war.plugin.version>
+
     <scala.version>2.10</scala.version>
     <scala.micro.version>6</scala.micro.version>
 
@@ -207,6 +209,17 @@
 
     <pluginManagement>
       <plugins>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>${war.plugin.version}</version>
+          <configuration>
+            <archive>
+              <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+            </archive>
+          </configuration>
+        </plugin>
 
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
