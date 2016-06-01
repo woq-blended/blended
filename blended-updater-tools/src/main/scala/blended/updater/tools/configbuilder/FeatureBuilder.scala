@@ -1,22 +1,17 @@
 package blended.updater.tools.configbuilder
 
+import java.io.File
+import java.io.PrintStream
+
+import blended.updater.config.ConfigWriter
+import blended.updater.config.FeatureConfig
+import blended.updater.config.MvnGav
+import blended.updater.config.RuntimeConfig
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
 import de.tototec.cmdoption.CmdOption
 import de.tototec.cmdoption.CmdlineParser
-import scala.util.control.NonFatal
-import java.io.File
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import scala.util.Try
-import blended.updater.config.FeatureConfig
-import blended.updater.config.RuntimeConfig
-import de.tototec.cmdoption.internal.LoggerFactory
-import blended.updater.config.BundleConfig
-import com.typesafe.config.ConfigValueFactory
-import scala.collection.JavaConverters._
-import blended.updater.config.ConfigWriter
-import java.io.PrintStream
-import com.typesafe.config.ConfigParseOptions
-import blended.updater.config.MvnGav
+
 import scala.util.Success
 
 object FeatureBuilder {
