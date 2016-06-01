@@ -1,0 +1,9 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: blended.security.boot
+
+Fragment-Host: io.hawt.hawtio-web

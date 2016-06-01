@@ -7,6 +7,9 @@ Bundle-SymbolicName:\
 Bundle-Activator: \
   ${bundle.namespace}.internal.SecurityActivator
 
+Export-Package: \
+  ${bundle.namespace}
+
 Import-Package: \
   *
 

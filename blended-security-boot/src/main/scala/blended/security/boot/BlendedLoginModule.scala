@@ -6,7 +6,7 @@ import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
 
-import org.osgi.framework.BundleContext
+import org.osgi.framework.{Bundle, BundleContext}
 
 object BlendedLoginModule {
 
@@ -33,7 +33,14 @@ class BlendedLoginModule extends LoginModule {
 
   override def initialize(subject: Subject, callbackHandler: CallbackHandler, sharedState: util.Map[String, _], options: util.Map[String, _]): Unit = {
 
-    val newOptions = options
+    val newOptions : java.util.HashMap[String, AnyRef] = new java.util.HashMap[String, AnyRef]()
+
+    val i = options.keySet().iterator()
+    while (i.hasNext) {
+      val k = i.next()
+      val v = options.get(k).asInstanceOf[AnyRef]
+      newOptions.put(k,v)
+    }
 
     val moduleClass : Option[String] = Option(newOptions.remove(propModule).toString())
     val moduleBundle : Option[String] = Option(newOptions.remove(propBundle).toString())
@@ -42,11 +49,11 @@ class BlendedLoginModule extends LoginModule {
       case (None, _) => throw new IllegalStateException(s"Option [${propBundle}] must be set to the name of the factory service bundle.")
       case (_, None) => throw new IllegalStateException(s"Option [${propModule}] must be set to the name of the factory service.")
       case (Some(clazz), Some(bundleName)) =>
-        Option(bundleContext.getBundle(bundleName)) match {
+        loginBundle(bundleName) match {
           case None => throw new IllegalStateException(s"Bundle [${bundleName}] not found.")
           case Some(bundle) =>
             try {
-              target = Some(bundle.loadClass(clazz).asInstanceOf[LoginModule])
+              target = Option(bundle.loadClass(clazz).newInstance().asInstanceOf[LoginModule])
               target.foreach(t => t.initialize(
                 subject,
                 callbackHandler,
@@ -54,11 +61,16 @@ class BlendedLoginModule extends LoginModule {
                 newOptions
               ))
             } catch {
-              case e : Exception => throw new IllegalStateException(s"Could not load Login Module [${clazz}] from bundle [${bundleName}]")
+              case e : Exception =>
+                e.printStackTrace()
+                throw new IllegalStateException(s"Could not load Login Module [${clazz}] from bundle [${bundleName}]")
             }
         }
     }
   }
+
+  private[this] def loginBundle(name: String) : Option[Bundle] =
+    bundleContext.getBundles().find(_.getSymbolicName().equals(name))
 
   override def logout(): Boolean = target match {
     case None => throw new LoginException(notInitialised)

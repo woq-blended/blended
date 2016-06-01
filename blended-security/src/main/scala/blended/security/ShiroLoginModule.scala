@@ -1,4 +1,4 @@
-package blended.security.internal
+package blended.security
 
 import java.util
 import javax.security.auth.Subject

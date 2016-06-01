@@ -378,6 +378,12 @@
 			<type>war</type>
 		</dependency>
 
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.hawtio.login</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+
 		<!-- blended-http -->
 
 		<dependency>
