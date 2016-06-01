@@ -20,11 +20,13 @@ import akka.actor.ActorRef
 import akka.camel.CamelMessage
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.itestsupport.camel.protocol.{CheckAssertions, CheckResults, MockAssertion}
-import de.tototec.cmdoption.internal.LoggerFactory
+import blended.itestsupport.camel.protocol.CheckAssertions
+import blended.itestsupport.camel.protocol.CheckResults
+import blended.itestsupport.camel.protocol.MockAssertion
+import org.slf4j.LoggerFactory
 
-import scala.concurrent.Await
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
 
 object MockAssertions {
 
