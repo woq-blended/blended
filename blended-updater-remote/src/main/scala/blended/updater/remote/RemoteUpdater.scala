@@ -1,8 +1,13 @@
 package blended.updater.remote
 
+import java.io.File
+
 import blended.mgmt.base.ContainerInfo
+import blended.updater.config.ConfigWriter
 import blended.updater.config.OverlayConfig
 import blended.updater.config.RuntimeConfig
+import blended.updater.remote.RuntimeConfigPersistor
+import com.typesafe.config.ConfigFactory
 import scala.collection.immutable
 import blended.mgmt.base.StageProfile
 import blended.mgmt.base.UpdateAction
@@ -10,15 +15,17 @@ import blended.mgmt.base.ActivateProfile
 import org.slf4j.LoggerFactory
 import java.util.Date
 
-trait RemoteUpdater {
-  self: RuntimeConfigPersistor with ContainerStatePersistor with OverlayConfigPersistor =>
+import scala.util.Try
+
+class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
+  containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[RemoteUpdater])
 
   type ContainerId = String
 
   def addAction(containerId: ContainerId, action: UpdateAction): Unit = {
-    val state = self.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
+    val state = containerStatePersistor.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
     val actions = state.outstandingActions
     val newActions =
       if (!actions.exists {
@@ -27,13 +34,13 @@ trait RemoteUpdater {
         actions ++ immutable.Seq(action)
       }
       else actions
-    self.updateContainerState(state.copy(outstandingActions = newActions))
+    containerStatePersistor.updateContainerState(state.copy(outstandingActions = newActions))
   }
 
   def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
     log.debug(s"About to analyze update properties from container info: ${containerInfo}")
     val timeStamp = System.currentTimeMillis()
-    val state = self.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
+    val state = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
     val props = containerInfo.serviceInfos.find(_.name.endsWith("/blended.updater")).map(si => si.props).getOrElse(Map())
     val active = props.get("profile.active").map(_.trim()).filter(!_.isEmpty())
@@ -54,102 +61,41 @@ trait RemoteUpdater {
       outstandingActions = newUpdateActions,
       syncTimeStamp = Some(timeStamp)
     )
-    self.updateContainerState(newState)
+    containerStatePersistor.updateContainerState(newState)
     newState
   }
 
   def getContainerState(containerId: ContainerId): Option[ContainerState] =
-    self.findContainerState(containerId)
+    containerStatePersistor.findContainerState(containerId)
 
   def getContainerActions(containerId: ContainerId): immutable.Seq[UpdateAction] =
     getContainerState(containerId).map(_.outstandingActions).getOrElse(immutable.Seq())
 
-  def getContainerIds(): immutable.Seq[ContainerId] = self.findAllContainerStates().map(_.containerId)
+  def getContainerIds(): immutable.Seq[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
 
-  def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = self.persistRuntimeConfig(runtimeConfig)
+  def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
 
-  def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = self.findRuntimeConfigs()
+  def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
 
-  def getOverlayConfigs(): immutable.Seq[OverlayConfig] = self.findOverlayConfigs()
+  def getOverlayConfigs(): immutable.Seq[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
 
-  def registerOverlayConfig(overlayConfig: OverlayConfig): Unit = self.persistOverlayConfig(overlayConfig)
-
-}
-
-case class ContainerState(
-  containerId: String,
-  outstandingActions: immutable.Seq[UpdateAction] = immutable.Seq(),
-  activeProfile: Option[String] = None,
-  validProfiles: immutable.Seq[String] = immutable.Seq(),
-  invalidProfiles: immutable.Seq[String] = immutable.Seq(),
-  syncTimeStamp: Option[Long] = None) {
-
-  override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},outstandingActions=${outstandingActions}" +
-    s",activeProfile=${activeProfile},validProfiles=${validProfiles},invalidProfiles=${invalidProfiles},syncTimeStamp=${syncTimeStamp.map(s => new Date(s))})"
+  def registerOverlayConfig(overlayConfig: OverlayConfig): Unit = overlayConfigPersistor.persistOverlayConfig(overlayConfig)
 
 }
 
-trait ContainerStatePersistor {
-  def findAllContainerStates(): immutable.Seq[ContainerState]
-
-  def findContainerState(containerId: String): Option[ContainerState]
-
-  def updateContainerState(containerState: ContainerState): Unit
-}
-
-/**
- * Persistence handling for [RuntimeConfig]s.
- */
-trait RuntimeConfigPersistor {
-  def persistRuntimeConfig(runtimeConfig: RuntimeConfig): Unit
-
-  def findRuntimeConfigs(): immutable.Seq[RuntimeConfig]
-}
-
-trait OverlayConfigPersistor {
-  def persistOverlayConfig(overlayConfig: OverlayConfig): Unit
-
-  def findOverlayConfigs(): immutable.Seq[OverlayConfig]
-}
-
-trait TransientRuntimeConfigPersistor extends RuntimeConfigPersistor {
-
-  private[this] var state: immutable.Set[RuntimeConfig] = Set()
-
-  override def persistRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = state += runtimeConfig
-
-  override def findRuntimeConfigs(): immutable.Seq[RuntimeConfig] = state.to[immutable.Seq]
-}
 
 
-trait TransientOverlayConfigPersistor extends OverlayConfigPersistor {
 
-  private[this] var state: immutable.Set[OverlayConfig] = Set()
 
-  override def persistOverlayConfig(overlayConfig: OverlayConfig): Unit = state += overlayConfig
 
-  override def findOverlayConfigs(): immutable.Seq[OverlayConfig] = state.to[immutable.Seq]
-}
 
-trait TransientContainerStatePersistor extends ContainerStatePersistor {
 
-  private[this] var state: immutable.Set[ContainerState] = Set()
 
-  def findContainerState(containerId: String): Option[ContainerState] = {
-    state.find(s => s.containerId == containerId)
-  }
 
-  def updateContainerState(containerState: ContainerState): Unit = {
-    state = state.filter(_.containerId != containerState.containerId) + containerState
-  }
 
-  def findAllContainerStates(): immutable.Seq[ContainerState] = {
-    state.to[immutable.Seq]
-  }
 
-}
 
-trait TransientPersistor
-  extends TransientRuntimeConfigPersistor
-    with TransientContainerStatePersistor
-    with TransientOverlayConfigPersistor
+
+
+
+
