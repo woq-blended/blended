@@ -61,9 +61,10 @@ class BlendedLoginModule extends LoginModule {
                 newOptions
               ))
             } catch {
-              case e : Exception =>
-                e.printStackTrace()
+              case cnf : ClassNotFoundException =>
                 throw new IllegalStateException(s"Could not load Login Module [${clazz}] from bundle [${bundleName}]")
+              case e : Exception =>
+                throw new IllegalStateException(s"${e.getClass().getName()} : ${e.getMessage()}")
             }
         }
     }
