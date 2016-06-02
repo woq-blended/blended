@@ -29,6 +29,11 @@
 			<version>5.0.0</version>
 		</dependency>
 		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.security.boot</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.felix</groupId>
 			<artifactId>org.apache.felix.configadmin</artifactId>
 			<version>${felix.ca.version}</version>
@@ -368,19 +373,15 @@
 
 		<dependency>
 			<groupId>io.hawt</groupId>
-			<artifactId>hawtio-osgi-jmx</artifactId>
-			<version>${hawtio.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>io.hawt</groupId>
 			<artifactId>hawtio-web</artifactId>
 			<version>${hawtio.version}</version>
 			<type>war</type>
 		</dependency>
+
 		<dependency>
-			<groupId>org.fusesource.insight</groupId>
-			<artifactId>insight-log</artifactId>
-			<version>7.2.0.redhat-060</version>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.hawtio.login</artifactId>
+			<version>${blended.version}</version>
 		</dependency>
 
 		<!-- blended-http -->
@@ -586,7 +587,7 @@
 			<version>${jersey.version}</version>
 		</dependency>
 
-		<!-- blended managment -->
+		<!-- blended management -->
 
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -612,39 +613,25 @@
 			<version>${blended.version}</version>
 		</dependency>
 
-    <!-- UNSORTED -->
+		<!-- blended-security -->
 
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.neo4j.api</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-core</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
 
-		<!-- <dependency> -->
-		<!-- <groupId>${project.groupId}</groupId> -->
-		<!-- <artifactId>blended.jolokia</artifactId> -->
-		<!-- <version>${blended.version}</version> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>org.apache.shiro</groupId>
+			<artifactId>shiro-web</artifactId>
+			<version>${shiro.version}</version>
+		</dependency>
 
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-api</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-service</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
-
-
-
-		<!-- <dependency> -->
-		<!-- <groupId>org.ops4j.pax.logging</groupId> -->
-		<!-- <artifactId>pax-logging-log4j2</artifactId> -->
-		<!-- <version>${pax-logging.version}</version> -->
-		<!-- </dependency> -->
+		<dependency>
+			<groupId>de.wayofquality.blended</groupId>
+			<artifactId>blended.security</artifactId>
+			<version>${blended.version}</version>
+		</dependency>
 
 	</dependencies>
 

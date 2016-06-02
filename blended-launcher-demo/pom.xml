@@ -39,6 +39,7 @@
       <type>zip</type>
       <classifier>bin</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -46,6 +47,7 @@
       <type>conf</type>
       <classifier>blended-base</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -53,6 +55,7 @@
       <type>conf</type>
       <classifier>blended-commons</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -60,12 +63,14 @@
       <type>conf</type>
       <classifier>blended-http</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
       <version>${blended.version}</version>
       <type>conf</type>
       <classifier>blended-jetty</classifier>
+
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -74,6 +79,7 @@
       <type>conf</type>
       <classifier>blended-jaxrs</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -81,6 +87,7 @@
       <type>conf</type>
       <classifier>blended-spray</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -88,6 +95,7 @@
       <type>conf</type>
       <classifier>blended-hawtio</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -95,6 +103,7 @@
       <type>conf</type>
       <classifier>blended-spring</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -102,6 +111,7 @@
       <type>conf</type>
       <classifier>blended-activemq</classifier>
     </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
@@ -109,25 +119,29 @@
       <type>conf</type>
       <classifier>blended-camel</classifier>
     </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-security</classifier>
+    </dependency>
+
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-mgmt-client</classifier>
+    </dependency>
+
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>blended.launcher.features</artifactId>
       <version>${blended.version}</version>
       <type>conf</type>
       <classifier>blended-samples</classifier>
-    </dependency>
-
-    <!-- bundles -->
-
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.mgmt.base</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.mgmt.agent</artifactId>
-      <version>${blended.version}</version>
     </dependency>
 
   </dependencies>
