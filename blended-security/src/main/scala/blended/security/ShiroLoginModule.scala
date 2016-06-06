@@ -2,7 +2,7 @@ package blended.security
 
 import java.util
 import javax.security.auth.Subject
-import javax.security.auth.callback.{PasswordCallback, NameCallback, Callback, CallbackHandler}
+import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
 
@@ -85,6 +85,8 @@ class ShiroLoginModule extends LoginModule {
 
     try {
       shiroSubject.login(token)
+      val principals = subject.getPrincipals().asScala
+      principals.foreach{ p => log.info(s"Found Principal [${p.getClass().getName()}] [$p]") }
     } catch {
       case e: Exception =>
         val msg = s"Shiro login failed (${e.getMessage()})"

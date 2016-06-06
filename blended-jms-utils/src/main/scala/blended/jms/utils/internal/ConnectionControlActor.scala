@@ -67,8 +67,8 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       initConnection()
 
     case GetConnection =>
-      initConnection()
       sender() ! conn
+      initConnection()
 
     case ConnectResult =>
 
