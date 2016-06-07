@@ -40,9 +40,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   private[this] var pinging : Boolean = false
   private[this] var pingTimer : Option[Cancellable] = None
 
-  private[this] var disconnecting : Boolean = false
   private[this] var lastDisconnect : Long = 0l
-
   private[this] var failedPings : Int = 0
 
   override def preStart(): Unit = {
@@ -143,11 +141,11 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       pingTimer = None
 
     case GetConnection =>
+      log.debug(s"Container is still disconnecting from JMS provider [$provider]")
       None
 
     case ConnectionClosed =>
       conn = None
-      disconnecting = false
       context.become(disconnected)
 
     case CloseTimeout =>
@@ -163,20 +161,15 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   }
 
   private[this] def initConnection() : Unit = {
-    if (disconnecting) {
-      log.debug(s"Container is still disconnecting from JMS provider [$provider]")
+    val remaining : Double = config.minReconnect * 1000.0 - (System.currentTimeMillis() - lastConnect)
+    if (remaining > 0) {
+      log.debug(s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
       checkConnection(schedule)
     } else {
-      val remaining : Double = config.minReconnect * 1000.0 - (System.currentTimeMillis() - lastConnect)
-      if (remaining > 0) {
-        log.debug(s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
-        checkConnection(schedule)
-      } else {
-        lastConnect = System.currentTimeMillis()
-        connect(lastConnect).pipeTo(self)
-        context.system.scheduler.scheduleOnce(30.seconds, self, ConnectingTimeout(lastConnect))
-        context.become(connecting)
-      }
+      lastConnect = System.currentTimeMillis()
+      connect(lastConnect).pipeTo(self)
+      context.system.scheduler.scheduleOnce(30.seconds, self, ConnectingTimeout(lastConnect))
+      context.become(connecting)
     }
   }
 
@@ -208,7 +201,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
     conn.foreach { c =>
       log.debug(s"Closing connection for provider [$provider]")
-      disconnecting = true
       context.system.actorOf(Props(ConnectionCloseActor(c.connection, config.minReconnect.seconds, self)))
     }
     context.become(closing)
