@@ -193,34 +193,5 @@ class ContainerContextImpl() extends ContainerContext {
     resolveSystemProps(props)
   }
 
-  @deprecated
-  override def writeConfig(configId: String, props: Properties): Unit = {
-    val configFile = new File(getConfigFile(configId))
-
-    log.debug("Wrting config for [{}] to [{}].", Array(configId, configFile): _*)
-
-    Option(configFile.getParentFile).filter(!_.exists()).foreach { p =>
-      log.debug("Creating missing config directory: {}", p)
-      p.mkdirs()
-    }
-
-    try {
-      val os = new FileOutputStream(configFile)
-      try {
-        props.store(os, "")
-      } catch {
-        case e: IOException =>
-          log.warn("Error writing config file: {}", Array(configFile, e): _*)
-      } finally {
-        os.close()
-      }
-    } catch {
-      case e: FileNotFoundException =>
-        log.warn("Could not find config file: {}", Array(configFile, e): _*)
-    }
-
-    log.info("Exported configuration [{}]", configFile)
-  }
-
   private def getConfigFile(configId: String): String = new File(getContainerConfigDirectory(), s"$configId.cfg").getPath()
 }

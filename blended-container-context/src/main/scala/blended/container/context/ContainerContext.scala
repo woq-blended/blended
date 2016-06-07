@@ -29,7 +29,7 @@ trait ContainerContext {
   @deprecated
   def readConfig(configId: String): Properties
 
-  @deprecated
-  def writeConfig(configId: String, props: Properties): Unit
+//  @deprecated
+//  def writeConfig(configId: String, props: Properties): Unit
 
 }

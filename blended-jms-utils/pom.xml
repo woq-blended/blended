@@ -43,6 +43,18 @@
   <dependencies>
 
     <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.domino</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.mgmt.base</artifactId>
+      <version>${blended.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
     </dependency>

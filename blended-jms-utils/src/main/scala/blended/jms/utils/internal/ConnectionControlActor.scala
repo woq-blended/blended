@@ -3,9 +3,12 @@ package blended.jms.utils.internal
 import java.util.concurrent.TimeUnit
 import javax.jms.{Connection, ConnectionFactory, Session}
 
-import akka.actor.{Actor, ActorLogging, Cancellable}
+import akka.actor.{Props, Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
 import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedJMSConnection}
+import blended.mgmt.base.FrameworkService
+import domino.service_consuming.ServiceConsuming
+import org.osgi.framework.BundleContext
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -13,11 +16,14 @@ import scala.util.control.NonFatal
 
 object ConnectionControlActor {
 
-  def apply(provider: String, cf: ConnectionFactory, config: BlendedJMSConnectionConfig) =
-    new ConnectionControlActor(provider, cf, config)
+  def apply(
+    provider: String, cf: ConnectionFactory, config: BlendedJMSConnectionConfig, bundleContext: BundleContext
+  ) =
+    new ConnectionControlActor(provider, cf, config, bundleContext)
 }
 
-class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: BlendedJMSConnectionConfig) extends Actor with ActorLogging {
+class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: BlendedJMSConnectionConfig, override val bundleContext: BundleContext)
+  extends Actor with ActorLogging with ServiceConsuming {
 
   case object PingTimeout
   case class ConnectingTimeout(t: Long)
@@ -78,7 +84,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
     case CheckConnection =>
       pingTimer = None
-      ping(conn.get).pipeTo(self)
+      conn.foreach{ c => ping(c).pipeTo(self) }
 
     case PingResult(Right(_)) =>
       pinging = false
@@ -130,6 +136,32 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       if (t == lastConnect) reconnect()
   }
 
+  def closing : Receive = {
+    case PingResult(_) =>
+
+    case CheckConnection =>
+      pingTimer = None
+
+    case GetConnection =>
+      None
+
+    case ConnectionClosed =>
+      conn = None
+      disconnecting = false
+      context.become(disconnected)
+
+    case CloseTimeout =>
+      val msg = s"Unable to close connection for provider [${provider} in [${config.minReconnect}]s]. Restarting container ..."
+      log.warning(msg)
+      withService[FrameworkService, Unit] { _ match {
+        case None =>
+          log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
+          bundleContext.getBundle(0).update()
+        case Some(s) => s.restartContainer(msg)
+      }}
+      disconnect()
+  }
+
   private[this] def initConnection() : Unit = {
     if (disconnecting) {
       log.debug(s"Container is still disconnecting from JMS provider [$provider]")
@@ -177,19 +209,9 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     conn.foreach { c =>
       log.debug(s"Closing connection for provider [$provider]")
       disconnecting = true
-
-      Future {
-        scala.concurrent.blocking {
-          c.connection.close()
-          disconnecting = false
-          lastDisconnect = System.currentTimeMillis()
-          log.debug(s"Connection closed for provider [$provider]")
-        }
-      }
+      context.system.actorOf(Props(ConnectionCloseActor(c.connection, config.minReconnect.seconds, self)))
     }
-
-    conn = None
-    context.become(disconnected)
+    context.become(closing)
   }
 
   private[this] def checkReconnect() : Unit = {
