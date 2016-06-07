@@ -31,7 +31,7 @@
   <logger name="io.hawt" level="debug" />
   <logger name="blended.security" level="debug" />
 
-  <root level="info">
+  <root level="debug">
     <appender-ref ref="FILE" />
   </root>
 </configuration>

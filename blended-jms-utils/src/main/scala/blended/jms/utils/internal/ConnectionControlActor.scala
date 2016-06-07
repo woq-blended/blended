@@ -5,7 +5,7 @@ import javax.jms.{Connection, ConnectionFactory, Session}
 
 import akka.actor.{Props, Actor, ActorLogging, Cancellable}
 import akka.pattern.pipe
-import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedJMSConnection}
+import blended.jms.utils.{BlendedSingleConnectionFactory, BlendedJMSConnectionConfig, BlendedJMSConnection}
 import blended.mgmt.base.FrameworkService
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
@@ -36,7 +36,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   private[this] val retrySchedule = config.retryInterval.seconds
   private[this] val schedule = Duration(config.pingInterval, TimeUnit.SECONDS)
 
-  private[this] var lastConnect: Long = 0l
+  private[this] var lastConnectAttempt: Long = 0l
   private[this] var pinging : Boolean = false
   private[this] var pingTimer : Option[Cancellable] = None
 
@@ -70,10 +70,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       pingTimer = None
       initConnection()
 
-    case GetConnection =>
-      sender() ! conn
-      initConnection()
-
     case ConnectResult =>
 
   }
@@ -101,9 +97,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
         checkReconnect()
       }
 
-    case GetConnection =>
-      sender() ! conn
-
     case ConnectResult =>
 
     case ConnectingTimeout =>
@@ -116,22 +109,20 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     case CheckConnection =>
       pingTimer = None
 
-    case GetConnection =>
-      sender() ! conn
-
     case ConnectResult(t, Left(e)) =>
-      if (t == lastConnect) reconnect()
+      if (t == lastConnectAttempt) reconnect()
 
     case ConnectResult(t, Right(c)) =>
-      if (t == lastConnect) {
+      if (t == lastConnectAttempt) {
         log.debug(s"Successfully connected to provider [$provider]")
         conn = Some(new BlendedJMSConnection(c))
-        pingTimer = Some(context.system.scheduler.scheduleOnce(schedule, self, CheckConnection))
+        BlendedSingleConnectionFactory.setConnection(provider, conn)
+        checkConnection(schedule)
         context.become(connected)
       }
 
     case ConnectingTimeout(t) =>
-      if (t == lastConnect) reconnect()
+      if (t == lastConnectAttempt) reconnect()
   }
 
   def closing : Receive = {
@@ -140,12 +131,10 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     case CheckConnection =>
       pingTimer = None
 
-    case GetConnection =>
-      log.debug(s"Container is still disconnecting from JMS provider [$provider]")
-      None
-
     case ConnectionClosed =>
       conn = None
+      lastDisconnect = System.currentTimeMillis()
+      checkConnection(schedule, true)
       context.become(disconnected)
 
     case CloseTimeout =>
@@ -161,19 +150,25 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   }
 
   private[this] def initConnection() : Unit = {
-    val remaining : Double = config.minReconnect * 1000.0 - (System.currentTimeMillis() - lastConnect)
-    if (remaining > 0) {
+    val remaining : Double = config.minReconnect * 1000.0 - (System.currentTimeMillis() - lastConnectAttempt)
+    if (lastDisconnect > 0l && remaining > 0) {
       log.debug(s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
       checkConnection(schedule)
     } else {
-      lastConnect = System.currentTimeMillis()
-      connect(lastConnect).pipeTo(self)
-      context.system.scheduler.scheduleOnce(30.seconds, self, ConnectingTimeout(lastConnect))
+      lastConnectAttempt = System.currentTimeMillis()
+      connect(lastConnectAttempt).pipeTo(self)
+      context.system.scheduler.scheduleOnce(30.seconds, self, ConnectingTimeout(lastConnectAttempt))
       context.become(connecting)
     }
   }
 
-  private[this] def checkConnection(delay : FiniteDuration) : Unit = {
+  private[this] def checkConnection(delay : FiniteDuration, force : Boolean = false) : Unit = {
+
+    if (force) {
+      pingTimer.foreach(_.cancel())
+      pingTimer = None
+    }
+
     if (pingTimer.isEmpty) {
       pingTimer = Some(context.system.scheduler.scheduleOnce(delay, self, CheckConnection))
     }
@@ -199,11 +194,17 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     pingTimer = None
     failedPings = 0
 
-    conn.foreach { c =>
+    if (conn.isDefined) {
       log.debug(s"Closing connection for provider [$provider]")
-      context.system.actorOf(Props(ConnectionCloseActor(c.connection, config.minReconnect.seconds, self)))
+      context.system.actorOf(Props(ConnectionCloseActor(conn.get.connection, config.minReconnect.seconds, self)))
+      conn = None
+      lastDisconnect = System.currentTimeMillis()
+      BlendedSingleConnectionFactory.setConnection(provider, conn)
+      context.become(closing)
+    } else {
+      log.debug(s"Connection for provider is already disconnected [$provider]")
+      context.become(disconnected)
     }
-    context.become(closing)
   }
 
   private[this] def checkReconnect() : Unit = {

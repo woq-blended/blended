@@ -2,15 +2,32 @@ package blended.jms.utils
 
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 
-import akka.pattern.ask
 import akka.actor.Props
 import akka.util.Timeout
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.internal.{ConnectionControlActor, GetConnection}
+import blended.jms.utils.internal.ConnectionControlActor
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+
+object BlendedSingleConnectionFactory {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
+  private[this] var connections : Map[String, Connection] = Map.empty
+
+  def getConnection(provider : String) : Option[Connection] = connections.get(provider)
+
+  def setConnection(provider : String, conn : Option[Connection]) : Unit = {
+    conn match {
+      case None =>
+        log.info(s"Removing connection for provider [${provider}] from cache.")
+        connections = connections.filterKeys( k => !k.equals(provider) )
+      case Some(c) =>
+        log.info(s"Caching connection for provider [${provider}].")
+        connections = connections + (provider -> c)
+    }
+  }
+}
 
 class BlendedSingleConnectionFactory(
   cfg : OSGIActorConfig,
@@ -24,19 +41,16 @@ class BlendedSingleConnectionFactory(
   private[this] val log : Logger = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
 
   private[this] val con = s"JMS-$provider"
+
+  log.debug(s"Creating ConnectionControlActor [${con}]")
   private[this] val actor = cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, config, cfg.bundleContext)), con)
+  log.debug(s"ConnectionControlActor [${con}] created.")
 
   @throws[JMSException]
   override def createConnection(): Connection = {
 
     try {
-
-      val futConn = for {
-        controller <- cfg.system.actorSelection(s"/user/$con").resolveOne()
-        conn <- (controller ? GetConnection).mapTo[Option[Connection]]
-      } yield conn
-
-      Await.result(futConn, timeout.duration) match {
+      BlendedSingleConnectionFactory.getConnection(provider) match {
         case Some(c) => c
         case None => throw new Exception(s"Error connecting to $provider.")
       }
