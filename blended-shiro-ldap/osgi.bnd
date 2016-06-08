@@ -1,0 +1,9 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: com.sun.jndi.*
+
+Fragment-Host: org.apache.shiro.core

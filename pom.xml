@@ -192,6 +192,7 @@
         <module>blended-security</module>
         <module>blended-security-boot</module>
         <module>blended-hawtio-login</module>
+        <module>blended-shiro-ldap</module>
 
         <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
