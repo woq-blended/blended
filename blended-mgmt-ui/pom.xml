@@ -78,12 +78,15 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
+        <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <version>1.5.0</version>
         <executions>
           <execution>
             <id>run-sbt</id>
+            <goals>
+              <goal>exec</goal>
+            </goals>
             <phase>compile</phase>
             <configuration>
               <executable>sbt</executable>
