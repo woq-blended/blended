@@ -631,6 +631,13 @@
 		</dependency>
 
 
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>blended.mgmt.ui</artifactId>
+			<version>${blended.version}</version>
+			<type>war</type>
+		</dependency>
+
 		<!-- blended-security -->
 
 		<dependency>

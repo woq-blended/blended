@@ -111,6 +111,15 @@
           <archive>
             <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
           </archive>
+          <webResources>
+            <resource>
+              <directory>${project.build.directory}/scala-2.11</directory>
+              <targetPath>scripts</targetPath>
+              <includes>
+                <include>**/*.js</include>
+              </includes>
+            </resource>
+          </webResources>
         </configuration>
       </plugin>
 

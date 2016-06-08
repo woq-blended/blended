@@ -211,6 +211,8 @@
         <module>blended-launcher-demo</module>
         <module>blended-demo-mgmt</module>
 
+        <module>blended-mgmt-ui</module>
+
       </modules>
     </profile>
 
