@@ -14,6 +14,7 @@ blended-camel-utils \
 blended-container-context \
 blended-container-registry \
 blended-domino \
+blended-hawtio \
 blended-hawtio-login \
 blended-itestsupport \
 blended-jms-utils \

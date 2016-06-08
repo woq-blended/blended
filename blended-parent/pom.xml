@@ -103,7 +103,7 @@
 
     <activemq.version>5.13.0</activemq.version>
     <camel.version>2.16.1</camel.version>
-    <hawtio.version>1.5-SNAPSHOT</hawtio.version>
+    <hawtio.version>1.4.65</hawtio.version>
 
     <!--used -->
     <activeio.version>3.1.4</activeio.version>
@@ -159,6 +159,7 @@
     <neo4j.version>2.1.2</neo4j.version>
     <netty.version>3.8.1.Final</netty.version>
     <ops4j-base.version>1.4.0</ops4j-base.version>
+    <orientdb.version>2.2.0</orientdb.version>
     <osgi.core.version>4.3.0</osgi.core.version>
     <osgi.enterprise.version>4.2.0</osgi.enterprise.version>
     <osweb.asm.version>3.1.0</osweb.asm.version>
@@ -583,6 +584,16 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-osgi</artifactId>
         <version>${activemq.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest_${scala.version}</artifactId>
+        <version>${scalatest.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.domino-osgi</groupId>
+        <artifactId>domino_${scala.version}</artifactId>
+        <version>${domino.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

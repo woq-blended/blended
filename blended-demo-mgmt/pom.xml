@@ -116,27 +116,26 @@
       <type>conf</type>
       <classifier>blended-samples</classifier>
     </dependency>
-
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-samples</classifier>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>blended.launcher.features</artifactId>
+      <version>${blended.version}</version>
+      <type>conf</type>
+      <classifier>blended-mgmt-server</classifier>
+    </dependency>
+    
     <!-- bundles -->
 
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>blended.mgmt.base</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
       <artifactId>blended.mgmt.rest</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.container.registry</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>${project.groupId}</groupId>
-      <artifactId>blended.persistence</artifactId>
       <version>${blended.version}</version>
     </dependency>
     <dependency>
