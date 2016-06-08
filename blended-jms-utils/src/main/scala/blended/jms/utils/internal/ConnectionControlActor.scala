@@ -116,7 +116,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       if (t == lastConnectAttempt) {
         log.debug(s"Successfully connected to provider [$provider]")
         conn = Some(new BlendedJMSConnection(c))
-        BlendedSingleConnectionFactory.setConnection(provider, conn)
+        publishConnection(conn)
         checkConnection(schedule)
         context.become(connected)
       }
@@ -133,6 +133,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
     case ConnectionClosed =>
       conn = None
+      publishConnection(None)
       lastDisconnect = System.currentTimeMillis()
       checkConnection(schedule, true)
       context.become(disconnected)
@@ -194,16 +195,15 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     pingTimer = None
     failedPings = 0
 
-    if (conn.isDefined) {
-      log.debug(s"Closing connection for provider [$provider]")
-      context.system.actorOf(Props(ConnectionCloseActor(conn.get.connection, config.minReconnect.seconds, self)))
-      conn = None
-      lastDisconnect = System.currentTimeMillis()
-      BlendedSingleConnectionFactory.setConnection(provider, conn)
-      context.become(closing)
-    } else {
+    if (conn.isEmpty) {
       log.debug(s"Connection for provider is already disconnected [$provider]")
       context.become(disconnected)
+    } else {
+      log.debug(s"Closing connection for provider [$provider]")
+      context.system.actorOf(Props(ConnectionCloseActor(conn.get.connection, config.minReconnect.seconds, self)))
+      lastDisconnect = System.currentTimeMillis()
+      context.become(closing)
+      publishConnection(None)
     }
   }
 
@@ -221,6 +221,9 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     disconnect()
     checkConnection(retrySchedule)
   }
+
+  private[this] def publishConnection(c: Option[Connection]) : Unit = BlendedSingleConnectionFactory.setConnection(provider, c)
+
 
   private[this] def ping(c: Connection) : Future[PingResult] = {
 
