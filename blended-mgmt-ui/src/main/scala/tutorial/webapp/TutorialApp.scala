@@ -1,12 +1,12 @@
 package tutorial.webapp
 
-import scala.scalajs.js.JSApp
 import scala.scalajs.js.annotation.JSExport
+import scalajs.js
 
-class TutorialApp extends JSApp {
+@JSExport
+class TutorialApp extends js.JSApp {
 
-  @JSExport
-  override def main(): Unit = {
+  def main(): Unit = {
     println("Hello World!")
   }
 }

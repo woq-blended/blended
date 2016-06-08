@@ -92,11 +92,19 @@
               <executable>sbt</executable>
               <workingDirectory>${project.basedir}</workingDirectory>
               <arguments>
-                <argument>compile</argument>
+                <argument>fastOptJS</argument>
               </arguments>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <classesDirectory>${project.build.outputDirectory}/scala-2.11</classesDirectory>
+        </configuration>
       </plugin>
     </plugins>
   </build>
