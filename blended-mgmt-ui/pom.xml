@@ -23,13 +23,18 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.wayofquality.blended</groupId>
   <artifactId>blended.mgmt.ui</artifactId>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
 
   <version>2.0-SNAPSHOT</version>
 
   <name>${project.artifactId}</name>
   <url>https://github.com/woq-blended/blended</url>
   <description>The blended management UI.</description>
+
+  <properties>
+    <bundle.namespace>${project.artifactId}</bundle.namespace>
+    <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
+  </properties>
 
   <licenses>
     <license>
@@ -101,10 +106,34 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
+        <artifactId>maven-war-plugin</artifactId>
         <configuration>
-          <classesDirectory>${project.build.outputDirectory}/scala-2.11</classesDirectory>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <supportedProjectTypes>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+          <instructions>
+            <_include>osgi.bnd</_include>
+          </instructions>
+        </configuration>
+        <executions>
+          <execution>
+            <id>manifest</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

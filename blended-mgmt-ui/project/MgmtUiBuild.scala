@@ -17,7 +17,7 @@ object MgmtUiBuild extends Build {
     version := Versions.app,
     name := appName,
     scalaVersion := Versions.scala,
-    mainClass in Compile := Some("tutorial.webApp.TutorialApp"),
+    mainClass in Compile := Some("tutorial.webapp.TutorialApp"),
     libraryDependencies ++= Dependencies.clientDeps.value,
     persistLauncher in Compile := true,
     persistLauncher in Test := false
