@@ -28,7 +28,12 @@ object MgmtUiBuild extends Build {
 
     lazy val clientDeps = Def.setting(Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
-      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
+      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
+      "com.lihaoyi" %%% "upickle" % Versions.upickle,
+      "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
+      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
+      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery
     ))
   }
 }
+
