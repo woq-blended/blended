@@ -39,16 +39,9 @@ Model(
   ),
   build = Build(
     plugins = Seq(
-      Plugin(
-        "org.apache.felix" % "maven-bundle-plugin",
-        extensions = true
-      ),
-      Plugin(
-        "net.alchim31.maven" % "scala-maven-plugin"
-      ),
-      Plugin(
-        "org.scalatest" % "scalatest-maven-plugin"
-      )
+      mavenBundlePlugin,
+      scalaMavenPlugin,
+      scalatestMavenPlugin
     )
   ),
     profiles = Seq(Profile(

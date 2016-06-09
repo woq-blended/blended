@@ -4,27 +4,26 @@
 val blendedGroupId = "de.wayofquality.blended"
 val blendedVersion = "2.0-SNAPSHOT"
 
-implicit val scalaVersion = ScalaVersion("2.10.6")
-
+implicit val scalaVersion = ScalaVersion("2.11.8")
 
 // Blended Projects
 
 val blendedParent = Parent(
-    gav = blendedGroupId % "blended.parent" % blendedVersion,
-    relativePath = "../blended-parent"
-  )
+  gav = blendedGroupId % "blended.parent" % blendedVersion,
+  relativePath = "../blended-parent"
+)
 
 val blendedAkka = blendedGroupId % "blended.akka" % blendedVersion
+val blendedContainerContext = blendedGroupId % "blended.container.context" % blendedVersion
+val blendedJmx = blendedGroupId % "blended.jmx" % blendedVersion
 val blendedLauncher = blendedGroupId % "blended.launcher" % blendedVersion
+val blendedMgmtBase = blendedGroupId % "blended.mgmt.base" % blendedVersion
 val blendedPersistence = blendedGroupId % "blended.persistence" % blendedVersion
 val blendedPersistenceOrient = blendedGroupId % "blended.persistence.orient" % blendedVersion
+val blendedSprayApi = blendedGroupId % "blended.spray.api" % blendedVersion
 val blendedTestSupport = blendedGroupId % "blended.testsupport" % blendedVersion
 val blendedUpdater = blendedGroupId % "blended.updater" % blendedVersion
 val blendedUpdaterConfig = blendedGroupId % "blended.updater.config" % blendedVersion
-val blendedContainerContext = blendedGroupId % "blended.container.context" % blendedVersion
-val blendedMgmtBase = blendedGroupId % "blended.mgmt.base" % blendedVersion
-val blendedSprayApi = blendedGroupId % "blended.spray.api" % blendedVersion
-
 
 // Dependencies
 
@@ -54,20 +53,32 @@ val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 
 val typesafeConfig = "com.typesafe" % "config" % "${typesafe.config.version}"
 
-
 // Plugins
 
+val mavenBundlePlugin = Plugin(
+  "org.apache.felix" % "maven-bundle-plugin",
+  extensions = true
+)
+
+val scalaMavenPlugin = Plugin(
+  "net.alchim31.maven" % "scala-maven-plugin"
+)
+
+val scalatestMavenPlugin = Plugin(
+  "org.scalatest" % "scalatest-maven-plugin"
+)
+
 def generatePomXml(phase: String = "validate") = Plugin(
-        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.15",
-        executions = Seq(
-          Execution(
-            id = "generate-pom.xml",
-            goals = Seq("translate"),
-            phase = "validate",
-            configuration = Config(
-              input = "pom.scala",
-              output = "pom.xml"
-            )
-          )
-        )
+  "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.15",
+  executions = Seq(
+    Execution(
+      id = "generate-pom.xml",
+      goals = Seq("translate"),
+      phase = phase,
+      configuration = Config(
+        input = "pom.scala",
+        output = "pom.xml"
       )
+    )
+  )
+)
