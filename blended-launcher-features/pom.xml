@@ -633,12 +633,6 @@
 			<version>${blended.version}</version>
 		</dependency>
 
-    <dependency>
-      <groupId>de.wayofquality.blended</groupId>
-      <artifactId>blended.shiro.ldap</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
 	</dependencies>
 
 	<build>
