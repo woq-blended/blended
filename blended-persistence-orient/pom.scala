@@ -10,10 +10,7 @@ Model(
   packaging = "bundle",
   name = "${project.artifactId}",
   description = "Implement a persistence backend with OrientDB.",
-  parent = Parent(
-    gav = blendedGroupId % "blended.parent" % "2.0-SNAPSHOT",
-    relativePath = "../blended-parent"
-  ),
+  parent = blendedParent,
   dependencies = Seq(
     // compile
     blendedAkka,
@@ -23,7 +20,7 @@ Model(
     // test
     scalaTest % "test",
     blendedTestSupport % "test",
-    mockito % "test"
+    mockitoAll % "test"
   ),
   properties = Map(
     "bundle.symbolicName" -> "${project.artifactId}",
@@ -31,21 +28,6 @@ Model(
   ),
   build = Build(
     plugins = Seq(
-      // Generate pom.xml
-      Plugin(
-        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.15",
-        executions = Seq(
-          Execution(
-            id = "generate-pom.xml",
-            goals = Seq("translate"),
-            phase = "none",
-            configuration = Config(
-              input = "pom.scala",
-              output = "pom.xml"
-            )
-          )
-        )
-      ),
       Plugin(
         "org.apache.felix" % "maven-bundle-plugin",
         extensions = true
@@ -62,21 +44,7 @@ Model(
     id = "gen-pom",
     build = Build(
       plugins = Seq(
-        // Generate pom.xml
-        Plugin(
-          "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.15",
-          executions = Seq(
-            Execution(
-              id = "generate-pom.xml",
-              goals = Seq("translate"),
-              phase = "validate",
-              configuration = Config(
-                input = "pom.scala",
-                output = "pom.xml"
-              )
-            )
-          )
-        )
+        generatePomXml(phase = "validate")
       )
     )
   )),
