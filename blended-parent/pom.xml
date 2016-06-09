@@ -101,9 +101,9 @@
 
     <!-- library versions -->
 
-    <activemq.version>5.13.0</activemq.version>
-    <camel.version>2.16.1</camel.version>
-    <hawtio.version>1.5-SNAPSHOT</hawtio.version>
+    <activemq.version>5.13.3</activemq.version>
+    <camel.version>2.16.3</camel.version>
+    <hawtio.version>1.4.65</hawtio.version>
 
     <!--used -->
     <activeio.version>3.1.4</activeio.version>
