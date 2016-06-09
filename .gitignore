@@ -19,3 +19,4 @@ felix-cache
 libs/
 .mvn/maven.settings
 .mvn/maven.config
+.polyglot.pom.scala

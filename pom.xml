@@ -150,25 +150,14 @@
     </profile>
 
     <profile>
-      <id>updater</id>
-      <modules>
-	<module>blended-util</module>
-	<module>blended-testsupport</module>
-	<module>blended-updater-config</module>
-	<module>blended-updater-tools</module>
-	<module>blended-launcher</module>
-	<module>blended-updater-maven-plugin</module>
-      </modules>
-    </profile>
-
-    <profile>
       <id>build</id>
       <modules>
-        <module>blended-updater-config</module>
         <module>blended-launcher</module>
         <module>blended-updater</module>
+        <module>blended-updater-config</module>
         <module>blended-updater-tools</module>
         <module>blended-updater-remote</module>
+        <module>blended-updater-maven-plugin</module>
 
         <module>blended-activemq-brokerstarter</module>
         <module>blended-container-context</module>

@@ -21,6 +21,13 @@
 
 	<dependencies>
 
+    <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended-updater-maven-plugin</artifactId>
+      <version>${blended.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
 		<!-- blended-base -->
 
 		<dependency>
