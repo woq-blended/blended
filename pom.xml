@@ -193,12 +193,8 @@
         <module>blended-security-boot</module>
         <module>blended-hawtio-login</module>
 
-        <module>blended-neo4j-api</module>
         <module>blended-persistence</module>
         <module>blended-persistence-orient</module>
-
-        <!--module>blended-persistence-neo4j</module>
-        <module>blended-persistence-h2</module-->
 
         <module>blended-jolokia</module>
         <module>blended-itestsupport</module>
