@@ -113,7 +113,6 @@ object BlendedModel{
     )
   )
 
-
   def apply(
     gav: Gav,
     build: Build = null,
@@ -131,7 +130,6 @@ object BlendedModel{
     modelEncoding: String = "UTF-8",
     modules: immutable.Seq[String] = Nil,
     packaging: String,
-    parent: Parent = null,
     pluginRepositories: immutable.Seq[Repository] = Nil,
     pomFile: Option[File] = None,
     prerequisites: Prerequisites = null,
@@ -158,7 +156,7 @@ object BlendedModel{
     name = Some("${project.artifactId}"),
     organization = Option(organization),
     packaging = packaging,
-    parent = Option(parent),
+    parent = None,
     pluginRepositories = pluginRepositories,
     pomFile = pomFile,
     prerequisites = Option(prerequisites),
@@ -174,6 +172,8 @@ object BlendedModel{
 
 val blendedAkka = BlendedModule("blended.akka")
 val blendedContainerContext = BlendedModule("blended.container.context")
+val blendedDomino = BlendedModule("blended.domino")
+val blendedJmsUtils = BlendedModule("blended.jms.utils")
 val blendedJmx = BlendedModule("blended.jmx")
 val blendedLauncher = BlendedModule("blended.launcher")
 val blendedMgmtBase = BlendedModule("blended.mgmt.base")
