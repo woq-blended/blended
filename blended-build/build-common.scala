@@ -170,6 +170,7 @@ object BlendedModel{
 
 // Blended Projects
 
+val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
 val blendedAkka = BlendedModule("blended.akka")
 val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedDomino = BlendedModule("blended.domino")

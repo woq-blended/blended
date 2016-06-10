@@ -1,7 +1,11 @@
 // Dependencies
 
+val activeMqVersion = "5.13.3"
 val akkaVersion = "2.3.10"
 val camelVersion = "2.16.3"
+
+val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
+val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
 
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
 val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
