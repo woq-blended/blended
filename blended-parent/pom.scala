@@ -312,32 +312,7 @@ Model(
         Plugin(
           "org.apache.maven.plugins" % "maven-shade-plugin" % "2.3"
         ),
-        Plugin(
-          "org.apache.felix" % "maven-bundle-plugin" % "${bundle.plugin.version}",
-          extensions = true,
-          executions = Seq(
-            Execution(
-              id = "manifest",
-              phase = "process-classes",
-              goals = Seq(
-                "manifest"
-              )
-            )
-          ),
-          dependencies = Seq(
-            "biz.aQute.bnd" % "biz.aQute.bndlib" % "${bndtool.version}"
-          ),
-          configuration = Config(
-            supportedProjectTypes = Config(
-              supportedProjectType = "jar",
-              supportedProjectType = "bundle",
-              supportedProjectType = "war"
-            ),
-            instructions = Config(
-              _include = "osgi.bnd"
-            )
-          )
-        ),
+        mavenBundlePlugin,
         Plugin(
           "org.apache.maven.plugins" % "maven-compiler-plugin" % "${compiler-plugin.version}",
           configuration = Config(
