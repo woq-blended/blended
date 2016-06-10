@@ -173,6 +173,7 @@ object BlendedModel{
 val blendedAkka = BlendedModule("blended.akka")
 val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedDomino = BlendedModule("blended.domino")
+val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
 val blendedJmsUtils = BlendedModule("blended.jms.utils")
 val blendedJmx = BlendedModule("blended.jmx")
 val blendedLauncher = BlendedModule("blended.launcher")
