@@ -1,13 +1,14 @@
 package blended.persistence.orient.internal
 
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.db.document.ODatabaseDocument
-import scala.collection.JavaConverters._
 import com.orientechnologies.orient.core.record.impl.ODocument
-import com.orientechnologies.orient.core.id.ORID
-import com.orientechnologies.orient.core.query.OQuery
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
-import blended.persistence.orient.PersistenceService
+
+import blended.persistence.PersistenceService
 
 class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
     extends PersistenceService {

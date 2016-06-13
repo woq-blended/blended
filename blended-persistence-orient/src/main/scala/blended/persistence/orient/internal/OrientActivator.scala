@@ -1,15 +1,17 @@
 package blended.persistence.orient.internal
 
+import java.io.File
+
+import scala.reflect.runtime.universe
+
 import org.slf4j.LoggerFactory
 
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
-
-import blended.persistence.orient.PersistenceService
-import domino.DominoActivator
-import java.io.File
-import blended.domino.TypesafeConfigWatching
-import com.orientechnologies.orient.core.db.document.ODatabaseDocument
 import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
+
+import blended.domino.TypesafeConfigWatching
+import blended.persistence.PersistenceService
+import domino.DominoActivator
 
 class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
 
