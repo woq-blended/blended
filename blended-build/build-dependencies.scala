@@ -1,8 +1,10 @@
-// Dependencies
+// Plain versions
 
 val activeMqVersion = "5.13.3"
 val akkaVersion = "2.3.10"
 val camelVersion = "2.16.3"
+
+// Dependencies
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
@@ -31,8 +33,7 @@ val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
 val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.0"
 
-//TODO: transformScalaVersion to proper String and use here
-val scalaLib = "org.scala-lang" % "scala-library" % "2.11.8"
+val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val slf4jVersion = "1.7.12"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion

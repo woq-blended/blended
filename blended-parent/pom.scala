@@ -185,9 +185,6 @@ BlendedModel(
           )
         ),
         Plugin(
-          "org.apache.maven.plugins" % "maven-source-plugin" % "2.4"
-        ),
-        Plugin(
           "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
           executions = Seq(
             Execution(

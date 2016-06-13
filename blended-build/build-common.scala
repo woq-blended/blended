@@ -8,13 +8,6 @@ val blendedVersion = "2.0-SNAPSHOT"
 
 implicit val scalaVersion = ScalaVersion("2.11.8")
 
-val blendedParent = Parent(
-  gav = blendedGroupId % "blended.parent" % blendedVersion,
-  relativePath = "../blended-parent"
-)
-
-def BlendedModule(name : String) = blendedGroupId % name % blendedVersion
-
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -135,40 +128,51 @@ object BlendedModel{
     prerequisites: Prerequisites = null,
     profiles: immutable.Seq[Profile] = Nil,
     properties: Map[String, String] = Map.empty,
-    repositories: immutable.Seq[Repository] = Nil
-  ) = new Model (
-    gav = gav,
-    build = Option(build),
-    ciManagement = Option(ciManagement),
-    contributors = contributors,
-    dependencyManagement= Option(dependencyManagement),
-    dependencies = dependencies,
-    description = Option(description),
-    developers = defaultDevelopers ++ developers,
-    distributionManagement = Option(distributionManagement),
-    inceptionYear = Option(inceptionYear),
-    issueManagement = Option(issueManagement),
-    licenses = defaultLicenses ++ licenses,
-    mailingLists = mailingLists,
-    modelEncoding = modelEncoding,
-    modelVersion = Some("4.0.0"),
-    modules = modules,
-    name = Some("${project.artifactId}"),
-    organization = Option(organization),
-    packaging = packaging,
-    parent = None,
-    pluginRepositories = pluginRepositories,
-    pomFile = pomFile,
-    prerequisites = Option(prerequisites),
-    profiles = defaultProfiles ++ profiles,
-    properties = defaultProperties ++ properties,
-    repositories = defaultRepositories ++ repositories,
-    scm = Option(scm),
-    url = Some("https://github.com/woq-blended/blended")
-  )
+    repositories: immutable.Seq[Repository] = Nil,
+    parent: Parent = null
+  ) = {
+    if(parent != null) println(s"Project with parent: ${gav}")
+    new Model (
+      gav = gav,
+      build = Option(build),
+      ciManagement = Option(ciManagement),
+      contributors = contributors,
+      dependencyManagement= Option(dependencyManagement),
+      dependencies = dependencies,
+      description = Option(description),
+      developers = defaultDevelopers ++ developers,
+      distributionManagement = Option(distributionManagement),
+      inceptionYear = Option(inceptionYear),
+      issueManagement = Option(issueManagement),
+      licenses = defaultLicenses ++ licenses,
+      mailingLists = mailingLists,
+      modelEncoding = modelEncoding,
+      modelVersion = Some("4.0.0"),
+      modules = modules,
+      name = Some("${project.artifactId}"),
+      organization = Option(organization),
+      packaging = packaging,
+      parent = Option(parent),
+      pluginRepositories = pluginRepositories,
+      pomFile = pomFile,
+      prerequisites = Option(prerequisites),
+      profiles = defaultProfiles ++ profiles,
+      properties = defaultProperties ++ properties,
+      repositories = defaultRepositories ++ repositories,
+      scm = Option(scm),
+      url = Some("https://github.com/woq-blended/blended")
+    )
+  }
 }
 
 // Blended Projects
+
+def BlendedModule(name : String) = blendedGroupId % name % blendedVersion
+
+val blendedParent = Parent(
+  gav = BlendedModule("blended.parent"),
+  relativePath = "../blended-parent"
+)
 
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
 val blendedAkka = BlendedModule("blended.akka")
@@ -185,5 +189,6 @@ val blendedSprayApi = BlendedModule("blended.spray.api")
 val blendedTestSupport = BlendedModule("blended.testsupport")
 val blendedUpdater = BlendedModule("blended.updater")
 val blendedUpdaterConfig = BlendedModule("blended.updater.config")
+val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
 
 

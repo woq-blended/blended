@@ -80,10 +80,21 @@ val scalaMavenPlugin = Plugin(
     )
   ),
   configuration = Config(
-    scalaVersion = "${scala.version}.${scala.micro.version}"
+    scalaVersion = scalaVersion.version
   )
 )
 
 val scalatestMavenPlugin = Plugin(
-  "org.scalatest" % "scalatest-maven-plugin"
+  "org.scalatest" % "scalatest-maven-plugin" % "1.0",
+  executions = Seq(
+    Execution(
+      id = "test",
+      goals = Seq("test")
+    )
+  ),
+  configuration = Config(
+    reportsDirectory = "${project.build.directory}/surefire-reports",
+    junitxml = ".",
+    stdout = "FT"
+  )
 )

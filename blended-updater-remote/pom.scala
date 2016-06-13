@@ -1,28 +1,25 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-val p = "blended.updater"
-println(s"Sourcing ${p}")
-
 #include blended-build/build-common.scala
 #include blended-build/build-dependencies.scala
 #include blended-build/build-plugins.scala
 
-Model(
-  blendedUpdater,
+BlendedModel(
+  blendedUpdaterRemote,
   packaging = "bundle",
-  name = "${project.artifactId}",
-  description = "OSGi Updater",
+  description = "OSGi Updater remote handle support",
   parent = blendedParent,
   dependencies = Seq(
     orgOsgi,
     domino,
     akkaOsgi,
     slf4j,
+    blendedPersistence,
     typesafeConfig,
     blendedUpdaterConfig,
-    blendedLauncher,
     blendedMgmtBase,
+    blendedLauncher,
     blendedContainerContext,
     blendedAkka,
     blendedSprayApi,
@@ -38,16 +35,11 @@ Model(
     mockitoAll % "test",
     blendedTestSupport % "test"
   ),
-  properties = Map(
-    "bundle.symbolicName" -> "${project.artifactId}",
-    "bundle.namespace" -> "${project.artifactId}"
-  ),
   build = Build(
     plugins = Seq(
       mavenBundlePlugin,
       scalaMavenPlugin,
       scalatestMavenPlugin
     )
-  ),
-  modelVersion = "4.0.0"
+  )
 )
