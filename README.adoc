@@ -25,9 +25,15 @@ Once, we are finished with the transition, you can build with a simple:
 
 As mose IDE's do not understand the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file. After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
 
+== Download  artifacts from Maven Central
+
+You can download released artifacts including binary and source JARs from http://search.maven.org/#search|ga|1|g%3A%22de.wayofquality.blended%22[Maven Central].
+
+
+
 == License
 
-Blended ist published under the Apache License Version 2.0
+Blended ist published under the http://www.apache.org/licenses/LICENSE-2.0[Apache License, Version 2.0]
 
 == Contribute
 
