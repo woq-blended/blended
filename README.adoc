@@ -15,7 +15,7 @@ The project documentation has moved to its own [github pages repository](https:/
 
 == Build from source
 
-We use Maven to build. You need at least Maven 3.3.1 as we are using the Maven Polyglot Scala Extension to build Blended.
+We use Maven to build. You need at least Maven 3.3.1 as we are using the https://github.com/takari/polyglot-maven[Maven Polyglot Scala Extension] to build Blended.
 
 Currently we transition the build scripts and as a result, the scipts may look a bit cluttered and unclean.
 
