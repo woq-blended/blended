@@ -2,7 +2,7 @@
 :toc:
 :toc-placement: preamble
 
-ifdef::env-gibbucket[]
+ifdef::env-github[]
 image:https://badge.waffle.io/woq-blended/blended.png[Stories in Ready, link=https://waffle.io/woq-blended/blended]
 image:https://api.travis-ci.org/woq-blended/blended.svg?branch=master[Building with Travis,link="https://travis-ci.org/woq-blended/blended"]
 image:https://badges.gitter.im/Join%20Chat.svg[Join the chat at, link="https://gitter.im/woq-blended/blended?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
