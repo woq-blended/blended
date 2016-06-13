@@ -1,72 +1,14 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-Model(
+#include blended-build/build-common.scala
+#include blended-build/build-dependencies.scala
+#include blended-build/build-plugins.scala
+
+BlendedModel(
   "de.wayofquality.blended" % "blended.parent" % "2.0-SNAPSHOT",
   packaging = "pom",
-  name = "${project.artifactId}",
   description = "Common Settings and configurations for all blended modules.",
-  url = "https://github.com/woq-blended/blended",
-  developers = Seq(
-    Developer(
-      email = "andreas@wayofquality.de",
-      name = "Andreas Gies",
-      organization = "WoQ - Way of Quality GmbH",
-      organizationUrl = "http://www.wayofquality.de"
-    ),
-    Developer(
-      email = "tobias.roeser@tototec.de",
-      name = "Tobias Roeser",
-      organization = "ToToTec GbR"
-    )
-  ),
-  licenses = Seq(
-    License(
-      name = "The Apache License, Version 2.0",
-      url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-    )
-  ),
-  scm = Scm(
-    connection = "scm:git:ssh://git@github.com/woq-blended/blended",
-    developerConnection = "scm:git:ssh://git@github.com/woq-blended/blended.git",
-    url = "https://github.com/woq-blended/blended"
-  ),
-  organization = Organization(
-    name = "https://github.com/woq-blended",
-    url = "https://github.com/woq-blended/blended"
-  ),
-  repositories = Seq(
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
-      id = "FUSEStaging",
-      url = "http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x"
-    ),
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
-      id = "SpringBundles",
-      url = "http://repository.springsource.com/maven/bundles/release"
-    ),
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
-      id = "SpringExternalBundles",
-      url = "http://repository.springsource.com/maven/bundles/external"
-    )
-  ),
   dependencies = Seq(
     "junit" % "junit" % "${junit.version}" % "test"
   ),
@@ -342,62 +284,7 @@ Model(
             argLine = "-Xmx1024m"
           )
         ),
-        Plugin(
-          "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1",
-          executions = Seq(
-            Execution(
-              id = "compile-scala",
-              goals = Seq(
-                "compile"
-              ),
-              configuration = Config(
-                fork = "true",
-                recompileMode = "incremental",
-                useZincServer = "true",
-                addJavacArgs = "-target|${java.version}|-source|${java.version}",
-                addZincArgs = "-C-target|-C${java.version}|-C-source|-C${java.version}",
-                args = Config(
-                  arg = "-deprecation",
-                  arg = "-feature",
-                  arg = "-Xlint",
-                  arg = "-Ywarn-nullary-override"
-                ),
-                jvmArgs = Config(
-                  jvmArg = "-Xms256m",
-                  jvmArg = "-Xmx512m",
-                  jvmArg = "-XX:MaxPermSize=128m"
-                )
-              )
-            ),
-            Execution(
-              id = "test-compile-scala",
-              goals = Seq(
-                "testCompile"
-              ),
-              configuration = Config(
-                fork = "true",
-                recompileMode = "incremental",
-                useZincServer = "true",
-                addJavacArgs = "-target|${java.version}|-source|${java.version}",
-                addZincArgs = "-C-target|-C${java.version}|-C-source|-C${java.version}",
-                args = Config(
-                  arg = "-deprecation",
-                  arg = "-feature",
-                  arg = "-Xlint",
-                  arg = "-Ywarn-nullary-override"
-                ),
-                jvmArgs = Config(
-                  jvmArg = "-Xms256m",
-                  jvmArg = "-Xmx512m",
-                  jvmArg = "-XX:MaxPermSize=128m"
-                )
-              )
-            )
-          ),
-          configuration = Config(
-            scalaVersion = "${scala.version}.${scala.micro.version}"
-          )
-        ),
+        scalaMavenPlugin,
         Plugin(
           "com.alexecollins.docker" % "docker-maven-plugin" % "2.4.0",
           executions = Seq(
@@ -525,6 +412,5 @@ Model(
         )
       )
     )
-  ),
-  modelVersion = "4.0.0"
+  )
 )
