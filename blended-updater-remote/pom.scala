@@ -9,7 +9,6 @@ BlendedModel(
   blendedUpdaterRemote,
   packaging = "bundle",
   description = "OSGi Updater remote handle support",
-  parent = blendedParent,
   dependencies = Seq(
     orgOsgi,
     domino,

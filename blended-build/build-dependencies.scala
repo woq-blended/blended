@@ -20,7 +20,7 @@ val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 val domino = "com.github.domino-osgi" %% "domino" % "1.1.1"
 
 val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
-val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "${felix.fileinstall.version}"
+val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
 val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
 val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
 val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
@@ -40,4 +40,4 @@ val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 
-val typesafeConfig = "com.typesafe" % "config" % "${typesafe.config.version}"
+val typesafeConfig = "com.typesafe" % "config" % "1.2.1"

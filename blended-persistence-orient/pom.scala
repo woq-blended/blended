@@ -9,7 +9,6 @@ BlendedModel(
   blendedPersistenceOrient,
   packaging = "bundle",
   description = "Implement a persistence backend with OrientDB.",
-  parent = blendedParent,
   dependencies = Seq(
     blendedPersistence,
     // compile

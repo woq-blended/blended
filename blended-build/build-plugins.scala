@@ -98,3 +98,4 @@ val scalatestMavenPlugin = Plugin(
     stdout = "FT"
   )
 )
+
