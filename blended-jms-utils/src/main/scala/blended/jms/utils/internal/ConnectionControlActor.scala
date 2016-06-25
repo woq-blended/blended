@@ -145,7 +145,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
         case None =>
           log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
           bundleContext.getBundle(0).update()
-        case Some(s) => s.restartContainer(msg)
+        case Some(s) => s.restartContainer(msg, true)
       }}
       disconnect()
   }

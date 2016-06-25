@@ -48,6 +48,9 @@ class ContainerContextImpl() extends ContainerContext {
     }
   }
 
+
+  override def getContainerLogDirectory(): String = containerLogDir
+
   override def getContainerDirectory(): String = containerDir
 
   val brandingProperties: Map[String, String] = {
@@ -66,7 +69,7 @@ class ContainerContextImpl() extends ContainerContext {
     props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
   }
 
-  private[this] val containerDir: String = {
+  private[this] lazy val containerDir: String = {
 
     val profileHome =
       brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
@@ -92,6 +95,11 @@ class ContainerContextImpl() extends ContainerContext {
     val absDir = configDir.getAbsolutePath
     System.setProperty("blended.container.home", absDir)
     absDir
+  }
+
+  private[this] lazy val containerLogDir: String = {
+    val f = new File(s"${containerDir}/../../../log")
+    f.getAbsolutePath()
   }
 
   override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath
