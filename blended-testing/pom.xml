@@ -25,7 +25,7 @@
 
   <groupId>de.wayofquality.blended.testing</groupId>
   <artifactId>blended-testing-reactor</artifactId>
-  <version>2.0-SNAPSHOT</version>
+  <version>2.0-RC5</version>
   <packaging>pom</packaging>
   <name>${project.artifactId}</name>
 
