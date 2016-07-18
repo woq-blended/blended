@@ -5,6 +5,7 @@ import com.typesafe.config.Config
 object BlendedJMSConnectionConfig {
 
   val defaultConfig = BlendedJMSConnectionConfig(
+    enabled = true,
     pingTolerance = 5,
     pingInterval = 30,
     pingTimeout = 3,
@@ -14,6 +15,7 @@ object BlendedJMSConnectionConfig {
   )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
+    val enabled       = if (cfg.hasPath("enabled")) cfg.getBoolean("enabled") else defaultConfig.enabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
     val pingInterval  = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
     val pingTimeout   = if (cfg.hasPath("pingTimeout")) cfg.getInt("pingTimeout") else defaultConfig.pingTimeout
@@ -22,6 +24,7 @@ object BlendedJMSConnectionConfig {
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
 
     BlendedJMSConnectionConfig(
+      enabled = enabled,
       pingTolerance = pingTolerance,
       pingInterval = pingInterval,
       pingTimeout = pingTimeout,
@@ -33,6 +36,7 @@ object BlendedJMSConnectionConfig {
 }
 
 case class BlendedJMSConnectionConfig(
+  enabled : Boolean,
   pingTolerance : Int,
   pingInterval : Int,
   pingTimeout : Int,
