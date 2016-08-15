@@ -6,25 +6,18 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedActivemqBrokerstarter,
+  gav = blendedSecurity,
   packaging = "bundle",
-  description =
-    """
-      |A simple wrapper around an Active MQ broker that makes sure that the broker
-      |is completely started before exposing a connection factory OSGi service.
-    """.stripMargin,
+  description = "Configuration bundle for the Apache Shiro security framework.",
   dependencies = Seq(
+    blendedSecurityBoot,
+    apacheShiroCore,
+    apacheShiroWeb,
     blendedAkka,
-    blendedJmsUtils,
-    camelJms,
-    activeMqBroker,
-    activeMqSpring,
     scalaLib % "provided"
   ),
-  build = Build(
-    plugins = Seq(
+  plugins = Seq(
       mavenBundlePlugin,
       scalaMavenPlugin
-    )
   )
 )

@@ -10,6 +10,7 @@ BlendedModel(
   packaging = "bundle",
   description = "OSGi Updater",
   dependencies = Seq(
+    scalaLib % "provided",
     orgOsgi,
     domino,
     akkaOsgi,

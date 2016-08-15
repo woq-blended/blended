@@ -33,6 +33,7 @@ BlendedModel(
     )
   ),
   properties = Map(
+    "junit.version" -> junit.version.get,
     "aries.util.version" -> "1.1.0",
     "bndtool.version" -> "3.2.0",
     "mimepull.version" -> "1.9.4",
@@ -40,7 +41,7 @@ BlendedModel(
     "spring.version" -> "3.2.14.RELEASE",
     "felix.ca.version" -> "1.8.6",
     "project.build.sourceEncoding" -> "UTF-8",
-    "shiro.version" -> "1.2.4",
+    "shiro.version" -> apacheShiroVersion,
     "docker.host" -> "localhost",
     "commons.lang.version" -> "2.6",
     "aries.blueprint.version" -> "1.0.1",

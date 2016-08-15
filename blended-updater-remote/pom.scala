@@ -10,6 +10,7 @@ BlendedModel(
   packaging = "bundle",
   description = "OSGi Updater remote handle support",
   dependencies = Seq(
+    scalaLib % "provided",
     orgOsgi,
     domino,
     akkaOsgi,
@@ -34,11 +35,9 @@ BlendedModel(
     mockitoAll % "test",
     blendedTestSupport % "test"
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin,
-      scalatestMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

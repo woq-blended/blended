@@ -10,22 +10,19 @@ BlendedModel(
   packaging = "bundle",
   description = "Implement a persistence backend with OrientDB.",
   dependencies = Seq(
+    scalaLib % "provided",
     blendedPersistence,
-    // compile
     blendedAkka,
     slf4j,
     domino,
     orientDbCore,
-    // test
     scalaTest % "test",
     blendedTestSupport % "test",
     mockitoAll % "test"
   ),
-  build = Build(
-    plugins = Seq(
-        mavenBundlePlugin,
-        scalaMavenPlugin,
-        scalatestMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

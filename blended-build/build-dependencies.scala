@@ -15,6 +15,10 @@ val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
 val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
 val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
+val apacheShiroVersion = "1.2.4"
+val apacheShiroCore = "org.apache.shiro" % "shiro-core" % apacheShiroVersion
+val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % apacheShiroVersion
+
 val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
 val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
@@ -42,6 +46,7 @@ val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val slf4jVersion = "1.7.12"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
+val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
