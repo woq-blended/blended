@@ -14,16 +14,19 @@ BlendedModel(
     orgOsgi,
     orgOsgiCompendium,
     slf4j,
+    junit,
     "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
     scalaTest % "test",
-    akkaTestkit % "test",
-    junit % "test"
+    akkaTestkit % "test"
   ),
-  build = Build(
-    plugins = Seq(
+  dependencyManagement = DependencyManagement(
+    Seq(
+      scalaLib
+    )
+  ),
+  plugins = BlendedModel.defaultPlugins ++ Seq(
       mavenBundlePlugin,
       scalaMavenPlugin,
       scalatestMavenPlugin
     )
-  )
 )

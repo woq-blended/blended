@@ -108,6 +108,58 @@ object BlendedModel{
     )
   )
 
+  val defaultResources = Seq(
+      Resource(
+        filtering = true,
+        directory = "src/main/resources"
+      ),
+      Resource(
+        directory = "src/main/binaryResources"
+      )
+    )
+
+  val defaultTestResources = Seq(
+      Resource(
+        filtering = true,
+        directory = "src/test/resources"
+      ),
+      Resource(
+        directory = "src/test/binaryResources"
+      )
+    )
+
+  val defaultPlugins = Seq(
+    Plugin(
+      "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.9.1",
+      executions = Seq(
+        Execution(
+          id = "add-scala-sources",
+          phase = "generate-sources",
+          goals = Seq(
+            "add-source"
+          ),
+          configuration = Config(
+            sources = Config(
+              source = "src/main/scala"
+            )
+          )
+        ),
+        Execution(
+          id = "add-scala-test-sources",
+          phase = "generate-sources",
+          goals = Seq(
+            "add-test-source"
+          ),
+          configuration = Config(
+            sources = Config(
+              source = "src/test/scala"
+            )
+          )
+        )
+      )
+    )
+  )
+
   def apply(
     gav: Gav,
     build: Build = null,
@@ -131,12 +183,24 @@ object BlendedModel{
     profiles: immutable.Seq[Profile] = Nil,
     properties: Map[String, String] = Map.empty,
     repositories: immutable.Seq[Repository] = Nil,
-    parent: Parent = null
+    parent: Parent = null,
+    resources: Seq[Resource] = null,
+    testResources: Seq[Resource] = null,
+    plugins: Seq[Plugin] = null
+
   ) = {
     if(parent != null) println(s"Project with parent: ${gav}")
+    val theBuild = Option(build).orElse{
+      Option(Build(
+          resources = Option(resources).getOrElse(defaultResources),
+          testResources = Option(testResources).getOrElse(defaultTestResources),
+          plugins = Option(plugins).getOrElse(defaultPlugins)
+        ))
+      }
+
     new Model (
       gav = gav,
-      build = Option(build),
+      build = theBuild,
       ciManagement = Option(ciManagement),
       contributors = contributors,
       dependencyManagement= Option(dependencyManagement),
