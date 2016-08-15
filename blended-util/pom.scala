@@ -14,7 +14,7 @@ BlendedModel(
     orgOsgi,
     orgOsgiCompendium,
     slf4j,
-    junit,
+    junit % "test",
     "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
     scalaTest % "test",
     akkaTestkit % "test"
