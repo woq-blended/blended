@@ -43,23 +43,33 @@ class BlendedSingleConnectionFactory(
   private[this] val con = s"JMS-$provider"
 
   log.debug(s"Creating ConnectionControlActor [${con}]")
-  private[this] val actor = cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, config, cfg.bundleContext)), con)
-  log.debug(s"ConnectionControlActor [${con}] created.")
+
+  private[this] val actor =
+    if (config.enabled) {
+      log.debug(s"ConnectionControlActor [${con}] created.")
+      Some(cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, config, cfg.bundleContext)), con))
+    }
+    else
+      None
 
   @throws[JMSException]
   override def createConnection(): Connection = {
 
-    try {
-      BlendedSingleConnectionFactory.getConnection(provider) match {
-        case Some(c) => c
-        case None => throw new Exception(s"Error connecting to $provider.")
+    if (config.enabled) {
+      try {
+        BlendedSingleConnectionFactory.getConnection(provider) match {
+          case Some(c) => c
+          case None => throw new Exception(s"Error connecting to $provider.")
+        }
+      } catch {
+        case e: Exception => {
+          val jmsEx = new JMSException("Error getting Connection Factory")
+          jmsEx.setLinkedException(e)
+          throw jmsEx
+        }
       }
-    } catch {
-      case e: Exception => {
-        val jmsEx = new JMSException("Error getting Connection Factory")
-        jmsEx.setLinkedException(e)
-        throw jmsEx
-      }
+    } else {
+      throw new JMSException(s"Connection for provider [$provider] is disabled.")
     }
   }
 

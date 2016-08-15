@@ -36,11 +36,12 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   private[this] val retrySchedule = config.retryInterval.seconds
   private[this] val schedule = Duration(config.pingInterval, TimeUnit.SECONDS)
 
+  private[this] var firstConnectAttempt : Option[Long] = None
   private[this] var lastConnectAttempt: Long = 0l
   private[this] var pinging : Boolean = false
   private[this] var pingTimer : Option[Cancellable] = None
 
-  private[this] var lastDisconnect : Long = 0l
+  private[this] var lastDisconnect : Option[Long] = None
   private[this] var failedPings : Int = 0
 
   override def preStart(): Unit = {
@@ -115,6 +116,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     case ConnectResult(t, Right(c)) =>
       if (t == lastConnectAttempt) {
         log.debug(s"Successfully connected to provider [$provider]")
+        firstConnectAttempt = None
         conn = Some(new BlendedJMSConnection(c))
         publishConnection(conn)
         checkConnection(schedule)
@@ -134,25 +136,23 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     case ConnectionClosed =>
       conn = None
       publishConnection(None)
-      lastDisconnect = System.currentTimeMillis()
+      lastDisconnect = Some(System.currentTimeMillis())
       checkConnection(schedule, true)
       context.become(disconnected)
 
     case CloseTimeout =>
-      val msg = s"Unable to close connection for provider [${provider} in [${config.minReconnect}]s]. Restarting container ..."
-      log.warning(msg)
-      withService[FrameworkService, Unit] { _ match {
-        case None =>
-          log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
-          bundleContext.getBundle(0).update()
-        case Some(s) => s.restartContainer(msg)
-      }}
+      restartContainer(s"Unable to close connection for provider [${provider} in [${config.minReconnect}]s]. Restarting container ...")
       disconnect()
   }
 
   private[this] def initConnection() : Unit = {
-    val remaining : Double = config.minReconnect * 1000.0 - (System.currentTimeMillis() - lastConnectAttempt)
-    if (lastDisconnect > 0l && remaining > 0) {
+
+    val remaining : Double = lastDisconnect match {
+      case None => 0
+      case Some(l) => config.minReconnect * 1000.0 - (System.currentTimeMillis() - l)
+    }
+
+    if (lastDisconnect.isDefined && remaining > 0) {
       log.debug(s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
       checkConnection(schedule)
     } else {
@@ -178,6 +178,10 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   private[this] def connect(timestamp: Long) : Future[ConnectResult] = Future {
     try {
       log.debug(s"Creating connection to JMS provider [$provider]")
+      if (config.maxReconnectTimeout > 0 && firstConnectAttempt.isEmpty && lastDisconnect.isDefined) {
+        log.info(s"Starting max reconnect timeout monitor for provider [${provider}] with [${config.maxReconnectTimeout}]s")
+        firstConnectAttempt = Some(lastConnectAttempt)
+      }
       scala.concurrent.blocking {
         val connection = new BlendedJMSConnection(cf.createConnection())
         connection.start()
@@ -186,6 +190,13 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     } catch {
       case NonFatal(e) =>
         log.debug(s"Error connecting to JMS provider [$provider]. ${e.getMessage()}")
+        if (config.maxReconnectTimeout > 0 && firstConnectAttempt.isDefined) {
+          firstConnectAttempt.foreach { t =>
+            if ((System.currentTimeMillis() - t) / 1000l > config.maxReconnectTimeout) {
+              restartContainer(s"Unable to reconnect to JMS provider [${provider}] in [${config.maxReconnectTimeout}]s. Restarting container ...")
+            }
+          }
+        }
         ConnectResult(timestamp, Left(e))
     }
   }
@@ -201,7 +212,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     } else {
       log.debug(s"Closing connection for provider [$provider]")
       context.system.actorOf(Props(ConnectionCloseActor(conn.get.connection, config.minReconnect.seconds, self)))
-      lastDisconnect = System.currentTimeMillis()
+      lastDisconnect = Some(System.currentTimeMillis())
       context.become(closing)
       publishConnection(None)
     }
@@ -224,6 +235,15 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
   private[this] def publishConnection(c: Option[Connection]) : Unit = BlendedSingleConnectionFactory.setConnection(provider, c)
 
+  private[this] def restartContainer(msg: String) : Unit = {
+    log.warning(msg)
+    withService[FrameworkService, Unit] { _ match {
+      case None =>
+        log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
+        bundleContext.getBundle(0).update()
+      case Some(s) => s.restartContainer(msg, true)
+    }}
+  }
 
   private[this] def ping(c: Connection) : Future[PingResult] = {
 

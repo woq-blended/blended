@@ -4,23 +4,43 @@ import com.typesafe.config.Config
 
 object BlendedJMSConnectionConfig {
 
-  val defaultConfig = BlendedJMSConnectionConfig(5, 30, 3, 5, 300)
+  val defaultConfig = BlendedJMSConnectionConfig(
+    enabled = true,
+    pingTolerance = 5,
+    pingInterval = 30,
+    pingTimeout = 3,
+    retryInterval = 5,
+    minReconnect = 300,
+    maxReconnectTimeout = -1
+  )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
+    val enabled       = if (cfg.hasPath("enabled")) cfg.getBoolean("enabled") else defaultConfig.enabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
     val pingInterval  = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
     val pingTimeout   = if (cfg.hasPath("pingTimeout")) cfg.getInt("pingTimeout") else defaultConfig.pingTimeout
     val retryInterval = if (cfg.hasPath("retryInterval")) cfg.getInt("retryInterval") else defaultConfig.retryInterval
     val minReconnect  = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
+    val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
 
-    BlendedJMSConnectionConfig(pingTolerance, pingInterval, pingTimeout, retryInterval, minReconnect)
+    BlendedJMSConnectionConfig(
+      enabled = enabled,
+      pingTolerance = pingTolerance,
+      pingInterval = pingInterval,
+      pingTimeout = pingTimeout,
+      retryInterval = retryInterval,
+      minReconnect = minReconnect,
+      maxReconnectTimeout = maxReconnectTimeout
+    )
   }
 }
 
 case class BlendedJMSConnectionConfig(
+  enabled : Boolean,
   pingTolerance : Int,
   pingInterval : Int,
   pingTimeout : Int,
   retryInterval : Int,
-  minReconnect : Int
+  minReconnect : Int,
+  maxReconnectTimeout: Int
 )

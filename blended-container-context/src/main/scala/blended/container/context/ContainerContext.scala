@@ -20,6 +20,7 @@ import com.typesafe.config.Config
 
 trait ContainerContext {
 
+  def getContainerLogDirectory(): String
   def getContainerDirectory(): String
   def getContainerConfigDirectory(): String
   def getContainerHostname(): String
