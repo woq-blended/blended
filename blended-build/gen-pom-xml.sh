@@ -4,20 +4,21 @@ dirs=$(find -path "*/target/scalamodel/pom.scala" -prune -o -name pom.scala -exe
 
 for dir in $dirs; do
 
-  cont="n"
+  # As we cannot check the included files, we always generate all
+  cont="y"
 
-  if [ "${dir}/pom.xml" -ot "${dir}/pom.scala" ]; then
-    cont="y"
-
+#  if [ "${dir}/pom.xml" -ot "${dir}/pom.scala" ]; then
+#    cont="y"
+#
 #    echo -n "${dir}/pom.xml is newer than ${dir}/pom.scala! Continue anyway [y/N]?"
 #    read cont
-
-  fi
+#
+#  fi
 
   if [ "$cont" == "y" ]; then
 
     echo "Converting ${dir}/pom.scala ->  ${dir}/pom.xml"
-    (cd ${dir} && mvn -N io.takari.polyglot:polyglot-translate-plugin:0.1.19:translate -Dinput=pom.scala -Doutput=pom.xml)
+    (cd ${dir} && mvn -N io.takari.polyglot:polyglot-translate-plugin:0.1.15:translate -Dinput=pom.scala -Doutput=pom.xml)
 
   fi
 
