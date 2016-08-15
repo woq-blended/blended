@@ -17,7 +17,7 @@ for dir in $dirs; do
   if [ "$cont" == "y" ]; then
 
     echo "Converting ${dir}/pom.scala ->  ${dir}/pom.xml"
-    (cd ${dir} && mvn -N io.takari.polyglot:polyglot-translate-plugin:0.1.15:translate -Dinput=pom.scala -Doutput=pom.xml)
+    (cd ${dir} && mvn -N io.takari.polyglot:polyglot-translate-plugin:0.1.19:translate -Dinput=pom.scala -Doutput=pom.xml)
 
   fi
 
