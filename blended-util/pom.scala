@@ -9,6 +9,9 @@ BlendedModel(
   blendedUtil,
   packaging = "bundle",
   description = "Utility classes to use in other bundles.",
+  properties = Map(
+    "loglevel.test" -> "INFO"
+  ),
   dependencies = Seq(
     akkaActor,
     orgOsgi,
@@ -17,6 +20,7 @@ BlendedModel(
     junit % "test",
     "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
     scalaTest % "test",
+    scalaXml,
     akkaTestkit % "test"
   ),
   dependencyManagement = DependencyManagement(

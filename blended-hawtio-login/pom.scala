@@ -9,9 +9,7 @@ BlendedModel(
   blendedHawtioLogin,
   packaging = "bundle",
   description = "Adding required imports to the hawtio war bundle.",
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin
   )
 )

@@ -6,16 +6,14 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedJmx,
+  gav = blendedJmx,
   packaging = "bundle",
   description = "Helper bundle to expose the platform's MBeanServer as OSGI Service.",
   dependencies = Seq(
     domino
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

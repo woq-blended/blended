@@ -10,7 +10,7 @@ BlendedModel(
   packaging = "bundle",
   description =
     """
-      |A bundle to privide a ConnectionFactory wrapper that monitors a single connection and is able
+      |A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able
       |to monitor the connection via an active ping.
     """.stripMargin,
   dependencies = Seq(
@@ -21,10 +21,8 @@ BlendedModel(
     blendedAkka,
     jms11Spec
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

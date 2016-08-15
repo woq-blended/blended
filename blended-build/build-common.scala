@@ -191,10 +191,12 @@ object BlendedModel{
   ) = {
     if(parent != null) println(s"Project with parent: ${gav}")
     val theBuild = Option(build).orElse{
+      val usedPlugins = Option(plugins).getOrElse(defaultPlugins)
       Option(Build(
           resources = Option(resources).getOrElse(defaultResources),
           testResources = Option(testResources).getOrElse(defaultTestResources),
-          plugins = Option(plugins).getOrElse(defaultPlugins)
+          plugins = usedPlugins,
+          pluginManagement = PluginManagement(plugins = usedPlugins)
         ))
       }
 
@@ -203,7 +205,7 @@ object BlendedModel{
       build = theBuild,
       ciManagement = Option(ciManagement),
       contributors = contributors,
-      dependencyManagement= Option(dependencyManagement),
+      dependencyManagement= Option(dependencyManagement).orElse(Option(DependencyManagement(dependencies))),
       dependencies = dependencies,
       description = Option(description),
       developers = defaultDevelopers ++ developers,

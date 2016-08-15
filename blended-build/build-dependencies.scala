@@ -38,6 +38,7 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.0"
 
 val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
 val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
+val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val slf4jVersion = "1.7.12"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion

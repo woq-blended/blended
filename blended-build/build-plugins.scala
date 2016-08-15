@@ -1,7 +1,7 @@
 // Plugins
 
 val mavenBundlePlugin = Plugin(
-  "org.apache.felix" % "maven-bundle-plugin" % "3.0.1",
+  "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
   extensions = true,
   executions = Seq(
     Execution(

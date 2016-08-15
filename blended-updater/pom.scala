@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedUpdater,
+  gav = blendedUpdater,
   packaging = "bundle",
   description = "OSGi Updater",
   dependencies = Seq(
@@ -33,11 +33,9 @@ BlendedModel(
     mockitoAll % "test",
     blendedTestSupport % "test"
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin,
-      scalatestMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )
