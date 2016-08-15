@@ -9,6 +9,7 @@ val camelVersion = "2.16.3"
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
 
+val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
 val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
 val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
@@ -38,6 +39,8 @@ val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val slf4jVersion = "1.7.12"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 
+
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"

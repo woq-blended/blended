@@ -25,7 +25,7 @@ object BlendedModel{
     id = "gen-pom",
     build = Build(
       plugins = Seq(Plugin(
-        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.15",
+        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.19",
         executions = Seq(
           Execution(
             id = "generate-pom.xml",
@@ -190,5 +190,4 @@ val blendedTestSupport = BlendedModule("blended.testsupport")
 val blendedUpdater = BlendedModule("blended.updater")
 val blendedUpdaterConfig = BlendedModule("blended.updater.config")
 val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
-
-
+val blendedUtil = BlendedModule("blended.util")
