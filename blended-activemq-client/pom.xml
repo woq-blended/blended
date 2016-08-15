@@ -1,73 +1,144 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  ~ Copyright 2014ff,  https://github.com/woq-blended
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
-
-<project
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
+<?xml version="1.0" encoding="UTF-8"?><project xsi:schemaLocation="http://maven.apache.org/POM/4.1.0 http://maven.apache.org/xsd/maven-4.1.0.xsd" xmlns="http://maven.apache.org/POM/4.1.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>de.wayofquality.blended</groupId>
-    <artifactId>blended.parent</artifactId>
-    <version>2.0-SNAPSHOT</version>
-    <relativePath>../blended-parent</relativePath>
-  </parent>
-
-  <name>${project.artifactId}</name>
+  <groupId>de.wayofquality.blended</groupId>
   <artifactId>blended.activemq.client</artifactId>
+  <version>2.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
-
-  <description>An Active MQ Connection factory as a service.</description>
+  <name>${project.artifactId}</name>
+  <description>
+An Active MQ Connection factory as a service.
+    </description>
+  <url>https://github.com/woq-blended/blended</url>
+  <organization name="https://github.com/woq-blended" url="https://github.com/woq-blended/blended" />
+  <licenses>
+    <license name="The Apache License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
+  </licenses>
+  <developers>
+    <developer name="Andreas Gies" email="andreas@wayofquality.de" organization="WoQ - Way of Quality GmbH" organizationUrl="http://www.wayofquality.de" />
+    <developer name="Tobias Roeser" email="tobias.roeser@tototec.de" organization="ToToTec GbR" />
+  </developers>
+  <scm connection="scm:git:ssh://git@github.com/woq-blended/blended" developerConnection="scm:git:ssh://git@github.com/woq-blended/blended.git" url="https://github.com/woq-blended/blended" />
   <properties>
-    <bundle.namespace>${project.artifactId}</bundle.namespace>
     <bundle.symbolicName>${project.artifactId}</bundle.symbolicName>
+    <bundle.namespace>${project.artifactId}</bundle.namespace>
   </properties>
-
   <dependencies>
-
-    <dependency>
-      <groupId>org.apache.activemq</groupId>
-      <artifactId>activemq-client</artifactId>
-      <version>${activemq.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>de.wayofquality.blended</groupId>
-      <artifactId>blended.domino</artifactId>
-      <version>${blended.version}</version>
-    </dependency>
-
+    <dependency groupId="de.wayofquality.blended" artifactId="blended.domino" version="2.0-SNAPSHOT" />
+    <dependency groupId="org.apache.activemq" artifactId="activemq-client" version="5.13.3" />
   </dependencies>
-
+  <repositories>
+    <repository id="FUSEStaging" url="http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x">
+      <releases enabled="true" updatePolicy="daily" checksumPolicy="warn" />
+      <snapshots enabled="false" updatePolicy="daily" checksumPolicy="warn" />
+    </repository>
+    <repository id="SpringBundles" url="http://repository.springsource.com/maven/bundles/release">
+      <releases enabled="true" updatePolicy="daily" checksumPolicy="warn" />
+      <snapshots enabled="false" updatePolicy="daily" checksumPolicy="warn" />
+    </repository>
+    <repository id="SpringExternalBundles" url="http://repository.springsource.com/maven/bundles/external">
+      <releases enabled="true" updatePolicy="daily" checksumPolicy="warn" />
+      <snapshots enabled="false" updatePolicy="daily" checksumPolicy="warn" />
+    </repository>
+  </repositories>
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
+      <plugin groupId="org.apache.felix" artifactId="maven-bundle-plugin" version="3.0.1" extensions="true" inherited="true">
+        <executions>
+          <execution id="manifest" phase="process-classes" inherited="true">
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency groupId="biz.aQute.bnd" artifactId="biz.aQute.bndlib" version="3.2.0" />
+        </dependencies>
+        <configuration>
+          <supportedProjectTypes>
+            <supportedProjectType>jar</supportedProjectType>
+            <supportedProjectType>bundle</supportedProjectType>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+          <instructions>
+            <_include>osgi.bnd</_include>
+          </instructions>
+        </configuration>
       </plugin>
-
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
+      <plugin groupId="net.alchim31.maven" artifactId="scala-maven-plugin" version="3.2.1" inherited="true">
+        <executions>
+          <execution id="compile-scala" inherited="true">
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <fork>true</fork>
+              <recompileMode>incremental</recompileMode>
+              <useZincServer>true</useZincServer>
+              <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+              <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+              <args>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
+                <arg>-Xlint</arg>
+                <arg>-Ywarn-nullary-override</arg>
+              </args>
+              <jvmArgs>
+                <jvmArg>-Xms256m</jvmArg>
+                <jvmArg>-Xmx512m</jvmArg>
+                <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+              </jvmArgs>
+            </configuration>
+          </execution>
+          <execution id="test-compile-scala" inherited="true">
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <configuration>
+              <fork>true</fork>
+              <recompileMode>incremental</recompileMode>
+              <useZincServer>true</useZincServer>
+              <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+              <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+              <args>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
+                <arg>-Xlint</arg>
+                <arg>-Ywarn-nullary-override</arg>
+              </args>
+              <jvmArgs>
+                <jvmArg>-Xms256m</jvmArg>
+                <jvmArg>-Xmx512m</jvmArg>
+                <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+              </jvmArgs>
+            </configuration>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>2.11.8</scalaVersion>
+        </configuration>
       </plugin>
     </plugins>
   </build>
-
+  <profiles>
+    <profile id="gen-pom">
+      <build>
+        <plugins>
+          <plugin groupId="io.takari.polyglot" artifactId="polyglot-translate-plugin" version="0.1.15" inherited="true">
+            <executions>
+              <execution id="generate-pom.xml" phase="validate" inherited="true">
+                <goals>
+                  <goal>translate</goal>
+                </goals>
+                <configuration>
+                  <input>pom.scala</input>
+                  <output>pom.xml</output>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
-

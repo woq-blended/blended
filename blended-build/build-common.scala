@@ -243,6 +243,7 @@ val blendedParent = Parent(
 )
 
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
+val blendedActivemqClient = BlendedModule("blended.activemq.client")
 val blendedAkka = BlendedModule("blended.akka")
 val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedDomino = BlendedModule("blended.domino")

@@ -7,6 +7,7 @@ val camelVersion = "2.16.3"
 // Dependencies
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
+val activemqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
 val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % activeMqVersion
 
