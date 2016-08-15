@@ -16,7 +16,8 @@ BlendedModel(
     slf4j,
     "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
     scalaTest % "test",
-    akkaTestkit % "test"
+    akkaTestkit % "test",
+    junit % "test"
   ),
   build = Build(
     plugins = Seq(
