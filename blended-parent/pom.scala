@@ -10,16 +10,16 @@ BlendedModel(
   packaging = "pom",
   description = "Common Settings and configurations for all blended modules.",
   dependencies = Seq(
-    "junit" % "junit" % "${junit.version}" % "test"
+    junit % "test"
   ),
   dependencyManagement = DependencyManagement(
     dependencies = Seq(
-      "org.scala-lang" % "scala-library" % "${scala.version}.${scala.micro.version}",
-      "org.scala-lang" % "scala-reflect" % "${scala.version}.${scala.micro.version}",
-      "org.slf4j" % "slf4j-api" % "${slf4j.version}",
-      "org.apache.activemq" % "activemq-osgi" % "${activemq.version}",
-      "org.scalatest" % "scalatest_${scala.version}" % "${scalatest.version}",
-      "com.github.domino-osgi" % "domino_${scala.version}" % "${domino.version}"
+      scalaLib,
+      scalaReflect,
+      slf4j,
+      activeMqOsgi,
+      scalaTest,
+      domino
     )
   ),
   distributionManagement = DistributionManagement(
@@ -114,7 +114,6 @@ BlendedModel(
     "war.plugin.version" -> "2.6",
     "bundle.plugin.version" -> "3.0.1",
     "xbean.asm4.version" -> "3.16",
-    "junit.version" -> "4.11",
     "commons.collections.version" -> "3.2.1",
     "jolokia.version" -> "1.3.3",
     "activemq.version" -> "5.13.3",

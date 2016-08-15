@@ -8,6 +8,7 @@ val camelVersion = "2.16.3"
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
+val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % activeMqVersion
 
 val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
@@ -27,6 +28,7 @@ val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.
 val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
 
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+val junit = "junit" % "junit" % "4.11"
 
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
@@ -35,10 +37,10 @@ val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.0"
 
 val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
+val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val slf4jVersion = "1.7.12"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
-
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"

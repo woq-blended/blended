@@ -7,6 +7,7 @@ val blendedGroupId = "de.wayofquality.blended"
 val blendedVersion = "2.0-SNAPSHOT"
 
 implicit val scalaVersion = ScalaVersion("2.11.8")
+val javaVersion = "1.7"
 
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
@@ -17,7 +18,8 @@ object BlendedModel{
   val defaultProperties : Map[String, String] =
     Map(
       "bundle.symbolicName" -> "${project.artifactId}",
-      "bundle.namespace" -> "${project.artifactId}"
+      "bundle.namespace" -> "${project.artifactId}",
+      "java.version" -> javaVersion
     )
 
   // Profiles we attach to all BlendedModels
