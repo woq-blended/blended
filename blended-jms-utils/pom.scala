@@ -14,9 +14,9 @@ BlendedModel(
       |to monitor the connection via an active ping.
     """.stripMargin,
   dependencies = Seq(
+    scalaLib % "provided",
     blendedDomino,
     blendedMgmtBase,
-    scalaLib,
     camelJms,
     blendedAkka,
     jms11Spec

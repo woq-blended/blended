@@ -186,7 +186,8 @@ object BlendedModel{
     parent: Parent = null,
     resources: Seq[Resource] = null,
     testResources: Seq[Resource] = null,
-    plugins: Seq[Plugin] = null
+    plugins: Seq[Plugin] = null,
+    pluginManagement: Seq[Plugin] = null
 
   ) = {
     if(parent != null) println(s"Project with parent: ${gav}")
@@ -196,7 +197,7 @@ object BlendedModel{
           resources = Option(resources).getOrElse(defaultResources),
           testResources = Option(testResources).getOrElse(defaultTestResources),
           plugins = usedPlugins,
-          pluginManagement = PluginManagement(plugins = usedPlugins)
+          pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
         ))
       }
 
@@ -248,8 +249,10 @@ val blendedAkka = BlendedModule("blended.akka")
 val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedDomino = BlendedModule("blended.domino")
 val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
+val blendedItestSupport = BlendedModule("blended.itestsupport")
 val blendedJmsUtils = BlendedModule("blended.jms.utils")
 val blendedJmx = BlendedModule("blended.jmx")
+val blendedJolokia = BlendedModule("blended.jolokia")
 val blendedLauncher = BlendedModule("blended.launcher")
 val blendedMgmtBase = BlendedModule("blended.mgmt.base")
 val blendedPersistence = BlendedModule("blended.persistence")
