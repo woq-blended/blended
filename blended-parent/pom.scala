@@ -52,11 +52,11 @@ BlendedModel(
     "felix.gogo.shell.version" -> "0.10.0",
     "osgi.enterprise.version" -> "4.2.0",
     "felix.framework.version" -> felixFramework.version.get,
-    "logback.version" logbackClassic.version.get,
+    "logback.version" -> logbackClassic.version.get,
     "cglib.version" -> "2.2.0",
     "mockito.version" -> "1.9.5",
     "aries.proxy.version" -> "1.0.1",
-    "scala.micro.version" -> scalaVersion.version.split("\\.", 3).drop(2).head(),
+    "scala.micro.version" -> scalaVersion.version.split("\\.", 3).drop(2).head,
     "joda-time.version" -> "1.6.2",
     "commons.pool.version" -> "1.6",
     "commons.exec.version" -> "1.3",
@@ -124,7 +124,7 @@ BlendedModel(
     "jetty.version" -> "7.6.8.v20121106",
     "commons.codec.version" -> "1.6.0",
     "linkedhashmap.version" -> "1.4.2",
-    "java.version" -> java.version
+    "java.version" -> javaVersion
   ),
   build = Build(
     resources = Seq(
