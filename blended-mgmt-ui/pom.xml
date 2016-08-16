@@ -136,6 +136,7 @@
         <version>8.1.16.v20140903</version>
         <configuration>
           <scanIntervalSeconds>10</scanIntervalSeconds>
+          <webAppSourceDirectory>target/blended.mgmt.ui-2.0-SNAPSHOT</webAppSourceDirectory>
           <webApp>
             <contextPath>/management</contextPath>
           </webApp>
