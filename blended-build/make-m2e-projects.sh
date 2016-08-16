@@ -171,7 +171,6 @@ nowarn=false
 optimise=false
 recompileOnMacroDef=true
 relationsDebug=false
-scala.compiler.additionalParams=\ -Xsource\:2.11 -Ymacro-expand\:none
 scala.compiler.installation=2.11
 scala.compiler.sourceLevel=2.11
 scala.compiler.useProjectSettings=true

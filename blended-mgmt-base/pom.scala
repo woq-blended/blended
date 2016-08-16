@@ -6,23 +6,18 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedJmsUtils,
+  gav = blendedMgmtBase,
   packaging = "bundle",
-  description =
-    """
-      |A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able
-      |to monitor the connection via an active ping.
-    """.stripMargin,
+  description = "Shared classes for management and reporting facility.",
   dependencies = Seq(
     scalaLib % "provided",
     blendedDomino,
-    blendedMgmtBase,
-    camelJms,
-    blendedAkka,
-    jms11Spec
-  ),
+    blendedUpdaterConfig,
+    sprayJson,
+    scalaTest % "test"
+  ), 
   plugins = Seq(
-    mavenBundlePlugin,
-    scalaMavenPlugin
+      mavenBundlePlugin,
+      scalaMavenPlugin
   )
 )

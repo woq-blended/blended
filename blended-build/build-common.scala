@@ -186,7 +186,8 @@ object BlendedModel{
     parent: Parent = null,
     resources: Seq[Resource] = null,
     testResources: Seq[Resource] = null,
-    plugins: Seq[Plugin] = null
+    plugins: Seq[Plugin] = null,
+    pluginManagement: Seq[Plugin] = null
 
   ) = {
     if(parent != null) println(s"Project with parent: ${gav}")
@@ -196,7 +197,7 @@ object BlendedModel{
           resources = Option(resources).getOrElse(defaultResources),
           testResources = Option(testResources).getOrElse(defaultTestResources),
           plugins = usedPlugins,
-          pluginManagement = PluginManagement(plugins = usedPlugins)
+          pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
         ))
       }
 
@@ -245,20 +246,24 @@ val blendedParent = Parent(
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
 val blendedActivemqClient = BlendedModule("blended.activemq.client")
 val blendedAkka = BlendedModule("blended.akka")
+val blendedCamelUtils = BlendedModule("blended.camel.utils")
 val blendedContainerContext = BlendedModule("blended.container.context")
+val blendedContainerRegistry = BlendedModule("blended.container.registry")
 val blendedDomino = BlendedModule("blended.domino")
 val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
+val blendedItestSupport = BlendedModule("blended.itestsupport")
 val blendedJmsUtils = BlendedModule("blended.jms.utils")
 val blendedJmx = BlendedModule("blended.jmx")
+val blendedJolokia = BlendedModule("blended.jolokia")
 val blendedLauncher = BlendedModule("blended.launcher")
 val blendedMgmtBase = BlendedModule("blended.mgmt.base")
 val blendedPersistence = BlendedModule("blended.persistence")
 val blendedPersistenceOrient = BlendedModule("blended.persistence.orient")
+val blendedSecurity = BlendedModule("blended.security")
+val blendedSecurityBoot = BlendedModule("blended.security.boot")
 val blendedSprayApi = BlendedModule("blended.spray.api")
 val blendedTestSupport = BlendedModule("blended.testsupport")
 val blendedUpdater = BlendedModule("blended.updater")
 val blendedUpdaterConfig = BlendedModule("blended.updater.config")
 val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
 val blendedUtil = BlendedModule("blended.util")
-val blendedSecurity = BlendedModule("blended.security")
-val blendedSecurityBoot = BlendedModule("blended.security.boot")
