@@ -23,8 +23,10 @@ BlendedModel(
     Plugin(
       mavenBundlePlugin.gav,
       extensions = true,
+      inherited = true,
       configuration = Config(
         instructions = new Config(Seq(
+          "_include" -> Option("osgi.bnd"),
           "Embed-Dependency" -> Option("*;scope=compile"),
           "_exportcontents" -> Option("spray.*;version="+ sprayVersion + ";-split-package:=merge-first," +
             "akka.spray.*;version="+ sprayVersion + ";-split-package:=merge-first," +
