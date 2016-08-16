@@ -3,9 +3,11 @@
 val activeMqVersion = "5.13.3"
 val akkaVersion = "2.3.10"
 val camelVersion = "2.16.3"
+val dockerJavaVersion = "1.0.0"
 val slf4jVersion = "1.7.12"
 val jolokiaVersion = "1.3.3"
-val dockerJavaVersion = "1.0.0"
+val parboiledVersion = "1.1.6"
+val sprayVersion = "1.3.2"
 
 // Dependencies
 
@@ -34,6 +36,7 @@ val camelServlet = "org.apache.camel" % "camel-servlet" % camelVersion
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
 val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
+val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
 val domino = "com.github.domino-osgi" %% "domino" % "1.1.1"
 
@@ -63,7 +66,12 @@ val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
-val sprayJson = "io.spray" %% "spray-json" % "1.3.1"
+val sprayClient = "io.spray" %% "spray-client" % sprayVersion
+val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
+val sprayJson = "io.spray" %% "spray-json" % sprayVersion
+val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
+val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
+val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
