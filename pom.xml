@@ -202,13 +202,6 @@
     </profile>
 
     <profile>
-      <id>testing</id>
-      <modules>
-        <module>blended-testing</module>
-      </modules>
-    </profile>
-
-    <profile>
       <id>itest</id>
       <modules>
         <module>blended-itestsupport</module>
