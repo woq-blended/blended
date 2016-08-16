@@ -30,6 +30,7 @@ val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 val camelCore = "org.apache.camel" % "camel-core" % camelVersion
 val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 val camelHttp = "org.apache.camel" % "camel-http" % camelVersion
+val camelServlet = "org.apache.camel" % "camel-servlet" % camelVersion
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
 val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
@@ -44,7 +45,8 @@ val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0
 val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
 val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-
+val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
+    
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
