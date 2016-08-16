@@ -33,7 +33,6 @@ blended-persistence-h2 \
 blended-samples \
 blended-spray \
 blended-spray-api \
-blended-testing \
 blended-testsupport \
 blended-updater \
 blended-updater-config \
