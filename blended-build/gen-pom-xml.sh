@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-dirs=$(find -path "*/target/scalamodel/pom.scala" -prune -o -name pom.scala -exec dirname {} \;)
+dirs=$(find . -name pom.scala -exec dirname {} \; | grep -v "target/scalamodel")
 
 for dir in $dirs; do
 
