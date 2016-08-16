@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.3 http://maven.apache.org/xsd/assembly-1.1.3.xsd">
+
+  <id>preWar</id>
+
+  <formats>
+    <format>dir</format>
+  </formats>
+
+  <fileSets>
+
+    <fileSet>
+      <directory>${project.build.directory}/scala-2.11</directory>
+      <outputDirectory>/scripts</outputDirectory>
+      <includes>
+        <include>blended-mgmt-ui*</include>
+      </includes>
+    </fileSet>
+
+    <!-- Bootstrap -->
+    <fileSet>
+      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/bootstrap/js</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>bootstrap.min.js</include>
+      </includes>
+    </fileSet>
+
+    <!-- JQuery -->
+    <fileSet>
+      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/jquery</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>jquery.min*</include>
+      </includes>
+    </fileSet>
+
+    <!-- React -->
+    <fileSet>
+      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/react</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>react.min.js</include>
+      </includes>
+    </fileSet>
+
+    <!-- CSS -->
+    <fileSet>
+      <directory>${project.build.directory}/web/classes/main/META-INF/resources/webjars/blended-mgmt-ui/${project.version}</directory>
+      <outputDirectory>css</outputDirectory>
+    </fileSet>
+
+  </fileSets>
+</assembly>

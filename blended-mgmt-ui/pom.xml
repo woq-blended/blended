@@ -73,7 +73,7 @@
         <version>1.5.0</version>
         <executions>
           <execution>
-            <id>run-sbt</id>
+            <id>compileJS</id>
             <goals>
               <goal>exec</goal>
             </goals>
@@ -82,8 +82,28 @@
               <executable>sbt</executable>
               <workingDirectory>${project.basedir}</workingDirectory>
               <arguments>
-                <argument>fastOptJS</argument>
+                <argument>fullOptJS</argument>
               </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+          <execution>
+            <id>prepareWar</id>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <phase>prepare-package</phase>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/assembly/assembly.xml</descriptor>
+              </descriptors>
             </configuration>
           </execution>
         </executions>
@@ -98,10 +118,10 @@
           </archive>
           <webResources>
             <resource>
-              <directory>${project.build.directory}/scala-2.11</directory>
-              <targetPath>scripts</targetPath>
+              <directory>${project.build.directory}/${project.artifactId}-${project.version}-preWar/${project.artifactId}-${project.version}</directory>
+              <targetPath>/</targetPath>
               <includes>
-                <include>**/*.js</include>
+                <include>**/*</include>
               </includes>
             </resource>
             <resource>
