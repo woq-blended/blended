@@ -104,6 +104,10 @@
                 <include>**/*.js</include>
               </includes>
             </resource>
+            <resource>
+              <directory>${project.build.directory}/web/classes/main/META-INF/resources/webjars/blended-mgmt-ui/${project.version}</directory>
+              <targetPath>css</targetPath>
+            </resource>
           </webResources>
         </configuration>
       </plugin>
