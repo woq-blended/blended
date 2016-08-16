@@ -56,7 +56,7 @@ BlendedModel(
     "cglib.version" -> "2.2.0",
     "mockito.version" -> "1.9.5",
     "aries.proxy.version" -> "1.0.1",
-    "scala.micro.version" -> "8",
+    "scala.micro.version" -> scalaVersion.version.split("\\.", 3).drop(2).head(),
     "joda-time.version" -> "1.6.2",
     "commons.pool.version" -> "1.6",
     "commons.exec.version" -> "1.3",
@@ -67,7 +67,7 @@ BlendedModel(
     "jettison.version" -> "1.3.4",
     "commons.discovery.version" -> "0.4.0",
     "felix.gogo.runtime.version" -> "0.16.2",
-    "spray-json.version" -> "1.3.1",
+    "spray-json.version" -> sprayJson.version.get,
     "xbean.finder.version" -> "3.16",
     "scalatest.version" -> "2.2.4",
     "commons.httpclient.version" -> "3.1.0",
@@ -87,7 +87,7 @@ BlendedModel(
     "blended.version" -> "2.0-SNAPSHOT",
     "aries.jmx.version" -> "1.1.1",
     "jersey.version" -> "1.18.1",
-    "slf4j.version" -> "1.7.12",
+    "slf4j.version" -> slf4j.version.get,
     "felix.scr.version" -> "1.6.2",
     "aries.blueprint.core.version" -> "1.4.3",
     "jledit.version" -> "0.2.0",
@@ -108,7 +108,7 @@ BlendedModel(
     "spring.osgi.version" -> "1.2.1",
     "typesafe.config.version" -> "1.2.1",
     "felix.cm.version" -> "1.6.0",
-    "scala.version" -> "2.11",
+    "scala.version" -> scalaVersion.binaryVersion,
     "compiler-plugin.version" -> "2.5.1",
     "parboiled.version" -> "1.1.6",
     "pax-web.version" -> "3.1.0",
@@ -124,7 +124,7 @@ BlendedModel(
     "jetty.version" -> "7.6.8.v20121106",
     "commons.codec.version" -> "1.6.0",
     "linkedhashmap.version" -> "1.4.2",
-    "java.version" -> "1.7"
+    "java.version" -> java.version
   ),
   build = Build(
     resources = Seq(

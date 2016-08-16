@@ -50,6 +50,7 @@ val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
+val sprayJson = "io.spray" %% "spray-json" % "1.3.1"
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
