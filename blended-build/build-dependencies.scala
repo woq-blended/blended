@@ -3,6 +3,7 @@
 val activeMqVersion = "5.13.3"
 val akkaVersion = "2.3.10"
 val camelVersion = "2.16.3"
+val slf4jVersion = "1.7.12"
 
 // Dependencies
 
@@ -34,6 +35,7 @@ val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0
 
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val junit = "junit" % "junit" % "4.11"
+val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
 
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
@@ -43,9 +45,8 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.0"
 
 val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
 val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
-val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
-val slf4jVersion = "1.7.12"
+val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
 
