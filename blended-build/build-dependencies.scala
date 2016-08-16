@@ -23,6 +23,7 @@ val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % apacheShiroVersion
 
 val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
+val camelCore = "org.apache.camel" % "camel-core" % camelVersion
 val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 
 val domino = "com.github.domino-osgi" %% "domino" % "1.1.1"
