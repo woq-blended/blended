@@ -1,23 +1,28 @@
 package blended.akka.internal
 
+import org.osgi.framework.BundleContext
+
 import akka.actor.ActorSystem
 import blended.akka.OSGIActorConfig
 import blended.domino.TypesafeConfigWatching
+import de.tototec.cmdoption.internal.LoggerFactory
 import domino.DominoImplicits
-import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
+import domino.capsule.Capsule
+import domino.capsule.CapsuleContext
+import domino.capsule.CapsuleScope
 import domino.service_watching.ServiceWatching
-import org.osgi.framework.BundleContext
 
 class ActorSystemCapsule(
-  cCtxt : CapsuleContext,
-  f : OSGIActorConfig => Unit,
-  bCtxt : BundleContext
-) extends Capsule
-  with TypesafeConfigWatching
-  with ServiceWatching
-  with DominoImplicits {
+  cCtxt: CapsuleContext,
+  f: OSGIActorConfig => Unit,
+  bCtxt: BundleContext) extends Capsule
+    with TypesafeConfigWatching
+    with ServiceWatching
+    with DominoImplicits {
 
-  var optCapsuleScope : Option[CapsuleScope] = None
+  private[this] val log = LoggerFactory.getLogger(classOf[ActorSystemCapsule])
+
+  var optCapsuleScope: Option[CapsuleScope] = None
 
   override protected def capsuleContext: CapsuleContext = cCtxt
 
@@ -27,11 +32,14 @@ class ActorSystemCapsule(
     whenServicePresent[ActorSystem] { system =>
       whenTypesafeConfigAvailable { (cfg, idSvc) =>
         if (optCapsuleScope.isEmpty) {
+          log.debug("About to start: {}", this)
           val newCapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
             val actorConfig = OSGIActorConfig(bundleContext, system, cfg, idSvc)
             f(actorConfig)
           }
           optCapsuleScope = Some(newCapsuleScope)
+        } else {
+          log.debug("Skipping start, capsule scope already defined: {}", this)
         }
       }
     }
@@ -39,6 +47,8 @@ class ActorSystemCapsule(
   }
 
   override def stop(): Unit = {
+    log.debug("About to stop: {}", this)
     optCapsuleScope.foreach(_.stop())
+    optCapsuleScope = None
   }
 }
