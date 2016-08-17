@@ -109,6 +109,7 @@ BlendedModel(
     "typesafe.config.version" -> "1.2.1",
     "felix.cm.version" -> "1.6.0",
     "scala.version" -> scalaVersion.binaryVersion,
+    "scala.xml.version" -> scalaXml.version.get,
     "compiler-plugin.version" -> "2.5.1",
     "parboiled.version" -> parboiledVersion,
     "pax-web.version" -> "3.1.0",

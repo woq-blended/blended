@@ -72,7 +72,6 @@ class HelloRoute(cfg: OSGIActorConfig, contextPath: String) extends OSGIActor(cf
     }
 
     servlet.providesService[Servlet] ( Map(
-      "urlPatterns" -> "/",
       "Webapp-Context" -> contextPath,
       "Web-ContextPath" -> s"/$contextPath"
     ))

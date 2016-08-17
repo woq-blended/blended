@@ -25,10 +25,5 @@
       <outputDirectory>/profiles/${profile.name}/${profile.version}</outputDirectory>
     </fileSet>
 
-    <fileSet>
-      <directory>target/classes</directory>
-      <outputDirectory>/profiles/${profile.name}/${profile.version}</outputDirectory>
-    </fileSet>
-
   </fileSets>
 </assembly>

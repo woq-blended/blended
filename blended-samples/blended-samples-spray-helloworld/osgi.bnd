@@ -10,6 +10,7 @@ Bundle-Activator: \
 Export-Package:
 
 Import-Package: \
+  scala.xml, \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   spray.routing,\
   spray.routing.directives,\
