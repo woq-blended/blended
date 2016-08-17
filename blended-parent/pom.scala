@@ -122,7 +122,7 @@ BlendedModel(
     "json-lenses.version" -> "0.5.4",
     "osweb.asm.version" -> "3.1.0",
     "spray.version" -> sprayVersion,
-    "jetty.version" -> "7.6.8.v20121106",
+    "jetty.version" -> "8.1.19.v20160209",
     "commons.codec.version" -> "1.6.0",
     "linkedhashmap.version" -> concurrentLinkedHashMapLru.version.get,
     "java.version" -> javaVersion

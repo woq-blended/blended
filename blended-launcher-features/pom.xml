@@ -510,7 +510,7 @@
 		<dependency>
 			<groupId>org.eclipse.jetty.aggregate</groupId>
 			<artifactId>jetty-all-server</artifactId>
-			<version>8.1.14.v20131031</version>
+			<version>${jetty.version}</version>
 		</dependency>
 
 		<!-- blended-spring -->

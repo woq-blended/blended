@@ -234,7 +234,7 @@ cp(projectDir/'target/'launcher/launcherDir, prodDir)
 // copy profile
 mkdir! profDir/up
 cp(projectDir/'target/'classes/'profile, profDir)
-cp.into(projectDir/'target/'classes/'container, prodDir)
+cp.over(projectDir/'target/'classes/'container, prodDir)
 
 // make launchfile
 
