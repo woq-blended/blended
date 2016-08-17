@@ -7,9 +7,16 @@
     <format>zip</format>
   </formats>
   <fileSets>
+
     <fileSet>
-      <directory>target/classes</directory>
+      <directory>target/classes/container</directory>
+      <outputDirectory>/</outputDirectory>
+    </fileSet>
+
+    <fileSet>
+      <directory>target/classes/profile</directory>
       <outputDirectory>/${profile.name}/${profile.version}</outputDirectory>
     </fileSet>
+
   </fileSets>
 </assembly>

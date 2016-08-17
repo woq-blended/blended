@@ -158,8 +158,8 @@
             <phase>compile</phase>
             <goals><goal>materialize-profile</goal></goals>
             <configuration>
-              <srcProfile>${project.build.directory}/classes/profile.conf</srcProfile>
-              <destDir>${project.build.directory}/classes</destDir>
+              <srcProfile>${project.build.directory}/classes/profile/profile.conf</srcProfile>
+              <destDir>${project.build.directory}/classes/profile</destDir>
             </configuration>
           </execution>
         </executions>
@@ -195,8 +195,8 @@
         <dependencies>
           <dependency>
             <groupId>com.lihaoyi</groupId>
-            <artifactId>ammonite-ops_${scala.version}</artifactId>
-            <version>0.4.6</version>
+            <artifactId>ammonite-ops_2.10</artifactId>
+            <version>0.7.2</version>
           </dependency>
         </dependencies>
         <executions>
@@ -232,7 +232,8 @@ cp(projectDir/'target/'launcher/launcherDir, prodDir)
 
 // copy profile
 mkdir! profDir/up
-cp(projectDir/'target/'classes, profDir)
+cp(projectDir/'target/'classes/'profile, profDir)
+cp.into(projectDir/'target/'classes/'container, prodDir)
 
 // make launchfile
 
