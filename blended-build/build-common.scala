@@ -19,7 +19,9 @@ object BlendedModel{
     Map(
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
-      "java.version" -> javaVersion
+      "java.version" -> javaVersion,
+      "scala.version" -> scalaVersion.binaryVersion,
+      "blended.version" -> blendedVersion
     )
 
   // Profiles we attach to all BlendedModels
