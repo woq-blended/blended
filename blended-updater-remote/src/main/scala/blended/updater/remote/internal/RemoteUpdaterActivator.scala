@@ -63,7 +63,10 @@ class RemoteUpdaterActivator
       whenServicePresent[RemoteUpdater] { remoteUpdater =>
         log.debug("About to register osgi console commands for remote updater")
         val commands = new RemoteCommands(remoteUpdater)
-        registerCommands(commands, commands.commands)
+        val reg = registerCommands(commands, commands.commands)
+        onStop {
+          reg.unregister()
+        }
       }
     }
   }
