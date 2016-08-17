@@ -25,25 +25,26 @@ object BlendedModel{
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(Profile(
-    id = "gen-pom",
-    build = Build(
-      plugins = Seq(Plugin(
-        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.19",
-        executions = Seq(
-          Execution(
-            id = "generate-pom.xml",
-            goals = Seq("translate"),
-            phase = "validate",
-            configuration = Config(
-              input = "pom.scala",
-              output = "pom.xml"
-            )
-          )
-        )
-      ))
-    )
-  ))
+  val defaultProfiles = Seq()
+//  Seq(Profile(
+//    id = "gen-pom",
+//    build = Build(
+//      plugins = Seq(Plugin(
+//        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.19",
+//        executions = Seq(
+//          Execution(
+//            id = "generate-pom.xml",
+//            goals = Seq("translate"),
+//            phase = "validate",
+//            configuration = Config(
+//              input = "pom.scala",
+//              output = "pom.xml"
+//            )
+//          )
+//        )
+//      ))
+//    )
+//  ))
 
   val defaultDevelopers = Seq(
     Developer(
