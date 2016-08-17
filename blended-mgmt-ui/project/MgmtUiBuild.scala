@@ -21,7 +21,7 @@ object MgmtUiBuild extends Build {
     name := appName,
     scalaVersion := Versions.scala,
 
-    mainClass in Compile := Some("tutorial.webapp.TutorialApp"),
+    mainClass in Compile := Some("blended.mgmt.ui.MgmtConsole"),
 
     LessKeys.sourceMap in Assets := true,      // generate a source map for developing in the browser
     LessKeys.compress in Assets := true,       // Compress the final CSS
@@ -33,6 +33,7 @@ object MgmtUiBuild extends Build {
     (compile in Compile) <<= (compile in Compile) dependsOn (LessKeys.less in Compile),
 
     libraryDependencies ++= Dependencies.clientDeps.value,
+    jsDependencies := Dependencies.jsDependencies.value,
     persistLauncher in Compile := true,
     persistLauncher in Test := false
   )
@@ -42,13 +43,20 @@ object MgmtUiBuild extends Build {
 
     lazy val clientDeps = Def.setting(Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
-      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
-      "com.lihaoyi" %%% "upickle" % Versions.upickle,
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
-      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
-      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery,
-      "org.webjars" % "bootstrap" % Versions.bootstrap,
-      "org.webjars" % "react" % Versions.react
+      //      "com.lihaoyi" %%% "upickle" % Versions.upickle,
+      //      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
+      //      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery,
+
+      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
+
+    ))
+
+    lazy val jsDependencies = Def.setting(Seq(
+
+      "org.webjars" % "bootstrap" % Versions.bootstrap / "bootstrap.js",
+      "org.webjars.bower" % "react" % Versions.react / "react.js"
+
     ))
   }
 }

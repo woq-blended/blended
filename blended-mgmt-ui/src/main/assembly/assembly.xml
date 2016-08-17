@@ -43,6 +43,7 @@
       <outputDirectory>/lib</outputDirectory>
       <includes>
         <include>react.min.js</include>
+        <include>react-dom.min.js</include>
       </includes>
     </fileSet>
 
