@@ -1,11 +1,11 @@
 package blended.akka.internal
 
 import org.osgi.framework.BundleContext
+import org.slf4j.LoggerFactory
 
 import akka.actor.ActorSystem
 import blended.akka.OSGIActorConfig
 import blended.domino.TypesafeConfigWatching
-import de.tototec.cmdoption.internal.LoggerFactory
 import domino.DominoImplicits
 import domino.capsule.Capsule
 import domino.capsule.CapsuleContext
@@ -51,4 +51,7 @@ class ActorSystemCapsule(
     optCapsuleScope.foreach(_.stop())
     optCapsuleScope = None
   }
+
+  log.debug("Constructed: {}", this)
+
 }
