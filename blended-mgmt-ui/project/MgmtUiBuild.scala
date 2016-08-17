@@ -33,7 +33,7 @@ object MgmtUiBuild extends Build {
     (compile in Compile) <<= (compile in Compile) dependsOn (LessKeys.less in Compile),
 
     libraryDependencies ++= Dependencies.clientDeps.value,
-    jsDependencies := Dependencies.jsDependencies.value,
+    jsDependencies ++= Dependencies.jsDependencies.value,
     persistLauncher in Compile := true,
     persistLauncher in Test := false
   )
