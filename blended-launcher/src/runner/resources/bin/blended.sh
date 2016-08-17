@@ -27,9 +27,6 @@ setenv
 
 cd $BLENDED_HOME
 
-BLENDED_VERSION="2.0-SNAPSHOT"
-
-
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 
 # Options for the service daemen JVM (outer) with controls the container JVM
@@ -51,15 +48,15 @@ OUTER_CP="${BLENDED_HOME}/lib/*"
 # semicolon-separated
 INNER_CP="\
 ${BLENDED_HOME}/etc;\
-${BLENDED_HOME}/lib/blended.launcher-${BLENDED_VERSION}.jar;\
-${BLENDED_HOME}/lib/config-1.2.1.jar;\
-${BLENDED_HOME}/lib/org.osgi.core-5.0.0.jar;\
-${BLENDED_HOME}/lib/blended.updater.config-${BLENDED_VERSION}.jar;\
-${BLENDED_HOME}/lib/de.tototec.cmdoption-0.4.2.jar;\
-${BLENDED_HOME}/lib/scala-library-2.10.5.jar;\
-${BLENDED_HOME}/lib/slf4j-api-1.7.12.jar;\
-${BLENDED_HOME}/lib/logback-core-1.1.3.jar;\
-${BLENDED_HOME}/lib/logback-classic-1.1.3.jar;\
+${BLENDED_HOME}/lib/blended.launcher-@blended.launcher.version@.jar;\
+${BLENDED_HOME}/lib/config-@typesafe.config.version@.jar;\
+${BLENDED_HOME}/lib/org.osgi.core-@org.osgi.core.version@.jar;\
+${BLENDED_HOME}/lib/blended.updater.config-@blended.updater.config.version@.jar;\
+${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar;\
+${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar;\
+${BLENDED_HOME}/lib/slf4j-api-@slf4j.version@.jar;\
+${BLENDED_HOME}/lib/logback-core-@logback.version@.jar;\
+${BLENDED_HOME}/lib/logback-classic-@logback.version@.jar;\
 "
 
 $JAVA_HOME/bin/java -version

@@ -16,7 +16,7 @@
   </dependencySets>
   <fileSets>
     <fileSet>
-      <directory>src/main/runner</directory>
+      <directory>target/runner-resources</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
   </fileSets>

@@ -10,7 +10,7 @@ BlendedModel(
   packaging = "bundle",
   description = "Provide an OSGi Launcher",
   dependencies = Seq(
-    scalaLib % "provided",
+    scalaLib,
     orgOsgi,
     slf4j,
     typesafeConfig,
@@ -26,10 +26,46 @@ BlendedModel(
     felixFileinstall % "test",
     felixMetatype % "test"
   ),
+  properties = Map(
+    "blended.launcher.version" -> blendedLauncher.version.get,
+    "blended.updater.config.version" -> blendedUpdaterConfig.version.get,
+    "cmdoption.version" -> cmdOption.version.get,
+    "org.osgi.core.version" -> orgOsgi.version.get,
+    "scala.library.version" -> scalaLib.version.get,
+    "typesafe.config.version" -> typesafeConfig.version.get,
+    "slf4j.version" -> slf4j.version.get,
+    "logback.version" -> logbackClassic.version.get
+  ),
   plugins = Seq(
     mavenBundlePlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
+    Plugin(
+      "org.apache.maven.plugins" % "maven-resources-plugin" % "3.0.1",
+      executions = Seq(
+        Execution(
+          id = "runner-resources",
+          phase = "process-resources",
+          goals = Seq("copy-resources"),
+          configuration = Config(
+            outputDirectory = "${basedir}/target/runner-resources",
+            resources = Config(
+              resource = Config(
+                directory = "src/runner/resources",
+                filtering = true
+              ),
+              resource = Config(
+                directory = "src/runner/binaryResources",
+                filtering = false
+              )
+            ),
+            delimiters = Config(
+              delimiter = "@"
+            )
+          )
+        )
+      )
+    ),
     Plugin(
       "org.apache.maven.plugins" % "maven-assembly-plugin",
       executions = Seq(
