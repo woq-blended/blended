@@ -1,19 +1,3 @@
-/*
- * Copyright 2014ff,  https://github.com/woq-blended
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package blended.launcher
 
 import java.io.File
@@ -26,12 +10,7 @@ import java.util.ServiceLoader
 import blended.launcher.config.LauncherConfig
 import blended.launcher.internal.ARM
 import blended.launcher.internal.Logger
-import blended.updater.config.ConfigConverter
-import blended.updater.config.LocalOverlays
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.ProfileLookup
-import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.config.RuntimeConfig
+import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import de.tototec.cmdoption.CmdOption
@@ -271,7 +250,9 @@ object Launcher {
         } else {
           Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
         }
-        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+
+        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false))
+
         val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
         val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
 
@@ -305,7 +286,8 @@ object Launcher {
         Configs(
           launcherConfig = launchConfig.copy(
             branding = launchConfig.branding ++ brandingProps,
-            systemProperties = (launchConfig.systemProperties ++ overlayProps) + ("blended.container.home" -> profileDir)
+            systemProperties =
+              SystemPropertyResolver.resolve((launchConfig.systemProperties ++ overlayProps) + ("blended.container.home" -> profileDir))
           ),
           profileConfig = Some(LocalRuntimeConfig(runtimeConfig, new File(profileDir))))
     }
