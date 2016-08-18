@@ -108,10 +108,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
           //          registerCommands(osgiCommands, osgiCommands.commands)
 
           val commands = new Commands(actor, Some(updateEnv))(cfg.system)
-          val reg = registerCommands(commands, commands.commandsWithDescription)
-          onStop {
-            reg.unregister()
-          }
+          registerCommands(commands, commands.commandsWithDescription)
 
       }
     }
