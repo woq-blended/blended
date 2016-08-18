@@ -43,7 +43,9 @@ BlendedModel(
   ),
   properties = Map(
     "profile.version" -> blendedDemoMgmt.version.get,
-    "profile.name" -> "blended-mgmt"
+    "profile.name" -> "blended-mgmt",
+    "spray.version" -> sprayVersion,
+    "loglevel.test" -> "DEBUG"
   ),
   plugins = Seq(
       Plugin(
@@ -126,8 +128,10 @@ cp.into(projectDir/'target/'classes/'container, prodDir)
 
 // make launchfile
 
-val launchConf = "profile.baseDir=${BLENDED_HOME}/profiles" +
-s"profile.name=${profileName}\nprofile.version=${profileVersion}"
+val launchConf = 
+  "profile.baseDir=${BLENDED_HOME}/profiles\n" +
+  s"profile.name=${profileName}\n" +
+  s"profile.version=${profileVersion}"
 
 write(prodLaunch, launchConf)
 write(tarLaunch, launchConf)
