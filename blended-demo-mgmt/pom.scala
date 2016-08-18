@@ -103,10 +103,12 @@ BlendedModel(
 import java.io.File
 import java.io.PrintWriter
 
+// make launchfile
+
 val launcherDir = "blended.launcher-""" + blendedLauncher.version.get + """"
 val tarLaunchFile = new File(project.getBasedir(), "target/launcher/" + launcherDir + "/launch.conf")
+println("Creating " + tarLaunchFile)
 
-// make launchfile
 val launchConf = 
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
   "profile.name=""" + profileName + """\n" +
@@ -116,6 +118,17 @@ val launchConf =
 val writer = new PrintWriter(tarLaunchFile)
 writer.print(launchConf)
 writer.close()
+
+// make overlays base.conf
+
+val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
+println("Creating " + baseConfFile)
+
+baseConfFile.getParentFile().mkdirs()
+val bcw = new PrintWriter(baseConfFile)
+bcw.print("overlays = []")
+bcw.close()
+
 """
               )
           )
