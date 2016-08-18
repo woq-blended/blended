@@ -582,6 +582,7 @@ class Updater(
     case PublishServiceInfo =>
       log.debug("About to gather service infos")
 
+      // FIXME: better represent overlays!!!
       val props = Map(
         "profile.active" -> findActiveConfig().map(lrc => s"${lrc.runtimeConfig.name}-${lrc.runtimeConfig.version}").getOrElse(""),
         "profiles.valid" -> profiles.collect {
