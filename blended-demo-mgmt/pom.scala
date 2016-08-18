@@ -101,29 +101,24 @@ BlendedModel(
             configuration = Config(
               script = """
 import java.io.File
-import scala.collection.JavaConverters._
-import better.files.{File => BFile, _}
-import better.files.Cmds._
+import java.io.PrintWriter
 
 val launcherDir = "blended.launcher-""" + blendedLauncher.version.get + """"
-
-val projectDir = project.getBasedir.toScala
-val tarLaunch = projectDir / "target" / "launcher" / launcherDir / "launch.conf"
+val tarLaunchFile = new File(project.getBasedir(), "target/launcher/" + launcherDir + "/launch.conf")
 
 // make launchfile
-
 val launchConf = 
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
   "profile.name=""" + profileName + """\n" +
   "profile.version=""" + blendedDemoMgmt.version.get + """"
 
-tarLaunch < launchConf
+// write it to file
+val writer = new PrintWriter(tarLaunchFile)
+writer.print(launchConf)
+writer.close()
 """
               )
           )
-        ),
-        dependencies = Seq(
-          "com.github.pathikrit" % "better-files_2.10" % "2.14.0"
         )
       ),
       Plugin(
