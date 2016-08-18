@@ -13,6 +13,8 @@ import blended.persistence.PersistenceService
 class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
     extends PersistenceService {
 
+  private[this] var createdClasses: Set[String] = Set()
+  
   def withDb[T](f: ODatabaseDocument => T): T = {
     val dbTx = dbPool.acquire()
     try {
@@ -48,12 +50,26 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
       data.asScala.foreach {
         case (k, v) => doc.field(k, v)
       }
-      doc.save().toMap()
+      val result = doc.save().toMap()
+      ensureClassCreated(pClass)
+      result
     }
   }
 
+  protected[internal] def ensureClassCreated(pClass: String): Unit = {
+    if(createdClasses.find(_ == pClass).isEmpty) {
+      withDb { db =>
+        val existingClass = Option(db.getMetadata().getSchema().getClass(pClass))
+        if(existingClass.isEmpty) {
+          db.getMetadata().getSchema().createClass(pClass);
+        }
+      }
+    }
+  }
+  
   override def findAll(pClass: String): Seq[java.util.Map[String, _ <: AnyRef]] = {
     withDb { db =>
+      ensureClassCreated(pClass)
       val r = db.browseClass(pClass)
       r.iterator().asScala.map(d => d.toMap).toList
     }
@@ -61,6 +77,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
 
   override def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]] = {
     withDb { db =>
+      ensureClassCreated(pClass)
       val ordered = data.asScala.toList
       val placeholder = ordered.map { case (k, v) => s" ${k} = ? " }
       val values = ordered.map { case (k, v) => v }

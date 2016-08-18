@@ -1,4 +1,4 @@
-package blended.persistence.orient
+package blended.persistence.orient.internal
 
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers
@@ -8,7 +8,6 @@ import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import com.orientechnologies.orient.core.record.impl.ODocument
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigFactory
-import blended.persistence.orient.internal.PersistenceServiceOrientDb
 
 class OrientExperimentalTest extends FreeSpec with Matchers with TestFile {
 
@@ -100,6 +99,28 @@ class OrientExperimentalTest extends FreeSpec with Matchers with TestFile {
 
         loaded.head.asScala.-("@class").-("@rid").asJava should equal(config.root().unwrapped())
 
+      } finally {
+        pool.close()
+      }
+    }
+  }
+
+
+  "TEST ensureClassCreated should work" in {
+    withTestDir() { dir =>
+      val url = "plocal:" + dir.getPath() + "/db-ensureClassCreated-should-work"
+      new ODatabaseDocumentTx(url).create()
+
+      val pool = new OPartitionedDatabasePool(url, "admin", "admin")
+      val exp = new PersistenceServiceOrientDb(pool)
+
+      try {
+        //        intercept[IllegalArgumentException] {
+        //          exp.findAll("NEWCLASS")
+        //        }
+        exp.ensureClassCreated("NEWCLASS")
+        val data = exp.findAll("NEWCLASS")
+        data should have size (0)
       } finally {
         pool.close()
       }

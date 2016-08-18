@@ -58,7 +58,7 @@ val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
 val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
-val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.0"
+val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 
 val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
 val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
