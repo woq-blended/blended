@@ -13,6 +13,8 @@ object Feature {
   )
 }
 
+val profileName = "blended-mgmt"
+
 BlendedModel(
   gav = blendedDemoMgmt,
   packaging = "jar",
@@ -99,48 +101,29 @@ BlendedModel(
             configuration = Config(
               script = """
 import java.io.File
-import ammonite.ops._
 import scala.collection.JavaConverters._
+import better.files.{File => BFile, _}
+import better.files.Cmds._
 
-val launcherDir = "blended.launcher-" + project.getProperties.get("blended.version").asInstanceOf[String]
+val launcherDir = "blended.launcher-""" + blendedLauncher.version.get + """"
 
-val profileName = project.getProperties.get("profile.name").asInstanceOf[String]
-val profileVersion = project.getProperties.get("profile.version").asInstanceOf[String]
-
-val projectDir = Path(project.getBasedir)
-val prodDir = projectDir/'target/'product
-
-val profDir = prodDir/'profiles/profileName/profileVersion
-
-val prodLaunch = prodDir/"launch.conf"
-val tarLaunch = projectDir/'target/'launcher/launcherDir/"launch.conf"
-
-rm! prodDir
-mkdir! prodDir/up
-
-// copy launcher
-cp(projectDir/'target/'launcher/launcherDir, prodDir)
-
-// copy profile
-mkdir! profDir/up
-cp(projectDir/'target/'classes/'profile, profDir)
-cp.into(projectDir/'target/'classes/'container, prodDir)
+val projectDir = project.getBasedir.toScala
+val tarLaunch = projectDir / "target" / "launcher" / launcherDir / "launch.conf"
 
 // make launchfile
 
 val launchConf = 
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
-  s"profile.name=${profileName}\n" +
-  s"profile.version=${profileVersion}"
+  "profile.name=""" + profileName + """\n" +
+  "profile.version=""" + blendedDemoMgmt.version.get + """"
 
-write(prodLaunch, launchConf)
-write(tarLaunch, launchConf)
+tarLaunch < launchConf
 """
               )
           )
         ),
         dependencies = Seq(
-          "com.lihaoyi" % "ammonite-ops_2.10" % "0.7.2"
+          "com.github.pathikrit" % "better-files_2.10" % "2.14.0"
         )
       ),
       Plugin(
