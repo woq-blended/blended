@@ -34,12 +34,17 @@ val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 val camelHttp = "org.apache.camel" % "camel-http" % camelVersion
 val camelServlet = "org.apache.camel" % "camel-servlet" % camelVersion
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
-val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
+val commonsLang = "commons-lang" % "commons-lang" % "2.6"
+val commonsNet = "commons-net" % "commons-net" % "3.3"
+val commonsPool = "commons-pool" % "commons-pool" % "1.6"
+val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
-
+    
 val domino = "com.github.domino-osgi" %% "domino" % "1.1.1"
 
+val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "${felix.ca.version}"
+val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "${felix.event.version}"
 val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
 val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
 val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
@@ -50,10 +55,12 @@ val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
     
+val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
 
+val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
 val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
