@@ -193,7 +193,7 @@
         <module>blended-activemq-client</module>
 
         <module>blended-launcher-features</module>
-        <module>blended-launcher-demo</module>
+        <module>blended-demo-launcher</module>
         <module>blended-demo-mgmt</module>
 
         <module>blended-mgmt-ui</module>

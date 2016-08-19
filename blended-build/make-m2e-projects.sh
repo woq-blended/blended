@@ -40,7 +40,7 @@ blended-updater-tools \
 blended-updater-remote \
 blended-updater-maven-plugin \
 blended-launcher-features \
-blended-launcher-demo \
+blended-demo-launcher \
 blended-demo-mgmt \
 blended-util \
 blended-security \

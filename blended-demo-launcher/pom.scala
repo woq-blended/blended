@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 val profileName = "blended-demo"
-val profileVersion = blendedLauncherDemo.version.get
+val profileVersion = blendedDemoLauncher.version.get
 
 // Helper to create a dependency to a feature
 object Feature {
@@ -18,7 +18,7 @@ object Feature {
 }
 
 BlendedModel(
-  blendedLauncherDemo,
+  blendedDemoLauncher,
   packaging = "jar",
   description = "A sample container for the blended launcher",
   prerequisites = Prerequisites(
@@ -45,8 +45,8 @@ BlendedModel(
     Feature("blended-samples")
   ),
   properties = Map(
-    "profile.version" -> blendedLauncherDemo.version.get,
-    "profile.name" -> "blended-demo"
+    "profile.version" -> profileVersion,
+    "profile.name" -> profileName
   ),
   plugins = Seq(
     Plugin(
@@ -109,7 +109,7 @@ import java.io.PrintWriter
 val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
 println("Creating " + tarLaunchFile)
 
-val launchConf = 
+val launchConf =
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
   "profile.name=""" + profileName + """\n" +
   "profile.version=""" + profileVersion + """"
