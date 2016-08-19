@@ -105,8 +105,7 @@ import java.io.PrintWriter
 
 // make launchfile
 
-val launcherDir = "blended.launcher-""" + blendedLauncher.version.get + """"
-val tarLaunchFile = new File(project.getBasedir(), "target/launcher/" + launcherDir + "/launch.conf")
+val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
 println("Creating " + tarLaunchFile)
 
 val launchConf = 
