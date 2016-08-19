@@ -6,6 +6,7 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 val profileName = "blended-demo"
+val profileVersion = blendedLauncherDemo.version.get
 
 // Helper to create a dependency to a feature
 object Feature {
@@ -101,48 +102,35 @@ BlendedModel(
           configuration = Config(
             script = """
 import java.io.File
-import ammonite.ops._
-import scala.collection.JavaConverters._
-
-val launcherDir = "blended.launcher-" + project.getProperties.get("blended.version").asInstanceOf[String]
-
-val profileName = project.getProperties.get("profile.name").asInstanceOf[String]
-val profileVersion = project.getProperties.get("profile.version").asInstanceOf[String]
-
-val projectDir = Path(project.getBasedir)
-val prodDir = projectDir/'target/'product
-
-val profDir = prodDir/'profiles/profileName/profileVersion
-
-val prodLaunch = prodDir/"launch.conf"
-val tarLaunch = projectDir/'target/'launcher/launcherDir/"launch.conf"
-
-rm! prodDir
-mkdir! prodDir/up
-
-// copy launcher
-cp(projectDir/'target/'launcher/launcherDir, prodDir)
-
-// copy profile
-mkdir! profDir/up
-cp(projectDir/'target/'classes/'profile, profDir)
-cp.over(projectDir/'target/'classes/'container, prodDir)
+import java.io.PrintWriter
 
 // make launchfile
 
+val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
+println("Creating " + tarLaunchFile)
+
 val launchConf = 
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
-  s"profile.name=${profileName}\n" +
-  s"profile.version=${profileVersion}"
+  "profile.name=""" + profileName + """\n" +
+  "profile.version=""" + profileVersion + """"
 
-write(prodLaunch, launchConf)
-write(tarLaunch, launchConf)
+// write it to file
+val writer = new PrintWriter(tarLaunchFile)
+writer.print(launchConf)
+writer.close()
+
+// make overlays base.conf
+
+val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
+println("Creating " + baseConfFile)
+
+baseConfFile.getParentFile().mkdirs()
+val bcw = new PrintWriter(baseConfFile)
+bcw.print("overlays = []")
+bcw.close()
 """
           )
         )
-      ),
-      dependencies = Seq(
-        "com.lihaoyi" % "ammonite-ops_2.10" % "0.7.2"
       )
     ),
     Plugin(
