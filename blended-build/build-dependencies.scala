@@ -78,6 +78,7 @@ val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
 val sprayJson = "io.spray" %% "spray-json" % sprayVersion
 val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
 val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
+val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
