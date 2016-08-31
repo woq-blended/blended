@@ -1,10 +1,16 @@
 package blended.mgmt.base.json
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigRenderOptions
+
 import blended.mgmt.base.ActivateProfile
 import blended.mgmt.base.AddOverlayConfig
 import blended.mgmt.base.AddRuntimeConfig
 import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.mgmt.base.NameVersion
+import blended.mgmt.base.OverlayState
 import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.ServiceInfo
 import blended.mgmt.base.StageProfile
@@ -17,28 +23,49 @@ import blended.updater.config.GeneratedConfig
 import blended.updater.config.OverlayConfig
 import blended.updater.config.OverlayRef
 import blended.updater.config.RuntimeConfig
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigRenderOptions
 import spray.json.DefaultJsonProtocol
 import spray.json.JsValue
 import spray.json.JsonParser
 import spray.json.ParserInput
 import spray.json.RootJsonFormat
+import blended.mgmt.base.Profile
+import blended.mgmt.base.OverlaySet
 
 /**
  * Defines type-classes to de-/serialization of protocol classes.
  */
 trait JsonProtocol extends DefaultJsonProtocol {
 
+  implicit val nameVersionFormat: RootJsonFormat[NameVersion] = jsonFormat2(NameVersion)
+  implicit val overlayStateFormat: RootJsonFormat[OverlayState] = new RootJsonFormat[OverlayState] {
+    import spray.json._
+    override def write(obj: OverlayState): JsValue = obj match {
+      case OverlayState.Active => "active".toJson
+      case OverlayState.Valid => "valid".toJson
+      case OverlayState.Invalid => "invalid".toJson
+      case OverlayState.Pending => "pending".toJson
+      case _ => serializationError(s"Could not write object ${obj}")
+    }
+    override def read(json: JsValue): OverlayState = {
+      json match {
+        case JsString("active") => OverlayState.Active
+        case JsString("valid") => OverlayState.Valid
+        case JsString("invalid") => OverlayState.Invalid
+        case JsString("pending") => OverlayState.Pending
+        case _ => deserializationError("UpdateAction expected")
+      }
+    }
+  }
+  implicit val overlaySetFormat: RootJsonFormat[OverlaySet] = jsonFormat3(OverlaySet)
+  implicit val profileFormat: RootJsonFormat[Profile] = jsonFormat3(Profile)
   implicit val serviceInfoFormat: RootJsonFormat[ServiceInfo] = jsonFormat4(ServiceInfo)
-  implicit val containerInfoFormat: RootJsonFormat[ContainerInfo] = jsonFormat3(ContainerInfo)
+  implicit val containerInfoFormat: RootJsonFormat[ContainerInfo] = jsonFormat4(ContainerInfo)
   implicit val artifactFormat: RootJsonFormat[Artifact] = jsonFormat3(Artifact)
   implicit val bundleConfigFormat: RootJsonFormat[BundleConfig] = jsonFormat3(BundleConfig)
   implicit val featureRefFormat: RootJsonFormat[FeatureRef] = jsonFormat3(FeatureRef)
   implicit val featureConfigFormat: RootJsonFormat[FeatureConfig] = jsonFormat5(FeatureConfig)
   implicit val runtimeConfigFormat: RootJsonFormat[RuntimeConfig] =
-  // RuntimeConfig has an additional derived val confuses automatic field extraction
+    // RuntimeConfig has an additional derived val confuses automatic field extraction
     jsonFormat(RuntimeConfig,
       "name", "version", "bundles",
       "startLevel", "defaultStartLevel",
@@ -82,7 +109,7 @@ trait JsonProtocol extends DefaultJsonProtocol {
       val activateProfile = classOf[ActivateProfile].getSimpleName()
       val addRuntimeConfig = classOf[AddRuntimeConfig].getSimpleName()
       val addOverlayConfig = classOf[AddOverlayConfig].getSimpleName()
-      
+
       json.asJsObject.fields.get("kind") match {
         case Some(JsString(`stageProfile`)) => stageProfileFormat.read(json)
         case Some(JsString(`activateProfile`)) => activateProfileFormat.read(json)

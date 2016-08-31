@@ -6,7 +6,6 @@ import blended.mgmt.base.ContainerInfo
 import blended.updater.config.ConfigWriter
 import blended.updater.config.OverlayConfig
 import blended.updater.config.RuntimeConfig
-import blended.updater.remote.RuntimeConfigPersistor
 import com.typesafe.config.ConfigFactory
 import scala.collection.immutable
 import blended.mgmt.base.StageProfile
@@ -42,6 +41,7 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
     val timeStamp = System.currentTimeMillis()
     val state = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
+    // FIXME: use profiles instead
     val props = containerInfo.serviceInfos.find(_.name.endsWith("/blended.updater")).map(si => si.props).getOrElse(Map())
     val active = props.get("profile.active").map(_.trim()).filter(!_.isEmpty())
     val valid = props.get("profiles.valid").toList.flatMap(_.split(",")).map(_.trim()).filter(!_.isEmpty())

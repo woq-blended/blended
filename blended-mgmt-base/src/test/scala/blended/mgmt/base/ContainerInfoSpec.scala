@@ -28,7 +28,8 @@ class ContainerInfoSpec extends WordSpec with Matchers {
   "ContainerInfo" should {
 
     val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
-    val containerInfo = ContainerInfo("uuid", Map("foo" -> "bar"), List(serviceInfo))
+    val profiles = List()
+    val containerInfo = ContainerInfo("uuid", Map("foo" -> "bar"), List(serviceInfo), profiles)
     val expectedJson = """{"containerId":"uuid","properties":{"foo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
 
     "serialize to Json correctly" in {
