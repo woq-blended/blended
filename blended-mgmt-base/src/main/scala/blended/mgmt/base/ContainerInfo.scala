@@ -36,6 +36,4 @@ case class ContainerInfo(
 
 }
 
-case class ContainerRegistryResponseOK(id: String, actions: immutable.Seq[UpdateAction] = immutable.Seq())
 
-case class RemoteContainerState(containerInfo: ContainerInfo, outstandingUpdateActions: immutable.Seq[UpdateAction])
