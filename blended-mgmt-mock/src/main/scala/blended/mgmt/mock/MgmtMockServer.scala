@@ -9,9 +9,12 @@ object MgmtMockServer {
 
     val port = 9999
 
+    // First start the Server
     val server = new WireMockServer(options().port(port))
-    configureFor(port)
     server.start()
+
+    // The we use the Wiremockmock client API to inject the stubs into the running server
+    configureFor(port)   // Important :: Point to the same port as the server - this is the client target port
 
     stubFor(
       get(urlEqualTo("/foo"))
