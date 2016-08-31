@@ -98,3 +98,5 @@ val scalatestMavenPlugin = Plugin(
     stdout = "FT"
   )
 )
+
+val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"

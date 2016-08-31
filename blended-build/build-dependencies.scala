@@ -66,6 +66,8 @@ val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
 val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
+val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
 val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
 val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
@@ -81,7 +83,7 @@ val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
 val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
-val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
-val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
-
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
+
+val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
+val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
