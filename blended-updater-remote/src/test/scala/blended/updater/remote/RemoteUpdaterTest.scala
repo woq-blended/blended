@@ -1,16 +1,21 @@
 package blended.updater.remote
 
+import scala.collection.immutable
+
+import org.scalatest.FreeSpec
+
+import blended.mgmt.base.ActivateProfile
 import blended.mgmt.base.AddRuntimeConfig
 import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ServiceInfo
-import blended.updater.config.BundleConfig
-import blended.updater.config.RuntimeConfig
-import org.scalatest.FreeSpec
-import scala.collection.immutable
 import blended.mgmt.base.StageProfile
-import blended.mgmt.base.ActivateProfile
+import blended.mgmt.base.OverlaySet
+import blended.mgmt.base.OverlayState
+import blended.updater.config.BundleConfig
 import blended.updater.config.OverlayConfig
 import blended.updater.config.OverlayRef
+import blended.updater.config.RuntimeConfig
+import blended.mgmt.base.Profile
 
 class RemoteUpdaterTest extends FreeSpec {
 
@@ -66,13 +71,14 @@ class RemoteUpdaterTest extends FreeSpec {
   }
 
   "remove a stage action if container info reports already staged" in {
-    pending
     val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
     val action1 = StageProfile("test", "1", todoOverlayRefs)
     ru.addAction("1", action1)
     assert(ru.getContainerActions("1") === Seq(action1))
-    val profiles = immutable.Seq()
-    ru.updateContainerState(ContainerInfo("1", Map(), immutable.Seq(ServiceInfo("/blended.updater", System.currentTimeMillis(), 100000L, Map("profiles.valid" -> "test-1"))), profiles))
+    val profiles = List(
+      Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Valid)))
+    )
+    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles))
     assert(ru.getContainerActions("1") === Seq())
   }
 
@@ -102,13 +108,14 @@ class RemoteUpdaterTest extends FreeSpec {
   }
 
   "remove an activation action if container info reports already activated" in {
-    pending
     val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
     val action1 = ActivateProfile("test", "1", todoOverlayRefs)
     ru.addAction("1", action1)
     assert(ru.getContainerActions("1") === Seq(action1))
-    val profiles = immutable.Seq()
-    ru.updateContainerState(ContainerInfo("1", Map(), immutable.Seq(ServiceInfo("/blended.updater", System.currentTimeMillis(), 100000L, Map("profile.active" -> "test-1"))), profiles))
+    val profiles = List(
+      Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Active)))
+    )
+    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles))
     assert(ru.getContainerActions("1") === Seq())
   }
 

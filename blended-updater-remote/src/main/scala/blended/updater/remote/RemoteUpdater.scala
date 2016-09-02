@@ -15,9 +15,10 @@ import org.slf4j.LoggerFactory
 import java.util.Date
 
 import scala.util.Try
+import blended.mgmt.base.OverlayState
 
 class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
-  containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {
+    containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[RemoteUpdater])
 
@@ -31,8 +32,7 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
         _ == action
       }) {
         actions ++ immutable.Seq(action)
-      }
-      else actions
+      } else actions
     containerStatePersistor.updateContainerState(state.copy(outstandingActions = newActions))
   }
 
@@ -41,23 +41,33 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
     val timeStamp = System.currentTimeMillis()
     val state = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
-    // FIXME: use profiles instead
-    val props = containerInfo.serviceInfos.find(_.name.endsWith("/blended.updater")).map(si => si.props).getOrElse(Map())
-    val active = props.get("profile.active").map(_.trim()).filter(!_.isEmpty())
-    val valid = props.get("profiles.valid").toList.flatMap(_.split(",")).map(_.trim()).filter(!_.isEmpty())
-    val invalid = props.get("profiles.invalid").toList.flatMap(_.split(",")).map(_.trim()).filter(!_.isEmpty())
+    val containerProfiles = containerInfo.profiles
 
     val newUpdateActions = state.outstandingActions.filter {
       // TODO: support for overlays
-      case ActivateProfile(n, v, o, _) => !active.exists(_ == s"${n}-${v}")
-      case StageProfile(n, v, oc, _) => !valid.exists(_ == s"${n}-${v}")
+      case ActivateProfile(n, v, o, _kind) =>
+        !containerProfiles.exists(p =>
+          p.name == n &&
+            p.version == v &&
+            p.overlays.exists(po =>
+              po.state == OverlayState.Active &&
+                po.overlays.toSet == o.toSet
+            )
+        )
+      case StageProfile(n, v, oc, _kind) =>
+        !containerProfiles.exists(p =>
+          p.name == n &&
+            p.version == v &&
+            p.overlays.exists(po =>
+              Set(OverlayState.Valid, OverlayState.Invalid, OverlayState.Active).exists(_ == po.state) &&
+                po.overlays.toSet == oc.toSet
+            )
+        )
       case _ => true
     }
 
     val newState = state.copy(
-      activeProfile = active,
-      validProfiles = valid,
-      invalidProfiles = invalid,
+      profiles = containerProfiles,
       outstandingActions = newUpdateActions,
       syncTimeStamp = Some(timeStamp)
     )

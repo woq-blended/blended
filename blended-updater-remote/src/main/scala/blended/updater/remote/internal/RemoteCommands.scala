@@ -25,9 +25,7 @@ class RemoteCommands(updater: RemoteUpdater) {
 
   def renderContainerState(state: ContainerState): String = {
     s"""Container ID: ${state.containerId}
-        |  active profile: ${state.activeProfile.mkString}
-        |  valid profiles: ${state.validProfiles.mkString(", ")}
-        |  invalid profiles: ${state.invalidProfiles.mkString(", ")}
+        |  profiles: ${state.profiles.mkString(", ")}
         |  outstanding actions: ${
       state.outstandingActions.map {
         // TODO: overlays

@@ -4,21 +4,28 @@ import blended.updater.config.RuntimeConfig
 import blended.updater.config.OverlayConfig
 import blended.updater.config.OverlayRef
 
+object UpdateAction {
+  val KindAddOverlayConfig = classOf[AddOverlayConfig].getSimpleName()
+  val KindAddRuntimeConfig = classOf[AddRuntimeConfig].getSimpleName()
+  val KindStageProfile = classOf[StageProfile].getSimpleName()
+  val KindActivateProfile = classOf[ActivateProfile].getSimpleName()
+}
+
 sealed trait UpdateAction {
   def kind: String
 }
 
 final case class AddRuntimeConfig(
   runtimeConfig: RuntimeConfig,
-  kind: String = classOf[AddRuntimeConfig].getSimpleName())
-  extends UpdateAction {
+  kind: String = UpdateAction.KindAddRuntimeConfig)
+    extends UpdateAction {
   require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
 }
 
 final case class AddOverlayConfig(
   overlay: OverlayConfig,
-  kind: String = classOf[AddOverlayConfig].getSimpleName())
-  extends UpdateAction {
+  kind: String = UpdateAction.KindAddOverlayConfig)
+    extends UpdateAction {
   require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
 }
 
@@ -26,8 +33,8 @@ final case class StageProfile(
   profileName: String,
   profileVersion: String,
   overlays: Set[OverlayRef],
-  kind: String = classOf[StageProfile].getSimpleName())
-  extends UpdateAction {
+  kind: String = UpdateAction.KindStageProfile)
+    extends UpdateAction {
   require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
 }
 
@@ -35,7 +42,7 @@ final case class ActivateProfile(
   profileName: String,
   profileVersion: String,
   overlays: Set[OverlayRef],
-  kind: String = classOf[ActivateProfile].getSimpleName())
-  extends UpdateAction {
+  kind: String = UpdateAction.KindActivateProfile)
+    extends UpdateAction {
   require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
 }

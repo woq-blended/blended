@@ -10,6 +10,10 @@ import blended.mgmt.base.ActivateProfile
 import scala.collection.immutable
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.OverlayConfig
+import jdk.nashorn.internal.ir.annotations.Immutable
+import blended.mgmt.base.UpdateAction
+import blended.updater.config.OverlayRef
+import com.typesafe.config.ConfigFactory
 
 class PersistentContainerStatePersistor(persistenceService: PersistenceService) extends ContainerStatePersistor {
 
@@ -51,15 +55,81 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
             }.asJava
           ).asJava
       }.asJava,
-      "activeProfile" -> containerState.activeProfile.orNull,
-      "validProfiles" -> containerState.validProfiles.asJava,
-      "invalidProfiles" -> containerState.invalidProfiles.asJava,
+      "profiles" -> containerState.profiles.map { p =>
+        Map(
+          "name" -> p.name,
+          "version" -> p.version,
+          "overlays" -> p.overlays.map { o =>
+            Map(
+              "overlays" -> o.overlays.map { o =>
+                Map(
+                  "name" -> o.name,
+                  "version" -> o.version
+                ).asJava
+              }.asJava,
+              "state" -> o.state,
+              "reason" -> o.reason
+            ).asJava
+          }.asJava
+        ).asJava
+      }.asJava,
       "syncTimeStamp" -> containerState.syncTimeStamp.map(l => java.lang.Long.valueOf(l)).orNull).asJava
   }
 
-  def toContainerState(map: java.util.Map[String, _ <: AnyRef]): Try[ContainerState] = {
-    // FIXME: implement
-    ???
+  def toContainerState(map: java.util.Map[String, _ <: AnyRef]): Try[ContainerState] = Try {
+    val data = map.asScala
+    ContainerState(
+      containerId = data.get("containerId").asInstanceOf[String],
+      outstandingActions = data.get("outstandingActions").asInstanceOf[java.util.Collection[_]].asScala.map { a =>
+        val aData = a.asInstanceOf[java.util.Map[String, _]].asScala
+
+        def pName = aData.get("profileName").asInstanceOf[String]
+        def pVersion = aData.get("profileVersion").asInstanceOf[String]
+        def pOverlays = aData.get("overlays").asInstanceOf[java.util.Collection[_]].asScala.map { o =>
+          val oData = o.asInstanceOf[java.util.Map[String, _]].asScala
+          OverlayRef(
+            name = oData.get("name").asInstanceOf[String],
+            version = oData.get("version").asInstanceOf[String]
+          )
+        }.toSet
+
+        aData.get("kind").asInstanceOf[String] match {
+          case kind @ UpdateAction.KindAddRuntimeConfig =>
+            AddRuntimeConfig(
+              runtimeConfig = RuntimeConfig.read(
+                ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
+              ).get,
+              kind = kind
+            )
+          case kind @ UpdateAction.KindAddOverlayConfig =>
+            AddOverlayConfig(
+              overlay = OverlayConfig.read(
+                ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
+              ).get,
+              kind = kind
+            )
+          case kind @ UpdateAction.KindStageProfile =>
+            StageProfile(
+              profileName = pName,
+              profileVersion = pVersion,
+              overlays = pOverlays,
+              kind = kind
+            )
+          case kind @ UpdateAction.KindActivateProfile =>
+            ActivateProfile(
+              profileName = pName,
+              profileVersion = pVersion,
+              overlays = pOverlays,
+              kind = kind
+            )
+          case k => error("Unsupported kind: " + k)
+        }
+      }.to[immutable.Seq],
+      profiles = data.get("profiles").asInstanceOf[java.util.Collection[_]].asScala.map { p =>
+        ???
+      }.to[immutable.Seq],
+      syncTimeStamp = data.get("syncTimeStamp").map(_.asInstanceOf[Long])
+    )
   }
 
   override def findAllContainerStates(): immutable.Seq[ContainerState] = {
@@ -68,6 +138,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
   }
 
   override def findContainerState(containerId: String): Option[ContainerState] = {
+    // TODO: ensure, we take the newest
     val state = persistenceService.findByExample(pClassName, Map("containerId" -> containerId).asJava)
     state.flatMap(s => toContainerState(s).toOption).headOption
   }
@@ -75,5 +146,4 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
   override def updateContainerState(containerState: ContainerState): Unit = {
     persistenceService.persist(pClassName, fromContainerState(containerState))
   }
-
 }
