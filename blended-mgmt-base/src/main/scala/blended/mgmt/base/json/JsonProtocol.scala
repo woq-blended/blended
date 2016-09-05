@@ -54,6 +54,10 @@ trait JsonProtocol extends DefaultJsonProtocol {
       }
     }
   }
+  
+  implicit val overlayRefFormat: RootJsonFormat[OverlayRef] = jsonFormat2(OverlayRef)
+  implicit val overlaySetFormat: RootJsonFormat[OverlaySet] = jsonFormat3(OverlaySet)
+
   implicit val profileFormat: RootJsonFormat[Profile] = jsonFormat3(Profile)
   implicit val serviceInfoFormat: RootJsonFormat[ServiceInfo] = jsonFormat4(ServiceInfo)
   implicit val containerInfoFormat: RootJsonFormat[ContainerInfo] = jsonFormat4(ContainerInfo)
@@ -69,9 +73,6 @@ trait JsonProtocol extends DefaultJsonProtocol {
       "properties", "frameworkProperties", "systemProperties",
       "features", "resources", "resolvedFeatures")
       
-  implicit val overlayRefFormat: RootJsonFormat[OverlayRef] = jsonFormat2(OverlayRef)
-  implicit val overlaySetFormat: RootJsonFormat[OverlaySet] = jsonFormat3(OverlaySet)
-  
   // we use Config's own JSON renderer and parser
   implicit val configFormat: RootJsonFormat[Config] = new RootJsonFormat[Config] {
     override def write(obj: Config): JsValue = {
