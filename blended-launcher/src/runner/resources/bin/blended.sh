@@ -27,6 +27,9 @@ setenv
 
 cd $BLENDED_HOME
 
+# JVM Restart Delay in seconds
+RESTART_DELAY=0
+
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 
 # Options for the service daemen JVM (outer) with controls the container JVM
@@ -69,6 +72,7 @@ exec ${JAVA_HOME}/bin/java\
  start\
  ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
+ "-cp=${RESTART_DELAY}"\
  -- \
  blended.launcher.Launcher \
  --framework-restart 0\
