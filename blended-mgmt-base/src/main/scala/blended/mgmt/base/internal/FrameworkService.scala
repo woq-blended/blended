@@ -1,14 +1,16 @@
 package blended.mgmt.base.internal
 
-import java.io.{FileInputStream, FileOutputStream, File, FilenameFilter}
+import java.io.{File, FileInputStream, FileOutputStream, FilenameFilter}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import blended.container.context.ContainerContext
 import blended.util.StreamCopySupport
-import org.osgi.framework.BundleContext
+import org.osgi.framework.{Bundle, BundleContext}
 import org.slf4j.LoggerFactory
+
+import scala.util.control.NonFatal
 
 class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext) extends FrameworkServiceMBean {
 
@@ -16,22 +18,31 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
 
   override def restartContainer(reason: String, saveLogs: Boolean): Unit = {
 
-    val now = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date())
+    try {
+      val frameworkBundle = bundleContext.getBundle(0)
 
-    val msg =
-      s"""
-        |---------------------------------------------------------------------------------------------------------
-        | Container restart initiated : $now
-        | Reason                      : $reason
-        |---------------------------------------------------------------------------------------------------------
-      """.stripMargin
+      if (frameworkBundle.getState() == Bundle.ACTIVE) {
+        val now = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date())
 
-    log.warn(msg)
+        val msg =
+          s"""
+             |---------------------------------------------------------------------------------------------------------
+             | Container restart initiated : $now
+             | Reason                      : $reason
+             |---------------------------------------------------------------------------------------------------------
+        """.stripMargin
 
-    if (saveLogs) createLogArchive(now)
+        log.warn(msg)
 
-    val frameworkBundle = bundleContext.getBundle(0)
-    frameworkBundle.update()
+        if (saveLogs) createLogArchive(now)
+
+        frameworkBundle.update()
+      } else {
+        log.warn("Ignoring container restart command because framework is not ACTIVE")
+      }
+    } catch {
+      case NonFatal(e) => log.error("Could not restart container", e)
+    }
   }
 
   private[this] def createLogArchive(timestamp: String) : Unit = {

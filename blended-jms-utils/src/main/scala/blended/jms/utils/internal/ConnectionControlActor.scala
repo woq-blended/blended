@@ -243,6 +243,8 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
         bundleContext.getBundle(0).update()
       case Some(s) => s.restartContainer(msg, true)
     }}
+
+    context.stop(self)
   }
 
   private[this] def ping(c: Connection) : Future[PingResult] = {
