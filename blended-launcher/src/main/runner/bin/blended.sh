@@ -29,6 +29,8 @@ cd $BLENDED_HOME
 
 BLENDED_VERSION="2.0-SNAPSHOT"
 
+# JVM Restart Delay in seconds
+RESTART_DELAY=0
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 
@@ -72,6 +74,7 @@ exec ${JAVA_HOME}/bin/java\
  start\
  ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
+ "-cp=${RESTART_DELAY}"\
  -- \
  blended.launcher.Launcher \
  --framework-restart 0\
