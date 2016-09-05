@@ -10,6 +10,7 @@ BlendedModel(
   packaging = "jar",
   description = "Mock server to simulate a larger network of blended containers for UI testing.",
   dependencies = Seq(
+    blendedMgmtBase,
     scalaLib,
     slf4j,
     slf4jLog4j12,

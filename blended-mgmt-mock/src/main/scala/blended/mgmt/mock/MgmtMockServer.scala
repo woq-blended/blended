@@ -5,6 +5,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.client.WireMock._
 
 object MgmtMockServer {
+
+  import MockObjects._
+
   def main(args: Array[String]) : Unit = {
 
     val port = 9999
@@ -17,8 +20,8 @@ object MgmtMockServer {
     configureFor(port)   // Important :: Point to the same port as the server - this is the client target port
 
     stubFor(
-      get(urlEqualTo("/foo"))
-        .willReturn(aResponse().withStatus(200).withBodyFile("test.txt")
+      get(urlEqualTo("/container"))
+        .willReturn(aResponse().withStatus(200).withBody(containerList(minimalEnv))
       )
     )
 
