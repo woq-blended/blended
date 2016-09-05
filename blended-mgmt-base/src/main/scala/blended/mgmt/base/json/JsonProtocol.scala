@@ -9,7 +9,6 @@ import blended.mgmt.base.AddOverlayConfig
 import blended.mgmt.base.AddRuntimeConfig
 import blended.mgmt.base.ContainerInfo
 import blended.mgmt.base.ContainerRegistryResponseOK
-import blended.mgmt.base.NameVersion
 import blended.mgmt.base.OverlayState
 import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.ServiceInfo
@@ -36,7 +35,6 @@ import blended.mgmt.base.OverlaySet
  */
 trait JsonProtocol extends DefaultJsonProtocol {
 
-  implicit val nameVersionFormat: RootJsonFormat[NameVersion] = jsonFormat2(NameVersion)
   implicit val overlayStateFormat: RootJsonFormat[OverlayState] = new RootJsonFormat[OverlayState] {
     import spray.json._
     override def write(obj: OverlayState): JsValue = obj match {
