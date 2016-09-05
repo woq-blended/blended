@@ -16,10 +16,11 @@
 
 package blended.mgmt.base
 
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 import blended.updater.config.RuntimeConfig
 import scala.collection.immutable
 import blended.updater.config.BundleConfig
+import blended.updater.config.OverlayRef
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 
@@ -30,7 +31,7 @@ class ContainerInfoSpec extends WordSpec with Matchers {
     val serviceInfo = ServiceInfo("service", 1234567890L, 30000L, Map("prop1" -> "val1"))
     val profiles = List()
     val containerInfo = ContainerInfo("uuid", Map("foo" -> "bar"), List(serviceInfo), profiles)
-    val expectedJson = """{"containerId":"uuid","properties":{"foo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}]}"""
+    val expectedJson = """{"containerId":"uuid","properties":{"foo":"bar"},"serviceInfos":[{"name":"service","timestampMsec":1234567890,"lifetimeMsec":30000,"props":{"prop1":"val1"}}],"profiles":[]}"""
 
     "serialize to Json correctly" in {
       import blended.mgmt.base.json._
@@ -78,4 +79,21 @@ class ContainerInfoSpec extends WordSpec with Matchers {
     }
 
   }
+
+  "OverlayRef" should {
+    "serialize and deserialize" in {
+      val overlayRef = OverlayRef("name", "version")
+      import blended.mgmt.base.json._
+      overlayRef should be(overlayRef.toJson.compactPrint.parseJson.convertTo[OverlayRef])
+    }
+  }
+
+  "OverlaySet" should {
+    "serialize and deserialize" in {
+      val overlaySet = OverlaySet(overlays = List(OverlayRef("name", "version")), state = OverlayState.Active, reason = None)
+      import blended.mgmt.base.json._
+      overlaySet should be(overlaySet.toJson.compactPrint.parseJson.convertTo[OverlaySet])
+    }
+  }
+
 }
