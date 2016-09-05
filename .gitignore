@@ -20,3 +20,4 @@ libs/
 .mvn/maven.settings
 .mvn/maven.config
 .polyglot.pom.scala
+/pom.xml

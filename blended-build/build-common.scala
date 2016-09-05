@@ -56,7 +56,7 @@ object BlendedModel{
     Developer(
       email = "tobias.roeser@tototec.de",
       name = "Tobias Roeser",
-      organization = "ToToTec GbR"
+      organization = "ToToTec"
     )
   )
 
