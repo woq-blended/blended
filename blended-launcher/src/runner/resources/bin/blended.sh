@@ -28,7 +28,10 @@ setenv
 cd $BLENDED_HOME
 
 # JVM Restart Delay in seconds
-RESTART_DELAY=0
+if [ -z "${RESTART_DELAY}" ]; then
+  # we provide a zero-default, when no such settings was defined before
+  RESTART_DELAY=0
+fi
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 
