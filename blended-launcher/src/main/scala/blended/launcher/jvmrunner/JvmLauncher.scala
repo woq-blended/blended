@@ -62,6 +62,17 @@ class JvmLauncher() {
             do {
               if (retVal == 2) {
                 log.debug("About to restart process")
+                config.restartDelaySec match {
+                  case Some(delay) =>
+                    log.debug("Waiting " + delay + " seconds before start of process")
+                    try {
+                      Thread.sleep(delay * 1000)
+                    } catch {
+                      case e: InterruptedException =>
+                        log.debug("Delay interrupted!")
+                    }
+                  case _ =>
+                }
               } else {
                 log.debug("About to start process")
               }
@@ -126,10 +137,11 @@ class JvmLauncher() {
   }
 
   case class Config(
-    classpath: Seq[File] = Seq(),
-    otherArgs: Seq[String] = Seq(),
-    action: Option[String] = None,
-    jvmOpts: Seq[String] = Seq()) {
+      classpath: Seq[File] = Seq(),
+      otherArgs: Seq[String] = Seq(),
+      action: Option[String] = None,
+      jvmOpts: Seq[String] = Seq(),
+      restartDelaySec: Option[Int] = None) {
 
     override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
   }
@@ -148,6 +160,9 @@ class JvmLauncher() {
         // Also support ":" on non-windows platform
         val cps = cp.substring("-cp=".length).split("[;]").toSeq.map(_.trim()).filter(!_.isEmpty).map(new File(_))
         parse(rest, initialConfig.copy(classpath = cps))
+      case Seq(delay, rest @ _*) if initialConfig.restartDelaySec.isEmpty && delay.startsWith("-restartDelay=") =>
+        val delaySec = delay.substring("-restartDelay=".length).toInt
+        parse(rest, initialConfig.copy(restartDelaySec = Option(delaySec)))
       case Seq(jvmOpt, rest @ _*) if jvmOpt.startsWith("-jvmOpt=") =>
         val opt = jvmOpt.substring("-jvmOpt=".length).trim()
         parse(rest, initialConfig.copy(jvmOpts = initialConfig.jvmOpts ++ Seq(opt).filter(!_.isEmpty)))
@@ -312,7 +327,7 @@ class JvmLauncher() {
     } else {
       val buf = new Array[Byte](1024)
       var len = 0
-      while ( {
+      while ({
         len = in.read(buf)
         len > 0
       }) {
