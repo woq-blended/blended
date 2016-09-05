@@ -10,7 +10,6 @@ import blended.mgmt.base.ActivateProfile
 import scala.collection.immutable
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.OverlayConfig
-import jdk.nashorn.internal.ir.annotations.Immutable
 import blended.mgmt.base.UpdateAction
 import blended.updater.config.OverlayRef
 import com.typesafe.config.ConfigFactory
