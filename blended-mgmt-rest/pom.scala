@@ -12,6 +12,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     slf4j % "provided",
+    blendedMgmtBase,
     blendedSpray,
     blendedSprayApi,
     blendedContainerRegistry,

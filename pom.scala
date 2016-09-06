@@ -96,6 +96,8 @@ Model(
         "blended-domino",
         "blended-akka",
         "blended-mgmt-base",
+        "blended-mgmt-repo",
+        "blended-mgmt-repo-rest",
         "blended-mgmt-agent",
         "blended-mgmt-rest",
         "blended-mgmt-mock",

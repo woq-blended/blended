@@ -23,6 +23,8 @@ blended-jolokia \
 blended-launcher \
 blended-mgmt-base \
 blended-mgmt-mock \
+blended-mgmt-repo \
+blended-mgmt-repo-rest \
 blended-mgmt-agent \
 blended-mgmt-rest \
 blended-neo4j-api \
