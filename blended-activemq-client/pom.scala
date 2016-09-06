@@ -14,7 +14,7 @@ BlendedModel(
     """.stripMargin,
   dependencies = Seq(
     blendedDomino,
-    activemqClient
+    activeMqClient
   ),
   build = Build(
     plugins = Seq(
