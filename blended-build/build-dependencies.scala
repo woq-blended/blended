@@ -54,6 +54,7 @@ val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
 val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
+val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
     
 val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
