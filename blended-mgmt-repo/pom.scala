@@ -15,7 +15,9 @@ BlendedModel(
     blendedUpdaterConfig,
     blendedMgmtBase,
     sprayJson,
-    scalaTest % "test"
+    scalaTest % "test",
+    blendedTestSupport % "test",
+    lambdaTest % "test"
   ), 
   plugins = Seq(
       mavenBundlePlugin,

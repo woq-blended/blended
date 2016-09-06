@@ -1,6 +1,7 @@
 package blended.mgmt.repo
 
 import java.io.File
+import scala.collection.immutable
 
 trait ArtifactRepo {
   
@@ -20,5 +21,10 @@ trait ArtifactRepo {
    * @return A `Some` of the checksum or `None`if the artifact does not exists in the repository.
    */
   def findFileSha1Checksum(path: String): Option[String]
+  
+  /**
+   * Find all known files (recursive) under the given artifact path.
+   */
+  def findFiles(path: String): Iterator[File]
 
 }

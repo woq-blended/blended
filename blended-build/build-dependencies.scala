@@ -60,6 +60,7 @@ val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
 
+val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
 val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
