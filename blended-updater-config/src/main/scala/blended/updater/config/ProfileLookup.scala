@@ -33,7 +33,7 @@ case class ProfileLookup(
    * The directory where the profile including it's overlays is installed.
    * It is always a sub directory of the `profileBaseDir`.
    *
-   * @see [[OverlayConfigFactory#materializedDir]]
+   * @see [[OverlayConfigCompanion#materializedDir]]
    */
   def materializedDir: File = {
     val pureProfileDir = new File(profileBaseDir, s"${profileName}/${profileVersion}")

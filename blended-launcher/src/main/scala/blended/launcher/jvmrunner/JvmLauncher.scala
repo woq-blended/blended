@@ -1,19 +1,14 @@
 package blended.launcher.jvmrunner
 
-import java.io.File
-import java.io.FileInputStream
-import java.io.OutputStream
-import java.io.InputStream
+import java.io.{File, FileInputStream, IOException, InputStream, OutputStream}
 import java.util.Properties
-import blended.launcher.internal.ARM
-import blended.updater.config.OverlayConfig
 
+import blended.launcher.internal.{ARM, Logger}
+import blended.updater.config.OverlayConfigCompanion
+
+import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
-import org.slf4j.LoggerFactory
-import java.io.IOException
-import scala.collection.JavaConverters._
-import blended.launcher.internal.Logger
 
 object JvmLauncher {
 
@@ -103,8 +98,8 @@ class JvmLauncher() {
                 props.asScala.toList.toMap
               }
 
-              val xmsOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
-              val xmxOpt = sysProps.collect { case (OverlayConfig.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
+              val xmsOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
+              val xmxOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
 
               val p = startJava(
                 classpath = config.classpath,

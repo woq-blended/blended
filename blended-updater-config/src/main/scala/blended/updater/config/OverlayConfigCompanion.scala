@@ -9,7 +9,7 @@ import scala.util.{Left, Right, Try}
 /**
  * Helper for [[OverlayConfig]] containing common useful operations.
  */
-final object OverlayConfigFactory {
+final object OverlayConfigCompanion {
 
   object Properties {
     val JVM_MAX_MEM = "blended.launcher.jvm.xmx"

@@ -25,7 +25,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
         case a: AddOverlayConfig =>
           Map(
             "kind" -> a.kind,
-            "overlay" -> OverlayConfig.toConfig(a.overlay).root().unwrapped()
+            "overlay" -> OverlayConfigCompanion.toConfig(a.overlay).root().unwrapped()
           ).asJava
         case s: StageProfile =>
           Map(
@@ -97,7 +97,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
             )
           case kind @ UpdateAction.KindAddOverlayConfig =>
             AddOverlayConfig(
-              overlay = OverlayConfig.read(
+              overlay = OverlayConfigCompanion.read(
                 ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
               ).get,
               kind = kind

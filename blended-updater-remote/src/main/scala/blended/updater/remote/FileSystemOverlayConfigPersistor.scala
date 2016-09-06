@@ -2,8 +2,7 @@ package blended.updater.remote
 
 import java.io.File
 
-import blended.updater.config.ConfigWriter
-import blended.updater.config.OverlayConfig
+import blended.updater.config.{ConfigWriter, OverlayConfig, OverlayConfigCompanion}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
@@ -29,7 +28,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
         val oc = Try {
           ConfigFactory.parseFile(file).resolve()
         }.flatMap { rawConfig =>
-          OverlayConfig.read(rawConfig)
+          OverlayConfigCompanion.read(rawConfig)
         }
         log.debug("Found file: {} with: {}", Array(file, oc))
         oc.toOption.map(oc => file -> oc)
@@ -53,7 +52,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
         sys.error(msg)
       }
     }
-    ConfigWriter.write(OverlayConfig.toConfig(overlayConfig), configFile, None)
+    ConfigWriter.write(OverlayConfigCompanion.toConfig(overlayConfig), configFile, None)
     overlayConfigs += configFile -> overlayConfig
   }
 

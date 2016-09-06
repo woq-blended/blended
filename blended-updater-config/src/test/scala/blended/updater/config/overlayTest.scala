@@ -35,7 +35,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           |  }
           |]""".stripMargin) { file =>
           val config = ConfigFactory.parseFile(file).resolve()
-          val read = OverlayConfigFactory.read(config)
+          val read = OverlayConfigCompanion.read(config)
           read.isSuccess shouldEqual true
           read.get.name shouldEqual "overlay"
           read.get.version shouldEqual "1"
@@ -66,7 +66,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
             config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
           )
         ))
-      val read = OverlayConfigFactory.read(OverlayConfigFactory.toConfig(c))
+      val read = OverlayConfigCompanion.read(OverlayConfigCompanion.toConfig(c))
       read.isSuccess shouldEqual true
       read.get.name shouldEqual "overlay"
       read.get.version shouldEqual "1"
@@ -158,7 +158,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
         )
       )
-      OverlayConfigFactory.findCollisions(overlay.generatedConfigs) shouldEqual Seq("Double defined config key found: key")
+      OverlayConfigCompanion.findCollisions(overlay.generatedConfigs) shouldEqual Seq("Double defined config key found: key")
     }
 
   }

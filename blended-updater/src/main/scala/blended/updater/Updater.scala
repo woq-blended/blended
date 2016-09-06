@@ -266,7 +266,7 @@ class Updater(
         case _ =>
           val confFile = new File(installBaseDir.getParentFile(), s"overlays/${config.name}-${config.version}.conf")
           confFile.getParentFile().mkdirs()
-          ConfigWriter.write(OverlayConfig.toConfig(config), confFile, None)
+          ConfigWriter.write(OverlayConfigCompanion.toConfig(config), confFile, None)
           overlayConfigs += config
           sender ! OperationSucceeded(reqId)
       }
@@ -420,7 +420,7 @@ class Updater(
       Try {
         ConfigFactory.parseFile(file).resolve()
       }.
-        flatMap(OverlayConfig.read) match {
+        flatMap(OverlayConfigCompanion.read) match {
         case Success(overlayConfig) =>
           List(overlayConfig)
         case Failure(e) =>

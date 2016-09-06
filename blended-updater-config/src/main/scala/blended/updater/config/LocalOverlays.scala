@@ -52,7 +52,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
         }
       }
     }
-    val generatorIssues = OverlayConfigFactory.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
+    val generatorIssues = OverlayConfigCompanion.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
     nameIssues ++ propIssues ++ generatorIssues
   }
 
@@ -68,7 +68,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigFactory.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -88,7 +88,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigFactory.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -143,14 +143,14 @@ final object LocalOverlays {
     LocalOverlays(
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
-        OverlayConfigFactory.read(c.toConfig()).get
+        OverlayConfigCompanion.read(c.toConfig()).get
       }.toSet
     )
   }
 
   def toConfig(localOverlays: LocalOverlays): Config = {
     val config = (Map(
-      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigFactory.toConfig).map(_.root().unwrapped()).asJava
+      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
     ).asJava)
     ConfigFactory.parseMap(config)
   }

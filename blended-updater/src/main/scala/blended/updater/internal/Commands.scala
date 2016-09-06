@@ -3,6 +3,7 @@ package blended.updater.internal
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
+
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
@@ -12,13 +13,11 @@ import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
 import blended.updater.Updater
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.OverlayConfig
+import blended.updater.config._
 import blended.updater.Updater.OperationSucceeded
 import blended.updater.Updater.OperationFailed
 import com.typesafe.config.ConfigParseOptions
-import blended.updater.config.OverlayRef
+
 import scala.annotation.varargs
 import org.slf4j.LoggerFactory
 
@@ -99,7 +98,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def registerOverlay(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val overlayConfig = OverlayConfig.read(config).get
+    val overlayConfig = OverlayConfigCompanion.read(config).get
     println("About to add: " + overlayConfig)
 
     implicit val timeout = Timeout(5, SECONDS)
