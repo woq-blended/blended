@@ -172,7 +172,7 @@ object RuntimeConfig
       val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
       try {
         while (sha1Stream.read != -1) {}
-        Some(bytesToString(sha1Stream.getMessageDigest.digest))
+        Option(bytesToString(sha1Stream.getMessageDigest.digest))
       } catch {
         case NonFatal(e) => None
       } finally {
