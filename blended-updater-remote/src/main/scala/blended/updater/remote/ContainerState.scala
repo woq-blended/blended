@@ -2,10 +2,9 @@ package blended.updater.remote
 
 import java.util.Date
 
-import blended.mgmt.base.UpdateAction
+import blended.updater.config.{Profile, UpdateAction}
 
 import scala.collection.immutable
-import blended.mgmt.base.Profile
 
 case class ContainerState(
   containerId: String,

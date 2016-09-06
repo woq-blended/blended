@@ -11,7 +11,6 @@ import scala.util.Right
 import scala.util.Try
 
 
-
 /**
  * Definition of an overlay.
  *

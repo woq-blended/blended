@@ -16,28 +16,22 @@
 
 package blended.mgmt.agent.internal
 
-import akka.actor.Cancellable
-import akka.actor.Props
+import akka.actor.{Cancellable, Props}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
-import blended.akka.{ OSGIActor, OSGIActorConfig }
-import blended.mgmt.base.ServiceInfo
-import blended.container.context.ContainerIdentifierService
+import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.mgmt.base.json._
+import blended.updater.config.{ContainerInfo, ContainerRegistryResponseOK, ServiceInfo}
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
-import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.{ Try, Success, Failure }
 import spray.client.pipelining._
 import spray.http.HttpRequest
 import spray.httpx.SprayJsonSupport
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
-import com.typesafe.config.ConfigFactory
+
+import scala.collection.JavaConverters._
+import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.util.{Failure, Try}
 
 object MgmtReporter {
 

@@ -1,17 +1,12 @@
 package blended.updater.remote
 
 import blended.persistence.PersistenceService
+
 import scala.collection.JavaConverters._
 import scala.util.Try
-import blended.mgmt.base.AddRuntimeConfig
-import blended.mgmt.base.AddOverlayConfig
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.ActivateProfile
+
 import scala.collection.immutable
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.OverlayConfig
-import blended.mgmt.base.UpdateAction
-import blended.updater.config.OverlayRef
+import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 
 class PersistentContainerStatePersistor(persistenceService: PersistenceService) extends ContainerStatePersistor {

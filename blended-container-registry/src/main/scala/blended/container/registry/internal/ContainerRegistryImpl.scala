@@ -21,8 +21,7 @@ import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.mgmt.base.json._
 import blended.persistence.protocol._
 import akka.actor.Props
-import blended.mgmt.base.UpdateContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
+import blended.updater.config.{ContainerRegistryResponseOK, UpdateContainerInfo}
 
 object ContainerRegistryImpl {
   def props(cfg: OSGIActorConfig): Props = Props(new ContainerRegistryImpl(cfg))

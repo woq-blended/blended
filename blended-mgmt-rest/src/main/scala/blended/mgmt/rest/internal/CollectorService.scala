@@ -1,24 +1,18 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
-import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.json.JsonProtocol._
-import blended.updater.config.OverlayConfig
-import blended.updater.config.RuntimeConfig
+import blended.updater.config._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes
 import spray.httpx.SprayJsonSupport
-import spray.routing.HttpService
-import spray.routing.Route
+import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 
 trait CollectorService extends HttpService {
   this: SprayJsonSupport =>
-
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
@@ -33,7 +27,6 @@ trait CollectorService extends HttpService {
   def getRuntimeConfigs(): immutable.Seq[RuntimeConfig]
 
   def getOverlayConfigs(): immutable.Seq[OverlayConfig]
-
 
   def version: String
 

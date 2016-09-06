@@ -1,8 +1,4 @@
-package blended.mgmt.base
-
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayRef
+package blended.updater.config
 
 object UpdateAction {
   val KindAddOverlayConfig = classOf[AddOverlayConfig].getSimpleName()

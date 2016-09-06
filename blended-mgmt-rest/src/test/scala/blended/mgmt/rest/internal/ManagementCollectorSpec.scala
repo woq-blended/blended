@@ -17,16 +17,12 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
-import blended.mgmt.base.RemoteContainerState
 import blended.mgmt.base.json._
-import blended.updater.config.OverlayConfig
-import blended.updater.config.RuntimeConfig
+import blended.updater.config._
 import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 import spray.httpx.SprayJsonSupport
 import spray.testkit.ScalatestRouteTest
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
 
 import scala.collection.immutable.Seq
 

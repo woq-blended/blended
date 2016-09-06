@@ -1,5 +1,4 @@
-package blended.mgmt.base
-
+package blended.updater.config
 
 case class ServiceInfo(name: String, timestampMsec: Long, lifetimeMsec: Long, props: Map[String, String]) {
 

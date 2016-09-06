@@ -1,3 +1,3 @@
-package blended.mgmt.base
+package blended.updater.config
 
 case class UpdateContainerInfo(info: ContainerInfo)

@@ -13,21 +13,12 @@ import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
-import blended.mgmt.base.ServiceInfo
-import blended.mgmt.base.UpdateAction
-import blended.mgmt.base.{AddRuntimeConfig => UAAddRuntimeConfig}
-import blended.mgmt.base.{AddOverlayConfig => UAAddOverlayConfig}
-import blended.mgmt.base.{ActivateProfile => UAActivateProfile}
-import blended.mgmt.base.{StageProfile => UAStageProfile}
-import blended.updater.config.Artifact
-import blended.updater.config.BundleConfig
-import blended.updater.config.ConfigWriter
-import blended.updater.config.LocalOverlays
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayRef
-import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.config.RuntimeConfig
+import blended.updater.config.UpdateAction
+import blended.updater.config.{AddRuntimeConfig => UAAddRuntimeConfig}
+import blended.updater.config.{AddOverlayConfig => UAAddOverlayConfig}
+import blended.updater.config.{ActivateProfile => UAActivateProfile}
+import blended.updater.config.{StageProfile => UAStageProfile}
+import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import org.slf4j.LoggerFactory

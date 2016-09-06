@@ -2,20 +2,10 @@ package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
 
-import akka.actor.Actor
-import akka.actor.ActorRefFactory
-import akka.actor.Props
-import blended.akka.OSGIActor
-import blended.akka.OSGIActorConfig
-import blended.akka.ProductionEventSource
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ContainerRegistryResponseOK
-import blended.mgmt.base.RemoteContainerState
-import blended.mgmt.base.UpdateContainerInfo
-import blended.spray.SprayOSGIBridge
-import blended.spray.SprayOSGIServlet
-import blended.updater.config.OverlayConfig
-import blended.updater.config.RuntimeConfig
+import akka.actor.{Actor, ActorRefFactory, Props}
+import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
+import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory

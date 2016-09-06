@@ -1,21 +1,8 @@
 package blended.updater.remote
 
 import scala.collection.immutable
-
 import org.scalatest.FreeSpec
-
-import blended.mgmt.base.ActivateProfile
-import blended.mgmt.base.AddRuntimeConfig
-import blended.mgmt.base.ContainerInfo
-import blended.mgmt.base.ServiceInfo
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.OverlaySet
-import blended.mgmt.base.OverlayState
-import blended.updater.config.BundleConfig
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayRef
-import blended.updater.config.RuntimeConfig
-import blended.mgmt.base.Profile
+import blended.updater.config._
 
 class RemoteUpdaterTest extends FreeSpec {
 

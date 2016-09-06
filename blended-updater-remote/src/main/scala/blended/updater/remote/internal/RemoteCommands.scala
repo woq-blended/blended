@@ -1,15 +1,11 @@
 package blended.updater.remote.internal
 
-import blended.mgmt.base.AddOverlayConfig
-import blended.mgmt.base.AddRuntimeConfig
 import blended.updater.remote.RemoteUpdater
 import java.io.File
-import blended.updater.config.RuntimeConfig
+
+import blended.updater.config._
 import com.typesafe.config.ConfigFactory
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.ActivateProfile
 import blended.updater.remote.ContainerState
-import blended.mgmt.base.StageProfile
 import java.util.Date
 
 class RemoteCommands(updater: RemoteUpdater) {

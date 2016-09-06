@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import blended.mgmt.base.json.JsonProtocol._
 import blended.mgmt.base._
-import blended.updater.config.OverlayRef
+import blended.updater.config._
 import spray.json._
 
 import scala.collection.immutable

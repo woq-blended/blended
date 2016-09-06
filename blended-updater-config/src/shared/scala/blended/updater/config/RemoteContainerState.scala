@@ -1,4 +1,4 @@
-package blended.mgmt.base
+package blended.updater.config
 
 import scala.collection.immutable
 

@@ -16,11 +16,10 @@
 
 package blended.mgmt.base
 
-import org.scalatest.{ Matchers, WordSpec }
-import blended.updater.config.RuntimeConfig
+import org.scalatest.{Matchers, WordSpec}
+import blended.updater.config._
+
 import scala.collection.immutable
-import blended.updater.config.BundleConfig
-import blended.updater.config.OverlayRef
 
 class ContainerInfoSpec extends WordSpec with Matchers {
 

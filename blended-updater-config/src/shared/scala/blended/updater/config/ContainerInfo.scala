@@ -1,4 +1,4 @@
-package blended.mgmt.base
+package blended.updater.config
 
 import scala.collection.immutable
 
@@ -11,5 +11,3 @@ case class ContainerInfo(
   override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},properties=${properties},serviceInfos=${serviceInfos},profiles=${profiles})"
 
 }
-
-

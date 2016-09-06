@@ -1,21 +1,9 @@
 package blended.updater.remote
 
-import java.io.File
-
-import blended.mgmt.base.ContainerInfo
-import blended.updater.config.ConfigWriter
-import blended.updater.config.OverlayConfig
-import blended.updater.config.RuntimeConfig
-import com.typesafe.config.ConfigFactory
-import scala.collection.immutable
-import blended.mgmt.base.StageProfile
-import blended.mgmt.base.UpdateAction
-import blended.mgmt.base.ActivateProfile
+import blended.updater.config._
 import org.slf4j.LoggerFactory
-import java.util.Date
 
-import scala.util.Try
-import blended.mgmt.base.OverlayState
+import scala.collection.immutable
 
 class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
     containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {

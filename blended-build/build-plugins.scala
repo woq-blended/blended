@@ -99,4 +99,5 @@ val scalatestMavenPlugin = Plugin(
   )
 )
 
+val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
 val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
