@@ -8,7 +8,7 @@ function setenv() {
 }
 
 function blended_home() {
-  
+
   home=$1
 
   if [ x"$BLENDED_HOME" == "x" ] ; then
@@ -17,7 +17,7 @@ function blended_home() {
     cd $dir
     home=$(pwd)
     cd $OLDDIR
-  fi  
+  fi
 
   echo "$home"
 }
@@ -75,7 +75,7 @@ exec ${JAVA_HOME}/bin/java\
  start\
  ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
- "-cp=${RESTART_DELAY}"\
+ "-restartDelay=${RESTART_DELAY}"\
  -- \
  blended.launcher.Launcher \
  --framework-restart 0\
