@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigFactory
 import blended.launcher.config.LauncherConfig.read
 import blended.launcher.config.LauncherConfig.toConfig
 
-class LauncherConfigTest extends FreeSpec {
+class   LauncherConfigTest extends FreeSpec {
 
   val minimalConfig = """
     |startLevel = 10

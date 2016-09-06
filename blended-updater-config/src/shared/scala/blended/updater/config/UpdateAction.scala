@@ -20,8 +20,7 @@ final case class AddRuntimeConfig(
 
 final case class AddOverlayConfig(
   overlay: OverlayConfig,
-  kind: String = UpdateAction.KindAddOverlayConfig)
-    extends UpdateAction {
+  kind: String = UpdateAction.KindAddOverlayConfig) extends UpdateAction {
   require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
 }
 

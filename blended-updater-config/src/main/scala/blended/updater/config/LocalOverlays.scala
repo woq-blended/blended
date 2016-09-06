@@ -36,7 +36,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def validate(): Seq[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
-      case (name, configs) if configs.size > 1 => s"More than one overlay with name '${name}' detected"
+      case (name, configs) if configs.size > 1 => s"More than one overlay with name '$name' detected"
     }.toList
     var seenPropsAndConfigNames = Set[(String, String)]()
     val propIssues = overlays.toSeq.flatMap { o =>
@@ -52,7 +52,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
         }
       }
     }
-    val generatorIssues = OverlayConfig.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
+    val generatorIssues = OverlayConfigFactory.findCollisions(overlays.toList.flatMap(_.generatedConfigs))
     nameIssues ++ propIssues ++ generatorIssues
   }
 
@@ -68,7 +68,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigFactory.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -88,7 +88,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfig.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigFactory.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -143,14 +143,14 @@ final object LocalOverlays {
     LocalOverlays(
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
-        OverlayConfig.read(c.toConfig()).get
+        OverlayConfigFactory.read(c.toConfig()).get
       }.toSet
     )
   }
 
   def toConfig(localOverlays: LocalOverlays): Config = {
     val config = (Map(
-      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfig.toConfig).map(_.root().unwrapped()).asJava
+      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigFactory.toConfig).map(_.root().unwrapped()).asJava
     ).asJava)
     ConfigFactory.parseMap(config)
   }

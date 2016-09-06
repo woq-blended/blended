@@ -1,11 +1,16 @@
-object MgmtUiBuild extends Build {
+import org.scalajs.sbtplugin.ScalaJSPlugin
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import sbt.Keys._
+import sbt._
 
-  val appName = "blended.mgmt.ui"
+object Build extends sbt.Build {
+
+  val appName = "blended.updater.config"
 
   lazy val root =
     project.in(file("."))
       .settings(projectSettings: _*)
-      .enablePlugins(ScalaJSPlugin, SbtWeb)
+      .enablePlugins(ScalaJSPlugin)
 
   lazy val projectSettings = Seq(
     organization := "de.wayofquality.blended",
@@ -14,42 +19,12 @@ object MgmtUiBuild extends Build {
     scalaVersion := Versions.scala,
 
     sourcesInBase := false,
-    mainClass in Compile := Some("blended.mgmt.ui.MgmtConsole"),
 
-    LessKeys.sourceMap in Assets := true,      // generate a source map for developing in the browser
-    LessKeys.compress in Assets := true,       // Compress the final CSS
-    LessKeys.color in Assets := true,          // Colorise Less output
-    LessKeys.sourceMapLessInline := false,     // Have less files extra
-
-    (sourceDirectory in Assets) := (baseDirectory.value / "src" / "main" / "less"),
-    includeFilter in (Assets, LessKeys.less) := "main.less",
-    (compile in Compile) <<= (compile in Compile) dependsOn (LessKeys.less in Compile),
-
-    libraryDependencies ++= Dependencies.clientDeps.value,
-    jsDependencies ++= Dependencies.jsDependencies.value,
-    persistLauncher in Compile := true,
-    persistLauncher in Test := false
+    (scalaSource in Compile) := (baseDirectory.value / "src" / "shared" / "scala")
   )
 
-
-  object Dependencies {
-
-    lazy val clientDeps = Def.setting(Seq(
-      "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
-      "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
-      //      "com.lihaoyi" %%% "upickle" % Versions.upickle,
-      //      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
-      //      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery,
-
-      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
-
-    ))
-
-    lazy val jsDependencies = Def.setting(Seq(
-
-      "org.webjars" % "bootstrap" % Versions.bootstrap / "bootstrap.js",
-      "org.webjars.bower" % "react" % Versions.react / "react.js"
-
-    ))
+  object Versions {
+    val app             = "2.0-SNAPSHOT"
+    val scala           = "2.11.8"
   }
 }

@@ -1,14 +1,15 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
 import java.io.File
-import com.typesafe.config.ConfigFactory
+
 import blended.testsupport.TestFile
-import blended.testsupport.TestFile.DeletePolicy
-import blended.testsupport.TestFile.DeleteWhenNoFailure
-import scala.collection.JavaConverters._
+import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
+import com.typesafe.config.ConfigFactory
+import org.scalatest.{FreeSpec, Matchers}
+
 import scala.util.Success
+
+import scala.collection.JavaConverters._
 
 class OverlaysTest extends FreeSpec with Matchers with TestFile {
 
@@ -34,7 +35,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           |  }
           |]""".stripMargin) { file =>
           val config = ConfigFactory.parseFile(file).resolve()
-          val read = OverlayConfig.read(config)
+          val read = OverlayConfigFactory.read(config)
           read.isSuccess shouldEqual true
           read.get.name shouldEqual "overlay"
           read.get.version shouldEqual "1"
@@ -65,7 +66,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
             config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
           )
         ))
-      val read = OverlayConfig.read(OverlayConfig.toConfig(c))
+      val read = OverlayConfigFactory.read(OverlayConfigFactory.toConfig(c))
       read.isSuccess shouldEqual true
       read.get.name shouldEqual "overlay"
       read.get.version shouldEqual "1"
@@ -157,7 +158,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
         )
       )
-      overlay.validate() shouldEqual Seq("Double defined config key found: key")
+      OverlayConfigFactory.findCollisions(overlay.generatedConfigs) shouldEqual Seq("Double defined config key found: key")
     }
 
   }

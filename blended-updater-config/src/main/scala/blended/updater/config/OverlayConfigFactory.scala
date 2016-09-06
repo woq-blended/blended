@@ -1,46 +1,15 @@
 package blended.updater.config
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable
 import scala.collection.immutable.Map
-import scala.util.Left
-import scala.util.Right
-import scala.util.Try
-
+import scala.util.{Left, Right, Try}
 
 /**
- * Definition of an overlay.
- *
- * @param name             The name of the overlay.
- * @param version          The version of the overlay.
- * @param generatedConfigs The config file generators.
+ * Helper for [[OverlayConfig]] containing common useful operations.
  */
-final case class OverlayConfig(
-  name: String,
-  version: String,
-  generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
-  properties: Map[String, String] = Map()
-) extends Ordered[OverlayConfig] {
-
-  override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
-
-  def overlayRef: OverlayRef = OverlayRef(name, version)
-
-  def validate(): Seq[String] = {
-    OverlayConfig.findCollisions(generatedConfigs)
-  }
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},generatedConfigs=${generatedConfigs})"
-
-}
-
-/**
- * Companion for [[OverlayConfig]] containing common useful operations.
- */
-final object OverlayConfig extends ((String, String, immutable.Seq[GeneratedConfig], Map[String, String]) => OverlayConfig) {
+final object OverlayConfigFactory {
 
   object Properties {
     val JVM_MAX_MEM = "blended.launcher.jvm.xmx"
