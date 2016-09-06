@@ -34,7 +34,7 @@
 
   <properties>
     <docker.src.groupId>de.wayofquality.blended</docker.src.groupId>
-    <docker.src.artifactId>blended.launcher.demo</docker.src.artifactId>
+    <docker.src.artifactId>blended.demo.launcher</docker.src.artifactId>
     <docker.src.version>${project.version}</docker.src.version>
     <docker.src.classifier>full-nojre</docker.src.classifier>
     <docker.src.type>tar.gz</docker.src.type>
