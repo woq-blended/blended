@@ -44,8 +44,6 @@ case class RuntimeConfig(
     resources: immutable.Seq[Artifact] = immutable.Seq(),
     resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
 
-  import RuntimeConfig._
-
   override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
     s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
     s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"

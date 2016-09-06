@@ -20,6 +20,7 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
+    compileJsPlugin,
     Plugin(
       buildHelperPlugin,
       executions = Seq(

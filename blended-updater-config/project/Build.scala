@@ -20,7 +20,11 @@ object Build extends sbt.Build {
 
     sourcesInBase := false,
 
-    (scalaSource in Compile) := (baseDirectory.value / "src" / "shared" / "scala")
+    (unmanagedSourceDirectories in Compile) := Seq(
+      baseDirectory.value / "src" / "shared" / "scala",
+      baseDirectory.value / "src" / "js" / "scala"
+    )
+
   )
 
   object Versions {
