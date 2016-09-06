@@ -12,7 +12,7 @@ val sprayVersion = "1.3.2"
 // Dependencies
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
-val activemqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
+val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
 val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % activeMqVersion
 val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
