@@ -21,6 +21,7 @@ object MgmtUiBuild extends Build {
     name := appName,
     scalaVersion := Versions.scala,
 
+    sourcesInBase := false,
     mainClass in Compile := Some("blended.mgmt.ui.MgmtConsole"),
 
     LessKeys.sourceMap in Assets := true,      // generate a source map for developing in the browser

@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedPersistence,
+  gav = blendedPersistence,
   packaging = "bundle",
   description = "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles.",
   dependencies = Seq(

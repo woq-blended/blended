@@ -1,7 +1,9 @@
 // Plugins
 
+val mavenBundlePluginVersion = "3.2.0"
+
 val mavenBundlePlugin = Plugin(
-  "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
+  "org.apache.felix" % "maven-bundle-plugin" % mavenBundlePluginVersion,
   extensions = true,
   executions = Seq(
     Execution(
@@ -23,6 +25,47 @@ val mavenBundlePlugin = Plugin(
     ),
     instructions = Config(
       _include = "osgi.bnd"
+    )
+  )
+)
+
+val bundleWarPlugin = Plugin(
+  "org.apache.felix" % "maven-bundle-plugin" % mavenBundlePluginVersion,
+  executions = Seq(
+    Execution(
+      id = "manifest",
+      phase = "prepare-package",
+      goals = Seq(
+        "manifest"
+      )
+    )
+  ),
+  configuration = Config(
+    supportedProjectTypes = Config(
+      supportedProjectType = "war"
+    ),
+    instructions = Config(
+      _include = "osgi.bnd"
+    )
+  )
+)
+
+val compileJsPlugin = Plugin(
+  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0",
+  executions = Seq(
+    Execution(
+      id = "compileJS",
+      phase = "compile",
+      goals = Seq(
+        "exec"
+      ),
+      configuration = Config(
+        executable = "sbt",
+        workingDirectory = "${project.basedir}",
+        arguments = Config(
+          argument = "fullOptJS"
+        )
+      )
     )
   )
 )
