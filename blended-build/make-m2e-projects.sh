@@ -3,9 +3,9 @@
 set -e
 
 blendedVersion="2.0-SNAPSHOT"
-classesDir="target-eclipse/classes"
-testClassesDir="target-eclipse/test-classes"
-libsDir="target-eclipse/libs"
+classesDir="eclipse-target/classes"
+testClassesDir="eclipse-target/test-classes"
+libsDir="eclipse-target/libs"
 
 projects="blended-activemq-brokerstarter \
 blended-akka \
