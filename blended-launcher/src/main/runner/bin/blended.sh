@@ -77,7 +77,7 @@ exec ${JAVA_HOME}/bin/java\
  start\
  ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
- "-cp=${RESTART_DELAY}"\
+ "-restartDelay=${RESTART_DELAY}"\
  -- \
  blended.launcher.Launcher \
  --framework-restart 0\
