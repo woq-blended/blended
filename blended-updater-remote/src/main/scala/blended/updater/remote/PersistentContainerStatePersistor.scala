@@ -20,7 +20,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
         case a: AddRuntimeConfig =>
           Map(
             "kind" -> a.kind,
-            "runtimeConfig" -> RuntimeConfig.toConfig(a.runtimeConfig).root().unwrapped()
+            "runtimeConfig" -> RuntimeConfigCompanion.toConfig(a.runtimeConfig).root().unwrapped()
           ).asJava
         case a: AddOverlayConfig =>
           Map(
@@ -90,7 +90,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
         aData.get("kind").asInstanceOf[String] match {
           case kind @ UpdateAction.KindAddRuntimeConfig =>
             AddRuntimeConfig(
-              runtimeConfig = RuntimeConfig.read(
+              runtimeConfig = RuntimeConfigCompanion.read(
                 ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
               ).get,
               kind = kind

@@ -155,7 +155,7 @@ object Launcher {
 
     if (createProperties) {
       val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
-      RuntimeConfig.createPropertyFile(localConfig, None, onlyIfMissing) match {
+      RuntimeConfigCompanion.createPropertyFile(localConfig, None, onlyIfMissing) match {
         case None => // nothing to generate, ok
         case Some(Success(f)) => // generated successfully, ok
           Console.err.println(s"Created properties file for profile: ${f}")
@@ -253,7 +253,7 @@ object Launcher {
 
         val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false))
 
-        val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
+        val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
         val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
 
         var brandingProps = Map(

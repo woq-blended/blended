@@ -80,7 +80,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def registerRuntimeConfig(file: File): AnyRef = {
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val runtimeConfig = RuntimeConfig.read(config).get
+    val runtimeConfig = RuntimeConfigCompanion.read(config).get
     println("About to add: " + runtimeConfig)
 
     implicit val timeout = Timeout(5, SECONDS)

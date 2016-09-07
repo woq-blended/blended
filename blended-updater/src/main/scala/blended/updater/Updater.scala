@@ -84,7 +84,7 @@ class Updater(
 
       val finalIssues = if (state.issues.isEmpty) {
         val previousRuntimeConfig = findActiveConfig()
-        val result = RuntimeConfig.createPropertyFile(state.config, previousRuntimeConfig)
+        val result = RuntimeConfigCompanion.createPropertyFile(state.config, previousRuntimeConfig)
         result match {
           case None =>
             // nothing to do, is ok
@@ -280,7 +280,7 @@ class Updater(
           config.resolve() match {
             case Success(resolved) =>
               confFile.getParentFile().mkdirs()
-              ConfigWriter.write(RuntimeConfig.toConfig(config), confFile, None)
+              ConfigWriter.write(RuntimeConfigCompanion.toConfig(config), confFile, None)
               runtimeConfigs += LocalRuntimeConfig(baseDir = confFile.getParentFile(), resolvedRuntimeConfig = resolved)
               sender() ! OperationSucceeded(reqId)
             case Failure(e) =>
@@ -458,7 +458,7 @@ class Updater(
         val name = versionDir.getParentFile.getName()
 
         val config = ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-        val resolved = ResolvedRuntimeConfig(RuntimeConfig.read(config).get)
+        val resolved = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
         val local = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved)
 
         // consistency checks

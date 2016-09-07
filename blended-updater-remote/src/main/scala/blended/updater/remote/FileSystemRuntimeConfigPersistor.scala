@@ -2,8 +2,7 @@ package blended.updater.remote
 
 import java.io.File
 
-import blended.updater.config.ConfigWriter
-import blended.updater.config.RuntimeConfig
+import blended.updater.config.{ConfigWriter, RuntimeConfig, RuntimeConfigCompanion}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
@@ -29,7 +28,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
         val rc = Try {
           ConfigFactory.parseFile(file).resolve()
         }.flatMap { rawConfig =>
-          RuntimeConfig.read(rawConfig)
+          RuntimeConfigCompanion.read(rawConfig)
         }
         log.debug("Found file: {} with: {}", Array(file, rc))
         rc.toOption.map(rc => file -> rc)
@@ -53,7 +52,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
         sys.error(msg)
       }
     }
-    ConfigWriter.write(RuntimeConfig.toConfig(runtimeConfig), configFile, None)
+    ConfigWriter.write(RuntimeConfigCompanion.toConfig(runtimeConfig), configFile, None)
     runtimeConfigs += configFile -> runtimeConfig
   }
 

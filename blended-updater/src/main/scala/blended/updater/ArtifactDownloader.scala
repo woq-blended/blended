@@ -4,9 +4,7 @@ import java.io.File
 
 import scala.util.Failure
 import scala.util.Success
-
 import org.slf4j.LoggerFactory
-
 import ArtifactDownloader.DownloadFailed
 import ArtifactDownloader.DownloadFinished
 import akka.actor.Actor
@@ -14,8 +12,7 @@ import akka.actor.ActorLogging
 import akka.actor.Props
 import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
-import blended.updater.config.Artifact
-import blended.updater.config.RuntimeConfig
+import blended.updater.config.{Artifact, RuntimeConfig, RuntimeConfigCompanion}
 
 class ArtifactDownloader()
     extends Actor
@@ -34,7 +31,7 @@ class ArtifactDownloader()
         if (!file.exists()) Some(s"File does not exist: ${file}")
         else artifact.sha1Sum match {
           case None => None
-          case Some(sha1) => RuntimeConfig.digestFile(file) match {
+          case Some(sha1) => RuntimeConfigCompanion.digestFile(file) match {
             case Some(`sha1`) => None
             case Some(fileSha1) => Some(s"File checksum ${fileSha1} does not match ${sha1}")
             case None => Some(s"Chould not verify checksum of file ${file}")
@@ -46,7 +43,7 @@ class ArtifactDownloader()
         case None =>
           sender() ! DownloadFinished(reqId)
         case Some(_) =>
-          RuntimeConfig.download(url, file) match {
+          RuntimeConfigCompanion.download(url, file) match {
             case Success(f) =>
               fileIssue() match {
                 case None => sender() ! DownloadFinished(reqId)

@@ -1,16 +1,10 @@
 package blended.updater.tools.configbuilder
 
-import java.io.File
-import java.io.PrintStream
+import java.io.{File, PrintStream}
 
-import blended.updater.config.ConfigWriter
-import blended.updater.config.FeatureConfig
-import blended.updater.config.MvnGav
-import blended.updater.config.RuntimeConfig
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-import de.tototec.cmdoption.CmdOption
-import de.tototec.cmdoption.CmdlineParser
+import blended.updater.config._
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
 
 import scala.util.Success
 
@@ -104,7 +98,7 @@ object FeatureBuilder {
     val file = new File(cmdline.featureFiles)
     val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
-    val feature = FeatureConfig.read(config).get
+    val feature = FeatureConfigCompanion.read(config).get
     Console.err.println(s"Processing feature: ${feature.name} ${feature.version}")
 
     val bundles = feature.bundles
@@ -123,7 +117,7 @@ object FeatureBuilder {
       case (bundle, bundleFile) =>
 
         if (bundleFile.exists()) {
-          val digest = RuntimeConfig.digestFile(bundleFile)
+          val digest = RuntimeConfigCompanion.digestFile(bundleFile)
           if (bundle.sha1Sum.isDefined && bundle.sha1Sum != digest) {
             if (debug) Console.err.println(s"Bundle file ${bundleFile} has invalid checksum: ${digest}, expected: ${bundle.sha1Sum}")
             if (cmdline.discardInvalid) {
@@ -142,7 +136,7 @@ object FeatureBuilder {
             else mvnUrls.map(url => RuntimeConfig.resolveBundleUrl(bundle.url, Option(url)).get)
           urls.find { url =>
             Console.err.println(s"Downloading ${bundleFile.getName()} from ${url}")
-            RuntimeConfig.download(url, bundleFile).isSuccess
+            RuntimeConfigCompanion.download(url, bundleFile).isSuccess
           } getOrElse {
             val msg = s"Could not download ${bundleFile.getName()} from: ${urls}"
             Console.err.println(msg)
@@ -155,7 +149,7 @@ object FeatureBuilder {
       val newBundles = bundleFiles.map {
         case (bundle, bundleFile) =>
           if (bundleFile.exists()) {
-            val digest = RuntimeConfig.digestFile(bundleFile)
+            val digest = RuntimeConfigCompanion.digestFile(bundleFile)
             bundle.copy(artifact = bundle.artifact.copy(sha1Sum = digest))
           } else {
             val msg = s"Cannot update checksum of missing bundle file: ${bundleFile.getName()}"
@@ -168,10 +162,10 @@ object FeatureBuilder {
     } else feature
 
     if (cmdline.outputFile.isDefined) {
-      ConfigWriter.write(FeatureConfig.toConfig(newFeature), new File(cmdline.outputFile.get), None)
+      ConfigWriter.write(FeatureConfigCompanion.toConfig(newFeature), new File(cmdline.outputFile.get), None)
     } else {
       val ps = new PrintStream(Console.out)
-      ConfigWriter.write(FeatureConfig.toConfig(newFeature), ps, None)
+      ConfigWriter.write(FeatureConfigCompanion.toConfig(newFeature), ps, None)
     }
   }
 

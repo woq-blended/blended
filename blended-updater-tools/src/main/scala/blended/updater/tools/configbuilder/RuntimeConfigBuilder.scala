@@ -1,22 +1,19 @@
 package blended.updater.tools.configbuilder
 
 import java.io.File
-import blended.updater.config.{ Artifact, BundleConfig, ConfigWriter, FeatureConfig, LocalRuntimeConfig, RuntimeConfig }
-import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
-import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
+
+import blended.updater.config._
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+
 import scala.collection.immutable._
-import blended.updater.config.FeatureResolver
 import scala.util.Failure
 import scala.util.Try
-import blended.updater.config.FeatureConfig
-import blended.updater.config.BundleConfig
-import blended.updater.config.Artifact
 import java.io.PrintWriter
-import blended.updater.config.LocalRuntimeConfig
+
 import com.typesafe.config.ConfigParseOptions
-import blended.updater.config.MvnGav
+
 import scala.util.Success
-import blended.updater.config.ResolvedRuntimeConfig
 
 object RuntimeConfigBuilder {
 
@@ -104,7 +101,7 @@ object RuntimeConfigBuilder {
     // read feature repo files
     val features = options.featureRepos.map { fileName =>
       val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-      FeatureConfig.read(featureConfig).get
+      FeatureConfigCompanion.read(featureConfig).get
     }
 
     val configFile = new File(options.configFile).getAbsoluteFile()
@@ -115,7 +112,7 @@ object RuntimeConfigBuilder {
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
     val config = ConfigFactory.parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-    val unresolvedRuntimeConfig = RuntimeConfig.read(config).get
+    val unresolvedRuntimeConfig = RuntimeConfigCompanion.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
     val resolved = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
@@ -145,9 +142,9 @@ object RuntimeConfigBuilder {
     if (options.downloadMissing) {
 
       val files = resolved.allBundles.distinct.map { b =>
-        RuntimeConfig.bundleLocation(b, dir) -> downloadUrls(b.artifact)
+        RuntimeConfigCompanion.bundleLocation(b, dir) -> downloadUrls(b.artifact)
       } ++ resolved.runtimeConfig.resources.map(r =>
-        RuntimeConfig.resourceArchiveLocation(r, dir) -> downloadUrls(r)
+        RuntimeConfigCompanion.resourceArchiveLocation(r, dir) -> downloadUrls(r)
       )
 
       val states = files.par.map {
@@ -156,7 +153,7 @@ object RuntimeConfigBuilder {
             println(s"Downloading: ${file}")
             urls.find { url =>
               Console.err.println(s"Downloading ${file.getName()} from $url")
-              RuntimeConfig.download(url, file).isSuccess
+              RuntimeConfigCompanion.download(url, file).isSuccess
             }.map { url => file -> Try(file)
             }.getOrElse {
               val msg = s"Could not download ${file.getName()} from: $urls"
@@ -179,7 +176,7 @@ object RuntimeConfigBuilder {
     val newRuntimeConfig = if (options.updateChecksums) {
       var checkedFiles: Map[File, String] = Map()
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
-        checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)).map { checksum =>
+        checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
           checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
             println(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
@@ -208,10 +205,10 @@ object RuntimeConfigBuilder {
 
     outFile match {
       case None =>
-        ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), Console.out, None)
+        ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), Console.out, None)
       case Some(f) =>
         Console.err.println("Writing config file: " + configFile)
-        ConfigWriter.write(RuntimeConfig.toConfig(newRuntimeConfig), f, None)
+        ConfigWriter.write(RuntimeConfigCompanion.toConfig(newRuntimeConfig), f, None)
     }
 
   }
