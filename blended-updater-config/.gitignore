@@ -1,1 +1,3 @@
 pom.xml
+project/build.properties
+project/plugins.sbt

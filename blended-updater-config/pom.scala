@@ -34,6 +34,36 @@ BlendedModel(
           )
         )
       )
+    ),
+    Plugin(
+      gav = scalaMavenPlugin.gav,
+      executions = Seq(
+        Execution(
+          id = "prepareSBT",
+          phase = "generate-resources",
+          goals = Seq(
+            "script"
+          ),
+          configuration = Config(
+            script = scriptHelper +
+              """
+import java.io.File
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "project/build.properties"),
+  "sbtVersion=""" + Versions.sbtVersion + """"
+)
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "project/plugins.sbt"),
+  "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
+  "\n" +
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + Versions.scalaJsVersion + """\")"
+)
+"""
+          )
+        )
+      )
     )
   )
 )

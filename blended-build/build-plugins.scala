@@ -1,5 +1,9 @@
 // Plugins
 
+val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
+val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
+val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+
 val mavenBundlePlugin = Plugin(
   gav = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
   extensions = true,
@@ -49,7 +53,7 @@ val bundleWarPlugin = Plugin(
 )
 
 val compileJsPlugin = Plugin(
-  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0",
+  gav = execMavenPlugin,
   executions = Seq(
     Execution(
       id = "compileJS",
@@ -125,6 +129,4 @@ val scalatestMavenPlugin = Plugin(
   )
 )
 
-val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
-val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
-val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+
