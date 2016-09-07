@@ -1,6 +1,7 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
+#include ../blended-build/build-versions.scala
 #include ../blended-build/build-common.scala
 #include ../blended-build/build-dependencies.scala
 #include ../blended-build/build-plugins.scala
@@ -46,12 +47,12 @@ BlendedModel(
   properties = Map(
     "profile.version" -> blendedDemoMgmt.version.get,
     "profile.name" -> "blended-mgmt",
-    "spray.version" -> sprayVersion,
+    "spray.version" -> Versions.sprayVersion,
     "loglevel.test" -> "DEBUG"
   ),
   plugins = Seq(
       Plugin(
-        "de.wayofquality.blended" % "blended-updater-maven-plugin" % blendedVersion,
+        gav = blendedUpdaterMavenPlugin,
         executions = Seq(
           Execution(
             id = "materialize-profile",
@@ -67,7 +68,7 @@ BlendedModel(
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10",
+        gav = mavenDependencyPlugin,
         executions = Seq(
           Execution(
             id = "unpack-launcher",
@@ -90,11 +91,11 @@ BlendedModel(
         )
       ),
       Plugin(
-        "net.alchim31.maven" % "scala-maven-plugin",
+        gav = scalaMavenPlugin.gav,
         executions = Seq(
           Execution(
             id = "build-product",
-            phase = "test-compile",
+            phase = "generate-resources",
             goals = Seq(
               "script"
             ),
@@ -114,6 +115,7 @@ val launchConf =
   "profile.version=""" + blendedDemoMgmt.version.get + """"
 
 // write it to file
+tarLaunchFile.getParentFile().mkdirs()
 val writer = new PrintWriter(tarLaunchFile)
 writer.print(launchConf)
 writer.close()

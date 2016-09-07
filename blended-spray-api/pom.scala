@@ -1,6 +1,7 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
+#include ../blended-build/build-versions.scala
 #include ../blended-build/build-common.scala
 #include ../blended-build/build-dependencies.scala
 #include ../blended-build/build-plugins.scala
@@ -28,10 +29,10 @@ BlendedModel(
         instructions = new Config(Seq(
           "_include" -> Option("osgi.bnd"),
           "Embed-Dependency" -> Option("*;scope=compile"),
-          "_exportcontents" -> Option("spray.*;version="+ sprayVersion + ";-split-package:=merge-first," +
-            "akka.spray.*;version="+ sprayVersion + ";-split-package:=merge-first," +
-            "org.parboiled.*;version=" + parboiledVersion + ";-split-package:=merge-first," +
-            "shapeless.*;version=" + parboiledVersion + ";-split-package:=merge-first"),
+          "_exportcontents" -> Option("spray.*;version="+ Versions.sprayVersion + ";-split-package:=merge-first," +
+            "akka.spray.*;version="+ Versions.sprayVersion + ";-split-package:=merge-first," +
+            "org.parboiled.*;version=" + Versions.parboiledVersion + ";-split-package:=merge-first," +
+            "shapeless.*;version=" + Versions.parboiledVersion + ";-split-package:=merge-first"),
           "Embed-Transitive" -> Option("true")
         ))
       )

@@ -1,9 +1,7 @@
 // Plugins
 
-val mavenBundlePluginVersion = "3.2.0"
-
 val mavenBundlePlugin = Plugin(
-  "org.apache.felix" % "maven-bundle-plugin" % mavenBundlePluginVersion,
+  gav = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
   extensions = true,
   executions = Seq(
     Execution(
@@ -30,7 +28,7 @@ val mavenBundlePlugin = Plugin(
 )
 
 val bundleWarPlugin = Plugin(
-  "org.apache.felix" % "maven-bundle-plugin" % mavenBundlePluginVersion,
+  gav = mavenBundlePlugin.gav,
   executions = Seq(
     Execution(
       id = "manifest",
@@ -70,60 +68,45 @@ val compileJsPlugin = Plugin(
   )
 )
 
+val scalaCompilerConfig = Config(
+  fork = "true",
+  recompileMode = "incremental",
+  useZincServer = "true",
+  addJavacArgs = "-target|${java.version}|-source|${java.version}",
+  addZincArgs = "-C-target|-C${java.version}|-C-source|-C${java.version}",
+  args = Config(
+    arg = "-deprecation",
+    arg = "-feature",
+    arg = "-Xlint",
+    arg = "-Ywarn-nullary-override"
+  ),
+  jvmArgs = Config(
+    jvmArg = "-Xms256m",
+    jvmArg = "-Xmx512m",
+    jvmArg = "-XX:MaxPermSize=128m"
+  )
+)
+
 val scalaMavenPlugin = Plugin(
-  "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1",
+  gav = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1",
   executions = Seq(
     Execution(
       id = "compile-scala",
       goals = Seq(
         "compile"
       ),
-      configuration = Config(
-        fork = "true",
-        recompileMode = "incremental",
-        useZincServer = "true",
-        addJavacArgs = "-target|${java.version}|-source|${java.version}",
-        addZincArgs = "-C-target|-C${java.version}|-C-source|-C${java.version}",
-        args = Config(
-          arg = "-deprecation",
-          arg = "-feature",
-          arg = "-Xlint",
-          arg = "-Ywarn-nullary-override"
-        ),
-        jvmArgs = Config(
-          jvmArg = "-Xms256m",
-          jvmArg = "-Xmx512m",
-          jvmArg = "-XX:MaxPermSize=128m"
-        )
-      )
+      configuration = scalaCompilerConfig
     ),
     Execution(
       id = "test-compile-scala",
       goals = Seq(
         "testCompile"
       ),
-      configuration = Config(
-        fork = "true",
-        recompileMode = "incremental",
-        useZincServer = "true",
-        addJavacArgs = "-target|${java.version}|-source|${java.version}",
-        addZincArgs = "-C-target|-C${java.version}|-C-source|-C${java.version}",
-        args = Config(
-          arg = "-deprecation",
-          arg = "-feature",
-          arg = "-Xlint",
-          arg = "-Ywarn-nullary-override"
-        ),
-        jvmArgs = Config(
-          jvmArg = "-Xms256m",
-          jvmArg = "-Xmx512m",
-          jvmArg = "-XX:MaxPermSize=128m"
-        )
-      )
+      configuration = scalaCompilerConfig
     )
   ),
   configuration = Config(
-    scalaVersion = scalaVersion.version
+    scalaVersion = Versions.scalaVersion
   )
 )
 
@@ -142,5 +125,6 @@ val scalatestMavenPlugin = Plugin(
   )
 )
 
+val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
 val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
 val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"

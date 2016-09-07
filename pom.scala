@@ -1,6 +1,7 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
+#include blended-build/build-versions.scala
 #include blended-build/build-common.scala
 
 Model(

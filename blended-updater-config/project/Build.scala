@@ -14,9 +14,9 @@ object Build extends sbt.Build {
 
   lazy val projectSettings = Seq(
     organization := "de.wayofquality.blended",
-    version := Versions.app,
+    version := Versions.blendedVersion,
     name := appName,
-    scalaVersion := Versions.scala,
+    scalaVersion := Versions.scalaVersion,
 
     sourcesInBase := false,
 
@@ -24,11 +24,6 @@ object Build extends sbt.Build {
       baseDirectory.value / "src" / "shared" / "scala",
       baseDirectory.value / "src" / "js" / "scala"
     )
-
   )
 
-  object Versions {
-    val app             = "2.0-SNAPSHOT"
-    val scala           = "2.11.8"
-  }
 }

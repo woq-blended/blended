@@ -1,6 +1,7 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
+#include ../blended-build/build-versions.scala
 #include ../blended-build/build-common.scala
 #include ../blended-build/build-dependencies.scala
 #include ../blended-build/build-plugins.scala
@@ -16,7 +17,7 @@ BlendedModel(
     scalaLib % "provided",
     blendedJolokia,
     blendedTestSupport,
-    "com.github.docker-java" % "docker-java" % dockerJavaVersion,
+    "com.github.docker-java" % "docker-java" % Versions.dockerJavaVersion,
     akkaCamel,
     typesafeConfig,
     junit,
@@ -32,7 +33,7 @@ BlendedModel(
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
     Dependency(
-      "org.jolokia" % "jolokia-jvm" % jolokiaVersion,
+      "org.jolokia" % "jolokia-jvm" % Versions.jolokiaVersion,
       classifier = "agent",
       scope = "runtime"
     )
@@ -61,7 +62,7 @@ BlendedModel(
     Plugin(
       scalatestMavenPlugin.gav,
       configuration = Config(
-        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + jolokiaVersion + "-agent.jar=port=7777,host=localhost"
+        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + Versions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
       )
     )
   )

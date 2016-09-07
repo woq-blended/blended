@@ -1,38 +1,26 @@
-// Plain versions
-
-val activeMqVersion = "5.13.3"
-val akkaVersion = "2.3.10"
-val camelVersion = "2.16.3"
-val dockerJavaVersion = "1.0.0"
-val slf4jVersion = "1.7.12"
-val jolokiaVersion = "1.3.3"
-val parboiledVersion = "1.1.6"
-val sprayVersion = "1.3.2"
-
 // Dependencies
 
-val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
-val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
-val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
-val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % activeMqVersion
-val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
+val activeMqBroker = "org.apache.activemq" % "activemq-broker" % Versions.activeMqVersion
+val activeMqClient = "org.apache.activemq" % "activemq-client" % Versions.activeMqVersion
+val activeMqSpring = "org.apache.activemq" % "activemq-spring" % Versions.activeMqVersion
+val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % Versions.activeMqVersion
+val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % Versions.activeMqVersion
     
-val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
-val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
-val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
-val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
-val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+val akkaActor = "com.typesafe.akka" %% "akka-actor" % Versions.akkaVersion
+val akkaCamel = "com.typesafe.akka" %% "akka-camel" % Versions.akkaVersion
+val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % Versions.akkaVersion
+val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % Versions.akkaVersion
+val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % Versions.akkaVersion
 
-val apacheShiroVersion = "1.2.4"
-val apacheShiroCore = "org.apache.shiro" % "shiro-core" % apacheShiroVersion
-val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % apacheShiroVersion
+val apacheShiroCore = "org.apache.shiro" % "shiro-core" % Versions.apacheShiroVersion
+val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % Versions.apacheShiroVersion
 
 val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
-val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
-val camelHttp = "org.apache.camel" % "camel-http" % camelVersion
-val camelServlet = "org.apache.camel" % "camel-servlet" % camelVersion
+val camelCore = "org.apache.camel" % "camel-core" % Versions.camelVersion
+val camelJms = "org.apache.camel" % "camel-jms" % Versions.camelVersion
+val camelHttp = "org.apache.camel" % "camel-http" % Versions.camelVersion
+val camelServlet = "org.apache.camel" % "camel-servlet" % Versions.camelVersion
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
 val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
 val commonsLang = "commons-lang" % "commons-lang" % "2.6"
@@ -56,11 +44,11 @@ val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % 
 val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
 val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
     
-val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
+val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % Versions.slf4jVersion
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
 val junit = "junit" % "junit" % "4.11"
-val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
+val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % Versions.slf4jVersion
 
 val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
 val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
@@ -72,22 +60,22 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val scalaLib = "org.scala-lang" % "scala-library" % scalaVersion.version
-val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion.version
+val scalaLib = "org.scala-lang" % "scala-library" % Versions.scalaVersion
+val scalaReflect = "org.scala-lang" % "scala-reflect" % Versions.scalaVersion
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
-val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
-val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
-val sprayClient = "io.spray" %% "spray-client" % sprayVersion
-val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
-val sprayHttp = "io.spray" %% "spray-http" % sprayVersion
-val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
-val sprayIo = "io.spray" %% "spray-io" % sprayVersion
-val sprayJson = "io.spray" %% "spray-json" % sprayVersion
-val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
-val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
-val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
-val sprayUtil = "io.spray" %% "spray-util" % sprayVersion
+val slf4j = "org.slf4j" % "slf4j-api" % Versions.slf4jVersion
+val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % Versions.slf4jVersion
+val sprayClient = "io.spray" %% "spray-client" % Versions.sprayVersion
+val sprayCaching = "io.spray" %% "spray-caching" % Versions.sprayVersion
+val sprayHttp = "io.spray" %% "spray-http" % Versions.sprayVersion
+val sprayHttpx = "io.spray" %% "spray-httpx" % Versions.sprayVersion
+val sprayIo = "io.spray" %% "spray-io" % Versions.sprayVersion
+val sprayJson = "io.spray" %% "spray-json" % Versions.sprayVersion
+val sprayRouting = "io.spray" %% "spray-routing" % Versions.sprayVersion
+val sprayServlet = "io.spray" %% "spray-servlet" % Versions.sprayVersion
+val sprayTestkit = "io.spray" %% "spray-testkit" % Versions.sprayVersion
+val sprayUtil = "io.spray" %% "spray-util" % Versions.sprayVersion
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"

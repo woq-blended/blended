@@ -4,10 +4,8 @@
 import scala.collection.immutable
 
 val blendedGroupId = "de.wayofquality.blended"
-val blendedVersion = "2.0-SNAPSHOT"
 
-implicit val scalaVersion = ScalaVersion("2.11.8")
-val javaVersion = "1.7"
+implicit val scalaVersion = ScalaVersion(Versions.scalaVersion)
 
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
@@ -19,9 +17,9 @@ object BlendedModel{
     Map(
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
-      "java.version" -> javaVersion,
+      "java.version" -> Versions.javaVersion,
       "scala.version" -> scalaVersion.binaryVersion,
-      "blended.version" -> blendedVersion
+      "blended.version" -> Versions.blendedVersion
     )
 
   // Profiles we attach to all BlendedModels
@@ -239,7 +237,7 @@ object BlendedModel{
 
 // Blended Projects
 
-def BlendedModule(name : String) = blendedGroupId % name % blendedVersion
+def BlendedModule(name : String) = blendedGroupId % name % Versions.blendedVersion
 
 val blendedParent = Parent(
   gav = BlendedModule("blended.parent"),

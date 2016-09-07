@@ -1,12 +1,13 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
+#include ../blended-build/build-versions.scala
 #include ../blended-build/build-common.scala
 #include ../blended-build/build-dependencies.scala
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  "de.wayofquality.blended" % "blended.parent" % "2.0-SNAPSHOT",
+  gav = BlendedModule("blended.parent"),
   packaging = "pom",
   description = "Common Settings and configurations for all blended modules.",
   dependencies = Seq(
@@ -41,7 +42,7 @@ BlendedModel(
     "spring.version" -> "3.2.14.RELEASE",
     "felix.ca.version" -> "1.8.6",
     "project.build.sourceEncoding" -> "UTF-8",
-    "shiro.version" -> apacheShiroVersion,
+    "shiro.version" -> Versions.apacheShiroVersion,
     "docker.host" -> "localhost",
     "commons.lang.version" -> "2.6",
     "aries.blueprint.version" -> "1.0.1",
@@ -74,7 +75,7 @@ BlendedModel(
     "commons.net.version" -> "3.3",
     "docker.port" -> "4243",
     "felix.gogo.command.version" -> felixGogoCommand.version.get,
-    "docker-java.version" -> dockerJavaVersion,
+    "docker-java.version" -> Versions.dockerJavaVersion,
     "pax-swissbox.version" -> "1.7.0",
     "loglevel.test" -> "INFO",
     "jasypt.version" -> "1.9.0_1",
@@ -111,21 +112,21 @@ BlendedModel(
     "scala.version" -> scalaVersion.binaryVersion,
     "scala.xml.version" -> scalaXml.version.get,
     "compiler-plugin.version" -> "2.5.1",
-    "parboiled.version" -> parboiledVersion,
+    "parboiled.version" -> Versions.parboiledVersion,
     "pax-web.version" -> "3.1.0",
     "war.plugin.version" -> "2.6",
     "bundle.plugin.version" -> "3.0.1",
     "xbean.asm4.version" -> "3.16",
     "commons.collections.version" -> "3.2.1",
-    "jolokia.version" -> jolokiaVersion,
+    "jolokia.version" -> Versions.jolokiaVersion,
     "activemq.version" -> "5.13.3",
     "json-lenses.version" -> jsonLenses.version.get,
     "osweb.asm.version" -> "3.1.0",
-    "spray.version" -> sprayVersion,
+    "spray.version" -> Versions.sprayVersion,
     "jetty.version" -> "8.1.19.v20160209",
     "commons.codec.version" -> "1.6.0",
     "linkedhashmap.version" -> concurrentLinkedHashMapLru.version.get,
-    "java.version" -> javaVersion
+    "java.version" -> Versions.javaVersion
   ),
   build = Build(
     resources = Seq(
