@@ -30,7 +30,7 @@ class RuntimeConfigTest
       |""".stripMargin
 
     "read" in {
-      val config = RuntimeConfig.read(ConfigFactory.parseString(minimal)).get
+      val config = RuntimeConfigCompanion.read(ConfigFactory.parseString(minimal)).get
     }
 
     val lines = minimal.trim().split("\n")
@@ -38,14 +38,14 @@ class RuntimeConfigTest
       "without line " + n + " must fail" in {
         val config = lines.take(n) ++ lines.drop(n + 1)
         val ex = intercept[RuntimeException] {
-          ResolvedRuntimeConfig(RuntimeConfig.read(ConfigFactory.parseString(config.mkString("\n"))).get, List())
+          ResolvedRuntimeConfig(RuntimeConfigCompanion.read(ConfigFactory.parseString(config.mkString("\n"))).get, List())
         }
         assert(ex.isInstanceOf[ConfigException] || ex.isInstanceOf[IllegalArgumentException])
       }
     }
 
     "read -> toConfig -> read must result in same config" in {
-      import RuntimeConfig._
+      import RuntimeConfigCompanion._
       val config = read(ConfigFactory.parseString(minimal))
       assert(config === read(toConfig(config.get)))
     }
@@ -103,7 +103,7 @@ class RuntimeConfigTest
       |""".stripMargin
 
     def features = List(feature1, feature2, feature3).map(f => {
-      val fc = FeatureConfig.read(ConfigFactory.parseString(f))
+      val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get
     })
@@ -126,7 +126,7 @@ class RuntimeConfigTest
     val resolver = FeatureResolver
 
     "should resolve to a valid config" in {
-      val rcTry = RuntimeConfig.read(ConfigFactory.parseString(config))
+      val rcTry = RuntimeConfigCompanion.read(ConfigFactory.parseString(config))
       rcTry shouldBe a[Success[_]]
 
       val resolvedTry = resolver.resolve(rcTry.get, features)
@@ -147,7 +147,7 @@ class RuntimeConfigTest
 
     "should not write a properties file without required settings" in {
       withTestDir() { dir =>
-        val res = RuntimeConfig.createPropertyFile(
+        val res = RuntimeConfigCompanion.createPropertyFile(
           LocalRuntimeConfig(ResolvedRuntimeConfig(next), new File(dir, "test/1")),
           Option(LocalRuntimeConfig(ResolvedRuntimeConfig(next), new File(dir, "test/2"))))
         assert(res === None)
@@ -159,7 +159,7 @@ class RuntimeConfigTest
         sys.props += "TEST_A" -> "TEST_a"
         sys.props += "test.prop" -> "TEST_PROP"
         try {
-          val res = RuntimeConfig.createPropertyFile(
+          val res = RuntimeConfigCompanion.createPropertyFile(
             LocalRuntimeConfig(ResolvedRuntimeConfig(next.copy(properties = Map(
               RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
               RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "sysprop",
@@ -185,7 +185,7 @@ class RuntimeConfigTest
           w.close()
         }
 
-        val res = RuntimeConfig.createPropertyFile(
+        val res = RuntimeConfigCompanion.createPropertyFile(
           LocalRuntimeConfig(ResolvedRuntimeConfig(next.copy(properties = Map(
             RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
             RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
@@ -219,7 +219,7 @@ class RuntimeConfigTest
           w.close()
         }
 
-        val res = RuntimeConfig.createPropertyFile(
+        val res = RuntimeConfigCompanion.createPropertyFile(
           LocalRuntimeConfig(ResolvedRuntimeConfig(next.copy(properties = Map(
             RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
             RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
@@ -254,7 +254,7 @@ class RuntimeConfigTest
           w.close()
         }
 
-        val res = RuntimeConfig.createPropertyFile(
+        val res = RuntimeConfigCompanion.createPropertyFile(
           LocalRuntimeConfig(ResolvedRuntimeConfig(next.copy(properties = Map(
             RuntimeConfig.Properties.PROFILE_PROPERTY_FILE -> "etc/props",
             RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS -> "fileCurVer:etc/props",
@@ -274,7 +274,7 @@ class RuntimeConfigTest
       s"should download a local file (try ${i})" in {
         withTestFiles("content", "") { (file, target) =>
           assert(Source.fromFile(file).getLines().toList === List("content"), "Precondition failed")
-          val result = RuntimeConfig.download(file.toURI().toString(), target)
+          val result = RuntimeConfigCompanion.download(file.toURI().toString(), target)
           assert(result === Success(target))
           assert(Source.fromFile(target).getLines().toList === List("content"))
         }

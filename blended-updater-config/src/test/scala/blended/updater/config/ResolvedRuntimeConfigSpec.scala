@@ -1,16 +1,10 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpecLike
-import org.scalatest.Matchers
-import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
-import scala.util.Success
-import scala.util.Failure
-import blended.testsupport.TestFile
-import java.io.File
-import scala.io.Source
-import java.io.FileWriter
+import org.scalatest.{FreeSpecLike, Matchers}
+
 import scala.collection.immutable
+import scala.util.Success
 
 class ResolvedRuntimeConfigSpec
     extends FreeSpecLike
@@ -49,12 +43,12 @@ class ResolvedRuntimeConfigSpec
       |""".stripMargin
 
     val features = immutable.Seq(feature1, feature2, feature3).map(f => {
-      val fc = FeatureConfig.read(ConfigFactory.parseString(f))
+      val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get
     })
 
-    val runtimeConfig = RuntimeConfig.read(ConfigFactory.parseString(config)).get
+    val runtimeConfig : RuntimeConfig = RuntimeConfigCompanion.read(ConfigFactory.parseString(config)).get
 
     "should be constructable with extra features" in {
       ResolvedRuntimeConfig(runtimeConfig, features)

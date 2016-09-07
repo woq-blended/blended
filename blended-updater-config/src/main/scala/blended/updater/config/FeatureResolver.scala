@@ -18,10 +18,10 @@ object FeatureResolver {
           Try {
             val url = RuntimeConfig.resolveBundleUrl(unresolveUrl, mvnBaseUrl).get
             val file = File.createTempFile(RuntimeConfig.resolveFileName(url).get, "")
-            RuntimeConfig.download(url, file).get
+            RuntimeConfigCompanion.download(url, file).get
             val config = ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
             file.delete()
-            FeatureConfig.read(config).get
+            FeatureConfigCompanion.read(config).get
           }.toOption.map { fetched =>
             synchronized {
               cache ++= Seq(fetched)

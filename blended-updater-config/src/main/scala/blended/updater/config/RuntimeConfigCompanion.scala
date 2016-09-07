@@ -31,67 +31,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 
-case class RuntimeConfig(
-    name: String,
-    version: String,
-    bundles: immutable.Seq[BundleConfig] = immutable.Seq(),
-    startLevel: Int,
-    defaultStartLevel: Int,
-    properties: Map[String, String] = Map(),
-    frameworkProperties: Map[String, String] = Map(),
-    systemProperties: Map[String, String] = Map(),
-    features: immutable.Seq[FeatureRef] = immutable.Seq(),
-    resources: immutable.Seq[Artifact] = immutable.Seq(),
-    resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
-    s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
-    s",systemProperties=${systemProperties},features=${features},resources=${resources},resolvedFeatures=${resolvedFeatures})"
-
-  def mvnBaseUrl: Option[String] = properties.get(RuntimeConfig.Properties.MVN_REPO)
-
-  def resolveBundleUrl(url: String): Try[String] = RuntimeConfig.resolveBundleUrl(url, mvnBaseUrl)
-
-  def resolveFileName(url: String): Try[String] = RuntimeConfig.resolveFileName(url)
-
-  def baseDir(profileBaseDir: File): File = new File(profileBaseDir, s"${name}/${version}")
-
-  //    def localRuntimeConfig(baseDir: File): LocalRuntimeConfig = LocalRuntimeConfig(runtimeConfig = this, baseDir = baseDir)
-
-  /**
-   * Try to create a [ResolvedRuntimeConfig]. This does not fetch missing [FeatureConfig]s.
-   *
-   * @see [FeatureResolver] for a way to resolve missing features.
-   */
-  def resolve(features: immutable.Seq[FeatureConfig] = immutable.Seq()): Try[ResolvedRuntimeConfig] = Try {
-    ResolvedRuntimeConfig(this, features.to[immutable.Seq])
-  }
-
-}
-
-object RuntimeConfig
-    extends ((String, String, immutable.Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], immutable.Seq[FeatureRef], immutable.Seq[Artifact], immutable.Seq[FeatureConfig]) => RuntimeConfig) {
-
-  val MvnPrefix = "mvn:"
-
-  object Properties {
-    val PROFILES_BASE_DIR = "blended.updater.profiles.basedir"
-    val PROFILE_DIR = "blended.updater.profile.dir"
-    val PROFILE_NAME = "blended.updater.profile.name"
-    val PROFILE_VERSION = "blended.updater.profile.version"
-    /**
-     * selected overlays, format: name:version,name:verion
-     */
-    val OVERLAYS = "blended.updater.profile.overlays"
-    val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
-    val MVN_REPO = "blended.updater.mvn.url"
-    /** A properties file relative to the profile dir */
-    val PROFILE_PROPERTY_FILE = "blended.updater.profile.properties.file"
-    /** Comma separated list of property providers */
-    val PROFILE_PROPERTY_PROVIDERS = "blended.updater.profile.properties.providers"
-    /** Comma separated list of properties required to be in the properties file */
-    val PROFILE_PROPERTY_KEYS = "blended.updater.profile.properties.keys"
-  }
+object RuntimeConfigCompanion {
 
   def read(config: Config): Try[RuntimeConfig] = Try {
 
@@ -115,7 +55,7 @@ object RuntimeConfig
       version = config.getString("version"),
       bundles =
         if (config.hasPath("bundles"))
-          config.getObjectList("bundles").asScala.map { bc => BundleConfig.read(bc.toConfig()).get }.toList
+          config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList
         else immutable.Seq(),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
@@ -125,16 +65,16 @@ object RuntimeConfig
       features =
         if (config.hasPath("features"))
           config.getObjectList("features").asScala.map { f =>
-          FeatureRef.fromConfig(f.toConfig()).get
+          FeatureRefCompanion.fromConfig(f.toConfig()).get
         }.toList
         else immutable.Seq(),
       resources =
         if (config.hasPath("resources"))
-          config.getObjectList("resources").asScala.map(r => Artifact.read(r.toConfig()).get).toList
+          config.getObjectList("resources").asScala.map(r => ArtifactCompanion.read(r.toConfig()).get).toList
         else immutable.Seq(),
       resolvedFeatures =
         if (config.hasPath("resolvedFeatures"))
-          config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfig.read(r.toConfig()).get).toList
+          config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfigCompanion.read(r.toConfig()).get).toList
         else immutable.Seq()
     )
   }
@@ -143,15 +83,15 @@ object RuntimeConfig
     val config = Map(
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
-      "bundles" -> runtimeConfig.bundles.map(BundleConfig.toConfig).map(_.root().unwrapped()).asJava,
+      "bundles" -> runtimeConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava,
       "startLevel" -> runtimeConfig.startLevel,
       "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
       "properties" -> runtimeConfig.properties.asJava,
       "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
       "systemProperties" -> runtimeConfig.systemProperties.asJava,
-      "features" -> runtimeConfig.features.map(FeatureRef.toConfig).map(_.root().unwrapped()).asJava,
-      "resources" -> runtimeConfig.resources.map(Artifact.toConfig).map(_.root().unwrapped()).asJava,
-      "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfig.toConfig).map(_.root().unwrapped()).asJava
+      "features" -> runtimeConfig.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava,
+      "resources" -> runtimeConfig.resources.map(ArtifactCompanion.toConfig).map(_.root().unwrapped()).asJava,
+      "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
     ConfigFactory.parseMap(config)
@@ -238,31 +178,14 @@ object RuntimeConfig
 
   def bundlesBaseDir(baseDir: File): File = new File(baseDir, "bundles")
 
-  def resolveBundleUrl(url: String, mvnBaseUrl: Option[String] = None): Try[String] = Try {
-    if (url.startsWith(MvnPrefix)) {
-      mvnBaseUrl match {
-        case Some(base) => MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl(base)
-        case None => sys.error("No repository defined to resolve url: " + url)
-      }
-    } else url
-  }
-
-  def resolveFileName(url: String): Try[String] = Try {
-    val resolvedUrl = if (url.startsWith(MvnPrefix)) {
-      MvnGav.parse(url.substring(MvnPrefix.size)).get.toUrl("file:///")
-    } else url
-    val path = new URL(resolvedUrl).getPath()
-    path.split("[/]").filter(!_.isEmpty()).reverse.headOption.getOrElse(path)
-  }
-
   def bundleLocation(bundle: BundleConfig, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(resolveFileName(bundle.url).get))
+    new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), bundle.jarName.getOrElse(RuntimeConfig.resolveFileName(bundle.url).get))
 
   def bundleLocation(artifact: Artifact, baseDir: File): File =
-    new File(RuntimeConfig.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(resolveFileName(artifact.url).get))
+    new File(RuntimeConfigCompanion.bundlesBaseDir(baseDir), artifact.fileName.getOrElse(RuntimeConfig.resolveFileName(artifact.url).get))
 
   def resourceArchiveLocation(resourceArchive: Artifact, baseDir: File): File =
-    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(resolveFileName(resourceArchive.url).get)}")
+    new File(baseDir, s"resources/${resourceArchive.fileName.getOrElse(RuntimeConfig.resolveFileName(resourceArchive.url).get)}")
 
   def resourceArchiveTouchFileLocation(resourceArchive: Artifact, baseDir: File, mvnBaseUrl: Option[String]): File = {
     val resFile = resourceArchiveLocation(resourceArchive, baseDir)
@@ -272,7 +195,7 @@ object RuntimeConfig
   def getPropertyFileProvider(
     curRuntime: RuntimeConfig,
     prevRuntime: Option[LocalRuntimeConfig]): Try[immutable.Seq[PropertyProvider]] = Try {
-    curRuntime.properties.get(Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
+    curRuntime.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
       case "env" => Some(new EnvPropertyProvider())
       case "sysprop" => Some(new SystemPropertyProvider())
       case x if x.startsWith("uuid:") =>
@@ -297,7 +220,7 @@ object RuntimeConfig
   def createPropertyFile(curRuntime: LocalRuntimeConfig,
     prevRuntime: Option[LocalRuntimeConfig], onlyIfMisssing: Boolean): Option[Try[File]] = {
 
-    curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
+    curRuntime.runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
       val propFile = new File(curRuntime.baseDir, fileName)
       if (propFile.exists() && onlyIfMisssing) {
         // nothing to create, as the file already exists
@@ -309,9 +232,9 @@ object RuntimeConfig
           content.load(new BufferedReader(new FileReader(propFile)))
         }
 
-        curRuntime.runtimeConfig.properties.get(Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
+        curRuntime.runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS).map(_.split("[,]").toList).map { props =>
           val providers = getPropertyFileProvider(curRuntime.runtimeConfig, prevRuntime).get
-          if (providers.isEmpty) sys.error(s"No property providers defined (${Properties.PROFILE_PROPERTY_PROVIDERS})")
+          if (providers.isEmpty) sys.error(s"No property providers defined (${RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS})")
           val resolvedProps = props.map { prop =>
             val newValue = providers.toStream.map(_.provide(prop)).find(_.isDefined).map(_.get)
 

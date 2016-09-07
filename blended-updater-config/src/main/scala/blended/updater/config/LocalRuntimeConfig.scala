@@ -16,17 +16,17 @@ case class LocalRuntimeConfig(
 
   def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
-  def bundleLocation(bundle: BundleConfig): File = RuntimeConfig.bundleLocation(bundle, baseDir)
+  def bundleLocation(bundle: BundleConfig): File = RuntimeConfigCompanion.bundleLocation(bundle, baseDir)
 
-  def bundleLocation(artifact: Artifact): File = RuntimeConfig.bundleLocation(artifact, baseDir)
+  def bundleLocation(artifact: Artifact): File = RuntimeConfigCompanion.bundleLocation(artifact, baseDir)
 
   val profileFileLocation: File = new File(baseDir, "profile.conf")
 
   def resourceArchiveLocation(resourceArchive: Artifact): File =
-    RuntimeConfig.resourceArchiveLocation(resourceArchive, baseDir)
+    RuntimeConfigCompanion.resourceArchiveLocation(resourceArchive, baseDir)
 
   def resourceArchiveTouchFileLocation(resourceArchive: Artifact): File =
-    RuntimeConfig.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
+    RuntimeConfigCompanion.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
 
   val propertiesFileLocation: Option[File] =
     runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_FILE).map(f => new File(baseDir, f))
@@ -60,7 +60,7 @@ case class LocalRuntimeConfig(
           val issue = if (!file.exists()) {
             Some(s"Missing file: ${file.getName()}")
           } else {
-            checkedFiles.get(file).orElse(RuntimeConfig.digestFile(file)) match {
+            checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)) match {
               case Some(d) =>
                 checkedFiles += file -> d
                 if (Option(d) != artifact.sha1Sum) {

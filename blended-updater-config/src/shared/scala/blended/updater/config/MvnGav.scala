@@ -1,6 +1,7 @@
 package blended.updater.config
 
 import java.util.regex.Pattern
+
 import scala.util.Try
 
 case class MvnGav(

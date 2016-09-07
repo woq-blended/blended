@@ -1,20 +1,15 @@
 package blended.updater.config
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.immutable.Seq
-import scala.util.Try
-
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 /**
- * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
- *
- * If there are unresolved (transitive) features, this class construction throws with a [java.lang.IllegalArgumentException].
- *
- * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
- *
- */
+  * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
+  *
+  * If there are unresolved (transitive) features, this class construction throws with a [java.lang.IllegalArgumentException].
+  *
+  * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
+  *
+  */
 case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
   {
@@ -51,8 +46,8 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   }
 
   /**
-   * All referenced features.
-   */
+    * All referenced features.
+    */
   def allReferencedFeatures: Seq[FeatureConfig] = {
     def find(features: Seq[FeatureRef]): Seq[FeatureConfig] = features.flatMap { f =>
       val feature = lookupFeature(f).get
@@ -62,8 +57,8 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   }
 
   /**
-   * All bundles of this runtime config including those trasitively defined in the features.
-   */
+    * All bundles of this runtime config including those trasitively defined in the features.
+    */
   def allBundles: Seq[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
 
   val framework: BundleConfig = {
@@ -71,14 +66,13 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
     require(fs.distinct.size == 1, s"A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}\n  ${fs.mkString("\n  ")}")
     fs.head
   }
-
 }
 
 object ResolvedRuntimeConfig extends (RuntimeConfig => ResolvedRuntimeConfig) {
 
   /**
-   * Construct with additional resolved features.
-   */
+    * Construct with additional resolved features.
+    */
   def apply(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]): ResolvedRuntimeConfig = {
 
     val allFeatures = (runtimeConfig.resolvedFeatures ++ features).distinct
@@ -87,18 +81,4 @@ object ResolvedRuntimeConfig extends (RuntimeConfig => ResolvedRuntimeConfig) {
       runtimeConfig.copy(resolvedFeatures = allFeatures)
     )
   }
-
-  def fromConfig(config: Config): Try[ResolvedRuntimeConfig] = Try {
-    ResolvedRuntimeConfig(
-      runtimeConfig = RuntimeConfig.read(config.getObject("runtimeConfig").toConfig()).get
-    )
-  }
-
-  def toConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig): Config = {
-    val config = Map(
-      "runtimeConfig" -> RuntimeConfig.toConfig(resolvedRuntimeConfig.runtimeConfig).root().unwrapped()
-    ).asJava
-    ConfigFactory.parseMap(config)
-  }
-
 }

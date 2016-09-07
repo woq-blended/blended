@@ -6,17 +6,7 @@ import scala.util.Try
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 
-
-case class FeatureRef(
-    name: String,
-    version: String,
-    url: Option[String] = None) {
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},url=${url})"
-
-}
-
-object FeatureRef extends ((String, String, Option[String]) => FeatureRef) {
+object FeatureRefCompanion {
 
   def toConfig(feature: FeatureRef): Config = {
     val config = (Map(
@@ -35,5 +25,4 @@ object FeatureRef extends ((String, String, Option[String]) => FeatureRef) {
       url = if (config.hasPath("url")) Option(config.getString("path")) else None
     )
   }
-
 }

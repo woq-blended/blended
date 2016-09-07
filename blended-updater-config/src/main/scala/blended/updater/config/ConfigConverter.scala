@@ -47,7 +47,8 @@ trait ConfigConverter {
   }
 
   def launcherConfigToRuntimeConfig(launcherConfig: LauncherConfig, missingPlaceholder: String): RuntimeConfig = {
-    import RuntimeConfig._
+    import RuntimeConfigCompanion._
+
     RuntimeConfig(
       name = launcherConfig.branding.getOrElse(RuntimeConfig.Properties.PROFILE_NAME, missingPlaceholder),
       version = launcherConfig.branding.getOrElse(RuntimeConfig.Properties.PROFILE_VERSION, missingPlaceholder),
