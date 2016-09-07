@@ -12,7 +12,7 @@ val sprayVersion = "1.3.2"
 // Dependencies
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
-val activemqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
+val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
 val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % activeMqVersion
 val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
@@ -54,12 +54,15 @@ val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
 val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
+val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
     
 val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
 
+val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
 val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
@@ -77,10 +80,14 @@ val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
 val sprayClient = "io.spray" %% "spray-client" % sprayVersion
 val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
+val sprayHttp = "io.spray" %% "spray-http" % sprayVersion
+val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
+val sprayIo = "io.spray" %% "spray-io" % sprayVersion
 val sprayJson = "io.spray" %% "spray-json" % sprayVersion
 val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
 val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
 val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
+val sprayUtil = "io.spray" %% "spray-util" % sprayVersion
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"

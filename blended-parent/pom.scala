@@ -119,7 +119,7 @@ BlendedModel(
     "commons.collections.version" -> "3.2.1",
     "jolokia.version" -> jolokiaVersion,
     "activemq.version" -> "5.13.3",
-    "json-lenses.version" -> "0.5.4",
+    "json-lenses.version" -> jsonLenses.version.get,
     "osweb.asm.version" -> "3.1.0",
     "spray.version" -> sprayVersion,
     "jetty.version" -> "8.1.19.v20160209",

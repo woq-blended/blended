@@ -6,20 +6,17 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  blendedActivemqClient,
+  blendedDomino,
   packaging = "bundle",
-  description =
-    """
-      |An Active MQ Connection factory as a service.
-    """.stripMargin,
+  description = "Blended Domino extension for new Capsule scopes.",
   dependencies = Seq(
-    blendedDomino,
-    activeMqClient
+    domino,
+    typesafeConfig,
+    blendedContainerContext,
+    scalaLib
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

@@ -6,22 +6,18 @@ import scala.collection.immutable.Seq
 #include ../blended-build/build-plugins.scala
 
 BlendedModel(
-  gav = blendedMgmtRepo,
+  blendedUpdaterTools,
   packaging = "bundle",
-  description = "File Artifact Repository",
+  description = "Configurations for Updater and Launcher",
   dependencies = Seq(
-    scalaLib % "provided",
-    blendedDomino,
+    typesafeConfig,
     blendedUpdaterConfig,
-    blendedMgmtBase,
-    sprayJson,
-    scalaTest % "test",
-    blendedTestSupport % "test",
-    lambdaTest % "test"
-  ), 
+    cmdOption,
+    scalaTest % "test"
+  ),
   plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin,
-      scalatestMavenPlugin
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

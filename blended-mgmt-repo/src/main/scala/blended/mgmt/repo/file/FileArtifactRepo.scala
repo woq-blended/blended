@@ -10,7 +10,11 @@ import java.util.Formatter
 import scala.util.control.NonFatal
 
 import blended.mgmt.repo.ArtifactRepo
+import java.nio.file.Path
+import java.nio.file.Files
+import scala.collection.JavaConverters._
 
+// TODO: make path-arguments robust against ".." injections
 class FileArtifactRepo(override val repoId: String, baseDir: File) extends ArtifactRepo {
 
   def findFile(path: String): Option[File] = {
@@ -41,5 +45,25 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
   }
 
   override def toString(): String = getClass().getSimpleName() + "(repoId=" + repoId + ",baseDir=" + baseDir + ")"
+
+  def findFiles(path: String): Iterator[File] = {
+    val file = new File(baseDir, path)
+    if (!file.exists()) Iterator.empty else {
+      val fs = file.toPath().getFileSystem()
+
+      def getFiles(dir: Path): Iterator[Path] = {
+        val files = Files.newDirectoryStream(dir).iterator().asScala
+        files.flatMap { f =>
+          val isDir = Files.isDirectory(f)
+          val file = Iterator(f).filter(f => !isDir)
+          val childs = if (isDir) getFiles(f) else Iterator.empty
+          file ++ childs
+        }
+      }
+
+      val files = getFiles(file.toPath())
+      files.map(_.toFile())
+    }
+  }
 
 }

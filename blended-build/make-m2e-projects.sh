@@ -65,7 +65,9 @@ for project in $genForProjects; do
 
   cd "$project"
 
-  cat > .project << EOF
+  if [ -e src/main/scala -o -e src/test/scala ]; then
+
+    cat > .project << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
         <name>$project</name>
@@ -91,6 +93,38 @@ for project in $genForProjects; do
         </natures>
 </projectDescription>
 EOF
+
+  else
+
+    echo "Generating project without scala support"
+
+    cat > .project << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+        <name>$project</name>
+        <comment></comment>
+        <projects>
+        </projects>
+        <buildSpec>
+                <buildCommand>
+                        <name>org.eclipse.m2e.core.maven2Builder</name>
+                        <arguments>
+                        </arguments>
+                </buildCommand>
+                <buildCommand>
+                        <name>org.eclipse.jdt.core.javabuilder</name>
+                        <arguments>
+                        </arguments>
+                </buildCommand>
+        </buildSpec>
+        <natures>
+                <nature>org.eclipse.jdt.core.javanature</nature>
+                <nature>org.eclipse.m2e.core.maven2Nature</nature>
+        </natures>
+</projectDescription>
+EOF
+
+  fi
 
   cat > .classpath << EOF
 <?xml version="1.0" encoding="UTF-8"?>
