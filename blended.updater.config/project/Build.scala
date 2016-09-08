@@ -17,7 +17,7 @@ object Build extends sbt.Build {
     version := BlendedVersions.blendedVersion,
     name := appName,
     scalaVersion := BlendedVersions.scalaVersion,
-    (artifact in packageBin) ~= { a : Artifact => a.copy(name = appName) },
+    moduleName := appName,
 
     sourcesInBase := false,
 

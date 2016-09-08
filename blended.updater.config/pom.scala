@@ -35,25 +35,23 @@ BlendedModel(
           )
         )
       )
+    ),
+    Plugin(
+      gav = mavenInstallPlugin,
+      executions = Seq(
+        Execution(
+          id = "publishJS",
+          phase = "install",
+          goals = Seq("install-file"),
+          configuration = Config(
+            file = "target/scala-" + scalaVersion.binaryVersion + "/${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion + "-" + BlendedVersions.blendedVersion + ".jar",
+            groupId = blendedUpdaterConfig.groupId.get,
+            artifactId = "${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion,
+            version = BlendedVersions.blendedVersion,
+            packaging = "jar"
+          )
+        )
+      )
     )
-    // FIXME TODO
-//    Plugin(
-//      gav = buildHelperPlugin,
-//      executions = Seq(
-//        Execution(
-//          id = "attachJS",
-//          phase = "package",
-//          goals = Seq("attach-artifact"),
-//          configuration = Config(
-//            artifacts = Config(
-//              artifact = Config (
-//                file = "target/scala-" + scalaVersion.binaryVersion + "/${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion + "-${project.version}.jar",
-//                classifier = "sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion
-//              )
-//            )
-//          )
-//        )
-//      )
-//    )
   )
 )

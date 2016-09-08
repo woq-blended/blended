@@ -36,15 +36,17 @@ object Build extends sbt.Build {
     libraryDependencies ++= Dependencies.clientDeps.value,
     jsDependencies ++= Dependencies.jsDependencies.value,
     persistLauncher in Compile := true,
-    persistLauncher in Test := false
-  )
+    persistLauncher in Test := false,
 
+    resolvers += Resolver.mavenLocal
+  )
 
   object Dependencies {
 
     lazy val clientDeps = Def.setting(Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
+      organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
       //      "com.lihaoyi" %%% "upickle" % Versions.upickle,
       //      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
       //      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery,

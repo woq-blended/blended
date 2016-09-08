@@ -12,6 +12,7 @@ BlendedModel(
   description = "The blended management UI.",
   build = Build(
     plugins = Seq(
+      prepareSbtPlugin,
       compileJsPlugin,
       bundleWarPlugin,
       Plugin(

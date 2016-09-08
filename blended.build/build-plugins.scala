@@ -3,6 +3,7 @@
 val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
 val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
 val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+val mavenInstallPlugin = "org.apache.maven.plugins" % "maven-install-plugin" % "2.5.2"
 
 val mavenBundlePlugin = Plugin(
   gav = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
@@ -136,7 +137,9 @@ ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/plugins.sbt"),
   "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
   "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")"
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
+  "\n" +
+  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.0\")"
 )
 """
       )
