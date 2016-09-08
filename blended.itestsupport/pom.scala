@@ -17,7 +17,7 @@ BlendedModel(
     scalaLib % "provided",
     blendedJolokia,
     blendedTestSupport,
-    "com.github.docker-java" % "docker-java" % Versions.dockerJavaVersion,
+    "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion,
     akkaCamel,
     typesafeConfig,
     junit,
@@ -33,7 +33,7 @@ BlendedModel(
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
     Dependency(
-      "org.jolokia" % "jolokia-jvm" % Versions.jolokiaVersion,
+      "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion,
       classifier = "agent",
       scope = "runtime"
     )
@@ -62,7 +62,7 @@ BlendedModel(
     Plugin(
       scalatestMavenPlugin.gav,
       configuration = Config(
-        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + Versions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
+        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
       )
     )
   )

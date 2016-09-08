@@ -29,10 +29,10 @@ BlendedModel(
         instructions = new Config(Seq(
           "_include" -> Option("osgi.bnd"),
           "Embed-Dependency" -> Option("*;scope=compile"),
-          "_exportcontents" -> Option("spray.*;version="+ Versions.sprayVersion + ";-split-package:=merge-first," +
-            "akka.spray.*;version="+ Versions.sprayVersion + ";-split-package:=merge-first," +
-            "org.parboiled.*;version=" + Versions.parboiledVersion + ";-split-package:=merge-first," +
-            "shapeless.*;version=" + Versions.parboiledVersion + ";-split-package:=merge-first"),
+          "_exportcontents" -> Option("spray.*;version="+ BlendedVersions.sprayVersion + ";-split-package:=merge-first," +
+            "akka.spray.*;version="+ BlendedVersions.sprayVersion + ";-split-package:=merge-first," +
+            "org.parboiled.*;version=" + BlendedVersions.parboiledVersion + ";-split-package:=merge-first," +
+            "shapeless.*;version=" + BlendedVersions.parboiledVersion + ";-split-package:=merge-first"),
           "Embed-Transitive" -> Option("true")
         ))
       )

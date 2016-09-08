@@ -1,4 +1,4 @@
-object Versions {
+object BlendedVersions {
 
   val blendedVersion = "2.0-SNAPSHOT"
 

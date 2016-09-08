@@ -5,8 +5,8 @@ import scala.collection.immutable
 
 val blendedGroupId = "de.wayofquality.blended"
 
-implicit val scalaVersion = ScalaVersion(Versions.scalaVersion)
-val scalaJsBinVersion = ScalaVersion(Versions.scalaJsVersion).binaryVersion
+implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
+val scalaJsBinVersion = ScalaVersion(BlendedVersions.scalaJsVersion).binaryVersion
 
 val scriptHelper =
 """
@@ -36,9 +36,9 @@ object BlendedModel{
     Map(
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
-      "java.version" -> Versions.javaVersion,
+      "java.version" -> BlendedVersions.javaVersion,
       "scala.version" -> scalaVersion.binaryVersion,
-      "blended.version" -> Versions.blendedVersion
+      "blended.version" -> BlendedVersions.blendedVersion
     )
 
   // Profiles we attach to all BlendedModels
@@ -256,7 +256,7 @@ object BlendedModel{
 
 // Blended Projects
 
-def BlendedModule(name : String) = blendedGroupId % name % Versions.blendedVersion
+def BlendedModule(name : String) = blendedGroupId % name % BlendedVersions.blendedVersion
 
 val blendedParent = Parent(
   gav = BlendedModule("blended.parent"),

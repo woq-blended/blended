@@ -23,7 +23,7 @@ BlendedModel(
     slf4j,
     akkaSlf4j % "test",
     Dependency(
-      "org.jolokia" % "jolokia-jvm" % Versions.jolokiaVersion,
+      "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion,
       classifier = "agent",
       scope = "runtime"
     ),

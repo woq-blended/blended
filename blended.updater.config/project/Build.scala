@@ -14,9 +14,10 @@ object Build extends sbt.Build {
 
   lazy val projectSettings = Seq(
     organization := "de.wayofquality.blended",
-    version := Versions.blendedVersion,
+    version := BlendedVersions.blendedVersion,
     name := appName,
-    scalaVersion := Versions.scalaVersion,
+    scalaVersion := BlendedVersions.scalaVersion,
+    (artifact in packageBin) ~= { a : Artifact => a.copy(name = appName) },
 
     sourcesInBase := false,
 

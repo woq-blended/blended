@@ -90,7 +90,7 @@ val scalaMavenPlugin = Plugin(
     )
   ),
   configuration = Config(
-    scalaVersion = Versions.scalaVersion
+    scalaVersion = BlendedVersions.scalaVersion
   )
 )
 
@@ -129,14 +129,14 @@ import java.io.File
 
 ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/build.properties"),
-  "sbtVersion=""" + Versions.sbtVersion + """"
+  "sbtVersion=""" + BlendedVersions.sbtVersion + """"
 )
 
 ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/plugins.sbt"),
   "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
   "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + Versions.scalaJsVersion + """\")"
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")"
 )
 """
       )
@@ -157,7 +157,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
-          argument = "publishLocal"
+          argument = "packageBin"
         )
       )
     )

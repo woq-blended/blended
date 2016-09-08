@@ -48,7 +48,7 @@ BlendedModel(
   properties = Map(
     "profile.version" -> profileVersion,
     "profile.name" -> profileName,
-    "spray.version" -> Versions.sprayVersion,
+    "spray.version" -> BlendedVersions.sprayVersion,
     "loglevel.test" -> "DEBUG"
   ),
   plugins = Seq(

@@ -1,26 +1,26 @@
 // Dependencies
 
-val activeMqBroker = "org.apache.activemq" % "activemq-broker" % Versions.activeMqVersion
-val activeMqClient = "org.apache.activemq" % "activemq-client" % Versions.activeMqVersion
-val activeMqSpring = "org.apache.activemq" % "activemq-spring" % Versions.activeMqVersion
-val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % Versions.activeMqVersion
-val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % Versions.activeMqVersion
+val activeMqBroker = "org.apache.activemq" % "activemq-broker" % BlendedVersions.activeMqVersion
+val activeMqClient = "org.apache.activemq" % "activemq-client" % BlendedVersions.activeMqVersion
+val activeMqSpring = "org.apache.activemq" % "activemq-spring" % BlendedVersions.activeMqVersion
+val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
+val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
     
-val akkaActor = "com.typesafe.akka" %% "akka-actor" % Versions.akkaVersion
-val akkaCamel = "com.typesafe.akka" %% "akka-camel" % Versions.akkaVersion
-val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % Versions.akkaVersion
-val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % Versions.akkaVersion
-val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % Versions.akkaVersion
+val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
+val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
+val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
+val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % BlendedVersions.akkaVersion
+val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % BlendedVersions.akkaVersion
 
-val apacheShiroCore = "org.apache.shiro" % "shiro-core" % Versions.apacheShiroVersion
-val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % Versions.apacheShiroVersion
+val apacheShiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
+val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
 
 val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
-val camelCore = "org.apache.camel" % "camel-core" % Versions.camelVersion
-val camelJms = "org.apache.camel" % "camel-jms" % Versions.camelVersion
-val camelHttp = "org.apache.camel" % "camel-http" % Versions.camelVersion
-val camelServlet = "org.apache.camel" % "camel-servlet" % Versions.camelVersion
+val camelCore = "org.apache.camel" % "camel-core" % BlendedVersions.camelVersion
+val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
+val camelHttp = "org.apache.camel" % "camel-http" % BlendedVersions.camelVersion
+val camelServlet = "org.apache.camel" % "camel-servlet" % BlendedVersions.camelVersion
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
 val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
 val commonsLang = "commons-lang" % "commons-lang" % "2.6"
@@ -44,11 +44,11 @@ val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % 
 val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
 val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
     
-val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % Versions.slf4jVersion
+val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
 val junit = "junit" % "junit" % "4.11"
-val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % Versions.slf4jVersion
+val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
 val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
 val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
@@ -60,22 +60,22 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val scalaLib = "org.scala-lang" % "scala-library" % Versions.scalaVersion
-val scalaReflect = "org.scala-lang" % "scala-reflect" % Versions.scalaVersion
+val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
+val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
 val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
-val slf4j = "org.slf4j" % "slf4j-api" % Versions.slf4jVersion
-val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % Versions.slf4jVersion
-val sprayClient = "io.spray" %% "spray-client" % Versions.sprayVersion
-val sprayCaching = "io.spray" %% "spray-caching" % Versions.sprayVersion
-val sprayHttp = "io.spray" %% "spray-http" % Versions.sprayVersion
-val sprayHttpx = "io.spray" %% "spray-httpx" % Versions.sprayVersion
-val sprayIo = "io.spray" %% "spray-io" % Versions.sprayVersion
-val sprayJson = "io.spray" %% "spray-json" % Versions.sprayVersion
-val sprayRouting = "io.spray" %% "spray-routing" % Versions.sprayVersion
-val sprayServlet = "io.spray" %% "spray-servlet" % Versions.sprayVersion
-val sprayTestkit = "io.spray" %% "spray-testkit" % Versions.sprayVersion
-val sprayUtil = "io.spray" %% "spray-util" % Versions.sprayVersion
+val slf4j = "org.slf4j" % "slf4j-api" % BlendedVersions.slf4jVersion
+val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
+val sprayClient = "io.spray" %% "spray-client" % BlendedVersions.sprayVersion
+val sprayCaching = "io.spray" %% "spray-caching" % BlendedVersions.sprayVersion
+val sprayHttp = "io.spray" %% "spray-http" % BlendedVersions.sprayVersion
+val sprayHttpx = "io.spray" %% "spray-httpx" % BlendedVersions.sprayVersion
+val sprayIo = "io.spray" %% "spray-io" % BlendedVersions.sprayVersion
+val sprayJson = "io.spray" %% "spray-json" % BlendedVersions.sprayVersion
+val sprayRouting = "io.spray" %% "spray-routing" % BlendedVersions.sprayVersion
+val sprayServlet = "io.spray" %% "spray-servlet" % BlendedVersions.sprayVersion
+val sprayTestkit = "io.spray" %% "spray-testkit" % BlendedVersions.sprayVersion
+val sprayUtil = "io.spray" %% "spray-util" % BlendedVersions.sprayVersion
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
