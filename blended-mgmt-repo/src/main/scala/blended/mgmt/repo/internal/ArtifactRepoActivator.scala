@@ -11,12 +11,12 @@ import blended.mgmt.repo.file.FileArtifactRepo
 import domino.DominoActivator
 import blended.mgmt.repo.ArtifactRepo
 
-class ArtifactRepoActivator extends DominoActivator with TypesafeConfigWatching {
+class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatching {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoActivator])
 
   whenBundleActive {
-    log.debug("About to activate bundle: {}", bundleContext.getBundle().getSymbolicName())
+    log.info("About to activate bundle: {}", bundleContext.getBundle().getSymbolicName())
 
     whenTypesafeConfigAvailable { (config, idService) =>
       log.debug("Config: {}", config)
@@ -30,7 +30,7 @@ class ArtifactRepoActivator extends DominoActivator with TypesafeConfigWatching 
         }
 
         val repoService = new FileArtifactRepo(repoId, baseDir)
-        log.debug("Service: {}", repoService)
+        log.info("Created service: {}", repoService)
 
         log.debug("About to register file based artifact repository to OSGi service registry")
         repoService.providesService[ArtifactRepo](
@@ -40,7 +40,7 @@ class ArtifactRepoActivator extends DominoActivator with TypesafeConfigWatching 
 
       } catch {
         case e: ConfigException =>
-          log.error("Missing configuration to provide file base artifact repository", e)
+          log.warn("Missing or invalid configuration. Cannot provide file base artifact repository. See error message for details.", e)
       }
 
     }

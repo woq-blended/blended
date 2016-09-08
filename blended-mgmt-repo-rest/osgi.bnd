@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \
-  ${bundle-namespace}.internal.ArtifactRepoRestActivator
+  ${bundle.namespace}.internal.ArtifactRepoRestActivator
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
