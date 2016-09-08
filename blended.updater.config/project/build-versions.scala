@@ -1,1 +1,1 @@
-../../blended-build/build-versions.scala
+../../blended.build/build-versions.scala
