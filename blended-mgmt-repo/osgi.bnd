@@ -1,7 +1,7 @@
-Bundle-Version:\
+Bundle-Version: \
   ${project.version}
 
-Bundle-SymbolicName:\
+Bundle-SymbolicName: \
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator: \

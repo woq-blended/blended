@@ -4,19 +4,75 @@ import org.slf4j.LoggerFactory
 
 import domino.DominoActivator
 import blended.mgmt.repo.ArtifactRepo
+import blended.akka.ActorSystemWatching
+import domino.service_watching.ServiceWatcherEvent.AddingService
+import domino.service_watching.ServiceWatcherEvent.ModifiedService
+import domino.service_watching.ServiceWatcherEvent.RemovedService
+import akka.actor.ActorRef
+import org.osgi.service.http.HttpService
+import blended.mgmt.repo.rest.ArtifactRepoServletActor
 
-class ArtifactRepoRestActivator extends DominoActivator {
+class ArtifactRepoRestActivator
+    extends DominoActivator
+    with ActorSystemWatching {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoRestActivator])
 
   whenBundleActive {
-    log.debug("About to activate bundle: {}", bundleContext.getBundle().getSymbolicName())
+    log.info("About to activate bundle: {}", bundleContext.getBundle().getSymbolicName())
 
+    whenServicePresent[HttpService] { httpSvc =>
+
+      whenActorSystemAvailable { cfg =>
+
+        val contextPath =
+          if (cfg.config.hasPath("contextPath")) {
+            Option(cfg.config.getString("contextPath"))
+          } else {
+            log.warn("No config entry for 'contextPath' found. Using empty context.")
+            None
+          }
+
+        var actors: Map[ArtifactRepo, ActorRef] = Map()
+
+        /**
+         * create and start actor and add to state
+         */
+        def addRepo(repo: ArtifactRepo): Unit = {
+          val props = ArtifactRepoServletActor.props(cfg, repo, contextPath)
+          val actorRef = setupBundleActor(cfg, props)
+          log.info("Created actor {} for artifact repo {}", Array(actorRef, repo): _*)
+          actors += repo -> actorRef
+          log.debug("known repos and their actors: {}", actors)
+        }
+
+        /**
+         *  stop actor and remove from state
+         */
+        def removeRepo(repo: ArtifactRepo): Unit = {
+          actors.get(repo).map { actor =>
+            log.info("About to stop actor {} for artifact repo {}", Array(actor, repo): _*)
+            cfg.system.stop(actor)
+            actors -= repo
+          }
+          log.debug("known repos and their actors: {}", actors)
+        }
+
+        watchServices[ArtifactRepo] {
+          case AddingService(repo, context) =>
+            addRepo(repo)
+          case ModifiedService(repo, context) =>
+            removeRepo(repo)
+            addRepo(repo)
+          case RemovedService(repo, context) =>
+            removeRepo(repo)
+        }
+
+      }
+
+    }
     // TODO: read config 
-    // TODO: watch for ArtifactRepo services
-    
-    // TODO: when both available, setup spray accordingly
-    
+
   }
 
 }

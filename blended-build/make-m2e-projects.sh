@@ -25,6 +25,7 @@ blended-mgmt-base \
 blended-mgmt-mock \
 blended-mgmt-repo \
 blended-mgmt-repo-rest \
+blended-mgmt-ui \
 blended-mgmt-agent \
 blended-mgmt-rest \
 blended-neo4j-api \

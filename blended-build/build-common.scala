@@ -9,21 +9,22 @@ implicit val scalaVersion = ScalaVersion(Versions.scalaVersion)
 val scalaJsBinVersion = ScalaVersion(Versions.scalaJsVersion).binaryVersion
 
 val scriptHelper =
- """
+"""
 object ScriptHelper {
 
   import java.io.File
   import java.io.PrintWriter
 
   def writeFile(f: File, content: String) : Unit = {
-    println("Creating " + f)
+    val action = if(f.exists()) "Overwriting file: " else "Creating file: "
+    println(action + f)
     f.getParentFile().mkdirs()
     val writer = new PrintWriter(f)
     writer.print(content)
-    writer.close
+    writer.close()
   }
 }
-""".stripMargin
+"""
 
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build

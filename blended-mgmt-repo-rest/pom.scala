@@ -9,13 +9,14 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = blendedMgmtRepoRest,
   packaging = "bundle",
-  description = "File Artifact Repository",
+  description = "File Artifact Repository REST Service",
   dependencies = Seq(
     scalaLib % "provided",
     blendedDomino,
     blendedUpdaterConfig,
     blendedMgmtBase,
     blendedMgmtRepo,
+    blendedSpray,
     sprayJson,
     scalaTest % "test"
   ), 
