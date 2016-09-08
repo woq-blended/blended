@@ -25,15 +25,23 @@ class ArtifactRepoRestActivator
 
       whenActorSystemAvailable { cfg =>
 
+        val contextPath =
+          if (cfg.config.hasPath("contextPath")) {
+            Option(cfg.config.getString("contextPath"))
+          } else {
+            log.warn("No config entry for 'contextPath' found. Using empty context.")
+            None
+          }
+
         var actors: Map[ArtifactRepo, ActorRef] = Map()
 
         /**
          * create and start actor and add to state
          */
         def addRepo(repo: ArtifactRepo): Unit = {
-          val props = ArtifactRepoServletActor.props(cfg, repo)
+          val props = ArtifactRepoServletActor.props(cfg, repo, contextPath)
           val actorRef = setupBundleActor(cfg, props)
-          log.info("Created actor {} for artifact repo {}", Array[Object](actorRef, repo))
+          log.info("Created actor {} for artifact repo {}", Array(actorRef, repo): _*)
           actors += repo -> actorRef
           log.debug("known repos and their actors: {}", actors)
         }
@@ -43,7 +51,7 @@ class ArtifactRepoRestActivator
          */
         def removeRepo(repo: ArtifactRepo): Unit = {
           actors.get(repo).map { actor =>
-            log.info("About to stop actor {} for artifact repo {}", Array(actor, repo))
+            log.info("About to stop actor {} for artifact repo {}", Array(actor, repo): _*)
             cfg.system.stop(actor)
             actors -= repo
           }

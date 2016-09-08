@@ -20,15 +20,16 @@ import spray.util.LoggingContext
 
 /**
  * Actor implementing a HttpService and providing a Servlet into the OSGi registry, once started.
- * 
+ *
  * @constructor
- * 
+ *
  * Please use [[ArtifactRepoServletActor$#props]] to create instances of this actor.
- * 
+ *
  */
 class ArtifactRepoServletActor(
   cfg: OSGIActorConfig,
-  override val artifactRepo: ArtifactRepo)
+  override val artifactRepo: ArtifactRepo,
+  contextPath: Option[String])
     extends OSGIActor(cfg)
     with HttpService { _: ArtifactRepoRoutes =>
 
@@ -37,10 +38,10 @@ class ArtifactRepoServletActor(
   override def preStart(): Unit = {
     log.debug("About to preStart actor: {}", self)
 
-    val config = cfg.config
-    val tmpConnectorSettings = ConnectorSettings(config)
-    val contextPath = tmpConnectorSettings.rootPath.toString() + "/" + artifactRepo.repoId
-    val connSettings = tmpConnectorSettings.copy(rootPath = Uri.Path(contextPath))
+    val repoContextPath = contextPath.getOrElse("") + "/" + artifactRepo.repoId
+
+    val config = cfg.idSvc.getContainerContext().getContainerConfig()
+    val connSettings = ConnectorSettings(config).copy(rootPath = Uri.Path(repoContextPath))
     implicit val routingSettings = RoutingSettings(config)
     implicit val routeLogger = LoggingContext.fromAdapter(log)
     implicit val exceptionHandler = ExceptionHandler.default
@@ -57,8 +58,8 @@ class ArtifactRepoServletActor(
 
     servlet.providesService[Servlet](
       "urlPatterns" -> "/",
-      "Webapp-Context" -> contextPath,
-      "Web-ContextPath" -> contextPath
+      "Webapp-Context" -> repoContextPath,
+      "Web-ContextPath" -> repoContextPath
     )
   }
 
@@ -71,6 +72,7 @@ object ArtifactRepoServletActor {
   /**
    * Actor creator for [[ArtifactRepoServletActor]].
    */
-  def props(cfg: OSGIActorConfig, artifactRepo: ArtifactRepo): Props = Props(new ArtifactRepoServletActor(cfg, artifactRepo) with ArtifactRepoRoutes)
+  def props(cfg: OSGIActorConfig, artifactRepo: ArtifactRepo, contextPath: Option[String]): Props =
+    Props(new ArtifactRepoServletActor(cfg, artifactRepo, contextPath) with ArtifactRepoRoutes)
 
 }
