@@ -7,48 +7,49 @@ classesDir="eclipse-target/classes"
 testClassesDir="eclipse-target/test-classes"
 libsDir="eclipse-target/libs"
 
-projects="blended-activemq-brokerstarter \
-blended-akka \
-blended-akka-itest \
-blended-camel-utils \
-blended-container-context \
-blended-container-registry \
-blended-domino \
-blended-hawtio \
-blended-hawtio-login \
-blended-itestsupport \
-blended-jms-utils \
-blended-jmx \
-blended-jolokia \
-blended-launcher \
-blended-mgmt-base \
-blended-mgmt-mock \
-blended-mgmt-repo \
-blended-mgmt-repo-rest \
-blended-mgmt-ui \
-blended-mgmt-agent \
-blended-mgmt-rest \
-blended-neo4j-api \
-blended-parent \
-blended-persistence \
-blended-persistence-orient \
-blended-persistence-neo4j \
-blended-persistence-h2 \
-blended-samples \
-blended-spray \
-blended-spray-api \
-blended-testsupport \
-blended-updater \
-blended-updater-config \
-blended-updater-tools \
-blended-updater-remote \
+projects="\
 blended-updater-maven-plugin \
-blended-launcher-features \
-blended-demo-launcher \
-blended-demo-mgmt \
-blended-util \
-blended-security \
-blended-security-boot"
+blended.activemq.brokerstarter \
+blended.activemq.client \
+blended.activemq.defaultbroker \
+blended.akka \
+blended.akka.itest \
+blended.build \
+blended.camel.utils \
+blended.container.context \
+blended.container.registry \
+blended.demo.launcher \
+blended.demo.mgmt \
+blended.domino \
+blended.hawtio.login \
+blended.itestsupport \
+blended.jms.utils \
+blended.jmx \
+blended.jolokia \
+blended.launcher \
+blended.launcher.features \
+blended.mgmt.agent \
+blended.mgmt.base \
+blended.mgmt.mock \
+blended.mgmt.repo \
+blended.mgmt.repo.rest \
+blended.mgmt.rest \
+blended.mgmt.ui \
+blended.parent \
+blended.persistence \
+blended.persistence.orient \
+blended.samples \
+blended.security \
+blended.security.boot \
+blended.spray \
+blended.spray.api \
+blended.testsupport \
+blended.updater \
+blended.updater.config \
+blended.updater.remote \
+blended.updater.tools \
+blended.util \
+"
 
 genForProjects="$projects"
 
