@@ -260,7 +260,7 @@ def BlendedModule(name : String) = blendedGroupId % name % Versions.blendedVersi
 
 val blendedParent = Parent(
   gav = BlendedModule("blended.parent"),
-  relativePath = "../blended-parent"
+  relativePath = "../blended.parent"
 )
 
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")

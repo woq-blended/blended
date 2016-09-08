@@ -35,24 +35,25 @@ BlendedModel(
           )
         )
       )
-    ),
-    Plugin(
-      gav = buildHelperPlugin,
-      executions = Seq(
-        Execution(
-          id = "attachJS",
-          phase = "package",
-          goals = Seq("attach-artifact"),
-          configuration = Config(
-            artifacts = Config(
-              artifact = Config (
-                file = "target/scala-" + scalaVersion.binaryVersion + "/${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion + "-${project.version}.jar",
-                classifier = "sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion
-              )
-            )
-          )
-        )
-      )
     )
+    // FIXME TODO
+//    Plugin(
+//      gav = buildHelperPlugin,
+//      executions = Seq(
+//        Execution(
+//          id = "attachJS",
+//          phase = "package",
+//          goals = Seq("attach-artifact"),
+//          configuration = Config(
+//            artifacts = Config(
+//              artifact = Config (
+//                file = "target/scala-" + scalaVersion.binaryVersion + "/${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion + "-${project.version}.jar",
+//                classifier = "sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion
+//              )
+//            )
+//          )
+//        )
+//      )
+//    )
   )
 )

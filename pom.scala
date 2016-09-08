@@ -74,63 +74,63 @@ Model(
     Profile(
       id = "parent",
       modules = Seq(
-        "blended-parent"
+        "blended.parent"
       )
     ),
     Profile(
       id = "build",
       modules = Seq(
-        "blended-launcher",
-        "blended-updater",
-        "blended-updater-config",
-        "blended-updater-tools",
-        "blended-updater-remote",
+        "blended.launcher",
+        "blended.updater",
+        "blended.updater.config",
+        "blended.updater.tools",
+        "blended.updater.remote",
         "blended-updater-maven-plugin",
-        "blended-activemq-brokerstarter",
-        "blended-container-context",
-        "blended-container-registry",
-        "blended-util",
-        "blended-jmx",
-        "blended-camel-utils",
-        "blended-jms-utils",
-        "blended-testsupport",
-        "blended-domino",
-        "blended-akka",
-        "blended-mgmt-base",
-        "blended-mgmt-repo",
-        "blended-mgmt-repo-rest",
-        "blended-mgmt-agent",
-        "blended-mgmt-rest",
-        "blended-mgmt-mock",
-        "blended-spray-api",
-        "blended-spray",
-        "blended-security",
-        "blended-security-boot",
-        "blended-hawtio-login",
-        "blended-persistence",
-        "blended-persistence-orient",
-        "blended-jolokia",
-        "blended-itestsupport",
-        "blended-samples",
-        "blended-activemq-defaultbroker",
-        "blended-activemq-client",
-        "blended-launcher-features",
-        "blended-demo-launcher",
-        "blended-demo-mgmt",
-        "blended-mgmt-ui"
+        "blended.activemq.brokerstarter",
+        "blended.container.context",
+        "blended.container.registry",
+        "blended.util",
+        "blended.jmx",
+        "blended.camel.utils",
+        "blended.jms.utils",
+        "blended.testsupport",
+        "blended.domino",
+        "blended.akka",
+        "blended.mgmt.base",
+        "blended.mgmt.repo",
+        "blended.mgmt.repo.rest",
+        "blended.mgmt.agent",
+        "blended.mgmt.rest",
+        "blended.mgmt.mock",
+        "blended.spray.api",
+        "blended.spray",
+        "blended.security",
+        "blended.security.boot",
+        "blended.hawtio.login",
+        "blended.persistence",
+        "blended.persistence.orient",
+        "blended.jolokia",
+        "blended.itestsupport",
+        "blended.samples",
+        "blended.activemq.defaultbroker",
+        "blended.activemq.client",
+        "blended.launcher.features",
+        "blended.demo.launcher",
+        "blended.demo.mgmt",
+        "blended.mgmt.ui"
       )
     ),
     Profile(
       id = "itest",
       modules = Seq(
-        "blended-itestsupport",
-        "blended-akka-itest"
+        "blended.itestsupport",
+        "blended.akka.itest"
       )
     ),
     Profile(
       id = "docker",
       modules = Seq(
-        "blended-docker"
+        "blended.docker"
       )
     ),
     Profile(
