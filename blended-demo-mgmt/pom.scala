@@ -100,36 +100,24 @@ BlendedModel(
               "script"
             ),
             configuration = Config(
-              script = """
+              script = scriptHelper + """
 import java.io.File
-import java.io.PrintWriter
 
 // make launchfile
 
 val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
-println("Creating " + tarLaunchFile)
 
-val launchConf = 
+val launchConf =
   "profile.baseDir=${BLENDED_HOME}/profiles\n" +
   "profile.name=""" + profileName + """\n" +
   "profile.version=""" + blendedDemoMgmt.version.get + """"
 
-// write it to file
-tarLaunchFile.getParentFile().mkdirs()
-val writer = new PrintWriter(tarLaunchFile)
-writer.print(launchConf)
-writer.close()
+ScriptHelper.writeFile(tarLaunchFile, launchConf)
 
 // make overlays base.conf
 
 val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
-println("Creating " + baseConfFile)
-
-baseConfFile.getParentFile().mkdirs()
-val bcw = new PrintWriter(baseConfFile)
-bcw.print("overlays = []")
-bcw.close()
-
+ScriptHelper.writeFile(baseConfFile, "overlays = []")
 """
               )
           )
