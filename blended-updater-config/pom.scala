@@ -21,6 +21,7 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
+    prepareSbtPlugin,
     compileJsPlugin,
     Plugin(
       buildHelperPlugin,
@@ -36,31 +37,19 @@ BlendedModel(
       )
     ),
     Plugin(
-      gav = scalaMavenPlugin.gav,
+      gav = buildHelperPlugin,
       executions = Seq(
         Execution(
-          id = "prepareSBT",
-          phase = "generate-resources",
-          goals = Seq(
-            "script"
-          ),
+          id = "attachJS",
+          phase = "package",
+          goals = Seq("attach-artifact"),
           configuration = Config(
-            script = scriptHelper +
-              """
-import java.io.File
-
-ScriptHelper.writeFile(
-  new File(project.getBasedir(), "project/build.properties"),
-  "sbtVersion=""" + Versions.sbtVersion + """"
-)
-
-ScriptHelper.writeFile(
-  new File(project.getBasedir(), "project/plugins.sbt"),
-  "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
-  "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + Versions.scalaJsVersion + """\")"
-)
-"""
+            artifacts = Config(
+              artifact = Config (
+                file = "target/scala-" + scalaVersion.binaryVersion + "/${project.artifactId}_sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion + "-${project.version}.jar",
+                classifier = "sjs" + scalaJsBinVersion + "_" + scalaVersion.binaryVersion
+              )
+            )
           )
         )
       )
