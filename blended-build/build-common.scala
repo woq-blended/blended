@@ -6,6 +6,7 @@ import scala.collection.immutable
 val blendedGroupId = "de.wayofquality.blended"
 
 implicit val scalaVersion = ScalaVersion(Versions.scalaVersion)
+val scalaJsBinVersion = ScalaVersion(Versions.scalaJsVersion).binaryVersion
 
 val scriptHelper =
  """

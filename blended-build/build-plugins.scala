@@ -52,26 +52,6 @@ val bundleWarPlugin = Plugin(
   )
 )
 
-val compileJsPlugin = Plugin(
-  gav = execMavenPlugin,
-  executions = Seq(
-    Execution(
-      id = "compileJS",
-      phase = "compile",
-      goals = Seq(
-        "exec"
-      ),
-      configuration = Config(
-        executable = "sbt",
-        workingDirectory = "${project.basedir}",
-        arguments = Config(
-          argument = "fullOptJS"
-        )
-      )
-    )
-  )
-)
-
 val scalaCompilerConfig = Config(
   fork = "true",
   recompileMode = "incremental",
@@ -129,4 +109,57 @@ val scalatestMavenPlugin = Plugin(
   )
 )
 
+/*
+ * Some helper plugins to compile ScalaJS code with SBT.
+ */
 
+val prepareSbtPlugin = Plugin(
+  gav = scalaMavenPlugin.gav,
+  executions = Seq(
+    Execution(
+      id = "prepareSBT",
+      phase = "generate-resources",
+      goals = Seq(
+        "script"
+      ),
+      configuration = Config(
+        script = scriptHelper +
+          """
+import java.io.File
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "project/build.properties"),
+  "sbtVersion=""" + Versions.sbtVersion + """"
+)
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "project/plugins.sbt"),
+  "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
+  "\n" +
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + Versions.scalaJsVersion + """\")"
+)
+"""
+      )
+    )
+  )
+)
+
+val compileJsPlugin = Plugin(
+  gav = execMavenPlugin,
+  executions = Seq(
+    Execution(
+      id = "compileJS",
+      phase = "compile",
+      goals = Seq(
+        "exec"
+      ),
+      configuration = Config(
+        executable = "sbt",
+        workingDirectory = "${project.basedir}",
+        arguments = Config(
+          argument = "publishLocal"
+        )
+      )
+    )
+  )
+)
