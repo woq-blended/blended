@@ -45,12 +45,11 @@ BlendedModel(
               includes = Config(
                 include = "**/*"
               )
+            ),
+            resource = Config(
+              directory = "${project.build.directory}/web/less/main",
+              targetPath = "css"
             )
-            // FIXME TODO
-//            resource = Config(
-//              directory = "${project.build.directory}/web/classes/main/META-INF/resources/webjars/blended-mgmt-ui/${project.version}",
-//              targetPath = "css"
-//            )
           )
         )
       ),

@@ -160,6 +160,20 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "fullOptJS"
+        )
+      )
+    ),
+    Execution(
+      id = "packageJS",
+      phase = "package",
+      goals = Seq(
+        "exec"
+      ),
+      configuration = Config(
+        executable = "sbt",
+        workingDirectory = "${project.basedir}",
+        arguments = Config(
           argument = "packageBin"
         )
       )

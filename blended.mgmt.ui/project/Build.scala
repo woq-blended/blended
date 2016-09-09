@@ -47,12 +47,9 @@ object Build extends sbt.Build {
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
-      //      "com.lihaoyi" %%% "upickle" % Versions.upickle,
-      //      "com.lihaoyi" %%% "scalatags" % Versions.scalaTags,
-      //      "be.doeraene" %%% "scalajs-jquery" % Versions.scalajsJQuery,
+      "com.lihaoyi" %%% "upickle" % Versions.upickle,
 
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
-
     ))
 
     lazy val jsDependencies = Def.setting(Seq(
