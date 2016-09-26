@@ -23,16 +23,6 @@ BlendedModel(
       domino
     )
   ),
-  distributionManagement = DistributionManagement(
-    repository = DeploymentRepository(
-      id = "ossrh",
-      url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-    ),
-    snapshotRepository = DeploymentRepository(
-      id = "ossrh",
-      url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    )
-  ),
   properties = Map(
     "junit.version" -> junit.version.get,
     "aries.util.version" -> "1.1.0",

@@ -51,56 +51,56 @@ BlendedModel(
     "loglevel.test" -> "DEBUG"
   ),
   plugins = Seq(
-      Plugin(
-        gav = blendedUpdaterMavenPlugin,
-        executions = Seq(
-          Execution(
-            id = "materialize-profile",
-            phase = "compile",
-            goals = Seq(
-              "materialize-profile"
-            ),
-            configuration = Config(
-              srcProfile = "${project.build.directory}/classes/profile/profile.conf",
-              destDir = "${project.build.directory}/classes/profile"
-            )
+    Plugin(
+      gav = blendedUpdaterMavenPlugin,
+      executions = Seq(
+        Execution(
+          id = "materialize-profile",
+          phase = "compile",
+          goals = Seq(
+            "materialize-profile"
+          ),
+          configuration = Config(
+            srcProfile = "${project.build.directory}/classes/profile/profile.conf",
+            destDir = "${project.build.directory}/classes/profile"
           )
         )
-      ),
-      Plugin(
-        gav = mavenDependencyPlugin,
-        executions = Seq(
-          Execution(
-            id = "unpack-launcher",
-            phase = "compile",
-            goals = Seq(
-              "unpack"
-            ),
-            configuration = Config(
-              artifactItems = Config(
-                artifactItem = Config(
-                  groupId = "${project.groupId}",
-                  artifactId = "blended.launcher",
-                  classifier = "bin",
-                  `type` = "zip",
-                  outputDirectory = "${project.build.directory}/launcher"
-                )
+      )
+    ),
+    Plugin(
+      gav = mavenDependencyPlugin,
+      executions = Seq(
+        Execution(
+          id = "unpack-launcher",
+          phase = "compile",
+          goals = Seq(
+            "unpack"
+          ),
+          configuration = Config(
+            artifactItems = Config(
+              artifactItem = Config(
+                groupId = "${project.groupId}",
+                artifactId = "blended.launcher",
+                classifier = "bin",
+                `type` = "zip",
+                outputDirectory = "${project.build.directory}/launcher"
               )
             )
           )
         )
-      ),
-      Plugin(
-        gav = scalaMavenPlugin.gav,
-        executions = Seq(
-          Execution(
-            id = "build-product",
-            phase = "generate-resources",
-            goals = Seq(
-              "script"
-            ),
-            configuration = Config(
-              script = scriptHelper + """
+      )
+    ),
+    Plugin(
+      gav = scalaMavenPlugin.gav,
+      executions = Seq(
+        Execution(
+          id = "build-product",
+          phase = "generate-resources",
+          goals = Seq(
+            "script"
+          ),
+          configuration = Config(
+            script = scriptHelper + """
 import java.io.File
 
 // make launchfile
@@ -119,36 +119,43 @@ ScriptHelper.writeFile(tarLaunchFile, launchConf)
 val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
 ScriptHelper.writeFile(baseConfFile, "overlays = []")
 """
-              )
-          )
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-assembly-plugin",
-        executions = Seq(
-          Execution(
-            id = "assemle",
-            phase = "package",
-            goals = Seq(
-              "single"
             )
-          )
-        ),
-        configuration = Config(
-          descriptors = Config(
-            descriptor = "src/main/assembly/full-nojre.xml",
-            descriptor = "src/main/assembly/product.xml"
-          )
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-jar-plugin" % "2.6",
-        executions = Seq(
-          Execution(
-            id = "default-jar",
-            phase = "none"
-          )
         )
       )
+    ),
+    Plugin(
+      "org.apache.maven.plugins" % "maven-assembly-plugin",
+      executions = Seq(
+        Execution(
+          id = "assemle",
+          phase = "package",
+          goals = Seq(
+            "single"
+          )
+        )
+      ),
+      configuration = Config(
+        descriptors = Config(
+          descriptor = "src/main/assembly/full-nojre.xml",
+          descriptor = "src/main/assembly/product.xml"
+        )
+      )
+    ),
+    Plugin(
+      "org.apache.maven.plugins" % "maven-jar-plugin" % "2.6",
+      executions = Seq(
+        Execution(
+          id = "default-jar",
+          phase = "none"
+        )
+      )
+    ),
+    Plugin(
+      "org.sonatype.plugins" % "nexus-staging-maven-plugin",
+      configuration = Config(
+        skipNexusStagingDeployMojo = "true"
+      )
+    )
   )
 )
+

@@ -152,6 +152,12 @@ ScriptHelper.writeFile(baseConfFile, "overlays = []")
           phase = "none"
         )
       )
+    ),
+    Plugin(
+      "org.sonatype.plugins" % "nexus-staging-maven-plugin",
+      configuration = Config(
+        skipNexusStagingDeployMojo = "true"
+      )
     )
   )
 )

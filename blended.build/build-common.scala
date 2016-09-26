@@ -1,4 +1,4 @@
-3// Polyglot Maven Scala file
+// Polyglot Maven Scala file
 // Shared build settings
 
 import scala.collection.immutable

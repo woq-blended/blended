@@ -142,7 +142,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
     case CloseTimeout =>
       restartContainer(s"Unable to close connection for provider [${provider} in [${config.minReconnect}]s]. Restarting container ...")
-      disconnect()
   }
 
   private[this] def initConnection() : Unit = {
@@ -237,6 +236,10 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
   private[this] def restartContainer(msg: String) : Unit = {
     log.warning(msg)
+
+    disconnect()
+    context.stop(self)
+
     withService[FrameworkService, Unit] { _ match {
       case None =>
         log.warning("Could not find FrameworkServive to restart Container. Restarting through Framework Bundle ...")
@@ -244,7 +247,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       case Some(s) => s.restartContainer(msg, true)
     }}
 
-    context.stop(self)
   }
 
   private[this] def ping(c: Connection) : Future[PingResult] = {

@@ -3,11 +3,12 @@ package blended.mgmt.base.internal
 import java.io.{File, FileInputStream, FileOutputStream, FilenameFilter}
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import blended.container.context.ContainerContext
 import blended.util.StreamCopySupport
-import org.osgi.framework.{Bundle, BundleContext}
+import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
@@ -15,13 +16,16 @@ import scala.util.control.NonFatal
 class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext) extends FrameworkServiceMBean {
 
   private[this] val log = LoggerFactory.getLogger(classOf[FrameworkService])
+  private[this] val restarting : AtomicBoolean = new AtomicBoolean(false)
 
   override def restartContainer(reason: String, saveLogs: Boolean): Unit = {
 
     try {
       val frameworkBundle = bundleContext.getBundle(0)
 
-      if (frameworkBundle.getState() == Bundle.ACTIVE) {
+      val mustRestart = restarting.getAndSet(true)
+
+      if (mustRestart) {
         val now = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date())
 
         val msg =
@@ -38,7 +42,7 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
 
         frameworkBundle.update()
       } else {
-        log.warn("Ignoring container restart command because framework is not ACTIVE")
+        log.warn("Ignoring container restart command because framework is already restarting.")
       }
     } catch {
       case NonFatal(e) => log.error("Could not restart container", e)
