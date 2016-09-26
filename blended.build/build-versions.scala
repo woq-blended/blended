@@ -1,6 +1,6 @@
 object BlendedVersions {
 
-  val blendedVersion = "2.0-RC10"
+  val blendedVersion = "2.0-SNAPSHOT"
 
   val javaVersion = "1.7"
 
