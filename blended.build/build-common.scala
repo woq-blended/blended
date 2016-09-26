@@ -240,6 +240,17 @@ object BlendedModel{
     )
   )
 
+  val distMgmt = DistributionManagement(
+    repository = DeploymentRepository(
+      id = "ossrh",
+      url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    ),
+    snapshotRepository = DeploymentRepository(
+      id = "ossrh",
+      url = "https://oss.sonatype.org/content/repositories/snapshots/"
+    )
+  )
+
   def apply(
     gav: Gav,
     build: Build = null,
@@ -249,7 +260,6 @@ object BlendedModel{
     dependencies: immutable.Seq[Dependency] = Nil,
     description: String = null,
     developers: immutable.Seq[Developer] = Nil,
-    distributionManagement: DistributionManagement = null,
     inceptionYear: String = null,
     issueManagement: IssueManagement = null,
     licenses: immutable.Seq[License] = Nil,
@@ -290,7 +300,7 @@ object BlendedModel{
       dependencies = dependencies,
       description = Option(description),
       developers = defaultDevelopers ++ developers,
-      distributionManagement = Option(distributionManagement),
+      distributionManagement = Option(distMgmt),
       inceptionYear = Option(inceptionYear),
       issueManagement = Option(issueManagement),
       licenses = defaultLicenses ++ licenses,
