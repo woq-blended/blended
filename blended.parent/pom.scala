@@ -375,41 +375,6 @@ BlendedModel(
           )
         )
       )
-    ),
-    Profile(
-      id = "release",
-      activation = Activation(
-      ),
-      build = BuildBase(
-        plugins = Seq(
-          Plugin(
-            "org.apache.maven.plugins" % "maven-source-plugin"
-          ),
-          Plugin(
-            "org.apache.maven.plugins" % "maven-gpg-plugin"
-          ),
-          Plugin(
-            "net.alchim31.maven" % "scala-maven-plugin",
-            executions = Seq(
-              Execution(
-                id = "attach-doc",
-                goals = Seq(
-                  "doc-jar"
-                )
-              )
-            )
-          ),
-          Plugin(
-            "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.5",
-            extensions = true,
-            configuration = Config(
-              serverId = "ossrh",
-              nexusUrl = "https://oss.sonatype.org/",
-              autoReleaseAfterClose = "true"
-            )
-          )
-        )
-      )
     )
   )
 )

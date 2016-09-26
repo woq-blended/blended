@@ -42,7 +42,34 @@ object BlendedModel{
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq()
+  val defaultProfiles = Seq(
+    Profile(
+      id = "release",
+      activation = Activation(
+      ),
+      build = BuildBase(
+        plugins = Seq(
+          Plugin(
+            "org.apache.maven.plugins" % "maven-source-plugin"
+          ),
+          Plugin(
+            "org.apache.maven.plugins" % "maven-gpg-plugin"
+          ),
+          Plugin(
+            "net.alchim31.maven" % "scala-maven-plugin",
+            executions = Seq(
+              Execution(
+                id = "attach-doc",
+                goals = Seq(
+                  "doc-jar"
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
 //  Seq(Profile(
 //    id = "gen-pom",
 //    build = Build(

@@ -132,34 +132,6 @@ Model(
       modules = Seq(
         "blended.docker"
       )
-    ),
-    Profile(
-      id = "release",
-      build = BuildBase(
-        plugins = Seq(
-          Plugin(
-            "org.apache.maven.plugins" % "maven-gpg-plugin" % "1.6",
-            executions = Seq(
-              Execution(
-                id = "sign-artifacts",
-                phase = "verify",
-                goals = Seq(
-                  "sign"
-                )
-              )
-            )
-          ),
-          Plugin(
-            "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.5",
-            extensions = true,
-            configuration = Config(
-              serverId = "ossrh",
-              nexusUrl = "https://oss.sonatype.org/",
-              autoReleaseAfterClose = "true"
-            )
-          )
-        )
-      )
     )
   ),
   modelVersion = "4.0.0"
