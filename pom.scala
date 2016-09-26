@@ -51,27 +51,6 @@ Model(
   ),
   profiles = Seq(
     Profile(
-      id = "sign",
-      activation = Activation(
-      ),
-      build = BuildBase(
-        plugins = Seq(
-          Plugin(
-            "org.apache.maven.plugins" % "maven-gpg-plugin" % "1.6",
-            executions = Seq(
-              Execution(
-                id = "sign-artifacts",
-                phase = "verify",
-                goals = Seq(
-                  "sign"
-                )
-              )
-            )
-          )
-        )
-      )
-    ),
-    Profile(
       id = "parent",
       modules = Seq(
         "blended.parent"
@@ -132,7 +111,8 @@ Model(
       modules = Seq(
         "blended.docker"
       )
-    )
+    ),
+    releaseProfile
   ),
   modelVersion = "4.0.0"
 )

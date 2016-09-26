@@ -150,22 +150,5 @@ ScriptHelper.writeFile(baseConfFile, "overlays = []")
           )
         )
       )
-  ),
-  profiles = Seq(
-    Profile(
-      id = "release",
-      activation = Activation(
-      ),
-      build = BuildBase(
-        plugins = Seq(
-          Plugin(
-            "org.sonatype.plugins" % "nexus-staging-maven-plugin",
-            configuration = Config(
-              skipNexusStagingDeployMojo = "true"
-            )
-          )
-        )
-      )
-    )
   )
 )

@@ -26,6 +26,64 @@ object ScriptHelper {
 }
 """
 
+val releaseProfile =  Profile(
+  id = "release",
+  activation = Activation(
+  ),
+  build = BuildBase(
+    plugins = Seq(
+    Plugin(
+      "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
+        executions = Seq(
+          Execution(
+            id = "attach-sources-no-fork",
+            phase = "generate-sources",
+            goals = Seq(
+              "jar-no-fork"
+            )
+          ),
+          Execution(
+            id = "attach-sources",
+            phase = "DISABLE_FORKED_LIFECYCLE_MSOURCES-13",
+            goals = Seq(
+              "jar-no-fork"
+            )
+          )
+        ),
+        configuration = Config(
+          includes = Config(
+            include = "**/*.java",
+            include = "**/*.scala"
+          )
+        )
+      ),
+      Plugin(
+        "org.apache.maven.plugins" % "maven-gpg-plugin" % "1.6",
+        executions = Seq(
+          Execution(
+            id = "sign-artifacts",
+            phase = "verify",
+            goals = Seq(
+              "sign"
+            )
+          )
+        )
+      ),
+      Plugin(
+        "net.alchim31.maven" % "scala-maven-plugin",
+        executions = Seq(
+          Execution(
+            id = "attach-doc",
+            goals = Seq(
+              "doc-jar"
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -42,34 +100,9 @@ object BlendedModel{
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(
-    Profile(
-      id = "release",
-      activation = Activation(
-      ),
-      build = BuildBase(
-        plugins = Seq(
-          Plugin(
-            "org.apache.maven.plugins" % "maven-source-plugin"
-          ),
-          Plugin(
-            "org.apache.maven.plugins" % "maven-gpg-plugin"
-          ),
-          Plugin(
-            "net.alchim31.maven" % "scala-maven-plugin",
-            executions = Seq(
-              Execution(
-                id = "attach-doc",
-                goals = Seq(
-                  "doc-jar"
-                )
-              )
-            )
-          )
-        )
-      )
-    )
-  )
+  val defaultProfiles = Seq(releaseProfile)
+
+
 //  Seq(Profile(
 //    id = "gen-pom",
 //    build = Build(
