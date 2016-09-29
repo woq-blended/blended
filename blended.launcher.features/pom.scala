@@ -90,12 +90,12 @@ BlendedModel(
     "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2",
     // blended-samples
     "${project.groupId}" % "blended.activemq.defaultbroker" % "${blended.version}",
-    "${project.groupId}.samples" % "blended.samples.spray.helloworld" % "${blended.version}",
-    "${project.groupId}.samples" % "blended.samples.camel" % "${blended.version}",
-    "de.wayofquality.blended.samples" % "blended.samples.jms" % "${blended.version}",
+    blendedSamplesSprayHelloworld,
+    blendedSamplesCamel,
+    blendedSamplesJms,
     // blended-spray
-    "${project.groupId}" % "blended.spray.api" % "${blended.version}",
-    "${project.groupId}" % "blended.spray" % "${blended.version}",
+    blendedSprayApi,
+    blendedSpray,
     // blended-hawtio
     Dependency(
       "io.hawt" % "hawtio-web" % "${hawtio.version}",
