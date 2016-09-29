@@ -200,3 +200,38 @@ val compileJsPlugin = Plugin(
     )
   )
 )
+
+val dockerMavenPlugin = Plugin(
+  "com.alexecollins.docker" % "docker-maven-plugin" % "2.4.0",
+  executions = Seq(
+    Execution(
+      id = "clean-docker",
+      phase = "clean",
+      goals = Seq(
+        "clean"
+      )
+    ),
+    Execution(
+      id = "package-docker",
+      phase = "package",
+      goals = Seq(
+        "package"
+      )
+    ),
+    Execution(
+      id = "deploy-docker",
+      phase = "deploy",
+      goals = Seq(
+        "deploy"
+      )
+    )
+  ),
+  configuration = Config(
+    version = "1.16",
+    username = "atooni",
+    email = "andreas@wayofquality.de",
+    password = "foo",
+    prefix = "blended",
+    host = "http://${docker.host}:${docker.port}"
+  )
+)

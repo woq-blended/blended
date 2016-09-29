@@ -446,3 +446,54 @@ object BlendedContainer {
   )
 }
 
+// The blended docker container template 
+
+object BlendedDockerContainer {
+  def apply(
+    gav : Gav,
+    image : Dependency,
+    folder : String
+  ) = BlendedModel(
+    gav = gav,
+    packaging = "jar",
+    description = "Packaging the launcher sample container into a docker image.",
+    dependencies = Seq(image),
+
+    properties = Map(
+      "docker.src.type" -> image.`type`,
+      "docker.target" -> folder,
+      "docker.src.version" -> image.gav.version.get,
+      "docker.src.artifactId" -> image.gav.artifactId,
+      "docker.src.classifier" -> image.classifier.get,
+      "docker.src.groupId" -> image.gav.groupId.get
+    ),
+
+    build = Build(
+      resources = Seq(
+        Resource(
+          filtering = true,
+          directory = "src/main/docker"
+        )
+      ),
+      plugins = Seq(
+        Plugin(
+          "org.apache.maven.plugins" % "maven-dependency-plugin",
+          executions = Seq(
+            Execution(
+              id = "extract-blended-container",
+              phase = "process-resources",
+              goals = Seq(
+                "copy-dependencies"
+              ),
+              configuration = Config(
+                includeScope = "provided",
+                outputDirectory = "${project.build.directory}/docker/${docker.target}"
+              )
+            )
+          )
+        ),
+        dockerMavenPlugin
+      )
+    )
+  )
+}
