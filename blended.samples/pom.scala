@@ -13,9 +13,9 @@ BlendedModel(
     Profile(
       id = "build",
       modules = Seq(
-        "blended-samples-camel",
+        "blended.samples.camel",
         "blended-samples-jms",
-        "blended-samples-spray-helloworld"
+        "blended.samples.spray.helloworld"
       )
     )
   )
