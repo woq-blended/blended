@@ -7,20 +7,11 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 
 BlendedModel(
-  gav = blendedActivemqBrokerstarter,
+  gav = blendedActivemqDefaultbroker,
   packaging = "bundle",
-  description =
-    """
-      |A simple wrapper around an Active MQ broker that makes sure that the broker
-      |is completely started before exposing a connection factory OSGi service.
-    """.stripMargin,
+  description = "An Active MQ broker instance.",
   dependencies = Seq(
-    blendedAkka,
-    blendedJmsUtils,
-    camelJms,
-    activeMqBroker,
-    activeMqSpring,
-    scalaLib % "provided"
+    blendedActivemqBrokerstarter
   ),
   build = Build(
     plugins = Seq(
@@ -29,3 +20,4 @@ BlendedModel(
     )
   )
 )
+
