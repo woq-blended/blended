@@ -3,6 +3,7 @@
 val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
 val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
 val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+val jettyMavenPlugin = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
 val mavenInstallPlugin = "org.apache.maven.plugins" % "maven-install-plugin" % "2.5.2"
 
 val mavenBundlePlugin = Plugin(

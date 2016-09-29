@@ -33,7 +33,7 @@ BlendedModel(
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-war-plugin",
+        gav = "org.apache.maven.plugins" % "maven-war-plugin",
         configuration = Config(
           archive = Config(
             manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
@@ -54,10 +54,10 @@ BlendedModel(
         )
       ),
       Plugin(
-        "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903",
+        gav = jettyMavenPlugin,
         configuration = Config(
           scanIntervalSeconds = "10",
-          webAppSourceDirectory = "target/blended.mgmt.ui-2.0-SNAPSHOT",
+          webAppSourceDirectory = "target/blended.mgmt.ui-" + BlendedVersions.blendedVersion,
           webApp = Config(
             contextPath = "/management"
           )
