@@ -82,3 +82,59 @@ val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
 
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
+
+// Blended Projects
+
+object BlendedModule {
+  def apply(name : String) = BlendedVersions.blendedGroupId % name % BlendedVersions.blendedVersion
+}
+
+val blendedParent = Parent(
+  gav = BlendedModule("blended.parent"),
+  relativePath = "../blended.parent"
+)
+
+val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
+val blendedActivemqClient = BlendedModule("blended.activemq.client")
+val blendedActivemqDefaultbroker = BlendedModule("blended.activemq.defaultbroker")
+val blendedAkka = BlendedModule("blended.akka")
+val blendedAkkaItest = BlendedModule("blended.akka.itest")
+val blendedCamelUtils = BlendedModule("blended.camel.utils")
+val blendedContainerContext = BlendedModule("blended.container.context")
+val blendedContainerRegistry = BlendedModule("blended.container.registry")
+val blendedDemoLauncher = BlendedModule("blended.demo.launcher")
+val blendedDemoMgmt = BlendedModule("blended.demo.mgmt")
+val blendedDockerLauncherDemo = BlendedModule("blended.docker.launcher.demo")
+val blendedDomino = BlendedModule("blended.domino")
+val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
+val blendedItestSupport = BlendedModule("blended.itestsupport")
+val blendedJmsUtils = BlendedModule("blended.jms.utils")
+val blendedJmx = BlendedModule("blended.jmx")
+val blendedJolokia = BlendedModule("blended.jolokia")
+val blendedLauncher = BlendedModule("blended.launcher")
+val blendedLauncherFeatures = BlendedModule("blended.launcher.features")
+val blendedMgmtAgent = BlendedModule("blended.mgmt.agent")
+val blendedMgmtBase = BlendedModule("blended.mgmt.base")
+val blendedMgmtRepo = BlendedModule("blended.mgmt.repo")
+val blendedMgmtRepoRest = BlendedModule("blended.mgmt.repo.rest")
+val blendedMgmtMock = BlendedModule("blended.mgmt.mock")
+val blendedMgmtRest = BlendedModule("blended.mgmt.rest")
+val blendedMgmtUi = BlendedModule("blended.mgmt.ui")
+val blendedPersistence = BlendedModule("blended.persistence")
+val blendedPersistenceOrient = BlendedModule("blended.persistence.orient")
+val blendedSamplesReactor = BlendedModule("blended.samples.reactor")
+val blendedSamplesCamel = BlendedModule("blended.samples.camel")
+val blendedSamplesJms = BlendedModule("blended.samples.jms")
+val blendedSamplesSprayHelloworld = BlendedModule("blended.samples.spray.helloworld")
+val blendedSecurity = BlendedModule("blended.security")
+val blendedSecurityBoot = BlendedModule("blended.security.boot")
+val blendedSpray = BlendedModule("blended.spray")
+val blendedSprayApi = BlendedModule("blended.spray.api")
+val blendedTestSupport = BlendedModule("blended.testsupport")
+val blendedUpdater = BlendedModule("blended.updater")
+val blendedUpdaterConfig = BlendedModule("blended.updater.config")
+val blendedUpdaterMavenPlugin = BlendedModule("blended-updater-maven-plugin")
+val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
+val blendedUpdaterTools = BlendedModule("blended.updater.tools")
+val blendedUtil = BlendedModule("blended.util")
+

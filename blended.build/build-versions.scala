@@ -1,5 +1,6 @@
 object BlendedVersions {
 
+  val blendedGroupId = "de.wayofquality.blended"
   val blendedVersion = "2.0-SNAPSHOT"
 
   val javaVersion = "1.7"
@@ -24,3 +25,6 @@ object BlendedVersions {
   val sprayVersion = "1.3.2"
 
 }
+
+implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
+val scalaJsBinVersion = ScalaVersion(BlendedVersions.scalaJsVersion).binaryVersion

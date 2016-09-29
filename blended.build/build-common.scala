@@ -3,29 +3,6 @@
 
 import scala.collection.immutable
 
-val blendedGroupId = "de.wayofquality.blended"
-
-implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
-val scalaJsBinVersion = ScalaVersion(BlendedVersions.scalaJsVersion).binaryVersion
-
-val scriptHelper =
-"""
-object ScriptHelper {
-
-  import java.io.File
-  import java.io.PrintWriter
-
-  def writeFile(f: File, content: String) : Unit = {
-    val action = if(f.exists()) "Overwriting file: " else "Creating file: "
-    println(action + f)
-    f.getParentFile().mkdirs()
-    val writer = new PrintWriter(f)
-    writer.print(content)
-    writer.close()
-  }
-}
-"""
-
 val releaseProfile =  Profile(
   id = "release",
   activation = Activation(
@@ -326,55 +303,146 @@ object BlendedModel{
   }
 }
 
-// Blended Projects
+// A Blended Container Template 
 
-def BlendedModule(name : String) = blendedGroupId % name % BlendedVersions.blendedVersion
+object Feature {
+  def apply(name: String) = Dependency(
+      blendedLauncherFeatures,
+      `type` = "conf",
+      classifier = name
+  )
+}
 
-val blendedParent = Parent(
-  gav = BlendedModule("blended.parent"),
-  relativePath = "../blended.parent"
-)
+object BlendedContainer {
 
-val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
-val blendedActivemqClient = BlendedModule("blended.activemq.client")
-val blendedActivemqDefaultbroker = BlendedModule("blended.activemq.defaultbroker")
-val blendedAkka = BlendedModule("blended.akka")
-val blendedAkkaItest = BlendedModule("blended.akka.itest")
-val blendedCamelUtils = BlendedModule("blended.camel.utils")
-val blendedContainerContext = BlendedModule("blended.container.context")
-val blendedContainerRegistry = BlendedModule("blended.container.registry")
-val blendedDemoLauncher = BlendedModule("blended.demo.launcher")
-val blendedDemoMgmt = BlendedModule("blended.demo.mgmt")
-val blendedDockerLauncherDemo = BlendedModule("blended.docker.launcher.demo")
-val blendedDomino = BlendedModule("blended.domino")
-val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
-val blendedItestSupport = BlendedModule("blended.itestsupport")
-val blendedJmsUtils = BlendedModule("blended.jms.utils")
-val blendedJmx = BlendedModule("blended.jmx")
-val blendedJolokia = BlendedModule("blended.jolokia")
-val blendedLauncher = BlendedModule("blended.launcher")
-val blendedLauncherFeatures = BlendedModule("blended.launcher.features")
-val blendedMgmtAgent = BlendedModule("blended.mgmt.agent")
-val blendedMgmtBase = BlendedModule("blended.mgmt.base")
-val blendedMgmtRepo = BlendedModule("blended.mgmt.repo")
-val blendedMgmtRepoRest = BlendedModule("blended.mgmt.repo.rest")
-val blendedMgmtMock = BlendedModule("blended.mgmt.mock")
-val blendedMgmtRest = BlendedModule("blended.mgmt.rest")
-val blendedMgmtUi = BlendedModule("blended.mgmt.ui")
-val blendedPersistence = BlendedModule("blended.persistence")
-val blendedPersistenceOrient = BlendedModule("blended.persistence.orient")
-val blendedSamplesReactor = BlendedModule("blended.samples.reactor")
-val blendedSamplesCamel = BlendedModule("blended.samples.camel")
-val blendedSamplesJms = BlendedModule("blended.samples.jms")
-val blendedSamplesSprayHelloworld = BlendedModule("blended.samples.spray.helloworld")
-val blendedSecurity = BlendedModule("blended.security")
-val blendedSecurityBoot = BlendedModule("blended.security.boot")
-val blendedSpray = BlendedModule("blended.spray")
-val blendedSprayApi = BlendedModule("blended.spray.api")
-val blendedTestSupport = BlendedModule("blended.testsupport")
-val blendedUpdater = BlendedModule("blended.updater")
-val blendedUpdaterConfig = BlendedModule("blended.updater.config")
-val blendedUpdaterMavenPlugin = BlendedModule("blended-updater-maven-plugin")
-val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
-val blendedUpdaterTools = BlendedModule("blended.updater.tools")
-val blendedUtil = BlendedModule("blended.util")
+  def apply(
+    gav : Gav,
+    description : String,
+    properties : Map[String, String] = Map.empty,
+    features : immutable.Seq[Dependency] = Seq.empty
+  ) = BlendedModel(
+    gav = gav,
+    description = description,
+    packaging = "jar",
+    prerequisites = Prerequisites(
+      maven = "3.3.3"
+    ),
+    properties = Map(
+      "profile.name" -> gav.artifactId,
+      "profile.version" -> gav.version.get
+    ) ++ properties,
+    dependencies = features ++ Seq(Dependency(
+      blendedLauncher,
+      `type` = "zip",
+      classifier = "bin"
+    )),
+    plugins = Seq(
+      Plugin(
+        gav = blendedUpdaterMavenPlugin,
+        executions = Seq(
+          Execution(
+            id = "materialize-profile",
+            phase = "compile",
+            goals = Seq(
+              "materialize-profile"
+            ),
+            configuration = Config(
+              srcProfile = "${project.build.directory}/classes/profile/profile.conf",
+              destDir = "${project.build.directory}/classes/profile"
+            )
+          )
+        )
+      ),
+      Plugin(
+        gav = mavenDependencyPlugin,
+        executions = Seq(
+          Execution(
+            id = "unpack-launcher",
+            phase = "compile",
+            goals = Seq(
+              "unpack"
+            ),
+            configuration = Config(
+              artifactItems = Config(
+                artifactItem = Config(
+                  groupId = "${project.groupId}",
+                  artifactId = "blended.launcher",
+                  classifier = "bin",
+                  `type` = "zip",
+                  outputDirectory = "${project.build.directory}/launcher"
+                )
+              )
+            )
+          )
+        )
+      ),
+      Plugin(
+        gav = scalaMavenPlugin.gav,
+        executions = Seq(
+          Execution(
+            id = "build-product",
+            phase = "generate-resources",
+            goals = Seq(
+              "script"
+            ),
+            configuration = Config(
+              script = scriptHelper + """
+  import java.io.File
+
+  // make launchfile
+
+  val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
+
+  val launchConf =
+    "profile.baseDir=${BLENDED_HOME}/profiles\n" +
+    "profile.name=""" + gav.artifactId + """\n" +
+    "profile.version=""" + gav.version.get + """"
+
+  ScriptHelper.writeFile(tarLaunchFile, launchConf)
+
+  // make overlays base.conf
+
+  val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
+  ScriptHelper.writeFile(baseConfFile, "overlays = []")
+  """
+              )
+          )
+        )
+      ),
+      Plugin(
+        "org.apache.maven.plugins" % "maven-assembly-plugin",
+        executions = Seq(
+          Execution(
+            id = "assemle",
+            phase = "package",
+            goals = Seq(
+              "single"
+            )
+          )
+        ),
+        configuration = Config(
+          descriptors = Config(
+            descriptor = "src/main/assembly/full-nojre.xml",
+            descriptor = "src/main/assembly/product.xml"
+          )
+        )
+      ),
+      Plugin(
+        "org.apache.maven.plugins" % "maven-jar-plugin" % "2.6",
+        executions = Seq(
+          Execution(
+            id = "default-jar",
+            phase = "none"
+          )
+        )
+      ),
+      Plugin(
+        "org.sonatype.plugins" % "nexus-staging-maven-plugin",
+        configuration = Config(
+          skipNexusStagingDeployMojo = "true"
+        )
+      )
+    )
+  )
+}
+

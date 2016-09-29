@@ -1,3 +1,22 @@
+
+val scriptHelper =
+"""
+object ScriptHelper {
+
+  import java.io.File
+  import java.io.PrintWriter
+
+  def writeFile(f: File, content: String) : Unit = {
+    val action = if(f.exists()) "Overwriting file: " else "Creating file: "
+    println(action + f)
+    f.getParentFile().mkdirs()
+    val writer = new PrintWriter(f)
+    writer.print(content)
+    writer.close()
+  }
+}
+"""
+
 // Plugins
 
 val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
