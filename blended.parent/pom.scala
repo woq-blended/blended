@@ -75,7 +75,7 @@ BlendedModel(
     "ops4j-base.version" -> "1.4.0",
     "uncommons.maths.version" -> "1.2.2",
     "jsch.version" -> "0.1.48_1",
-    "blended.version" -> "2.0-SNAPSHOT",
+    "blended.version" -> BlendedVersions.blendedVersion,
     "aries.jmx.version" -> "1.1.1",
     "jersey.version" -> "1.18.1",
     "slf4j.version" -> slf4j.version.get,

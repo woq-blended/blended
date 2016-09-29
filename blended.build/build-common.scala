@@ -37,7 +37,7 @@ val releaseProfile =  Profile(
         executions = Seq(
           Execution(
             id = "attach-sources-no-fork",
-            phase = "generate-sources",
+            phase = "package",
             goals = Seq(
               "jar-no-fork"
             )
@@ -54,7 +54,8 @@ val releaseProfile =  Profile(
           includes = Config(
             include = "**/*.java",
             include = "**/*.scala"
-          )
+          ),
+          forceCreation = "true"
         )
       ),
       Plugin(
@@ -74,6 +75,7 @@ val releaseProfile =  Profile(
         executions = Seq(
           Execution(
             id = "attach-doc",
+            phase = "package",
             goals = Seq(
               "doc-jar"
             )
