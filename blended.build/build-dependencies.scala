@@ -1,3 +1,6 @@
+implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
+val scalaJsBinVersion = ScalaVersion(BlendedVersions.scalaJsVersion).binaryVersion
+
 // Dependencies
 
 val activeMqBroker = "org.apache.activemq" % "activemq-broker" % BlendedVersions.activeMqVersion
