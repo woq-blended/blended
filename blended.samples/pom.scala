@@ -14,7 +14,7 @@ BlendedModel(
       id = "build",
       modules = Seq(
         "blended.samples.camel",
-        "blended-samples-jms",
+        "blended.samples.jms",
         "blended.samples.spray.helloworld"
       )
     )
