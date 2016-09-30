@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = blendedSamplesReactor,
   packaging = "pom",
-  description = "A collection of sample projects."
+  description = "A collection of sample projects.",
   profiles = Seq(
     Profile(
       id = "build",
