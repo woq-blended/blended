@@ -1,7 +1,7 @@
 object BlendedVersions {
 
   val blendedGroupId = "de.wayofquality.blended"
-  val blendedVersion = "2.0-RC11"
+  val blendedVersion = "2.0-RC12"
 
   val javaVersion = "1.7"
 
