@@ -251,7 +251,7 @@ object Launcher {
           Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
         }
 
-        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false))
+        val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
         val runtimeConfig = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
         val launchConfig = ConfigConverter.runtimeConfigToLauncherConfig(runtimeConfig, profileDir)
