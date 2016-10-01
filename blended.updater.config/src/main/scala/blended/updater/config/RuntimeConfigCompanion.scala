@@ -35,8 +35,8 @@ object RuntimeConfigCompanion {
 
   def read(config: Config): Try[RuntimeConfig] = Try {
 
-    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false))
-    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
+    val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+    val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     config.withFallback(optionals).checkValid(reference)
 
     def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
@@ -94,7 +94,7 @@ object RuntimeConfigCompanion {
       "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
     ).asJava
 
-    ConfigFactory.parseMap(config)
+    ConfigFactory.parseMap(config).resolve()
   }
 
   def bytesToString(digest: Array[Byte]): String = {
