@@ -21,7 +21,6 @@ BlendedModel(
     junit % "test",
     slf4jLog4j12 % "test",
     scalaTest % "test",
-    scalaXml,
     akkaTestkit % "test"
   ),
   dependencyManagement = DependencyManagement(

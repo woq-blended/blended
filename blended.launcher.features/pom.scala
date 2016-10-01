@@ -43,7 +43,7 @@ BlendedModel(
     "com.typesafe.akka" % "akka-slf4j_${scala.version}" % "${akka.version}",
     scalaLib,
     scalaReflect,
-    scalaXml,
+    //scalaXml,
     // blended-activemq
     blendedActivemqBrokerstarter,
     "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0",
@@ -155,10 +155,10 @@ BlendedModel(
     "com.orientechnologies" % "orientdb-core" % "2.2.0",
     "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.1",
     "com.google.code.findbugs" % "jsr305" % "3.0.1",
-    Dependency(
-      blendedMgmtUi,
-      `type` = "war"
-    ),
+    //Dependency(
+    //  blendedMgmtUi,
+    //  `type` = "war"
+    //),
     // blended-security
     "org.apache.shiro" % "shiro-core" % "${shiro.version}",
     "org.apache.shiro" % "shiro-web" % "${shiro.version}",

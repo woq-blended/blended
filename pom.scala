@@ -97,8 +97,8 @@ Model(
         "blended.activemq.client",
         "blended.launcher.features",
         "blended.demo.launcher",
-        "blended.demo.mgmt",
-        "blended.mgmt.ui"
+        "blended.demo.mgmt"
+        //"blended.mgmt.ui"
       )
     ),
     Profile(
