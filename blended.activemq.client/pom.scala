@@ -17,10 +17,8 @@ BlendedModel(
     blendedDomino,
     activeMqClient
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

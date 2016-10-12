@@ -6,58 +6,34 @@ import scala.collection.immutable.Seq
 #include blended.build/build-plugins.scala
 #include blended.build/build-common.scala
 
-Model(
+BlendedModel(
   gav = BlendedModule("blended.reactor"),
   packaging = "pom",
-  name = "${project.artifactId}",
   description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
-  url = "https://github.com/woq-blended/blended",
-  developers = BlendedModel.defaultDevelopers,
-  licenses = BlendedModel.defaultLicenses,
-  scm = BlendedModel.scm,
-  organization = BlendedModel.organization,
-  distributionManagement = DistributionManagement(
-    repository = DeploymentRepository(
-      id = "ossrh",
-      url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+  plugins = Seq(
+    Plugin(
+      "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.5",
+      extensions = true,
+      configuration = Config(
+        serverId = "ossrh",
+        nexusUrl = "https://oss.sonatype.org/",
+        autoReleaseAfterClose = "true"
+      )
     ),
-    snapshotRepository = DeploymentRepository(
-      id = "ossrh",
-      url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    )
-  ),
-  build = Build(
-    plugins = Seq(
-      Plugin(
-        "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.5",
-        extensions = true,
-        configuration = Config(
-          serverId = "ossrh",
-          nexusUrl = "https://oss.sonatype.org/",
-          autoReleaseAfterClose = "true"
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-install-plugin" % "2.4",
-        configuration = Config(
-          skip = "true"
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-deploy-plugin" % "2.7",
-        configuration = Config(
-          skip = "true"
-        )
+    Plugin(
+      "org.apache.maven.plugins" % "maven-install-plugin" % "2.4",
+      configuration = Config(
+        skip = "true"
+      )
+    ),
+    Plugin(
+      "org.apache.maven.plugins" % "maven-deploy-plugin" % "2.7",
+      configuration = Config(
+        skip = "true"
       )
     )
   ),
   profiles = Seq(
-    Profile(
-      id = "parent",
-      modules = Seq(
-        "blended.parent"
-      )
-    ),
     Profile(
       id = "build",
       modules = Seq(
@@ -113,8 +89,6 @@ Model(
       modules = Seq(
         "blended.docker"
       )
-    ),
-    releaseProfile
-  ),
-  modelVersion = "4.0.0"
+    )
+  )
 )

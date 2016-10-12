@@ -15,7 +15,7 @@ BlendedModel(
     scalaLib % "provided"
   ),
   plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

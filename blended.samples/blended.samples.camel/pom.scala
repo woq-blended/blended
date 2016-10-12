@@ -17,10 +17,8 @@ BlendedModel(
     geronimoJms11Spec,
     slf4j
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin, 
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

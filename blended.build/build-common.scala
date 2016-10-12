@@ -81,27 +81,6 @@ object BlendedModel{
   // Profiles we attach to all BlendedModels
   val defaultProfiles = Seq(releaseProfile)
 
-
-//  Seq(Profile(
-//    id = "gen-pom",
-//    build = Build(
-//      plugins = Seq(Plugin(
-//        "io.takari.polyglot" % "polyglot-translate-plugin" % "0.1.19",
-//        executions = Seq(
-//          Execution(
-//            id = "generate-pom.xml",
-//            goals = Seq("translate"),
-//            phase = "validate",
-//            configuration = Config(
-//              input = "pom.scala",
-//              output = "pom.xml"
-//            )
-//          )
-//        )
-//      ))
-//    )
-//  ))
-
   val defaultDevelopers = Seq(
     Developer(
       email = "andreas@wayofquality.de",
@@ -232,7 +211,6 @@ object BlendedModel{
 
   def apply(
     gav: Gav,
-    build: Build = null,
     ciManagement: CiManagement = null,
     contributors: immutable.Seq[Contributor] = Nil,
     dependencyManagement: DependencyManagement = null,
@@ -249,22 +227,22 @@ object BlendedModel{
     pluginRepositories: immutable.Seq[Repository] = Nil,
     pomFile: Option[File] = None,
     prerequisites: Prerequisites = null,
-    profiles: immutable.Seq[Profile] = Nil,
+    profiles: immutable.Seq[Profile] = Seq.empty,
     properties: Map[String, String] = Map.empty,
     repositories: immutable.Seq[Repository] = Nil,
     parent: Parent = null,
-    resources: Seq[Resource] = null,
-    testResources: Seq[Resource] = null,
-    plugins: Seq[Plugin] = null,
+    resources: Seq[Resource] = Seq.empty,
+    testResources: Seq[Resource] = Seq.empty,
+    plugins: Seq[Plugin] = Seq.empty,
     pluginManagement: Seq[Plugin] = null
 
   ) = {
     if(parent != null) println(s"Project with parent: ${gav}")
-    val theBuild = Option(build).orElse{
-      val usedPlugins = Option(plugins).getOrElse(defaultPlugins)
+    val theBuild = {
+      val usedPlugins = plugins ++ defaultPlugins
       Option(Build(
-          resources = Option(resources).getOrElse(defaultResources),
-          testResources = Option(testResources).getOrElse(defaultTestResources),
+          resources = resources ++ defaultResources,
+          testResources = testResources ++ defaultTestResources,
           plugins = usedPlugins,
           pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
         ))
@@ -303,7 +281,76 @@ object BlendedModel{
   }
 }
 
-// A Blended Container Template 
+// Support for building features and containers
+
+case class FeatureBundle(
+  dependency : Dependency,
+  startLevel : Integer = -1,
+  start : Boolean = false
+) {
+  override def toString: String = {
+
+    val gav = dependency.gav
+
+    val builder : StringBuilder = new StringBuilder("{ ")
+
+    builder.append("url=\"")
+    builder.append("mvn:")
+
+    builder.append(gav.groupId.get)
+    builder.append(":")
+    builder.append(gav.artifactId)
+    builder.append(":")
+
+    if (!dependency.`type`.equals("jar")) {
+      builder.append(gav.classifier.getOrElse(""))
+      builder.append(":")
+    }
+
+    builder.append(gav.version.get)
+
+    if (!dependency.`type`.equals("jar")) {
+      builder.append(":")
+      builder.append(dependency.`type`)
+    }
+
+    builder.append("\"")
+
+    if (startLevel >= 0) builder.append(s", startLevel=${startLevel}")
+    if (start) builder.append(", start=true")
+
+    builder.append(" }")
+
+    builder.toString()
+  }
+}
+
+// Create the String content of a feature file from a sequence of FeatureBundles
+
+def featureDependencies(features: Map[String, Seq[FeatureBundle]]) : Seq[Dependency] =
+  features.values.flatten.map(_.dependency).toList
+
+// This is the content of the feature file
+def featureFile(name : String, features: Seq[FeatureBundle]) : String = {
+
+  val prefix = "\"\"\"name=\"" + name + "\"\nversion=\"${project.version}\"\n"
+
+  val bundles = features.map(_.toString).mkString(
+    "bundles = [\n", ",\n", "\n]\n\"\"\"")
+
+  prefix + bundles
+}
+
+def generateFeatures(features : Map[String, Seq[FeatureBundle]]) = {
+
+  val writeFiles = features.map { case (key, bundles) =>
+"""
+ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key + """.conf"), """ + featureFile(key, bundles) + """)
+"""
+  }.mkString("import java.io.File\n", "\n", "")
+
+  scriptHelper + writeFiles
+}
 
 object Feature {
   def apply(name: String) = Dependency(
@@ -312,6 +359,40 @@ object Feature {
       classifier = name
   )
 }
+
+def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
+  Plugin(
+    gav = scalaMavenPlugin.gav,
+    executions = Seq(
+      Execution(
+        id = "build-product",
+        phase = "generate-resources",
+        goals = Seq(
+          "script"
+        ),
+        configuration = Config(
+          script = generateFeatures(features)
+        )
+      )
+    )
+  ),
+  Plugin(
+    blendedUpdaterMavenPlugin,
+    executions = Seq(
+      Execution(
+        id = "make-features",
+        phase = "compile",
+        goals = Seq(
+          "build-features"
+        ),
+        configuration = Config(
+          srcFeatureDir = "${project.build.directory}/classes",
+          resolveFromDependencies = "true"
+        )
+      )
+    )
+  )
+)
 
 object BlendedContainer {
 
@@ -468,32 +549,31 @@ object BlendedDockerContainer {
       "docker.src.groupId" -> image.gav.groupId.get
     ),
 
-    build = Build(
-      resources = Seq(
-        Resource(
-          filtering = true,
-          directory = "src/main/docker"
-        )
-      ),
-      plugins = Seq(
-        Plugin(
-          "org.apache.maven.plugins" % "maven-dependency-plugin",
-          executions = Seq(
-            Execution(
-              id = "extract-blended-container",
-              phase = "process-resources",
-              goals = Seq(
-                "copy-dependencies"
-              ),
-              configuration = Config(
-                includeScope = "provided",
-                outputDirectory = "${project.build.directory}/docker/${docker.target}"
-              )
+    resources = Seq(
+      Resource(
+        filtering = true,
+        directory = "src/main/docker"
+      )
+    ),
+
+    plugins = Seq(
+      Plugin(
+        "org.apache.maven.plugins" % "maven-dependency-plugin",
+        executions = Seq(
+          Execution(
+            id = "extract-blended-container",
+            phase = "process-resources",
+            goals = Seq(
+              "copy-dependencies"
+            ),
+            configuration = Config(
+              includeScope = "provided",
+              outputDirectory = "${project.build.directory}/docker/${docker.target}"
             )
           )
-        ),
-        dockerMavenPlugin
-      )
+        )
+      ),
+      dockerMavenPlugin
     )
   )
 }

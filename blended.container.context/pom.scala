@@ -21,7 +21,7 @@ BlendedModel(
     julToSlf4j
   ),
   plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )

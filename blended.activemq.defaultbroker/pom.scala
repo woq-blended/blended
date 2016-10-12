@@ -13,11 +13,9 @@ BlendedModel(
   dependencies = Seq(
     blendedActivemqBrokerstarter
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin
   )
 )
 

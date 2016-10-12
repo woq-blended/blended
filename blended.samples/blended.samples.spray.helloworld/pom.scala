@@ -23,11 +23,9 @@ BlendedModel(
     mockitoAll % "test",
     slf4jLog4j12 % "test"
   ),
-  build = Build(
-    plugins = Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin,
-      scalatestMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

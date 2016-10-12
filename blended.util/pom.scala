@@ -29,9 +29,9 @@ BlendedModel(
       scalaLib
     )
   ),
-  plugins = BlendedModel.defaultPlugins ++ Seq(
-      mavenBundlePlugin,
-      scalaMavenPlugin,
-      scalatestMavenPlugin
-    )
+  plugins = Seq(
+    mavenBundlePlugin,
+    scalaMavenPlugin,
+    scalatestMavenPlugin
+  )
 )

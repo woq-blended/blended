@@ -22,9 +22,17 @@ BlendedModel(
   plugins = Seq(
     scalaMavenPlugin,
     Plugin(
-      scalatestMavenPlugin.gav,
+      gav = scalatestMavenPlugin.gav,
+      executions = Seq(
+        Execution(
+          id = "test",
+          goals = Seq("test")
+        )
+      ),
       configuration = Config(
-        argLine = "-Djava.net.preferIPv4Stack=true"
+        reportsDirectory = "${project.build.directory}/surefire-reports",
+        junitxml = ".",
+        stdout = "FT"
       )
     )
   )
