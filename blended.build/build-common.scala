@@ -147,24 +147,24 @@ object BlendedModel{
   )
 
   val defaultResources = Seq(
-      Resource(
-        filtering = true,
-        directory = "src/main/resources"
-      ),
-      Resource(
-        directory = "src/main/binaryResources"
-      )
+    Resource(
+      filtering = true,
+      directory = "src/main/resources"
+    ),
+    Resource(
+      directory = "src/main/binaryResources"
     )
+  )
 
   val defaultTestResources = Seq(
-      Resource(
-        filtering = true,
-        directory = "src/test/resources"
-      ),
-      Resource(
-        directory = "src/test/binaryResources"
-      )
+    Resource(
+      filtering = true,
+      directory = "src/test/resources"
+    ),
+    Resource(
+      directory = "src/test/binaryResources"
     )
+  )
 
   val defaultPlugins = Seq(
     Plugin(
@@ -194,6 +194,33 @@ object BlendedModel{
             )
           )
         )
+      )
+    ),
+    Plugin(
+      "org.apache.maven.plugins" % "maven-enforcer-plugin" % "1.3.1",
+      executions = Seq(
+        Execution(
+          id = "enforce-maven",
+          goals = Seq(
+            "enforce"
+          ),
+          configuration = Config(
+            rules = Config(
+              requireMavenVersion = Config(
+                version = "3.0.5"
+              )
+            )
+          )
+        )
+      )
+    ),
+    Plugin(
+      "org.apache.maven.plugins" % "maven-compiler-plugin" % "3.5.1",
+      configuration = Config(
+        source = "${java.version}",
+        target = "${java.version}",
+        encoding = "${project.build.sourceEncoding}",
+        fork = "true"
       )
     )
   )

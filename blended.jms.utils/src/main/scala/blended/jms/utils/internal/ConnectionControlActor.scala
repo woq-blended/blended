@@ -152,7 +152,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
     }
 
     if (lastDisconnect.isDefined && remaining > 0) {
-      log.debug(s"Container is waiting to reconnect, remaining wait time [${remaining / 1000.0}]s")
+      log.debug(s"Container is waiting to reconnect for provider [${provider}], remaining wait time [${remaining / 1000.0}]s")
       checkConnection(schedule)
     } else {
       lastConnectAttempt = System.currentTimeMillis()
