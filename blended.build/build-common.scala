@@ -475,7 +475,7 @@ object BlendedContainer {
 
 // The blended docker container template 
 
-object SIBDockerContainer {
+object BlendedDockerContainer {
   def apply(
     gav : Gav,
     image : Dependency,
