@@ -23,9 +23,9 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
     try {
       val frameworkBundle = bundleContext.getBundle(0)
 
-      val mustRestart = restarting.getAndSet(true)
+      val alreadyRestarting = restarting.getAndSet(true)
 
-      if (mustRestart) {
+      if (!alreadyRestarting) {
         val now = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date())
 
         val msg =
