@@ -1,7 +1,7 @@
 object BlendedVersions {
 
   val blendedGroupId = "de.wayofquality.blended"
-  val blendedVersion = "2.0-RC15"
+  val blendedVersion = "2.0-RC16"
 
   val javaVersion = "1.7"
 
@@ -9,11 +9,11 @@ object BlendedVersions {
   val scalaVersion = "2.10.4"
   val scalaJsVersion = "0.6.12"
 
-  val activeMqVersion = "5.13.3"
+  val activeMqVersion = "5.14.1"
   val akkaVersion = "2.3.10"
   val apacheShiroVersion = "1.2.4"
 
-  val camelVersion = "2.16.3"
+  val camelVersion = "2.17.3"
 
   val dockerJavaVersion = "1.0.0"
 

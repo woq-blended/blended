@@ -5,7 +5,7 @@ MAINTAINER Andreas Gies version: ${project.version}
 
 # Installation section
 ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt
-RUN ln -s /opt/blended.launcher.demo-${project.version} /opt/${docker.target}
+RUN ln -s /opt/blended.demo.launcher-${project.version} /opt/${docker.target}
 RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}
 RUN chown -R blended.blended /opt/${docker.target}
 
