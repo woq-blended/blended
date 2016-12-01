@@ -18,12 +18,6 @@ function build {
 
 "$MVN" -version
 
-cd blended-parent
+build clean install -P build -pl :blended-updater-maven-plugin -am "$@"
 
-build clean install "$@"
-
-cd ..
-
-build clean install -P parent "$@"
-build clean install -P updater "$@"
 build clean install -P build "$@"
