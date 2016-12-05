@@ -202,7 +202,7 @@ val compileJsPlugin = Plugin(
 )
 
 val dockerMavenPlugin = Plugin(
-  "com.alexecollins.docker" % "docker-maven-plugin" % "2.4.0",
+  "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.21",
   executions = Seq(
     Execution(
       id = "clean-docker",
@@ -232,6 +232,6 @@ val dockerMavenPlugin = Plugin(
     email = "andreas@wayofquality.de",
     password = "foo",
     prefix = "blended",
-    host = "http://${docker.host}:${docker.port}"
+    host = "tcp://${docker.host}:${docker.port}"
   )
 )

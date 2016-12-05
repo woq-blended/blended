@@ -572,7 +572,8 @@ object BlendedDockerContainer {
   def apply(
     gav : Gav,
     image : Dependency,
-    folder : String
+    folder : String,
+    ports : List[Int] = List.empty
   ) = BlendedModel(
     gav = gav,
     packaging = "jar",
@@ -588,13 +589,6 @@ object BlendedDockerContainer {
       "docker.src.groupId" -> image.gav.groupId.get
     ),
 
-    resources = Seq(
-      Resource(
-        filtering = true,
-        directory = "src/main/docker"
-      )
-    ),
-
     plugins = Seq(
       Plugin(
         "org.apache.maven.plugins" % "maven-dependency-plugin",
@@ -608,6 +602,43 @@ object BlendedDockerContainer {
             configuration = Config(
               includeScope = "provided",
               outputDirectory = "${project.build.directory}/docker/${docker.target}"
+            )
+          )
+        )
+      ),
+      Plugin(
+        gav = scalaMavenPlugin.gav,
+        executions = Seq(
+          Execution(
+            id = "prepare-docker",
+            phase = "generate-resources",
+            goals = Seq(
+              "script"
+            ),
+            configuration = Config(
+              script = scriptHelper + """
+  import java.io.File
+
+  // make Dockerfile
+
+  val dockerfile = new File(project.getBasedir() + "/src/main/docker/""" + folder + """", "Dockerfile")
+
+  val dockerconf =
+    "FROM atooni/blended-base:latest\n" +
+    "MAINTAINER Blended Team version: """ + gav.version.get + """\n" +
+    "ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt\n" +
+    "RUN ln -s /opt/${docker.src.artifactId}-${docker.src.version} /opt/${docker.target}\n" +
+    "RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}\n" +
+    "RUN chown -R blended.blended /opt/${docker.target}\n" +
+    "USER blended\n" +
+    "ENV JAVA_HOME /opt/java\n" +
+    "ENV PATH ${PATH}:${JAVA_HOME}/bin\n" +
+    "ENTRYPOINT [\"/bin/sh\", \"/opt/${docker.target}/bin/blended.sh\"]\n" +
+    """" + ports.map(p => "EXPOSE " + p + "\\n").mkString + """"
+
+  ScriptHelper.writeFile(dockerfile, dockerconf)
+
+  """
             )
           )
         )

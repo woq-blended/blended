@@ -7,12 +7,13 @@ import scala.collection.immutable.Seq
 #include ../../blended.build/build-common.scala
 
 BlendedDockerContainer(
-  gav = blendedDockerLauncherDemo,
+  gav = blendedDockerDemoLauncher,
   image = Dependency(
     gav = blendedDemoLauncher,
     `type` = "tar.gz",
     classifier = "full-nojre",
     scope = "provided"
   ),
-  folder = "blended"
+  folder = "launcher",
+  ports = List(1099,1883,8080)
 )
