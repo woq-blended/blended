@@ -10,6 +10,9 @@ BlendedModel(
   gav = blendedMgmtUi,
   packaging = "war",
   description = "The blended management UI.",
+  dependencies = Seq(
+    scalaLib % "provided"
+  ),
   plugins = Seq(
     prepareSbtPlugin,
     compileJsPlugin,

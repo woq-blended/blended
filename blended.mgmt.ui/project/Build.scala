@@ -16,10 +16,10 @@ object Build extends sbt.Build {
       .enablePlugins(ScalaJSPlugin, SbtWeb)
 
   lazy val projectSettings = Seq(
-    organization := "de.wayofquality.blended",
-    version := Versions.app,
+    organization := BlendedVersions.blendedGroupId,
+    version := BlendedVersions.blendedVersion,
     name := appName,
-    scalaVersion := Versions.scala,
+    scalaVersion := BlendedVersions.scalaVersion,
 
     sourcesInBase := false,
     mainClass in Compile := Some("blended.mgmt.ui.MgmtConsole"),
@@ -61,9 +61,6 @@ object Build extends sbt.Build {
   }
 
   object Versions {
-
-    val app             = "2.0-SNAPSHOT"
-    val scala           = "2.11.8"
 
     val bootstrap       = "3.3.7"
     val react           = "15.2.1"

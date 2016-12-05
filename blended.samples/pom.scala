@@ -13,6 +13,9 @@ BlendedModel(
   profiles = Seq(
     Profile(
       id = "build",
+      activation = Activation(
+        activeByDefault = true
+      ),
       modules = Seq(
         "blended.samples.camel",
         "blended.samples.jms",

@@ -20,6 +20,9 @@ blended.container.context \
 blended.container.registry \
 blended.demo.launcher \
 blended.demo.mgmt \
+blended.docker \
+blended.docker/blended.docker.base \
+blended.docker/blended.docker.launcher.demo \
 blended.domino \
 blended.hawtio.login \
 blended.itestsupport \
@@ -39,6 +42,9 @@ blended.parent \
 blended.persistence \
 blended.persistence.orient \
 blended.samples \
+blended.samples/blended.samples.camel \
+blended.samples/blended.samples.jms \
+blended.samples/blended.samples.spray.helloworld \
 blended.security \
 blended.security.boot \
 blended.spray \
@@ -51,6 +57,8 @@ blended.updater.tools \
 blended.util \
 "
 
+curdir="$(pwd)"
+
 genForProjects="$projects"
 
 if [ -n "$*" ]; then
@@ -60,10 +68,11 @@ fi
 
 for project in $genForProjects; do
 
+  projectName=${project##*/}
+
   echo ""
   echo "*******************************************************"
-  echo "* Project: $project"
-  echo "* "
+  echo "* Project: $projectName (${project})"
 
   cd "$project"
 
@@ -72,7 +81,7 @@ for project in $genForProjects; do
     cat > .project << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-        <name>$project</name>
+        <name>${projectName}</name>
         <comment></comment>
         <projects>
         </projects>
@@ -103,7 +112,7 @@ EOF
     cat > .project << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-        <name>$project</name>
+        <name>$projectName</name>
         <comment></comment>
         <projects>
         </projects>
@@ -229,6 +238,6 @@ EOF
 </classpath>
 EOF
 
-  cd ..
+  cd "$curdir"
 
 done
