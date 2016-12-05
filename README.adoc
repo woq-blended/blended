@@ -9,13 +9,16 @@ image:https://badges.gitter.im/Join%20Chat.svg[Join the chat at, link="https://g
 endif::[]
 
 
-This project is dedicated to provide reusable components for developing OSGI based application. It builds on top of Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray and Domino.
+This project is dedicated to provide reusable components for developing OSGI based application.
+It builds on top of Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray and Domino.
 
-The project documentation has moved to its own [github pages repository](https://github.com/woq/woq.github.io) and is live at [http://www.wayofquality.de/projects/blended](http://www.wayofquality.de/projects/blended). We are currently busy getting the initial use cases documented. Stay tuned for more to come ...
+The project documentation has moved to its own [github pages repository](https://github.com/woq/woq.github.io) and is live at [http://www.wayofquality.de/projects/blended](http://www.wayofquality.de/projects/blended).
+We are currently busy getting the initial use cases documented. Stay tuned for more to come ...
 
 == Build from source
 
-We use Maven to build. You need at least Maven 3.3.1 as we are using the https://github.com/takari/polyglot-maven[Maven Polyglot Scala Extension] to build Blended.
+We use Maven to build.
+You need at least Maven 3.3.1 as we are using the https://github.com/takari/polyglot-maven[Maven Polyglot Scala Extension] to build Blended.
 
 Currently we transition the build scripts and as a result, the scipts may look a bit cluttered and unclean.
 
@@ -23,7 +26,8 @@ Once, we are finished with the transition, you can build with a simple:
 
 `mvn clean install`
 
-As mose IDE's do not understand the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file. After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
+As most IDE's do not understand the `pom.scala` files, you can use the `blended.build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file.
+After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
 
 == Download  artifacts from Maven Central
 
@@ -43,4 +47,5 @@ There are several areas on our [wishlist](http://www.wayofquality.de/jobs.html) 
 
 We are keen to know what you think about Blended. What are your use cases, your wishes?
 
-We are developing on top of OSGi and Akka. If you spot somethings that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)
+We are developing on top of OSGi and Akka.
+If you spot somethings that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)

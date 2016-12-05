@@ -67,7 +67,7 @@ for project in $genForProjects; do
 
   cd "$project"
 
-  if [ -e src/main/scala -o -e src/test/scala ]; then
+  if [ -e src/main/scala -o -e src/test/scala -o -e src/shared/scala ]; then
 
     cat > .project << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -133,7 +133,7 @@ EOF
 <classpath>
 EOF
 
-  for path in src/main/scala src/main/java src/main/binaryResources src/main/resources; do
+  for path in src/main/scala src/main/java src/shared/scala src/main/binaryResources src/main/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
         <classpathentry kind="src" path="$path"/>
