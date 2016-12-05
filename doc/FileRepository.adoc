@@ -1,0 +1,51 @@
+= File Repository
+
+The Blended Management Server serves as a File Repository.
+
+== Overview
+
+Per convention, the files are organized as in a Maven 2 Repository under the following structure:
+
+.Tree structure of a repository
+[listing]
+----
+/artifacts/
++- {repoId}/
+   +- {groupId}/
+      +- {artifactId}/
+         +- {version}/
+            {artifactId}-{version}[-{classifier}].{ext}
+----
+
+== Configuration
+
+=== HTTP Service
+
+The HTTP-Server for the repository is configured via: `etc/blended.mgmt.repo.rest.conf`
+
+.Properties
+
+* `contextPath` - The URL base path were the artifacts can be accessed.
+
+.Example `etc/blended.mgmt.repo.rest.conf`
+[source,properties]
+----
+contextPath = /artifacts
+----
+
+=== Repository
+
+A file repository can be configured via:
+`etc/blended.mgmt.repo.conf`
+
+.Properties
+
+* `repoId` - The ID of the repo, which is also part of it's URL.
+* `baseDir` - The server-local path were the artifacts are stored.
+
+.Example `etc/blended.mgmt.repo.conf`
+[source,properties]
+----
+repoId = "testrepo"
+baseDir = "/tmp"
+----
