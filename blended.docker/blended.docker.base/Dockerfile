@@ -8,7 +8,7 @@ RUN groupadd blended
 RUN useradd -d /home/blended -s /bin/bash -g blended -m blended
 
 ADD files/jdk-8u111-linux-x64.tar.gz /opt
-ADD files/profile /etc/profile.d
+ADD files/profile.d /etc/profile.d
 RUN ln -s /opt/jdk1.8.0_111 /opt/java
 
 # End of Installation section
