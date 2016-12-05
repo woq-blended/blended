@@ -13,7 +13,7 @@ object Build extends sbt.Build {
       .enablePlugins(ScalaJSPlugin)
 
   lazy val projectSettings = Seq(
-    organization := BlendedVersions.BlendedGroupId,
+    organization := BlendedVersions.blendedGroupId,
     version := BlendedVersions.blendedVersion,
     name := appName,
     scalaVersion := BlendedVersions.scalaVersion,
