@@ -36,6 +36,9 @@ BlendedModel(
   profiles = Seq(
     Profile(
       id = "build",
+      activation = Activation(
+        activeByDefault = true
+      ),
       modules = Seq(
         "blended.launcher",
         "blended.updater",
