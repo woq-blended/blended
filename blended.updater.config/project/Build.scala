@@ -13,12 +13,13 @@ object Build extends sbt.Build {
       .enablePlugins(ScalaJSPlugin)
 
   lazy val projectSettings = Seq(
-    organization := "de.wayofquality.blended",
+    organization := BlendedVersions.BlendedGroupId,
     version := BlendedVersions.blendedVersion,
     name := appName,
     scalaVersion := BlendedVersions.scalaVersion,
     moduleName := appName,
 
+    // avoid picking up pom.scala as source file
     sourcesInBase := false,
 
     (unmanagedSourceDirectories in Compile) := Seq(
