@@ -159,11 +159,11 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = springJms)
   ),
   "blended-samples" -> Seq(
-      FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
-      FeatureBundle(dependency = blendedActivemqClient, start = true),
-      FeatureBundle(dependency = blendedSamplesSprayHelloworld, start = true),
-      FeatureBundle(dependency = blendedSamplesCamel, start = true),
-      FeatureBundle(dependency = blendedSamplesJms, start = true)
+    FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
+    FeatureBundle(dependency = blendedActivemqClient, start = true),
+    FeatureBundle(dependency = blendedSamplesSprayHelloworld, start = true),
+    FeatureBundle(dependency = blendedSamplesCamel, start = true),
+    FeatureBundle(dependency = blendedSamplesJms, start = true)
   )
 )
 
