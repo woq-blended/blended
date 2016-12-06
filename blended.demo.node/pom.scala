@@ -7,8 +7,8 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-common.scala
 
 BlendedContainer(
-  gav = blendedDemoLauncher,
-  description = "A sample container for the blended launcher",
+  gav = blendedDemoNode,
+  description = "A sample container with some routes and Mgmt client functions,",
   features = Seq(
     Feature("blended-base"),
     Feature("blended-commons"),
