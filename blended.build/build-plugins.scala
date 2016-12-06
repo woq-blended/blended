@@ -232,6 +232,7 @@ val dockerMavenPlugin = Plugin(
     email = "andreas@wayofquality.de",
     password = "foo",
     prefix = "blended",
-    host = "tcp://${docker.host}:${docker.port}"
+    host = "tcp://${docker.host}:${docker.port}",
+    cleanContainerOnly = true
   )
 )
