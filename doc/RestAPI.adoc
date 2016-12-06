@@ -2,7 +2,7 @@
 
 == mgmt: Management API via `blended.mgmt.rest`
 
-GET `/mgmt/container`::
+GET `mgmt/container`::
 Description: List all known remote container states. +
 Response: `Seq[RemoteContainerState]`
 
