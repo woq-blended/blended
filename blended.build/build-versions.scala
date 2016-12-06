@@ -7,7 +7,7 @@ object BlendedVersions {
 
   val sbtVersion = "0.13.11"
   val scalaVersion = "2.11.8"
-  val scalaJsVersion = "0.6.12"
+  val scalaJsVersion = "0.6.13"
 
   val activeMqVersion = "5.13.3"
   val akkaVersion = "2.3.10"
@@ -24,6 +24,6 @@ object BlendedVersions {
   val slf4jVersion = "1.7.12"
   val sprayVersion = "1.3.2"
 
-  val upickle = "0.4.2"
+  val upickle = "0.4.3"
 
 }
