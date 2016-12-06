@@ -64,3 +64,29 @@ In order to use the imported certificates with maven, you have to use the create
 On OS X the docker daemon does not run directly on the operating system, but within a small virtual box container. As a result, the docker daemon host is not `localhost` on OS X, but the IP address of the virtual box container. It is a good idea to use the virtual box configuration tools to make that IP address static, so that it does not change over time.
 ****
 
+== Using the demo containers manually
+
+Currently blended contains two demo containers: One container is acting as a management server and the other container is a sample container with some integration routes and REST services. Within blended all _node_-container try to connect to the management server in order to report their status and also aquire configuration or bundle updates.
+
+The demo containers and their corresponding docker images are configured so that they can connect to each other.
+
+Once both containers are started after a few seconds the node container will have reported itself to the management node.
+
+=== Starting the management container
+
+To start the management container we simply start the docker image with a given name. The given name makes it easier to link the node container to the management container later on.
+
+....
+docker run -itP --name mgmt atooni/blended_mgmt
+....
+
+
+=== Starting and connecting the node container
+
+When we start the node container we have to link it to the management container. The link comes in 2 parts. The first part is the _docker name_. In our case the name is _mgmt_. In case you have chosen not to select the name yourself, ou have to query docker to find out what the name is.
+
+The second part is the name the node container can use as a DNS name to contact the management server. It is important, that this second part is _mgmt_ or the node will not find it's management connection.
+
+....
+docker run -itP --name node --link mgmt:mgmt atooni/blended_node
+....

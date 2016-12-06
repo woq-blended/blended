@@ -96,7 +96,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedUpdaterRemote, start = true),
     FeatureBundle(dependency = blendedContainerRegistry),
     FeatureBundle(dependency = blendedPersistence),
-    FeatureBundle(dependency = blendedPersistenceOrient),
+    FeatureBundle(dependency = blendedPersistenceOrient, start = true),
     FeatureBundle(dependency = orientDbCore),
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
