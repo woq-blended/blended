@@ -22,10 +22,19 @@ object Build extends sbt.Build {
     // avoid picking up pom.scala as source file
     sourcesInBase := false,
 
+    libraryDependencies ++= Dependencies.clientDeps.value,
+
     (unmanagedSourceDirectories in Compile) := Seq(
-      baseDirectory.value / "src" / "shared" / "scala",
-      baseDirectory.value / "src" / "js" / "scala"
+      baseDirectory.value / "src" / "shared" / "scala"
     )
   )
+
+  object Dependencies {
+
+    lazy val clientDeps = Def.setting(Seq(
+      "com.lihaoyi" %%% "upickle" % BlendedVersions.upickle
+    ))
+
+  }
 
 }

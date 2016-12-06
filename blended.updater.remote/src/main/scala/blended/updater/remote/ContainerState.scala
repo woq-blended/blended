@@ -4,12 +4,10 @@ import java.util.Date
 
 import blended.updater.config.{Profile, UpdateAction}
 
-import scala.collection.immutable
-
 case class ContainerState(
   containerId: String,
-  outstandingActions: immutable.Seq[UpdateAction] = immutable.Seq(),
-  profiles: immutable.Seq[Profile] = immutable.Seq(),
+  outstandingActions: List[UpdateAction] = List.empty,
+  profiles: List[Profile] = List.empty,
   syncTimeStamp: Option[Long] = None) {
 
   override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},outstandingActions=${outstandingActions}" +

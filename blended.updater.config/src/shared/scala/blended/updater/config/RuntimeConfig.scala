@@ -3,22 +3,20 @@ package blended.updater.config
 import java.io.File
 import java.net.URL
 
-import scala.collection.immutable
-import scala.collection.immutable.Map
 import scala.util.Try
 
 case class RuntimeConfig(
   name: String,
   version: String,
-  bundles: immutable.Seq[BundleConfig] = immutable.Seq(),
+  bundles: List[BundleConfig] = List.empty,
   startLevel: Int,
   defaultStartLevel: Int,
-  properties: Map[String, String] = Map(),
-  frameworkProperties: Map[String, String] = Map(),
-  systemProperties: Map[String, String] = Map(),
-  features: immutable.Seq[FeatureRef] = immutable.Seq(),
-  resources: immutable.Seq[Artifact] = immutable.Seq(),
-  resolvedFeatures: immutable.Seq[FeatureConfig] = immutable.Seq()) {
+  properties: Map[String, String] = Map.empty,
+  frameworkProperties: Map[String, String] = Map.empty,
+  systemProperties: Map[String, String] = Map.empty,
+  features: List[FeatureRef] = List.empty,
+  resources: List[Artifact] = List.empty,
+  resolvedFeatures: List[FeatureConfig] = List.empty) {
 
   override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},bundles=${bundles}" +
     s",startLevel=${startLevel},defaultStartLevel=${defaultStartLevel},properties=${properties},frameworkProperties=${frameworkProperties}" +
@@ -40,13 +38,13 @@ case class RuntimeConfig(
     *
     * @see [FeatureResolver] for a way to resolve missing features.
     */
-  def resolve(features: immutable.Seq[FeatureConfig] = immutable.Seq()): Try[ResolvedRuntimeConfig] = Try {
-    ResolvedRuntimeConfig(this, features.to[immutable.Seq])
+  def resolve(features: List[FeatureConfig] = List.empty): Try[ResolvedRuntimeConfig] = Try {
+    ResolvedRuntimeConfig(this, features)
   }
 }
 
 object RuntimeConfig
-  extends ((String, String, immutable.Seq[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], immutable.Seq[FeatureRef], immutable.Seq[Artifact], immutable.Seq[FeatureConfig]) => RuntimeConfig) {
+  extends ((String, String, List[BundleConfig], Int, Int, Map[String, String], Map[String, String], Map[String, String], List[FeatureRef], List[Artifact], List[FeatureConfig]) => RuntimeConfig) {
 
   val MvnPrefix = "mvn:"
 

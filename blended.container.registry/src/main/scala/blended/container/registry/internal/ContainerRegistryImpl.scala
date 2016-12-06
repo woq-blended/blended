@@ -1,10 +1,7 @@
 package blended.container.registry.internal
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, Props}
 import blended.akka.{OSGIActor, OSGIActorConfig}
-import blended.mgmt.base.json._
-import blended.persistence.protocol._
-import akka.actor.Props
 import blended.updater.config.{ContainerRegistryResponseOK, UpdateContainerInfo}
 
 object ContainerRegistryImpl {

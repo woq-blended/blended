@@ -25,10 +25,10 @@ class RemoteCommands(updater: RemoteUpdater) {
         |  outstanding actions: ${
       state.outstandingActions.map {
         // TODO: overlays
-        case AddRuntimeConfig(rc, _) => s"add runtime config ${rc.name}-${rc.version}"
-        case AddOverlayConfig(oc, _) => s"add overlay config ${oc.name}-${oc.version}"
-        case StageProfile(n, v, o, _) => s"stage ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
-        case ActivateProfile(n, v, o, _) => s"activate ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
+        case AddRuntimeConfig(rc) => s"add runtime config ${rc.name}-${rc.version}"
+        case AddOverlayConfig(oc) => s"add overlay config ${oc.name}-${oc.version}"
+        case StageProfile(n, v, o) => s"stage ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
+        case ActivateProfile(n, v, o) => s"activate ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
       }.mkString(", ")
     }
         |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
@@ -74,14 +74,14 @@ class RemoteCommands(updater: RemoteUpdater) {
       case Some(rc) =>
         // FIXME: support for overlay
         updater.addAction(containerId, AddRuntimeConfig(rc))
-        updater.addAction(containerId, StageProfile(profileName, profileVersion, Set()))
+        updater.addAction(containerId, StageProfile(profileName, profileVersion, List.empty))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${profileName}-${profileVersion}")
     }
   }
 
   def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
     // FIXME: support for overlays
-    updater.addAction(containerId, ActivateProfile(profileName, profileVersion, Set()))
+    updater.addAction(containerId, ActivateProfile(profileName, profileVersion, List.empty))
     println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 

@@ -1,32 +1,16 @@
 package blended.updater
 
 import java.io.File
-import scala.collection.immutable
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.FreeSpecLike
-import akka.actor.ActorSystem
-import akka.actor.actorRef2Scala
-import akka.testkit.ImplicitSender
-import akka.testkit.TestKit
+
+import akka.actor.{ActorSystem, actorRef2Scala}
+import akka.testkit.{ImplicitSender, TestKit}
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.DeleteNever
-import blended.updater.Updater.ActivateProfile
-import blended.updater.Updater.AddRuntimeConfig
-import blended.updater.Updater.OperationFailed
-import blended.updater.Updater.OperationSucceeded
-import blended.updater.Updater.StageProfile
-import blended.updater.config.BundleConfig
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.config.RuntimeConfig
-import blended.updater.Updater.GetProfiles
-import blended.updater.config.LocalOverlays
-import blended.updater.config.GeneratedConfig
+import blended.updater.config._
 import com.typesafe.config.ConfigFactory
+import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
+
 import scala.collection.JavaConverters._
-import blended.updater.Updater.AddOverlayConfig
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayRef
 
 class UpdaterTest
     extends TestKit(ActorSystem("updater-test"))
@@ -38,7 +22,7 @@ class UpdaterTest
   implicit val deletePolicy = DeleteNever
 
   val dummyProfileActivator = new ProfileActivator {
-    def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = true
+    def apply(name: String, version: String, overlays: List[OverlayRef]): Boolean = true
   }
 
   override def afterAll {
@@ -60,7 +44,7 @@ class UpdaterTest
 
           val config = ResolvedRuntimeConfig(RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
-            bundles = immutable.Seq(BundleConfig(
+            bundles = List(BundleConfig(
               url = bundle1.toURI().toString(),
               sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
               start = true,
@@ -72,9 +56,9 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config.runtimeConfig)
+            updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
             expectMsgPF() {
-              case OperationSucceeded(`addId`) => true
+              case Updater.OperationSucceeded(`addId`) => true
             }
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
@@ -84,7 +68,7 @@ class UpdaterTest
 
           {
             val id = nextId()
-            updater ! GetProfiles(id)
+            updater ! Updater.GetProfiles(id)
             expectMsgPF() {
               case Updater.Result(`id`, profiles: Set[_]) if profiles.isEmpty => true
             }
@@ -106,7 +90,7 @@ class UpdaterTest
 
           {
             val id = nextId()
-            updater ! GetProfiles(id)
+            updater ! Updater.GetProfiles(id)
             expectMsgPF() {
               case Updater.Result(`id`, profiles: Set[_]) if profiles.isEmpty => true
             }
@@ -114,7 +98,7 @@ class UpdaterTest
 
           val config = ResolvedRuntimeConfig(RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
-            bundles = immutable.Seq(BundleConfig(
+            bundles = List(BundleConfig(
               url = bundle1.toURI().toString(),
               sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
               start = true,
@@ -126,9 +110,9 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config.runtimeConfig)
+            updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
             expectMsgPF() {
-              case OperationSucceeded(`addId`) => true
+              case Updater.OperationSucceeded(`addId`) => true
             }
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
@@ -147,9 +131,9 @@ class UpdaterTest
           {
             val config2 = config.runtimeConfig.copy(startLevel = 20)
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config2)
+            updater ! Updater.AddRuntimeConfig(addId, config2)
             expectMsgPF() {
-              case OperationFailed(`addId`, _) => true
+              case Updater.OperationFailed(`addId`, _) => true
             }
           }
 
@@ -173,7 +157,7 @@ class UpdaterTest
 
           val config = RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
-            bundles = immutable.Seq(BundleConfig(
+            bundles = List(BundleConfig(
               url = bundle1.toURI().toString(),
               sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
               start = true,
@@ -186,9 +170,9 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config)
+            updater ! Updater.AddRuntimeConfig(addId, config)
             expectMsgPF() {
-              case OperationSucceeded(`addId`) => true
+              case Updater.OperationSucceeded(`addId`) => true
             }
           }
           assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
@@ -198,9 +182,9 @@ class UpdaterTest
 
           {
             val stageId = nextId()
-            updater ! StageProfile(stageId, config.name, config.version, overlays = Set())
-            expectMsgPF(hint = s"Waiting for: ${OperationSucceeded(stageId)}") {
-              case OperationSucceeded(`stageId`) => true
+            updater ! Updater.StageProfile(stageId, config.name, config.version, overlays = List.empty)
+            expectMsgPF(hint = s"Waiting for: ${Updater.OperationSucceeded(stageId)}") {
+              case Updater.OperationSucceeded(`stageId`) => true
             }
           }
 
@@ -232,7 +216,7 @@ class UpdaterTest
 
           val config = RuntimeConfig(
             name = "test-with-1-framework-bundle", version = "1.0.0",
-            bundles = immutable.Seq(BundleConfig(
+            bundles = List(BundleConfig(
               url = bundle1.toURI().toString(),
               sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
               start = true,
@@ -245,9 +229,9 @@ class UpdaterTest
 
           {
             val addId = nextId()
-            updater ! AddRuntimeConfig(addId, config)
+            updater ! Updater.AddRuntimeConfig(addId, config)
             expectMsgPF() {
-              case OperationSucceeded(`addId`) => true
+              case Updater.OperationSucceeded(`addId`) => true
             }
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle").list.toSet === Set("1.0.0"))
@@ -258,15 +242,17 @@ class UpdaterTest
           val overlay = OverlayConfig(
             name = "o",
             version = "1",
-            generatedConfigs = List(GeneratedConfig(configFile = "application_overlay.conf",
-              config = ConfigFactory.parseMap(Map("overlayKey" -> "overlayValue").asJava))
+            generatedConfigs = List(GeneratedConfigCompanion.create(
+              "application_overlay.conf",
+              ConfigFactory.parseMap(Map("overlayKey" -> "overlayValue").asJava)
             ))
+          )
 
           {
             val addOId = nextId()
-            updater ! AddOverlayConfig(addOId, overlay)
+            updater ! Updater.AddOverlayConfig(addOId, overlay)
             expectMsgPF() {
-              case OperationSucceeded(`addOId`) => true
+              case Updater.OperationSucceeded(`addOId`) => true
             }
             assert(baseDir.list().toSet === Set("overlays", "install"))
             assert(new File(baseDir, "overlays").list().toSet === Set("o-1.conf"))
@@ -274,11 +260,11 @@ class UpdaterTest
 
           {
             val stageId = nextId()
-            updater ! StageProfile(stageId, config.name, config.version,
-              overlays = Set(OverlayRef(name = "o", version = "1")))
+            updater ! Updater.StageProfile(stageId, config.name, config.version,
+              overlays = List(OverlayRef(name = "o", version = "1")))
 
-            expectMsgPF(hint = s"Waiting for: ${OperationSucceeded(stageId)}") {
-              case OperationSucceeded(`stageId`) => true
+            expectMsgPF(hint = s"Waiting for: ${Updater.OperationSucceeded(stageId)}") {
+              case Updater.OperationSucceeded(`stageId`) => true
             }
 
             assert(installBaseDir.list().toSet === Set("test-with-1-framework-bundle"))
@@ -293,7 +279,7 @@ class UpdaterTest
 
           {
             val checkId = nextId()
-            updater ! GetProfiles(checkId)
+            updater ! Updater.GetProfiles(checkId)
             expectMsgPF() {
               case Updater.Result(`checkId`, profiles: Set[_]) if profiles.size == 1 => true
             }
@@ -328,7 +314,7 @@ class UpdaterTest
             Updater.props(
               installBaseDir,
               new ProfileActivator {
-                def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = {
+                def apply(name: String, version: String, overlays: List[OverlayRef]): Boolean = {
                   curNameVersion = Some(name -> version)
                   true
                 }
@@ -341,7 +327,7 @@ class UpdaterTest
           {
             val config = ResolvedRuntimeConfig(RuntimeConfig(
               name = "test-with-3-bundles", version = "1.0.0",
-              bundles = immutable.Seq(
+              bundles = List(
                 BundleConfig(
                   url = bundle1.toURI().toString(),
                   sha1Sum = "1316d3ef708f9059883a837ca833a22a6a5d1f6a",
@@ -369,18 +355,18 @@ class UpdaterTest
 
             {
               val addId = nextId()
-              updater ! AddRuntimeConfig(addId, config.runtimeConfig)
+              updater ! Updater.AddRuntimeConfig(addId, config.runtimeConfig)
 
               expectMsgPF() {
-                case OperationSucceeded(`addId`) => true
+                case Updater.OperationSucceeded(`addId`) => true
               }
             }
 
             {
               val stageId = nextId()
-              updater ! StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set())
-              expectMsgPF(hint = s"waiting for: ${OperationSucceeded(stageId)}") {
-                case OperationSucceeded(`stageId`) => true
+              updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = List.empty )
+              expectMsgPF(hint = s"waiting for: ${Updater.OperationSucceeded(stageId)}") {
+                case Updater.OperationSucceeded(`stageId`) => true
               }
 
               assert(installBaseDir.list().toSet === Set("test-with-3-bundles"))
@@ -393,7 +379,7 @@ class UpdaterTest
 
             {
               val queryId = nextId()
-              updater ! GetProfiles(queryId)
+              updater ! Updater.GetProfiles(queryId)
               expectMsgPF(hint = s"Query id: ${queryId}") {
                 case Updater.Result(`queryId`, profiles: Set[_]) =>
                   profiles.toList match {
@@ -408,9 +394,9 @@ class UpdaterTest
               assert(restarted === false)
               assert(curNameVersion === None)
               val reqId = nextId()
-              updater ! ActivateProfile(reqId, "test-with-3-bundles", "1.0.0", Set())
+              updater ! Updater.ActivateProfile(reqId, "test-with-3-bundles", "1.0.0", List.empty)
               expectMsgPF() {
-                case OperationSucceeded(`reqId`) => true
+                case Updater.OperationSucceeded(`reqId`) => true
               }
               // restart happens after the message, so we wait
               assert(curNameVersion === Some("test-with-3-bundles" -> "1.0.0"))

@@ -27,7 +27,7 @@ final object OverlayConfigCompanion {
     // seen configurations per target file
     var fileToConfig: Map[String, Map[String, Object]] = Map()
     val issues = generatedConfigs.flatMap { gc =>
-      val newConfig = gc.config.root().unwrapped().asScala.toMap
+      val newConfig = GeneratedConfigCompanion.config(gc).root().unwrapped().asScala.toMap
       fileToConfig.get(gc.configFile) match {
         case None =>
           // no collision
@@ -63,7 +63,7 @@ final object OverlayConfigCompanion {
           val genConf = gen.toConfig()
           val fileName = genConf.getString("file")
           val genConfig = genConf.getObject("config").toConfig()
-          GeneratedConfig(configFile = fileName, config = genConfig)
+          GeneratedConfigCompanion.create(fileName, genConfig)
         }.toList
       } else Nil,
       properties = configAsMap("properties", Some(() => Map()))
@@ -77,7 +77,7 @@ final object OverlayConfigCompanion {
       "configGenerator" -> overlayConfig.generatedConfigs.map { genConfig =>
         Map(
           "file" -> genConfig.configFile,
-          "config" -> genConfig.config.root().unwrapped()
+          "config" -> GeneratedConfigCompanion.config(genConfig).root().unwrapped()
         ).asJava
       }.asJava,
       "properties" -> overlayConfig.properties.asJava

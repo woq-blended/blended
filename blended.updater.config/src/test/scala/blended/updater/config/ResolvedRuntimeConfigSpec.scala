@@ -3,7 +3,6 @@ package blended.updater.config
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{FreeSpecLike, Matchers}
 
-import scala.collection.immutable
 import scala.util.Success
 
 class ResolvedRuntimeConfigSpec
@@ -42,7 +41,7 @@ class ResolvedRuntimeConfigSpec
       |bundles = [{url = "mvn:feature3:bundle1:1", startLevel = 0}]
       |""".stripMargin
 
-    val features = immutable.Seq(feature1, feature2, feature3).map(f => {
+    val features = List(feature1, feature2, feature3).map(f => {
       val fc = FeatureConfigCompanion.read(ConfigFactory.parseString(f))
       fc shouldBe a[Success[_]]
       fc.get

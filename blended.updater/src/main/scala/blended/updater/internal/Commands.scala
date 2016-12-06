@@ -38,7 +38,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
-    val activeProfile = env.map(env => Updater.ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(Set())))
+    val activeProfile = env.map(env => Updater.ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(List.empty)))
     log.debug("acitive profile: {}", activeProfile)
 
     val profiles = Await.result(
@@ -114,11 +114,11 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
       }
   }
 
-  def parseOverlays(overlayNameVersion: Seq[String]): Set[OverlayRef] = {
+  def parseOverlays(overlayNameVersion: Seq[String]): List[OverlayRef] = {
     if (overlayNameVersion.size % 2 != 0) {
       sys.error(s"Missing version for overlay ${overlayNameVersion.last}")
     }
-    overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toSet
+    overlayNameVersion.sliding(2, 2).map(o => OverlayRef(o(0), o(1))).toList
   }
 
   @varargs

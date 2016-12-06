@@ -14,6 +14,7 @@ BlendedModel(
     scalaLib % "provided",
     typesafeConfig,
     slf4j,
+    upickle,
     scalaTest % "test",
     blendedTestSupport % "test"
   ),

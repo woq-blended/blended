@@ -1,13 +1,12 @@
 package blended.updater.remote
 
-import scala.collection.immutable
 import org.scalatest.FreeSpec
 import blended.updater.config._
 
 class RemoteUpdaterTest extends FreeSpec {
 
-  val todoOverlays = Set[OverlayConfig]()
-  val todoOverlayRefs = Set[OverlayRef]()
+  val todoOverlays = List.empty[OverlayConfig]
+  val todoOverlayRefs = List.empty[OverlayRef]
 
   "initial empty state" in {
     val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
@@ -16,7 +15,7 @@ class RemoteUpdaterTest extends FreeSpec {
 
   "adding a runtime config action" in {
     val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
     ru.addAction("1", action1)
     assert(ru.getContainerActions("1") === Seq(action1))
   }
@@ -30,10 +29,10 @@ class RemoteUpdaterTest extends FreeSpec {
 
   "adding a second add runtime config  action" in {
     val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
     ru.addAction("1", action1)
     assert(ru.getContainerActions("1") === Seq(action1))
-    val action2 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = immutable.Seq(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+    val action2 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
     ru.addAction("1", action2)
     assert(ru.getContainerActions("1") === Seq(action1, action2))
   }

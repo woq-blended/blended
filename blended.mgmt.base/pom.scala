@@ -15,6 +15,7 @@ BlendedModel(
     blendedDomino,
     blendedUpdaterConfig,
     sprayJson,
+    upickle,
     scalaTest % "test"
   ), 
   plugins = Seq(

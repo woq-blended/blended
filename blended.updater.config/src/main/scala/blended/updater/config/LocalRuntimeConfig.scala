@@ -8,7 +8,6 @@ import scala.util.Try
 import scala.io.Source
 import java.util.Properties
 import java.io.FileReader
-import scala.collection.immutable._
 
 case class LocalRuntimeConfig(
     resolvedRuntimeConfig: ResolvedRuntimeConfig,

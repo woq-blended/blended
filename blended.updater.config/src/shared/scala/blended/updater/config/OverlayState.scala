@@ -3,6 +3,7 @@ package blended.updater.config
 sealed trait OverlayState {
   def state: String
 }
+
 object OverlayState {
   final case object Active extends OverlayState {
     override val state: String = "active"
