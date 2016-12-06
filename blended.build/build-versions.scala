@@ -24,4 +24,6 @@ object BlendedVersions {
   val slf4jVersion = "1.7.12"
   val sprayVersion = "1.3.2"
 
+  val upickle = "0.4.2"
+
 }

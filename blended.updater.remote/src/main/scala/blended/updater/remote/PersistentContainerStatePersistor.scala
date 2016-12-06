@@ -5,7 +5,6 @@ import blended.persistence.PersistenceService
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-import scala.collection.immutable
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 
@@ -19,17 +18,14 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
       "outstandingActions" -> containerState.outstandingActions.map {
         case a: AddRuntimeConfig =>
           Map(
-            "kind" -> a.kind,
             "runtimeConfig" -> RuntimeConfigCompanion.toConfig(a.runtimeConfig).root().unwrapped()
           ).asJava
         case a: AddOverlayConfig =>
           Map(
-            "kind" -> a.kind,
             "overlay" -> OverlayConfigCompanion.toConfig(a.overlay).root().unwrapped()
           ).asJava
         case s: StageProfile =>
           Map(
-            "kind" -> s.kind,
             "profileName" -> s.profileName,
             "profileVersion" -> s.profileVersion,
             "overlays" -> s.overlays.map { o =>
@@ -39,7 +35,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
             }.asJava
           ).asJava
         case a: ActivateProfile =>
-          Map("kind" -> a.kind,
+          Map(
             "profileName" -> a.profileName,
             "profileVersion" -> a.profileVersion,
             "overlays" -> a.overlays.map { o =>
@@ -85,48 +81,44 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
             name = oData.get("name").asInstanceOf[String],
             version = oData.get("version").asInstanceOf[String]
           )
-        }.toSet
+        }.toList
 
         aData.get("kind").asInstanceOf[String] match {
           case kind @ UpdateAction.KindAddRuntimeConfig =>
             AddRuntimeConfig(
               runtimeConfig = RuntimeConfigCompanion.read(
                 ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
-              ).get,
-              kind = kind
+              ).get
             )
           case kind @ UpdateAction.KindAddOverlayConfig =>
             AddOverlayConfig(
               overlay = OverlayConfigCompanion.read(
                 ConfigFactory.parseMap(a.asInstanceOf[java.util.Map[String, _]])
-              ).get,
-              kind = kind
+              ).get
             )
           case kind @ UpdateAction.KindStageProfile =>
             StageProfile(
               profileName = pName,
               profileVersion = pVersion,
-              overlays = pOverlays,
-              kind = kind
+              overlays = pOverlays
             )
           case kind @ UpdateAction.KindActivateProfile =>
             ActivateProfile(
               profileName = pName,
               profileVersion = pVersion,
-              overlays = pOverlays,
-              kind = kind
+              overlays = pOverlays
             )
           case k => error("Unsupported kind: " + k)
         }
-      }.to[immutable.Seq],
+      }.toList,
       profiles = data.get("profiles").asInstanceOf[java.util.Collection[_]].asScala.map { p =>
         ???
-      }.to[immutable.Seq],
+      }.toList,
       syncTimeStamp = data.get("syncTimeStamp").map(_.asInstanceOf[Long])
     )
   }
 
-  override def findAllContainerStates(): immutable.Seq[ContainerState] = {
+  override def findAllContainerStates(): List[ContainerState] = {
     val state = persistenceService.findAll(pClassName)
     state.flatMap(s => toContainerState(s).toOption).toList
   }

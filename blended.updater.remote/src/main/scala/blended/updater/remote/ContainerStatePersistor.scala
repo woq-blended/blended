@@ -1,10 +1,8 @@
 package blended.updater.remote
 
-import scala.collection.immutable
-
 trait ContainerStatePersistor {
 
-  def findAllContainerStates(): immutable.Seq[ContainerState]
+  def findAllContainerStates(): List[ContainerState]
 
   def findContainerState(containerId: String): Option[ContainerState]
 

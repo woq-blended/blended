@@ -21,8 +21,6 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.immutable
-import scala.collection.immutable.Map
 import scala.util.Success
 import scala.util.Try
 import scala.util.control.NonFatal
@@ -56,7 +54,7 @@ object RuntimeConfigCompanion {
       bundles =
         if (config.hasPath("bundles"))
           config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList
-        else immutable.Seq(),
+        else List.empty,
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
       properties = properties,
@@ -67,15 +65,15 @@ object RuntimeConfigCompanion {
           config.getObjectList("features").asScala.map { f =>
           FeatureRefCompanion.fromConfig(f.toConfig()).get
         }.toList
-        else immutable.Seq(),
+        else List.empty,
       resources =
         if (config.hasPath("resources"))
           config.getObjectList("resources").asScala.map(r => ArtifactCompanion.read(r.toConfig()).get).toList
-        else immutable.Seq(),
+        else List.empty,
       resolvedFeatures =
         if (config.hasPath("resolvedFeatures"))
           config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfigCompanion.read(r.toConfig()).get).toList
-        else immutable.Seq()
+        else List.empty
     )
   }
 
@@ -194,7 +192,7 @@ object RuntimeConfigCompanion {
 
   def getPropertyFileProvider(
     curRuntime: RuntimeConfig,
-    prevRuntime: Option[LocalRuntimeConfig]): Try[immutable.Seq[PropertyProvider]] = Try {
+    prevRuntime: Option[LocalRuntimeConfig]): Try[List[PropertyProvider]] = Try {
     curRuntime.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
       case "env" => Some(new EnvPropertyProvider())
       case "sysprop" => Some(new SystemPropertyProvider())

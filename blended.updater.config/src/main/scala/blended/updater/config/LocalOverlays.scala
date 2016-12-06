@@ -23,9 +23,9 @@ import scala.util.Try
  * @param overlays   Alls involved overlay config.
  * @param profileDir The profile directory.
  */
-final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
+final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) {
 
-  def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
+  def overlayRefs: List[OverlayRef] = overlays.map(_.overlayRef)
 
   /**
    * Validate this set of overlays.
@@ -34,7 +34,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    * @return A collection of validation errors, if any.
    *         If this is empty, the validation was successful.
    */
-  def validate(): Seq[String] = {
+  def validate(): List[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '$name' detected"
     }.toList
@@ -144,7 +144,7 @@ final object LocalOverlays {
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
         OverlayConfigCompanion.read(c.toConfig()).get
-      }.toSet
+      }.toList
     )
   }
 

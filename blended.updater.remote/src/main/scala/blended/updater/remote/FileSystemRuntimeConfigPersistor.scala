@@ -6,7 +6,6 @@ import blended.updater.config.{ConfigWriter, RuntimeConfig, RuntimeConfigCompani
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable
 import scala.util.Try
 
 class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPersistor {
@@ -56,7 +55,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
     runtimeConfigs += configFile -> runtimeConfig
   }
 
-  override def findRuntimeConfigs(): immutable.Seq[RuntimeConfig] = {
+  override def findRuntimeConfigs(): List[RuntimeConfig] = {
     if (!initialized) initialize()
     runtimeConfigs.values.toList
   }

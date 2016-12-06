@@ -4,19 +4,19 @@ import javax.servlet.Servlet
 
 import akka.actor.{Actor, ActorRefFactory, Props}
 import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
-import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import blended.spray.{SprayOSGIBridge, SprayOSGIServlet, SprayUPickleSupport}
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 import spray.http.Uri.Path
-import spray.httpx.SprayJsonSupport
 import spray.routing._
 import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
 
 import scala.collection.immutable
 
+import upickle.default._
 
 case class ManagementCollectorConfig(
   servletSettings: ConnectorSettings,
@@ -45,7 +45,7 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
   extends OSGIActor(cfg)
     with CollectorService
     with ProductionEventSource
-    with SprayJsonSupport {
+    with SprayUPickleSupport {
 
   type ContainerId = String
 

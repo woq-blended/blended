@@ -1,7 +1,5 @@
 package blended.updater.config
 
-import scala.collection.immutable.Seq
-
 /**
   * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
   *
@@ -14,7 +12,7 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
   {
     // Check if all feature reference have a according resolved feature
-    def check(features: Seq[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
+    def check(features: List[FeatureRef], depChain: List[String]): Unit = features.foreach { f =>
       val depName = s"${f.name}-${f.version}"
       val newDepChain = depName :: depChain
       require(depChain.find(_ == depName).isEmpty, s"No cycles in feature dependencies allowed, but detected: ${newDepChain.mkString(" required by ")}")
@@ -48,8 +46,8 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   /**
     * All referenced features.
     */
-  def allReferencedFeatures: Seq[FeatureConfig] = {
-    def find(features: Seq[FeatureRef]): Seq[FeatureConfig] = features.flatMap { f =>
+  def allReferencedFeatures: List[FeatureConfig] = {
+    def find(features: List[FeatureRef]): List[FeatureConfig] = features.flatMap { f =>
       val feature = lookupFeature(f).get
       feature +: find(feature.features)
     }
@@ -59,7 +57,7 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   /**
     * All bundles of this runtime config including those trasitively defined in the features.
     */
-  def allBundles: Seq[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
+  def allBundles: List[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
 
   val framework: BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
@@ -73,7 +71,7 @@ object ResolvedRuntimeConfig extends (RuntimeConfig => ResolvedRuntimeConfig) {
   /**
     * Construct with additional resolved features.
     */
-  def apply(runtimeConfig: RuntimeConfig, features: Seq[FeatureConfig]): ResolvedRuntimeConfig = {
+  def apply(runtimeConfig: RuntimeConfig, features: List[FeatureConfig]): ResolvedRuntimeConfig = {
 
     val allFeatures = (runtimeConfig.resolvedFeatures ++ features).distinct
 

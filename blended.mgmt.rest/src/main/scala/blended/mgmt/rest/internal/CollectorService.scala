@@ -1,18 +1,19 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
-import blended.mgmt.base.json.JsonProtocol._
+import blended.spray.SprayUPickleSupport
 import blended.updater.config._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes
-import spray.httpx.SprayJsonSupport
 import spray.routing.{HttpService, Route}
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 
+import upickle.default._
+
 trait CollectorService extends HttpService {
-  this: SprayJsonSupport =>
+  this: SprayUPickleSupport =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 

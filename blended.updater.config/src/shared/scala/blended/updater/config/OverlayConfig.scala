@@ -1,8 +1,5 @@
 package blended.updater.config
 
-import scala.collection.immutable
-import scala.collection.immutable.Map
-
 /**
   * Definition of an overlay.
   *
@@ -13,8 +10,8 @@ import scala.collection.immutable.Map
 final case class OverlayConfig(
   name: String,
   version: String,
-  generatedConfigs: immutable.Seq[GeneratedConfig] = immutable.Seq(),
-  properties: Map[String, String] = Map()
+  generatedConfigs: List[GeneratedConfig] = List.empty,
+  properties: Map[String, String] = Map.empty
 ) extends Ordered[OverlayConfig] {
 
   override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)

@@ -16,6 +16,7 @@ BlendedModel(
     blendedContainerRegistry,
     blendedUpdaterConfig,
     blendedSprayApi,
+    blendedSpray,
     orgOsgi,
     akkaOsgi,
     akkaTestkit % "test",

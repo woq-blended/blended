@@ -16,7 +16,8 @@ BlendedModel(
     blendedSprayApi,
     scalaLib,
     geronimoServlet30Spec,
-    orgOsgi
+    orgOsgi,
+    upickle
   ),
   plugins = Seq(
     mavenBundlePlugin,

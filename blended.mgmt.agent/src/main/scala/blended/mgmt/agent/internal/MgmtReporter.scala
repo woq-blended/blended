@@ -4,13 +4,12 @@ import akka.actor.{Cancellable, Props}
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import blended.akka.{OSGIActor, OSGIActorConfig}
-import blended.mgmt.base.json._
+import blended.spray.SprayUPickleSupport
 import blended.updater.config.{ContainerInfo, ContainerRegistryResponseOK, ServiceInfo}
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 import spray.client.pipelining._
 import spray.http.HttpRequest
-import spray.httpx.SprayJsonSupport
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -42,8 +41,9 @@ object MgmtReporter {
   def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
 }
 
-class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSupport {
+class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayUPickleSupport {
 
+  import upickle.default._
   import MgmtReporter._
 
   ////////////////////
@@ -118,5 +118,4 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayJsonSu
       serviceInfos += name -> serviceInfo
 
   }
-
 }
