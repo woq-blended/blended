@@ -18,8 +18,8 @@ blended.build \
 blended.camel.utils \
 blended.container.context \
 blended.container.registry \
-blended.demo.launcher \
-blended.demo.mgmt \
+blended.demo/blended.demo.node \
+blended.demo/blended.demo.mgmt \
 blended.docker \
 blended.docker/blended.docker.base \
 blended.docker/blended.docker.launcher.demo \
