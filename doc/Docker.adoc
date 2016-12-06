@@ -1,0 +1,66 @@
+= Docker notes
+
+In *blended* we use for integration testing. In our build process we declare some test containers and subsequently those are packaged as docker images in preparation for the integration tests.
+
+== Docker version
+
+We use https://www.docker.com/technologies/overview[docker] version 1.12.3.
+
+== Docker Maven support
+
+Within Maven we use a https://github.com/alexec/docker-maven-plugin[docker maven plugin].
+
+== Using Maven with docker
+
+Since version 1.12 docker does not allow non-secure connections to it's rest API. Usually with docker the required certificates are also installed on the machine and an environment variable `DOCKER_CERT_PATH` is set. This variable points to the directory which contains the certificates to connect to the docker daemon.
+
+To use the certifactes with Java we have to create a keystore containing dockker's root certificate or docker's root certificate to an existing keystore.
+
+....
+$ keytool -importcert -file $DOCKER_CERT_PATH/cert.pem -keystore /tmp/mystore
+Enter keystore password:
+Re-enter new password:
+Owner: O=andreas
+Issuer: O=andreas
+Serial number: 4a37f9e449ec328872e41b2b8352e4ea
+Valid from: Sun Oct 04 15:24:00 CEST 2015 until: Tue Sep 18 15:24:00 CEST 2018
+Certificate fingerprints:
+	 MD5:  31:8C:B8:DF:22:38:87:4A:34:44:1B:42:24:0F:DA:B9
+	 SHA1: 5B:C8:27:FC:15:0E:98:C9:0E:98:03:00:94:0D:ED:26:2E:F5:17:9C
+	 SHA256: 5B:0B:9D:58:53:BB:94:50:9C:51:A9:58:32:87:C5:47:68:EB:B3:34:66:B0:0E:CC:3D:F1:F1:80:A2:BE:84:54
+	 Signature algorithm name: SHA256withRSA
+	 Version: 3
+
+Extensions:
+
+#1: ObjectId: 2.5.29.19 Criticality=true
+BasicConstraints:[
+  CA:false
+  PathLen: undefined
+]
+
+#2: ObjectId: 2.5.29.37 Criticality=false
+ExtendedKeyUsages [
+  clientAuth
+]
+
+#3: ObjectId: 2.5.29.15 Criticality=true
+KeyUsage [
+  DigitalSignature
+]
+
+Trust this certificate? [no]:  yes
+Certificate was added to keystore
+....
+
+In order to use the imported certificates with maven, you have to use the created keystore as the keystore for ssl connections by including the following system properties in the maven build:
+
+....
+-Djavax.net.ssl.trustStore=/tmp/mystore -Djavax.net.ssl.trustStorePassword=!YOURPASSWORD!
+....
+
+.Note for OS X users
+****
+On OS X the docker daemon does not run directly on the operating system, but within a small virtual box container. As a result, the docker daemon host is not `localhost` on OS X, but the IP address of the virtual box container. It is a good idea to use the virtual box configuration tools to make that IP address static, so that it does not change over time.
+****
+
