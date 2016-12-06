@@ -1,6 +1,7 @@
 = Docker notes
 
-In *blended* we use for integration testing. In our build process we declare some test containers and subsequently those are packaged as docker images in preparation for the integration tests.
+
+In *blended* we use Docker for integration testing. In our build process we declare some test containers and subsequently those are packaged as docker images in preparation for the integration tests.
 
 == Docker version
 
@@ -76,17 +77,17 @@ Once both containers are started after a few seconds the node container will hav
 
 To start the management container we simply start the docker image with a given name. The given name makes it easier to link the node container to the management container later on.
 
-....
+----
 docker run -itP --name mgmt atooni/blended_mgmt
-....
+----
 
 
 === Starting and connecting the node container
 
-When we start the node container we have to link it to the management container. The link comes in 2 parts. The first part is the _docker name_. In our case the name is _mgmt_. In case you have chosen not to select the name yourself, ou have to query docker to find out what the name is.
+When we start the node container we have to link it to the management container. The link comes in 2 parts. The first part is the _docker name_. In our case the name is _mgmt_. In case you have chosen not to select the name yourself, you have to query docker to find out what the name is.
 
 The second part is the name the node container can use as a DNS name to contact the management server. It is important, that this second part is _mgmt_ or the node will not find it's management connection.
 
-....
+----
 docker run -itP --name node --link mgmt:mgmt atooni/blended_node
-....
+----
