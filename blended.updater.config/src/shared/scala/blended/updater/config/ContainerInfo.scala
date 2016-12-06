@@ -1,6 +1,5 @@
 package blended.updater.config
 
-import upickle.Js
 import upickle.default._
 
 case class ContainerInfo(
@@ -12,4 +11,8 @@ case class ContainerInfo(
 
   override def toString(): String = s"${getClass().getSimpleName()}(containerId=${containerId},properties=${properties},serviceInfos=${serviceInfos},profiles=${profiles})"
 
+}
+
+object ContainerInfo {
+  implicit val readWriter: ReadWriter[ContainerInfo] = macroRW
 }

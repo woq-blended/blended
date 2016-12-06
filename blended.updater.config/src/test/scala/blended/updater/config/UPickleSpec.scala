@@ -63,24 +63,21 @@ class UPickleSpec extends FreeSpec with Matchers {
 
   "A Container Info should be (de)serializable with uPickle" in {
 
-    pending
-//    import ContainerInfo._
-//
-//    val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-//    val profile = Profile("myProfile", "1.0", List.empty)
-//
-//    val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
-//
-//    val json = write(info)
-//    log.info(json)
-//
-//    val info2 = read[ContainerInfo](json)
-//
-//    info2.containerId should be (info2.containerId)
-//    info2.properties should be (Map("foo" -> "bar"))
-//
-//    info2.serviceInfos should be (List(svcInfo))
-//    info2.profiles should be (List(profile))
+    val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+    val profile = Profile("myProfile", "1.0", List.empty)
+
+    val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
+
+    val json = write(info)
+    log.info(json)
+
+    val info2 = read[ContainerInfo](json)
+
+    info2.containerId should be (info2.containerId)
+    info2.properties should be (Map("foo" -> "bar"))
+
+    info2.serviceInfos should be (List(svcInfo))
+    info2.profiles should be (List(profile))
   }
 
   "A List of Service Infos should be (de)serializable with uPickle" in {
@@ -88,6 +85,7 @@ class UPickleSpec extends FreeSpec with Matchers {
     val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
     val json = write(List(svcInfo))
+    log.info(json)
 
     val svcList = read[List[ServiceInfo]](json)
 

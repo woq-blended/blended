@@ -5,11 +5,9 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import blended.updater.config._
+import upickle.default._
 
 import scala.util.Random
-
-import blended.updater.config.JsonProtocol._
-import upickle.default._
 
 object MockObjects {
 
