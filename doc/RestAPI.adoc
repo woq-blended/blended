@@ -6,7 +6,6 @@ GET `/mgmt/container`::
 Description: List all known remote container states. +
 Response: `Seq[RemoteContainerState]`
 
-
 POST `mgmt/container`::
 Description: Add new or update container info. +
 Parameter: `ContainerInfo`
@@ -26,3 +25,9 @@ Response: `Seq[RuntimeConfig]`
 POST `mgmt/runtimeConfig`::
 Description: Registers a new runtime config. +
 Parameter: `RuntimeConfig`
+
+== mgmt.repo: Repository Access via `blended.mgmt.repo.rest`
+
+GET `artifacts/{repoId}/{groupId}/{artifactId}/{version}/{artifactId}-{version}[-{classifier}].{type}`::
+Description: Download a specific artifact with given from the repository with ID `repoId` and the given coordinates (`groupId`, `artifactId`, `version`, `type` and the optional `classifier`). +
+Response: Artifact as download
