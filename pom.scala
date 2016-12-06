@@ -75,8 +75,7 @@ BlendedModel(
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
         "blended.launcher.features",
-        "blended.demo.launcher",
-        "blended.demo.mgmt",
+        "blended.demo",
         "blended.mgmt.ui"
       )
     ),

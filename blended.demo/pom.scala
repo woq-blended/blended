@@ -7,16 +7,11 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedDockerReactor,
+  gav = blendedDemoReactor,
   packaging = "pom",
-  description = "A collection of docker definitions to demonstrate how docker can be used for blended containers.",
-  profiles = Seq(
-    Profile(
-      id = "docker",
-      modules = Seq(
-        "blended.docker.demo.mgmt",
-        "blended.docker.demo.node"
-      )
-    )
+  description = "A collection of container definitions to demonstrate the functionality of blended.",
+  modules = Seq(
+    "blended.demo.mgmt",
+    "blended.demo.node"
   )
 )
