@@ -1,0 +1,26 @@
+= Web Console development nodes
+
+== Using the Management Mock Server
+
+For convenience the sub project `blended.mgmt.mock` provides a management mock server that can be used as a backend for th UI development.
+
+In `blended.mgmt.mock` run
+
+----
+mvn clean install exec:java
+----
+
+
+== Starting the Web Console from Maven
+
+From `blended.mgmt.ui` run
+
+----
+mvn clean install jetty:run
+----
+
+The web console is then available at
+
+----
+http://localhost:8080/management/
+----

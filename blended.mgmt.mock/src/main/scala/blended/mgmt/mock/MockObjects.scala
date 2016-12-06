@@ -5,7 +5,6 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import blended.mgmt.base.json.JsonProtocol._
-import blended.mgmt.base._
 import blended.updater.config._
 import spray.json._
 
