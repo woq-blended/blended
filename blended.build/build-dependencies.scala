@@ -1,5 +1,16 @@
 implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
-val scalaJsBinVersion = ScalaVersion(BlendedVersions.scalaJsVersion).binaryVersion
+
+case class ScalaJsVersion(val version: String) {
+  val binaryVersion = version.split("\\.", 3).take(2).mkString(".")
+}
+
+implicit val implicitScalaJsVersion = ScalaJsVersion(BlendedVersions.scalaJsVersion)
+
+implicit class ScalaJsGroupId(groupId: String) {
+  def %%%(artifactId: String)(implicit scalaVersion: ScalaVersion, scalaJsVersion: ScalaJsVersion): GroupArtifactId = {
+    groupId %% (artifactId + "_sjs" + scalaJsVersion.binaryVersion)
+  }
+}
 
 // Dependencies
 val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
@@ -103,6 +114,7 @@ val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
 val paxSwissboxCore = "org.ops4j.pax.swissbox" % "pax-swissbox-core" % "1.7.0"
 val paxSwissboxOptJcl = "org.ops4j.pax.swissbox" % "pax-swissbox-optional-jcl" % "1.7.0"
+val prickle = "com.github.benhutchison" %% "prickle" % BlendedVersions.prickle
 
 val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 

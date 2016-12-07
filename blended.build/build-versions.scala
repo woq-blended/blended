@@ -25,5 +25,6 @@ object BlendedVersions {
   val sprayVersion = "1.3.2"
 
   val upickle = "0.4.3"
+  val prickle = "1.1.13"
 
 }

@@ -8,9 +8,6 @@ import org.scalajs.dom.ext.Ajax
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Success
 
-import blended.updater.config.JsonProtocol._
-import upickle.default._
-
 object CompManagementConsole {
 
   val url = "http://localhost:9999/empty"
