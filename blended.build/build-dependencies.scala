@@ -110,13 +110,14 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % "3.1.0"
-val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % "3.1.0"
-val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % "3.1.0"
-val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % "3.1.0"
-val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % "3.1.0"
-val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % "3.1.0"
-val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % "3.1.0"
+val paxwebVersion = "3.1.0"
+val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % paxwebVersion
+val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % paxwebVersion
+val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % paxwebVersion
+val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % paxwebVersion
+val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % paxwebVersion
+val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % paxwebVersion
+val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % paxwebVersion
 
 val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
 val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
@@ -147,14 +148,14 @@ val sprayServlet = "io.spray" %% "spray-servlet" % BlendedVersions.sprayVersion
 val sprayTestkit = "io.spray" %% "spray-testkit" % BlendedVersions.sprayVersion
 val sprayUtil = "io.spray" %% "spray-util" % BlendedVersions.sprayVersion
 
-val springBeans = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-beans" % "3.2.14.RELEASE_1"
-val springAop = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-aop" % "3.2.14.RELEASE_1"
-val springContext = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context" % "3.2.14.RELEASE_1"
-val springContextSupport = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context-support" % "3.2.14.RELEASE_1"
-val springExpression = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-expression" % "3.2.14.RELEASE_1"
-val springCore = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-core" % "3.2.14.RELEASE_1"
-val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % "3.2.14.RELEASE_1"
-val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % "3.2.14.RELEASE_1"
+val springBeans = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-beans" % BlendedVersions.springVersion
+val springAop = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-aop" % BlendedVersions.springVersion
+val springContext = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context" % BlendedVersions.springVersion
+val springContextSupport = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context-support" % BlendedVersions.springVersion
+val springExpression = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-expression" % BlendedVersions.springVersion
+val springCore = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-core" % BlendedVersions.springVersion
+val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % BlendedVersions.springVersion
+val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % BlendedVersions.springVersion
 
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
@@ -163,11 +164,12 @@ val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
 
-val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % "3.16"
-val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % "3.16"
-val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % "3.16"
-val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % "3.16"
-val xbeanSpring = "org.apache.xbean" % "xbean-spring" % "3.16"
+val xbeanVersion = "3.16"
+val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % xbeanVersion
+val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % xbeanVersion
+val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % xbeanVersion
+val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % xbeanVersion
+val xbeanSpring = "org.apache.xbean" % "xbean-spring" % xbeanVersion
 
 // Blended Projects
 
