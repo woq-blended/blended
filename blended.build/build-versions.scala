@@ -15,7 +15,7 @@ object BlendedVersions {
 
   val camelVersion = "2.16.3"
 
-  val dockerJavaVersion = "1.0.0"
+  val dockerJavaVersion = "3.0.6"
 
   val jolokiaVersion = "1.3.3"
 
