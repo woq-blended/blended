@@ -1,46 +1,46 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
-import blended.spray.SprayUPickleSupport
+import blended.spray.SprayPrickleSupport
 import blended.updater.config._
 import org.scalatest.mock.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, FreeSpec }
 import spray.testkit.ScalatestRouteTest
+import blended.updater.config.json.PrickleProtocol._
 
 import scala.collection.immutable.Seq
-
-import upickle.default._
+import prickle._
 
 class ManagementCollectorSpec
-  extends WordSpec
+    extends FreeSpec
     with Matchers
     with MockitoSugar
     with ScalatestRouteTest
     with CollectorService
-    with SprayUPickleSupport {
+    with SprayPrickleSupport {
 
   val testPostLatch = TestLatch(1)
   val testGetLatch = TestLatch(1)
 
-  "The Management collector" should {
+  "The Management collector" - {
 
-    "POST /container returns a registry response" in {
+    "should POST /container returns a registry response" in {
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List())) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       testPostLatch.isOpen should be(true)
     }
 
-    "GET /container return container infos" in {
+    "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
         responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List()), List())))
       }
       testGetLatch.isOpen should be(true)
     }
 
-    "GET version returns the version" in {
+    "should GET version returns the version" in {
       Get("/version") ~> versionRoute ~> check {
-        responseAs[String] should be ("TEST")
+        responseAs[String] should be("TEST")
       }
     }
 

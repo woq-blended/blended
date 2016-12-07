@@ -5,15 +5,16 @@ import blended.spray.SprayUPickleSupport
 import blended.updater.config._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes
-import spray.routing.{HttpService, Route}
+import spray.routing.{ HttpService, Route }
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 
-import upickle.default._
+import blended.updater.config.json.PrickleProtocol._
+import blended.spray.SprayPrickleSupport
 
 trait CollectorService extends HttpService {
-  this: SprayUPickleSupport =>
+  this: SprayPrickleSupport =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
