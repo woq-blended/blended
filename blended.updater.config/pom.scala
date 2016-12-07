@@ -15,7 +15,6 @@ BlendedModel(
     typesafeConfig,
     slf4j,
     "com.github.benhutchison" %% "prickle" % "1.1.13",
-    upickle,
     scalaTest % "test",
     blendedTestSupport % "test"
   ),
