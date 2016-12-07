@@ -1,10 +1,8 @@
 package blended.launcher.config
 
+import blended.launcher.config.LauncherConfig.{read, toConfig}
+import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.FreeSpec
-import com.typesafe.config.ConfigException
-import com.typesafe.config.ConfigFactory
-import blended.launcher.config.LauncherConfig.read
-import blended.launcher.config.LauncherConfig.toConfig
 
 class   LauncherConfigTest extends FreeSpec {
 

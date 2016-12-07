@@ -1,16 +1,13 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpecLike
-import org.scalatest.Matchers
-import com.typesafe.config.ConfigException
-import com.typesafe.config.ConfigFactory
-import scala.util.Success
-import scala.util.Failure
+import java.io.{File, FileWriter}
+
 import blended.testsupport.TestFile
-import java.io.File
+import com.typesafe.config.{ConfigException, ConfigFactory}
+import org.scalatest.{FreeSpecLike, Matchers}
+
 import scala.io.Source
-import java.io.FileWriter
-import scala.collection.immutable
+import scala.util.Success
 
 class RuntimeConfigTest
     extends FreeSpecLike

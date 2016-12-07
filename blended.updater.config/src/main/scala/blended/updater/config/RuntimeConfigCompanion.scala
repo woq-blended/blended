@@ -1,33 +1,16 @@
 package blended.updater.config
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.FileReader
-import java.io.FileWriter
+import java.io._
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.util.Formatter
-import java.util.Properties
+import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.security.{DigestInputStream, MessageDigest}
+import java.util.{Formatter, Properties}
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.util.Success
-import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+
+import scala.collection.JavaConverters.{asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.{Success, Try}
 import scala.util.control.NonFatal
-
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
 
 object RuntimeConfigCompanion {
 
@@ -119,7 +102,6 @@ object RuntimeConfigCompanion {
 
   def download(url: String, file: File): Try[File] =
     Try {
-      import sys.process._
       val parentDir = file.getAbsoluteFile().getParentFile() match {
         case null =>
           new File(".")

@@ -1,10 +1,10 @@
 package blended.launcher.config
 
 import java.io.File
+
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+
 import scala.collection.JavaConverters._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
 
 case class LauncherConfig(
     frameworkJar: String,

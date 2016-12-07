@@ -1,13 +1,8 @@
 package blended.updater.config
 
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
-import java.io.PrintStream
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigRenderOptions
+import java.io._
+
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
 import org.slf4j.LoggerFactory
 
 /**

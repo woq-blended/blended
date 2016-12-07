@@ -1,12 +1,9 @@
 package blended.updater.config
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory}
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.Try
 
 object FeatureConfigCompanion {
   def apply(name: String,

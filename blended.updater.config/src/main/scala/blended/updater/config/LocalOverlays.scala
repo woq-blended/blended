@@ -2,18 +2,13 @@ package blended.updater.config
 
 import java.io.File
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
 import _root_.scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
-import scala.util.Failure
-import scala.util.Left
-import scala.util.Right
-import scala.util.Success
-import scala.util.Try
+import scala.util._
 
 
 /**

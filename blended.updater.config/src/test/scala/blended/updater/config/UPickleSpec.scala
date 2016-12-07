@@ -1,5 +1,6 @@
 package blended.updater.config
 
+import blended.updater.config
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{FreeSpec, Matchers}
 import org.slf4j.LoggerFactory
@@ -90,5 +91,18 @@ class UPickleSpec extends FreeSpec with Matchers {
     val svcList = read[List[ServiceInfo]](json)
 
     svcList should be (List(svcInfo))
+  }
+
+  "An Overlay State should be (de)serialisable with uPickle" in {
+
+    import OverlayState._
+
+    val os = Active
+    val json = write[OverlayState](os)
+
+    log.info("Shitty JSON : " + json)
+
+    val os2 = read[OverlayState](json)
+    os2 should be (Active)
   }
 }

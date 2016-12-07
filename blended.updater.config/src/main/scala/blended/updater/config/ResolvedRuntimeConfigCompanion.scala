@@ -3,7 +3,6 @@ package blended.updater.config
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.immutable.Seq
 import scala.util.Try
 
 object ResolvedRuntimeConfigCompanion {

@@ -1,13 +1,10 @@
 package blended.updater.config
 
-import java.io.PrintStream
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
-import java.io.File
-import scala.util.Try
-import scala.io.Source
+import java.io._
 import java.util.Properties
-import java.io.FileReader
+
+import scala.io.Source
+import scala.util.Try
 
 case class LocalRuntimeConfig(
     resolvedRuntimeConfig: ResolvedRuntimeConfig,

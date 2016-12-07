@@ -1,7 +1,7 @@
 package blended.updater.config
 
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
+import org.scalatest.{FreeSpec, Matchers}
+
 import scala.util.Success
 
 class FeatureResolverSpec extends FreeSpec with Matchers {
