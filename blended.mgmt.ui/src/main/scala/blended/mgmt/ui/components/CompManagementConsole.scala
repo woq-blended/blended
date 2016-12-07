@@ -8,6 +8,9 @@ import org.scalajs.dom.ext.Ajax
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.Success
 
+import prickle._
+import blended.updater.config.json.PrickleProtocol._
+
 object CompManagementConsole {
 
   val url = "http://localhost:9999/empty"
@@ -22,7 +25,7 @@ object CompManagementConsole {
       Ajax.get(url).onComplete {
         case Success(xhr) =>
           println(xhr.responseText)
-          val newList = upickle.default.read[List[ContainerInfo]](xhr.responseText)
+          val newList = Unpickle[List[ContainerInfo]].fromString(xhr.responseText).get
           $.setState(State(newList)).runNow()
         case _ => println("Could not retrieve container list from server")
       }

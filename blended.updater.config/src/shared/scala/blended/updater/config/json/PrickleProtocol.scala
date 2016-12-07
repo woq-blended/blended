@@ -16,6 +16,9 @@ object PrickleProtocol {
   implicit val serviceInfoPickler: Pickler[ServiceInfo] = Pickler.materializePickler[ServiceInfo]
   implicit val serviceInfoUnpickler: Unpickler[ServiceInfo] = Unpickler.materializeUnpickler[ServiceInfo]
 
+  implicit val containerInfoPickler: Pickler[ContainerInfo] = Pickler.materializePickler[ContainerInfo]
+  implicit val containerInfoUnpickler: Unpickler[ContainerInfo] = Unpickler.materializeUnpickler[ContainerInfo]
+  
   implicit val overlayStatePickler: PicklerPair[OverlayState] = CompositePickler[OverlayState].
     concreteType[OverlayState.Active.type].
     concreteType[OverlayState.Valid.type].
