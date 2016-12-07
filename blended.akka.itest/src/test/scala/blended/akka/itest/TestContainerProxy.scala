@@ -11,8 +11,8 @@ import org.apache.camel.component.jms.JmsComponent
 import scala.concurrent.duration._
 
 object TestContainerProxy {
-  def amqUrl(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = cuts("blended_blended_0").url("jms", dockerHost, "tcp")
-  def jmxRest(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = s"${cuts("blended_blended_0").url("http", dockerHost, "http")}/hawtio/jolokia"
+  def amqUrl(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = cuts("blended_node_0").url("jms", dockerHost, "tcp")
+  def jmxRest(cuts: Map[String, ContainerUnderTest])(implicit dockerHost: String) : String = s"${cuts("blended_node_0").url("http", dockerHost, "http")}/hawtio/jolokia"
 }
 
 class TestContainerProxy extends BlendedTestContextManager with TestContextConfigurator {
@@ -35,8 +35,8 @@ class TestContainerProxy extends BlendedTestContextManager with TestContextConfi
       ParallelComposedCondition(
         JMSAvailableCondition(new ActiveMQConnectionFactory(amqUrl(cuts)), Some(t)),
         JolokiaAvailableCondition(jmxRest(cuts), Some(t), Some("root"), Some("mysecret"))
-      ),
-      CamelContextExistsCondition(jmxRest(cuts), None, None,  "BlendedSample", Some(t))
+      )
+//      CamelContextExistsCondition(jmxRest(cuts), None, None,  "BlendedSample", Some(t))
     )
   }
 }

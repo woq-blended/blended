@@ -71,13 +71,13 @@ trait DockerTestSetup { this : MockitoSugar =>
   
   when(listContainersCmd.exec()) thenReturn running
   
-  def configurePorts(ct: Container) : Array[Container.Port] = {
+  def configurePorts(ct: Container) : Array[ContainerPort] = {
   
     // Expose 3 ports per mocked docker container 
     val ports : List[Int] = List( 1099, 1883, 8181 )
     
     val ctPorts = ports.map { p => 
-      val ctPort = mock[Container.Port] 
+      val ctPort = mock[ContainerPort]
       
       when(ctPort.getIp) thenReturn("0.0.0.0")
       when(ctPort.getPublicPort) thenReturn(portNumber.getAndIncrement)
@@ -108,14 +108,14 @@ trait DockerTestSetup { this : MockitoSugar =>
 
     when(mockClient.createContainerCmd(anyString)) thenReturn createCmd
     when(createCmd.withName(anyString())) thenReturn createCmd
+    when(createCmd.withPortBindings(portBindings)) thenReturn createCmd
+    when(createCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn createCmd
+    when(createCmd.withPublishAllPorts(true)) thenReturn createCmd
+
     when(mockClient.waitContainerCmd(anyString())) thenReturn waitCmd
     when(mockClient.stopContainerCmd(anyString())) thenReturn stopCmd
     when(mockClient.startContainerCmd(anyString())) thenReturn startCmd
     when(mockClient.inspectContainerCmd(anyString())) thenReturn inspectCmd
-
-    when(startCmd.withPortBindings(portBindings)) thenReturn startCmd
-    when(startCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn startCmd
-    when(startCmd.withPublishAllPorts(true)) thenReturn startCmd
 
     when(inspectCmd.exec()) thenReturn containerInfo
     

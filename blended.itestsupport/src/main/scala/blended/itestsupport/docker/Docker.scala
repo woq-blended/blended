@@ -20,13 +20,13 @@ object DockerClientFactory {
       logger.info(s"$config")
 
       val dockerConfig =  DefaultDockerClientConfig.createDefaultConfigBuilder()
-        .withDockerHost(config.getString("docker.host"))
+        .withDockerHost("tcp://" + config.getString("docker.host") + ":" + config.getString("docker.port"))
         .withRegistryUsername(config.getString("docker.user"))
         .withRegistryPassword(config.getString("docker.password"))
         .withRegistryEmail(config.getString("docker.eMail"))
         .build()
 
-      logger info s"Trying to connect to docker at [${dockerConfig.getDockerHost()}]"
+      logger.info(s"Trying to connect to docker at [${dockerConfig.getDockerHost()}]")
 
       val dockerClient = DockerClientBuilder.getInstance(dockerConfig).build()
 

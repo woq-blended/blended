@@ -5,7 +5,7 @@ import akka.event.{LoggingAdapter, LoggingReceive}
 import akka.pattern._
 import akka.util.Timeout
 import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.model.Container
+import com.github.dockerjava.api.model.{Container, ContainerPort}
 import com.typesafe.config.Config
 import blended.itestsupport.{ContainerUnderTest, NamedContainerPort}
 import blended.itestsupport.docker.protocol._
@@ -123,7 +123,7 @@ class DockerContainerMapper extends Actor with ActorLogging {
     dc.getNames.filter { _.indexOf("/", 1) == -1 }.head.substring(1)
   
     
-  private[docker] def mapPort(dockerPorts: Array[Container.Port], port: NamedContainerPort) : NamedContainerPort = {
+  private[docker] def mapPort(dockerPorts: Array[ContainerPort], port: NamedContainerPort) : NamedContainerPort = {
     dockerPorts.filter { _.getPrivatePort() == port.privatePort }.toList match {
       case e if e.isEmpty => port
       case l => port.copy(publicPort = l.head.getPublicPort)
