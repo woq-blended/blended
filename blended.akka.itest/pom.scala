@@ -17,6 +17,7 @@ BlendedModel(
     blendedItestSupport % "test",
     scalaTest % "test",
     slf4j % "test",
+    slf4jLog4j12 % "test",
     akkaSlf4j % "test"
   ),
   plugins = Seq(
