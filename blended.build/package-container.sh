@@ -2,7 +2,7 @@
 
 set -x
 
-val SCRIPT_DIR=`dirname "$0"`
+SCRIPT_DIR=`dirname "$0"`
 
 sh $SCRIPT_DIR/docker_clean.sh
 
