@@ -2,9 +2,12 @@ package blended.updater.config.json
 
 import blended.updater.config._
 import prickle._
+import microjson.JsValue
 
 object PrickleProtocol {
-
+  
+  implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
+  
   implicit val updateActionPickler: PicklerPair[UpdateAction] = CompositePickler[UpdateAction].
     concreteType[ActivateProfile].
     concreteType[StageProfile].
