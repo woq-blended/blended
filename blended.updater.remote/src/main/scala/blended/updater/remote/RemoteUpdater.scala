@@ -3,8 +3,6 @@ package blended.updater.remote
 import blended.updater.config._
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable
-
 class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
     containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {
 
@@ -19,7 +17,7 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
       if (!actions.exists {
         _ == action
       }) {
-        actions ++ immutable.Seq(action)
+        actions ++ List(action)
       } else actions
     containerStatePersistor.updateContainerState(state.copy(outstandingActions = newActions))
   }
@@ -33,7 +31,7 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
 
     val newUpdateActions = state.outstandingActions.filter {
       // TODO: support for overlays
-      case ActivateProfile(n, v, o, _kind) =>
+      case ActivateProfile(n, v, o) =>
         !containerProfiles.exists(p =>
           p.name == n &&
             p.version == v &&
@@ -42,7 +40,7 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
                 po.overlays.toSet == o.toSet
             )
         )
-      case StageProfile(n, v, oc, _kind) =>
+      case StageProfile(n, v, oc) =>
         !containerProfiles.exists(p =>
           p.name == n &&
             p.version == v &&
@@ -66,16 +64,16 @@ class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
   def getContainerState(containerId: ContainerId): Option[ContainerState] =
     containerStatePersistor.findContainerState(containerId)
 
-  def getContainerActions(containerId: ContainerId): immutable.Seq[UpdateAction] =
-    getContainerState(containerId).map(_.outstandingActions).getOrElse(immutable.Seq())
+  def getContainerActions(containerId: ContainerId): List[UpdateAction] =
+    getContainerState(containerId).map(_.outstandingActions).getOrElse(List.empty)
 
-  def getContainerIds(): immutable.Seq[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
+  def getContainerIds(): List[ContainerId] = containerStatePersistor.findAllContainerStates().map(_.containerId)
 
   def registerRuntimeConfig(runtimeConfig: RuntimeConfig): Unit = runtimeConfigPersistor.persistRuntimeConfig(runtimeConfig)
 
-  def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
+  def getRuntimeConfigs(): List[RuntimeConfig] = runtimeConfigPersistor.findRuntimeConfigs()
 
-  def getOverlayConfigs(): immutable.Seq[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
+  def getOverlayConfigs(): List[OverlayConfig] = overlayConfigPersistor.findOverlayConfigs()
 
   def registerOverlayConfig(overlayConfig: OverlayConfig): Unit = overlayConfigPersistor.persistOverlayConfig(overlayConfig)
 

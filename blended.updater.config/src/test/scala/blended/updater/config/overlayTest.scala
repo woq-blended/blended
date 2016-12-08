@@ -7,8 +7,6 @@ import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.util.Success
-
 import scala.collection.JavaConverters._
 
 class OverlaysTest extends FreeSpec with Matchers with TestFile {
@@ -40,13 +38,13 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           read.get.name shouldEqual "overlay"
           read.get.version shouldEqual "1"
           read.get.generatedConfigs.toSet shouldEqual Set(
-            GeneratedConfig(
-              configFile = "file1",
-              config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+            GeneratedConfigCompanion.create(
+              "file1",
+              ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
             ),
-            GeneratedConfig(
-              configFile = "etc/file2.conf",
-              config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+            GeneratedConfigCompanion.create(
+              "etc/file2.conf",
+              ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
             )
           )
         }
@@ -57,13 +55,13 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
         name = "overlay",
         version = "1",
         generatedConfigs = List(
-          GeneratedConfig(
-            configFile = "file1",
-            config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+          GeneratedConfigCompanion.create(
+            "file1",
+            ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
           ),
-          GeneratedConfig(
-            configFile = "etc/file2",
-            config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+          GeneratedConfigCompanion.create(
+            "etc/file2",
+            ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
           )
         ))
       val read = OverlayConfigCompanion.read(OverlayConfigCompanion.toConfig(c))
@@ -71,13 +69,13 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       read.get.name shouldEqual "overlay"
       read.get.version shouldEqual "1"
       read.get.generatedConfigs.toSet shouldEqual Set(
-        GeneratedConfig(
-          configFile = "file1",
-          config = ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
+        GeneratedConfigCompanion.create(
+          "file1",
+          ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
         ),
-        GeneratedConfig(
-          configFile = "etc/file2",
-          config = ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
+        GeneratedConfigCompanion.create(
+          "etc/file2",
+          ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
         )
       )
     }
@@ -114,14 +112,14 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1_1 = OverlayConfig("overlay1", "1")
       val o1_2 = OverlayConfig("overlay1", "2")
       val o2_1 = OverlayConfig("overlay2", "1")
-      val overlays = LocalOverlays(overlays = Set(o1_1, o1_2, o2_1), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = List(o1_1, o1_2, o2_1), profileDir = new File("."))
       overlays.validate() shouldEqual Seq("More than one overlay with name 'overlay1' detected")
     }
 
     "detects overlays with conflicting propetries" in {
       val o1 = OverlayConfig("o1", "1", properties = Map("P1" -> "V1"))
       val o2 = OverlayConfig("o2", "1", properties = Map("P1" -> "V2"))
-      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
       overlays.validate() shouldEqual Seq("Duplicate property definitions detected. Property: P1 Occurences: o1-1, o2-1")
     }
 
@@ -130,17 +128,17 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
         )
       )
-      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
       overlays.validate() should have size 1
       overlays.validate() shouldEqual Seq("Double defined config key found: key")
 
@@ -154,8 +152,8 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val overlay = OverlayConfig(
         name = "o", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1),
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1),
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
         )
       )
       OverlayConfigCompanion.findCollisions(overlay.generatedConfigs) shouldEqual Seq("Double defined config key found: key")
@@ -168,7 +166,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig("overlay1", "1")
       val o2 = OverlayConfig("overlay2", "1")
       withTestDir() { dir =>
-        val overlays = LocalOverlays(Set(o1, o2), dir)
+        val overlays = LocalOverlays(List(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         overlays.materializedDir.listFiles() shouldBe null
       }
@@ -179,18 +177,18 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key2=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(Set(o1, o2), dir)
+        val overlays = LocalOverlays(List(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
         overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
@@ -206,18 +204,18 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config1)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key1=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfig(configFile = "etc/application_overlay.conf", config = config2)
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(Set(o1, o2), dir)
+        val overlays = LocalOverlays(List(o1, o2), dir)
         overlays.materialize().isFailure shouldBe true
       }
     }

@@ -1,9 +1,10 @@
 package blended.updater.config
 
-import scala.util.Try
 import java.io.File
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
+
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+
+import scala.util.Try
 
 object FeatureResolver {
 

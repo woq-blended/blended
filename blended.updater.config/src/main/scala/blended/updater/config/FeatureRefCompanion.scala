@@ -1,10 +1,9 @@
 package blended.updater.config
 
+import com.typesafe.config.{Config, ConfigFactory}
+
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.util.Try
-
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 object FeatureRefCompanion {
 

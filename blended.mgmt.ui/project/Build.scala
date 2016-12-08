@@ -47,7 +47,7 @@ object Build extends sbt.Build {
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
-      "com.lihaoyi" %%% "upickle" % Versions.upickle,
+      "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
 
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
     ))

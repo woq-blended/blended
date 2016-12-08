@@ -7,37 +7,24 @@ object UpdateAction {
   val KindActivateProfile = classOf[ActivateProfile].getSimpleName()
 }
 
-sealed trait UpdateAction {
-  def kind: String
-}
+sealed trait UpdateAction
 
 final case class AddRuntimeConfig(
-  runtimeConfig: RuntimeConfig,
-  kind: String = UpdateAction.KindAddRuntimeConfig)
-    extends UpdateAction {
-  require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
-}
+  runtimeConfig: RuntimeConfig
+) extends UpdateAction
 
 final case class AddOverlayConfig(
-  overlay: OverlayConfig,
-  kind: String = UpdateAction.KindAddOverlayConfig) extends UpdateAction {
-  require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
-}
+  overlay: OverlayConfig
+) extends UpdateAction
 
 final case class StageProfile(
   profileName: String,
   profileVersion: String,
-  overlays: Set[OverlayRef],
-  kind: String = UpdateAction.KindStageProfile)
-    extends UpdateAction {
-  require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
-}
+  overlays: List[OverlayRef]
+) extends UpdateAction
 
 final case class ActivateProfile(
   profileName: String,
   profileVersion: String,
-  overlays: Set[OverlayRef],
-  kind: String = UpdateAction.KindActivateProfile)
-    extends UpdateAction {
-  require(kind == getClass.getSimpleName(), s"kind must be ${getClass.getSimpleName()} but was: ${kind}")
-}
+  overlays: List[OverlayRef]
+) extends UpdateAction

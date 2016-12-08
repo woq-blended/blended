@@ -1,35 +1,16 @@
 package blended.updater.config
 
-import java.io.BufferedInputStream
-import java.io.BufferedOutputStream
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.FileReader
-import java.io.FileWriter
+import java.io._
 import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardCopyOption
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.util.Formatter
-import java.util.Properties
+import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.security.{DigestInputStream, MessageDigest}
+import java.util.{Formatter, Properties}
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.immutable
-import scala.collection.immutable.Map
-import scala.util.Success
-import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+
+import scala.collection.JavaConverters.{asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.{Success, Try}
 import scala.util.control.NonFatal
-
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
 
 object RuntimeConfigCompanion {
 
@@ -56,7 +37,7 @@ object RuntimeConfigCompanion {
       bundles =
         if (config.hasPath("bundles"))
           config.getObjectList("bundles").asScala.map { bc => BundleConfigCompanion.read(bc.toConfig()).get }.toList
-        else immutable.Seq(),
+        else List.empty,
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
       properties = properties,
@@ -67,15 +48,15 @@ object RuntimeConfigCompanion {
           config.getObjectList("features").asScala.map { f =>
           FeatureRefCompanion.fromConfig(f.toConfig()).get
         }.toList
-        else immutable.Seq(),
+        else List.empty,
       resources =
         if (config.hasPath("resources"))
           config.getObjectList("resources").asScala.map(r => ArtifactCompanion.read(r.toConfig()).get).toList
-        else immutable.Seq(),
+        else List.empty,
       resolvedFeatures =
         if (config.hasPath("resolvedFeatures"))
           config.getObjectList("resolvedFeatures").asScala.map(r => FeatureConfigCompanion.read(r.toConfig()).get).toList
-        else immutable.Seq()
+        else List.empty
     )
   }
 
@@ -121,7 +102,6 @@ object RuntimeConfigCompanion {
 
   def download(url: String, file: File): Try[File] =
     Try {
-      import sys.process._
       val parentDir = file.getAbsoluteFile().getParentFile() match {
         case null =>
           new File(".")
@@ -194,7 +174,7 @@ object RuntimeConfigCompanion {
 
   def getPropertyFileProvider(
     curRuntime: RuntimeConfig,
-    prevRuntime: Option[LocalRuntimeConfig]): Try[immutable.Seq[PropertyProvider]] = Try {
+    prevRuntime: Option[LocalRuntimeConfig]): Try[List[PropertyProvider]] = Try {
     curRuntime.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_PROVIDERS).toList.flatMap(_.split("[,]")).flatMap {
       case "env" => Some(new EnvPropertyProvider())
       case "sysprop" => Some(new SystemPropertyProvider())

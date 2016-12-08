@@ -2,11 +2,10 @@ package blended.updater.config
 
 import java.io.File
 
+import com.typesafe.config.{Config, ConfigFactory}
+
 import scala.collection.JavaConverters._
 import scala.util.Try
-
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 /**
  * Information used by the Blended Launcher and Blended Updater to determine or persist

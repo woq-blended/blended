@@ -1,16 +1,16 @@
 package blended.updater.config
 
 import java.io.File
-import scala.collection.immutable._
+
 import blended.launcher.config.LauncherConfig
 import org.slf4j.LoggerFactory
+
+import scala.collection.immutable._
 
 /**
  * Convert between [[LauncherConfig]] and [[ResolvedRuntimeConfig]].
  */
 trait ConfigConverter {
-
-  import ConfigConverter._
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConfigConverter])
 

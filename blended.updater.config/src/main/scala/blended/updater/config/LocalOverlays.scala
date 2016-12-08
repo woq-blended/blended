@@ -2,18 +2,13 @@ package blended.updater.config
 
 import java.io.File
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
 import _root_.scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
-import scala.util.Failure
-import scala.util.Left
-import scala.util.Right
-import scala.util.Success
-import scala.util.Try
+import scala.util._
 
 
 /**
@@ -23,9 +18,9 @@ import scala.util.Try
  * @param overlays   Alls involved overlay config.
  * @param profileDir The profile directory.
  */
-final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
+final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) {
 
-  def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef)
+  def overlayRefs: List[OverlayRef] = overlays.map(_.overlayRef)
 
   /**
    * Validate this set of overlays.
@@ -34,7 +29,7 @@ final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
    * @return A collection of validation errors, if any.
    *         If this is empty, the validation was successful.
    */
-  def validate(): Seq[String] = {
+  def validate(): List[String] = {
     val nameIssues = overlays.groupBy(_.name).collect {
       case (name, configs) if configs.size > 1 => s"More than one overlay with name '$name' detected"
     }.toList
@@ -144,7 +139,7 @@ final object LocalOverlays {
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
         OverlayConfigCompanion.read(c.toConfig()).get
-      }.toSet
+      }.toList
     )
   }
 

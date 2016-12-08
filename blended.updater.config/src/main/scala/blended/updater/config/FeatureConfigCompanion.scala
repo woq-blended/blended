@@ -1,28 +1,22 @@
 package blended.updater.config
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.immutable.Map
-import scala.collection.immutable.Nil
-import scala.collection.immutable.Seq
-import scala.util.Try
+import com.typesafe.config.{Config, ConfigFactory}
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
+import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.Try
 
 object FeatureConfigCompanion {
   def apply(name: String,
     version: String,
     url: String = null,
-    bundles: Seq[BundleConfig] = null,
-    features: Seq[FeatureRef] = null): FeatureConfig = {
+    bundles: List[BundleConfig] = null,
+    features: List[FeatureRef] = null): FeatureConfig = {
     FeatureConfig(
       name = name,
       version = version,
       url = Option(url),
-      bundles = Option(bundles).getOrElse(Seq()),
-      features = Option(features).getOrElse(Seq())
+      bundles = Option(bundles).getOrElse(List.empty),
+      features = Option(features).getOrElse(List.empty)
     )
   }
 

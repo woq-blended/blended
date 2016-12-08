@@ -3,18 +3,6 @@
 
 import scala.collection.immutable
 
-case class ScalaJsVersion(val version: String) {
-  val binaryVersion = version.split("\\.", 3).take(2).mkString(".")
-}
-
-implicit val implicitScalaJsVersion = ScalaJsVersion(BlendedVersions.scalaJsVersion)
-
-implicit class ScalaJsGroupId(groupId: String) {
-  def %%%(artifactId: String)(implicit scalaVersion: ScalaVersion, scalaJsVersion: ScalaJsVersion): GroupArtifactId = {
-    groupId %% (artifactId + "_sjs" + scalaJsVersion.binaryVersion)
-  }
-}
-
 val releaseProfile =  Profile(
   id = "release",
   activation = Activation(

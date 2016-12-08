@@ -4,11 +4,10 @@ import java.text.DecimalFormat
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
-import blended.mgmt.base.json.JsonProtocol._
 import blended.updater.config._
-import spray.json._
+import blended.updater.config.json.PrickleProtocol._
+import prickle._
 
-import scala.collection.immutable
 import scala.util.Random
 
 object MockObjects {
@@ -40,19 +39,19 @@ object MockObjects {
     props = sizedProperties(namePrefix = "property", numProps = rnd.nextInt(10) + 1)
   )
 
-  private[this] def serviceSeq(numServices : Int) : immutable.Seq[ServiceInfo] =
-    1.to(numServices).map(i => serviceInfo())
+  private[this] def serviceSeq(numServices : Int) : List[ServiceInfo] =
+    1.to(numServices).map(i => serviceInfo()).toList
 
   private[this] lazy val validProfiles = {
 
     val noOverlays = OverlaySet(
-      overlays = immutable.Seq.empty[OverlayRef],
+      overlays = List.empty[OverlayRef],
       state = OverlayState.Valid,
       reason = None
     )
 
     val someOverlays = OverlaySet(
-      overlays = immutable.Seq(
+      overlays = List(
         OverlayRef(name = "java-medium", version = "1.0"),
         OverlayRef(name = "shop-A", version = "1.0")
       ),
@@ -61,7 +60,7 @@ object MockObjects {
     )
 
     val invalid = OverlaySet(
-      overlays = immutable.Seq(
+      overlays = List(
         OverlayRef(name = "java-small", version = "1.0"),
         OverlayRef(name = "shop-Q", version = "1.0")
       ),
@@ -69,10 +68,10 @@ object MockObjects {
       reason = None
     )
 
-    immutable.Seq(
-      Profile(name = "blended-demo", "1.0", immutable.Seq(noOverlays)),
-      Profile(name = "blended-simple", "1.0", immutable.Seq(noOverlays, someOverlays, invalid)),
-      Profile(name = "blended-simple", "1.1", immutable.Seq(noOverlays, someOverlays, invalid))
+    List(
+      Profile(name = "blended-demo", "1.0", List(noOverlays)),
+      Profile(name = "blended-simple", "1.0", List(noOverlays, someOverlays, invalid)),
+      Profile(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
     )
 
   }
@@ -92,15 +91,18 @@ object MockObjects {
   }.toList
 
   // use this method and one of the defined environments in the mock server
-  def containerList(l: List[ContainerInfo]) = l.toJson.prettyPrint
+  def containerList(l: List[ContainerInfo]) = Pickle.intoString(l)
 
   // Define some test environments here
 
   // 1. empty environment
-  lazy val emptyEnv = List.empty[ContainerInfo]
+  val emptyEnv = List.empty[ContainerInfo]
 
   // 2. a single container environment
-  lazy val minimalEnv = createContainer(1)
+  val minimalEnv = createContainer(1)
+
+  // 3. A medium sized environment
+  val mediumEnv = createContainer(5)
 
 }
 

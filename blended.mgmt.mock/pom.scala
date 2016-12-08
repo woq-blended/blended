@@ -15,6 +15,7 @@ BlendedModel(
     scalaLib,
     slf4j,
     slf4jLog4j12,
+    prickle,
     wiremockStandalone
   ),
   properties = Map(

@@ -6,7 +6,6 @@ import blended.updater.config.{ConfigWriter, OverlayConfig, OverlayConfigCompani
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
-import scala.collection.immutable
 import scala.util.Try
 
 class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPersistor {
@@ -56,7 +55,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
     overlayConfigs += configFile -> overlayConfig
   }
 
-  override def findOverlayConfigs(): immutable.Seq[OverlayConfig] = {
+  override def findOverlayConfigs(): List[OverlayConfig] = {
     if (!initalized) initialize()
     overlayConfigs.values.toList
   }

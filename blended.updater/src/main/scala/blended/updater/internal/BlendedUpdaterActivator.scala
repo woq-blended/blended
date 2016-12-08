@@ -26,7 +26,7 @@ case class UpdateEnv(
   launchProfileLookupFile: Option[File],
   profilesBaseDir: File,
   launchedProfileDir: Option[File],
-  overlays: Option[Set[OverlayRef]])
+  overlays: Option[List[OverlayRef]])
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
@@ -54,7 +54,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
             override def apply(
               newName: String,
               newVersion: String,
-              newOverlays: Set[OverlayRef]): Boolean = {
+              newOverlays: List[OverlayRef]): Boolean = {
               // TODO: Error reporting
               updateEnv match {
                 case UpdateEnv(_, _, Some(lookupFile), _, _, _) =>
@@ -129,7 +129,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
         case x =>
           log.debug("Unsupported overlay: " + x.mkString(":"))
           None
-      }.toSet
+      }.toList
     }
     Some(
       UpdateEnv(

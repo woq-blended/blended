@@ -1,10 +1,9 @@
 package blended.updater.config
 
-import java.io.File
+import java.io.{File, FileReader}
 import java.util.Properties
-import java.io.FileReader
+
 import scala.util.Try
-import scala.util.control.NonFatal
 
 class FilePropertyProvider(file: File) extends PropertyProvider {
 

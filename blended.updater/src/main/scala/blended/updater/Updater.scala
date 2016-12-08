@@ -88,13 +88,13 @@ class Updater(
         result match {
           case None =>
             // nothing to do, is ok
-            Seq()
+            List.empty
           case Some(Success(_)) =>
             // ok
-            Seq()
+            List.empty
           case Some(Failure(e)) =>
             // could not create properties file
-            Seq(s"Could not create properties file: ${e.getMessage()}")
+            List(s"Could not create properties file: ${e.getMessage()}")
         }
       } else state.issues
 
@@ -196,7 +196,7 @@ class Updater(
   }
 
   def handleUpdateAction(event: UpdateAction): Unit = event match {
-    case UAAddRuntimeConfig(runtimeConfig, _) =>
+    case UAAddRuntimeConfig(runtimeConfig) =>
       log.debug("Received add runtime config request (via event stream) for {}-{}",
         Array(runtimeConfig.name, runtimeConfig.version))
 
@@ -208,7 +208,7 @@ class Updater(
           Array(runtimeConfig.name, runtimeConfig.version, x))
       }
 
-    case UAAddOverlayConfig(overlayConfig, _) =>
+    case UAAddOverlayConfig(overlayConfig) =>
       log.debug("Received add overlay config request (via event stream) for {}-{}",
         Array(overlayConfig.name, overlayConfig.version))
 
@@ -220,7 +220,7 @@ class Updater(
           Array(overlayConfig.name, overlayConfig.version, x))
       }
 
-    case UAStageProfile(name, version, overlayRefs, _) =>
+    case UAStageProfile(name, version, overlayRefs) =>
       log.debug("Received stage profile request (via event stream) for {}-{} and overlays: ",
         Array(name, version, overlayRefs))
 
@@ -232,7 +232,7 @@ class Updater(
           Array(name, version, overlayRefs, x))
       }
 
-    case UAActivateProfile(name, version, overlayRefs, _) =>
+    case UAActivateProfile(name, version, overlayRefs) =>
       log.debug("Received activate profile request (via event stream) for {}-{} and overlays: {}",
         Array(name, version, overlayRefs))
 
@@ -314,7 +314,7 @@ class Updater(
 
           val localOverlays = LocalOverlays(overlays.map(_._2.get), localRuntimeConfig.baseDir)
 
-          Profile(localRuntimeConfig, localOverlays, Profile.Pending(Seq("Newly staged")))
+          Profile(localRuntimeConfig, localOverlays, Profile.Pending(List("Newly staged")))
 
         } match {
           case Failure(e) =>
@@ -371,9 +371,9 @@ class Updater(
                     config = config,
                     artifactsToDownload = artifacts,
                     pendingArtifactsToUnpack = pendingUnpacks,
-                    artifactsToUnpack = Seq(),
+                    artifactsToUnpack = List.empty,
                     overlays = localOverlays,
-                    issues = Seq()))
+                    issues = List.empty))
 
               }
             }
@@ -495,7 +495,7 @@ class Updater(
 
     log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
 
-    def profileState(issues: Seq[String]): Profile.ProfileState = issues match {
+    def profileState(issues: List[String]): Profile.ProfileState = issues match {
       case Seq() => Profile.Staged
       case issues => Profile.Pending(issues)
     }
@@ -690,9 +690,9 @@ object Updater {
   final case class AddOverlayConfig(override val requestId: String, overlayConfig: OverlayConfig) extends Protocol
 
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageProfile(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
+  final case class StageProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
 
-  final case class ActivateProfile(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
+  final case class ActivateProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
 
   /**
    * Scans the profile directory for existing runtime configurations and replaces the internal state of this actor with the result.
@@ -754,11 +754,11 @@ object Updater {
     requestId: String,
     requestActor: ActorRef,
     config: LocalRuntimeConfig,
-    artifactsToDownload: Seq[ArtifactInProgress],
-    pendingArtifactsToUnpack: Seq[ArtifactInProgress],
-    artifactsToUnpack: Seq[ArtifactInProgress],
+    artifactsToDownload: List[ArtifactInProgress],
+    pendingArtifactsToUnpack: List[ArtifactInProgress],
+    artifactsToUnpack: List[ArtifactInProgress],
     overlays: LocalOverlays,
-    issues: Seq[String]) {
+    issues: List[String]) {
 
     val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 
@@ -772,7 +772,7 @@ object Updater {
 
   }
 
-  case class ProfileId(name: String, version: String, overlays: Set[OverlayRef]) {
+  case class ProfileId(name: String, version: String, overlays: List[OverlayRef]) {
     override def toString(): String =
       s"${name}-${version}_" + {
         if (overlays.isEmpty) "base"
@@ -784,9 +784,9 @@ object Updater {
 
     sealed trait ProfileState
 
-    final case class Pending(issues: Seq[String]) extends ProfileState
+    final case class Pending(issues: List[String]) extends ProfileState
 
-    final case class Invalid(issues: Seq[String]) extends ProfileState
+    final case class Invalid(issues: List[String]) extends ProfileState
 
     final case object Resolved extends ProfileState
 
@@ -799,7 +799,7 @@ object Updater {
 
     def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
 
-    def bundles: Seq[BundleConfig] = config.resolvedRuntimeConfig.allBundles
+    def bundles: List[BundleConfig] = config.resolvedRuntimeConfig.allBundles
   }
 
 }
