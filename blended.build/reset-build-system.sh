@@ -8,4 +8,6 @@ wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
 tar -xzf zinc-0.3.11.tgz
 sh ./zinc-0.3.11/bin/zinc -start -scala-home /opt/scala
 
+exit 0
+
 
