@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 rm -Rf ~/.m2/repository
 rm -Rf ~/.ivy2/cache
 
