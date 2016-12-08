@@ -111,6 +111,7 @@ val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
 val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
 
 val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
+val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
 
 val paxSwissboxCore = "org.ops4j.pax.swissbox" % "pax-swissbox-core" % "1.7.0"
 val paxSwissboxOptJcl = "org.ops4j.pax.swissbox" % "pax-swissbox-optional-jcl" % "1.7.0"
@@ -225,6 +226,7 @@ val blendedMgmtRest = BlendedModule("blended.mgmt.rest")
 val blendedMgmtUi = BlendedModule("blended.mgmt.ui")
 val blendedPersistence = BlendedModule("blended.persistence")
 val blendedPersistenceOrient = BlendedModule("blended.persistence.orient")
+val blendedPrickle = BlendedModule("blended.prickle")
 val blendedSamplesReactor = BlendedModule("blended.samples.reactor")
 val blendedSamplesCamel = BlendedModule("blended.samples.camel")
 val blendedSamplesJms = BlendedModule("blended.samples.jms")
