@@ -13,7 +13,7 @@ import blended.updater.config.json.PrickleProtocol._
 
 object CompManagementConsole {
 
-  val url = "http://localhost:9999/empty"
+  val url = "http://localhost:9999/medium"
 
   case class State(containerList: List[ContainerInfo])
 
