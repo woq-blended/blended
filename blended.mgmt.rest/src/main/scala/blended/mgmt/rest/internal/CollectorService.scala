@@ -1,7 +1,6 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
-import blended.spray.SprayUPickleSupport
 import blended.updater.config._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes

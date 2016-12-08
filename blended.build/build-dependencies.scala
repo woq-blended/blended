@@ -172,8 +172,6 @@ val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
 
-val upickle = "com.lihaoyi" %% "upickle" % BlendedVersions.upickle
-
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
 

@@ -5,7 +5,8 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import blended.updater.config._
-import upickle.default._
+import blended.updater.config.json.PrickleProtocol._
+import prickle._
 
 import scala.util.Random
 
@@ -90,7 +91,7 @@ object MockObjects {
   }.toList
 
   // use this method and one of the defined environments in the mock server
-  def containerList(l: List[ContainerInfo]) = write(l)
+  def containerList(l: List[ContainerInfo]) = Pickle.intoString(l)
 
   // Define some test environments here
 

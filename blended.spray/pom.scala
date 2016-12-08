@@ -17,7 +17,6 @@ BlendedModel(
     scalaLib,
     geronimoServlet30Spec,
     orgOsgi,
-    upickle,
     prickle
   ),
   plugins = Seq(
