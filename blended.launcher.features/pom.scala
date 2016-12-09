@@ -54,7 +54,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = servicemixJaxbImpl),
     FeatureBundle(dependency = xbeanSpring),
     FeatureBundle(dependency = activeMqOsgi),
-    FeatureBundle(dependency = blendedActivemqBrokerstarter)
+    FeatureBundle(dependency = blendedActivemqBrokerstarter),
+    FeatureBundle(dependency = springJms)
   ),
   "blended-camel" -> Seq(
     FeatureBundle(dependency = camelCore),
@@ -156,8 +157,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = springAop),
     FeatureBundle(dependency = springContext),
     FeatureBundle(dependency = springContextSupport),
-    FeatureBundle(dependency = springTx),
-    FeatureBundle(dependency = springJms)
+    FeatureBundle(dependency = springTx)
   ),
   "blended-samples" -> Seq(
     FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
