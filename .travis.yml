@@ -4,8 +4,8 @@ sudo: false
 
 before_script:
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
-  - tar xzf zinc-0.3.7.tgz
-  - ./zinc-0.3.7/bin/zinc -start
+  - tar xzf zinc-0.3.11.tgz
+  - ./zinc-0.3.11/bin/zinc -start
 
 script: travis_wait ./blended.build/build.sh
 
