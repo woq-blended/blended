@@ -7,7 +7,7 @@ before_script:
   - tar xzf zinc-0.3.11.tgz
   - ./zinc-0.3.11/bin/zinc -start
 
-script: travis_wait ./blended.build/build.sh
+script: travis_wait ./blended.build/compile-and-test.sh
 
 jdk:
   - oraclejdk8
