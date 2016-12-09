@@ -22,7 +22,7 @@ BlendedModel(
         instructions = new Config(Seq(
           "Bundle-Version" -> blendedPrickle.version,
           "Bundle-SymbolicName" -> Option(blendedPrickle.artifactId),
-          "Import-Package" -> Option("scala.*;version=\"[" + scalaVersion.binaryVersion + "," + scalaVersion.binaryVersion + ".50)\"),prickle,microjson,*"),
+          "Import-Package" -> Option("scala.*;version=\"[" + scalaVersion.binaryVersion + "," + scalaVersion.binaryVersion + ".50)\",prickle,microjson,*"),
           "Embed-Dependency" -> Option(prickle.artifactId + ";inline=true," + microjson.artifactId + ";inline=true"),
           "Export-Package" -> Option("prickle;version=\"" + prickle.version.get + "\",microjson;version=\"" + microjson.version.get + "\"")
         ))
