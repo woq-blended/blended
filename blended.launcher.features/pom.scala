@@ -38,7 +38,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = akkaSlf4j),
     FeatureBundle(dependency = domino),
     FeatureBundle(dependency = blendedDomino),
-    FeatureBundle(dependency = blendedMgmtBase, start = true)
+    FeatureBundle(dependency = blendedMgmtBase, start = true),
+    FeatureBundle(dependency = blendedPrickle)
   ),
   "blended-activemq" -> Seq(
     FeatureBundle(dependency = ariesProxyApi),
