@@ -134,7 +134,7 @@ val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % paxwebVersion
 
 val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
 val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
-val scalaTest = "org.scalatest" %% "scalatest" % "2.2.4"
+val scalaTest = "org.scalatest" %% "scalatest" % "3.0.1"
 val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
 
 val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"

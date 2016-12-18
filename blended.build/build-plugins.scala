@@ -227,12 +227,14 @@ val dockerMavenPlugin = Plugin(
     )
   ),
   configuration = Config(
-    version = "1.16",
+    version = "1.24",
     username = "atooni",
     email = "andreas@wayofquality.de",
     password = "foo",
     prefix = "blended",
     host = "tcp://${docker.host}:${docker.port}",
-    cleanContainerOnly = true
+    cleanContainerOnly = true,
+    removeIntermediateImages = true,
+    cache = true
   )
 )
