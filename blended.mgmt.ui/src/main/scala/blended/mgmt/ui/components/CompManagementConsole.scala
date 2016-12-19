@@ -35,7 +35,7 @@ object CompManagementConsole {
       println(s"Rerendering with $s")
 
       <.div(
-        <.div("My cool Menu"),
+        <.div("My very super cool Menu"),
         <.div(CompContainerInfo.CompContainerInfoList(s.containerList))
       )
 
