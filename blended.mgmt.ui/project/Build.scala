@@ -119,6 +119,7 @@ object Build extends sbt.Build {
 
     lazy val clientDeps = Def.setting(Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
+      "com.github.japgolly.scalajs-react" %%% "extra" % Versions.scalajsReact,
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
