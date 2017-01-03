@@ -3,10 +3,6 @@ package blended.mgmt.ui.pages
 import japgolly.scalajs.react.{ReactComponentB, ReactElement}
 import japgolly.scalajs.react.extra.router.{Path, Redirect, RouterConfig, RouterConfigDsl}
 
-sealed trait Page
-case object Container extends Page
-case object Help extends Page
-
 abstract class TopLevelPage {
 
   val name : String
@@ -14,8 +10,6 @@ abstract class TopLevelPage {
   val routerPath : Path
 
   val content : ReactElement
-
-  val page : Page
 
   def component = ReactComponentB.static(name, content).build
 }
