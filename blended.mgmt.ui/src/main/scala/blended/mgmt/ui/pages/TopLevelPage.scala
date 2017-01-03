@@ -1,7 +1,7 @@
 package blended.mgmt.ui.pages
 
+import japgolly.scalajs.react.extra.router.{Path, RouterConfigDsl}
 import japgolly.scalajs.react.{ReactComponentB, ReactElement}
-import japgolly.scalajs.react.extra.router.{Path, Redirect, RouterConfig, RouterConfigDsl}
 
 abstract class TopLevelPage {
 
