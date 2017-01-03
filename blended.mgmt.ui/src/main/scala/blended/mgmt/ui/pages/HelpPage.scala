@@ -14,6 +14,4 @@ object HelpPage extends TopLevelPage {
     <.p(
       "This is the help Page"
     )
-
-  override val page: Page = Help
 }

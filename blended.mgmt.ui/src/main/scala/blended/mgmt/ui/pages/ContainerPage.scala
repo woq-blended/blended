@@ -15,5 +15,4 @@ object ContainerPage extends TopLevelPage {
       "This is the container Page"
     )
 
-  override val page: Page = Container
 }
