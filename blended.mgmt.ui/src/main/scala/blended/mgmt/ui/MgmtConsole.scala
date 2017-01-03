@@ -1,8 +1,9 @@
 package blended.mgmt.ui
 
-import blended.mgmt.ui.pages.{ContainerPage, HelpPage}
+import blended.mgmt.ui.pages._
 import org.scalajs.dom
-import japgolly.scalajs.react._, vdom.prefix_<^._
+import japgolly.scalajs.react._
+import vdom.prefix_<^._
 import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.extra.router._
 
@@ -12,23 +13,15 @@ import scala.scalajs.js.annotation.JSExport
 @JSExport
 class MgmtConsole extends js.JSApp {
 
-  sealed trait Page
-  case object Container extends Page
-  case object Help extends Page
-
-  val routerConfig = RouterConfigDsl[Page].buildConfig { dsl =>
+  val routerConfig = RouterConfigDsl[TopLevelPage].buildConfig { dsl =>
     import dsl._
 
-    (trimSlashes
-    | staticRoute(root, Container) ~> render(ContainerPage.component())
-    | staticRoute("#help", Help) ~> render(HelpPage.component())
-    )
-      .notFound(redirectToPage(Container)(Redirect.Replace))
-      .renderWith(layout(_,_))
-
+    (trimSlashes | TopLevelPages.routes)
+      .notFound(redirectToPage(TopLevelPages.defaultPage)(Redirect.Replace))
+      .renderWith(layout(_, _))
   }
 
-  def layout(c: RouterCtl[Page], r: Resolution[Page]) =
+  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) =
     <.div(
       navMenu(c),
       <.div(
@@ -36,10 +29,10 @@ class MgmtConsole extends js.JSApp {
       )
     )
 
-  val navMenu = ReactComponentB[RouterCtl[Page]]("Menu")
+  val navMenu = ReactComponentB[RouterCtl[TopLevelPage]]("Menu")
     .render_P { ctl =>
 
-      def nav(name: String, target: Page) =
+      def nav(name: String, target: TopLevelPage) =
         <.li(
           ^.cls := "navbar-brand active",
           ctl.setOnClick(target),
@@ -50,8 +43,9 @@ class MgmtConsole extends js.JSApp {
         ^.cls := "navbar navbar-default",
         <.ul(
           ^.cls := "navbar-header",
-          nav("Container", Container),
-          nav("Help", Help)
+          TopLevelPages.values.map { tlp =>
+            nav(tlp.name, tlp)
+          }
         )
       )
     }
