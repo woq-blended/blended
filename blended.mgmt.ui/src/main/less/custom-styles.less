@@ -1,10 +1,27 @@
 // Application specific styles go here
 
-.navbar-brand {
+.reverseHover {
+  text-decoration: none;
+  &:hover { text-decoration: underline }
+}
+
+
+.navbar-header {
+
+  li {
+    list-style-type: none;
+  }
+
+  text-decoration: none;
   cursor: pointer;
 }
 
-.navbar li {
-  list-style-type: none;
-  cursor: pointer;
+.navbar-brand {
+  .reverseHover;
+  color: grey;
+}
+
+.navbar-selected {
+  background-color: darkblue;
+  color: white;
 }

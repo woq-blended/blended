@@ -4,13 +4,13 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.Path
 import japgolly.scalajs.react.vdom.prefix_<^._
 
-object SettingsPage extends TopLevelPage {
+object ProfilesPage extends TopLevelPage {
 
-  override val name: String = "Settings"
+  override val name: String = "Profiles"
 
-  override val routerPath: Path = Path("#settings")
+  override val routerPath: Path = Path("#profiles")
 
   override val content: ReactElement = <.p(
-    "This is the settings Page"
+    "This is the profiles Page"
   )
 }

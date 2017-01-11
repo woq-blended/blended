@@ -1,13 +1,16 @@
 package blended.mgmt.ui.pages
 
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.extra.router.Path
 import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{ReactComponentB, _}
 
-object OverlaysPage {
+object OverlaysPage extends TopLevelPage {
 
-  val component = ReactComponentB.static( "Overlays",
-    <.p(
-      "This is the overlay page"
-    )
-  ).build
+  override val name: String = "Overlays"
+
+  override val routerPath: Path = Path("#overlays")
+
+  override val content: ReactElement = <.p(
+    "This is the overlay page "
+  )
 }

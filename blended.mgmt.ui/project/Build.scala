@@ -80,7 +80,7 @@ object Build extends sbt.Build {
     mainClass in Compile := Some(s"$appName.MgmtConsole"),
 
     LessKeys.sourceMap in Assets := true,      // generate a source map for developing in the browser
-    LessKeys.compress in Assets := true,       // Compress the final CSS
+    LessKeys.compress in Assets := false,       // Compress the final CSS
     LessKeys.color in Assets := true,          // Colorise Less output
     LessKeys.sourceMapLessInline := false,     // Have less files extra
     LessKeys.verbose := true,

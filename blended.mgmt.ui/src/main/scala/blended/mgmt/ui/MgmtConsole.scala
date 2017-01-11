@@ -1,5 +1,6 @@
 package blended.mgmt.ui
 
+import blended.mgmt.ui.backend.DataManager
 import blended.mgmt.ui.pages._
 import org.scalajs.dom
 import japgolly.scalajs.react._
@@ -32,12 +33,23 @@ class MgmtConsole extends js.JSApp {
   val navMenu = ReactComponentB[RouterCtl[TopLevelPage]]("Menu")
     .render_P { ctl =>
 
-      def nav(name: String, target: TopLevelPage) =
+
+      def nav(name: String, target: TopLevelPage) = {
+
+        val selected : String = target.equals(DataManager.selectedPage) match {
+          case true => " navbar-selected"
+          case _ => ""
+        }
+
         <.li(
-          ^.cls := "navbar-brand active",
-          ctl.setOnClick(target),
+          ^.cls := "navbar-brand" + selected,
+          ^.onClick --> CallbackTo[Unit] {
+            DataManager.setSelectedPage(target)
+            ctl.set(target).runNow()
+          },
           name
         )
+      }
 
       <.div(
         ^.cls := "navbar navbar-default",
@@ -57,6 +69,7 @@ class MgmtConsole extends js.JSApp {
 
   override def main(): Unit = {
     val router = Router(baseUrl, routerConfig.logToConsole)
+
     router().render(dom.document.body)
   }
 }
