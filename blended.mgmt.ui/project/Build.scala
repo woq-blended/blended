@@ -124,14 +124,17 @@ object Build extends sbt.Build {
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
 
+      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
+      "org.scalatest" %%% "scalatest" % BlendedVersions.scalaTestVersion % "test"
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
     ))
 
     lazy val jsDependencies = Def.setting(Seq(
 
       "org.webjars" % "bootstrap" % Versions.bootstrap / "bootstrap.js",
-      "org.webjars.bower" % "react" % Versions.react / "react.js"
-
+      "org.webjars.bower" % "react" % Versions.react / "react.js",
+      RuntimeDOM,
+      "org.webjars" % "jquery" % "2.1.4" / "2.1.4/jquery.js"
     ))
   }
 

@@ -5,10 +5,12 @@ object BlendedVersions {
 
   val javaVersion = "1.8"
 
-  val sbtVersion = "0.13.11"
+  val sbtVersion = "0.13.13"
   val scalaVersion = "2.11.8"
-  val scalaJsVersion = "0.6.13"
+  val scalaJsVersion = "0.6.14"
 
+  val scalaTestVersion = "3.0.1"
+  
   val activeMqVersion = "5.14.2"
   val akkaVersion = "2.3.10"
   val apacheShiroVersion = "1.2.4"

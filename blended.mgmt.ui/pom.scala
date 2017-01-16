@@ -5,13 +5,20 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-dependencies.scala
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
+#include project/Versions.scala
 
 BlendedModel(
   gav = blendedMgmtUi,
   packaging = "war",
   description = "The blended management UI.",
   dependencies = Seq(
-    scalaLib % "provided"
+    scalaLib % "provided",
+      "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact % "provided",
+      "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom % "provided",
+      blendedUpdaterConfig,
+      "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle % "provided",
+      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "provided",
+      scalaTest % "test"
   ),
   plugins = Seq(
     prepareSbtPlugin,
