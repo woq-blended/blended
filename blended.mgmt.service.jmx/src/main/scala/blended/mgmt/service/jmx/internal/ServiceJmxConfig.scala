@@ -8,10 +8,17 @@ object ServiceJmxConfig {
 
   val intervalPath = "interval"
   val templatesPath = "templates"
+  val servicesPath = "services"
 
   private def readTemplates(cfg: ConfigObject) : Map[String, ServiceTypeTemplate] = {
     cfg.unwrapped().asScala.map { case (key, value) =>
       ( key, ServiceTypeTemplate(key, cfg.toConfig().getObject(key).toConfig()) )
+    }.toMap
+  }
+
+  private def readServices(cfg: ConfigObject) : Map[String, SingleServiceConfig] = {
+    cfg.unwrapped().asScala.map { case (key, value) =>
+      ( key, SingleServiceConfig(key, cfg.toConfig().getObject(key).toConfig()) )
     }.toMap
   }
 
@@ -22,15 +29,16 @@ object ServiceJmxConfig {
 
     interval = if (cfg.hasPath(intervalPath)) cfg.getInt(intervalPath) else 5,
 
-    templates = if (cfg.hasPath(templatesPath)) readTemplates(cfg.getObject(templatesPath)) else Map.empty
+    templates = if (cfg.hasPath(templatesPath)) readTemplates(cfg.getObject(templatesPath)) else Map.empty,
+
+    services = if (cfg.hasPath(servicesPath)) readServices(cfg.getObject(servicesPath)) else Map.empty
   )
 }
 
-
-
 case class ServiceJmxConfig(
   interval : Int,
-  templates : Map[String, ServiceTypeTemplate]
+  templates : Map[String, ServiceTypeTemplate],
+  services : Map [String, SingleServiceConfig]
 )
 
 object ServiceTypeTemplate {
@@ -51,4 +59,22 @@ case class ServiceTypeTemplate(
   domain : String,
   query : Map[String, String],
   attributes : List[String]
+)
+
+case object SingleServiceConfig {
+
+  val queryPath = "query"
+  val svcTypePath = "type"
+
+  def apply(svcName: String, cfg: Config) : SingleServiceConfig = new SingleServiceConfig(
+    name = svcName,
+    svcType = cfg.getString(svcTypePath),
+    query = if (cfg.hasPath(queryPath)) ServiceJmxConfig.getStringMap(cfg.getObject(queryPath)) else Map.empty
+  )
+}
+
+case class SingleServiceConfig(
+  name : String,
+  svcType : String,
+  query : Map[String, String]
 )
