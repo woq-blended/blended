@@ -11,8 +11,6 @@ script: travis_wait ./blended.build/02_compile-and-test.sh
 
 jdk:
   - oraclejdk8
-  - oraclejdk7
-  - openjdk7
 
 notifications:
   webhooks:
