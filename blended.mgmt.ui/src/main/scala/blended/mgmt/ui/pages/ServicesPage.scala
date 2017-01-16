@@ -6,11 +6,11 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 
 object ServicesPage extends TopLevelPage {
 
-  override val name: String = "Services"
+  override val name: String = i18n.tr("Services")
 
   override val routerPath: Path = Path("#services")
 
   override val content: ReactElement = <.p(
-    "This is the services Page"
+    i18n.tr("This is the services Page")
   )
 }

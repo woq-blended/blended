@@ -4,9 +4,14 @@ import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.prefix_<^._
 import japgolly.scalajs.react.{BackendScope, ReactComponentB}
+import blended.mgmt.ui.util.Logger
+import blended.mgmt.ui.util.I18n
 
 object CompManagementConsole {
 
+  private[this] val log = Logger("blended.mgmt.ui.component.CompManagementConsole")
+  private[this] val i18n = I18n()
+  
   case class State(containerList: List[ContainerInfo])
 
   class Backend($: BackendScope[_, State]) extends Observer[List[ContainerInfo]] {
@@ -14,10 +19,10 @@ object CompManagementConsole {
     override def update(newData: List[ContainerInfo]): Unit = $.setState(State(newData)).runNow()
 
     def render(s : State) = {
-      println(s"Rerendering with $s")
+      log.debug(s"Rerendering with $s")
 
       <.div(
-        <.div("My very super cool Menu"),
+        <.div(i18n.tr("My very super cool Menu")),
         <.div(CompContainerInfo.CompContainerInfoList(s.containerList))
       )
     }

@@ -3,9 +3,12 @@ package blended.mgmt.ui.pages
 import blended.mgmt.ui.backend.DataManager
 import japgolly.scalajs.react.extra.router.{Path, RouterConfigDsl}
 import japgolly.scalajs.react.{Callback, ReactComponentB, ReactElement}
+import blended.mgmt.ui.util.I18n
 
 abstract class TopLevelPage {
 
+	val i18n = I18n()
+  
   val name : String
 
   val routerPath : Path

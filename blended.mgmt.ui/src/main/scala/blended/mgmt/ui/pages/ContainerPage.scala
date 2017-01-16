@@ -6,13 +6,13 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 
 object ContainerPage extends TopLevelPage {
 
-  override val name: String = "Container"
+  override val name: String = i18n.tr("Container")
 
   override val routerPath: Path = Path.root
 
   override val content: ReactElement =
     <.p(
-      "This is the container Page"
+      i18n.tr("This is the container Page")
     )
 
 }

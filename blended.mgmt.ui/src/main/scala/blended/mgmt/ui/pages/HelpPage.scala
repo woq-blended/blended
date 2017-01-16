@@ -6,12 +6,12 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 
 object HelpPage extends TopLevelPage {
 
-  override val name: String = "Help"
+  override val name: String = i18n.tr("Help")
 
   override val routerPath: Path = Path("#help")
 
   override val content: ReactElement =
     <.p(
-      "This is the help Page"
+      i18n.tr("This is the help Page")
     )
 }

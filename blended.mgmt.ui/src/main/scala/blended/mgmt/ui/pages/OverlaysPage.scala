@@ -6,11 +6,11 @@ import japgolly.scalajs.react.vdom.prefix_<^._
 
 object OverlaysPage extends TopLevelPage {
 
-  override val name: String = "Overlays"
+  override val name: String = i18n.tr("Overlays")
 
   override val routerPath: Path = Path("#overlays")
 
   override val content: ReactElement = <.p(
-    "This is the overlay page "
+    i18n.tr("This is the overlay page ")
   )
 }
