@@ -14,15 +14,19 @@ import scala.util.Try
 import java.util.regex.Matcher
 
 trait I18nMarker {
+
+  private[this] val log = Logger[I18nMarker]
+
   @inline def marktr(msgid: String): String = msgid
   @inline def marktrc(context: String, msgid: String): String = msgid
   @inline def notr(msgid: String, params: Any*): String = params match {
     case Seq() => msgid
-    case _ => 
-      val idx = 0
+    case _ =>
+      var idx = 0
       var msg = msgid
       val args = params.map(_.toString).foreach { arg =>
-        msg = msg.replaceAll("\\Q{" + idx + "}\\E", Matcher.quoteReplacement(arg))
+        msg = msg.replaceAll("\\{" + idx + "\\}", Matcher.quoteReplacement(arg))
+        idx += 1
       }
       msg
   }
@@ -44,7 +48,7 @@ trait PreparedI18n {
 
 object I18n extends I18nMarker {
 
-  private[this] val log = Logger("blended.mgmt.ui.util.I18n")
+  private[this] val log = Logger[I18n.type]
 
   var missingTranslationDecorator: Option[String => String] = None
 
@@ -56,7 +60,7 @@ object I18n extends I18nMarker {
 
 class I18nImpl(override val locale: String, missingTranslationDecorator: Option[String => String]) extends I18n {
 
-  private[this] lazy val log = Logger("blended.mgmt.ui.util.I18nImpl")
+  private[this] lazy val log = Logger[I18nImpl]
 
   override def toString = "I18nImpl(locale=" + locale + ")"
 
