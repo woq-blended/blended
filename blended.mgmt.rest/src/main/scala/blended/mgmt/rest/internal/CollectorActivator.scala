@@ -1,11 +1,10 @@
 package blended.mgmt.rest.internal
 
-import akka.actor.Props
 import blended.akka.ActorSystemWatching
+import blended.updater.remote.RemoteUpdater
 import domino.DominoActivator
 import org.osgi.service.http.HttpService
 import org.slf4j.LoggerFactory
-import blended.updater.remote.RemoteUpdater
 
 class CollectorActivator extends DominoActivator with ActorSystemWatching {
 

@@ -15,7 +15,6 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Try}
-import prickle._
 import blended.updater.config.json.PrickleProtocol._
 
 object MgmtReporter {

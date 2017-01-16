@@ -3,11 +3,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.wayofquality.blended</groupId>
-  <artifactId>blended.demo.reactor</artifactId>
+  <artifactId>blended.prickle</artifactId>
   <version>2.1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>bundle</packaging>
   <name>${project.artifactId}</name>
-  <description>A collection of container definitions to demonstrate the functionality of blended.</description>
+  <description>Wrapper for Prickle and mircojson</description>
   <url>https://github.com/woq-blended/blended</url>
   <organization>
     <name>https://github.com/woq-blended</name>
@@ -32,10 +32,6 @@
       <organization>ToToTec</organization>
     </developer>
   </developers>
-  <modules>
-    <module>blended.demo.mgmt</module>
-    <module>blended.demo.node</module>
-  </modules>
   <scm>
     <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
     <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
@@ -58,7 +54,36 @@
     <blended.version>2.1.0-SNAPSHOT</blended.version>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
   </properties>
-  <dependencyManagement />
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.github.benhutchison</groupId>
+        <artifactId>prickle_2.11</artifactId>
+        <version>1.1.13</version>
+        <optional>false</optional>
+      </dependency>
+      <dependency>
+        <groupId>com.github.benhutchison</groupId>
+        <artifactId>microjson_2.11</artifactId>
+        <version>1.4</version>
+        <optional>false</optional>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>com.github.benhutchison</groupId>
+      <artifactId>prickle_2.11</artifactId>
+      <version>1.1.13</version>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>com.github.benhutchison</groupId>
+      <artifactId>microjson_2.11</artifactId>
+      <version>1.4</version>
+      <optional>false</optional>
+    </dependency>
+  </dependencies>
   <repositories>
     <repository>
       <releases>
@@ -126,6 +151,22 @@
     </testResources>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>3.2.0</version>
+          <extensions>true</extensions>
+          <inherited>true</inherited>
+          <configuration>
+            <instructions>
+              <Bundle-Version>2.1.0-SNAPSHOT</Bundle-Version>
+              <Bundle-SymbolicName>blended.prickle</Bundle-SymbolicName>
+              <Import-Package>scala.*;version="[2.11,2.11.50)",prickle,microjson,*</Import-Package>
+              <Embed-Dependency>prickle_2.11;inline=true,microjson_2.11;inline=true</Embed-Dependency>
+              <Export-Package>prickle;version="1.1.13",microjson;version="1.4"</Export-Package>
+            </instructions>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -198,6 +239,22 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.2.0</version>
+        <extensions>true</extensions>
+        <inherited>true</inherited>
+        <configuration>
+          <instructions>
+            <Bundle-Version>2.1.0-SNAPSHOT</Bundle-Version>
+            <Bundle-SymbolicName>blended.prickle</Bundle-SymbolicName>
+            <Import-Package>scala.*;version="[2.11,2.11.50)",prickle,microjson,*</Import-Package>
+            <Embed-Dependency>prickle_2.11;inline=true,microjson_2.11;inline=true</Embed-Dependency>
+            <Export-Package>prickle;version="1.1.13",microjson;version="1.4"</Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>

@@ -3,11 +3,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.wayofquality.blended</groupId>
-  <artifactId>blended.demo.reactor</artifactId>
+  <artifactId>blended.mgmt.service.jmx</artifactId>
   <version>2.1.0-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>bundle</packaging>
   <name>${project.artifactId}</name>
-  <description>A collection of container definitions to demonstrate the functionality of blended.</description>
+  <description>A JMX based Service Info Collector.</description>
   <url>https://github.com/woq-blended/blended</url>
   <organization>
     <name>https://github.com/woq-blended</name>
@@ -32,10 +32,6 @@
       <organization>ToToTec</organization>
     </developer>
   </developers>
-  <modules>
-    <module>blended.demo.mgmt</module>
-    <module>blended.demo.node</module>
-  </modules>
   <scm>
     <connection>scm:git:ssh://git@github.com/woq-blended/blended</connection>
     <developerConnection>scm:git:ssh://git@github.com/woq-blended/blended.git</developerConnection>
@@ -58,7 +54,64 @@
     <blended.version>2.1.0-SNAPSHOT</blended.version>
     <bundle.namespace>${project.artifactId}</bundle.namespace>
   </properties>
-  <dependencyManagement />
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>2.11.8</version>
+        <scope>provided</scope>
+        <optional>false</optional>
+      </dependency>
+      <dependency>
+        <groupId>de.wayofquality.blended</groupId>
+        <artifactId>blended.domino</artifactId>
+        <version>2.1.0-SNAPSHOT</version>
+        <optional>false</optional>
+      </dependency>
+      <dependency>
+        <groupId>de.wayofquality.blended</groupId>
+        <artifactId>blended.akka</artifactId>
+        <version>2.1.0-SNAPSHOT</version>
+        <optional>false</optional>
+      </dependency>
+      <dependency>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest_2.11</artifactId>
+        <version>3.0.1</version>
+        <scope>test</scope>
+        <optional>false</optional>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>2.11.8</version>
+      <scope>provided</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.domino</artifactId>
+      <version>2.1.0-SNAPSHOT</version>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>de.wayofquality.blended</groupId>
+      <artifactId>blended.akka</artifactId>
+      <version>2.1.0-SNAPSHOT</version>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_2.11</artifactId>
+      <version>3.0.1</version>
+      <scope>test</scope>
+      <optional>false</optional>
+    </dependency>
+  </dependencies>
   <repositories>
     <repository>
       <releases>
@@ -126,6 +179,124 @@
     </testResources>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>3.2.0</version>
+          <extensions>true</extensions>
+          <executions>
+            <execution>
+              <id>manifest</id>
+              <phase>process-classes</phase>
+              <goals>
+                <goal>manifest</goal>
+              </goals>
+              <inherited>true</inherited>
+            </execution>
+          </executions>
+          <dependencies>
+            <dependency>
+              <groupId>biz.aQute.bnd</groupId>
+              <artifactId>biz.aQute.bndlib</artifactId>
+              <version>3.2.0</version>
+              <optional>false</optional>
+            </dependency>
+          </dependencies>
+          <inherited>true</inherited>
+          <configuration>
+            <supportedProjectTypes>
+              <supportedProjectType>jar</supportedProjectType>
+              <supportedProjectType>bundle</supportedProjectType>
+              <supportedProjectType>war</supportedProjectType>
+            </supportedProjectTypes>
+            <instructions>
+              <_include>osgi.bnd</_include>
+            </instructions>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.1</version>
+          <extensions>false</extensions>
+          <executions>
+            <execution>
+              <id>compile-scala</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+              <inherited>true</inherited>
+              <configuration>
+                <fork>true</fork>
+                <recompileMode>incremental</recompileMode>
+                <useZincServer>true</useZincServer>
+                <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+                <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+                <args>
+                  <arg>-deprecation</arg>
+                  <arg>-feature</arg>
+                  <arg>-Xlint</arg>
+                  <arg>-Ywarn-nullary-override</arg>
+                </args>
+                <jvmArgs>
+                  <jvmArg>-Xms256m</jvmArg>
+                  <jvmArg>-Xmx512m</jvmArg>
+                  <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+                </jvmArgs>
+              </configuration>
+            </execution>
+            <execution>
+              <id>test-compile-scala</id>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
+              <inherited>true</inherited>
+              <configuration>
+                <fork>true</fork>
+                <recompileMode>incremental</recompileMode>
+                <useZincServer>true</useZincServer>
+                <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+                <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+                <args>
+                  <arg>-deprecation</arg>
+                  <arg>-feature</arg>
+                  <arg>-Xlint</arg>
+                  <arg>-Ywarn-nullary-override</arg>
+                </args>
+                <jvmArgs>
+                  <jvmArg>-Xms256m</jvmArg>
+                  <jvmArg>-Xmx512m</jvmArg>
+                  <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+                </jvmArgs>
+              </configuration>
+            </execution>
+          </executions>
+          <inherited>true</inherited>
+          <configuration>
+            <scalaVersion>2.11.8</scalaVersion>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.scalatest</groupId>
+          <artifactId>scalatest-maven-plugin</artifactId>
+          <version>1.0</version>
+          <extensions>false</extensions>
+          <executions>
+            <execution>
+              <id>test</id>
+              <goals>
+                <goal>test</goal>
+              </goals>
+              <inherited>true</inherited>
+            </execution>
+          </executions>
+          <inherited>true</inherited>
+          <configuration>
+            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+            <junitxml>.</junitxml>
+            <stdout>FT</stdout>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>build-helper-maven-plugin</artifactId>
@@ -198,6 +369,124 @@
       </plugins>
     </pluginManagement>
     <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.2.0</version>
+        <extensions>true</extensions>
+        <executions>
+          <execution>
+            <id>manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+            <inherited>true</inherited>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>biz.aQute.bnd</groupId>
+            <artifactId>biz.aQute.bndlib</artifactId>
+            <version>3.2.0</version>
+            <optional>false</optional>
+          </dependency>
+        </dependencies>
+        <inherited>true</inherited>
+        <configuration>
+          <supportedProjectTypes>
+            <supportedProjectType>jar</supportedProjectType>
+            <supportedProjectType>bundle</supportedProjectType>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+          <instructions>
+            <_include>osgi.bnd</_include>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>3.2.1</version>
+        <extensions>false</extensions>
+        <executions>
+          <execution>
+            <id>compile-scala</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <inherited>true</inherited>
+            <configuration>
+              <fork>true</fork>
+              <recompileMode>incremental</recompileMode>
+              <useZincServer>true</useZincServer>
+              <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+              <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+              <args>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
+                <arg>-Xlint</arg>
+                <arg>-Ywarn-nullary-override</arg>
+              </args>
+              <jvmArgs>
+                <jvmArg>-Xms256m</jvmArg>
+                <jvmArg>-Xmx512m</jvmArg>
+                <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+              </jvmArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>test-compile-scala</id>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <inherited>true</inherited>
+            <configuration>
+              <fork>true</fork>
+              <recompileMode>incremental</recompileMode>
+              <useZincServer>true</useZincServer>
+              <addJavacArgs>-target|${java.version}|-source|${java.version}</addJavacArgs>
+              <addZincArgs>-C-target|-C${java.version}|-C-source|-C${java.version}</addZincArgs>
+              <args>
+                <arg>-deprecation</arg>
+                <arg>-feature</arg>
+                <arg>-Xlint</arg>
+                <arg>-Ywarn-nullary-override</arg>
+              </args>
+              <jvmArgs>
+                <jvmArg>-Xms256m</jvmArg>
+                <jvmArg>-Xmx512m</jvmArg>
+                <jvmArg>-XX:MaxPermSize=128m</jvmArg>
+              </jvmArgs>
+            </configuration>
+          </execution>
+        </executions>
+        <inherited>true</inherited>
+        <configuration>
+          <scalaVersion>2.11.8</scalaVersion>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>1.0</version>
+        <extensions>false</extensions>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <inherited>true</inherited>
+          </execution>
+        </executions>
+        <inherited>true</inherited>
+        <configuration>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <junitxml>.</junitxml>
+          <stdout>FT</stdout>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>

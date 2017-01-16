@@ -62,6 +62,7 @@ BlendedModel(
         "blended.mgmt.agent",
         "blended.mgmt.rest",
         "blended.mgmt.mock",
+        "blended.mgmt.service.jmx",
         "blended.prickle",
         "blended.spray.api",
         "blended.spray",
