@@ -14,7 +14,7 @@ object CompContainerInfo {
       .render_P(ct =>
         <.tr(
           <.td(ct.containerId),
-          <.td(ct.profiles.size, i18n.tr(" Profiles"))
+          <.td(i18n.trn("{0} Profile", "{0} Profiles", ct.profiles.size, ct.profiles.size))
         )
       )
       .build
