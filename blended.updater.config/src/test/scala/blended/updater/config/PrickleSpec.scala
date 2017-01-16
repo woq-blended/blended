@@ -68,7 +68,7 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     "a ServiceInfo" in {
 
-      val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(svcInfo)
       log.info("json: " + json)
@@ -80,7 +80,7 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     "a list of ServiceInfo's" in {
 
-      val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(List(svcInfo))
       log.info("json: " + json)
@@ -92,7 +92,7 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     "a ContainerInfo" in {
 
-      val svcInfo = ServiceInfo("mySvc", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", List.empty)
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))

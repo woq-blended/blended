@@ -14,6 +14,8 @@ BlendedModel(
     scalaLib % "provided",
     blendedDomino,
     blendedAkka,
+    blendedUpdaterConfig,
+    akkaTestkit % "test",
     scalaTest % "test"
   ),
   plugins = Seq(

@@ -3,13 +3,12 @@ package blended.mgmt.rest.internal
 import akka.testkit.TestLatch
 import blended.spray.SprayPrickleSupport
 import blended.updater.config._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ Matchers, FreeSpec }
 import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
 
 import scala.collection.immutable.Seq
-import prickle._
 
 class ManagementCollectorSpec
     extends FreeSpec

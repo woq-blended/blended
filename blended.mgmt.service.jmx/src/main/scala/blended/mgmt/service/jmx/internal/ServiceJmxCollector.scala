@@ -4,6 +4,7 @@ import javax.management.MBeanServer
 
 import akka.actor.{Cancellable, Props}
 import blended.akka.{OSGIActor, OSGIActorConfig}
+import blended.updater.config.ServiceInfo
 
 import scala.concurrent.duration._
 
@@ -32,6 +33,9 @@ class ServiceJmxCollector(cfg: OSGIActorConfig, svcConfig : ServiceJmxConfig, se
 
   override def receive: Receive = {
     case Tick =>
-      log.info("Refreshing Service Information from JMX")
+      log.debug("Refreshing Service Information from JMX")
+      serviceInfos().foreach(info => cfg.system.eventStream.publish(info))
   }
+
+  private def serviceInfos() : List[ServiceInfo] = List.empty
 }
