@@ -16,7 +16,8 @@ BlendedModel(
     blendedAkka,
     blendedUpdaterConfig,
     akkaTestkit % "test",
-    scalaTest % "test"
+    scalaTest % "test",
+    slf4jLog4j12 % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

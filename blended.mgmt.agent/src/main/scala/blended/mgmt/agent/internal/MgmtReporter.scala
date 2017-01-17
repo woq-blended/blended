@@ -113,7 +113,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
         }
       }
 
-    case serviceInfo @ ServiceInfo(name, ts, lifetime, props) =>
+    case serviceInfo @ ServiceInfo(name, svcType, ts, lifetime, props) =>
       log.debug("Update service info for: {}", name)
       serviceInfos += name -> serviceInfo
 

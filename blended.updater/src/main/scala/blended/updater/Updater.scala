@@ -589,6 +589,7 @@ class Updater(
 
       val serviceInfo = ServiceInfo(
         name = context.self.path.toString,
+        serviceType = "Updater",
         timestampMsec = System.currentTimeMillis(),
         lifetimeMsec = config.serviceInfoLifetimeMSec,
         props = props

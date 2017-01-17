@@ -34,6 +34,7 @@ object MockObjects {
 
   private[this] def serviceInfo(numProps: Int = 10) = ServiceInfo(
     name = s"service-${serviceCount.incrementAndGet()}",
+    serviceType = s"type-${rnd.nextInt(3) + 1}",
     timestampMsec = System.currentTimeMillis(),
     lifetimeMsec = 5000l,
     props = sizedProperties(namePrefix = "property", numProps = rnd.nextInt(10) + 1)
