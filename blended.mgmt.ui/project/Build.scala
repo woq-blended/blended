@@ -126,7 +126,6 @@ object Build extends sbt.Build {
 
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
       "org.scalatest" %%% "scalatest" % BlendedVersions.scalaTestVersion % "test"
-      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test"
     ))
 
     lazy val jsDependencies = Def.setting(Seq(
