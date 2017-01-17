@@ -64,17 +64,20 @@ case class ServiceTypeTemplate(
 case object SingleServiceConfig {
 
   val queryPath = "query"
-  val svcTypePath = "type"
+  val svcTypePath = "serviceType"
+  val attributesPath = "attributes"
 
   def apply(svcName: String, cfg: Config) : SingleServiceConfig = new SingleServiceConfig(
     name = svcName,
     svcType = cfg.getString(svcTypePath),
-    query = if (cfg.hasPath(queryPath)) ServiceJmxConfig.getStringMap(cfg.getObject(queryPath)) else Map.empty
+    query = if (cfg.hasPath(queryPath)) ServiceJmxConfig.getStringMap(cfg.getObject(queryPath)) else Map.empty,
+    attributes = if (cfg.hasPath(attributesPath)) cfg.getStringList(attributesPath).asScala.toList else List.empty
   )
 }
 
 case class SingleServiceConfig(
   name : String,
   svcType : String,
-  query : Map[String, String]
+  query : Map[String, String],
+  attributes : List[String]
 )
