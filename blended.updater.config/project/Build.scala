@@ -25,7 +25,11 @@ object Build extends sbt.Build {
     libraryDependencies ++= Dependencies.clientDeps.value,
 
     (unmanagedSourceDirectories in Compile) := Seq(
-      baseDirectory.value / "src" / "shared" / "scala"
+      baseDirectory.value / "shared" / "main" / "scala"
+    ),
+
+    (unmanagedSourceDirectories in Test) := Seq(
+      baseDirectory.value / "shared" / "test" / "scala"
     )
   )
 

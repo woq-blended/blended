@@ -35,7 +35,17 @@ BlendedModel(
           goals = Seq("add-source"),
           configuration = Config(
             sources = Config(
-              source =  "src/shared/scala"
+              source =  "shared/main/scala"
+            )
+          )
+        ),
+        Execution(
+          id = "addTestSources",
+          phase = "generate-sources",
+          goals = Seq("add-test-source"),
+          configuration = Config(
+            sources = Config(
+              source =  "shared/test/scala"
             )
           )
         )
