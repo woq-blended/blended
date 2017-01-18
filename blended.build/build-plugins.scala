@@ -171,7 +171,7 @@ val compileJsPlugin = Plugin(
   gav = execMavenPlugin,
   executions = Seq(
     Execution(
-      id = "compileJS",
+      id = "compileAndTestJs",
       phase = "compile",
       goals = Seq(
         "exec"
@@ -180,7 +180,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
-          argument = "fastOptJS"
+          argument = "test"
         )
       )
     ),

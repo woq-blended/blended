@@ -1,11 +1,10 @@
 package blended.updater.config
 
-import blended.updater.config
+import blended.updater.config.json.PrickleProtocol._
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 import org.slf4j.LoggerFactory
 import prickle._
-import blended.updater.config.json.PrickleProtocol._
 
 class PrickleSpec extends FreeSpec with Matchers {
 
