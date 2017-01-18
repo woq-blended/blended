@@ -9,8 +9,10 @@ object ContainerInfoFilter {
 
   private[this] val log = Logger[ContainerInfoFilter.type]
 
-  case class ContainerId(containerId: String) extends Filter[ContainerInfo] {
-    override def matches(containerInfo: ContainerInfo): Boolean = containerInfo.containerId == containerId
+  case class ContainerId(containerId: String, exact: Boolean = false) extends Filter[ContainerInfo] {
+    override def matches(containerInfo: ContainerInfo): Boolean =
+      if (exact) containerInfo.containerId == containerId
+      else containerInfo.containerId.contains(containerId)
   }
 
   case class ContainsContainerProperty(property: String) extends Filter[ContainerInfo] {
@@ -20,12 +22,15 @@ object ContainerInfoFilter {
   case class FreeText(text: String) extends Filter[ContainerInfo] {
     override def matches(containerInfo: ContainerInfo): Boolean = {
       val lazyLines = Stream(
-        () => Seq(containerInfo.containerId)
+        () => Seq(containerInfo.containerId),
+        () => containerInfo.properties.values,
+        () => containerInfo.profiles.map(p => p.name + "-" + p.version),
+        () => containerInfo.profiles.flatMap(p => p.overlays.flatMap(o => o.overlays).map(_.toString()))
       ).flatMap { generator => generator() }
 
       val p = Pattern.compile(Pattern.quote(text))
       lazyLines.exists { line =>
-        log.trace("Match? line = " + line + ", pattern = " + p)
+        log.trace("Match? line = " + line + ", " + this)
         p.matcher(line).find()
       }
     }

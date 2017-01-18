@@ -9,14 +9,17 @@ import prickle._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
+import blended.mgmt.ui.util.Logger
 
 
 object DataManager {
 
+  private[this] val log = Logger[DataManager.type]
+  
   var selectedPage : TopLevelPage = TopLevelPages.defaultPage
 
   def setSelectedPage(page: TopLevelPage) : Unit = {
-    println("Selected Page : " + page.routerPath.toString)
+    log.debug("Selected Page : " + page.routerPath.toString)
     selectedPage = page
   }
 
@@ -28,9 +31,9 @@ object DataManager {
 
       Ajax.get(ConsoleSettings.mgmtUrl).onComplete {
         case Success(xhr) =>
-          println(xhr.responseText)
+          log.trace("response: " + xhr.responseText)
           update(Unpickle[List[ContainerInfo]].fromString(xhr.responseText).get)
-        case _ => println("Could not retrieve container list from server")
+        case _ => log.error("Could not retrieve container list from server")
       }
     }
 
