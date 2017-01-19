@@ -180,6 +180,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "fastOptJS",
           argument = "test"
         )
       )
