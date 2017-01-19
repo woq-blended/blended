@@ -146,8 +146,6 @@ BlendedModel(
     "com.sun.jersey" % "jersey-client" % "${jersey.version}",
     // blended-management
     blendedMgmtAgent,
-    blendedMgmtRepo,
-    blendedMgmtRepoRest,
     blendedContainerRegistry,
     blendedMgmtRest,
     blendedPersistence,

@@ -78,8 +78,6 @@ Model(
         "blended.domino",
         "blended.akka",
         "blended.mgmt.base",
-        "blended.mgmt.repo",
-        "blended.mgmt.repo.rest",
         "blended.mgmt.agent",
         "blended.mgmt.rest",
         "blended.mgmt.mock",
@@ -98,7 +96,6 @@ Model(
         "blended.launcher.features",
         "blended.demo.launcher",
         "blended.demo.mgmt"
-        //"blended.mgmt.ui"
       )
     ),
     Profile(
