@@ -67,12 +67,9 @@ class I18nImpl(override val locale: String, missingTranslationDecorator: Option[
   private[this] def translate(msgid: String): String = {
     // TODO: make a message lookup
     log.trace("Could not lookup msgid \"" + msgid + "\" for locale \"" + locale + "\"")
-    missingTranslationDecorator match {
-      case None => I18n.missingTranslationDecorator match {
-        case None => msgid
-        case Some(miss) => miss(msgid)
-      }
+    missingTranslationDecorator.orElse(I18n.missingTranslationDecorator) match {
       case Some(miss) => miss(msgid)
+      case None => msgid
     }
   }
 
