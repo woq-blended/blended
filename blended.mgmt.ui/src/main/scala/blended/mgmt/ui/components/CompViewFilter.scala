@@ -33,19 +33,23 @@ object CompViewFilter {
     }
 
     def render(props: Props) = {
-      val divs = props.filter.filters.map { filter =>
+      val filters = props.filter.filters
+
+      val selectedFilters = filters.map { filter =>
         <.span(
           <.span(filter.toString()),
-          <.span("X", ^.onClick ==> removeFilter(filter)
+          <.span(
+            i18n.trc("Remove filter", "X"),
+            ^.onClick ==> removeFilter(filter)
           )
         )
       }
 
-      <.span(
-        (divs ++
-          Seq(<.span("Remove All", ^.onClick ==> removeAllFilter))
-        ): _*
-      )
+      val clearFilters = filters.headOption.map(_ => <.span(
+        i18n.tr("Clear Filter"),
+        ^.onClick ==> removeAllFilter))
+
+      <.span((selectedFilters ++ clearFilters): _*)
     }
   }
 
