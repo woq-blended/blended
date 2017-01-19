@@ -3,12 +3,12 @@ package blended.samples.jms.internal
 import java.util.concurrent.atomic.AtomicLong
 import javax.jms.ConnectionFactory
 
+import blended.camel.utils.BlendedCamelContext
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
-import org.apache.camel.{LoggingLevel, Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
-import org.apache.camel.impl.DefaultCamelContext
+import org.apache.camel.{Exchange, Processor}
 import org.slf4j.LoggerFactory
 
 object JmsSampleActivator {
@@ -26,8 +26,7 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
 
       whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)"){ cf =>
 
-        val ctxt = new DefaultCamelContext()
-        ctxt.setName("JmsSampleContext")
+        val ctxt = BlendedCamelContext("JmsSampleContext")
         ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
         ctxt.addRoutes(new RouteBuilder() {

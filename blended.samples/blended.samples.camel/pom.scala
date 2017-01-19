@@ -11,6 +11,7 @@ BlendedModel(
   packaging = "bundle",
   description = "A sample camel route.",
   dependencies = Seq(
+    blendedCamelUtils,
     domino,
     camelCore,
     camelJms,
