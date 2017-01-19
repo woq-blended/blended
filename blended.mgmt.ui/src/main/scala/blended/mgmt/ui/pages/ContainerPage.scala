@@ -12,6 +12,6 @@ object ContainerPage extends TopLevelPage {
   override val routerPath: Path = Path.root
 
   override val content: ReactElement =
-    <.div(CompManagementConsole.CompManagementConsole())
+    <.div(CompManagementConsole.Component())
 
 }

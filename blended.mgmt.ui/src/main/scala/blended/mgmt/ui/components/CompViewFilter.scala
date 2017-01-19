@@ -53,7 +53,7 @@ object CompViewFilter {
     }
   }
 
-  val CompViewFilter = ReactComponentB[Props]("ContainerViewFilter")
+  val Component = ReactComponentB[Props]("ContainerViewFilter")
     .backend(new Backend(_))
     .renderBackend
     .build

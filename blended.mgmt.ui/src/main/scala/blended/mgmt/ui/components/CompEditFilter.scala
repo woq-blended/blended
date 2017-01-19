@@ -106,7 +106,7 @@ object CompEditFilter {
     }
   }
 
-  val CompEditFilter = ReactComponentB[Props]("ContainerEditFilter")
+  val Component = ReactComponentB[Props]("ContainerEditFilter")
     .initialState(State())
     .backend(new Backend(_))
     .renderBackend
