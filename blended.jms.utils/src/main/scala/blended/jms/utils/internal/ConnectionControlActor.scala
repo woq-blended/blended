@@ -25,9 +25,7 @@ object ConnectionControlActor {
 class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: BlendedJMSConnectionConfig, override val bundleContext: BundleContext)
   extends Actor with ActorLogging with ServiceConsuming {
 
-  case object PingTimeout
   case class ConnectingTimeout(t: Long)
-  case class PingResult(result : Either[Throwable, Boolean])
   case class ConnectResult(timestamp: Long, result: Either[Throwable, Connection])
 
   private[this] implicit val eCtxt = context.system.dispatcher
@@ -38,7 +36,6 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
   private[this] var firstConnectAttempt : Option[Long] = None
   private[this] var lastConnectAttempt: Long = 0l
-  private[this] var pinging : Boolean = false
   private[this] var pingTimer : Option[Cancellable] = None
 
   private[this] var lastDisconnect : Option[Long] = None
@@ -79,24 +76,19 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
     case CheckConnection =>
       pingTimer = None
-      conn.foreach{ c => ping(c).pipeTo(self) }
+      conn.foreach( ping )
 
     case PingResult(Right(_)) =>
-      pinging = false
       failedPings = 0
       checkConnection(schedule)
 
     case PingResult(Left(t)) =>
-      pinging = false
       log.debug(s"Error sending connection ping for provider [$provider].")
       checkReconnect()
 
     case PingTimeout =>
-      if (pinging) {
-        pinging = false
-        log.debug(s"Ping for provider [$provider] timed out.")
-        checkReconnect()
-      }
+      log.debug(s"Ping for provider [$provider] timed out.")
+      checkReconnect()
 
     case ConnectResult =>
 
@@ -249,29 +241,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
   }
 
-  private[this] def ping(c: Connection) : Future[PingResult] = {
-
-    pinging = true
-    context.system.scheduler.scheduleOnce(config.pingTimeout.seconds, self, PingTimeout)
-
-    Future {
-      var session: Option[Session] = None
-
-      try {
-        log.debug(s"Checking connection for provider [$provider]")
-        session = Some(c.createSession(false, Session.AUTO_ACKNOWLEDGE))
-        session.foreach { s =>
-          val producer = s.createProducer(s.createTopic("blended.ping"))
-          producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
-          producer.close()
-        }
-        PingResult(Right(true))
-      } catch {
-        case NonFatal(e) =>
-          PingResult(Left(e))
-      } finally {
-        session.foreach(_.close())
-      }
-    }
+  private[this] def ping(c: Connection) : Unit = {
+    val pingActor = context.actorOf(ConnectionPingActor.props(self, c, "blended.ping", config.pingTimeout.seconds))
   }
 }
