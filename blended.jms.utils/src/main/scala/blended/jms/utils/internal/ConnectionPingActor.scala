@@ -27,6 +27,7 @@ class ConnectionPingActor(controller: ActorRef, con: Connection, destName : Stri
   implicit val eCtxt = context.system.dispatcher
 
   var isTimeout = false
+  var hasPinged = false
 
   private class PingListener(a : ActorRef) extends MessageListener {
 
@@ -71,16 +72,17 @@ class ConnectionPingActor(controller: ActorRef, con: Connection, destName : Stri
   def pinging(session: Session, timer: Cancellable): Receive = {
 
     case Timeout =>
-      isTimeout = true
-      controller ! PingTimeout
+      if (!hasPinged) {
+        isTimeout = true
+        controller ! PingTimeout
+      }
       self ! Cleanup
 
     case PingReceived(m) =>
-      if (isTimeout) {
+      if (!isTimeout) {
         controller ! PingResult(Right(m))
-        timer.cancel()
+        hasPinged = true
       }
-      self ! Cleanup
 
     case Cleanup =>
       session.close()
