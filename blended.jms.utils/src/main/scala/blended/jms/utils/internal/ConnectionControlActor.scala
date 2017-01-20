@@ -79,6 +79,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       conn.foreach( ping )
 
     case PingResult(Right(_)) =>
+      log.info(s"JMS connection for provider [$provider] seems healthy.")
       failedPings = 0
       checkConnection(schedule)
 
@@ -87,7 +88,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       checkReconnect()
 
     case PingTimeout =>
-      log.debug(s"Ping for provider [$provider] timed out.")
+      log.warning(s"Ping for provider [$provider] timed out.")
       checkReconnect()
 
     case ConnectResult =>
@@ -242,6 +243,7 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
   }
 
   private[this] def ping(c: Connection) : Unit = {
-    val pingActor = context.actorOf(ConnectionPingActor.props(self, c, "blended.ping", config.pingTimeout.seconds))
+    log.info(s"Checking JMS connection for provider [$provider]")
+    context.actorOf(ConnectionPingActor.props(self, c, "blended.ping", config.pingTimeout.seconds))
   }
 }
