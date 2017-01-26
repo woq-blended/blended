@@ -14,41 +14,48 @@ object CompManagementConsole {
   private[this] val log: Logger = Logger[CompManagementConsole.type]
   private[this] val i18n = I18n()
 
-  case class State(containerList: List[ContainerInfo], filter: And[ContainerInfo] = And()) {
+  case class State(containerList: List[ContainerInfo], filter: And[ContainerInfo] = And(), selected: Option[ContainerInfo] = None) {
     def filteredContainerList: List[ContainerInfo] = containerList.filter(c => filter.matches(c))
+    def consistent = this.copy(selected = selected.filter(s => containerList.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
 
-    override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData)).runNow()
+    override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData).consistent).runNow()
 
     def addFilter(filter: Filter[ContainerInfo]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
-      scope.modState(s => s.copy(filter = s.filter.append(filter).normalized)).runNow()
+      scope.modState(s => s.copy(filter = s.filter.append(filter).normalized).consistent).runNow()
     }
 
     def removeFilter(filter: Filter[ContainerInfo]) = {
-      scope.modState(s => s.copy(filter = And((s.filter.filters.filter(_ != filter)): _*))).runNow()
+      scope.modState(s => s.copy(filter = And((s.filter.filters.filter(_ != filter)): _*)).consistent).runNow()
     }
 
     def removeAllFilter() = {
-      scope.modState(s => s.copy(filter = And())).runNow()
+      scope.modState(s => s.copy(filter = And()).consistent).runNow()
+    }
+
+    def selectContainer(containerInfo: Option[ContainerInfo]) = {
+      scope.modState(s => s.copy(selected = containerInfo).consistent).runNow()
     }
 
     def render(s: State) = {
       log.debug(s"Rerendering with $s")
       <.div(
         <.div(
-          CompEditFilter.CompEditFilter(CompEditFilter.Props(s.filter, s.containerList, addFilter))),
+          CompEditFilter.Component(CompEditFilter.Props(s.filter, s.containerList, addFilter))),
         <.div(
-          CompViewFilter.CompViewFilter(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
+          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
         <.div(
-          CompContainerInfo.CompContainerInfoList(s.filteredContainerList))
+          CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
+        <.div(
+          CompContainerDetail.Component(s.selected))
       )
     }
   }
 
-  val CompManagementConsole =
+  val Component =
     ReactComponentB[Unit]("MgmtConsole")
       .initialState(State(containerList = List.empty))
       .renderBackend[Backend]
