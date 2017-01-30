@@ -35,18 +35,25 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
   override def performCheck(cond: AsyncCondition) : Future[Boolean] = {
 
     implicit val t = Timeout(10.seconds)
-    log.debug("Checking JMS connection...")
-    (jmsConnector.get ? Connect("test")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
-      result match {
-        case Left(e) => {
-          log.debug(s"Couldn't connect to JMS [${e.inner.getMessage}]")
-          false
+    log.debug(s"Checking JMS connection...[$cf]")
+
+    jmsConnector match {
+      case None => Future(false)
+      case Some(c) =>
+        (c ? Connect(s"test-${System.currentTimeMillis()}")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
+
+          result match {
+            case Left(e) => {
+              log.debug(s"Couldn't connect to JMS [$cf] [${e.inner.getMessage}]")
+              c ! Disconnect
+              false
+            }
+            case Right(_) => {
+              c ! Disconnect
+              true
+            }
+          }
         }
-        case Right(_) => {
-          jmsConnector.get ! Disconnect
-          true
-        }
-      }
     }
   }
 }

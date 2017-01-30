@@ -29,11 +29,7 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
 
   def disconnected : Receive = {
     case Connect(clientId, user, pwd) => {
-      val result = try {
-        Await.result(createConnection(clientId, user, pwd), 1.second)
-      } catch {
-        case t: Throwable => Left(JMSCaughtException(t))
-      }
+      val result = createConnection(clientId, user, pwd)
 
       sender ! result
     }
@@ -72,34 +68,32 @@ class JMSConnectorActor(cf: ConnectionFactory) extends Actor with ActorLogging {
 
   private def createConnection(
     clientId: String, user: Option[String], password: Option[String]
-  ) : Future[Either[JMSCaughtException, Connected]] = {
+  ) : Either[JMSCaughtException, Connected] = {
 
-    Future {
-      try {
-        val connection = if (user.isDefined && password.isDefined)
-          cf.createConnection(user.get, password.get)
-        else
-          cf.createConnection()
+    try {
+      val connection = if (user.isDefined && password.isDefined)
+        cf.createConnection(user.get, password.get)
+      else
+        cf.createConnection()
 
-        log.debug(s"Connection [${clientId}] created ...")
+      log.debug(s"Connection [${clientId}] created ...")
 
-        connection.setClientID(clientId)
-        connection.start()
-        context.become(connected(connection))
+      connection.setClientID(clientId)
+      connection.start()
+      context.become(connected(connection))
 
-        val f = (() => { c: Connection =>
-          log.debug(s"Closing connection [${clientId}]")
-          c.close()
-        }.apply(connection))
+      val f = (() => { c: Connection =>
+        log.debug(s"Closing connection [${clientId}]")
+        c.close()
+      }.apply(connection))
 
-        addPostStopAction(f)
+      addPostStopAction(f)
 
-        Right(Connected(clientId))
-      } catch {
-        case t: Throwable =>
-          log.debug(s"Couldn't create JMS connection [${clientId}]")
-          Left(JMSCaughtException(t))
-      }
+      Right(Connected(clientId))
+    } catch {
+      case t: Throwable =>
+        log.warning(s"Couldn't create JMS connection [${clientId}], ${t.getMessage()}")
+        Left(JMSCaughtException(t))
     }
   }
 }
