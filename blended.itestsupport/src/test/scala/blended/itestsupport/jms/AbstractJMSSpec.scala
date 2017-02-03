@@ -52,6 +52,7 @@ abstract class AbstractJMSSpec extends WordSpec
       val b = new BrokerService()
       b.setBrokerName("blended")
       b.setPersistent(false)
+      b.setUseJmx(false)
       b.setPersistenceAdapter(new MemoryPersistenceAdapter)
 
       b.start()

@@ -1,5 +1,6 @@
 package blended.itestsupport.jms
 
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.ConnectionFactory
 
 import akka.actor._
@@ -10,6 +11,7 @@ import blended.itestsupport.jms.protocol._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object JMSAvailableCondition{
   def apply(cf: ConnectionFactory, t: Option[FiniteDuration] = None)(implicit system: ActorSystem) =
@@ -21,6 +23,9 @@ private[jms] object JMSChecker {
 }
 
 private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
+
+  var connected : AtomicBoolean = new AtomicBoolean(false)
+  var connecting : AtomicBoolean = new AtomicBoolean(false)
 
   override def supervisorStrategy = OneForOneStrategy() {
     case _ => SupervisorStrategy.Stop
@@ -34,26 +39,35 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
 
   override def performCheck(cond: AsyncCondition) : Future[Boolean] = {
 
-    implicit val t = Timeout(10.seconds)
+    implicit val t = Timeout(5.seconds)
+
     log.debug(s"Checking JMS connection...[$cf]")
+    if ( (!connected.get()) && (!connecting.get()) ) {
 
-    jmsConnector match {
-      case None => Future(false)
-      case Some(c) =>
-        (c ? Connect(s"test-${System.currentTimeMillis()}")).mapTo[Either[JMSCaughtException, Connected]].map { result =>
+      connecting.set(true)
 
-          result match {
-            case Left(e) => {
-              log.debug(s"Couldn't connect to JMS [$cf] [${e.inner.getMessage}]")
-              c ! Disconnect
-              false
+      jmsConnector match {
+        case None => Future(false)
+        case Some(c) =>
+          (c ? Connect(s"test-${System.currentTimeMillis()}")).mapTo[Either[JMSCaughtException, Connected]] onComplete {
+            case Success(result) => result match {
+              case Left(e) => {
+                log.debug(s"Couldn't connect to JMS [$cf] [${e.inner.getMessage}]")
+                c ! Disconnect
+              }
+              case Right(_) => {
+                connected.set(true)
+                c ! Disconnect
+              }
             }
-            case Right(_) => {
+            case Failure(_) =>
               c ! Disconnect
-              true
-            }
           }
-        }
+      }
+
+      connecting.set(false)
     }
+
+    Future(connected.get())
   }
 }

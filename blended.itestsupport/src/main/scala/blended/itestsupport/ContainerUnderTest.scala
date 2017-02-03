@@ -45,7 +45,8 @@ case class ContainerLink(
 )
 
 object ContainerUnderTest {
-  def containerMap(config: Config) = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
+
+  def containerMap(config: Config) : Map[String, ContainerUnderTest] = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
       ContainerUnderTest(cfg)
     }.toList.map( ct => (ct.ctName, ct)).toMap
       

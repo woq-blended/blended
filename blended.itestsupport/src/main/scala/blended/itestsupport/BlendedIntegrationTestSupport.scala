@@ -12,11 +12,11 @@ import org.apache.camel.CamelContext
 import scala.concurrent.Await
 import scala.concurrent.duration.FiniteDuration
 
-trait BlendedIntegrationTestSupport { 
-  
+trait BlendedIntegrationTestSupport {
+
   def testContext(ctProxy: ActorRef)(implicit timeout: FiniteDuration, testKit: TestKit) : CamelContext = {
     val probe = new TestProbe(testKit.system)
-    val cuts = ContainerUnderTest.containerMap(testKit.system.settings.config)    
+    val cuts = ContainerUnderTest.containerMap(testKit.system.settings.config)
     ctProxy.tell(TestContextRequest(cuts), probe.ref)
     probe.receiveN(1,timeout).head.asInstanceOf[CamelContext] 
   }
