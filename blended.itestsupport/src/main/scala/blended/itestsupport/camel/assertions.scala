@@ -14,7 +14,7 @@ import scala.concurrent.Await
 
 object MockAssertions {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[MockAssertions])
+  private[this] val log = LoggerFactory.getLogger(classOf[MockAssertions.type])
   
   def checkAssertions(mock: ActorRef, assertions: MockAssertion*)(implicit timeout: Timeout) : List[Throwable] = {
     val f = (mock ? CheckAssertions(assertions)).mapTo[CheckResults]
@@ -94,5 +94,3 @@ object MockAssertions {
     }
   }
 }
-
-class MockAssertions

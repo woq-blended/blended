@@ -89,4 +89,5 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case Left(t) => t.getMessage 
   }
 
+  override def toString: String = s"CamelMockActor[$uri]"
 }
