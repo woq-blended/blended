@@ -14,9 +14,29 @@ object CompContainerDetail {
 
   class Backend(scope: BackendScope[Option[ContainerInfo], Unit]) {
     def render(ci: Option[ContainerInfo]) = {
-      <.div(
-        i18n.tr("Container ID: {0}", ci.map(_.containerId).getOrElse(i18n.tr("<NONE>")))
-      )
+      ci match {
+        case None => <.span(i18n.tr("No Container selected"))
+        case Some(containerInfo) =>
+
+          val props = containerInfo.properties.map(p => <.div(<.span(p._1, ": "), <.span(p._2))).toSeq
+          val profiles = containerInfo.profiles.map(p => <.span(p.name))
+
+          <.div(
+            <.div(
+              i18n.tr("Container ID:"),
+              containerInfo.containerId
+            ),
+            <.div(
+              i18n.tr("Properties:"),
+              <.div(props: _*)
+            ),
+            <.div(
+              i18n.tr("Profiles:"),
+              <.span(profiles: _*)
+            )
+          )
+
+      }
     }
   }
 
