@@ -19,20 +19,35 @@ object CompContainerDetail {
         case Some(containerInfo) =>
 
           val props = containerInfo.properties.map(p => <.div(<.span(p._1, ": "), <.span(p._2))).toSeq
-          val profiles = containerInfo.profiles.map(p => <.span(p.name))
+
+          val profiles = containerInfo.profiles.flatMap { profile =>
+            val oSets = profile.overlays
+
+            oSets.map { oSet =>
+              val overlays = oSet.overlays
+
+              val genTitle = if (overlays.isEmpty) i18n.tr("without overlays") else overlays.mkString(", ")
+
+              <.div(
+                oSet.reason.isDefined ?= (^.title := s"${oSet.state}: ${oSet.reason.get}"),
+                s"${profile.name}-${profile.version} ${genTitle} (${oSet.state})"
+              )
+            }
+          }
 
           <.div(
             <.div(
-              i18n.tr("Container ID:"),
+              i18n.tr("Container ID: "),
               containerInfo.containerId
             ),
             <.div(
-              i18n.tr("Properties:"),
+              i18n.tr("Properties: "),
+              " ",
               <.div(props: _*)
             ),
             <.div(
-              i18n.tr("Profiles:"),
-              <.span(profiles: _*)
+              i18n.tr("Profiles: "),
+              <.div(profiles: _*)
             )
           )
 

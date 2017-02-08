@@ -21,6 +21,7 @@ object ContainerInfoFilter {
 
   case class FreeText(text: String) extends Filter[ContainerInfo] {
     override def matches(containerInfo: ContainerInfo): Boolean = {
+      // create (lazily) text lines that will be searched
       val lazyLines = Stream(
         () => Seq(containerInfo.containerId),
         () => containerInfo.properties.values,
