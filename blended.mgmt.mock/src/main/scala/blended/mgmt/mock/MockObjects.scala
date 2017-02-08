@@ -66,7 +66,7 @@ object MockObjects {
         OverlayRef(name = "shop-Q", version = "1.0")
       ),
       state = OverlayState.Invalid,
-      reason = None
+      reason = Some("Incorrect artifact checksums")
     )
 
     List(
