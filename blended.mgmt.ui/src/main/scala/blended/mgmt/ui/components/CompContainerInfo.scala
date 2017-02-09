@@ -15,6 +15,7 @@ object CompContainerInfo {
   case class Props(containerInfo: ContainerInfo, select: () => Unit)
 
   class CompContainerInfoBackend(scope: BackendScope[Props, Unit]) {
+    
     def selectContainer(e: ReactEventI) = {
       scope.props.map { p => p.select() }
     }
