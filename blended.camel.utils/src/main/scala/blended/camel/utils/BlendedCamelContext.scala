@@ -9,9 +9,11 @@ object BlendedCamelContext {
 
   val count = new AtomicLong(0)
 
-  def apply() : CamelContext = BlendedCamelContext("blended-" + count.incrementAndGet())
+  def apply() : CamelContext = BlendedCamelContext(true)
 
-  def apply(name : String) : CamelContext = {
+  def apply(withJmx: Boolean) : CamelContext = BlendedCamelContext("blended-" + count.incrementAndGet(), withJmx)
+
+  def apply(name : String, withJmx: Boolean = true) : CamelContext = {
 
     val result = new DefaultCamelContext()
     result.setName(name)
@@ -20,6 +22,10 @@ object BlendedCamelContext {
     agent.setUseHostIPAddress(true)
     agent.setCreateConnector(false)
     agent.setUsePlatformMBeanServer(true)
+
+    if (!withJmx) {
+      result.disableJMX()
+    }
 
     result
   }

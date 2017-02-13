@@ -3,11 +3,10 @@ package blended.itestsupport.camel
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging}
-import akka.camel.{CamelMessage, CamelExtension}
-import akka.event.LoggingReceive
+import akka.camel.{CamelExtension, CamelMessage}
 import blended.itestsupport.camel.protocol._
-import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
+import org.apache.camel.{Exchange, Processor}
 
 import scala.collection.convert.Wrappers.JMapWrapper
 
