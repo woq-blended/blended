@@ -17,7 +17,9 @@ object CompContainerDetail {
   private[this] val log = Logger[CompContainerDetail.type]
   private[this] val i18n = I18n()
 
-  class Backend(scope: BackendScope[Option[ContainerInfo], Unit]) {
+  case class Props(containerInfo: Option[ContainerInfo])
+
+  class Backend(scope: BackendScope[Props, Unit]) {
 
     def activateProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
       CallbackTo {
@@ -30,17 +32,17 @@ object CompContainerDetail {
         log.trace(s"Unimplemented callback: resolve profile ${profile} with overlay set ${overlaySet}")
       }
     }
-   
+
     def deleteProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
       CallbackTo {
         log.trace(s"Unimplemented callback: delete profile ${profile} with overlay set ${overlaySet}")
       }
     }
 
-    def render(ci: Option[ContainerInfo]) = {
-      ci match {
-        case None => <.span(i18n.tr("No Container selected"))
-        case Some(containerInfo) =>
+    def render(props: Props) = {
+      props match {
+        case Props(None) => <.span(i18n.tr("No Container selected"))
+        case Props(Some(containerInfo)) =>
 
           val props = containerInfo.properties.map(p => <.div(<.span(p._1, ": "), <.span(p._2))).toSeq
 
@@ -53,19 +55,27 @@ object CompContainerDetail {
               val genTitle = if (overlays.isEmpty) i18n.tr("without overlays") else overlays.mkString(", ")
 
               <.div(
-                  ^.`class` := oSet.state.toString,
+                ^.`class` := oSet.state.toString,
                 oSet.reason.isDefined ?= (^.title := s"${oSet.state}: ${oSet.reason.get}"),
                 s"${profile.name}-${profile.version} ${genTitle} (${oSet.state})",
                 " ",
-                oSet.state != OverlayState.Valid ?= <.span(
+                oSet.state != OverlayState.Valid ?= <.button(
+                  ^.`type` := "button",
+                  ^.`class` := "btn btn-default btn-xs",
                   ^.onClick ==> activateProfile(profile, oSet),
                   i18n.tr("Activate")
                 ),
-                oSet.state != OverlayState.Active ?= <.span(
+                " ",
+                oSet.state != OverlayState.Active ?= <.button(
+                  ^.`type` := "button",
+                  ^.`class` := "btn btn-default btn-xs",
                   ^.onClick ==> deleteProfile(profile, oSet),
                   i18n.tr("Delete")
                 ),
-                oSet.state != OverlayState.Invalid ?= <.span(
+                " ",
+                oSet.state != OverlayState.Invalid ?= <.button(
+                  ^.`type` := "button",
+                  ^.`class` := "btn btn-default btn-xs",
                   ^.onClick ==> resolveProfile(profile, oSet),
                   i18n.tr("Try to Resolve")
                 )
@@ -94,7 +104,7 @@ object CompContainerDetail {
   }
 
   val Component =
-    ReactComponentB[Option[ContainerInfo]]("ContainerDetail")
+    ReactComponentB[Props]("ContainerDetail")
       .renderBackend[Backend]
       .build
 }

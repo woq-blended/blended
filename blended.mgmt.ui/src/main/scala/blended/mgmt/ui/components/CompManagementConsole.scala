@@ -50,7 +50,7 @@ object CompManagementConsole {
         <.div(
           CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
         <.div(
-          CompContainerDetail.Component(s.selected))
+          CompContainerDetail.Component(CompContainerDetail.Props(s.selected)))
       )
     }
   }
