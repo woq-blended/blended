@@ -20,7 +20,7 @@ class ContainerUnderTestSpec extends WordSpec
 
       def docker = {
         System.setProperty("docker.io.version", "1.17")
-        new Docker with VolumeBaseDir {
+        new Docker {
           override implicit val logger: LoggingAdapter = system.log
           override implicit val config: Config = system.settings.config
           override implicit val client = mockClient

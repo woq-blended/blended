@@ -1,15 +1,15 @@
 package blended.itestsupport.camel
 
 import akka.actor.{ActorSystem, Props}
-import akka.camel.{CamelExtension, Oneway, Producer}
+import akka.camel.{Oneway, Producer}
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
 import blended.itestsupport.camel.MockAssertions._
 import blended.itestsupport.camel.protocol._
 import blended.itestsupport.docker.DockerTestSetup
 import blended.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
-import org.scalatest.{WordSpec, Matchers, WordSpecLike}
+import org.scalatest.mockito.MockitoSugar
+import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.duration._
 
@@ -26,7 +26,7 @@ class CamelMockActorSpec extends WordSpec
     def endpointUri = s"direct-vm:$uri?block=true"    
   })) 
   
-  def createProbe(implicit system : ActorSystem) = {
+  def createProbe()(implicit system : ActorSystem) : TestProbe = {
     val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[MockMessageReceived])
     probe
@@ -50,10 +50,10 @@ class CamelMockActorSpec extends WordSpec
       val mock = mockActor("b") 
       val p = producer("b")
       
-      val probe = createProbe
+      val probe = createProbe()
 
       p ! "Hello Andreas"
-      probe.expectMsg(MockMessageReceived("direct-vm:b"))
+      probe.expectMsgType[MockMessageReceived]
     }
   
     "Track the received messages" in TestActorSys { testkit =>
@@ -68,7 +68,7 @@ class CamelMockActorSpec extends WordSpec
       sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
-      probe.expectMsg(MockMessageReceived("direct-vm:c"))
+      probe.expectMsgType[MockMessageReceived]
 
       mock.tell(GetReceivedMessages, sender.ref)
       sender.fishForMessage() {
@@ -90,7 +90,7 @@ class CamelMockActorSpec extends WordSpec
       sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
-      probe.expectMsg(MockMessageReceived("direct-vm:d"))
+      probe.expectMsgType[MockMessageReceived]
 
       checkAssertions(mock, expectedMessageCount(2)) should have size 1
     }  
@@ -107,7 +107,7 @@ class CamelMockActorSpec extends WordSpec
       sender.expectMsg(ReceivedMessages(List.empty))
       
       p ! "Hello Andreas"
-      probe.expectMsg(MockMessageReceived("direct-vm:e"))
+      probe.expectMsgType[MockMessageReceived]
 
       checkAssertions(mock, expectedMessageCount(1)) should have size 0
     }  

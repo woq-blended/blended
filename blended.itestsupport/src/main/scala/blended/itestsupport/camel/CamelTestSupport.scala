@@ -54,12 +54,13 @@ trait CamelTestSupport {
 
     val producer = context.createProducerTemplate()
     val response = producer.send(uri, exchange)
-    
-    if (response.getException != null) {
-      log.warn(s"Executing request on [$uri] failed")
-      Left(response.getException)
-    } else {
-      Right(camelMessage(response.getOut))
+
+    Option(response.getException()) match {
+      case Some(e) =>
+        log.warn(s"Executing request on [$uri] failed")
+        Left(e)
+      case None =>
+        Right(camelMessage(response.getOut()))
     }
   }
 

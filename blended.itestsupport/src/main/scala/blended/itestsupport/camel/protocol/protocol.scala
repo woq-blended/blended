@@ -11,7 +11,7 @@ package protocol {
   case object GetReceivedMessages
   case class ReceivedMessages(messages: List[CamelMessage])
   case object ResetMessages
-  case class MockMessageReceived(uri: String)
+  case class MockMessageReceived(uri: String, msg: CamelMessage)
   case class CheckAssertions(assertions: Seq[MockAssertion])
   case class CheckResults(results: List[AssertionResult])
   case object StopReceive
