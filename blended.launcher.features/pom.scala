@@ -172,6 +172,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
 BlendedModel(
   blendedLauncherFeatures,
   packaging = "jar",
+  description = "The prepackaged features for blended.",
   prerequisites = Prerequisites(
     maven = "3.3.3"
   ),

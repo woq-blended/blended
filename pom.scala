@@ -12,12 +12,13 @@ BlendedModel(
   description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
   plugins = Seq(
     Plugin(
-      "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.5",
+      "org.sonatype.plugins" % "nexus-staging-maven-plugin",
       extensions = true,
       configuration = Config(
         serverId = "ossrh",
         nexusUrl = "https://oss.sonatype.org/",
-        autoReleaseAfterClose = "true"
+        autoReleaseAfterClose = "true",
+        skipNexusStagingDeployMojo = "true"
       )
     ),
     Plugin(
