@@ -95,6 +95,13 @@
         <scope>test</scope>
         <optional>false</optional>
       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>1.7.12</version>
+        <scope>test</scope>
+        <optional>false</optional>
+      </dependency>
     </dependencies>
   </dependencyManagement>
   <dependencies>
@@ -134,6 +141,13 @@
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.11</artifactId>
       <version>3.0.1</version>
+      <scope>test</scope>
+      <optional>false</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.12</version>
       <scope>test</scope>
       <optional>false</optional>
     </dependency>

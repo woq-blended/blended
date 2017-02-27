@@ -17,7 +17,6 @@ object CamelMockActor {
 class CamelMockActor(uri: String) extends Actor with ActorLogging {
 
   private[this] val camelContext = CamelExtension(context.system).context
-  private[this] val mockActor = self
   private[this] var routeId : Option[String] = None
 
   override def preStart(): Unit = {
@@ -26,6 +25,8 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     camelContext.addRoutes( new RouteBuilder() {
 
       override def configure(): Unit = {
+
+        val mockActor = self
 
         routeId = Some(UUID.randomUUID().toString())
 
@@ -52,7 +53,9 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
 
     case ca : CheckAssertions =>
-      val results = CheckResults(ca.assertions.toList.map { a => a(messages.reverse) })
+      val mockMessages = messages.reverse
+      log.info(s"Checking assertions for [$uri] on [${mockMessages.size}] messages.")
+      val results = CheckResults(ca.assertions.toList.map { a => a(mockMessages) })
       errors(results) match {
         case e if e.isEmpty =>
         case l => log.error(prettyPrint(l))
@@ -62,10 +65,10 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
 
   def receiving(messages: List[CamelMessage]) : Receive = {
     case msg : CamelMessage =>
-      log.info("Received msg at uri [{}]", uri)
       val newList = msg :: messages
+      log.info(s"CamelMockActor [$uri] has now [${newList.size}] messages.")
       context.become(receiving(newList) orElse (handleRquests(newList)))
-      context.system.eventStream.publish(MockMessageReceived(uri))
+      context.system.eventStream.publish(MockMessageReceived(uri, msg))
 
     case StopReceive =>
       routeId.foreach { rid =>

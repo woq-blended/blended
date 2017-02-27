@@ -15,6 +15,7 @@ BlendedModel(
     started by the integration test (for reproducability).""",
   dependencies = Seq(
     scalaLib % "provided",
+    blendedAkka,
     blendedJolokia,
     blendedTestSupport,
     "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion,
