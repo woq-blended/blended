@@ -1,6 +1,13 @@
 package blended.updater.config.json
 
-import blended.updater.config._
+import blended.updater.config.ServiceInfo
+import blended.updater.config.ContainerInfo
+import blended.updater.config.OverlayState
+import blended.updater.config.UpdateAction
+import blended.updater.config.ActivateProfile
+import blended.updater.config.StageProfile
+import blended.updater.config.AddRuntimeConfig
+import blended.updater.config.AddOverlayConfig
 import prickle._
 import microjson.JsValue
 

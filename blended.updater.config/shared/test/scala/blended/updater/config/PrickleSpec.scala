@@ -1,14 +1,10 @@
 package blended.updater.config
 
 import blended.updater.config.json.PrickleProtocol._
-import com.typesafe.config.ConfigFactory
-import org.scalatest.{FreeSpec, Matchers}
-import org.slf4j.LoggerFactory
+import org.scalatest.{ FreeSpec, Matchers }
 import prickle._
 
 class PrickleSpec extends FreeSpec with Matchers {
-
-  private[this] val log = LoggerFactory.getLogger(classOf[PrickleSpec])
 
   "Prickle should (de)serialize" - {
     "an ActivateProfile" in {
@@ -36,7 +32,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
 
       val json = Pickle.intoString(action: UpdateAction)
-      log.info("json: " + json)
+      println("json: " + json)
 
       val action2: UpdateAction = Unpickle[UpdateAction].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
@@ -51,17 +47,10 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     "a GeneratedConfig" in {
 
-      val config = ConfigFactory.load()
-
-      val cfg = GeneratedConfigCompanion.create("filename", config)
-
+      val cfg = GeneratedConfig("filename", "{ key1: value1 }")
       val json = Pickle.intoString(cfg)
-
       val cfg2 = Unpickle[GeneratedConfig].fromString(json).get
-      cfg2.configFile should be(cfg.configFile)
-
-      val config2 = GeneratedConfigCompanion.config(cfg2)
-      config2 should be(config)
+      cfg2 should be(cfg)
 
     }
 
@@ -70,7 +59,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(svcInfo)
-      log.info("json: " + json)
+      println("json: " + json)
 
       val svc = Unpickle[ServiceInfo].fromString(json).get
 
@@ -82,7 +71,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(List(svcInfo))
-      log.info("json: " + json)
+      println("json: " + json)
 
       val svcList = Unpickle[List[ServiceInfo]].fromString(json).get
 
@@ -97,7 +86,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
 
       val json = Pickle.intoString(info)
-      log.info("json: " + json)
+      println("json: " + json)
 
       val info2 = Unpickle[ContainerInfo].fromString(json).get
 
@@ -112,7 +101,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val resp = ContainerRegistryResponseOK("response", List.empty)
 
       val json = Pickle.intoString(resp)
-      log.info("json: " + json)
+      println("json: " + json)
 
       val resp2 = Unpickle[ContainerRegistryResponseOK].fromString(json).get
       resp2 should be(resp)

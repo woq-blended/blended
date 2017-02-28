@@ -36,7 +36,8 @@ object Build extends sbt.Build {
   object Dependencies {
 
     lazy val clientDeps = Def.setting(Seq(
-      "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle
+      "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
+      "org.scalatest" %%% "scalatest" % BlendedVersions.scalaTestVersion % "test"
     ))
 
   }
