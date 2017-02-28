@@ -8,6 +8,8 @@ import blended.mgmt.ui.util.Logger
 import blended.mgmt.ui.util.I18n
 import blended.mgmt.ui.components.filter.Filter
 import blended.mgmt.ui.components.filter.And
+import blended.mgmt.ui.backend.DirectProfileUpdater
+import blended.mgmt.ui.ConsoleSettings
 
 object CompManagementConsole {
 
@@ -50,7 +52,7 @@ object CompManagementConsole {
         <.div(
           CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
         <.div(
-          CompContainerDetail.Component(CompContainerDetail.Props(s.selected)))
+          CompContainerDetail.Component(CompContainerDetail.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerBaseUrl)))))
       )
     }
   }

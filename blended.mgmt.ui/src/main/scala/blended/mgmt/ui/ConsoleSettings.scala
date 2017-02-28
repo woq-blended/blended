@@ -2,5 +2,7 @@ package blended.mgmt.ui
 
 object ConsoleSettings {
 
-  val mgmtUrl = "http://localhost:9999/medium"
+  val mgmtUrl = "http://mgmt:9191/mgmt/container"
+  
+  val containerBaseUrl = "http://mgmt:9191/mgmt/container"
 }

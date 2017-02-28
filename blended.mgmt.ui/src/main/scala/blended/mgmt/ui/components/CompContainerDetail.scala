@@ -11,26 +11,42 @@ import blended.updater.config.OverlayState
 import blended.updater.config.Profile
 import blended.updater.config.OverlaySet
 import japgolly.scalajs.react.CallbackTo
+import blended.mgmt.ui.backend.ProfileUpdater
+import blended.updater.config.ActivateProfile
+import blended.updater.config.UpdateAction
+import blended.updater.config.StageProfile
 
 object CompContainerDetail {
 
   private[this] val log = Logger[CompContainerDetail.type]
   private[this] val i18n = I18n()
 
-  case class Props(containerInfo: Option[ContainerInfo])
+  case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdater] = None)
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def activateProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
-      CallbackTo {
-        log.trace(s"Unimplemented callback: activate profile ${profile} with overlay set ${overlaySet}")
+    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEventI) = {
+      scope.props.map { p =>
+        p.containerInfo match {
+          case Some(ci) =>
+            p.profileUpdater match {
+              case Some(pu) =>
+                pu.addUpdateActions(ci.containerId, updateActions.toList)
+              case None =>
+                log.info(s"Skipping update action. No profile updater set")
+            }
+          case None =>
+            log.info(s"Skipping update action. No containerInfo set")
+        }
       }
     }
 
+    def activateProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
+      sendUpdateAction(ActivateProfile(profile.name, profile.version, overlaySet.overlays))(event)
+    }
+
     def resolveProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
-      CallbackTo {
-        log.trace(s"Unimplemented callback: resolve profile ${profile} with overlay set ${overlaySet}")
-      }
+      sendUpdateAction(StageProfile(profile.name, profile.version, overlaySet.overlays))(event)
     }
 
     def deleteProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
@@ -41,8 +57,8 @@ object CompContainerDetail {
 
     def render(props: Props) = {
       props match {
-        case Props(None) => <.span(i18n.tr("No Container selected"))
-        case Props(Some(containerInfo)) =>
+        case Props(None, _) => <.span(i18n.tr("No Container selected"))
+        case Props(Some(containerInfo), profileUpdater) =>
 
           val props = containerInfo.properties.map(p => <.div(<.span(p._1, ": "), <.span(p._2))).toSeq
 
@@ -56,12 +72,16 @@ object CompContainerDetail {
 
               <.div(
                 ^.`class` := oSet.state.toString,
-                oSet.reason.isDefined ?= (^.title := s"${oSet.state}: ${oSet.reason.get}"),
-                s"${profile.name}-${profile.version} ${genTitle} (${oSet.state})",
+                s"${profile.name}-${profile.version} ${genTitle} ",
+                <.span(
+                  oSet.reason.isDefined ?= (^.title := s"${oSet.state}: ${oSet.reason.get}"),
+                  s"(${oSet.state})"
+                ),
                 " ",
-                oSet.state != OverlayState.Valid ?= <.button(
+                oSet.state != OverlayState.Active ?= <.button(
                   ^.`type` := "button",
                   ^.`class` := "btn btn-default btn-xs",
+                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
                   ^.onClick ==> activateProfile(profile, oSet),
                   i18n.tr("Activate")
                 ),
@@ -69,13 +89,15 @@ object CompContainerDetail {
                 oSet.state != OverlayState.Active ?= <.button(
                   ^.`type` := "button",
                   ^.`class` := "btn btn-default btn-xs",
+                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
                   ^.onClick ==> deleteProfile(profile, oSet),
                   i18n.tr("Delete")
                 ),
                 " ",
-                oSet.state != OverlayState.Invalid ?= <.button(
+                oSet.state == OverlayState.Invalid ?= <.button(
                   ^.`type` := "button",
                   ^.`class` := "btn btn-default btn-xs",
+                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
                   ^.onClick ==> resolveProfile(profile, oSet),
                   i18n.tr("Try to Resolve")
                 )
