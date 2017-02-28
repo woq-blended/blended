@@ -3,9 +3,9 @@ package blended.jms.utils.internal
 import java.util.concurrent.TimeUnit
 import javax.jms.{Connection, ConnectionFactory, Session}
 
-import akka.actor.{Props, Actor, ActorLogging, Cancellable}
+import akka.actor.{Actor, ActorLogging, Cancellable, Props}
 import akka.pattern.pipe
-import blended.jms.utils.{BlendedSingleConnectionFactory, BlendedJMSConnectionConfig, BlendedJMSConnection}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory}
 import blended.mgmt.base.FrameworkService
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
@@ -78,8 +78,8 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
       pingTimer = None
       conn.foreach( ping )
 
-    case PingResult(Right(_)) =>
-      log.info(s"JMS connection for provider [$provider] seems healthy.")
+    case PingResult(Right(m)) =>
+      log.info(s"JMS connection for provider [$provider] seems healthy [$m].")
       failedPings = 0
       checkConnection(schedule)
 
@@ -244,6 +244,8 @@ class ConnectionControlActor(provider: String, cf: ConnectionFactory, config: Bl
 
   private[this] def ping(c: Connection) : Unit = {
     log.info(s"Checking JMS connection for provider [$provider]")
-    context.actorOf(ConnectionPingActor.props(self, c, "blended.ping", config.pingTimeout.seconds))
+    val pinger = context.actorOf(ConnectionPingActor.props(self, config.pingTimeout.seconds))
+    val jmsPingPerformer = new JmsPingPerformer(pinger, provider, c, "blended.ping")
+    pinger ! jmsPingPerformer
   }
 }
