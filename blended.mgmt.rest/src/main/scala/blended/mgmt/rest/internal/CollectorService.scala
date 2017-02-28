@@ -21,12 +21,16 @@ trait CollectorService extends HttpService {
 
   def getCurrentState(): immutable.Seq[RemoteContainerState]
 
+  /** Register a runtime config into the management container. */
   def registerRuntimeConfig(rc: RuntimeConfig): Unit
 
+  /** Register a overlay config into the management container. */
   def registerOverlayConfig(oc: OverlayConfig): Unit
 
+  /** Get all registered runtime configs of the management container. */
   def getRuntimeConfigs(): immutable.Seq[RuntimeConfig]
 
+  /** Get all registered overlay configs of the managament container. */
   def getOverlayConfigs(): immutable.Seq[OverlayConfig]
 
   def version: String
