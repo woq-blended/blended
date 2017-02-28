@@ -1,47 +1,41 @@
 package blended.jms.utils.internal
 
-import javax.jms.Connection
-
 import akka.actor._
 import akka.pattern.pipe
 
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 
 object ConnectionCloseActor {
-  def apply(conn: Connection, t: FiniteDuration, controller: ActorRef) = new ConnectionCloseActor(conn, t, controller)
+  def apply(holder: ConnectionHolder) = new ConnectionCloseActor(holder)
 }
 
-class ConnectionCloseActor(conn: Connection, t: FiniteDuration, controller: ActorRef) extends Actor with ActorLogging {
+class ConnectionCloseActor(holder: ConnectionHolder) extends Actor with ActorLogging {
 
-  case object CloseConnection
-
-  implicit val eCtxt = context.system.dispatcher
+  private[this] implicit val eCtxt = context.system.dispatcher
   private[this] var timer : Option[Cancellable] = None
-
-  override def preStart(): Unit = {
-    super.preStart()
-    self ! CloseConnection
-  }
 
   override def receive: Receive = {
 
-    case CloseConnection =>
+    case Disconnect(t) =>
+      context.become(waiting(sender()))
+
       val f = Future {
-        conn.close()
+        holder.close()
         ConnectionClosed
       }
       timer = Some(context.system.scheduler.scheduleOnce(t, self, CloseTimeout))
       f.pipeTo(self)
+  }
 
+  def waiting(caller: ActorRef) : Receive = {
     case CloseTimeout =>
       timer.foreach(_.cancel())
-      controller ! CloseTimeout
+      caller ! CloseTimeout
       context.stop(self)
 
     case ConnectionClosed =>
       timer.foreach(_.cancel())
-      controller ! ConnectionClosed
+      caller ! ConnectionClosed
       context.stop(self)
   }
 }

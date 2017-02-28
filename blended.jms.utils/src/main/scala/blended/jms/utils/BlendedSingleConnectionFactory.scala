@@ -5,7 +5,7 @@ import javax.jms.{Connection, ConnectionFactory, JMSException}
 import akka.actor.Props
 import akka.util.Timeout
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.internal.ConnectionControlActor
+import blended.jms.utils.internal.{ConnectionControlMonitor, ConnectionHolder, ConnectionStateManager}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
@@ -40,17 +40,20 @@ class BlendedSingleConnectionFactory(
   private[this] implicit val timeout = Timeout(100.millis)
   private[this] val log : Logger = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
 
-  private[this] val con = s"JMS-$provider"
-
-  log.debug(s"Creating ConnectionControlActor [${con}]")
+  private[this] val monitorName = s"Monitor-$provider"
+  private[this] val stateMgrName = s"JMS-$provider"
 
   private[this] val actor =
     if (config.enabled) {
-      log.debug(s"ConnectionControlActor [${con}] created.")
-      Some(cfg.system.actorOf(Props(ConnectionControlActor(provider, cf, config, cfg.bundleContext)), con))
-    }
-    else
+
+      val monitor = cfg.system.actorOf(ConnectionControlMonitor.props(cfg.bundleContext), monitorName)
+      val holder = new ConnectionHolder(provider, cf)
+      log.info(s"ConnectionController [$stateMgrName] created.")
+      Some(cfg.system.actorOf(ConnectionStateManager.props(monitor, holder, config), stateMgrName))
+    } else {
+      log.info(s"ConnectionController [$stateMgrName] is disabled by config setting.")
       None
+    }
 
   @throws[JMSException]
   override def createConnection(): Connection = {
