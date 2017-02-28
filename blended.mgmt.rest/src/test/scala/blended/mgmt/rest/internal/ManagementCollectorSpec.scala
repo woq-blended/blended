@@ -3,7 +3,6 @@ package blended.mgmt.rest.internal
 import akka.testkit.TestLatch
 import blended.spray.SprayPrickleSupport
 import blended.updater.config._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{ Matchers, FreeSpec }
 import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
@@ -13,7 +12,6 @@ import scala.collection.immutable.Seq
 class ManagementCollectorSpec
     extends FreeSpec
     with Matchers
-    with MockitoSugar
     with ScalatestRouteTest
     with CollectorService
     with SprayPrickleSupport {
@@ -21,7 +19,7 @@ class ManagementCollectorSpec
   val testPostLatch = TestLatch(1)
   val testGetLatch = TestLatch(1)
 
-  "The Management collector" - {
+  "The Management collector routes" - {
 
     "should POST /container returns a registry response" in {
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List())) ~> collectorRoute ~> check {
@@ -42,7 +40,7 @@ class ManagementCollectorSpec
         responseAs[String] should be("TEST")
       }
     }
-
+    
   }
 
   override implicit def actorRefFactory = system
@@ -66,4 +64,6 @@ class ManagementCollectorSpec
   override def getRuntimeConfigs(): Seq[RuntimeConfig] = ???
 
   override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
+
+  override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
 }

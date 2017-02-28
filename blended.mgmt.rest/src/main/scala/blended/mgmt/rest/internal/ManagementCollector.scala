@@ -2,9 +2,9 @@ package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
 
-import akka.actor.{Actor, ActorRefFactory, Props}
-import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
-import blended.spray.{SprayOSGIBridge, SprayOSGIServlet}
+import akka.actor.{ Actor, ActorRefFactory, Props }
+import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
+import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import com.typesafe.config.Config
@@ -19,10 +19,10 @@ import scala.collection.immutable
 import blended.spray.SprayPrickleSupport
 
 case class ManagementCollectorConfig(
-  servletSettings: ConnectorSettings,
-  routingSettings: RoutingSettings,
-  contextPath: String,
-  remoteUpdater: RemoteUpdater) {
+    servletSettings: ConnectorSettings,
+    routingSettings: RoutingSettings,
+    contextPath: String,
+    remoteUpdater: RemoteUpdater) {
 
   override def toString(): String = s"${getClass.getSimpleName}(servletSettings=${servletSettings},routingSettings=${routingSettings},contextPath=${contextPath},remoteUpdater=${remoteUpdater})"
 }
@@ -42,7 +42,7 @@ object ManagementCollector {
 }
 
 class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfig)
-  extends OSGIActor(cfg)
+    extends OSGIActor(cfg)
     with CollectorService
     with ProductionEventSource
     with SprayPrickleSupport {
@@ -89,7 +89,14 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
       "Web-ContextPath" -> s"/${config.contextPath}"
     )
 
-    context.become(runRoute(collectorRoute ~ infoRoute ~ versionRoute ~ runtimeConfigRoute ~ overlayConfigRoute))
+    context.become(runRoute(
+      collectorRoute ~
+        infoRoute ~
+        versionRoute ~
+        runtimeConfigRoute ~
+        overlayConfigRoute ~
+        updateActionRoute
+    ))
   }
 
   def receive: Receive = Actor.emptyBehavior
@@ -108,4 +115,7 @@ class ManagementCollector(cfg: OSGIActorConfig, config: ManagementCollectorConfi
   override def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = config.remoteUpdater.getRuntimeConfigs()
 
   override def getOverlayConfigs(): immutable.Seq[OverlayConfig] = config.remoteUpdater.getOverlayConfigs()
+
+  override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = config.remoteUpdater.addAction(containerId, updateAction)
+
 }

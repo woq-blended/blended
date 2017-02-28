@@ -33,6 +33,9 @@ trait CollectorService extends HttpService {
   /** Get all registered overlay configs of the managament container. */
   def getOverlayConfigs(): immutable.Seq[OverlayConfig]
 
+  /** Promote (stage) an update action to a container. */
+  def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
+
   def version: String
 
   def versionRoute: Route = {
@@ -109,6 +112,17 @@ trait CollectorService extends HttpService {
             complete(s"Registered ${oc.name}-${oc.version}")
           }
         }
+    }
+  }
+
+  def updateActionRoute: Route = {
+    path("container" / Segment / "update") { containerId =>
+      post {
+        entity(as[UpdateAction]) { updateAction =>
+          addUpdateAction(containerId, updateAction)
+          complete(s"Added UpdateAction to ${containerId}")
+        }
+      }
     }
   }
 
