@@ -3,12 +3,12 @@ package blended.jms.utils.internal
 import javax.jms.Connection
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
 
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
-
 import scala.concurrent.duration._
 
 object JmsConnectionController {
@@ -22,7 +22,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
 
   override def receive: Receive = disconnected
 
-  def disconnected : Receive = {
+  def disconnected : Receive = LoggingReceive {
     case Connect(t) =>
       val caller = sender()
 
@@ -34,10 +34,10 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
         case NonFatal(e) => caller ! ConnectResult(t, Left(e))
       }
     case Disconnect =>
-      sender ! ConnectionClosed
+      sender() ! ConnectionClosed
   }
 
-  def connected(c : Connection) : Receive = {
+  def connected(c : Connection) : Receive = LoggingReceive {
     case Connect(t) =>
       sender ! ConnectResult(t, Right(c))
     case Disconnect(t) =>
@@ -54,4 +54,6 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
           if (log.isDebugEnabled) log.error(t.getMessage(), t)
       }
   }
+
+  override def toString: String = "JMSConnectionController(" + holder.toString() + ")"
 }

@@ -26,6 +26,6 @@ class BlendedDemoIntegrationSpec extends RefSpec
   }
   
   override def afterAll() {
-    stopContainers(ctProxy)(1200.seconds, testkit)
+    //stopContainers(ctProxy)(1200.seconds, testkit)
   }
 }

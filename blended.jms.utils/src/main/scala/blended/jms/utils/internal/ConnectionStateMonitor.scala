@@ -1,6 +1,7 @@
 package blended.jms.utils.internal
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.event.LoggingReceive
 import blended.mgmt.base.FrameworkService
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
@@ -12,7 +13,7 @@ object ConnectionStateMonitor {
 class ConnectionStateMonitor(override val bundleContext: BundleContext, val monitorBean: ConnectionMonitor)
   extends Actor with ActorLogging with ServiceConsuming {
 
-  override def receive: Receive = {
+  override def receive: Receive = LoggingReceive {
     case ConnectionStateChanged(state) =>
       val caller = sender()
 

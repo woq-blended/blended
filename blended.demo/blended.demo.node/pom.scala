@@ -25,7 +25,6 @@ BlendedContainer(
     Feature("blended-samples")
   ),
   properties = Map(
-    "spray.version" -> BlendedVersions.sprayVersion,
-    "loglevel.test" -> "DEBUG"
+    "spray.version" -> BlendedVersions.sprayVersion
   )
 )

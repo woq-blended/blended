@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit
 import javax.jms.Connection
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
 import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
 
@@ -70,7 +71,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // ---- State: Disconnected
-  def disconnected()(state: ConnectionState) : Receive = {
+  def disconnected()(state: ConnectionState) : Receive = LoggingReceive {
 
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
     case CheckConnection =>
@@ -79,7 +80,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // ---- State: Connected
-  def connected()(state: ConnectionState) : Receive = {
+  def connected()(state: ConnectionState) : Receive = LoggingReceive {
 
     // If we are already connected we simply try to ping the underlying connection
     case CheckConnection =>
@@ -108,7 +109,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // ---- State: Connecting
-  def connecting()(state: ConnectionState) : Receive = {
+  def connecting()(state: ConnectionState) : Receive = LoggingReceive {
 
     case CheckConnection =>
       pingTimer = None
@@ -141,7 +142,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // State: Closing
-  def closing()(state: ConnectionState) : Receive = {
+  def closing()(state: ConnectionState) : Receive = LoggingReceive {
 
     case CheckConnection =>
       pingTimer = None
@@ -162,7 +163,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       monitor ! RestartContainer(e)
   }
 
-  def jmxOperations(state : ConnectionState) : Receive = {
+  def jmxOperations(state : ConnectionState) : Receive = LoggingReceive {
     case s : ConnectionState =>
       if (s.disconnectPending)
         disconnect(state)
