@@ -1,10 +1,12 @@
 package blended.jms.utils
 
+import java.lang.management.ManagementFactory
 import javax.jms.{Connection, ConnectionFactory, JMSException}
+import javax.management.ObjectName
 
 import akka.util.Timeout
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.internal.{ConnectionStateMonitor, ConnectionHolder, ConnectionStateManager}
+import blended.jms.utils.internal._
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
@@ -28,11 +30,17 @@ class BlendedSingleConnectionFactory(
   private[this] val actor =
     if (config.enabled) {
 
-      val monitor = cfg.system.actorOf(ConnectionStateMonitor.props(cfg.bundleContext), monitorName)
-      log.info(s"ConnectionController [$stateMgrName] created.")
+      val jmxServer = ManagementFactory.getPlatformMBeanServer()
+      val mBean = new ConnectionMonitor(provider)
+
+      val objName = new ObjectName(s"blended:type=ConnectionMonitor,provider=$provider")
+      jmxServer.registerMBean(mBean, objName)
+
+      val monitor = cfg.system.actorOf(ConnectionStateMonitor.props(cfg.bundleContext, mBean), monitorName)
+      log.info(s"Connection State Monitor [$stateMgrName] created.")
       Some(cfg.system.actorOf(ConnectionStateManager.props(monitor, holder, config), stateMgrName))
     } else {
-      log.info(s"ConnectionController [$stateMgrName] is disabled by config setting.")
+      log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None
     }
 

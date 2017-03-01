@@ -48,3 +48,5 @@ case class Disconnect(timeout: FiniteDuration)
   * @param r
   */
 case class ConnectResult(t: Long, r : Either[Throwable, Connection])
+
+case class ConnectionStateChanged(state: ConnectionState)

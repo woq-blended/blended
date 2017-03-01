@@ -6,12 +6,16 @@ import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
 
 object ConnectionStateMonitor {
-  def props(bc : BundleContext) : Props = Props(new ConnectionStateMonitor(bc))
+  def props(bc : BundleContext, monitorBean: ConnectionMonitor) : Props = Props(new ConnectionStateMonitor(bc, monitorBean))
 }
 
-class ConnectionStateMonitor(override val bundleContext: BundleContext) extends Actor with ActorLogging with ServiceConsuming {
+class ConnectionStateMonitor(override val bundleContext: BundleContext, val monitorBean: ConnectionMonitor)
+  extends Actor with ActorLogging with ServiceConsuming {
 
   override def receive: Receive = {
+    case ConnectionStateChanged(state) =>
+      monitorBean.setState(state)
+
     case RestartContainer(t) =>
       restartContainer(t.getMessage())
       context.stop(self)
