@@ -24,12 +24,14 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
 
   def disconnected : Receive = {
     case Connect(t) =>
+      val caller = sender()
+
       try {
         val c = holder.connect()
-        sender ! ConnectResult(t, Right(c))
+        caller ! ConnectResult(t, Right(c))
         context.become(connected(c))
       } catch {
-        case NonFatal(e) => sender ! ConnectResult(t, Left(e))
+        case NonFatal(e) => caller ! ConnectResult(t, Left(e))
       }
     case Disconnect =>
       sender ! ConnectionClosed

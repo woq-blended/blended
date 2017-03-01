@@ -8,7 +8,9 @@ class ConnectionMonitor(provider: String) extends ConnectionMonitorMBean {
   override def getProvider(): String = provider
 
   def setState(newState: ConnectionState) : Unit = { state = newState }
-  override def getState(): String = state.state
+  def getState() : ConnectionState = state
+
+  override def getStatus(): String = state.status
 
   override def getLastConnect(): Option[Date] = state.lastConnect
 
@@ -21,4 +23,8 @@ class ConnectionMonitor(provider: String) extends ConnectionMonitorMBean {
   override def setMaxEvents(n: Int): Unit = {} // TODO
 
   override def getEvents(): Array[String] = state.events.toArray
+
+  override def disconnect(reason: String): Unit = state = state.copy(disconnectPending = true)
+
+  override def connect(): Unit = state = state.copy(connectPending = true)
 }

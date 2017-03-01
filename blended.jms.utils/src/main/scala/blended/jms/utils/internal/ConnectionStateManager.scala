@@ -66,7 +66,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
   override def preStart(): Unit = {
     super.preStart()
-    switchState(disconnected(), ConnectionState().copy(state = DISCONNECTED))
+    switchState(disconnected(), ConnectionState().copy(status = DISCONNECTED))
   }
 
   // ---- State: Disconnected
@@ -115,7 +115,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     case ConnectResult(t, Left(e)) =>
       if (t == state.lastConnectAttempt.getOrElse(0l)) {
-        switchState(disconnected(), state.copy(state = DISCONNECTED))
+        switchState(disconnected(), state.copy(status = DISCONNECTED))
         if (!checkRestartForFailedReconnect(state, e)) {
           checkConnection(retrySchedule)
         }
@@ -127,7 +127,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
         conn = Some(new BlendedJMSConnection(c))
         checkConnection(schedule)
         switchState(connected(), publishEvents(state, s"Successfully connected to provider [$provider]").copy(
-          state = CONNECTED,
+          status = CONNECTED,
           firstReconnectAttempt = None,
           lastConnect = Some(new Date())
         ))
@@ -135,7 +135,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     case ConnectTimeout(t) =>
       if (t == state.lastConnectAttempt.getOrElse(0l)) {
-        switchState(disconnected(), state.copy(state = DISCONNECTED))
+        switchState(disconnected(), state.copy(status = DISCONNECTED))
         checkConnection(retrySchedule)
       }
   }
@@ -153,7 +153,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       switchState(
         disconnected(),
         publishEvents(state, s"Connection for provider [$provider] successfully closed.")
-          .copy(state = DISCONNECTED, lastDisconnect = Some(new Date()))
+          .copy(status = DISCONNECTED, lastDisconnect = Some(new Date()))
       )
 
     // Once we encounter a timeout for a connection close we initiate a Container Restart via the monitor
@@ -162,15 +162,24 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       monitor ! RestartContainer(e)
   }
 
+  def jmxOperations(state : ConnectionState) : Receive = {
+    case s : ConnectionState =>
+      if (s.disconnectPending)
+        disconnect(state)
+      else if (s.connectPending)
+        self ! CheckConnection
+  }
+
   // helper methods
 
   // A convenience method to let us know which state we are switching to
   private[this] def switchState(rec: StateReceive, newState: ConnectionState) : Unit = {
-    log.debug(s"Connection State Manager [$provider] switching to state [$newState]")
+
+    val nextState = publishEvents(newState, s"Connection State Manager [$provider] switching to state [${newState.status}]")
     currentReceive = rec
-    currentState = newState
-    monitor ! newState
-    context.become(rec(newState).orElse(unhandled))
+    currentState = nextState
+    monitor ! nextState
+    context.become(rec(nextState).orElse(jmxOperations(nextState)).orElse(unhandled))
   }
 
   // A convenience method to capture unhandled messages
@@ -250,7 +259,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
     // push the events into the newState in reverse order and set
     // the new state name
     publishEvents(newState, events.reverse.toArray:_*).copy(
-      state = CONNECTING,
+      status = CONNECTING,
       lastConnectAttempt = Some(lastConnectAttempt)
     )
   }
@@ -285,7 +294,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     // Notify the connection controller of the disconnect
     controller ! Disconnect(config.minReconnect.seconds)
-    switchState(closing(), s.copy(state = CLOSING, failedPings = 0))
+    switchState(closing(), s.copy(status = CLOSING, failedPings = 0))
   }
 
   // A reconnect is only schedule if we have reached the maximumPingTolerance for the connection

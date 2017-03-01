@@ -14,7 +14,15 @@ class ConnectionStateMonitor(override val bundleContext: BundleContext, val moni
 
   override def receive: Receive = {
     case ConnectionStateChanged(state) =>
-      monitorBean.setState(state)
+      val caller = sender()
+
+      val response = state.copy(
+        disconnectPending = monitorBean.getState().disconnectPending,
+        connectPending = monitorBean.getState().connectPending
+      )
+      monitorBean.setState(state.copy(disconnectPending = false, connectPending = false))
+
+      caller ! response
 
     case RestartContainer(t) =>
       restartContainer(t.getMessage())

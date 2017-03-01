@@ -11,12 +11,15 @@ object ConnectionState {
 }
 
 case class ConnectionState(
-  state : String = ConnectionState.DISCONNECTED,
+  status : String = ConnectionState.DISCONNECTED,
   lastConnect : Option[Date] = None,
   lastDisconnect : Option[Date] = None,
   failedPings: Int = 0,
   maxEvents: Int = 20,
   events: List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
-  lastConnectAttempt: Option[Date] = None
+  lastConnectAttempt: Option[Date] = None,
+
+  disconnectPending : Boolean = false,
+  connectPending : Boolean = false
 )
