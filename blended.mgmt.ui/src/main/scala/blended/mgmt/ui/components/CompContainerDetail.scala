@@ -60,7 +60,7 @@ object CompContainerDetail {
         case Props(None, _) => <.span(i18n.tr("No Container selected"))
         case Props(Some(containerInfo), profileUpdater) =>
 
-          val props = containerInfo.properties.map(p => <.div(<.span(p._1, ": "), <.span(p._2))).toSeq
+          val props = containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
           val profiles = containerInfo.profiles.flatMap { profile =>
             val oSets = profile.overlays
@@ -105,19 +105,43 @@ object CompContainerDetail {
             }
           }
 
+          val services = containerInfo.serviceInfos.map { serviceInfo =>
+
+            val sProps = serviceInfo.props.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
+
+            <.div(
+              <.div(
+                i18n.tr("Service: "),
+                serviceInfo.name
+              ),
+              <.div(
+                i18n.tr("Type: "),
+                serviceInfo.serviceType
+              ),
+              <.div(
+                i18n.tr("Properties: "),
+                <.div(sProps: _*)
+              )
+            )
+          }
+
           <.div(
             <.div(
-              i18n.tr("Container ID: "),
+              i18n.tr("Container ID:"),
+              " ",
               containerInfo.containerId
             ),
             <.div(
-              i18n.tr("Properties: "),
-              " ",
+              i18n.tr("Properties:"),
               <.div(props: _*)
             ),
             <.div(
-              i18n.tr("Profiles: "),
+              i18n.tr("Profiles:"),
               <.div(profiles: _*)
+            ),
+            <.div(
+              i18n.tr("Services:"),
+              <.div(services: _*)
             )
           )
 

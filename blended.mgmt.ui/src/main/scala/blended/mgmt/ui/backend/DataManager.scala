@@ -10,6 +10,7 @@ import prickle._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
 import blended.mgmt.ui.util.Logger
+import blended.updater.config.RemoteContainerState
 
 
 object DataManager {
@@ -32,7 +33,7 @@ object DataManager {
       Ajax.get(ConsoleSettings.mgmtUrl).onComplete {
         case Success(xhr) =>
           log.trace("response: " + xhr.responseText)
-          update(Unpickle[List[ContainerInfo]].fromString(xhr.responseText).get)
+          update(Unpickle[List[RemoteContainerState]].fromString(xhr.responseText).get.map(_.containerInfo))
         case _ => log.error("Could not retrieve container list from server")
       }
     }

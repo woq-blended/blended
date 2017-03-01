@@ -108,6 +108,25 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     }
 
+    "a RemoteContainerState" in {
+      val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
+      val profile = Profile("myProfile", "1.0", List.empty)
+
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
+
+      val overlay = OverlayRef("myOverlay", "1.0")
+      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
+
+      val state = RemoteContainerState(info, List(action))
+
+      val json = Pickle.intoString(state)
+      println("json: " + json)
+
+      val state2 = Unpickle[RemoteContainerState].fromString(json).get
+
+      state2 should be (state)
+    }
+
   }
 
 }

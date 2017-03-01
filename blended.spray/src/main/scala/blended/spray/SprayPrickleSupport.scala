@@ -6,12 +6,13 @@ import spray.httpx.unmarshalling.Unmarshaller
 
 import prickle._
 import org.slf4j.LoggerFactory
+import microjson.JsValue
 
 trait SprayPrickleSupport {
 
   private[this] val log = LoggerFactory.getLogger(classOf[SprayPrickleSupport])
 
-  implicit def prickleMarshaller[T](implicit p: Pickler[T]): Marshaller[T] =
+  implicit def prickleMarshaller[T](implicit p: Pickler[T], config: PConfig[JsValue]): Marshaller[T] =
     Marshaller.of[T](ContentTypes.`application/json`) {
       (value, contentType, context) =>
         log.debug("About to pickle: {}", value)
@@ -21,7 +22,7 @@ trait SprayPrickleSupport {
         context.marshalTo(entity)
     }
 
-  implicit def prickleUnmarshaller[T](implicit u: Unpickler[T]): Unmarshaller[T] =
+  implicit def prickleUnmarshaller[T](implicit u: Unpickler[T], config: PConfig[JsValue]): Unmarshaller[T] =
     Unmarshaller[T](MediaTypes.`application/json`) {
       case x: HttpEntity.NonEmpty ⇒
         val jsonString = x.asString(defaultCharset = HttpCharsets.`UTF-8`)
