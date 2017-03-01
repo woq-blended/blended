@@ -1,10 +1,11 @@
 package blended.jms.utils.internal
 
+import java.util.Date
 import javax.jms.Connection
 
 import scala.concurrent.duration.FiniteDuration
 
-case object CheckConnection
+case class CheckConnection(now : Boolean)
 case object ConnectionClosed
 case object CloseTimeout
 case class ConnectTimeout(t: Long)
@@ -34,7 +35,7 @@ case class RestartContainer(reason: Throwable)
 /**
   * Command message to establish a JMS Connection
   */
-case class Connect(t : Long)
+case class Connect(ts : Date)
 
 /**
   * Command message to close a JMS Connection within a given timeout
@@ -44,9 +45,15 @@ case class Disconnect(timeout: FiniteDuration)
 
 /**
   * Outcome of a connect
-  * @param t
-  * @param r
   */
-case class ConnectResult(t: Long, r : Either[Throwable, Connection])
+case class ConnectResult(ts: Date, r : Either[Throwable, Connection])
 
 case class ConnectionStateChanged(state: ConnectionState)
+
+case class ConnectionCommand(
+  provider: String = "",
+  maxEvents: Int = 0,
+  disconnectPending : Boolean = false,
+  connectPending: Boolean = false,
+  reconnectNow : Boolean = false
+)

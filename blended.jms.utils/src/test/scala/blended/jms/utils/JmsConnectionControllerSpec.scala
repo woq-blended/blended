@@ -1,5 +1,7 @@
 package blended.jms.utils
 
+import java.util.Date
+
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils.internal._
@@ -52,15 +54,15 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val holder = new ConnectionHolder("happy", connectionFactory("blended"))
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
-      val t = System.currentTimeMillis()
+      val t = new Date()
 
       testActor ! Connect(t)
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
-      m.t should be (t)
+      m.ts should be (t)
       m.r.isRight should be (true)
 
-      val t2 = System.currentTimeMillis()
+      val t2 = new Date()
       val c1 = m.r.right.get
 
       testActor ! Connect(t2)
@@ -73,12 +75,12 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val holder = new ConnectionHolder("dirty", connectionFactory("foobar"))
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
-      val t = System.currentTimeMillis()
+      val t = new Date()
 
       testActor ! Connect(t)
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
-      m.t should be (t)
+      m.ts should be (t)
       m.r.isLeft should be (true)
     }
 
@@ -86,12 +88,12 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val holder = new ConnectionHolder("happy", connectionFactory("blended"))
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
-      val t = System.currentTimeMillis()
+      val t = new Date()
 
       testActor ! Connect(t)
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
-      m.t should be (t)
+      m.ts should be (t)
       m.r.isRight should be (true)
 
       val t2 = System.currentTimeMillis()
@@ -112,12 +114,12 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
-      val t = System.currentTimeMillis()
+      val t = new Date()
 
       testActor ! Connect(t)
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
-      m.t should be (t)
+      m.ts should be (t)
       m.r.isRight should be (true)
 
       val t2 = System.currentTimeMillis()

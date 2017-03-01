@@ -68,22 +68,23 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   override def preStart(): Unit = {
     super.preStart()
     switchState(disconnected(), ConnectionState().copy(status = DISCONNECTED))
+    context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
   }
 
   // ---- State: Disconnected
   def disconnected()(state: ConnectionState) : Receive = LoggingReceive {
 
     // Upon a CheckConnection message we will kick off initiating and monitoring the connection
-    case CheckConnection =>
+    case cc : CheckConnection =>
       pingTimer = None
-      initConnection(state)
+      initConnection(state, cc.now)
   }
 
   // ---- State: Connected
-  def connected()(state: ConnectionState) : Receive = LoggingReceive {
+  def connected()(state: ConnectionState) : Receive = {
 
     // If we are already connected we simply try to ping the underlying connection
-    case CheckConnection =>
+    case cc : CheckConnection =>
       pingTimer = None
       conn.foreach( ping )
 
@@ -109,9 +110,9 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // ---- State: Connecting
-  def connecting()(state: ConnectionState) : Receive = LoggingReceive {
+  def connecting()(state: ConnectionState) : Receive = {
 
-    case CheckConnection =>
+    case cc : CheckConnection =>
       pingTimer = None
 
     case ConnectResult(t, Left(e)) =>
@@ -142,9 +143,9 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   }
 
   // State: Closing
-  def closing()(state: ConnectionState) : Receive = LoggingReceive {
+  def closing()(state: ConnectionState) : Receive = {
 
-    case CheckConnection =>
+    case cc : CheckConnection =>
       pingTimer = None
 
     // All good, happily disconnected
@@ -163,12 +164,14 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       monitor ! RestartContainer(e)
   }
 
-  def jmxOperations(state : ConnectionState) : Receive = LoggingReceive {
-    case s : ConnectionState =>
-      if (s.disconnectPending)
-        disconnect(state)
-      else if (s.connectPending)
-        self ! CheckConnection
+  def jmxOperations(state : ConnectionState) : Receive = {
+    case cmd : ConnectionCommand =>
+      if (cmd.provider == provider) {
+        if (cmd.disconnectPending)
+          disconnect(state)
+        else if (cmd.connectPending)
+          self ! CheckConnection(cmd.reconnectNow)
+      }
   }
 
   // helper methods
@@ -179,8 +182,8 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
     val nextState = publishEvents(newState, s"Connection State Manager [$provider] switching to state [${newState.status}]")
     currentReceive = rec
     currentState = nextState
-    monitor ! nextState
-    context.become(rec(nextState).orElse(jmxOperations(nextState)).orElse(unhandled))
+    monitor ! ConnectionStateChanged(nextState)
+    context.become(LoggingReceive (rec(nextState).orElse(jmxOperations(nextState)).orElse(unhandled)) )
   }
 
   // A convenience method to capture unhandled messages
@@ -207,7 +210,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   // in the config has passed.
   // If not, we will try to connect immediately.
 
-  private[this] def initConnection(s: ConnectionState) : Unit = {
+  private[this] def initConnection(s: ConnectionState, now : Boolean) : Unit = {
 
     val remaining : Double = s.lastDisconnect match {
       case None => 0
@@ -216,7 +219,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     // if we were ever disconnected from the JMS provider since the container start we will check
     // whether the reconnect interval has passed, otherwise we will connect immediately
-    if (s.lastDisconnect.isDefined && remaining > 0) {
+    if (!now && s.lastDisconnect.isDefined && remaining > 0) {
       switchState(
         currentReceive,
         publishEvents(s, s"Container is waiting to reconnect for provider [${provider}], remaining wait time [${remaining / 1000.0}]s")
@@ -236,7 +239,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
     }
 
     if (pingTimer.isEmpty) {
-      pingTimer = Some(context.system.scheduler.scheduleOnce(delay, self, CheckConnection))
+      pingTimer = Some(context.system.scheduler.scheduleOnce(delay, self, CheckConnection(false)))
     }
   }
 
@@ -255,7 +258,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
     } else state
 
-    controller ! Connect(lastConnectAttempt.getTime())
+    controller ! Connect(lastConnectAttempt)
 
     // push the events into the newState in reverse order and set
     // the new state name
@@ -295,18 +298,20 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     // Notify the connection controller of the disconnect
     controller ! Disconnect(config.minReconnect.seconds)
-    switchState(closing(), s.copy(status = CLOSING, failedPings = 0))
+    switchState(closing(), s.copy(status = CLOSING))
   }
 
   // A reconnect is only schedule if we have reached the maximumPingTolerance for the connection
   // Otherwise we schedule a connection check for the retry schedule, which is usually much shorter
   // than the normal connection check
   private[this] def checkReconnect(s: ConnectionState) : Unit = {
+    log.debug(s"Checking reconnect for provider [$provider] state [$s] against tolerance [${config.pingTolerance}]")
     if (s.failedPings == config.pingTolerance) {
       reconnect(
         publishEvents(s, s"Maximum ping tolerance for provider [$provider] reached .... reconnecting.")
       )
     } else {
+      switchState(currentReceive, s)
       checkConnection(retrySchedule)
     }
   }

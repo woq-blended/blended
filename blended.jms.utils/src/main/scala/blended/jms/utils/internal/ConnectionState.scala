@@ -18,8 +18,5 @@ case class ConnectionState(
   maxEvents: Int = 20,
   events: List[String] = List.empty,
   firstReconnectAttempt : Option[Date] = None,
-  lastConnectAttempt: Option[Date] = None,
-
-  disconnectPending : Boolean = false,
-  connectPending : Boolean = false
+  lastConnectAttempt: Option[Date] = None
 )

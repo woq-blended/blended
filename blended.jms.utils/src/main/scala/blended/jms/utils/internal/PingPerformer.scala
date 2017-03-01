@@ -38,6 +38,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
 
   override def onMessage(m: Message): Unit = {
     val text = if (m.isInstanceOf[TextMessage]) m.asInstanceOf[TextMessage].getText() else "UNKNOWN"
+    log.debug(s"received ping message [$text] for provider [$provider]")
     pingActor ! PingReceived(text)
   }
 
@@ -46,12 +47,13 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
       case None => pingActor ! PingResult(Left(new Exception(s"No session established for JMS checker [$provider, $pingId]")))
       case Some(s) => try {
 
-        val dest = s.createTopic("destName")
+        val dest = s.createTopic(destName)
         val consumer = s.createConsumer(dest)
-        s.setMessageListener(this)
+        consumer.setMessageListener(this)
 
         val producer = s.createProducer(dest)
         producer.send(s.createTextMessage(pingId))
+        log.debug(s"sent ping message [$pingId] to provider [$provider]")
         producer.close()
       } catch {
         case NonFatal(e) =>

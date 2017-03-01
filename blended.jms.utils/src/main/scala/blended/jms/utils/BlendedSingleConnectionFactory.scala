@@ -44,7 +44,7 @@ class BlendedSingleConnectionFactory(
       None
     }
 
-  actor.foreach { a => a ! CheckConnection }
+  actor.foreach { a => a ! CheckConnection(false) }
 
   @throws[JMSException]
   override def createConnection(): Connection = {

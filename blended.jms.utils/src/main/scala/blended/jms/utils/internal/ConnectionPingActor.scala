@@ -1,8 +1,9 @@
 package blended.jms.utils.internal
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.event.LoggingReceive
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 object ConnectionPingActor {
@@ -28,7 +29,7 @@ class ConnectionPingActor(timeout: FiniteDuration)
   var isTimeout = false
   var hasPinged = false
 
-  override def receive: Receive = {
+  override def receive: Receive = LoggingReceive {
     case p : PingPerformer =>
       val caller = sender()
       try {
@@ -40,7 +41,7 @@ class ConnectionPingActor(timeout: FiniteDuration)
       context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
   }
 
-  def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = {
+  def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = LoggingReceive {
 
     case Timeout =>
       if (!hasPinged) {
