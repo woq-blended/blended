@@ -4,7 +4,9 @@ import javax.jms.{Connection, ConnectionFactory}
 
 case class ConnectionHolder(provider: String, cf: ConnectionFactory) {
 
-  var conn : Option[Connection] = None
+  private[this] var conn : Option[Connection] = None
+
+  def getConnection() : Option[Connection] = conn
 
   def connect() : Connection = conn match {
     case Some(c) => c

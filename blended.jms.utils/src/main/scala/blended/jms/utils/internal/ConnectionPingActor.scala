@@ -7,12 +7,17 @@ import scala.util.control.NonFatal
 
 object ConnectionPingActor {
 
-  def props(controller: ActorRef, timeout: FiniteDuration) = Props(
-    new ConnectionPingActor(controller, timeout)
+  def props(timeout: FiniteDuration) = Props(
+    new ConnectionPingActor(timeout)
   )
 }
 
-class ConnectionPingActor(controller: ActorRef, timeout: FiniteDuration)
+/**
+  * This Actor will execute and monitor a single ping operation to check the health
+  * of the underlying JMS connection
+  * @param timeout
+  */
+class ConnectionPingActor(timeout: FiniteDuration)
   extends Actor with ActorLogging {
 
   case object Timeout
@@ -25,33 +30,34 @@ class ConnectionPingActor(controller: ActorRef, timeout: FiniteDuration)
 
   override def receive: Receive = {
     case p : PingPerformer =>
+      val caller = sender()
       try {
         p.start()
         p.ping()
       } catch {
-        case NonFatal(e) => controller ! PingResult(Left(e))
+        case NonFatal(e) => caller ! PingResult(Left(e))
       }
-      context.become(pinging(p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
+      context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
   }
 
-  def pinging(performer: PingPerformer, timer: Cancellable): Receive = {
+  def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = {
 
     case Timeout =>
       if (!hasPinged) {
         isTimeout = true
-        controller ! PingTimeout
+        caller ! PingTimeout
       }
       self ! Cleanup
 
     case PingResult(r) =>
       timer.cancel()
-      controller ! r
+      caller ! r
       self ! Cleanup
 
     case PingReceived(m) =>
       if (!isTimeout) {
         timer.cancel()
-        controller ! PingResult(Right(m))
+        caller ! PingResult(Right(m))
         hasPinged = true
       }
       self ! Cleanup

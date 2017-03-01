@@ -5,11 +5,11 @@ import blended.mgmt.base.FrameworkService
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
 
-object ConnectionControlMonitor {
-  def props(bc : BundleContext) : Props = Props(new ConnectionControlMonitor(bc))
+object ConnectionStateMonitor {
+  def props(bc : BundleContext) : Props = Props(new ConnectionStateMonitor(bc))
 }
 
-class ConnectionControlMonitor(override val bundleContext: BundleContext) extends Actor with ActorLogging with ServiceConsuming {
+class ConnectionStateMonitor(override val bundleContext: BundleContext) extends Actor with ActorLogging with ServiceConsuming {
 
   override def receive: Receive = {
     case RestartContainer(t) =>

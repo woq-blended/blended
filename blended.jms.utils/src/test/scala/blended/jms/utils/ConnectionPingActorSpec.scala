@@ -19,10 +19,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
     "should respond with a ConnectionHealthy message if the connection is fine" in {
 
-      // The probe in this test is a place holder for the ConnectionControlActor
-      val probe = TestProbe()
-
-      val testActor = system.actorOf(ConnectionPingActor.props(probe.ref, 1.second))
+      val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
       val healthyPerformer = new PingPerformer(pingActor = testActor) {
         override def ping() = testActor ! PingReceived("Hooray")
@@ -30,14 +27,12 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       testActor ! healthyPerformer
 
-      probe.expectMsg(PingResult(Right("Hooray")))
+      expectMsg(PingResult(Right("Hooray")))
     }
 
     "should respond with a Timeout message if the connection cannot be pinged" in {
 
-      val probe = TestProbe()
-
-      val testActor = system.actorOf(ConnectionPingActor.props(probe.ref, 1.second))
+      val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
       val dirtyPerformer = new PingPerformer(pingActor = testActor) {
         override def ping() = {}
@@ -45,15 +40,13 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       testActor ! dirtyPerformer
 
-      probe.expectMsg(PingTimeout)
+      expectMsg(PingTimeout)
     }
 
     "should respond with a negative ping result message if the performer throws an exception" in {
-      val probe = TestProbe()
-
       val e = new Exception("boom")
 
-      val testActor = system.actorOf(ConnectionPingActor.props(probe.ref, 1.second))
+      val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
       val dirtyPerformer = new PingPerformer(pingActor = testActor) {
         override def ping() = throw e
@@ -61,7 +54,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       testActor ! dirtyPerformer
 
-      probe.expectMsg(PingResult(Left(e)))
+      expectMsg(PingResult(Left(e)))
     }
   }
 }

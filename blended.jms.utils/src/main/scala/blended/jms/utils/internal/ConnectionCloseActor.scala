@@ -9,32 +9,37 @@ object ConnectionCloseActor {
   def apply(holder: ConnectionHolder) = new ConnectionCloseActor(holder)
 }
 
+/**
+  * This Actor will execute and monitor a single close operation on a given JMS connection
+  * and then stop itself.
+  * @param holder
+  */
 class ConnectionCloseActor(holder: ConnectionHolder) extends Actor with ActorLogging {
 
   private[this] implicit val eCtxt = context.system.dispatcher
-  private[this] var timer : Option[Cancellable] = None
 
   override def receive: Receive = {
 
     case Disconnect(t) =>
-      context.become(waiting(sender()))
+      // Just schedule a timeout message in case the Future takes too long
+      context.become(waiting(sender(), context.system.scheduler.scheduleOnce(t, self, CloseTimeout)))
 
       val f = Future {
         holder.close()
         ConnectionClosed
       }
-      timer = Some(context.system.scheduler.scheduleOnce(t, self, CloseTimeout))
+
       f.pipeTo(self)
   }
 
-  def waiting(caller: ActorRef) : Receive = {
+  def waiting(caller: ActorRef, timer: Cancellable) : Receive = {
     case CloseTimeout =>
-      timer.foreach(_.cancel())
+      timer.cancel()
       caller ! CloseTimeout
       context.stop(self)
 
     case ConnectionClosed =>
-      timer.foreach(_.cancel())
+      timer.cancel()
       caller ! ConnectionClosed
       context.stop(self)
   }

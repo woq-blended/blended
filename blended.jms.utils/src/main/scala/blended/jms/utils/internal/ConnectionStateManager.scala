@@ -129,7 +129,6 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
         log.debug(s"Successfully connected to provider [$provider]")
         firstReconnectAttempt = None
         conn = Some(new BlendedJMSConnection(c))
-        publishConnection(conn)
         checkConnection(schedule)
         switchState("connected", connected)
       }
@@ -147,7 +146,6 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     case ConnectionClosed =>
       conn = None
-      publishConnection(None)
       lastDisconnect = Some(System.currentTimeMillis())
       checkConnection(schedule, true)
       switchState("disconnected", disconnected)
@@ -252,12 +250,9 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
     checkConnection(retrySchedule)
   }
 
-  private[this] def publishConnection(c: Option[Connection]) : Unit = BlendedSingleConnectionFactory.setConnection(provider, c)
-
-
   private[this] def ping(c: Connection) : Unit = {
     log.info(s"Checking JMS connection for provider [$provider]")
-    val pinger = context.actorOf(ConnectionPingActor.props(self, config.pingTimeout.seconds))
+    val pinger = context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds))
     val jmsPingPerformer = new JmsPingPerformer(pinger, provider, c, "blended.ping")
     pinger ! jmsPingPerformer
   }

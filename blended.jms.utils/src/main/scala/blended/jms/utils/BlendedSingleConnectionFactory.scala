@@ -2,32 +2,12 @@ package blended.jms.utils
 
 import javax.jms.{Connection, ConnectionFactory, JMSException}
 
-import akka.actor.Props
 import akka.util.Timeout
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.internal.{ConnectionControlMonitor, ConnectionHolder, ConnectionStateManager}
+import blended.jms.utils.internal.{ConnectionStateMonitor, ConnectionHolder, ConnectionStateManager}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
-
-object BlendedSingleConnectionFactory {
-
-  private[this] val log = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
-  private[this] var connections : Map[String, Connection] = Map.empty
-
-  def getConnection(provider : String) : Option[Connection] = connections.get(provider)
-
-  def setConnection(provider : String, conn : Option[Connection]) : Unit = {
-    conn match {
-      case None =>
-        log.info(s"Removing connection for provider [${provider}] from cache.")
-        connections = connections.filterKeys( k => !k.equals(provider) )
-      case Some(c) =>
-        log.info(s"Caching connection for provider [${provider}].")
-        connections = connections + (provider -> c)
-    }
-  }
-}
 
 class BlendedSingleConnectionFactory(
   cfg : OSGIActorConfig,
@@ -43,11 +23,12 @@ class BlendedSingleConnectionFactory(
   private[this] val monitorName = s"Monitor-$provider"
   private[this] val stateMgrName = s"JMS-$provider"
 
+  val holder = new ConnectionHolder(provider, cf)
+
   private[this] val actor =
     if (config.enabled) {
 
-      val monitor = cfg.system.actorOf(ConnectionControlMonitor.props(cfg.bundleContext), monitorName)
-      val holder = new ConnectionHolder(provider, cf)
+      val monitor = cfg.system.actorOf(ConnectionStateMonitor.props(cfg.bundleContext), monitorName)
       log.info(s"ConnectionController [$stateMgrName] created.")
       Some(cfg.system.actorOf(ConnectionStateManager.props(monitor, holder, config), stateMgrName))
     } else {
@@ -60,7 +41,7 @@ class BlendedSingleConnectionFactory(
 
     if (config.enabled) {
       try {
-        BlendedSingleConnectionFactory.getConnection(provider) match {
+        holder.getConnection() match {
           case Some(c) => c
           case None => throw new Exception(s"Error connecting to $provider.")
         }
