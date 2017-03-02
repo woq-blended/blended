@@ -6,6 +6,78 @@ import prickle._
 
 class PrickleSpec extends FreeSpec with Matchers {
 
+  "Prickle real world test cases" - {
+    "1. deserialize a container info" in {
+
+      val svcInfos = List(
+        ServiceInfo(
+          "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn",
+          "jmsQueue",
+          System.currentTimeMillis(),
+          3000l,
+          Map(
+            "Name" -> "SampleIn",
+            "InFlightCount" -> "0",
+            "DequeueCount" -> "0",
+            "QueueSize" -> "0",
+            "EnqueueCount" -> "0"
+          )
+        ),
+        ServiceInfo(
+          "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn,endpoint=Consumer,clientId=ID_x3.local-45075-1488278206331-3_1,consumerId=ID_x3.local-45075-1488278206331-4_1_2_1",
+          "jmsQueue",
+          System.currentTimeMillis(),
+          3000l,
+          Map(
+            "Name" -> "SampleIn",
+            "InFlightCount" -> "0",
+            "DequeueCount" -> "0",
+            "QueueSize" -> "0",
+            "EnqueueCount" -> "0"
+          )
+        ),
+        ServiceInfo(
+          "java.lang:type=Memory",
+          "Runtime",
+          System.currentTimeMillis(),
+          3000l,
+          Map(
+            "HeapMemoryUsage.committed" -> "383254528",
+            "HeapMemoryUsage.init" -> "260046848",
+            "HeapMemoryUsage.max" -> "3693084672",
+            "HeapMemoryUsage.used" -> "135072144"
+          )
+        ),
+        ServiceInfo(
+          "java.lang:type=OperationSystem",
+          "Runtime",
+          System.currentTimeMillis(),
+          3000l,
+          Map(
+            "Name" -> "Linux"
+          )
+        ),
+        ServiceInfo(
+          "akka://BlendedActorSystem/user/blended.updater",
+          "Updater",
+          System.currentTimeMillis(),
+          3000l,
+          Map(
+            "profile.active" -> "blended.demo.node-2.1.0-SNAPSHOT",
+            "profiles.valid" -> "blended.demo.node-2.1.0-SNAPSHOT"
+          )
+        )
+      )
+
+      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List())))
+      println("serialized: " + info)
+
+      val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
+      containerInfos.size should be(1)
+    }
+
+  }
+
   "Prickle should (de)serialize" - {
     "an ActivateProfile" in {
 
