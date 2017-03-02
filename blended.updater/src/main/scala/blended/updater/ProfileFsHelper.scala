@@ -88,7 +88,7 @@ class ProfileFsHelper {
     runtimeConfigs
   }
 
-  def scanForProfiles(installBaseDir: File, runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[Updater.LocalProfile] = {
+  def scanForProfiles(installBaseDir: File, runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
     log.debug("Scanning for profiles in: {}", installBaseDir)
 
     val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs(installBaseDir)).toList
@@ -105,9 +105,9 @@ class ProfileFsHelper {
 
     log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
 
-    def profileState(issues: List[String]): Updater.LocalProfile.ProfileState = issues match {
-      case Seq() => Updater.LocalProfile.Staged
-      case issues => Updater.LocalProfile.Pending(issues)
+    def profileState(issues: List[String]): LocalProfile.ProfileState = issues match {
+      case Seq() => LocalProfile.Staged
+      case issues => LocalProfile.Pending(issues)
     }
 
     val fullProfiles = runtimeConfigsWithIssues.flatMap {
@@ -154,7 +154,7 @@ class ProfileFsHelper {
                 }
                 log.debug("Found overlay:", localOverlays)
                 log.debug("Found overlay issues: {}", issues)
-                List(Updater.LocalProfile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
+                List(LocalProfile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
               }
           }
         }

@@ -20,6 +20,8 @@ import com.typesafe.config.ConfigParseOptions
 
 import scala.annotation.varargs
 import org.slf4j.LoggerFactory
+import blended.updater.LocalProfile
+import blended.updater.ProfileId
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
 
@@ -38,7 +40,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
-    val activeProfile = env.map(env => Updater.ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(List.empty)))
+    val activeProfile = env.map(env => ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(List.empty)))
     log.debug("acitive profile: {}", activeProfile)
 
     val profiles = Await.result(
@@ -47,7 +49,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
     s"${profiles.size} profiles:\n${
       profiles.map {
-        case p: Updater.LocalProfile =>
+        case p: LocalProfile =>
           val activePart = if (activeProfile.exists(_ == p.profileId)) " (active)" else ""
           p.profileId + ": " + p.state + activePart
       }.mkString("\n")

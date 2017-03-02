@@ -35,7 +35,7 @@ class Updater(
   restartFramework: () => Unit,
   config: UpdaterConfig,
   launchedProfileDir: Option[File],
-  launchedProfileId: Option[Updater.ProfileId])
+  launchedProfileId: Option[ProfileId])
     extends Actor
     with ActorLogging {
 
@@ -645,37 +645,5 @@ object Updater {
 
   }
 
-  /**
-   * A ProfileId is a concrete runtime config with one set of overlays.
-   */
-  case class ProfileId(name: String, version: String, overlays: List[OverlayRef]) {
-    override def toString(): String =
-      s"${name}-${version}_" + {
-        if (overlays.isEmpty) "base"
-        else overlays.toList.sorted.mkString("_")
-      }
-  }
-
-  object LocalProfile {
-
-    sealed trait ProfileState
-
-    final case class Pending(issues: List[String]) extends ProfileState
-
-    final case class Invalid(issues: List[String]) extends ProfileState
-
-    final case object Resolved extends ProfileState
-
-    final case object Staged extends ProfileState
-
-  }
-
-  case class LocalProfile(config: LocalRuntimeConfig, overlays: LocalOverlays, state: LocalProfile.ProfileState) {
-    def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
-
-    def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
-
-    def bundles: List[BundleConfig] = config.resolvedRuntimeConfig.allBundles
-  }
 
 }

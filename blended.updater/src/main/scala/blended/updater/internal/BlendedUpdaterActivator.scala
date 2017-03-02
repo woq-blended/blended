@@ -19,6 +19,7 @@ import blended.updater.config.RuntimeConfig
 import domino.DominoActivator
 import blended.updater.config.OverlayRef
 import blended.updater.ProfileActivator
+import blended.updater.ProfileId
 
 case class UpdateEnv(
   launchedProfileName: String,
@@ -89,7 +90,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
               config = UpdaterConfig.fromConfig(cfg.config),
               launchedProfileDir = updateEnv.launchedProfileDir.orNull,
               launchedProfileId = updateEnv.overlays.map { overlayRefs =>
-                Updater.ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion, overlayRefs)
+                ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion, overlayRefs)
               }.orNull
             )
           )
