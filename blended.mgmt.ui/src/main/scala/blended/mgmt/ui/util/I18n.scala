@@ -17,8 +17,19 @@ trait I18nMarker {
 
   private[this] val log = Logger[I18nMarker]
 
+  /**
+   * Mark a string for translation, but return the untranslated string.
+   *  Useful e.g. in a static context or in early initialization situations.
+   */
   @inline def marktr(msgid: String): String = msgid
+  /**
+   * Same as [[I18nMarker#marktr]] but with translation context.
+   */
   @inline def marktrc(context: String, msgid: String): String = msgid
+  /**
+   * A convenience method to format untranslated strings with parameters the same way translated strings were.
+   * Parameters can be referenced in the string by `"{0}"`, `"{1}"`, `"{2}"` and so on.
+   */
   @inline def notr(msgid: String, params: Any*): String = params match {
     case Seq() => msgid
     case _ =>
@@ -33,11 +44,31 @@ trait I18nMarker {
 }
 
 trait I18n extends I18nMarker {
+  /**
+   * Translate a string with optional parameters.
+   * Parameters can be referenced in the string by `"{0}"`, `"{1}"`, `"{2}"` and so on.
+   */
   def tr(msgid: String, params: Any*): String
+  /**
+   * Same as [[I18n#tr]], but with support for a second plural version of the string.
+   */
   def trn(msgid: String, msgidPlural: String, n: Long, params: Any*): String
+  /**
+   * Same as [[I18n#tr]] but with translation context.
+   */
   def trc(context: String, msgid: String, params: Any*): String
+  /**
+   * Same as [[I18n#trn]] but with translation context.
+   */
   def trcn(context: String, msgid: String, msgidPlural: String, n: Long, params: Any*): String
+  /**
+   * The used locale of this [[I18n]] instance.
+   */
   def locale: String
+  /**
+   * A convenience method to mark and hold the translated and untranslated string including it's parameters.
+   * The actual translation and string formatting might (and will) be deferred until the access of the [[PreparedI18n#tr]] and [[PreparedI18n#notr]] methods.
+   */
   def preparetr(msgid: String, params: Any*): PreparedI18n
 }
 
