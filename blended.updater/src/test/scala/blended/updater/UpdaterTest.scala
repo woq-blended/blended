@@ -383,8 +383,8 @@ class UpdaterTest
               expectMsgPF(hint = s"Query id: ${queryId}") {
                 case Updater.Result(`queryId`, profiles: Set[_]) =>
                   profiles.toList match {
-                    case List(Updater.Profile(LocalRuntimeConfig(`config`, _),
-                      overlays, Updater.Profile.Staged)) => true
+                    case List(Updater.LocalProfile(LocalRuntimeConfig(`config`, _),
+                      overlays, Updater.LocalProfile.Staged)) => true
                     case u => sys.error("unexpected: " + u)
                   }
               }

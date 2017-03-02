@@ -55,7 +55,7 @@ class Updater(
   // requestId -> State
   private[this] var stagingInProgress: Map[String, State] = Map()
 
-  private[this] var profiles: Map[ProfileId, Profile] = Map()
+  private[this] var profiles: Map[ProfileId, LocalProfile] = Map()
 
   private[this] var overlayConfigs: Set[OverlayConfig] = Set()
   private[this] var runtimeConfigs: Set[LocalRuntimeConfig] = Set()
@@ -100,10 +100,10 @@ class Updater(
 
       stagingInProgress = stagingInProgress.filterKeys(id != _)
       val (profileState, msg) = finalIssues match {
-        case Seq() => Profile.Staged -> OperationSucceeded(id)
-        case issues => Profile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
+        case Seq() => LocalProfile.Staged -> OperationSucceeded(id)
+        case issues => LocalProfile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
       }
-      profiles += state.profileId -> Profile(state.config, state.overlays, profileState)
+      profiles += state.profileId -> LocalProfile(state.config, state.overlays, profileState)
       state.requestActor ! msg
     } else {
       stagingInProgress += id -> state
@@ -128,7 +128,7 @@ class Updater(
   def findLocalResource(name: String, sha1Sum: String): Option[File] =
     profiles.values.filter { profile =>
       // only valid profiles
-      profile.state == Profile.Staged
+      profile.state == LocalProfile.Staged
     }.
       flatMap { profile =>
         profile.bundles.filter { b =>
@@ -291,7 +291,7 @@ class Updater(
     case StageNextRuntimeConfig(reqId) =>
       if (stagingInProgress.isEmpty) {
         profiles.toIterator.collect {
-          case (id @ ProfileId(name, version, overlays), Profile(_, _, Profile.Pending(_))) =>
+          case (id @ ProfileId(name, version, overlays), LocalProfile(_, _, LocalProfile.Pending(_))) =>
             log.info("About to auto-stage profile {}", id)
             self ! StageProfile(nextId(), name, version, overlays = overlays)
         }.take(1)
@@ -314,7 +314,7 @@ class Updater(
 
           val localOverlays = LocalOverlays(overlays.map(_._2.get), localRuntimeConfig.baseDir)
 
-          Profile(localRuntimeConfig, localOverlays, Profile.Pending(List("Newly staged")))
+          LocalProfile(localRuntimeConfig, localOverlays, LocalProfile.Pending(List("Newly staged")))
 
         } match {
           case Failure(e) =>
@@ -324,12 +324,12 @@ class Updater(
         }
 
       } map {
-        case profile @ Profile(_, _, Profile.Staged) =>
+        case profile  @ LocalProfile(_, _, LocalProfile.Staged) =>
           // already staged
           log.debug("Profile already staged: {}", profile.profileId)
           sender() ! OperationSucceeded(reqId)
 
-        case profile @ Profile(config, localOverlays, state) =>
+        case profile @ LocalProfile(config, localOverlays, state) =>
           log.debug("About to stage profile: {}", profile.profileId)
           val reqActor = sender()
 
@@ -385,7 +385,7 @@ class Updater(
       log.debug("Requested activate profile with id: {}", profileId)
       val requestingActor = sender()
       profiles.get(profileId) match {
-        case Some(Profile(_, _, Profile.Staged)) =>
+        case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
           // write config
           log.debug("About to activate new profile for next startup: {}", profileId)
           val success = profileActivator(name, version, profileId.overlays)
@@ -415,121 +415,11 @@ class Updater(
   }
 
   def scanForRuntimeConfigs(): List[LocalRuntimeConfig] = {
-    log.debug("Scanning for runtime configs in {}", installBaseDir)
-
-    val configFiles = Option(installBaseDir.listFiles).getOrElse(Array()).toList.
-      flatMap { nameDir =>
-        Option(nameDir.listFiles).getOrElse(Array()).toList.
-          flatMap { versionDir =>
-            val profileFile = new File(versionDir, "profile.conf")
-            if (profileFile.exists()) Some(profileFile)
-            else None
-          }
-      }
-
-    log.debug("Found potential runtime config files: {}", configFiles)
-
-    // read configs
-    val runtimeConfigs = configFiles.flatMap { runtimeConfigFile =>
-      Try {
-        val versionDir = runtimeConfigFile.getParentFile()
-        val version = versionDir.getName()
-        val name = versionDir.getParentFile.getName()
-
-        val config = ConfigFactory.parseFile(runtimeConfigFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-        val resolved = ResolvedRuntimeConfig(RuntimeConfigCompanion.read(config).get)
-        val local = LocalRuntimeConfig(baseDir = versionDir, resolvedRuntimeConfig = resolved)
-
-        // consistency checks
-        if (local.runtimeConfig.name == name && local.runtimeConfig.version == version) {
-          List(local)
-        } else {
-          log.warn(s"Profile name and version do not match directory names: ${runtimeConfigFile}")
-          List()
-        }
-      }.getOrElse {
-        log.warn(s"Could not read profile file: ${runtimeConfigFile}")
-        List()
-      }
-    }
-    log.info(s"Found runtime configs: ${runtimeConfigs.zipWithIndex.map(wi => s"${wi._2}: ${wi._1}").mkString("\n")}")
-
-    runtimeConfigs
+    ProfileFsHelper.scanForRuntimeConfigs(installBaseDir)
   }
 
-  def scanForProfiles(runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[Profile] = {
-    log.debug("Scanning for profiles in: {}", installBaseDir)
-
-    val rcs = runtimeConfigs.getOrElse(scanForRuntimeConfigs()).toList
-
-    val runtimeConfigsWithIssues = rcs.flatMap { localConfig =>
-      val issues = localConfig.validate(
-        includeResourceArchives = false,
-        explodedResourceArchives = true,
-        checkPropertiesFile = true).toList
-      log.debug(s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: {}", issues)
-      List(localConfig -> issues)
-
-    }
-
-    log.debug(s"Runtime configs (with issues): ${runtimeConfigsWithIssues}")
-
-    def profileState(issues: List[String]): Profile.ProfileState = issues match {
-      case Seq() => Profile.Staged
-      case issues => Profile.Pending(issues)
-    }
-
-    val fullProfiles = runtimeConfigsWithIssues.flatMap {
-      case (localRuntimeConfig, issues) =>
-        val profileDir = localRuntimeConfig.baseDir
-
-        // scan for overlays
-        val overlayDir = new File(profileDir, "overlays")
-        val overlayFiles = Option(overlayDir.listFiles()).getOrElse(Array()).filter(f => f.getName().endsWith(".conf")).toList
-        if (overlayFiles.isEmpty) {
-          log.warn("Could not found any overlay configs for profile: {}", localRuntimeConfig.profileFileLocation)
-          //          log.info("Migrating legacy profile. Generating base overlay config")
-          //          // We create a transient base overlay
-          // TODO: Remove timely
-          //          List(Profile(localRuntimeConfig, LocalOverlays(Set(), profileDir), profileState(issues)))
-          List()
-        } else overlayFiles.flatMap { file =>
-          Try {
-            ConfigFactory.parseFile(file, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
-          }.flatMap { c =>
-            LocalOverlays.read(c, profileDir)
-          } match {
-            case Failure(e) =>
-              log.error(s"Could not load overlay config file: ${file}", e)
-              None
-            case Success(localOverlays) =>
-              val canonicalFile = LocalOverlays.preferredConfigFile(localOverlays.overlays.map(_.overlayRef), profileDir)
-              if (canonicalFile != file) {
-                log.error("Skipping found overlays file because filename does not match the expected file name: {}", file)
-                List()
-              } else {
-                val overlayIssues = localOverlays.validate() match {
-                  case Seq() =>
-                    // no conflicts, now check if already materialized
-                    if (localOverlays.isMaterialized()) {
-                      List()
-                    } else {
-                      List("Overlays not materialized")
-                    }
-                  case issues =>
-                    log.error("Skipping found overlays file because it is not valid: {}. Issue: {}",
-                      Array(file, issues.mkString(" / ")))
-                    issues.toList
-                }
-                log.debug("Found overlay:", localOverlays)
-                log.debug("Found overlay issues: {}", issues)
-                List(Profile(localRuntimeConfig, localOverlays, profileState(issues ::: overlayIssues)))
-              }
-          }
-        }
-    }
-
-    fullProfiles
+  def scanForProfiles(runtimeConfigs: Option[List[LocalRuntimeConfig]] = None): List[LocalProfile] = {
+    ProfileFsHelper.scanForProfiles(installBaseDir, runtimeConfigs)
   }
 
   override def receive: Actor.Receive = LoggingReceive {
@@ -556,13 +446,13 @@ class Updater(
       val props = Map(
         "profile.active" -> findActiveConfig().map(lrc => s"${lrc.runtimeConfig.name}-${lrc.runtimeConfig.version}").getOrElse(""),
         "profiles.valid" -> profiles.collect {
-          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Staged)) => s"$name-$version"
+          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Staged)) => s"$name-$version"
         }.mkString(","),
         "profiles.invalid" -> profiles.collect {
-          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Invalid(_))) => s"$name-$version"
+          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Invalid(_))) => s"$name-$version"
         }.mkString(","),
         "profiles.pending" -> profiles.collect {
-          case (ProfileId(name, version, overlays), Profile(config, localOverlays, Profile.Pending(_))) => s"$name-$version"
+          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Pending(_))) => s"$name-$version"
         }.mkString(",")
       ).filter { case (k, v) => !v.isEmpty() }
 
@@ -766,7 +656,7 @@ object Updater {
       }
   }
 
-  object Profile {
+  object LocalProfile {
 
     sealed trait ProfileState
 
@@ -780,7 +670,7 @@ object Updater {
 
   }
 
-  case class Profile(config: LocalRuntimeConfig, overlays: LocalOverlays, state: Profile.ProfileState) {
+  case class LocalProfile(config: LocalRuntimeConfig, overlays: LocalOverlays, state: LocalProfile.ProfileState) {
     def profileId: ProfileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 
     def runtimeConfig: RuntimeConfig = config.resolvedRuntimeConfig.runtimeConfig
