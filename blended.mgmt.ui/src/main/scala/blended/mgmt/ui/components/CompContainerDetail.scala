@@ -15,6 +15,7 @@ import blended.mgmt.ui.backend.ProfileUpdater
 import blended.updater.config.ActivateProfile
 import blended.updater.config.UpdateAction
 import blended.updater.config.StageProfile
+import blended.updater.config.Profile.SingleProfile
 
 object CompContainerDetail {
 
@@ -41,17 +42,17 @@ object CompContainerDetail {
       }
     }
 
-    def activateProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
-      sendUpdateAction(ActivateProfile(profile.name, profile.version, overlaySet.overlays))(event)
+    def activateProfile(profile: SingleProfile)(event: ReactEventI) = {
+      sendUpdateAction(ActivateProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def resolveProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
-      sendUpdateAction(StageProfile(profile.name, profile.version, overlaySet.overlays))(event)
+    def resolveProfile(profile: SingleProfile)(event: ReactEventI) = {
+      sendUpdateAction(StageProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def deleteProfile(profile: Profile, overlaySet: OverlaySet)(event: ReactEventI) = {
+    def deleteProfile(profile: SingleProfile)(event: ReactEventI) = {
       CallbackTo {
-        log.trace(s"Unimplemented callback: delete profile ${profile} with overlay set ${overlaySet}")
+        log.trace(s"Unimplemented callback: delete profile ${profile}")
       }
     }
 
@@ -62,47 +63,42 @@ object CompContainerDetail {
 
           val props = containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
-          val profiles = containerInfo.profiles.flatMap { profile =>
-            val oSets = profile.overlays
+          val profiles = containerInfo.profiles.flatMap(_.toSingle).map { profile =>
 
-            oSets.map { oSet =>
-              val overlays = oSet.overlays
+            val genTitle = if (profile.overlays.isEmpty) i18n.tr("without overlays") else profile.overlays.mkString(", ")
 
-              val genTitle = if (overlays.isEmpty) i18n.tr("without overlays") else overlays.mkString(", ")
-
-              <.div(
-                ^.`class` := oSet.state.toString,
-                s"${profile.name}-${profile.version} ${genTitle} ",
-                <.span(
-                  oSet.reason.isDefined ?= (^.title := s"${oSet.state}: ${oSet.reason.get}"),
-                  s"(${oSet.state})"
-                ),
-                " ",
-                oSet.state != OverlayState.Active ?= <.button(
-                  ^.`type` := "button",
-                  ^.`class` := "btn btn-default btn-xs",
-                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
-                  ^.onClick ==> activateProfile(profile, oSet),
-                  i18n.tr("Activate")
-                ),
-                " ",
-                oSet.state != OverlayState.Active ?= <.button(
-                  ^.`type` := "button",
-                  ^.`class` := "btn btn-default btn-xs",
-                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
-                  ^.onClick ==> deleteProfile(profile, oSet),
-                  i18n.tr("Delete")
-                ),
-                " ",
-                oSet.state == OverlayState.Invalid ?= <.button(
-                  ^.`type` := "button",
-                  ^.`class` := "btn btn-default btn-xs",
-                  profileUpdater.isEmpty ?= (^.disabled := "disabled"),
-                  ^.onClick ==> resolveProfile(profile, oSet),
-                  i18n.tr("Try to Resolve")
-                )
+            <.div(
+              ^.`class` := profile.state.toString,
+              s"${profile.name}-${profile.version} ${genTitle} ",
+              <.span(
+                profile.overlaySet.reason.isDefined ?= (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}"),
+                s"(${profile.state})"
+              ),
+              " ",
+              profile.state != OverlayState.Active ?= <.button(
+                ^.`type` := "button",
+                ^.`class` := "btn btn-default btn-xs",
+                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.onClick ==> activateProfile(profile),
+                i18n.tr("Activate")
+              ),
+              " ",
+              profile.state != OverlayState.Active ?= <.button(
+                ^.`type` := "button",
+                ^.`class` := "btn btn-default btn-xs",
+                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.onClick ==> deleteProfile(profile),
+                i18n.tr("Delete")
+              ),
+              " ",
+              profile.state == OverlayState.Invalid ?= <.button(
+                ^.`type` := "button",
+                ^.`class` := "btn btn-default btn-xs",
+                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.onClick ==> resolveProfile(profile),
+                i18n.tr("Try to Resolve")
               )
-            }
+            )
           }
 
           val services = containerInfo.serviceInfos.map { serviceInfo =>
