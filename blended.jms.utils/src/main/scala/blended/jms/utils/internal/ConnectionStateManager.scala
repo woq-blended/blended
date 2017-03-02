@@ -135,7 +135,8 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
         switchState(connected(), publishEvents(state, s"Successfully connected to provider [$provider]").copy(
           status = CONNECTED,
           firstReconnectAttempt = None,
-          lastConnect = Some(new Date())
+          lastConnect = Some(new Date()),
+          failedPings = 0
         ))
       }
 
