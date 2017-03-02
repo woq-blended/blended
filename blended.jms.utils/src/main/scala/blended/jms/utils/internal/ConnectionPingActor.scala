@@ -1,91 +1,74 @@
 package blended.jms.utils.internal
 
-import javax.jms._
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.event.LoggingReceive
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 object ConnectionPingActor {
 
-  def props(controller: ActorRef, con: Connection, destName: String, timeout: FiniteDuration) = Props(
-    new ConnectionPingActor(controller, con, destName, timeout)
+  def props(timeout: FiniteDuration) = Props(
+    new ConnectionPingActor(timeout)
   )
-
 }
 
-class ConnectionPingActor(controller: ActorRef, con: Connection, destName : String, timeout: FiniteDuration)
+/**
+  * This Actor will execute and monitor a single ping operation to check the health
+  * of the underlying JMS connection
+  * @param timeout
+  */
+class ConnectionPingActor(timeout: FiniteDuration)
   extends Actor with ActorLogging {
 
   case object Timeout
   case object Cleanup
-
-  case class PingReceived(m : Message)
-  case class PerformPing(session: Session)
 
   implicit val eCtxt = context.system.dispatcher
 
   var isTimeout = false
   var hasPinged = false
 
-  private class PingListener(a : ActorRef) extends MessageListener {
-
-    override def onMessage(message: Message): Unit = a ! PingReceived(message)
-  }
-
-  override def preStart(): Unit = {
-
-    super.preStart()
-
-    val session = con.createSession(false, Session.AUTO_ACKNOWLEDGE)
-
-    val consumer = session.createConsumer(session.createTopic(destName))
-
-    consumer.setMessageListener(new PingListener(self))
-
-    self ! PerformPing(session)
-  }
-
-  def stop(s: Session) : Receive = {
-    case Cleanup =>
-      s.close()
-      context.stop(self)
-  }
-
-  override def receive: Receive = {
-    case PerformPing(s) =>
-      context.become(pinging(s, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
-
+  override def receive: Receive = LoggingReceive {
+    case p : PingPerformer =>
+      val caller = sender()
       try {
-        val producer = s.createProducer(s.createTopic(destName))
-        producer.send(s.createTextMessage(s"${System.currentTimeMillis()}"))
-        producer.close()
-
+        p.start()
+        p.ping()
+        context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
       } catch {
         case NonFatal(e) =>
-          controller ! PingResult(Left(e))
-          self ! Cleanup
+          log.debug(s"Ping for provider [${p.provider}] failed : [${e.getMessage()}]")
+          p.close()
+          caller ! PingResult(Left(e))
+          context.stop(self)
       }
   }
 
-  def pinging(session: Session, timer: Cancellable): Receive = {
+  def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = LoggingReceive {
 
     case Timeout =>
       if (!hasPinged) {
         isTimeout = true
-        controller ! PingTimeout
+        caller ! PingTimeout
       }
+      self ! Cleanup
+
+    case PingResult(r) =>
+      timer.cancel()
+      caller ! r
       self ! Cleanup
 
     case PingReceived(m) =>
       if (!isTimeout) {
-        controller ! PingResult(Right(m))
+        timer.cancel()
+        caller ! PingResult(Right(m))
         hasPinged = true
       }
+      self ! Cleanup
 
     case Cleanup =>
-      session.close()
+      performer.close()
       context.stop(self)
   }
 }

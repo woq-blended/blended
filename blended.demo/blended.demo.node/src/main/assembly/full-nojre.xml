@@ -11,7 +11,7 @@
   <fileSets>
 
     <fileSet>
-      <directory>${project.build.directory}/launcher/blended.launcher-${blended.version}</directory>
+      <directory>target/classes/container</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
 
@@ -21,7 +21,7 @@
     </fileSet>
 
     <fileSet>
-      <directory>target/classes/container</directory>
+      <directory>${project.build.directory}/launcher/blended.launcher-${blended.version}</directory>
       <outputDirectory>/</outputDirectory>
     </fileSet>
 

@@ -20,10 +20,18 @@ BlendedModel(
     blendedMgmtBase,
     camelJms,
     blendedAkka,
-    jms11Spec
+    jms11Spec,
+    scalaTest % "test",
+    akkaSlf4j % "test",
+    slf4jLog4j12 % "test",
+    mockitoAll % "test",
+    activeMqBroker % "test",
+    activeMqKahadbStore % "test",
+    akkaTestkit % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

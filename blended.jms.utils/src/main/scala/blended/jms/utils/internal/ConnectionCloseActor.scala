@@ -1,47 +1,46 @@
 package blended.jms.utils.internal
 
-import javax.jms.Connection
-
 import akka.actor._
 import akka.pattern.pipe
 
 import scala.concurrent.Future
-import scala.concurrent.duration.FiniteDuration
 
 object ConnectionCloseActor {
-  def apply(conn: Connection, t: FiniteDuration, controller: ActorRef) = new ConnectionCloseActor(conn, t, controller)
+  def apply(holder: ConnectionHolder) = new ConnectionCloseActor(holder)
 }
 
-class ConnectionCloseActor(conn: Connection, t: FiniteDuration, controller: ActorRef) extends Actor with ActorLogging {
+/**
+  * This Actor will execute and monitor a single close operation on a given JMS connection
+  * and then stop itself.
+  * @param holder
+  */
+class ConnectionCloseActor(holder: ConnectionHolder) extends Actor with ActorLogging {
 
-  case object CloseConnection
-
-  implicit val eCtxt = context.system.dispatcher
-  private[this] var timer : Option[Cancellable] = None
-
-  override def preStart(): Unit = {
-    super.preStart()
-    self ! CloseConnection
-  }
+  private[this] implicit val eCtxt = context.system.dispatcher
 
   override def receive: Receive = {
 
-    case CloseConnection =>
+    case Disconnect(t) =>
+      // Just schedule a timeout message in case the Future takes too long
+      context.become(waiting(sender(), context.system.scheduler.scheduleOnce(t, self, CloseTimeout)))
+
       val f = Future {
-        conn.close()
+        holder.close()
         ConnectionClosed
       }
-      timer = Some(context.system.scheduler.scheduleOnce(t, self, CloseTimeout))
-      f.pipeTo(self)
 
+      f.pipeTo(self)
+  }
+
+  def waiting(caller: ActorRef, timer: Cancellable) : Receive = {
     case CloseTimeout =>
-      timer.foreach(_.cancel())
-      controller ! CloseTimeout
+      timer.cancel()
+      caller ! CloseTimeout
       context.stop(self)
 
     case ConnectionClosed =>
-      timer.foreach(_.cancel())
-      controller ! ConnectionClosed
+      timer.cancel()
+      caller ! ConnectionClosed
       context.stop(self)
   }
 }
