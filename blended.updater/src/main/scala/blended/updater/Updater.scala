@@ -14,10 +14,10 @@ import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
 import blended.updater.config.UpdateAction
-import blended.updater.config.{AddRuntimeConfig => UAAddRuntimeConfig}
-import blended.updater.config.{AddOverlayConfig => UAAddOverlayConfig}
-import blended.updater.config.{ActivateProfile => UAActivateProfile}
-import blended.updater.config.{StageProfile => UAStageProfile}
+import blended.updater.config.{ AddRuntimeConfig => UAAddRuntimeConfig }
+import blended.updater.config.{ AddOverlayConfig => UAAddOverlayConfig }
+import blended.updater.config.{ ActivateProfile => UAActivateProfile }
+import blended.updater.config.{ StageProfile => UAStageProfile }
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
@@ -36,7 +36,7 @@ class Updater(
   config: UpdaterConfig,
   launchedProfileDir: Option[File],
   launchedProfileId: Option[Updater.ProfileId])
-  extends Actor
+    extends Actor
     with ActorLogging {
 
   import Updater._
@@ -160,8 +160,8 @@ class Updater(
       tickers +:= context.system.scheduler.schedule(
         Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
         Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)) {
-        self ! StageNextRuntimeConfig(nextId())
-      }
+          self ! StageNextRuntimeConfig(nextId())
+        }
     } else {
       log.info(s"Auto-staging is disabled")
     }
@@ -172,8 +172,8 @@ class Updater(
       tickers +:= context.system.scheduler.schedule(
         Duration(100, TimeUnit.MILLISECONDS),
         Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)) {
-        self ! PublishServiceInfo
-      }
+          self ! PublishServiceInfo
+        }
     } else {
       log.info("Publishing of service infos is disabled")
     }
@@ -411,28 +411,7 @@ class Updater(
 
   def scanForOverlayConfigs(): List[OverlayConfig] = {
     val overlayBaseDir = new File(installBaseDir.getParentFile(), "overlays")
-    log.debug("Scanning for overlays configs in: {}", overlayBaseDir)
-
-    val confFiles = Option(overlayBaseDir.listFiles).getOrElse(Array()).
-      filter(f => f.isFile() && f.getName().endsWith(".conf"))
-
-    val configs = confFiles.toList.flatMap { file =>
-      Try {
-        ConfigFactory.parseFile(file).resolve()
-      }.
-        flatMap(OverlayConfigCompanion.read) match {
-        case Success(overlayConfig) =>
-          List(overlayConfig)
-        case Failure(e) =>
-          log.error("Could not parse overlay config file: {}", Array(file, e))
-          List()
-      }
-    }
-
-    log.info("Found overlay configs : {}", configs)
-
-    configs
-
+    ProfileFsHelper.scanForOverlayConfigs(overlayBaseDir)
   }
 
   def scanForRuntimeConfigs(): List[LocalRuntimeConfig] = {
@@ -752,17 +731,20 @@ object Updater {
    * Internal working state of in-progress stagings.
    */
   private case class State(
-    requestId: String,
-    requestActor: ActorRef,
-    config: LocalRuntimeConfig,
-    artifactsToDownload: List[ArtifactInProgress],
-    pendingArtifactsToUnpack: List[ArtifactInProgress],
-    artifactsToUnpack: List[ArtifactInProgress],
-    overlays: LocalOverlays,
-    issues: List[String]) {
+      requestId: String,
+      requestActor: ActorRef,
+      config: LocalRuntimeConfig,
+      artifactsToDownload: List[ArtifactInProgress],
+      pendingArtifactsToUnpack: List[ArtifactInProgress],
+      artifactsToUnpack: List[ArtifactInProgress],
+      overlays: LocalOverlays,
+      issues: List[String]) {
 
     val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 
+    /**
+     * The download/unpack progress in percent.
+     */
     def progress(): Int = {
       val all = config.runtimeConfig.bundles.size
       val todos = artifactsToDownload.size
@@ -773,6 +755,9 @@ object Updater {
 
   }
 
+  /**
+   * A ProfileId is a concrete runtime config with one set of overlays.
+   */
   case class ProfileId(name: String, version: String, overlays: List[OverlayRef]) {
     override def toString(): String =
       s"${name}-${version}_" + {
