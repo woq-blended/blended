@@ -35,10 +35,14 @@ class ConnectionPingActor(timeout: FiniteDuration)
       try {
         p.start()
         p.ping()
+        context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
       } catch {
-        case NonFatal(e) => caller ! PingResult(Left(e))
+        case NonFatal(e) =>
+          log.debug(s"Ping for provider [${p.provider}] failed : [${e.getMessage()}]")
+          p.close()
+          caller ! PingResult(Left(e))
+          context.stop(self)
       }
-      context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
   }
 
   def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = LoggingReceive {

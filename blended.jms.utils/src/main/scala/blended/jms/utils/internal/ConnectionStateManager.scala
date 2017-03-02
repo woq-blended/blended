@@ -83,6 +83,10 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   // ---- State: Connected
   def connected()(state: ConnectionState) : Receive = {
 
+    // we simply eat up the CloseTimeOut messages that might still be going for previous
+    // connect attempts
+    case ConnectTimeout(_) => // do nothing, this will just get rid of unrelevant warnings in the log
+
     // If we are already connected we simply try to ping the underlying connection
     case cc : CheckConnection =>
       pingTimer = None

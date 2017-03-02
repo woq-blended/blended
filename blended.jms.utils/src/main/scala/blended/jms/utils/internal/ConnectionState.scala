@@ -6,8 +6,8 @@ object ConnectionState {
 
   val CONNECTED = "connected"
   val CONNECTING = "connecting"
-  val CLOSING = "CLOSING"
-  val DISCONNECTED = "diconnected"
+  val CLOSING = "closing"
+  val DISCONNECTED = "disconnected"
 }
 
 case class ConnectionState(

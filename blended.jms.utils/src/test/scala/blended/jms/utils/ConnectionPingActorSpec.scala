@@ -21,7 +21,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val healthyPerformer = new PingPerformer(pingActor = testActor) {
+      val healthyPerformer = new PingPerformer(pingActor = testActor, id = "amq") {
         override def ping() = testActor ! PingReceived("Hooray")
       }
 
@@ -34,7 +34,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val dirtyPerformer = new PingPerformer(pingActor = testActor) {
+      val dirtyPerformer = new PingPerformer(pingActor = testActor, id = "amq") {
         override def ping() = {}
       }
 
@@ -48,7 +48,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val dirtyPerformer = new PingPerformer(pingActor = testActor) {
+      val dirtyPerformer = new PingPerformer(pingActor = testActor, id = "amq") {
         override def ping() = throw e
       }
 

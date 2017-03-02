@@ -9,7 +9,9 @@ import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
 
-abstract class PingPerformer(pingActor : ActorRef) {
+abstract class PingPerformer(pingActor: ActorRef, id: String) {
+
+  val provider = id
 
   val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
@@ -21,7 +23,7 @@ abstract class PingPerformer(pingActor : ActorRef) {
 }
 
 class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, destName : String)
-  extends PingPerformer(pingActor) with MessageListener {
+  extends PingPerformer(pingActor, provider) with MessageListener {
 
   private[this] val log = LoggerFactory.getLogger(classOf[JmsPingPerformer])
   private[this] val pingId = df.format(new Date())
@@ -29,11 +31,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
   var session : Option[Session] = None
 
   override def start(): Unit = {
-    try {
-      session = Some(con.createSession(false, Session.AUTO_ACKNOWLEDGE))
-    } catch {
-      case NonFatal(e) => pingActor ! PingResult(Left(e))
-    }
+    session = Some(con.createSession(false, Session.AUTO_ACKNOWLEDGE))
   }
 
   override def onMessage(m: Message): Unit = {
@@ -45,8 +43,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
   override def ping(): Unit = {
     session match {
       case None => pingActor ! PingResult(Left(new Exception(s"No session established for JMS checker [$provider, $pingId]")))
-      case Some(s) => try {
-
+      case Some(s) =>
         val dest = s.createTopic(destName)
         val consumer = s.createConsumer(dest)
         consumer.setMessageListener(this)
@@ -55,10 +52,6 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
         producer.send(s.createTextMessage(pingId))
         log.debug(s"sent ping message [$pingId] to provider [$provider]")
         producer.close()
-      } catch {
-        case NonFatal(e) =>
-          pingActor ! PingResult(Left(e))
-      }
     }
   }
 
