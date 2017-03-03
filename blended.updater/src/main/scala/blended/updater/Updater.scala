@@ -28,6 +28,7 @@ import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
+import blended.updater.config.Profile.SingleProfile
 
 class Updater(
   installBaseDir: File,
@@ -112,17 +113,10 @@ class Updater(
 
   def findConfig(id: ProfileId): Option[LocalRuntimeConfig] = profiles.get(id).map(_.config)
 
-  @deprecated
-  def findActiveConfig(): Option[LocalRuntimeConfig] = launchedProfileDir.flatMap { dir =>
-    val absDir = dir.getAbsoluteFile()
-    profiles.values.find { profile =>
-      profile.config.baseDir.getAbsoluteFile() == absDir
-    }.map(_.config)
-  }
+  def findActiveConfig(): Option[LocalRuntimeConfig] = findActiveProfile().map(_.config)
 
-  def findActiveProfile(): Option[Profile] = {
-    // FIXME
-    None
+  def findActiveProfile(): Option[LocalProfile] = {
+    launchedProfileId.flatMap(profileId => profiles.get(profileId))
   }
 
   def findLocalResource(name: String, sha1Sum: String): Option[File] =
@@ -148,8 +142,14 @@ class Updater(
 
   private[this] def nextId(): String = UUID.randomUUID().toString()
 
+  /**
+   * Signals to publish current service information into the Akka event stream.
+   */
   case object PublishServiceInfo
 
+  /**
+   * Signals to publish current profile information into the Akka event stream.
+   */
   case object PublishProfileInfo
 
   override def preStart(): Unit = {
@@ -444,33 +444,31 @@ class Updater(
 
     case PublishProfileInfo =>
       log.debug("About to publish profile infos")
-      val toSend = Profile.fromSingleProfiles(profiles.values.toSeq.map(_.toSingleProfile))
-      // publish a ProfileInfo
+      val activeProfile = findActiveProfile().map(_.toSingleProfile)
+      val singleProfiles = profiles.values.toSeq.map(_.toSingleProfile).map { p =>
+        activeProfile match {
+          case Some(a) if p.name == a.name && p.version == a.version && p.overlays.toSet == a.overlays.toSet =>
+            p.copy(overlaySet = p.overlaySet.copy(state = OverlayState.Active))
+          case _ => p
+        }
+
+      }
+      val toSend = Profile.fromSingleProfiles(singleProfiles)
       context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
     case PublishServiceInfo =>
       log.debug("About to gather and publish service infos")
-
-      // FIXME: better represent overlays!!!
-      val props = Map(
-        "profile.active" -> findActiveConfig().map(lrc => s"${lrc.runtimeConfig.name}-${lrc.runtimeConfig.version}").getOrElse(""),
-        "profiles.valid" -> profiles.collect {
-          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Staged)) => s"$name-$version"
-        }.mkString(","),
-        "profiles.invalid" -> profiles.collect {
-          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Invalid(_))) => s"$name-$version"
-        }.mkString(","),
-        "profiles.pending" -> profiles.collect {
-          case (ProfileId(name, version, overlays), LocalProfile(config, localOverlays, LocalProfile.Pending(_))) => s"$name-$version"
-        }.mkString(",")
-      ).filter { case (k, v) => !v.isEmpty() }
 
       val serviceInfo = ServiceInfo(
         name = context.self.path.toString,
         serviceType = "Updater",
         timestampMsec = System.currentTimeMillis(),
         lifetimeMsec = config.serviceInfoLifetimeMSec,
-        props = props
+        props = Map(
+          "installBaseDir" -> installBaseDir.getAbsolutePath(),
+          "launchedProfileDir" -> launchedProfileDir.map(_.getAbsolutePath()).getOrElse(""),
+          "launchedProfileId" -> launchedProfileId.map(_.toString()).getOrElse("")
+        )
       )
       log.debug("About to publish service info: {}", serviceInfo)
       context.system.eventStream.publish(serviceInfo)
