@@ -26,9 +26,10 @@ object CompContainerInfo {
         <.td(
           <.span(
             ^.onClick ==> selectContainer,
-            ct.containerId)
+            ct.containerId,
+            " "
+            )
         ),
-        " ",
         <.td(
           i18n.trn("{0} Profile", "{0} Profiles", ct.profiles.size, ct.profiles.size)
         ))

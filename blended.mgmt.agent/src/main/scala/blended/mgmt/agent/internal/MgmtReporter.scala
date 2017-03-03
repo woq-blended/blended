@@ -1,11 +1,11 @@
 package blended.mgmt.agent.internal
 
-import akka.actor.{Cancellable, Props}
+import akka.actor.{ Cancellable, Props }
 import akka.event.LoggingReceive
 import akka.pattern.pipe
-import blended.akka.{OSGIActor, OSGIActorConfig}
+import blended.akka.{ OSGIActor, OSGIActorConfig }
 import blended.spray.SprayPrickleSupport
-import blended.updater.config.{ContainerInfo, ContainerRegistryResponseOK, ServiceInfo}
+import blended.updater.config.{ ContainerInfo, ContainerRegistryResponseOK, ServiceInfo }
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
 import spray.client.pipelining._
@@ -14,34 +14,30 @@ import spray.http.HttpRequest
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Try}
+import scala.util.{ Failure, Try }
 import blended.updater.config.json.PrickleProtocol._
+import blended.updater.config.Profile
+import blended.updater.config.ProfileInfo
 
-object MgmtReporter {
-
-  object MgmtReporterConfig {
-    def fromConfig(config: Config): Try[MgmtReporterConfig] = Try {
-      MgmtReporterConfig(
-        registryUrl = config.getString("registryUrl"),
-        updateIntervalMsec = if (config.hasPath("updateIntervalMsec")) config.getLong("updateIntervalMsec") else 0,
-        initialUpdateDelayMsec = if (config.hasPath("initialUpdateDelayMsec")) config.getLong("initialUpdateDelayMsec") else 0
-      )
-    }
-  }
-
-  case class MgmtReporterConfig(
-      registryUrl: String,
-      updateIntervalMsec: Long,
-      initialUpdateDelayMsec: Long) {
-
-    override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
-  }
-
-  case object Tick
-
-  def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
-}
-
+/**
+ * Actor, that collects various container information and send's it to a remote management container.
+ *
+ * Sources of information:
+ *
+ * * [[ServiceInfo]] from the Akka event stream
+ * * `([[Long]], List[[[Profile]]])` from the Akka event stream
+ *
+ * Send to remote container:
+ *
+ * * [[ContainerInfo]] send via HTTP POST request
+ *
+ * Configuration:
+ *
+ * This actor reads a configuration class [[MgmtReporterConfig]] from the [[OSGIActorConfig]].
+ * Only if all necessary configuration are set (currently `initialUpdateDelayMsec` and `updateIntervalMsec`), the reporter sends information to the management container.
+ * The target URL of the management container is configured with the `registryUrl` config entry.
+ *
+ */
 class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickleSupport {
 
   import MgmtReporter._
@@ -50,6 +46,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
   // MUTABLE
   private[this] var ticker: Option[Cancellable] = None
   private[this] var serviceInfos: Map[String, ServiceInfo] = Map()
+  private[this] var profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
   ////////////////////
 
   private[this] val log = LoggerFactory.getLogger(classOf[MgmtReporter])
@@ -78,6 +75,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
     }
 
     context.system.eventStream.subscribe(context.self, classOf[ServiceInfo])
+    context.system.eventStream.subscribe(context.self, classOf[ProfileInfo])
   }
 
   override def postStop(): Unit = {
@@ -93,9 +91,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
 
     case Tick =>
       config.foreach { config =>
-        // TODO: populate profile info
-        val profiles = List()
-        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList, profiles)
+        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList, profileInfo.profiles)
         log.info("Performing report [{}].", info)
         val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
           sendReceive ~> unmarshal[ContainerRegistryResponseOK]
@@ -113,9 +109,43 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
         }
       }
 
+    // from event stream
     case serviceInfo @ ServiceInfo(name, svcType, ts, lifetime, props) =>
       log.debug("Update service info for: {}", name)
       serviceInfos += name -> serviceInfo
 
+    // from event stream
+    case pi @ ProfileInfo(timestamp, _) =>
+      if (timestamp > profileInfo.timeStamp) {
+        log.debug("Update profile info to:  {}", pi)
+        profileInfo = pi
+      } else {
+        log.debug("Ingnoring profile info with to old timestamp: {}", pi)
+      }
   }
+}
+
+object MgmtReporter {
+
+  object MgmtReporterConfig {
+    def fromConfig(config: Config): Try[MgmtReporterConfig] = Try {
+      MgmtReporterConfig(
+        registryUrl = config.getString("registryUrl"),
+        updateIntervalMsec = if (config.hasPath("updateIntervalMsec")) config.getLong("updateIntervalMsec") else 0,
+        initialUpdateDelayMsec = if (config.hasPath("initialUpdateDelayMsec")) config.getLong("initialUpdateDelayMsec") else 0
+      )
+    }
+  }
+
+  case class MgmtReporterConfig(
+      registryUrl: String,
+      updateIntervalMsec: Long,
+      initialUpdateDelayMsec: Long) {
+
+    override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
+  }
+
+  case object Tick
+
+  def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
 }

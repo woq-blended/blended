@@ -150,6 +150,8 @@ class Updater(
 
   case object PublishServiceInfo
 
+  case object PublishProfileInfo
+
   override def preStart(): Unit = {
     log.info("Initiating initial scanning for profiles")
     self ! Scan
@@ -173,6 +175,7 @@ class Updater(
         Duration(100, TimeUnit.MILLISECONDS),
         Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)) {
           self ! PublishServiceInfo
+          self ! PublishProfileInfo
         }
     } else {
       log.info("Publishing of service infos is disabled")
@@ -324,7 +327,7 @@ class Updater(
         }
 
       } map {
-        case profile  @ LocalProfile(_, _, LocalProfile.Staged) =>
+        case profile @ LocalProfile(_, _, LocalProfile.Staged) =>
           // already staged
           log.debug("Profile already staged: {}", profile.profileId)
           sender() ! OperationSucceeded(reqId)
@@ -439,8 +442,14 @@ class Updater(
       profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
       log.debug("Profiles (after scan): {}", profiles)
 
+    case PublishProfileInfo =>
+      log.debug("About to publish profile infos")
+      val toSend = Profile.fromSingleProfiles(profiles.values.toSeq.map(_.toSingleProfile))
+      // publish a ProfileInfo
+      context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
+
     case PublishServiceInfo =>
-      log.debug("About to gather service infos")
+      log.debug("About to gather and publish service infos")
 
       // FIXME: better represent overlays!!!
       val props = Map(
@@ -644,6 +653,5 @@ object Updater {
     }
 
   }
-
 
 }

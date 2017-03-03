@@ -13,4 +13,9 @@ object Profile {
     def state: OverlayState = overlaySet.state
   }
 
+  def fromSingleProfiles(singleProfiles: Seq[SingleProfile]): List[Profile] = {
+    val grouped = singleProfiles.groupBy(p => (p.name, p.version))
+    grouped.toList.map { case ((n, v), p) => Profile(n, v, p.toList.map(_.overlaySet)) }
+  }
+
 }

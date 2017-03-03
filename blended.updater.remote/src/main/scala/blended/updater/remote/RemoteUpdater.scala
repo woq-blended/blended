@@ -3,8 +3,10 @@ package blended.updater.remote
 import blended.updater.config._
 import org.slf4j.LoggerFactory
 
-class RemoteUpdater(runtimeConfigPersistor: RuntimeConfigPersistor,
-    containerStatePersistor: ContainerStatePersistor, overlayConfigPersistor: OverlayConfigPersistor) {
+class RemoteUpdater(
+    runtimeConfigPersistor: RuntimeConfigPersistor,
+    containerStatePersistor: ContainerStatePersistor,
+    overlayConfigPersistor: OverlayConfigPersistor) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[RemoteUpdater])
 
