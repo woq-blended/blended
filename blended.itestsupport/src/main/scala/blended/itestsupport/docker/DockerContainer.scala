@@ -33,12 +33,15 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
   def startContainer = {
     
     val links : List[Link] = cut.links.map { l => Link.parse(s"${l.container}:${l.hostname}") }
-    logger info s"Starting container [${cut.dockerName}] with container links [$links]."
-    
+    logger info s"Links for container [${cut.dockerName}] : [$links]."
+
+    val ports : Array[PortBinding] = cut.ports.map { case (name, p) => p.binding }.toArray
+    logger info s"Ports for container [${cut.dockerName}] : [${cut.ports}]."
+
     val containerCmd  = client.createContainerCmd(id)
       .withName(cut.dockerName)
       .withTty(true)
-      .withPublishAllPorts(true)
+      .withPortBindings(ports:_*)
 
     if (!links.isEmpty) containerCmd.withLinks(links:_*)
     containerCmd.exec()

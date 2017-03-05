@@ -28,6 +28,7 @@ trait CamelTestSupport {
     val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOnly)
 
+    log.info(s"sending test message to [$uri]")
     val producer = context.createProducerTemplate()
     val response : Exchange = producer.send(uri, exchange)
 
