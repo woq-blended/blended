@@ -1,16 +1,22 @@
 package blended.itestsupport
 
+import java.util.concurrent.atomic.AtomicInteger
+
+import com.github.dockerjava.api.model.PortBinding
 import com.typesafe.config.Config
 
 import scala.collection.convert.Wrappers.JListWrapper
 
 object NamedContainerPort {
+
+  private[this] val portCount = new AtomicInteger(32768)
+
   def apply(config : Config) : NamedContainerPort = {
     val privatePort = config.getInt("private")
     val publicPort = if (config.hasPath("public")) 
       config.getInt("public")
     else
-      privatePort
+      portCount.getAndIncrement()
 
     NamedContainerPort(config.getString("name"), privatePort, publicPort)
   }   
@@ -18,7 +24,9 @@ object NamedContainerPort {
 
 case class NamedContainerPort(
   name: String, privatePort: Int, publicPort: Int
-)
+) {
+  def binding = PortBinding.parse(s"$publicPort:$privatePort")
+}
 
 object VolumeConfig {
   def apply(config : Config) : VolumeConfig = VolumeConfig(

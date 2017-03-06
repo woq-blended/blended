@@ -76,7 +76,6 @@ trait DockerTestSetup { this : MockitoSugar =>
   // Set up a mock for an individual container
   def configureMockContainer(ctName : String) : String = {
     
-    val portBindings = new Ports()
     val imageId = UUID.randomUUID().toString()
     
     val createResp = mock[CreateContainerResponse]
@@ -92,7 +91,7 @@ trait DockerTestSetup { this : MockitoSugar =>
 
     when(mockClient.createContainerCmd(anyString)) thenReturn createCmd
     when(createCmd.withName(anyString())) thenReturn createCmd
-    when(createCmd.withPortBindings(portBindings)) thenReturn createCmd
+    when(createCmd.withPortBindings(anyVararg[PortBinding]())) thenReturn createCmd
     when(createCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn createCmd
     when(createCmd.withPublishAllPorts(true)) thenReturn createCmd
 

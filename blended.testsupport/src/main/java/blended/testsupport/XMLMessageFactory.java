@@ -16,7 +16,7 @@
 
 package blended.testsupport;
 
-import blended.util.FileReader;
+import blended.util.FileHelper;
 import org.apache.camel.Message;
 import org.apache.camel.impl.DefaultMessage;
 import org.slf4j.Logger;
@@ -68,7 +68,7 @@ public class XMLMessageFactory implements MessageFactory {
 
   private Document readMessageFile() throws Exception {
 
-    byte[] content = FileReader.readFile(resourceName);
+    byte[] content = FileHelper.readFile(resourceName);
     InputStream is = new ByteArrayInputStream(content);
 
     try {
