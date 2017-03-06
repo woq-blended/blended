@@ -53,6 +53,7 @@ BlendedModel(
         "blended.util",
         "blended.jmx",
         "blended.camel.utils",
+        "blended.jms.sampler",
         "blended.jms.utils",
         "blended.testsupport",
         "blended.domino",

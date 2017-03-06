@@ -1,0 +1,16 @@
+Test Driven Middleware
+======================
+
+Imagine you are working for a retail company you had to create an integration which hooks up all of 
+your point of sales location to your data center. You not only facing a wide variety of operating 
+systems your platform needs to execute on, but also instable and/or slow networks ans ever-changing 
+requirements. 
+
+You have tried with several large companies - the integration specialists - promising a variety of features 
+helping to solve the problem:
+
+* Central Management
+* "No programming, just config"
+* GUI based deployments
+
+In our talk we are going to challenge those features based on a decade of experience implementing 
