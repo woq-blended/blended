@@ -2,7 +2,7 @@ package blended.itestsupport.camel
 
 import akka.camel.CamelMessage
 import blended.testsupport.XMLMessageFactory
-import blended.util.FileReader
+import blended.util.FileHelper
 import org.apache.camel.impl.DefaultExchange
 import org.apache.camel.{CamelContext, Exchange, ExchangePattern, Message}
 import org.slf4j.LoggerFactory
@@ -85,7 +85,7 @@ trait CamelTestSupport {
 
   private[CamelTestSupport] def createMessageFromFile(message: String, props: Map[String, String])(implicit context: CamelContext) : Option[CamelMessage] = {
     try {
-      val content: Array[Byte] = FileReader.readFile(message)
+      val content: Array[Byte] = FileHelper.readFile(message)
       Some(CamelMessage(content, props.mapValues { _.asInstanceOf[Any] } ))
     } catch {
       case e: Exception => None

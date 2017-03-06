@@ -1,26 +1,19 @@
-/*
- * Copyright 2014ff,  https://github.com/woq-blended
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package blended.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
-public class FileReader {
+public class FileHelper {
+
+  public static void writeFile(final File f, byte[] content) throws Exception {
+
+    final InputStream is = new ByteArrayInputStream(content);
+    final OutputStream os = new FileOutputStream(f);
+
+    StreamCopySupport.copyStream(is, os);
+
+    safeClose(is);
+    safeClose(os);
+  }
 
   public static byte[] readStream(InputStream is) throws Exception {
 
