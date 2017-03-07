@@ -9,6 +9,7 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = blendedJmsSampler,
   packaging = "bundle",
+  description = "A bundle to sample messages from a given JMS topic.",
   dependencies = Seq(
     slf4j,
     blendedDomino,
