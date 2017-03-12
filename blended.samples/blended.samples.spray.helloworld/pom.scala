@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   gav = blendedSamplesSprayHelloworld,
-  packaging = "bundle",
+  packaging = "war",
   description = "A sample Spray based HTTP endpoint for the blended container.",
   dependencies = Seq(
     blendedSprayApi,
@@ -26,6 +26,15 @@ BlendedModel(
   plugins = Seq(
     mavenBundlePlugin,
     scalaMavenPlugin,
-    scalatestMavenPlugin
+    scalatestMavenPlugin,
+    Plugin(
+      gav = mavenWarPlugin,
+      configuration = Config (
+        packagingExcludes = "WEB-INF/lib/*.jar",
+        archive = Config(
+          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
+        )
+      )
+    )
   )
 )

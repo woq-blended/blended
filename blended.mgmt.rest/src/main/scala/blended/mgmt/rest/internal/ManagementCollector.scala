@@ -2,9 +2,9 @@ package blended.mgmt.rest.internal
 
 import javax.servlet.Servlet
 
-import akka.actor.{ Actor, ActorRefFactory, Props }
-import blended.akka.{ OSGIActor, OSGIActorConfig, ProductionEventSource }
-import blended.spray.{ SprayOSGIBridge, SprayOSGIServlet }
+import akka.actor.{Actor, ActorRefFactory, Props}
+import blended.akka.{OSGIActor, OSGIActorConfig, ProductionEventSource}
+import blended.spray.{SprayOSGIServlet, SprayPrickleSupport}
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import com.typesafe.config.Config
@@ -15,8 +15,6 @@ import spray.servlet.ConnectorSettings
 import spray.util.LoggingContext
 
 import scala.collection.immutable
-
-import blended.spray.SprayPrickleSupport
 
 case class ManagementCollectorConfig(
     servletSettings: ConnectorSettings,

@@ -23,7 +23,6 @@ trait ActorSystemWatching extends DominoImplicits {
   def whenActorSystemAvailable(f: OSGIActorConfig => Unit): Unit = {
     val m = new ActorSystemCapsule(capsuleContext, f, bundleContext)
     capsuleContext.addCapsule(m)
-
   }
 
   def setupBundleActor(cfg: OSGIActorConfig, props: Props): ActorRef = setupBundleActor(cfg.system, props)

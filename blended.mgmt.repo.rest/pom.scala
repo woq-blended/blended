@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   gav = blendedMgmtRepoRest,
-  packaging = "bundle",
+  packaging = "war",
   description = "File Artifact Repository REST Service",
   dependencies = Seq(
     scalaLib % "provided",
@@ -23,6 +23,15 @@ BlendedModel(
   plugins = Seq(
     mavenBundlePlugin,
     scalaMavenPlugin,
-    scalatestMavenPlugin
+    scalatestMavenPlugin,
+    Plugin(
+      gav = mavenWarPlugin,
+      configuration = Config (
+        packagingExcludes = "WEB-INF/lib/*.jar",
+        archive = Config(
+          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
+        )
+      )
+    )
   )
 )
