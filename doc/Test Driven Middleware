@@ -2,7 +2,7 @@ Test Driven Middleware
 ======================
 
 Imagine you are working for a retail company you had to create an integration which hooks up all of 
-your point of sales location to your data center. You not only facing a wide variety of operating 
+your point of sales location to your data center. You are not only facing a wide variety of operating 
 systems your platform needs to execute on, but also instable and/or slow networks ans ever-changing 
 requirements. 
 
@@ -11,6 +11,15 @@ helping to solve the problem:
 
 * Central Management
 * "No programming, just config"
-* GUI based deployments
+* Easy deployment
+* No Testing Required
 
-In our talk we are going to challenge those features based on a decade of experience implementing 
+In our talk we are going to challenge those features based on a decade of experience implementing a 
+container framework geared to be used in large heterogenous networks. We will show why the "Slideware"
+features won't lead to success and why a test driven approach lead to success eventually. 
+
+Our container framework is fully built on top of Open Source components such as ActiveMQ, Camel, Apache 
+Felix and HawtIO. It provides loosely coupled management features, treats configurable as versioned 
+components and is designed from a tester's perspective. 
+
+ 

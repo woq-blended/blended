@@ -1,19 +1,26 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
+import blended.spray.{BlendedHttpRoute, SprayPrickleSupport}
 import blended.updater.config._
+import blended.updater.config.json.PrickleProtocol._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes
-import spray.routing.{ HttpService, Route }
+import spray.routing.Route
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 
-import blended.updater.config.json.PrickleProtocol._
-import blended.spray.SprayPrickleSupport
-
-trait CollectorService extends HttpService {
+trait CollectorService extends BlendedHttpRoute {
   this: SprayPrickleSupport =>
+
+  override val httpRoute: Route =
+    collectorRoute ~
+    infoRoute ~
+    versionRoute ~
+    runtimeConfigRoute ~
+    overlayConfigRoute ~
+    updateActionRoute
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 

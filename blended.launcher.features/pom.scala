@@ -96,7 +96,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
   "blended-mgmt-server" -> Seq(
     FeatureBundle(dependency = blendedMgmtRest, start = true),
     FeatureBundle(dependency = blendedMgmtRepo, start = true),
-    FeatureBundle(dependency = blendedMgmtRepoRest, start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedUpdaterRemote, start = true),
     FeatureBundle(dependency = blendedContainerRegistry),
     FeatureBundle(dependency = blendedPersistence),
@@ -164,7 +164,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
   "blended-samples" -> Seq(
     FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
     FeatureBundle(dependency = blendedActivemqClient, start = true),
-    FeatureBundle(dependency = blendedSamplesSprayHelloworld, start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedSamplesCamel, start = true),
     FeatureBundle(dependency = blendedSamplesJms, start = true)
   )

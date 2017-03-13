@@ -33,6 +33,15 @@ BlendedModel(
   plugins = Seq(
     mavenBundlePlugin,
     scalaMavenPlugin,
-    scalatestMavenPlugin
+    scalatestMavenPlugin,
+    Plugin(
+      gav = mavenWarPlugin,
+      configuration = Config (
+        packagingExcludes = "WEB-INF/lib/*.jar",
+        archive = Config(
+          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
+        )
+      )
+    )
   )
 )

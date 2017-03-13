@@ -1,4 +1,4 @@
-package blended.mgmt.repo.rest
+package blended.mgmt.repo.rest.internal
 
 import blended.mgmt.repo.ArtifactRepo
 import blended.spray.BlendedHttpRoute

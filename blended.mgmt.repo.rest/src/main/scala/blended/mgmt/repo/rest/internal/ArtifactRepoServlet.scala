@@ -1,4 +1,4 @@
-package blended.mgmt.repo.rest
+package blended.mgmt.repo.rest.internal
 
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import blended.akka.OSGIActorConfig
