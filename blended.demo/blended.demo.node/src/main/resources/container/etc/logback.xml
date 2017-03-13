@@ -14,7 +14,7 @@
 
   <logger name="blended.jms" level="debug" />
 
-  <root level="info">
+  <root level="debug">
     <appender-ref ref="FILE" />
   </root>
 </configuration>

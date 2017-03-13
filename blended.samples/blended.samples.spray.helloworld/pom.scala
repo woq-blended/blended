@@ -18,6 +18,7 @@ BlendedModel(
     orgOsgi,
     orgOsgiCompendium,
     slf4j,
+    geronimoServlet30Spec,
     scalaTest % "test",
     sprayTestkit % "test",
     mockitoAll % "test",

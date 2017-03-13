@@ -11,3 +11,5 @@ Export-Package:
 Import-Package: *
 
 Private-Package: ${bundle.namespace}.internal
+
+

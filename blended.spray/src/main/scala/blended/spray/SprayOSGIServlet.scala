@@ -1,7 +1,5 @@
 package blended.spray
 
-import javax.servlet.ServletConfig
-
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.event.Logging
 import akka.spray.RefUtils
@@ -16,8 +14,9 @@ import spray.servlet.{ConnectorSettings, Servlet30ConnectorServlet}
 abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSystemWatching with ServiceWatching { this: BlendedHttpRoute =>
 
   private[this] val sLog = LoggerFactory.getLogger(classOf[SprayOSGIServlet])
-  private[this] var initConfig : Option[ServletConfig] = None
   private[this] var refFactory : Option[ActorRefFactory] = None
+
+  def servletConfig = getServletConfig()
 
   /** Dependency */
   override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
@@ -25,11 +24,14 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   /** Dependency */
   override protected def bundleContext: BundleContext = {
 
-    require(initConfig.isDefined)
-    val sCtxt = initConfig.get.getServletContext()
-    val obj = sCtxt.getAttribute("osgi-bundlecontext")
-    require(Option(obj).isDefined)
-    obj.asInstanceOf[BundleContext]
+    val sCtxt = servletConfig.getServletContext()
+    val obj = Option(sCtxt.getAttribute("osgi-bundlecontext"))
+
+    obj match {
+      case None => throw new Exception("Attribute [osgi-bundlecontext] unefined in servlet context.")
+      case Some(bc) if bc.isInstanceOf[BundleContext] => bc.asInstanceOf[BundleContext]
+      case Some(o) => throw new Exception(s"[${o.toString()}] is not of class BundleContext")
+    }
   }
 
   override implicit def actorRefFactory: ActorRefFactory = refFactory match {
@@ -38,7 +40,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   }
 
   def contextPath(cfg: OSGIActorConfig) : String =
-    if (cfg.config.hasPath("contextPath")) cfg.config.getString("contextPath") else initConfig.get.getServletName()
+    if (cfg.config.hasPath("contextPath")) cfg.config.getString("contextPath") else servletConfig.getServletName()
 
   def props(cfg: OSGIActorConfig, route: BlendedHttpRoute) : Props =
     BlendedHttpActor.props(cfg, this, contextPath(cfg))
@@ -78,17 +80,12 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     createServletActor(cfg)
   }
 
-  override def init(servletConfig: ServletConfig): Unit = {
-
-    super.init()
+  override def init(): Unit = {
     sLog.info(s"About to initialise SprayOsgiServlet [${servletConfig.getServletName()}]")
-    initConfig = Some(servletConfig)
 
     whenActorSystemAvailable { cfg =>
       refFactory = Some(cfg.system)
       startSpray(cfg)
     }
-
   }
-
 }

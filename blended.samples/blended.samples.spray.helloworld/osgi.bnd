@@ -4,24 +4,18 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Bundle-Activator: \
-  ${bundle.namespace}.internal.HelloActivator
-
 Export-Package:
 
 Import-Package: \
   scala.xml, \
   scala.*;version="[${scala.version},${scala.version}.50)", \
-  spray.routing,\
-  spray.routing.directives,\
-  spray.servlet,\
-  shapeless,\
-  blended.spray,\
   *
 
 Private-Package:\
   ${bundle.namespace}.internal.*
 
+Webapp-Context: blended
+Web-ContextPath: blended
 
 
 
