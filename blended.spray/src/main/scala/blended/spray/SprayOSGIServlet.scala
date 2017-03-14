@@ -40,7 +40,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   }
 
   def contextPath(cfg: OSGIActorConfig) : String =
-    if (cfg.config.hasPath("contextPath")) cfg.config.getString("contextPath") else servletConfig.getServletName()
+    Option(bundleContext.getBundle().getHeaders().get("Web-ContextPath")).getOrElse(bundleContext.getBundle().getSymbolicName())
 
   def props(cfg: OSGIActorConfig, route: BlendedHttpRoute) : Props =
     BlendedHttpActor.props(cfg, this, contextPath(cfg))

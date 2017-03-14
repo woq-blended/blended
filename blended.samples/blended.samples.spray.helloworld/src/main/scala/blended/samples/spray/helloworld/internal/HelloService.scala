@@ -6,8 +6,6 @@ import spray.routing._
 
 trait HelloService extends BlendedHttpRoute {
 
-  import HttpService._
-
   override val httpRoute: Route = path("hello") {
     get {
       respondWithMediaType(`text/html`) {
