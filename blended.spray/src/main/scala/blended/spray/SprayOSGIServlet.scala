@@ -15,8 +15,16 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
 
   private[this] val sLog = LoggerFactory.getLogger(classOf[SprayOSGIServlet])
   private[this] var refFactory : Option[ActorRefFactory] = None
+  private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
+
+  def actorConfig : OSGIActorConfig = osgiActorCfg match {
+    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] eccessed in wwrong context ")
+    case Some(cfg) => cfg
+  }
 
   def servletConfig = getServletConfig()
+
+  def bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 
   /** Dependency */
   override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
@@ -39,28 +47,27 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     case Some(f) => f
   }
 
-  def contextPath(cfg: OSGIActorConfig) : String =
+  def contextPath : String =
     Option(bundleContext.getBundle().getHeaders().get("Web-ContextPath")).getOrElse(bundleContext.getBundle().getSymbolicName())
 
-  def props(cfg: OSGIActorConfig, route: BlendedHttpRoute) : Props =
-    BlendedHttpActor.props(cfg, this, contextPath(cfg))
+  def props(route: BlendedHttpRoute) : Props =
+    BlendedHttpActor.props(actorConfig, this, contextPath)
 
-  def createServletActor(osgiCfg: OSGIActorConfig) : Unit =
-    createServletActor(osgiCfg, props(osgiCfg, this))
+  def createServletActor() : Unit =
+    createServletActor(props(this))
 
-  def createServletActor(osgiCfg: OSGIActorConfig, props : Props): ActorRef = {
+  def createServletActor(props : Props): ActorRef = {
 
-    system = osgiCfg.system
+    system = actorConfig.system
     log = Logging(system, this.getClass)
 
-    val cPath = contextPath(osgiCfg)
-    val symbolicName = osgiCfg.bundleContext.getBundle().getSymbolicName()
-    log.info(s"Initialising Spray actor for [${symbolicName}], using servlet context path [$cPath]")
+    val symbolicName = actorConfig.bundleContext.getBundle().getSymbolicName()
+    log.info(s"Initialising Spray actor for [${symbolicName}], using servlet context path [$contextPath]")
 
-    val bundleConfig = osgiCfg.system.settings.config.withValue(symbolicName, osgiCfg.system.settings.config.root())
+    val bundleConfig = actorConfig.system.settings.config.withValue(symbolicName, actorConfig.system.settings.config.root())
 
-    implicit val servletSettings = ConnectorSettings(bundleConfig).copy(rootPath = Path(s"/$cPath"))
-    val actor = osgiCfg.system.actorOf(props)
+    implicit val servletSettings = ConnectorSettings(bundleConfig).copy(rootPath = Path(s"/$contextPath"))
+    val actor = actorConfig.system.actorOf(props)
 
     serviceActor = actor
     settings = servletSettings
@@ -77,7 +84,9 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   }
 
   def startSpray(cfg: OSGIActorConfig): Unit = {
-    createServletActor(cfg)
+
+    osgiActorCfg = Some(cfg)
+    createServletActor()
   }
 
   override def init(): Unit = {

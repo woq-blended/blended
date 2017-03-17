@@ -27,7 +27,7 @@ class ManagemenCollectorServlet extends SprayOSGIServlet
     whenServicePresent[RemoteUpdater]{ updater =>
 
       remoteUpdater = Some(updater)
-      val actor = createServletActor(cfg)
+      val actor = createServletActor()
     }
   }
 

@@ -1,9 +1,10 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
+import blended.akka.OSGIActorConfig
 import blended.spray.SprayPrickleSupport
 import blended.updater.config._
-import org.scalatest.{ Matchers, FreeSpec }
+import org.scalatest.{FreeSpec, Matchers}
 import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
 
@@ -42,6 +43,8 @@ class ManagementCollectorSpec
     }
     
   }
+
+  override def actorConfig: OSGIActorConfig = ???
 
   override implicit def actorRefFactory = system
 

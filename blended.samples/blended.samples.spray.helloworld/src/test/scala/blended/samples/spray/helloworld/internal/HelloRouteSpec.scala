@@ -1,5 +1,6 @@
 package blended.samples.spray.helloworld.internal
 
+import blended.akka.OSGIActorConfig
 import org.scalatest.{Matchers, WordSpec}
 import org.slf4j.LoggerFactory
 import spray.testkit.ScalatestRouteTest
@@ -7,6 +8,8 @@ import spray.testkit.ScalatestRouteTest
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 
   val log = LoggerFactory.getLogger(classOf[HelloRouteSpec])
+
+  override def actorConfig: OSGIActorConfig = ???
 
   def actorRefFactory = system
 

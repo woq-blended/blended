@@ -19,6 +19,7 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
 
   def repoProps(repo: ArtifactRepo)(cfg: OSGIActorConfig, contextPath: String): Props =
     BlendedHttpActor.props(cfg, new ArtifactRepoRoutes {
+      override def actorConfig: OSGIActorConfig = cfg
       override protected def artifactRepo: ArtifactRepo = repo
       override implicit def actorRefFactory: ActorRefFactory = cfg.system
     }, contextPath)
@@ -29,9 +30,9 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
       * create and start actor and add to state
       */
     def addRepo(repo: ArtifactRepo): Unit = {
-      val repoContextPath = contextPath(osgiCfg) + "/" + repo.repoId
+      val repoContextPath = contextPath + "/" + repo.repoId
       val props = repoProps(repo)(osgiCfg, repoContextPath)
-      val actorRef = createServletActor(osgiCfg, props)
+      val actorRef = createServletActor(props)
       log.info("Created actor {} for artifact repo {}", Array(actorRef, repo): _*)
       actors += repo -> actorRef
       log.debug("known repos and their actors: {}", actors)
