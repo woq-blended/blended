@@ -8,7 +8,6 @@ import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedServi
 import org.slf4j.LoggerFactory
 import spray.routing.Route
 
-
 class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoServlet])
@@ -24,14 +23,14 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
       override implicit def actorRefFactory: ActorRefFactory = cfg.system
     }, contextPath)
 
-  override def startSpray(osgiCfg: OSGIActorConfig): Unit = {
+  override def startSpray(): Unit = {
 
     /**
       * create and start actor and add to state
       */
     def addRepo(repo: ArtifactRepo): Unit = {
       val repoContextPath = contextPath + "/" + repo.repoId
-      val props = repoProps(repo)(osgiCfg, repoContextPath)
+      val props = repoProps(repo)(actorConfig, repoContextPath)
       val actorRef = createServletActor(props)
       log.info("Created actor {} for artifact repo {}", Array(actorRef, repo): _*)
       actors += repo -> actorRef
@@ -44,7 +43,7 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
     def removeRepo(repo: ArtifactRepo): Unit = {
       actors.get(repo).map { actor =>
         log.info("About to stop actor {} for artifact repo {}", Array(actor, repo): _*)
-        osgiCfg.system.stop(actor)
+        actorConfig.system.stop(actor)
         actors -= repo
       }
       log.debug("known repos and their actors: {}", actors)

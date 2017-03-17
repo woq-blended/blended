@@ -18,7 +18,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
 
   def actorConfig : OSGIActorConfig = osgiActorCfg match {
-    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] eccessed in wwrong context ")
+    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wwrong context ")
     case Some(cfg) => cfg
   }
 
@@ -72,20 +72,18 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     serviceActor = actor
     settings = servletSettings
 
-    require(Option(system) != None, "No ActorSystem configured")
-    require(Option(serviceActor) != None, "No ServiceActor configured")
-    require(Option(settings) != None, "No ConnectorSettings configured")
-    require(RefUtils.isLocal(serviceActor), "The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
+    if (Option(system).isEmpty) throw new Exception("No ActorSystem configured")
+    if (Option(serviceActor).isEmpty) throw new Exception("No ServiceActor configured")
+    if (Option(settings).isEmpty) throw new Exception("No ConnectorSettings configured")
+    if (!RefUtils.isLocal(serviceActor)) throw new Exception("The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
     timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
-    require(RefUtils.isLocal(timeoutHandler), "The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
+    if (!RefUtils.isLocal(timeoutHandler)) throw new Exception("The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
     log.info(s"Initialized Servlet API 3.0 (OSGi) <=> Spray Connector for [$symbolicName]")
 
     serviceActor
   }
 
-  def startSpray(cfg: OSGIActorConfig): Unit = {
-
-    osgiActorCfg = Some(cfg)
+  def startSpray(): Unit = {
     createServletActor()
   }
 
@@ -93,8 +91,9 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     sLog.info(s"About to initialise SprayOsgiServlet [${servletConfig.getServletName()}]")
 
     whenActorSystemAvailable { cfg =>
+      osgiActorCfg = Some(cfg)
       refFactory = Some(cfg.system)
-      startSpray(cfg)
+      startSpray()
     }
   }
 }

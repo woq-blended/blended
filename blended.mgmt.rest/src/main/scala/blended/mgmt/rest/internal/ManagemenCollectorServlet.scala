@@ -22,7 +22,7 @@ class ManagemenCollectorServlet extends SprayOSGIServlet
 
   private[this] var cfg : Option[OSGIActorConfig] = None
 
-  override def startSpray(cfg: OSGIActorConfig): Unit = {
+  override def startSpray(): Unit = {
 
     whenServicePresent[RemoteUpdater]{ updater =>
 
