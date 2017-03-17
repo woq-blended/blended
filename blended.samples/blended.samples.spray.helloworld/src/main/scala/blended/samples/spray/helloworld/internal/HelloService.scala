@@ -8,9 +8,15 @@ trait HelloService extends BlendedHttpRoute {
 
   override val httpRoute: Route = path("hello") {
     get {
-      respondWithMediaType(`text/plain`) {
+      respondWithMediaType(`text/html`) {
         complete {
-          "Say hello to spray routing within OSGi."
+          """
+            |<html>
+            |<body>Say hello to
+            | <i>spray routing</i>
+            | within OSGi.</body>
+            |</html>
+          """.stripMargin
         }
       }
     }

@@ -69,6 +69,7 @@ val bundleWarPlugin = Plugin(
       supportedProjectType = "war"
     ),
     instructions = Config(
+      _wab = "src/main/webapp,src/main/resources",
       _include = "osgi.bnd"
     )
   )

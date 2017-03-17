@@ -25,7 +25,7 @@ BlendedModel(
     slf4jLog4j12 % "test"
   ),
   plugins = Seq(
-    mavenBundlePlugin,
+    bundleWarPlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
     Plugin(
