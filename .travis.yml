@@ -2,10 +2,15 @@ language: java
 
 sudo: false
 
+branches:
+  only:
+    - itest
+
 before_script:
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
   - tar xzf zinc-0.3.11.tgz
-  - ./zinc-0.3.11/bin/zinc -start
+  - ./zinc-0.3.11/bin/zinc -start -nailed
+  - cd blended.mgmt.ui && npm install jmsdom && cd ..
 
 script: travis_wait ./blended.build/02_compile-and-test.sh
 
