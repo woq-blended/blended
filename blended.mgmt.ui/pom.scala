@@ -71,6 +71,29 @@ BlendedModel(
           contextPath = "/management"
         )
       )
+    ),
+
+    Plugin(
+      gav = "com.github.eirslett" % "frontend-maven-plugin" % "1.3",
+      executions = Seq(
+        Execution(
+          id = "install node and npm",
+          phase = "initialize",
+          goals = Seq(
+            "install-node-and-npm"
+          )
+        ),
+        Execution(
+          id = "npm install",
+          phase = "generate-resources",
+          goals = Seq(
+            "npm"
+          )
+        )
+      ),
+      configuration = Config(
+        nodeVersion = "v4.2.6"
+      )
     )
   )
 )

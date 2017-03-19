@@ -5,14 +5,14 @@ branches:
     - itest
 
 before_script:
-  - curl -sL https://deb.nodesource.com/setup_6.x -o nodesource_setup.sh
-  - sudo bash nodesource_setup.sh
-  - sudo apt-get install node nodejs
-  - node --version
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
   - tar xzf zinc-0.3.11.tgz
   - ./zinc-0.3.11/bin/zinc -start -nailed
-  - cd blended.mgmt.ui && npm install jsdom && cd ..
+
+cache:
+  directories:
+    - $HOME/.m2
+    - $HOME/.ivy2
 
 script: travis_wait ./blended.build/02_compile-and-test.sh
 

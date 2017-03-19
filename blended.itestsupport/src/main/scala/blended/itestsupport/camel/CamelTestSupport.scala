@@ -76,16 +76,17 @@ trait CamelTestSupport {
   private [CamelTestSupport] def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : CamelMessage =
     (evaluateXML match {
       case true => createMessageFromXML(message, binary)
-      case false => createMessageFromFile(message, properties)
+      case false => createMessageFromFile(message, binary, properties)
     }) match {
       case None =>
         CamelMessage(message, properties)
       case Some(m) => m
     }
 
-  private[CamelTestSupport] def createMessageFromFile(message: String, props: Map[String, String])(implicit context: CamelContext) : Option[CamelMessage] = {
+  private[CamelTestSupport] def createMessageFromFile(message: String, binary: Boolean, props: Map[String, String])(implicit context: CamelContext) : Option[CamelMessage] = {
     try {
-      val content: Array[Byte] = FileHelper.readFile(message)
+      val bytes = FileHelper.readFile(message)
+      val content: Any = if (binary) bytes else new String(bytes)
       Some(CamelMessage(content, props.mapValues { _.asInstanceOf[Any] } ))
     } catch {
       case e: Exception => None

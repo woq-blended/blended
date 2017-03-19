@@ -62,8 +62,6 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     log = Logging(system, this.getClass)
 
     val symbolicName = actorConfig.bundleContext.getBundle().getSymbolicName()
-    log.info(s"Initialising Spray actor for [${symbolicName}], using servlet context path [$contextPath]")
-
     val bundleConfig = actorConfig.system.settings.config.withValue(symbolicName, actorConfig.system.settings.config.root())
 
     implicit val servletSettings = ConnectorSettings(bundleConfig).copy(rootPath = Path(s"/$contextPath"))
