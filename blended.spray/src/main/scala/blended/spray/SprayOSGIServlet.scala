@@ -18,7 +18,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
 
   def actorConfig : OSGIActorConfig = osgiActorCfg match {
-    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wwrong context ")
+    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wrong context ")
     case Some(cfg) => cfg
   }
 
