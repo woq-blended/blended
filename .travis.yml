@@ -10,7 +10,7 @@ before_script:
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
   - tar xzf zinc-0.3.11.tgz
   - ./zinc-0.3.11/bin/zinc -start -nailed
-  - nvm use 4.6
+  - nvm install 4.6
   - node --version
 
 cache:
