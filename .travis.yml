@@ -14,7 +14,7 @@ cache:
     - $HOME/.m2
     - $HOME/.ivy2
 
-script: travis_wait ./blended.build/02_compile-and-test.sh
+script: ./blended.build/02_compile-and-test.sh
 
 jdk:
   - oraclejdk8

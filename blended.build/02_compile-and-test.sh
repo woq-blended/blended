@@ -21,6 +21,4 @@ function build {
 
 "$MVN" -version
 
-build clean install -P build -pl :blended-updater-maven-plugin -am "$@" || ( echo "Failed to build blended-updater-maven-plugin" ; exit 1 )
-
-build clean install -P build "$@" || ( echo "Failed to build blended projects" ; exit 1 )
+$MVNW clean install -P build "$@"
