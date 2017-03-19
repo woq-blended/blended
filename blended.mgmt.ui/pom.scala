@@ -92,7 +92,7 @@ BlendedModel(
         )
       ),
       configuration = Config(
-        nodeVersion = "v4.2.6"
+        nodeVersion = "v4.6.0"
       )
     )
   )
