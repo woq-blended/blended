@@ -1,8 +1,14 @@
 language: java
 
+sudo: false
+
 branches:
   only:
     - itest
+
+before-install:
+  nodejs:
+    - 4
 
 before_script:
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
