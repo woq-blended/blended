@@ -2,9 +2,13 @@ package blended.jms.utils
 
 import javax.jms._
 
+import org.slf4j.LoggerFactory
+
 import scala.util.control.NonFatal
 
 trait JMSSupport {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[JMSSupport])
 
   val TOPICTAG = "topic:"
   val QUEUETAG = "queue:"
@@ -18,7 +22,9 @@ trait JMSSupport {
       f(session.get)
       None
     } catch {
-      case NonFatal(e) => Some(e)
+      case NonFatal(e) =>
+        log.debug(s"Encountered JMS Exception [${e.getMessage}]", e)
+        Some(e)
     } finally {
       session.foreach(_.close())
     }
@@ -33,7 +39,8 @@ trait JMSSupport {
       f(connection.get)
       None
     } catch {
-      case NonFatal(e) => Some(e)
+      case NonFatal(e) =>
+        Some(e)
     } finally {
       connection.foreach(_.close())
     }
@@ -60,8 +67,13 @@ trait JMSSupport {
 
     withConnection { conn =>
       withSession { session =>
+        log.debug(s"Sending JMS message to [$destName]")
         val producer = session.createProducer(destination(session, destName))
+        val msg = msgFactory.createMessage(session, content)
+        log.debug("JMS message created")
         producer.send(msgFactory.createMessage(session, content), deliveryMode, priority, ttl)
+        log.debug("Message sent successfully")
+        producer.close()
       } (conn)
     } (cf)
   }

@@ -1,5 +1,7 @@
 package blended.spray
 
+import javax.servlet.ServletConfig
+
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.event.Logging
 import akka.spray.RefUtils
@@ -22,7 +24,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     case Some(cfg) => cfg
   }
 
-  def servletConfig = getServletConfig()
+  def servletConfig : ServletConfig = getServletConfig()
 
   def bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 
