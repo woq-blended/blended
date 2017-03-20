@@ -2,12 +2,9 @@ package blended.itestsupport.jms
 
 import javax.jms.{Message, Session}
 
+import blended.jms.utils.JMSMessageFactory
+
 import scala.util.Random
-
-trait JMSMessageFactory {
-
-  def createMessage(session: Session, content: Option[Any] = None) : Message
-}
 
 class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory {
 
@@ -19,8 +16,7 @@ class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory {
     result
   }
 
-
-  override def createMessage(session: Session, content: Option[Any]) = {
+  override def createMessage(session: Session, content: Option[Any]): Message = {
     val m = session.createBytesMessage()
     m.writeBytes(body)
     m
@@ -28,6 +24,7 @@ class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory {
 }
 
 class TextMessageFactory extends JMSMessageFactory {
+
   override def createMessage(session: Session, content: Option[Any]) = {
     val body = content match {
       case None => "None"

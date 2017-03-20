@@ -165,7 +165,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
     // Once we encounter a timeout for a connection close we initiate a Container Restart via the monitor
     case CloseTimeout =>
-      val e = new Exception(s"Unable to close connection for provider [${provider} in [${config.minReconnect}]s]. Restarting container ...")
+      val e = new Exception(s"Unable to close connection for provider [${provider}] in [${config.minReconnect}]s]. Restarting container ...")
       monitor ! RestartContainer(e)
   }
 

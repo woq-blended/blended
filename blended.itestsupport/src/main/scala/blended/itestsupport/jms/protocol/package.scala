@@ -21,6 +21,9 @@ import javax.jms.DeliveryMode
 import akka.actor.ActorRef
 
 package protocol {
+
+  import blended.jms.utils.JMSMessageFactory
+
   case class Connect(clientId: String, user: Option[String] = None, password: Option[String] = None)
   case class Connected(clientId: String)
 

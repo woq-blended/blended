@@ -6,6 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import akka.event.LoggingReceive
 import blended.util.protocol.IncrementCounter
 import blended.itestsupport.jms.protocol._
+import blended.jms.utils.JMSSupport
 
 import scala.concurrent.duration._
 
@@ -15,8 +16,6 @@ class AkkaConsumer(
   destName: String,
   subscriberName: Option[String] = None
 ) extends MessageListener with JMSSupport {
-
-  override def jmsConnection = connection
 
   var session : Option[Session] = None
   var consumer : Option[MessageConsumer] = None
