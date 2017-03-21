@@ -41,7 +41,7 @@ Blended ist published under the http://www.apache.org/licenses/LICENSE-2.0[Apach
 
 == Contribute
 
-There are several areas on our [wishlist](http://www.wayofquality.de/jobs.html) that we need to incorporate over time or just want to look at, if some of those match your interests, why not join forces ?
+Why not just clone our repo, dig around and send us some pull requests ....
 
 == Feedback
 
