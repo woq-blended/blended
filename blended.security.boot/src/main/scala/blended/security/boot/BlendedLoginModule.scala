@@ -33,6 +33,7 @@ class BlendedLoginModule extends LoginModule {
 
   override def initialize(subject: Subject, callbackHandler: CallbackHandler, sharedState: util.Map[String, _], options: util.Map[String, _]): Unit = {
 
+    // Beware: A mutable Map!
     val newOptions : java.util.HashMap[String, AnyRef] = new java.util.HashMap[String, AnyRef]()
 
     val i = options.keySet().iterator()
