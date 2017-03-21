@@ -1,6 +1,9 @@
 language: java
 
-sudo: false
+sudo: required
+
+services:
+  - docker
 
 before_script:
   - wget http://downloads.typesafe.com/zinc/0.3.11/zinc-0.3.11.tgz
@@ -8,6 +11,8 @@ before_script:
   - ./zinc-0.3.11/bin/zinc -start -nailed
   - nvm install 4.6
   - node --version
+  - docker --version
+  - netstat -anp | grep -i listen | grep -v STREAM
 
 cache:
   directories:
