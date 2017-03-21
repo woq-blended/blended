@@ -1,0 +1,26 @@
+= Security in Blended Container
+
+== Used technology
+
+* JAAS
+* Apache Shiro
+
+== Birds eye view
+
+Blended uses JAAS with then delegates the handling to Apache Shiro as security implementation.
+
+To use JAAS in a modular and independent (for target JVMs) way, the JVM must know the so call `LoginModule` very early. Too early, to provide it in an modular and dynamic OSGi way. For that reason, a two-phase bootstrap is needed.
+
+In the first phase, there is the extension bundle `blended.security.boot`. It provides the `blended.security.boot.BlendedLoginModule` which will act as a intermediate `LoginModule`. It knows, how to access the real `LoginModule` once it is available.
+
+The `BlendedLoginModule` must be provided with a configuration, in which one has to set up the read implementation classes, which are provided by the bundle `blended.security`.
+
+In the second phase, when to OSGi container has loaded the `blended.security` bundle, this bundle provides the class `blended.security.ShiroLoginModule`, which acts as the real `LoginModule` and binds Apache Shiro as security backend into JAAS.
+
+NOTE: Section incomplete and need review
+
+== Details
+
+NOTE: Section pending
+
+== Securing WAR / WAB bundles
