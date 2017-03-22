@@ -6,6 +6,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import blended.util.protocol.IncrementCounter
 import blended.itestsupport.jms.protocol._
+import blended.jms.utils.JMSSupport
 
 object Producer {
 
@@ -15,8 +16,6 @@ object Producer {
 
 class Producer(connection: Connection, destName: String, msgCounter: Option[ActorRef])
   extends JMSSupport with Actor with ActorLogging {
-
-  override def jmsConnection = connection
 
   override def receive = LoggingReceive {
 
@@ -36,7 +35,7 @@ class Producer(connection: Connection, destName: String, msgCounter: Option[Acto
           )
           msgCounter.foreach { counter => counter ! new IncrementCounter() }
         }
-      }
+      }(connection)
       sender ! MessageProduced
     }
   }

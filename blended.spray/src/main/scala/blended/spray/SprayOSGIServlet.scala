@@ -1,5 +1,7 @@
 package blended.spray
 
+import javax.servlet.ServletConfig
+
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.event.Logging
 import akka.spray.RefUtils
@@ -18,11 +20,11 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
   private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
 
   def actorConfig : OSGIActorConfig = osgiActorCfg match {
-    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wwrong context ")
+    case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wrong context ")
     case Some(cfg) => cfg
   }
 
-  def servletConfig = getServletConfig()
+  def servletConfig : ServletConfig = getServletConfig()
 
   def bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 

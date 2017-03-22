@@ -40,7 +40,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedDomino),
     FeatureBundle(dependency = blendedMgmtBase, start = true),
     FeatureBundle(dependency = blendedPrickle),
-    FeatureBundle(dependency = blendedMgmtServiceJmx, start = true)
+    FeatureBundle(dependency = blendedMgmtServiceJmx, start = true),
+    FeatureBundle(dependency = blendedJmsUtils, start = true)
   ),
   "blended-activemq" -> Seq(
     FeatureBundle(dependency = ariesProxyApi),
@@ -67,7 +68,6 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = camelServlet),
     FeatureBundle(dependency = camelServletListener),
     FeatureBundle(dependency = blendedCamelUtils),
-    FeatureBundle(dependency = blendedJmsUtils, start = true),
     FeatureBundle(dependency = blendedJmsSampler, start = true)
   ),
   "blended-commons" -> Seq(

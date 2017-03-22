@@ -18,6 +18,7 @@ BlendedModel(
     blendedAkka,
     blendedJolokia,
     blendedTestSupport,
+    blendedJmsUtils,
     "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion,
     akkaCamel,
     typesafeConfig,
