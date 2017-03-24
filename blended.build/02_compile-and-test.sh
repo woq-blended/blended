@@ -21,4 +21,4 @@ function build {
 
 "$MVN" -version
 
-"$MVN" clean install -P build "$@" | gerp -v "download"
+"$MVN" clean install -P build "$@" | grep -v "download"
