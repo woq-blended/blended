@@ -39,10 +39,10 @@ class JMSSupportSpec extends FreeSpec
     ctxt
   }
 
-  private def sendMessage() : Unit = {
+  private def sendMessage(destName: String) : Unit = {
     sendMessage(
       cf = cf,
-      destName = "test",
+      destName = destName,
       content = None,
       msgFactory = new JMSMessageFactory {
         override def createMessage(session: Session, content: Option[Any]) = {
@@ -53,10 +53,10 @@ class JMSSupportSpec extends FreeSpec
     )
   }
 
-  private def checkMessage(assertions: MockAssertion*) : Unit = {
+  private def checkMessage(destName: String, assertions: MockAssertion*) : Unit = {
 
     val probe = TestProbe()
-    val mock = system.actorOf(Props(new CamelMockActor("jms:test")))
+    val mock = system.actorOf(Props(new CamelMockActor("jms:" + destName)))
     system.eventStream.subscribe(probe.ref, classOf[MockMessageReceived])
 
     probe.receiveOne(timeout.duration)
@@ -71,15 +71,15 @@ class JMSSupportSpec extends FreeSpec
 
     "send messages correctly to JMS" in {
 
-      sendMessage()
-      checkMessage(expectedMessageCount(1))
+      sendMessage("test")
+      checkMessage("test", expectedMessageCount(1))
     }
 
     "should receive messages from JMS correctly" in {
 
       val count : AtomicInteger = new AtomicInteger(0)
 
-      sendMessage()
+      sendMessage("test")
 
       receiveMessage(
         cf = cf,
@@ -94,12 +94,12 @@ class JMSSupportSpec extends FreeSpec
 
       count.get() should be (1)
 
-      checkMessage(expectedMessageCount(0))
+      checkMessage("test", expectedMessageCount(0))
     }
 
     "should not consume messages if the message handler yields an exception" in {
 
-      sendMessage()
+      sendMessage("test")
 
       receiveMessage(
         cf = cf,
@@ -111,7 +111,32 @@ class JMSSupportSpec extends FreeSpec
         }
       )
 
-      checkMessage(expectedMessageCount(1))
+      checkMessage("test", expectedMessageCount(1))
+    }
+
+    "forward messages correctly" in {
+
+      sendMessage("test1")
+
+      val receiver = new PollingJMSReceiver(
+        cf = cf,
+        destName = "test1",
+        interval = 50l,
+        msgHandler = new ForwardingMessageHandler(
+          cf = cf,
+          destName = "test2",
+          additionalHeader = Map("foo" -> "bar")
+        )
+      )
+
+      receiver.start()
+
+      checkMessage("test2",
+        expectedMessageCount(1),
+        expectedHeaders(Map("foo" -> "bar"))
+      )
+
+      receiver.stop()
     }
   }
 
