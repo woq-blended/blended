@@ -13,7 +13,7 @@ class BlendedJMSConnection(conn: Connection) extends Connection {
   override def createDurableConnectionConsumer(topic: Topic, s: String, s1: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer =
     conn.createDurableConnectionConsumer(topic, s, s1, serverSessionPool, i)
 
-  override def stop(): Unit = log.debug("Ignoring call to connection.stop()")
+  override def stop(): Unit = {}
 
   override def createSession(b: Boolean, i: Int): Session = conn.createSession(b, i)
 
@@ -29,7 +29,7 @@ class BlendedJMSConnection(conn: Connection) extends Connection {
 
   override def getExceptionListener: ExceptionListener = conn.getExceptionListener
 
-  override def close(): Unit = log.debug("Ignoring call to connection.close()")
+  override def close(): Unit = {}
 
   override def start(): Unit = conn.start()
 }

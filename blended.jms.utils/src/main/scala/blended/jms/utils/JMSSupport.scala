@@ -72,7 +72,6 @@ trait JMSSupport {
         var msg : Option[Message] = None
 
         do {
-          log.debug(s"Receiving message from [$destName]")
           msg = Option(consumer.receive(10))
           msg.foreach { m =>
             val id = m.getJMSMessageID()
@@ -87,10 +86,7 @@ trait JMSSupport {
             }
           }
         } while(msg.isDefined)
-
-        log.debug(s"No more messages to process from [$destName] - Idling consumer")
         consumer.close()
-
       } (con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
     } (cf)
   }
@@ -107,12 +103,10 @@ trait JMSSupport {
 
     withConnection { conn =>
       withSession { session =>
-        log.debug(s"Sending JMS message to [$destName]")
         val producer = session.createProducer(destination(session, destName))
         val msg = msgFactory.createMessage(session, content)
-        log.debug("JMS message created")
         producer.send(msgFactory.createMessage(session, content), deliveryMode, priority, ttl)
-        log.debug("Message sent successfully")
+        log.debug(s"Message sent successfully to [$destName]")
         producer.close()
       } (conn)
     } (cf)
