@@ -27,7 +27,9 @@ BlendedModel(
     mockitoAll % "test",
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
-    akkaTestkit % "test"
+    akkaTestkit % "test",
+    blendedCamelUtils % "test",
+    blendedTestSupport % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

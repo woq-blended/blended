@@ -1,4 +1,4 @@
-package blended.itestsupport.camel
+package blended.testsupport.camel
 
 import akka.camel.CamelMessage
 
@@ -16,5 +16,4 @@ package protocol {
   case class CheckResults(results: List[AssertionResult])
   case object StopReceive
   case class ReceiveStopped(uri: String)
-
 }

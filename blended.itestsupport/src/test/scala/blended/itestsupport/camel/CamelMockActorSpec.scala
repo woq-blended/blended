@@ -4,10 +4,11 @@ import akka.actor.{ActorSystem, Props}
 import akka.camel.{Oneway, Producer}
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
-import blended.itestsupport.camel.MockAssertions._
-import blended.itestsupport.camel.protocol._
+import blended.testsupport.camel.MockAssertions._
+import blended.testsupport.camel.protocol._
 import blended.itestsupport.docker.DockerTestSetup
 import blended.testsupport.TestActorSys
+import blended.testsupport.camel.CamelMockActor
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 

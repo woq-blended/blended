@@ -5,9 +5,9 @@ import akka.camel.CamelExtension
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
 import blended.itestsupport.BlendedIntegrationTestSupport
-import blended.itestsupport.camel.MockAssertions._
-import blended.itestsupport.camel.protocol._
-import blended.itestsupport.camel.{CamelMockActor, CamelTestSupport}
+import blended.testsupport.camel.MockAssertions._
+import blended.testsupport.camel.protocol._
+import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
 import scala.concurrent.duration.DurationInt

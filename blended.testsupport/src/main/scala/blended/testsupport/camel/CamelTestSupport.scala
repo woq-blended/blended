@@ -1,4 +1,4 @@
-package blended.itestsupport.camel
+package blended.testsupport.camel
 
 import akka.camel.CamelMessage
 import blended.testsupport.XMLMessageFactory

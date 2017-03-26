@@ -36,7 +36,10 @@ trait JMSSupport {
 
     try {
       connection = Some(cf.createConnection())
-      f(connection.get)
+      connection.foreach { c =>
+        c.start()
+        f(c)
+      }
       None
     } catch {
       case NonFatal(e) =>
@@ -53,6 +56,43 @@ trait JMSSupport {
       session.createQueue(destName.substring(QUEUETAG.length))
     else
       session.createQueue(destName)
+  }
+
+  def receiveMessage(
+    cf : ConnectionFactory,
+    destName: String,
+    msgHandler: JMSMessageHandler
+  ) : Unit = {
+
+    withConnection { conn =>
+      withSession { session =>
+
+        val consumer = session.createConsumer(destination(session, destName))
+
+        var msg : Option[Message] = None
+
+        do {
+          log.debug(s"Receiving message from [$destName]")
+          msg = Option(consumer.receive(10))
+          msg.foreach { m =>
+            val id = m.getJMSMessageID()
+            log.debug(s"Handling received message [$id] from [$destName]")
+            msgHandler.handleMessage(m) match {
+              case Some(t) =>
+                log.warn(s"Error handling message [$id] from [$destName]")
+                throw t
+              case None =>
+                log.debug(s"Successfully handled message [$id] from [$destName]")
+                m.acknowledge()
+            }
+          }
+        } while(msg.isDefined)
+
+        log.debug(s"No more messages to process from [$destName] - Idling consumer")
+        consumer.close()
+
+      } (con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
+    } (cf)
   }
 
   def sendMessage(

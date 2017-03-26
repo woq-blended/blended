@@ -4,14 +4,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.ConnectionFactory
 
 import akka.actor._
-import akka.pattern.ask
 import akka.util.Timeout
 import blended.itestsupport.condition.{AsyncChecker, AsyncCondition}
-import blended.itestsupport.jms.protocol._
+import blended.jms.utils.JMSSupport
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 object JMSAvailableCondition{
   def apply(cf: ConnectionFactory, t: Option[FiniteDuration] = None)(implicit system: ActorSystem) =
@@ -22,7 +20,7 @@ private[jms] object JMSChecker {
   def apply(cf: ConnectionFactory) = new JMSChecker(cf)
 }
 
-private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
+private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker with JMSSupport {
 
   var connected : AtomicBoolean = new AtomicBoolean(false)
   var connecting : AtomicBoolean = new AtomicBoolean(false)
@@ -42,28 +40,14 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker {
     implicit val t = Timeout(5.seconds)
 
     log.debug(s"Checking JMS connection...[$cf]")
-    if ( (!connected.get()) && (!connecting.get()) ) {
 
+
+    if ( (!connected.get()) && (!connecting.get()) ) {
       connecting.set(true)
 
-      jmsConnector match {
-        case None => Future(false)
-        case Some(c) =>
-          (c ? Connect(s"test-${System.currentTimeMillis()}")).mapTo[Either[JMSCaughtException, Connected]] onComplete {
-            case Success(result) => result match {
-              case Left(e) => {
-                log.debug(s"Couldn't connect to JMS [$cf] [${e.inner.getMessage}]")
-                c ! Disconnect
-              }
-              case Right(_) => {
-                connected.set(true)
-                c ! Disconnect
-              }
-            }
-            case Failure(_) =>
-              c ! Disconnect
-          }
-      }
+      withConnection { conn =>
+        connected.set(true)
+      } (cf)
 
       connecting.set(false)
     }

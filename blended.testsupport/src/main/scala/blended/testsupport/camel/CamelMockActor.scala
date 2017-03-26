@@ -1,10 +1,10 @@
-package blended.itestsupport.camel
+package blended.testsupport.camel
 
 import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging}
 import akka.camel.{CamelExtension, CamelMessage}
-import blended.itestsupport.camel.protocol._
+import blended.testsupport.camel.protocol._
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.{Exchange, Processor}
 
@@ -53,6 +53,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)
 
     case ca : CheckAssertions =>
+      val requestor = sender()
       val mockMessages = messages.reverse
       log.info(s"Checking assertions for [$uri] on [${mockMessages.size}] messages.")
       val results = CheckResults(ca.assertions.toList.map { a => a(mockMessages) })
@@ -60,7 +61,8 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
         case e if e.isEmpty =>
         case l => log.error(prettyPrint(l))
       }
-      sender ! results
+      log.debug(s"Sending assertion results to caller : [$results]")
+      requestor ! results
   }
 
   def receiving(messages: List[CamelMessage]) : Receive = {

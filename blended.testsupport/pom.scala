@@ -18,7 +18,8 @@ BlendedModel(
     slf4j,
     slf4jLog4j12,
     akkaTestkit,
-    scalaTest
+    scalaTest,
+    akkaCamel
   ),
   plugins = Seq(
     scalaMavenPlugin,
