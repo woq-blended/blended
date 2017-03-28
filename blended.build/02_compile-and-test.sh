@@ -21,4 +21,4 @@ function build {
 
 "$MVN" -version
 
-"$MVN" clean install -P build,docker,itest "$@" | grep -v -i "download"
+"$MVN" clean install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT "$@" | grep -v -i "download" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"

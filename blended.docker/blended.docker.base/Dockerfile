@@ -1,5 +1,5 @@
 # The basic image to run Blended containers
-FROM centos:centos6
+FROM centos:centos7
 
 MAINTAINER Andreas Gies version: 2.0-SNAPSHOT
 
