@@ -1,0 +1,30 @@
+= Documentation of Project Blended
+
+Maybe unsorted collection of Documentations
+
+
+.[File: README.adoc]
+include::../README.adoc[leveloffset=+1]
+
+.[File: Development.adoc]
+include::Development.adoc[leveloffset=+1]
+
+.[File: WebConsoleDev.adoc]
+include::WebConsoleDev.adoc[leveloffset=+1]
+
+.[File: Docker.adoc]
+include::Docker.adoc[leveloffset=+1]
+
+.[File: Security.adoc]
+include::Security.adoc[leveloffset=+1]
+
+== Specific aspects
+
+.[File: RestAPI.adoc]
+include::RestAPI.adoc[leveloffset=+2]
+
+.[File: FileRepository.adoc]
+include::FileRepository.adoc[leveloffset=+2]
+
+.[File: ProfileOverlays.adoc]
+include::ProfileOverlays.adoc[leveloffset=+2]

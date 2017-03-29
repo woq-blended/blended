@@ -4,7 +4,7 @@ The Blended Management Server serves as a File Repository.
 
 == Overview
 
-Per convention, the files are organized as in a Maven 2 Repository under the following structure:
+Per convention, the files are organized as in a Maven 2 Repository layout under the following structure:
 
 .Tree structure of a repository
 [listing]
