@@ -16,10 +16,24 @@ helping to solve the problem:
 
 In our talk we are going to challenge those features based on a decade of experience implementing a 
 container framework geared to be used in large heterogenous networks. We will show why the "Slideware"
-features won't lead to success and why a test driven approach lead to success eventually. 
+will fail in the end and a test driven approach leads to success eventually. 
 
-Our container framework is fully built on top of Open Source components such as ActiveMQ, Camel, Apache 
-Felix and HawtIO. It provides loosely coupled management features, treats configurable as versioned 
-components and is designed from a tester's perspective. 
-
+Based on real project requirements we will give an overview of an integration framework designed around 
+automated testing, distribution and a minimal cost of ownership. The framework is open source and ready 
+to use in real world integration scenarios. 
  
+
+
+Andreas Gies
+============
+Since early ages Andreas loved software development and continued to do so throughout and after his studies 
+of computer science in Munich. After university he was thrown into a large middleware project in 1991 and 
+never got away from the topic ever since. Over time he has worked for several large integration vendors as 
+developer, architect and consultant. In 2010 he founded the WOQ- Way of Quality GmbH, a small software 
+company specialising on integration projects. 
+
+Since then the WoQ developed and open sourced their integration framework which they use in their own projects. 
+Now closing in on it's 3rd major release the framework is ready for a broader audience. 
+
+Andreas lives and works in southern Spain together with his wife Karin and his 8 dogs Pinocchio, Pequeno, Pequena,
+Pepino, Nicah, Vishnu, Chewi and Floh.
