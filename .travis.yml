@@ -12,7 +12,6 @@ env:
 
 cache:
   directories:
-    - /var/lib/docker
     - $HOME/.m2
     - $HOME/.ivy2
 
