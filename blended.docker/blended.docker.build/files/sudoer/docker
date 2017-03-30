@@ -1,0 +1,2 @@
+blended	ALL=NOPASSWD:/usr/bin/dockerd
+

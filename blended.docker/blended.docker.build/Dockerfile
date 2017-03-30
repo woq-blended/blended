@@ -10,7 +10,7 @@ ADD files/software/sbt-0.13.13.tgz /opt
 ADD files/software/apache-maven-3.3.9-bin.tar.gz /opt
 ADD files/software/zinc-0.3.11.tgz /opt
 ADD files/profile.d /etc/profile.d
-ADD files/system /etc/systemd/system
+ADD files/sudoer /etc/sudoers.d
 
 RUN ln -s /opt/jdk1.8.0_121 /opt/java \
  && ln -s /opt/scala-2.11.8 /opt/scala \
@@ -18,9 +18,9 @@ RUN ln -s /opt/jdk1.8.0_121 /opt/java \
  && ln -s /opt/apache-maven-3.3.9 /opt/maven \
  && ln -s /opt/zinc-0.3.11 /opt/zinc \
  && groupadd blended ; useradd -d /home/blended -s /bin/bash -g blended -m blended \
- && apt-get -y update
+ && apt-get -y update 
  
-RUN apt-get install -y software-properties-common curl apt-transport-https net-tools systemd
+RUN apt-get install -y software-properties-common curl apt-transport-https net-tools systemd sudo 
 
 RUN rm -f /bin/sh ; ln -s /bin/bash /bin/sh \
     && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable"
@@ -30,7 +30,8 @@ RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 RUN apt-get -y update
 
 RUN apt-get -y install docker-ce
-RUN usermod -a -G docker blended
+RUN usermod -a -G docker blended \
+ && mkdir -p /var/lib/docker ; chown -R root:docker /var/lib/docker ; chmod -R g+w /var/lib/docker 
 
 USER blended
 
