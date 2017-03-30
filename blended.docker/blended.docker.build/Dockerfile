@@ -40,5 +40,6 @@ RUN /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2"
 
 # End of Installation section
 
-ENTRYPOINT ["/bin/bash", "-l"]
+ENTRYPOINT ["/bin/bash", "-l", "-c", "sh /home/blended/project/blended.build/docker-build.sh"]
+
 
