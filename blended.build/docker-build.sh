@@ -17,8 +17,6 @@ sudo /usr/bin/dockerd -H 127.0.0.1:2375 &
 
 cd ~/project
 
-sh $SCRIPT_DIR/mvn.sh -P build 
+mvn clean -P build | grep -v -i "downloading" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"
 
-#mvn clean -P build | grep -v -i "download" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"
-
-#mvn install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT
+mvn install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT | grep -v -i "downloading" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"
