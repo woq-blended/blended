@@ -1,20 +1,24 @@
 #!/bin/bash 
 
 set -e 
+set -x 
 
 export DOCKER_HOST=127.0.0.1
 export DOCKER_PORT=2375 
+
+SCRIPT_DIR=$(dirname $0)
 
 source ~/.nvm/nvm.sh
 nvm use 4.2.6
 
 node --version 
 
-nohup sudo /usr/bin/dockerd -H 127.0.0.1:2375 &> /tmp/docker.out &
-cat /tmp/docker.out
-
-docker -H 127.0.0.1:2375 ps -a 
+sudo /usr/bin/dockerd -H 127.0.0.1:2375 &
 
 cd ~/project
 
-mvn install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT
+sh $SCRIPT_DIR/mvn.sh -P build 
+
+#mvn clean -P build | grep -v -i "download" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"
+
+#mvn install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT
