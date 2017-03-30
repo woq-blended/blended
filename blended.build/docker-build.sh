@@ -14,4 +14,4 @@ nohup sudo /usr/bin/dockerd -H 127.0.0.1:2375 &> /tmp/docker.out &
 
 cd ~/project 
 
-mvn clean install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT
+mvn clean install -P build,docker,itest -Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT | grep -v -i "download" | grep -v -i "CheckForNull" | grep -v -i "longer than 100 characters"

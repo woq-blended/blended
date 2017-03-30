@@ -10,19 +10,13 @@ env:
     - DOCKER_HOST=127.0.0.1
     - DOCKER_PORT=2375
 
-before_script:
-  - nvm install 4.6
-  - node --version
-
 cache:
   directories:
+    - /var/lib/docker
     - $HOME/.m2
     - $HOME/.ivy2
 
-script: ./blended.build/02_compile-and-test.sh
-
-jdk:
-  - oraclejdk8
+script: docker run -it -v $(pwd):/home/blended/project -v ~/.m2:/home/blended/.m2 -v ~/.ivy2:/home/blended/.ivy2 --privileged atooni/blended-build
 
 notifications:
   webhooks:
