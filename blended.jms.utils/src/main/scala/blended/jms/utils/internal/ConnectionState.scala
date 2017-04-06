@@ -11,6 +11,7 @@ object ConnectionState {
 }
 
 case class ConnectionState(
+  provider : String,
   status : String = ConnectionState.DISCONNECTED,
   lastConnect : Option[Date] = None,
   lastDisconnect : Option[Date] = None,

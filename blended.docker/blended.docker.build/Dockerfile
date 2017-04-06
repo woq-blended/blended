@@ -8,7 +8,7 @@ ADD files/software/jdk-8u121-linux-x64.tar.gz /opt
 ADD files/software/scala-2.11.8.tgz /opt
 ADD files/software/sbt-0.13.13.tgz /opt
 ADD files/software/apache-maven-3.3.9-bin.tar.gz /opt
-ADD files/software/zinc-0.3.11.tgz /opt
+ADD files/software/zinc-0.3.13.tgz /opt
 ADD files/profile.d /etc/profile.d
 ADD files/sudoer /etc/sudoers.d
 
@@ -16,7 +16,7 @@ RUN ln -s /opt/jdk1.8.0_121 /opt/java \
  && ln -s /opt/scala-2.11.8 /opt/scala \
  && ln -s /opt/sbt-launcher-packaging-0.13.13 /opt/sbt \
  && ln -s /opt/apache-maven-3.3.9 /opt/maven \
- && ln -s /opt/zinc-0.3.11 /opt/zinc \
+ && ln -s /opt/zinc-0.3.13 /opt/zinc \
  && groupadd blended ; useradd -d /home/blended -s /bin/bash -g blended -m blended \
  && apt-get -y update 
  
@@ -37,6 +37,8 @@ USER blended
 
 RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | bash
 RUN /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2"
+
+ADD files/software/sbt-boot.tgz /home/blended/.sbt
 
 # End of Installation section
 

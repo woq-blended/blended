@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat
 class ConnectionMonitor(provider: String) extends ConnectionMonitorMBean {
 
   private[this] val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
-  private[this] var state : ConnectionState = ConnectionState()
+  private[this] var state : ConnectionState = ConnectionState(provider = provider).copy(status = ConnectionState.DISCONNECTED)
 
   private[this] var cmd : ConnectionCommand = ConnectionCommand(provider = provider)
 

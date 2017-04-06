@@ -26,6 +26,10 @@ class ConnectionStateMonitor(override val bundleContext: BundleContext, val moni
 
   override def receive: Receive = LoggingReceive {
     case ConnectionStateChanged(state) =>
+      val oldState = monitorBean.getState()
+      if (oldState.status != state.status) {
+        context.system.eventStream.publish(state)
+      }
       monitorBean.setState(state)
 
     case RestartContainer(t) =>
