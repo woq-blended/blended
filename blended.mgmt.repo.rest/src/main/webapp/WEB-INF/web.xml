@@ -9,7 +9,7 @@
   <display-name>Spray Sample Servlet</display-name>
 
   <servlet>
-    <servlet-name>hello</servlet-name>
+    <servlet-name>repo</servlet-name>
     <servlet-class>blended.mgmt.repo.rest.internal.ArtifactRepoServlet</servlet-class>
   </servlet>
 

@@ -14,6 +14,4 @@ Import-Package: \
 Private-Package:\
   ${bundle.namespace}.internal.*
 
-Bundle-Activator:\
-  ${bundle.namespace}.internal.AgentActivator
 

@@ -21,10 +21,10 @@ BlendedContainer(
     Feature("blended-activemq"),
     Feature("blended-camel"),
     Feature("blended-samples"),
+    Feature("blended-mgmt-client"),
     Feature("blended-mgmt-server")
   ),
   properties = Map(
-    "spray.version" -> BlendedVersions.sprayVersion,
-    "loglevel.test" -> "DEBUG"
+    "spray.version" -> BlendedVersions.sprayVersion
   )
 )
