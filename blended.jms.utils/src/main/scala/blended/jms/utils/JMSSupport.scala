@@ -61,19 +61,21 @@ trait JMSSupport {
   def receiveMessage(
     cf : ConnectionFactory,
     destName: String,
-    msgHandler: JMSMessageHandler
+    msgHandler: JMSMessageHandler,
+    maxMessages : Int = 0
   ) : Unit = {
 
     withConnection { conn =>
       withSession { session =>
 
         val consumer = session.createConsumer(destination(session, destName))
-
         var msg : Option[Message] = None
+        var msgCount : Int = 0
 
         do {
           msg = Option(consumer.receive(10))
           msg.foreach { m =>
+            msgCount += 1
             val id = m.getJMSMessageID()
             log.debug(s"Handling received message [$id] from [$destName]")
             msgHandler.handleMessage(m) match {
@@ -85,7 +87,7 @@ trait JMSSupport {
                 m.acknowledge()
             }
           }
-        } while(msg.isDefined)
+        } while(msg.isDefined && (maxMessages <=0 || msgCount < maxMessages))
         consumer.close()
       } (con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
     } (cf)

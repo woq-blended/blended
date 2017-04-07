@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   blendedMgmtRest,
-  packaging = "bundle",
+  packaging = "war",
   description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry.",
   dependencies = Seq(
     scalaLib % "provided",
@@ -31,7 +31,7 @@ BlendedModel(
     "bundle.namespace" -> "${project.artifactId}"
   ),
   plugins = Seq(
-    mavenBundlePlugin,
+    bundleWarPlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
     Plugin(

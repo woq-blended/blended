@@ -40,8 +40,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedDomino),
     FeatureBundle(dependency = blendedMgmtBase, start = true),
     FeatureBundle(dependency = blendedPrickle),
-    FeatureBundle(dependency = blendedMgmtServiceJmx, start = true),
-    FeatureBundle(dependency = blendedJmsUtils, start = true)
+    FeatureBundle(dependency = blendedMgmtServiceJmx, start = true)
   ),
   "blended-activemq" -> Seq(
     FeatureBundle(dependency = ariesProxyApi),
@@ -57,6 +56,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = xbeanSpring),
     FeatureBundle(dependency = activeMqOsgi),
     FeatureBundle(dependency = blendedActivemqBrokerstarter),
+    FeatureBundle(dependency = blendedJmsUtils, start = true),
     FeatureBundle(dependency = springJms)
   ),
   "blended-camel" -> Seq(
@@ -94,7 +94,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedMgmtAgent, start = true)
   ),
   "blended-mgmt-server" -> Seq(
-    FeatureBundle(dependency = blendedMgmtRest, start = true),
+    FeatureBundle(dependency = Dependency(gav =blendedMgmtRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedMgmtRepo, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedUpdaterRemote, start = true),

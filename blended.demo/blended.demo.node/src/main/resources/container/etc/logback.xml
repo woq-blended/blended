@@ -12,9 +12,7 @@
     </layout>
   </appender>
 
-  <logger name="blended.jms" level="debug" />
-
-  <root level="debug">
+  <root level="info">
     <appender-ref ref="FILE" />
   </root>
 </configuration>

@@ -33,7 +33,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var currentReceive : StateReceive = disconnected()
-  private[this] var currentState : ConnectionState = ConnectionState()
+  private[this] var currentState : ConnectionState = ConnectionState(provider = holder.provider).copy(status = DISCONNECTED)
 
   // the retry Schedule is the time interval we retry a connection after a failed connect attempt
   // usually that is only a fraction of the ping interval (i.e. 5 seconds)
@@ -67,7 +67,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
 
   override def preStart(): Unit = {
     super.preStart()
-    switchState(disconnected(), ConnectionState().copy(status = DISCONNECTED))
+    switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
   }
 

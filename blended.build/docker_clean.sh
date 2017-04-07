@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DOCKER="docker -H=127.0.0.1:4243"
+DOCKER="docker -H=$DOCKER_HOST:$DOCKER_PORT"
 
 for vm in $($DOCKER ps -aq)
 do

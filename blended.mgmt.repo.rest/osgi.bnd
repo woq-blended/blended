@@ -4,6 +4,8 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Classpath: WEB-INF/classes,.
+
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   *
@@ -14,3 +16,6 @@ Private-Package: \
 
 Export-Package: \
   ${bundle.namespace}
+
+Webapp-Context: repo
+Web-ContextPath: repo

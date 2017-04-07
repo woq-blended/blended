@@ -10,9 +10,6 @@ BlendedModel(
   blendedUtil,
   packaging = "bundle",
   description = "Utility classes to use in other bundles.",
-  properties = Map(
-    "loglevel.test" -> "INFO"
-  ),
   dependencies = Seq(
     akkaActor,
     orgOsgi,

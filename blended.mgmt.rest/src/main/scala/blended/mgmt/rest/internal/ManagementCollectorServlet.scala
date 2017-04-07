@@ -8,13 +8,13 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.immutable
 
-class ManagemenCollectorServlet extends SprayOSGIServlet
+class ManagementCollectorServlet extends SprayOSGIServlet
   with CollectorService
   with SprayPrickleSupport {
 
   type ContainerId = String
 
-  private[this] val mylog = LoggerFactory.getLogger(classOf[ManagemenCollectorServlet])
+  private[this] val mylog = LoggerFactory.getLogger(classOf[ManagementCollectorServlet])
 
   private[this] var containerStates: Map[ContainerId, RemoteContainerState] = Map()
 

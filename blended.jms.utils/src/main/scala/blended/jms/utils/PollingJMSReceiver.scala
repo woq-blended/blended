@@ -11,6 +11,7 @@ class PollingJMSReceiver(
   msgHandler: JMSMessageHandler
 ) extends JMSSupport {
 
+  private[this] val timer : Timer = new Timer()
   private[this] val stopping : AtomicBoolean = new AtomicBoolean(false)
 
   def start(): Unit = {
@@ -24,8 +25,10 @@ class PollingJMSReceiver(
 
   private[this] def poll() : Unit = {
     if (!stopping.get()) {
-      receiveMessage(cf, destName, msgHandler)
-      new Timer().schedule(
+      timer.purge()
+      // Get as many messages as possible
+      receiveMessage(cf, destName, msgHandler, 0)
+      timer.schedule(
         new TimerTask {
           override def run(): Unit = poll()
         }, interval

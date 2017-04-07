@@ -21,7 +21,7 @@ BlendedModel(
     scalaTest % "test"
   ), 
   plugins = Seq(
-    mavenBundlePlugin,
+    bundleWarPlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
     Plugin(
