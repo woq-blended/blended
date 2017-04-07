@@ -4,6 +4,8 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Classpath: WEB-INF/classes,.
+
 Import-Package: \
   spray.routing,\
   spray.routing.directives,\
@@ -14,6 +16,7 @@ Import-Package: \
 Private-Package: \
   ${bundle.namespace}.internal
 
-
+Webapp-Context: mgmt
+Web-ContextPath: mgmt
 
 
