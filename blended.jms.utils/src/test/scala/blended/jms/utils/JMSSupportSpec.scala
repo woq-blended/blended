@@ -89,7 +89,8 @@ class JMSSupportSpec extends FreeSpec
             count.incrementAndGet()
             None
           }
-        }
+        },
+        subscriptionName = None
       )
 
       count.get() should be (1)
@@ -108,7 +109,8 @@ class JMSSupportSpec extends FreeSpec
           override def handleMessage(msg: Message): Option[Throwable] = {
             Some(new Exception("test failure"))
           }
-        }
+        },
+        subscriptionName = None
       )
 
       checkMessage("test", expectedMessageCount(1))

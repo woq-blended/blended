@@ -39,6 +39,15 @@ object ContainerPropertyResolver {
       "left" -> { case (s: String, param: String) =>
         val n = param.toInt
         if (n >= s.length) s else s.take(n)
+      },
+
+      "replace" -> { case (s: String, param: String) =>
+          val replace = param.split(":")
+          if (replace.length != 2) {
+            s
+          } else {
+            s.replaceAll(replace(0), replace(1))
+          }
       }
     )
 

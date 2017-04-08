@@ -18,6 +18,7 @@ class PropertyResolverSpec extends FreeSpec
   props.put("bar", "test")
   props.put("FOO", "BAR")
   props.put("num", "12345")
+  props.put("version", "2.2.0")
 
   val idSvc = mock[ContainerIdentifierService]
   when(idSvc.getProperties()) thenReturn (props)
@@ -75,6 +76,7 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[num(left:4)]]") should be ("1234")
       ContainerPropertyResolver.resolve(idSvc, "$[[num(right:4)]]") should be ("2345")
       ContainerPropertyResolver.resolve(idSvc, "$[[num(right:6)]]") should be ("12345")
+      ContainerPropertyResolver.resolve(idSvc, "$[[version(replace:\\.:_)]]") should be ("2_2_0")
     }
   }
 

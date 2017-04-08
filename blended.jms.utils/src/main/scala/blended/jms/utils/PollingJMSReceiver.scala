@@ -8,7 +8,8 @@ class PollingJMSReceiver(
   cf: ConnectionFactory,
   destName : String,
   interval: Long,
-  msgHandler: JMSMessageHandler
+  msgHandler: JMSMessageHandler,
+  subscriptionName : Option[String] = None
 ) extends JMSSupport {
 
   private[this] val timer : Timer = new Timer()
@@ -27,7 +28,7 @@ class PollingJMSReceiver(
     if (!stopping.get()) {
       timer.purge()
       // Get as many messages as possible
-      receiveMessage(cf, destName, msgHandler, 0)
+      receiveMessage(cf, destName, msgHandler, 0, subscriptionName)
       timer.schedule(
         new TimerTask {
           override def run(): Unit = poll()
