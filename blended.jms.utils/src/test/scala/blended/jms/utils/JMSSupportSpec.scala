@@ -7,6 +7,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
+import blended.testsupport.camel.MockAssertions._
+import blended.testsupport.camel.protocol._
 import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
@@ -16,8 +18,6 @@ import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
 
 import scala.concurrent.duration._
-import blended.testsupport.camel.MockAssertions._
-import blended.testsupport.camel.protocol._
 
 class JMSSupportSpec extends FreeSpec
   with JMSSupport

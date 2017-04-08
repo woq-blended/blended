@@ -1,5 +1,6 @@
 package blended.jms.utils
 
+import blended.container.context.ContainerIdentifierService
 import com.typesafe.config.Config
 
 object BlendedJMSConnectionConfig {
@@ -11,17 +12,19 @@ object BlendedJMSConnectionConfig {
     pingTimeout = 3,
     retryInterval = 5,
     minReconnect = 300,
-    maxReconnectTimeout = -1
+    maxReconnectTimeout = -1,
+    clientId = "$[[" + ContainerIdentifierService.containerId + "]]"
   )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
-    val enabled       = if (cfg.hasPath("enabled")) cfg.getBoolean("enabled") else defaultConfig.enabled
+    val enabled = if (cfg.hasPath("enabled")) cfg.getBoolean("enabled") else defaultConfig.enabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
-    val pingInterval  = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
-    val pingTimeout   = if (cfg.hasPath("pingTimeout")) cfg.getInt("pingTimeout") else defaultConfig.pingTimeout
+    val pingInterval = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
+    val pingTimeout = if (cfg.hasPath("pingTimeout")) cfg.getInt("pingTimeout") else defaultConfig.pingTimeout
     val retryInterval = if (cfg.hasPath("retryInterval")) cfg.getInt("retryInterval") else defaultConfig.retryInterval
-    val minReconnect  = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
+    val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
+    val clientId = if (cfg.hasPath("clientId")) cfg.getString("clientId") else defaultConfig.clientId
 
     BlendedJMSConnectionConfig(
       enabled = enabled,
@@ -30,7 +33,8 @@ object BlendedJMSConnectionConfig {
       pingTimeout = pingTimeout,
       retryInterval = retryInterval,
       minReconnect = minReconnect,
-      maxReconnectTimeout = maxReconnectTimeout
+      maxReconnectTimeout = maxReconnectTimeout,
+      clientId = clientId
     )
   }
 }
@@ -42,5 +46,6 @@ case class BlendedJMSConnectionConfig(
   pingTimeout : Int,
   retryInterval : Int,
   minReconnect : Int,
-  maxReconnectTimeout: Int
+  maxReconnectTimeout: Int,
+  clientId : String
 )

@@ -18,7 +18,10 @@ BlendedModel(
     orgOsgi,
     domino,
     slf4j,
-    julToSlf4j
+    julToSlf4j,
+    scalaTest % "test",
+    slf4jLog4j12 % "test",
+    mockitoAll % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

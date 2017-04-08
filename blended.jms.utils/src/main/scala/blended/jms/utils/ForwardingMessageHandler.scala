@@ -1,9 +1,10 @@
 package blended.jms.utils
 
 import javax.jms._
-import scala.collection.JavaConverters._
 
 import org.slf4j.LoggerFactory
+
+import scala.collection.JavaConverters._
 
 class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, additionalHeader : Map[String, AnyRef] = Map.empty)
   extends JMSMessageHandler

@@ -5,7 +5,10 @@ import javax.jms.{Connection, ConnectionFactory}
 import blended.jms.utils.BlendedJMSConnection
 import org.slf4j.LoggerFactory
 
-case class ConnectionHolder(provider: String, cf: ConnectionFactory) {
+case class ConnectionHolder(
+  provider: String,
+  cf: ConnectionFactory
+) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
 
@@ -13,11 +16,12 @@ case class ConnectionHolder(provider: String, cf: ConnectionFactory) {
 
   def getConnection() : Option[BlendedJMSConnection] = conn
 
-  def connect() : Connection = conn match {
+  def connect(id: String) : Connection = conn match {
     case Some(c) => c
     case None =>
-      log.debug(s"Creating underlying connection for provider [$provider]")
+      log.info(s"Creating underlying connection for provider [$provider] with client id [$id]")
       val c = cf.createConnection()
+      c.setClientID(id)
       c.start()
 
       conn = Some(new BlendedJMSConnection(c))
@@ -25,7 +29,7 @@ case class ConnectionHolder(provider: String, cf: ConnectionFactory) {
   }
 
   def close() : Unit = {
-    log.debug(s"Closing underlying connection for provider [$provider]")
+    log.info(s"Closing underlying connection for provider [$provider]")
     conn.foreach(_.connection.close())
     conn = None
   }

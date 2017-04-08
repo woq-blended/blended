@@ -2,7 +2,7 @@ package blended.jms.utils
 
 import blended.container.context.ContainerIdentifierService
 
-trait BlendedClientIdProvider {
+trait BlendedJMSClientIdProvider {
 
   def clientId(idSvc: ContainerIdentifierService) : String
 }

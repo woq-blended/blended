@@ -7,6 +7,7 @@ import javax.jms.Connection
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
+import blended.akka.OSGIActorConfig
 import blended.jms.utils.internal.ConnectionState._
 import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
 
@@ -15,20 +16,24 @@ import scala.concurrent.duration._
 object ConnectionStateManager {
 
   def props(
-    monitor: ActorRef, holder: ConnectionHolder, config: BlendedJMSConnectionConfig
+    cfg: OSGIActorConfig,
+    monitor: ActorRef,
+    holder: ConnectionHolder
   ) : Props =
-    Props(new ConnectionStateManager(monitor, holder, config))
+    Props(new ConnectionStateManager(cfg, monitor, holder))
 }
 
-class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config: BlendedJMSConnectionConfig)
+class ConnectionStateManager(cfg: OSGIActorConfig, monitor: ActorRef, holder: ConnectionHolder)
   extends Actor with ActorLogging {
 
   type StateReceive = ConnectionState => Receive
 
+  private[this] val config = BlendedJMSConnectionConfig(cfg.config)
   private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
   private[this] implicit val eCtxt = context.system.dispatcher
   private[this] val provider = holder.provider
+  private[this] val clientId = cfg.idSvc.resolvePropertyString(config.clientId)
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
@@ -263,7 +268,7 @@ class ConnectionStateManager(monitor: ActorRef, holder: ConnectionHolder, config
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
     } else state
 
-    controller ! Connect(lastConnectAttempt)
+    controller ! Connect(lastConnectAttempt, clientId)
 
     // push the events into the newState in reverse order and set
     // the new state name

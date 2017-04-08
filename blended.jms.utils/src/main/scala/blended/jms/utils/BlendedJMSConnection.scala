@@ -2,7 +2,7 @@ package blended.jms.utils
 
 import javax.jms._
 
-import org.slf4j.{LoggerFactory, Logger}
+import org.slf4j.LoggerFactory
 
 class BlendedJMSConnection(conn: Connection) extends Connection {
 

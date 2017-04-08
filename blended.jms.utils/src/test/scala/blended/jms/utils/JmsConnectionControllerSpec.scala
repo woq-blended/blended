@@ -1,6 +1,7 @@
 package blended.jms.utils
 
 import java.util.Date
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
@@ -18,7 +19,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
   with ImplicitSender
   with BeforeAndAfterAll {
 
+  private[this] val idCnt = new AtomicInteger(0)
   private[this] var broker : Option[BrokerService] = None
+
+  def testId() : String = "testId-" + idCnt.incrementAndGet()
 
   override protected def beforeAll() : Unit = {
     super.beforeAll()
@@ -56,7 +60,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val t = new Date()
 
-      testActor ! Connect(t)
+      testActor ! Connect(t, testId())
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
       m.ts should be (t)
@@ -65,9 +69,10 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val t2 = new Date()
       val c1 = m.r.right.get
 
-      testActor ! Connect(t2)
+      testActor ! Connect(t2, testId())
 
       expectMsg(ConnectResult(t2, Right(c1)))
+      holder.close()
     }
 
     "should answer with a negative ConnectResult message in case of a failed connect" in {
@@ -77,11 +82,13 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val t = new Date()
 
-      testActor ! Connect(t)
+      testActor ! Connect(t, testId())
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
       m.ts should be (t)
       m.r.isLeft should be (true)
+
+      holder.close()
     }
 
     "should answer with a ConnectionClosed message in case of a successful disconnect" in {
@@ -90,7 +97,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val t = new Date()
 
-      testActor ! Connect(t)
+      testActor ! Connect(t, testId())
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
       m.ts should be (t)
@@ -116,7 +123,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
       val t = new Date()
 
-      testActor ! Connect(t)
+      testActor ! Connect(t, testId())
 
       val m = receiveOne(3.seconds).asInstanceOf[ConnectResult]
       m.ts should be (t)

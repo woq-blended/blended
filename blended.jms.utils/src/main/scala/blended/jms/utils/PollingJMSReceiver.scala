@@ -1,7 +1,7 @@
 package blended.jms.utils
 
-import java.util.{Timer, TimerTask}
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.{Timer, TimerTask}
 import javax.jms.ConnectionFactory
 
 class PollingJMSReceiver(

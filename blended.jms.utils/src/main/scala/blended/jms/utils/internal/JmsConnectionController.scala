@@ -7,9 +7,9 @@ import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
 
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
-import scala.concurrent.duration._
 
 object JmsConnectionController {
 
@@ -23,11 +23,11 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
   override def receive: Receive = disconnected
 
   def disconnected : Receive = LoggingReceive {
-    case Connect(t) =>
+    case Connect(t, id) =>
       val caller = sender()
 
       try {
-        val c = holder.connect()
+        val c = holder.connect(id)
         caller ! ConnectResult(t, Right(c))
         context.become(connected(c))
       } catch {
@@ -38,7 +38,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
   }
 
   def connected(c : Connection) : Receive = LoggingReceive {
-    case Connect(t) =>
+    case Connect(t, _) =>
       sender ! ConnectResult(t, Right(c))
     case Disconnect(t) =>
       implicit val timeout = Timeout(t + 1.second)
