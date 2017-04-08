@@ -3,11 +3,18 @@ package blended.jms.utils
 import javax.jms.ConnectionFactory
 
 import blended.akka.{ActorSystemWatching, OSGIActorConfig}
+import blended.container.context.ContainerPropertyResolver
 import blended.util.ReflectionHelper
 import domino.DominoActivator
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
+
+object ConnectionFactoryFactory {
+  val CONNECTION_URLS = "connectionURLs"
+  val DEFAULT_USER = "defaultUser"
+  val DEFAULT_PWD = "defaultPassword"
+}
 
 abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystemWatching {
 
@@ -27,7 +34,7 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
       propCfg.entrySet().asScala.foreach { entry =>
 
         val key = entry.getKey
-        val value = entry.getValue.unwrapped()
+        val value = ContainerPropertyResolver.resolve(cfg.idSvc, cfg.config.getConfig("properties").getString(key))
 
         log.info(s"Setting property [$key] for connection factory [$symbolicName] to [$value].")
         ReflectionHelper.setProperty(cf, value, key)

@@ -2,7 +2,7 @@ package blended.container.context.internal
 
 import java.util.Properties
 
-import blended.container.context.{ContainerIdentifierService, PropertyResolverException}
+import blended.container.context.{ContainerIdentifierService, ContainerPropertyResolver, PropertyResolverException}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, Matchers}

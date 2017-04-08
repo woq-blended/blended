@@ -2,8 +2,6 @@ package blended.container.context
 
 import java.util.Properties
 
-import blended.container.context.internal.ContainerPropertyResolver
-
 class PropertyResolverException(msg : String) extends Exception(msg)
 
 /**

@@ -1,6 +1,5 @@
-package blended.container.context.internal
+package blended.container.context
 
-import blended.container.context.{ContainerIdentifierService, PropertyResolverException}
 import org.slf4j.LoggerFactory
 
 object ContainerPropertyResolver {
