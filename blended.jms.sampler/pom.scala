@@ -11,6 +11,7 @@ BlendedModel(
   packaging = "bundle",
   description = "A bundle to sample messages from a given JMS topic.",
   dependencies = Seq(
+    blendedAkka,
     slf4j,
     blendedDomino,
     blendedUtil,

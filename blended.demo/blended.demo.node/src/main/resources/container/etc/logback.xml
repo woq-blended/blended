@@ -12,6 +12,8 @@
     </layout>
   </appender>
 
+  <logger name="blended" level="DEBUG" />
+
   <root level="info">
     <appender-ref ref="FILE" />
   </root>

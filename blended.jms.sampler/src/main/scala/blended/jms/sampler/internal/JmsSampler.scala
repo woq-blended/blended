@@ -1,29 +1,20 @@
 package blended.jms.sampler.internal
 
-import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.ConnectionFactory
 
-import blended.container.context.ContainerIdentifierService
+import akka.actor.ActorRef
+import blended.akka.OSGIActorConfig
 import org.slf4j.LoggerFactory
 
-import scala.util.control.NonFatal
-
-class JmsSampler(idSvc: ContainerIdentifierService, cf: ConnectionFactory) extends JmsSamplerMBean {
+case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSamplerMBean {
 
   private[this] var encoding = "UTF-8"
   private[this] var destinationName : String = ""
-  private[this] var worker : Option[TopicSampler] = None
-  private[this] val stopPending : AtomicBoolean = new AtomicBoolean(false)
-  private[this] var samplerThread : Option[Thread] = None
+  private[this] var worker : Option[ActorRef] = None
+  private[this] val sampling : AtomicBoolean = new AtomicBoolean(false)
 
   private[this] val log = LoggerFactory.getLogger(classOf[JmsSampler])
-
-  private[this] val dir = {
-    val f = new File(idSvc.getContainerContext().getContainerLogDirectory() + "/../trace")
-    if (!f.exists()) f.mkdirs()
-    f.getAbsoluteFile()
-  }
 
   override def getEncoding(): String = encoding
 
@@ -39,37 +30,21 @@ class JmsSampler(idSvc: ContainerIdentifierService, cf: ConnectionFactory) exten
     }
   }
 
-  override def isSampling(): Boolean = worker.isDefined
+  def setSampling(s : Boolean) : Unit = sampling.set(s)
+
+  override def isSampling(): Boolean = sampling.get()
 
   override def startSampling(): Unit = if (!isSampling()) {
 
     if (destinationName.length() > 0) {
-      worker = Some(new TopicSampler(dir, cf, destinationName.trim(), getEncoding()))
-      try {
-        worker.get.initSampler()
-      } catch {
-        case NonFatal(e) =>
-          log.warn(s"Could not start sampler for destination [$destinationName] : [${e.getMessage()}]")
-          stopSampling()
-      }
-
-      worker.foreach { ts =>
-        samplerThread = Some(new Thread(new Runnable {
-          override def run() = while (!stopPending.get()) {
-            ts.sample()
-          }
-        }))
-        log.info(s"Starting sampler for topic [$destinationName]")
-        samplerThread.foreach(_.start())
-      }
+      log.info(s"Starting topic sampler for destination [${destinationName}]")
+      worker = Some(cfg.system.actorOf(JMSSampleControlActor.props(cfg, cf, this)))
     }
   }
 
-  override def stopSampling(): Unit = if (isSampling() && !stopPending.get()) {
-    log.info(s"Stopping sampler for destination [$destinationName]")
-    stopPending.set(true)
-    worker.foreach(_.closeSampler())
+  override def stopSampling(): Unit = if (isSampling()) {
+    log.info(s"Stopping topic sampler for destination [$destinationName]")
+    worker.foreach(_ ! StopSampling)
     worker = None
-    stopPending.set(false)
   }
 }

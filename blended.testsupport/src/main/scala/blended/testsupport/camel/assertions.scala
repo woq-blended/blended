@@ -13,6 +13,8 @@ import scala.concurrent.Await
 object MockAssertions {
 
   private[this] val log = LoggerFactory.getLogger(classOf[MockAssertions])
+
+  private[this] def extractHeader (m : CamelMessage) : Map[String, Any] = m.getHeaders.asScala.toMap
   
   def checkAssertions(mock: ActorRef, assertions: MockAssertion*)(implicit timeout: Timeout) : List[Throwable] = {
     val f = (mock ? CheckAssertions(assertions)).mapTo[CheckResults]
@@ -23,6 +25,9 @@ object MockAssertions {
     if (l.size >= n) {
       Right(s"MockActor has [${l.size}] messages")
     } else {
+      for (elem <- l) {
+        log.info(s"Msg Header : [${extractHeader(elem)}]")
+      }
       Left(new Exception(s"MockActor has [${l.size}] messages, but expected at least [$n] messages"))
     }
   }
@@ -62,7 +67,7 @@ object MockAssertions {
   def expectedHeaders(headers : Map[String, Any]*) : MockAssertion = { l: List[CamelMessage] =>
 
     def misMatchedHeaders(m : CamelMessage, expected: Map[String, Any]) : Map[String, Any] = {
-      log.debug(s"Checking headers ${m.getHeaders.asScala}, expected: [$expected]")
+      log.info(s"Checking headers ${extractHeader(m)}, expected: [$expected]")
 
       expected.filter { case (k, v) =>
         !m.headers.contains(k) || m.headers(k) != v
