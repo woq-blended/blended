@@ -3,7 +3,8 @@ package blended.jms.sampler.internal
 import java.io.File
 import javax.jms.ConnectionFactory
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.SupervisorStrategy.Stop
+import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import blended.akka.OSGIActorConfig
 
 object JMSSampleControlActor {
@@ -13,6 +14,12 @@ object JMSSampleControlActor {
 }
 
 class JMSSampleControlActor(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler: JmsSampler) extends Actor with ActorLogging {
+
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
+    case e : Exception =>
+      log.warning(s"Topic Sampler terminated with exception [${e.getMessage}]")
+      Stop
+  }
 
   override def preStart(): Unit = self ! Init
 
@@ -29,10 +36,11 @@ class JMSSampleControlActor(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler
 
       val destName = sampler.getDestinationName()
       val sampleActor = context.actorOf(JMSSampleActor.props(dir, cfg, cf, destName, sampler.getEncoding()))
+      context.watch(sampleActor)
+
       sampleActor ! StartSampling
       sampler.setSampling(true)
 
-      context.watch(sampleActor)
       context.become(sampling(sampleActor, destName))
 
       log.debug(s"Topic sampler [${destName}] started")

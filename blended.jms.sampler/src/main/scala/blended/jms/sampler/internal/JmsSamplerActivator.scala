@@ -12,7 +12,7 @@ class JmsSamplerActivator extends DominoActivator with ActorSystemWatching {
 
   whenBundleActive {
     whenActorSystemAvailable{ cfg =>
-      whenAdvancedServicePresent[ConnectionFactory]("provider=activemq") {
+      whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") {
         cf =>
           val sampler = new JmsSampler(cfg, cf)
           ManagementFactory.getPlatformMBeanServer().registerMBean(sampler, new ObjectName("blended:type=JmsSampler"))
