@@ -101,7 +101,7 @@ class JMSSampleActor(dir: File, cfg: OSGIActorConfig, cf: ConnectionFactory, des
 
           do {
             bCnt = bMsg.readBytes(bytes)
-            bos.write(bytes,0,bCnt)
+            if (bCnt > 0) bos.write(bytes,0,bCnt)
           } while(bCnt > 0)
 
           bos.flush()
