@@ -1,13 +1,12 @@
 package blended.jms.utils
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
+import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils.internal._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FreeSpecLike, Matchers}
 
 import scala.concurrent.duration._
-import scala.util.control.NonFatal
 
 class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
   with FreeSpecLike

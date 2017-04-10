@@ -2,6 +2,8 @@ package blended.container.context
 
 import java.util.Properties
 
+class PropertyResolverException(msg : String) extends Exception(msg)
+
 /**
  * Each container within the infrastructure has a unique ID. Once the unique ID is assigned to
  * a container, it doesn't change and also survives container restarts.
@@ -13,4 +15,10 @@ trait ContainerIdentifierService {
   def getUUID(): String
   def getProperties(): Properties
   def getContainerContext(): ContainerContext
+
+  def resolvePropertyString(value: String) : String = ContainerPropertyResolver.resolve(this, value)
+}
+
+object ContainerIdentifierService {
+  val containerId = "containerId"
 }

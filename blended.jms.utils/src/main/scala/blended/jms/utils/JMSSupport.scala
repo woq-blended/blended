@@ -62,13 +62,24 @@ trait JMSSupport {
     cf : ConnectionFactory,
     destName: String,
     msgHandler: JMSMessageHandler,
-    maxMessages : Int = 0
+    maxMessages : Int = 0,
+    subscriptionName : Option[String]
   ) : Unit = {
 
     withConnection { conn =>
       withSession { session =>
 
-        val consumer = session.createConsumer(destination(session, destName))
+        val d = destination(session, destName)
+
+        val consumer : MessageConsumer = if (d.isInstanceOf[Queue]) {
+          session.createConsumer(d)
+        } else {
+          subscriptionName match {
+            case Some(n) => session.createDurableSubscriber(d.asInstanceOf[Topic], n)
+            case None => throw new JMSException(s"Subscriber Name undefined for creating durable subscriber for [$destName]")
+          }
+        }
+
         var msg : Option[Message] = None
         var msgCount : Int = 0
 

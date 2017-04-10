@@ -35,7 +35,7 @@ case class RestartContainer(reason: Throwable)
 /**
   * Command message to establish a JMS Connection
   */
-case class Connect(ts : Date)
+case class Connect(ts : Date, id: String)
 
 /**
   * Command message to close a JMS Connection within a given timeout

@@ -18,6 +18,7 @@ BlendedModel(
     scalaLib % "provided",
     blendedDomino,
     blendedMgmtBase,
+    blendedContainerContext,
     camelJms,
     blendedAkka,
     jms11Spec,

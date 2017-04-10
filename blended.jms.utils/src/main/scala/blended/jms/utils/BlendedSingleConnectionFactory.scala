@@ -14,8 +14,7 @@ import scala.concurrent.duration._
 class BlendedSingleConnectionFactory(
   cfg : OSGIActorConfig,
   cf: ConnectionFactory,
-  provider : String,
-  config : BlendedJMSConnectionConfig
+  provider : String
 ) extends ConnectionFactory {
 
   private[this] implicit val eCtxt = cfg.system.dispatcher
@@ -24,6 +23,8 @@ class BlendedSingleConnectionFactory(
 
   private[this] val monitorName = s"Monitor-$provider"
   private[this] val stateMgrName = s"JMS-$provider"
+
+  private[this] val config = BlendedJMSConnectionConfig(cfg.config)
 
   val holder = new ConnectionHolder(provider, cf)
 
@@ -38,7 +39,7 @@ class BlendedSingleConnectionFactory(
 
       val monitor = cfg.system.actorOf(ConnectionStateMonitor.props(cfg.bundleContext, mBean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
-      Some(cfg.system.actorOf(ConnectionStateManager.props(monitor, holder, config), stateMgrName))
+      Some(cfg.system.actorOf(ConnectionStateManager.props(cfg, monitor, holder), stateMgrName))
     } else {
       log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None
