@@ -1,6 +1,6 @@
 package blended.akka.itest
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestKit
 import blended.itestsupport.BlendedIntegrationTestSupport
 import org.scalatest.BeforeAndAfterAll
@@ -18,7 +18,7 @@ class BlendedDemoIntegrationSpec extends RefSpec
   private[this] val ctProxy = testkit.system.actorOf(Props(new TestContainerProxy()))
   private[this] val timeout = 60.seconds
   
-  override def nestedSuites = IndexedSeq(new BlendedDemoSpec())
+  override def nestedSuites = IndexedSeq(new BlendedDemoSpec(ctProxy: ActorRef))
   
   override def beforeAll() {
     testContext(ctProxy)(timeout, testkit)

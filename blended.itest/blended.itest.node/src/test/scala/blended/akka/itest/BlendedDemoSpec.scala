@@ -1,6 +1,6 @@
 package blended.akka.itest
 
-import akka.actor.Props
+import akka.actor.{ActorRef, Props}
 import akka.camel.CamelExtension
 import akka.testkit.{TestActorRef, TestKit, TestProbe}
 import akka.util.Timeout
@@ -13,13 +13,13 @@ import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 import scala.concurrent.duration.DurationInt
 
 @DoNotDiscover
-class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
+class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends WordSpec
   with Matchers
   with BlendedIntegrationTestSupport 
   with CamelTestSupport {
 
   implicit val system = testKit.system
-  implicit val timeOut = new Timeout(3.seconds)
+  implicit val timeOut = Timeout(30.seconds)
   implicit val eCtxt = testKit.system.dispatcher
   override implicit val camelContext = CamelExtension.get(system).context
 
@@ -49,6 +49,9 @@ class BlendedDemoSpec(implicit testKit : TestKit) extends WordSpec
           log.error(e.getMessage, e)
           fail(e.getMessage)
       }
+
+      val dir = containerDirectory(ctProxy, "node_0", "/opt/node/log")
+      dir.content should contain key ("./blended.log")
     }
   }
 }

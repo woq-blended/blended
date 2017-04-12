@@ -1,18 +1,13 @@
 package blended.itestsupport.docker
 
-import java.io.{BufferedInputStream, ByteArrayOutputStream}
-
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.event.LoggingReceive
 import akka.util.Timeout
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.compress.TarFileSupport
 import blended.itestsupport.docker.protocol._
-import blended.util.StreamCopySupport
 import com.github.dockerjava.api.DockerClient
-import org.kamranzafar.jtar.TarInputStream
 
-import scala.collection.mutable
 import scala.concurrent.duration._
 
 object ContainerActor {

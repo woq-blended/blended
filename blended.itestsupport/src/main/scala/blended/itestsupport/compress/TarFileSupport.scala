@@ -3,7 +3,7 @@ package blended.itestsupport.compress
 import java.io.{BufferedInputStream, ByteArrayOutputStream, InputStream}
 
 import blended.util.StreamCopySupport
-import org.kamranzafar.jtar.TarInputStream
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -13,7 +13,7 @@ object TarFileSupport {
   private[this] val log = LoggerFactory.getLogger(classOf[TarFileSupport])
 
   def untar(is : InputStream) : Map[String, Array[Byte]] = {
-    val tar = new TarInputStream(new BufferedInputStream(is))
+    val tar = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(is))
     val bytes = new Array[Byte](8192)
 
     val content : mutable.Map[String, Array[Byte]] = mutable.Map.empty

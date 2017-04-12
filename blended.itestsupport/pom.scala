@@ -29,7 +29,7 @@ BlendedModel(
     camelHttp,
     slf4j,
     geronimoJms11Spec,
-    jtar,
+    commonsCompress,
     akkaSlf4j % "test",
     slf4jLog4j12 % "test",
     mockitoAll % "test",

@@ -52,6 +52,7 @@ val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVer
 
 val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"
 val commonsCodec = "org.apache.commons" % "com.springsource.org.apache.commons.codec" % "1.6.0"
+val commonsCompress = "org.apache.commons" % "commons-compress" % "1.13"
 val commonsCollections = "org.apache.commons" % "com.springsource.org.apache.commons.collections" % "3.2.1"
 val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
 val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
@@ -103,7 +104,6 @@ val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
 val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
-val jtar = "org.kamranzafar" % "jtar" % "2.3"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
