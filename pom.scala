@@ -87,7 +87,7 @@ BlendedModel(
       id = "itest",
       modules = Seq(
         "blended.itestsupport",
-        "blended.akka.itest"
+        "blended.itest"
       )
     ),
     Profile(

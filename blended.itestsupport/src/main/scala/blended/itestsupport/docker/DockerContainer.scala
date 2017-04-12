@@ -1,5 +1,7 @@
 package blended.itestsupport.docker
 
+import java.io.InputStream
+
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
 import blended.itestsupport.ContainerUnderTest
@@ -46,12 +48,16 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
       .withPortBindings(ports:_*)
       .withEnv(env:_*)
 
-
     if (!links.isEmpty) containerCmd.withLinks(links:_*)
     containerCmd.exec()
 
     client.startContainerCmd(containerName).exec()
     this
+  }
+
+  def getContainerDirectory(dir: String) : InputStream = {
+    logger.info(s"Getting directory [$dir] from container [${cut}]")
+    client.copyArchiveFromContainerCmd(id, dir).exec()
   }
 
   def containerInfo = client.inspectContainerCmd(containerName).exec()

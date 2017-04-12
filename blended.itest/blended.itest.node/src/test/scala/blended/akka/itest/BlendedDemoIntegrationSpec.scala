@@ -16,7 +16,7 @@ class BlendedDemoIntegrationSpec extends RefSpec
   implicit val testkit = new TestKit(ActorSystem("Blended"))
   
   private[this] val ctProxy = testkit.system.actorOf(Props(new TestContainerProxy()))
-  private[this] val timeout = 1200.seconds
+  private[this] val timeout = 60.seconds
   
   override def nestedSuites = IndexedSeq(new BlendedDemoSpec())
   
@@ -26,6 +26,6 @@ class BlendedDemoIntegrationSpec extends RefSpec
   }
   
   override def afterAll() {
-    stopContainers(ctProxy)(1200.seconds, testkit)
+    stopContainers(ctProxy)(timeout, testkit)
   }
 }

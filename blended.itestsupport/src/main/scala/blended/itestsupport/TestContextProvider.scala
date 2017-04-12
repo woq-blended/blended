@@ -16,7 +16,7 @@ class TestContextCreator extends Actor with ActorLogging { this : TestContextCon
   
   def receive = LoggingReceive {
     case r : TestContextRequest => 
-      log info s"Creating TestCamelContext for CUT's [${r.cuts}]"
+      log.info(s"Creating TestCamelContext for CUT's [${r.cuts}]")
       
       val result = try 
         Right(configure(r.cuts, camel.context)) 

@@ -17,7 +17,6 @@ object DockerClientFactory {
   def apply(config : Config)(implicit logger: LoggingAdapter) = client match {
     case Some(dockerClient) => dockerClient
     case _ =>
-      logger.info(s"$config")
 
       val dockerConfig =  DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerHost("tcp://" + config.getString("docker.host") + ":" + config.getString("docker.port"))

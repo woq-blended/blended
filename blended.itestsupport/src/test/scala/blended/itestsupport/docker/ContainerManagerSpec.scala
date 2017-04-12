@@ -1,11 +1,11 @@
 package blended.itestsupport.docker
 
 import akka.actor.Props
-import akka.testkit.{TestProbe, TestActorRef}
+import akka.testkit.{TestActorRef, TestProbe}
 import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.docker.protocol._
 import blended.testsupport.TestActorSys
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
 class ContainerManagerSpec extends WordSpec

@@ -23,4 +23,7 @@ package protocol {
   case object StopContainer
   case class ContainerStopped(name: DockerResult[String])
 
+  case class GetContainerDirectory(containerId: String, dir: String)
+  case class ContainerDirectory(content: Map[String, Array[Byte]])
+
 }

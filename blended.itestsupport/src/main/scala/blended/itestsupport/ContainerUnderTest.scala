@@ -1,21 +1,44 @@
 package blended.itestsupport
 
+import java.net.{ServerSocket, Socket}
 import java.util.concurrent.atomic.AtomicInteger
 
 import com.github.dockerjava.api.model.PortBinding
 import com.typesafe.config.Config
+
 import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
 
 object NamedContainerPort {
 
   private[this] val portCount = new AtomicInteger(32768)
+
+  private[this] def nextFreePort() : Int = {
+
+    def isFree(p : Int) : Boolean = {
+
+      try {
+        val socket : ServerSocket = new ServerSocket(p)
+        socket.close()
+        true
+      } catch {
+        case NonFatal(_) => false
+      }
+    }
+
+    var result = portCount.getAndIncrement()
+    while (!isFree(result)) result = portCount.getAndIncrement()
+
+    result
+  }
+
 
   def apply(config : Config) : NamedContainerPort = {
     val privatePort = config.getInt("private")
     val publicPort = if (config.hasPath("public")) 
       config.getInt("public")
     else
-      portCount.getAndIncrement()
+      nextFreePort()
 
     NamedContainerPort(config.getString("name"), privatePort, publicPort)
   }   
