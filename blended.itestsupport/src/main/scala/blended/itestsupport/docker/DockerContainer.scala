@@ -38,10 +38,14 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
     val ports : Array[PortBinding] = cut.ports.map { case (name, p) => p.binding }.toArray
     logger info s"Ports for container [${cut.dockerName}] : [${cut.ports}]."
 
+    val env : Array[String] = cut.env.map{ case (k,v) => s"$k=$v" }.toArray
+
     val containerCmd  = client.createContainerCmd(id)
       .withName(cut.dockerName)
       .withTty(true)
       .withPortBindings(ports:_*)
+      .withEnv(env:_*)
+
 
     if (!links.isEmpty) containerCmd.withLinks(links:_*)
     containerCmd.exec()

@@ -93,6 +93,7 @@ trait DockerTestSetup { this : MockitoSugar =>
     when(createCmd.withName(anyString())) thenReturn createCmd
     when(createCmd.withPortBindings(anyVararg[PortBinding]())) thenReturn createCmd
     when(createCmd.withLinks(Link.parse("jms_demo_0:jms_demo"))) thenReturn createCmd
+    when(createCmd.withEnv(anyVararg[String]())) thenReturn createCmd
     when(createCmd.withPublishAllPorts(true)) thenReturn createCmd
 
     when(mockClient.waitContainerCmd(anyString())) thenReturn waitCmd

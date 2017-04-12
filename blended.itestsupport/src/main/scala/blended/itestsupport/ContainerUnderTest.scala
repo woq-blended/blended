@@ -4,8 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import com.github.dockerjava.api.model.PortBinding
 import com.typesafe.config.Config
-
-import scala.collection.convert.Wrappers.JListWrapper
+import scala.collection.JavaConverters._
 
 object NamedContainerPort {
 
@@ -54,24 +53,24 @@ case class ContainerLink(
 
 object ContainerUnderTest {
 
-  def containerMap(config: Config) : Map[String, ContainerUnderTest] = JListWrapper(config.getConfigList("docker.containers")).map { cfg =>
+  def containerMap(config: Config) : Map[String, ContainerUnderTest] = config.getConfigList("docker.containers").asScala.map { cfg =>
       ContainerUnderTest(cfg)
     }.toList.map( ct => (ct.ctName, ct)).toMap
       
   def apply(config : Config) : ContainerUnderTest = {
     
     val volumes : List[VolumeConfig] = if (config.hasPath("volumes"))
-      JListWrapper(config.getConfigList("volumes")).map{cfg: Config => VolumeConfig(cfg)}.toList
+      config.getConfigList("volumes").asScala.map{cfg: Config => VolumeConfig(cfg)}.toList
     else
       List.empty
     
     val ports : List[NamedContainerPort] = if (config.hasPath("ports"))
-      JListWrapper(config.getConfigList("ports")).map { cfg: Config => NamedContainerPort(cfg) }.toList
+      config.getConfigList("ports").asScala.map { cfg: Config => NamedContainerPort(cfg) }.toList
     else 
       List.empty
     
     val links : List[ContainerLink] = if (config.hasPath("links"))
-      JListWrapper(config.getConfigList("links")).map { cfg: Config => ContainerLink(cfg) }.toList
+      config.getConfigList("links").asScala.map { cfg: Config => ContainerLink(cfg) }.toList
     else 
       List.empty
     
@@ -82,14 +81,21 @@ object ContainerUnderTest {
     else 
       s"${ctName}_${System.currentTimeMillis}"
 
+    val env : Map[String, String] = if (config.hasPath("env")) {
+      config.getConfig("env").entrySet().asScala.map { entry =>
+        (entry.getKey(), config.getConfig("env").getString(entry.getKey()))
+      }.toMap
+    } else Map.empty
+
     ContainerUnderTest(
-      config.getString("name"),
-      config.getString("image"), 
-      dockerName,
-      dockerName,
-      volumes,
-      links,
-      ports.map { p => (p.name, p) }.toMap
+      ctName = config.getString("name"),
+      imgPattern = config.getString("image"),
+      imgId = dockerName,
+      dockerName = dockerName,
+      volumes = volumes,
+      links = links,
+      ports = ports.map { p => (p.name, p) }.toMap,
+      env = env
     )
   }
 } 
@@ -101,7 +107,8 @@ case class ContainerUnderTest(
   dockerName      : String,
   volumes         : List[VolumeConfig] = List.empty,
   links           : List[ContainerLink] = List.empty,                             
-  ports           : Map[String, NamedContainerPort] = Map.empty
+  ports           : Map[String, NamedContainerPort] = Map.empty,
+  env             : Map[String, String] = Map.empty
 ) {
   
   val DEFAULT_PROTOCOL = "tcp"
