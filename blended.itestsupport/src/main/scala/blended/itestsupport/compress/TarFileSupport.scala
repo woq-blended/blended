@@ -1,9 +1,11 @@
 package blended.itestsupport.compress
 
-import java.io.{BufferedInputStream, ByteArrayOutputStream, InputStream}
+import java.io._
+import java.util.zip.GZIPOutputStream
 
 import blended.util.StreamCopySupport
 import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
@@ -35,6 +37,44 @@ object TarFileSupport {
     is.close()
 
     content.toMap
+  }
+
+  def tar(file : File, os: OutputStream) : Unit = {
+
+    def addFileToTar(tarOs: TarArchiveOutputStream, file: File, base : String) : Unit = {
+      val entryName = base + file.getName()
+      val entry = new TarArchiveEntry(file, entryName)
+
+      log.debug(s"Adding [$entryName] to tar archive.")
+
+      tarOs.putArchiveEntry(entry)
+
+      if (file.isFile()) {
+        StreamCopySupport.copyStream(new FileInputStream(file), tarOs)
+        tarOs.closeArchiveEntry()
+      } else {
+        tarOs.closeArchiveEntry()
+
+        val files = Option(file.listFiles())
+        files.map { ff =>
+          ff.foreach{ f => addFileToTar(tarOs, f, entryName + "/") }
+        }
+      }
+    }
+
+    if (!file.exists()) throw new FileNotFoundException(file.getAbsolutePath())
+
+    val bOut = new BufferedOutputStream(os)
+    var tarOut = new TarArchiveOutputStream(bOut)
+
+    try {
+      addFileToTar(tarOut, file, "")
+    } finally {
+      tarOut.finish()
+      tarOut.close()
+      bOut.close()
+      os.close()
+    }
   }
 }
 

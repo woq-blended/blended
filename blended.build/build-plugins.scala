@@ -128,7 +128,10 @@ val scalatestMavenPlugin = Plugin(
   configuration = Config(
     reportsDirectory = "${project.build.directory}/surefire-reports",
     junitxml = ".",
-    stdout = "FT"
+    stdout = "FT",
+    systemProperties = Config(
+      blendedProjectHome = "${blended.project.home}"
+    )
   )
 )
 

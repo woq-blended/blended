@@ -1,4 +1,4 @@
-package blended.akka.itest
+package blended.itest.node
 
 import blended.itestsupport.{BlendedTestContextManager, ContainerUnderTest, TestContextConfigurator}
 import blended.itestsupport.condition.{SequentialComposedCondition, Condition, ParallelComposedCondition}

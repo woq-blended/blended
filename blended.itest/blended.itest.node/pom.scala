@@ -22,19 +22,6 @@ BlendedModel(
   ),
   plugins = Seq(
     scalaMavenPlugin,
-    Plugin(
-      gav = scalatestMavenPlugin.gav,
-      executions = Seq(
-        Execution(
-          id = "test",
-          goals = Seq("test")
-        )
-      ),
-      configuration = Config(
-        reportsDirectory = "${project.build.directory}/surefire-reports",
-        junitxml = ".",
-        stdout = "FT"
-      )
-    )
+    scalatestMavenPlugin
   )
 )

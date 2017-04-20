@@ -1,11 +1,13 @@
 package blended.itestsupport.docker
 
-import java.io.InputStream
+import java.io.{ByteArrayInputStream, InputStream}
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
 import blended.itestsupport.ContainerUnderTest
 import org.slf4j.LoggerFactory
+
+import scala.util.control.NonFatal
 
 /*
  * Provide a simple wrapper around the excellent docker Java API to create an abstraction suitable for
@@ -58,6 +60,18 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
   def getContainerDirectory(dir: String) : InputStream = {
     logger.info(s"Getting directory [$dir] from container [${cut.ctName}]")
     client.copyArchiveFromContainerCmd(containerName, dir).exec()
+  }
+
+  def writeContainerDirectory(dir: String, content: Array[Byte]) : Either[Throwable, Boolean]= {
+    try {
+      logger.info(s"Writing archive of size [${content.length}] to directory [$dir] in container [${cut.ctName}]")
+      val cmd = client.copyArchiveToContainerCmd(containerName)
+      cmd.withRemotePath(dir).withTarInputStream(new ByteArrayInputStream(content))
+      cmd.exec()
+      Right(true)
+    } catch {
+      case NonFatal(t) => Left(t)
+    }
   }
 
   def containerInfo = client.inspectContainerCmd(containerName).exec()

@@ -1,4 +1,4 @@
-package blended.akka.itest
+package blended.itest.node
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestKit

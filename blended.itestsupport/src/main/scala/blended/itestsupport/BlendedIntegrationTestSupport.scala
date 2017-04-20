@@ -1,10 +1,13 @@
 package blended.itestsupport
 
+import java.io.{ByteArrayOutputStream, File}
+
 import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
 import akka.util.Timeout.durationToTimeout
+import blended.itestsupport.compress.TarFileSupport
 import blended.itestsupport.condition.{Condition, ConditionActor}
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.protocol._
@@ -34,7 +37,22 @@ trait BlendedIntegrationTestSupport {
     probe.expectMsg(timeout.duration, ContainerManagerStopped)
   }
 
-  def containerDirectory(ctProxy: ActorRef, ctName: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : Future[ContainerDirectory] = {
+  def writeContainerDirectory(ctProxy : ActorRef, ctName: String, target: String, file: File)(implicit timeout: Timeout, testKit: TestKit) : Future[Either[Throwable, Boolean]] = {
+
+    implicit val eCtxt = testKit.system.dispatcher
+
+    val bos = new ByteArrayOutputStream()
+    TarFileSupport.tar(file, bos)
+
+    ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
+      cc.cut match {
+        case None => throw new Exception(s"Container with name [$ctName] not found.")
+        case Some(cut) => ctProxy.ask(WriteContainerDirectory(cut, target, bos.toByteArray())).mapTo[Either[Throwable, Boolean]]
+      }
+    }
+  }
+
+  def readContainerDirectory(ctProxy: ActorRef, ctName: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : Future[ContainerDirectory] = {
 
     implicit val eCtxt = testKit.system.dispatcher
 

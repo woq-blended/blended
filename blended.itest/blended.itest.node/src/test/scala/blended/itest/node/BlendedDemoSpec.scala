@@ -1,4 +1,6 @@
-package blended.akka.itest
+package blended.itest.node
+
+import java.io.File
 
 import akka.actor.{ActorRef, Props}
 import akka.camel.CamelExtension
@@ -8,6 +10,7 @@ import blended.itestsupport.BlendedIntegrationTestSupport
 import blended.testsupport.camel.MockAssertions._
 import blended.testsupport.camel.protocol._
 import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
+import blended.util.FileHelper
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
 import scala.concurrent.Await
@@ -51,8 +54,25 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
           fail(e.getMessage)
       }
 
-      val dir = Await.result(containerDirectory(ctProxy, "blended_node_0", "/opt/node/log"), timeOut.duration)
-      dir.content should contain key ("log/blended.log")
+    }
+
+    "Allow to read and write directories via the docker API" in {
+
+      import blended.testsupport.BlendedTestSupport.projectHome
+
+      val file = new File(s"${projectHome}/blended.itest/blended.itest.node/target/test-classes/data")
+      val rc = Await.result(writeContainerDirectory(ctProxy, "blended_node_0", "/opt/node", file), timeOut.duration)
+
+      rc should be (Right(true))
+
+      val dir = Await.result(readContainerDirectory(ctProxy, "blended_node_0", "/opt/node/data"), timeOut.duration)
+
+      val fContent = FileHelper.readFile("data/testFile.txt")
+
+      dir.content.get("data/testFile.txt") match {
+        case None => fail("expected file [/opt/node/data/testFile.txt] not found in container")
+        case Some(c) => c should equal (fContent)
+      }
     }
   }
 }
