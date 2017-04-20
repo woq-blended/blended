@@ -69,8 +69,7 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
   
   def running(dockerHandler: ActorRef, cuts: Map[String, ContainerUnderTest]) : Receive = LoggingReceive {
     case gcd : GetContainerDirectory =>
-      log.info(s"Getting container directory [${gcd.dir}] from [${gcd.containerId}]")
-      dockerHandler.forward(gcd)
+      dockerHandler.tell(gcd, sender())
 
     case scm : StopContainerManager =>
       log.info("Stopping Test Container Manager")
@@ -215,8 +214,8 @@ class DockerContainerHandler(implicit client: DockerClient) extends Actor with A
 
   def running(managedContainers: List[ContainerUnderTest]) : Receive = LoggingReceive {
     case gcd: GetContainerDirectory =>
-      log.info(s"Trying to get container diectory [${gcd.dir}] from [${gcd.containerId}]")
-      val ctActor = context.actorSelection(gcd.containerId).resolveOne().map(_.forward(gcd))
+      val requestor = sender()
+      context.actorSelection(gcd.container.ctName).resolveOne().map(_.tell(gcd, requestor))
 
     case scm : StopContainerManager =>
       

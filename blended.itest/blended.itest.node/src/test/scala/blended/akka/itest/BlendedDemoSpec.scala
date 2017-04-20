@@ -10,6 +10,7 @@ import blended.testsupport.camel.protocol._
 import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
+import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
 @DoNotDiscover
@@ -50,8 +51,8 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
           fail(e.getMessage)
       }
 
-      val dir = containerDirectory(ctProxy, "node_0", "/opt/node/log")
-      dir.content should contain key ("./blended.log")
+      val dir = Await.result(containerDirectory(ctProxy, "blended_node_0", "/opt/node/log"), timeOut.duration)
+      dir.content should contain key ("log/blended.log")
     }
   }
 }

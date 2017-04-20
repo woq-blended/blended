@@ -49,9 +49,12 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
 
   def started(cut: ContainerUnderTest) : Receive = LoggingReceive {
     case gcd : GetContainerDirectory =>
+      val requestor = sender()
       val result = TarFileSupport.untar(dc.getContainerDirectory(gcd.dir))
       log.info(s"Extracted [${result.size}] entries for directory [${gcd.dir}] from container [${container.ctName}]")
-      sender() ! ContainerDirectory(result)
+      log.debug(s"Extracted entries are [${result.keys.mkString(",")}]")
+      log.debug(s"Sending container director response to [${requestor.path}]")
+      requestor ! ContainerDirectory(gcd.container, gcd.dir, result)
 
     case StopContainer => {
       new DockerContainer(cut).stopContainer

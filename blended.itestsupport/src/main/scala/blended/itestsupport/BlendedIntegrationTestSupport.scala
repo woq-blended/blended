@@ -10,7 +10,7 @@ import blended.itestsupport.docker.protocol._
 import blended.itestsupport.protocol._
 import org.apache.camel.CamelContext
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 
 trait BlendedIntegrationTestSupport {
 
@@ -34,10 +34,16 @@ trait BlendedIntegrationTestSupport {
     probe.expectMsg(timeout.duration, ContainerManagerStopped)
   }
 
-  def containerDirectory(ctProxy: ActorRef, container: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : ContainerDirectory = {
+  def containerDirectory(ctProxy: ActorRef, ctName: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : Future[ContainerDirectory] = {
 
-    val future = ctProxy.ask(GetContainerDirectory(container, dirName)).mapTo[ContainerDirectory]
-    Await.result(future, timeout.duration)
+    implicit val eCtxt = testKit.system.dispatcher
+
+    ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
+      cc.cut match {
+        case None => throw new Exception(s"Container with name [$ctName] not found.")
+        case Some(cut) => ctProxy.ask(GetContainerDirectory(cut, dirName)).mapTo[ContainerDirectory]
+      }
+    }
   }
 
   def assertCondition(condition: Condition)(implicit testKit: TestKit) : Boolean = {

@@ -56,8 +56,8 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
   }
 
   def getContainerDirectory(dir: String) : InputStream = {
-    logger.info(s"Getting directory [$dir] from container [${cut}]")
-    client.copyArchiveFromContainerCmd(id, dir).exec()
+    logger.info(s"Getting directory [$dir] from container [${cut.ctName}]")
+    client.copyArchiveFromContainerCmd(containerName, dir).exec()
   }
 
   def containerInfo = client.inspectContainerCmd(containerName).exec()

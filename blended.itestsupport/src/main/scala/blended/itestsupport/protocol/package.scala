@@ -43,5 +43,8 @@ package protocol {
   case object ConfiguredContainers_?
   case class ConfiguredContainers(cuts: Map[String, ContainerUnderTest])
 
+  case class ConfiguredContainer_?(ctName: String)
+  case class ConfiguredContainer(cut: Option[ContainerUnderTest])
+
 }
 

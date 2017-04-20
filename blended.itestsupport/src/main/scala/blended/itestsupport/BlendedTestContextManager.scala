@@ -12,6 +12,8 @@ import blended.itestsupport.docker.protocol._
 import blended.itestsupport.protocol.{TestContextRequest, _}
 import org.apache.camel.CamelContext
 
+import scala.concurrent.Future
+
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   
   val camel = CamelExtension(context.system)
@@ -48,6 +50,8 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
     case ContainerReady_? => 
       implicit val eCtxt = context.system.dispatcher
 
+      val requestor = sender()
+
       val condition = containerReady(cuts)
       
       log.info(s"Waiting for container condition(s) [$condition}]")
@@ -57,17 +61,19 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
       (checker ? CheckCondition)(condition.timeout).map {
         case cr: ConditionCheckResult => ContainerReady(cr.allSatisfied)
         case _ => ContainerReady(false)
-      }.pipeTo(sender())
+      }.pipeTo(requestor)
 
     case ConfiguredContainers_? => sender ! ConfiguredContainers(cuts)
 
+    case cc : ConfiguredContainer_? => sender() ! ConfiguredContainer(cuts.get(cc.ctName))
+
     case gcd : GetContainerDirectory =>
-      containerMgr.forward(gcd)
-      
+      containerMgr.tell(gcd, sender())
+
     case scm : StopContainerManager =>
       camel.context.stop()
       containerMgr.forward(scm)
-  } 
+  }
    
   def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = ConditionProvider.alwaysTrue()
 
