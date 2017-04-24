@@ -1,5 +1,5 @@
 # The basic image to run Blended containers
-FROM ubuntu:16.04
+FROM alpine:latest
 
 MAINTAINER Andreas Gies 
 

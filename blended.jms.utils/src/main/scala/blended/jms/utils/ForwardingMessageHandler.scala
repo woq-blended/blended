@@ -1,5 +1,6 @@
 package blended.jms.utils
 
+import java.io.ByteArrayOutputStream
 import javax.jms._
 
 import org.slf4j.LoggerFactory
@@ -20,12 +21,24 @@ class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, addition
 
       val result = original match {
         case tMsg : TextMessage =>
+          val body = tMsg.getText()
+          log.debug(s"Received text message of length [${body.length()}] : [${body.take(50)}]...")
           session.createTextMessage(tMsg.getText())
         case bMsg : BytesMessage =>
+          log.debug(s"Received bytes message of length [${bMsg.getBodyLength()}]")
+          val bytes = new Array[Byte](1024)
           val r = session.createBytesMessage()
-          val bytes = new Array[Byte](bMsg.getBodyLength().toInt)
-          bMsg.readBytes(bytes)
-          r.writeBytes(bytes)
+
+          val bos = new ByteArrayOutputStream()
+
+          var cnt = 0
+
+          do {
+            cnt = bMsg.readBytes(bytes)
+            if (cnt > 0) bos.write(bytes, 0 , cnt)
+          } while (cnt >= 0)
+
+          r.writeBytes(bos.toByteArray())
           r
         case pMsg =>
           log.warn(s"Message [${pMsg.getJMSMessageID()}] is of type [${pMsg.getClass().getName()}], forwarding as plain message")
