@@ -25,3 +25,4 @@ libs/
 .idea
 *.iml
 mvn.out
+nohup.out
