@@ -41,10 +41,8 @@ BlendedModel(
       scope = "runtime"
     )
   ),
-  pluginManagement = Seq(
-      scalatestMavenPlugin
-  ),
   plugins = Seq(
+    scalatestMavenPlugin,
     Plugin(
       "org.apache.maven.plugins" % "maven-dependency-plugin",
       executions = Seq(

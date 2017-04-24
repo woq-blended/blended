@@ -25,10 +25,10 @@ class TarHandlerSpec extends FreeSpec with Matchers {
 
     "should be able to create a tar file" in {
 
-      import blended.testsupport.BlendedTestSupport.projectHome
+      import blended.testsupport.BlendedTestSupport.projectTestOutput
 
       val os = new ByteArrayOutputStream()
-      TarFileSupport.tar(new File(s"${projectHome}/blended.itestsupport/src/test/resources/data"), os)
+      TarFileSupport.tar(new File(s"${projectTestOutput}/data"), os)
 
       val content = TarFileSupport.untar(new ByteArrayInputStream(os.toByteArray()))
       content should have size(2)

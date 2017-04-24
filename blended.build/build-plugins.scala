@@ -130,7 +130,7 @@ val scalatestMavenPlugin = Plugin(
     junitxml = ".",
     stdout = "FT",
     systemProperties = Config(
-      blendedProjectHome = "${blended.project.home}"
+      projectTestOutput = "${project.build.testOutputDirectory}"
     )
   )
 )

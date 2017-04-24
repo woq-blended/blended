@@ -58,9 +58,9 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
 
     "Allow to read and write directories via the docker API" in {
 
-      import blended.testsupport.BlendedTestSupport.projectHome
+      import blended.testsupport.BlendedTestSupport.projectTestOutput
 
-      val file = new File(s"${projectHome}/blended.itest/blended.itest.node/target/test-classes/data")
+      val file = new File(s"${projectTestOutput}/data")
       val rc = Await.result(writeContainerDirectory(ctProxy, "blended_node_0", "/opt/node", file), timeOut.duration)
 
       rc should be (Right(true))

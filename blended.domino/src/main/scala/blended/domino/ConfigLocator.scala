@@ -5,8 +5,6 @@ import java.io.File
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
-import scala.util.control.NonFatal
-
 class ConfigLocator(configDirectory: String) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConfigLocator])

@@ -335,6 +335,9 @@
             <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
             <junitxml>.</junitxml>
             <stdout>FT</stdout>
+            <systemProperties>
+              <projectTestOutput>${project.build.testOutputDirectory}</projectTestOutput>
+            </systemProperties>
           </configuration>
         </plugin>
         <plugin>
@@ -525,6 +528,9 @@
           <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
           <junitxml>.</junitxml>
           <stdout>FT</stdout>
+          <systemProperties>
+            <projectTestOutput>${project.build.testOutputDirectory}</projectTestOutput>
+          </systemProperties>
         </configuration>
       </plugin>
       <plugin>
