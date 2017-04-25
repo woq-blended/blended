@@ -329,14 +329,17 @@ case class FeatureBundle(
     builder.append(gav.artifactId)
     builder.append(":")
 
-    if (!dependency.`type`.equals("jar")) {
-      builder.append(gav.classifier.getOrElse(""))
+    // if true, we render the long form with 5 parts (4 colons) instead of 3 parts (2 colons)
+    val longForm = dependency.classifier.isDefined || !dependency.`type`.equals("jar")
+    
+    if (longForm) {
+      builder.append(dependency.classifier.getOrElse(""))
       builder.append(":")
     }
 
     builder.append(gav.version.get)
 
-    if (!dependency.`type`.equals("jar")) {
+    if (longForm) {
       builder.append(":")
       builder.append(dependency.`type`)
     }
@@ -352,10 +355,26 @@ case class FeatureBundle(
   }
 }
 
+/**
+ * Provide a copy method for non-case class [[Dependency]].
+ */
+implicit class CopyDependency(d: Dependency) {
+  def copy(
+    gav: Gav = d.gav,
+    `type`: String = d.`type`,
+    classifier: Option[String] = d.classifier,
+    scope: Option[String] = d.scope,
+    systemPath: Option[String] = d.systemPath,
+    exclusions: immutable.Seq[GroupArtifactId] = d.exclusions,
+    optional: Boolean = d.optional): Dependency =
+    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
+}
+
 // Create the String content of a feature file from a sequence of FeatureBundles
 
-def featureDependencies(features: Map[String, Seq[FeatureBundle]]) : Seq[Dependency] =
-  features.values.flatten.map(_.dependency).toList
+def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {
+  features.values.flatten.map(_.dependency.copy(exclusions = Seq("*" % "*"))).toList
+}
 
 // This is the content of the feature file
 def featureFile(name : String, features: Seq[FeatureBundle]) : String = {
