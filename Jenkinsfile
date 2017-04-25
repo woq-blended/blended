@@ -1,3 +1,5 @@
 pipeline {
-  echo "Hello Jenkins !"
+  node {
+    echo "Hello Jenkins !"
+  }
 }
