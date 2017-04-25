@@ -116,11 +116,16 @@ trait JMSSupport {
 
     withConnection { conn =>
       withSession { session =>
-        val producer = session.createProducer(destination(session, destName))
-        val msg = msgFactory.createMessage(session, content)
-        producer.send(msgFactory.createMessage(session, content), deliveryMode, priority, ttl)
-        log.debug(s"Message sent successfully to [$destName]")
-        producer.close()
+        try {
+          val producer = session.createProducer(destination(session, destName))
+          val msg = msgFactory.createMessage(session, content)
+          producer.send(msg, deliveryMode, priority, ttl)
+          log.debug(s"Message sent successfully to [$destName]")
+          producer.close()
+          None
+        } catch {
+          case NonFatal(t) => Some(t)
+        }
       } (conn)
     } (cf)
   }
