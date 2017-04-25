@@ -22,10 +22,10 @@ class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, addition
       val result = original match {
         case tMsg : TextMessage =>
           val body = tMsg.getText()
-          log.debug(s"Received text message of length [${body.length()}] : [${body.take(50)}]...")
+          log.debug(s"Received text message [${tMsg.getJMSMessageID()}] of length [${body.length()}] : [${body.take(50)}]...")
           session.createTextMessage(tMsg.getText())
         case bMsg : BytesMessage =>
-          log.debug(s"Received bytes message of length [${bMsg.getBodyLength()}]")
+          log.debug(s"Received bytes message [${bMsg.getJMSMessageID()}] of length [${bMsg.getBodyLength()}]")
           val bytes = new Array[Byte](1024)
           val r = session.createBytesMessage()
 
@@ -39,6 +39,9 @@ class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, addition
           } while (cnt >= 0)
 
           r.writeBytes(bos.toByteArray())
+          if (log.isDebugEnabled()) {
+            log.debug(s"Forwarding bytes message of length [${bos.toByteArray().length}]")
+          }
           r
         case pMsg =>
           log.warn(s"Message [${pMsg.getJMSMessageID()}] is of type [${pMsg.getClass().getName()}], forwarding as plain message")
