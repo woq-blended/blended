@@ -124,7 +124,7 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val paxwebVersion = "3.1.0"
+val paxwebVersion = "3.1.6"
 val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % paxwebVersion
 val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % paxwebVersion
 val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % paxwebVersion
