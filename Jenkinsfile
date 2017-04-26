@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Prepare Build') {
       steps {
-        checkout scm 
+        docker.build 'blended-build' 'blended.docker/blended.docker.build'
       }
     }
   }
