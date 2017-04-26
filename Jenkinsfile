@@ -8,8 +8,12 @@ pipeline {
         }
       }
     }
-    stage('Build and Test') {
-      agent { docker 'blended-build:latest' }
+    stage('Containerized Build') {
+      agent { 
+        docker {
+          image 'blended-build:latest'
+        } 
+      }
       steps {
         ansiColor('xterm') {
           sh 'mvn -version'
