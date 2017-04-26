@@ -9,8 +9,8 @@ pipeline {
       }
     }
     stage('Build and Test') {
+      agent { docker 'blended-build:latest' }
       steps {
-        agent { docker 'blended-build:latest' }
         ansiColor('xterm') {
           sh 'mvn -version'
         }
