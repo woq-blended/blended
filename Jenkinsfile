@@ -9,8 +9,8 @@ pipeline {
       }
     }
     stage('Build and Test') {
-      node('blended-build:latest') 
       steps {
+        node('blended-build:latest') 
         ansiColor('xterm') {
           sh 'mvn -version'
         }
