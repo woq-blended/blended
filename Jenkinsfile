@@ -3,7 +3,7 @@ pipeline {
   stages {
     stage('Prepare Build') {
       steps {
-        docker.build 'blended-build' 'blended.docker/blended.docker.build'
+        sh 'cd blended.docker/blended.docker.build; docker build -t blended-build .'
       }
     }
   }
