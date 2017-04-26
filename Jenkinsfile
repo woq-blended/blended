@@ -9,8 +9,11 @@ pipeline {
       }
     }
     stage('Build and Test') {
-      node('blended-build:latest') {
-        sh 'mvn -version'
+      node('blended-build:latest') 
+      steps {
+        ansiColor {
+          sh 'mvn -version'
+        }
       }
     }
   }
