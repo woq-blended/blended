@@ -1,9 +1,5 @@
 pipeline {
-  agent {
-    dockerfile {
-      dir 'blended.docker/blended.docker.build'
-    }
-  }
+  agent { docker 'maven:3.5.0' }
   stages {
     stage('Containerized Build') {
       steps {
