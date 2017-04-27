@@ -8,7 +8,7 @@ pipeline {
     stage('Containerized Build') {
       steps {
         ansiColor('xterm') {
-          sh 'mvn -version'
+          sh 'mvn clean install'
         }
       }
     }
