@@ -24,6 +24,7 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
+    scoverageMavenPlugin,
     prepareSbtPlugin,
     compileJsPlugin,
     Plugin(

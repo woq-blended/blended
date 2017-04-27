@@ -118,7 +118,7 @@ val scalaMavenPlugin = Plugin(
 )
 
 val scalatestMavenPlugin = Plugin(
-  "org.scalatest" % "scalatest-maven-plugin" % "1.0",
+  gav = "org.scalatest" % "scalatest-maven-plugin" % "1.0",
   executions = Seq(
     Execution(
       id = "test",
@@ -132,6 +132,21 @@ val scalatestMavenPlugin = Plugin(
     systemProperties = Config(
       projectTestOutput = "${project.build.testOutputDirectory}"
     )
+  )
+)
+
+val scoverageMavenPlugin = Plugin(
+  gav = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0",
+  executions = Seq(
+    Execution(
+      id = "coverage",
+      phase = "test",
+      goals = Seq("report")
+    )
+  ),
+  configuration = Config(
+    aggregate = "true",
+    highlighting = "true"
   )
 )
 
@@ -164,7 +179,7 @@ ScriptHelper.writeFile(
   "\n" +
   "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
   "\n" +
-  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.0\")"
+  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")"
 )
 """
       )
@@ -185,6 +200,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "-batch",
           argument = "fastOptJS",
           argument = "test"
         )
@@ -200,6 +216,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "-batch",
           argument = "packageBin"
         )
       )
