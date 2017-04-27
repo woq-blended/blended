@@ -87,20 +87,4 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
     </Arg>
   </Call>
 
-  <!-- =========================================================== -->
-  <!-- Configure Authentication Realms                             -->
-  <!-- Realms may be configured for the entire server here, or     -->
-  <!-- they can be configured for a specific web app in a context  -->
-  <!-- configuration (see $(jetty.home)/contexts/test.xml for an   -->
-  <!-- example).                                                   -->
-  <!-- =========================================================== -->
-  <Call name="addBean">
-    <Arg>
-      <New class="org.eclipse.jetty.plus.jaas.JAASLoginService">
-        <Set name="name">default</Set>
-        <Set name="loginModuleName">blended</Set>
-      </New>
-    </Arg>
-  </Call>
-
 </Configure>
