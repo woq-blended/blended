@@ -1,16 +1,21 @@
 pipeline {
-  agent { 
-    dockerfile {
-      dir 'blended.docker/blended.docker.build'
-    }
-  }
+  agent any
   stages {
-    stage('Containerized Build') {
+    stage('Prepare Build') {
       steps {
         ansiColor('xterm') {
-          sh 'source $HOME/.nvm/nvm.sh ; nvm use 4.2'
+          sh 'cd blended.docker/blended.docker.build; docker build -t atooni/blended-build .'
+        }
+      }
+    }
+    stage('Containerized Build') {
+      agent {
+        docker 'atooni/blended-build'
+      }
+      steps {
+        ansiColor('xterm') {
           sh '/opt/zinc/bin/zinc -start -nailed -scala-home=$SCALA_HOME'
-          sh 'mvn clean install'
+          sh 'source $HOME/.nvm/nvm.sh ; nvm use 4.2; mvn clean install'
         }
         junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
       }
