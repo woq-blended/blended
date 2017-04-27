@@ -41,8 +41,7 @@ RUN ln -s /opt/jdk1.8.0_131 /opt/java \
 
 USER ${USER}
 
-RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" \
- && PATH=/opt/java/bin:$PATH; /opt/sbt/bin/sbt about 
+RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" 
 
 EXPOSE 22
 
