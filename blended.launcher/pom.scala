@@ -18,7 +18,7 @@ BlendedModel(
     commonsDaemon,
     blendedUpdaterConfig,
     cmdOption,
-    logbackClassic % "provided",
+    // logbackClassic % "provided",
     scalaTest % "test",
     felixFramework % "test",
     felixGogoRuntime % "test",
