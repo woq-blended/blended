@@ -1,7 +1,7 @@
 pipeline {
   agent { 
     dockerfile {
-      dir 'blended:docker/blended.docker.build'
+      dir 'blended.docker/blended.docker.build'
     }
   }
   stages {
