@@ -5,9 +5,9 @@ object BlendedVersions {
 
   val javaVersion = "1.8"
 
-  val sbtVersion = "0.13.13"
-  val scalaVersion = "2.11.8"
-  val scalaJsVersion = "0.6.14"
+  val sbtVersion = "0.13.15"
+  val scalaVersion = "2.11.11"
+  val scalaJsVersion = "0.6.15"
 
   val scalaTestVersion = "3.0.1"
   

@@ -164,7 +164,7 @@ ScriptHelper.writeFile(
   "\n" +
   "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
   "\n" +
-  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.0\")"
+  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")"
 )
 """
       )

@@ -36,13 +36,13 @@ RUN ln -s /opt/jdk1.8.0_131 /opt/java \
  && ln -s /opt/sbt-launcher-packaging-0.13.15 /opt/sbt \
  && ln -s /opt/apache-maven-3.5.0 /opt/maven \
  && ln -s /opt/zinc-0.3.13 /opt/zinc  \
- && PATH=/opt/java/bin:$PATH; /opt/sbt/bin/sbt about \
- && echo "jenkins:jenkins" | chpasswd \
+ && echo "jenkins:jenkins" | chpasswd 
  
 
 USER ${USER}
 
-RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" 
+RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" \
+ && PATH=/opt/java/bin:$PATH; /opt/sbt/bin/sbt about 
 
 EXPOSE 22
 
