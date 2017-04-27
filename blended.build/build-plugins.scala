@@ -185,6 +185,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "-batch",
           argument = "fastOptJS",
           argument = "test"
         )
@@ -200,6 +201,7 @@ val compileJsPlugin = Plugin(
         executable = "sbt",
         workingDirectory = "${project.basedir}",
         arguments = Config(
+          argument = "-batch",
           argument = "packageBin"
         )
       )

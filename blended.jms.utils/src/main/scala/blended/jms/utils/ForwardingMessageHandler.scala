@@ -29,20 +29,14 @@ class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, addition
           val bytes = new Array[Byte](1024)
           val r = session.createBytesMessage()
 
-          val bos = new ByteArrayOutputStream()
-
           var cnt = 0
 
           do {
             cnt = bMsg.readBytes(bytes)
-            if (cnt > 0) bos.write(bytes, 0 , cnt)
+            if (cnt > 0) r.writeBytes(bytes, 0, cnt)
           } while (cnt >= 0)
-
-          r.writeBytes(bos.toByteArray())
-          if (log.isDebugEnabled()) {
-            log.debug(s"Forwarding bytes message of length [${bos.toByteArray().length}]")
-          }
           r
+
         case pMsg =>
           log.warn(s"Message [${pMsg.getJMSMessageID()}] is of type [${pMsg.getClass().getName()}], forwarding as plain message")
           session.createMessage()
