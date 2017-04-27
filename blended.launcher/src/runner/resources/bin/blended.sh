@@ -47,8 +47,15 @@ JAVA_OPTS="${JAVA_OPTS} -Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.cli
 #CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Xmx1024m"
 
 if [ -n "$DEBUG_PORT" ] ; then
-  CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Xdebug -jvmOpt=-Xrunjdwp:server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=y ${JAVA_OPTS}"
+  if [ -n "$DEBUG_WAIT" ] ; then
+    MY_DEBUG_WAIT="y"
+  else
+    MY_DEBUG_WAIT="n"
+  fi
+  CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-agentlib:jdwp=server=y,transport=dt_socket,address=${DEBUG_PORT},suspend=${MY_DEBUG_WAIT}"
+  unset MY_DEBUG_WAIT
 fi
+
 
 # colun-separated
 OUTER_CP="${BLENDED_HOME}/lib/*"
