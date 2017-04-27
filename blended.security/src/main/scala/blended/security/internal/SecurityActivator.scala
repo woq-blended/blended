@@ -22,7 +22,11 @@ class SecurityActivator extends DominoActivator {
       BlendedLoginModule.init(bundleContext)
 
       log.info("Initialising security manager.")
-      Configuration.setConfiguration(new BlendedConfiguration(bundleContext))
+      Configuration.setConfiguration(
+        new BlendedConfiguration(
+          bundleName = bundleContext.getBundle().getSymbolicName(),
+          loginModuleClassName = classOf[ShiroLoginModule].getName()
+        ))
 
       val factory = new IniSecurityManagerFactory(s"file:${idSvc.getContainerContext().getContainerConfigDirectory()}/shiro.ini")
       val secMgr = factory.getInstance()

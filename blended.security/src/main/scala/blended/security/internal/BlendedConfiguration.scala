@@ -10,13 +10,13 @@ import org.osgi.framework.BundleContext
 
 import scala.collection.JavaConverters._
 
-class BlendedConfiguration(bundleContext: BundleContext) extends Configuration {
+class BlendedConfiguration(bundleName: String, loginModuleClassName: String) extends Configuration {
 
   override def getAppConfigurationEntry(name: String): Array[AppConfigurationEntry] = {
 
     val options : Map[String, Any] = Map(
-      propBundle -> bundleContext.getBundle().getSymbolicName(),
-      propModule -> classOf[ShiroLoginModule].getName()
+      propBundle -> bundleName,
+      propModule -> loginModuleClassName
     )
 
     val entry = new AppConfigurationEntry(classOf[BlendedLoginModule].getName(), LoginModuleControlFlag.REQUISITE, options.asJava)

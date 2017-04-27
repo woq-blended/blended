@@ -2,7 +2,7 @@ package blended.security
 
 import java.util
 import javax.security.auth.Subject
-import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
+import javax.security.auth.callback.{ CallbackHandler, NameCallback, PasswordCallback }
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
 
@@ -15,11 +15,11 @@ import scala.collection.JavaConverters._
 
 object ShiroLoginModule {
 
-  private[this] var secMgr : Option[org.apache.shiro.mgt.SecurityManager] = None
+  private[this] var secMgr: Option[org.apache.shiro.mgt.SecurityManager] = None
 
-  def setSecurityManager(mgr: org.apache.shiro.mgt.SecurityManager) : Unit = secMgr = Option(mgr)
+  def setSecurityManager(mgr: org.apache.shiro.mgt.SecurityManager): Unit = secMgr = Option(mgr)
 
-  def securityManager : org.apache.shiro.mgt.SecurityManager = {
+  def securityManager: org.apache.shiro.mgt.SecurityManager = {
     require(secMgr.isDefined)
     secMgr.get
   }
@@ -30,33 +30,42 @@ class ShiroLoginModule extends LoginModule {
   import ShiroLoginModule.securityManager
 
   private[this] val log = LoggerFactory.getLogger(classOf[ShiroLoginModule])
-  private[this] var subject : Subject = null
-  private[this] var cbHandler : CallbackHandler = null
+  private[this] var subject: Subject = null
+  private[this] var cbHandler: CallbackHandler = null
 
-  private[this] var shared : Map[String, _] = Map.empty
-  private[this] var succeeded : Boolean = false
+  private[this] var shared: Map[String, _] = Map.empty
+  private[this] var succeeded: Boolean = false
+
+  override def toString(): String = getClass().getSimpleName() +
+    "(subject=" + subject +
+    ",cbHandler=" + cbHandler +
+    ",shared=" + shared +
+    ",succeeded=" + succeeded +
+    ")"
 
   override def initialize(
     subj: Subject,
     callbackHandler: CallbackHandler,
-    sharedState: util.Map[String, _], options:
-    util.Map[String, _]): Unit =
-  {
-    log.info("Initializing Shiro login module.")
+    sharedState: util.Map[String, _], options: util.Map[String, _]): Unit =
+    {
+      log.info("Initializing Shiro login module.")
 
-    require(Option(callbackHandler).isDefined)
-    require(Option(subj).isDefined)
+      require(Option(callbackHandler).isDefined)
+      require(Option(subj).isDefined)
 
-    shared = Option(sharedState) match {
-      case None => Map.empty
-      case Some(s) => s.asScala.toMap
+      shared = Option(sharedState) match {
+        case None => Map.empty
+        case Some(s) => s.asScala.toMap
+      }
+
+      subject = subj
+      cbHandler = callbackHandler
     }
 
-    subject = subj
-    cbHandler = callbackHandler
+  override def logout(): Boolean = {
+    // ThreadContext.unbindSecurityManager()
+    false
   }
-
-  override def logout(): Boolean = false
 
   override def abort(): Boolean = false
 
@@ -70,7 +79,9 @@ class ShiroLoginModule extends LoginModule {
     try {
       cbHandler.handle(Array(nameCallback, passwordCallback))
     } catch {
-      case e: Exception => throw new LoginException(e.getMessage())
+      case e: Exception => 
+        log.debug("Errors while callback execution", e)
+        throw new LoginException(e.getMessage())
     }
 
     val name = nameCallback.getName()
@@ -84,9 +95,12 @@ class ShiroLoginModule extends LoginModule {
     val token = new UsernamePasswordToken(name, pwd)
 
     try {
+      log.debug("About to login via shiro")
       shiroSubject.login(token)
+      log.debug("Subject has admin role? {}", shiroSubject.hasRole("admin"))
+      log.debug("Subject has admin permission? {}", shiroSubject.isPermitted("admin"))
       val principals = subject.getPrincipals().asScala
-      principals.foreach{ p => log.info(s"Found Principal [${p.getClass().getName()}] [$p]") }
+      log.debug("Found Principals: {}", principals.map(p => p.getClass().getName() + ": " + p))
     } catch {
       case e: Exception =>
         val msg = s"Shiro login failed (${e.getMessage()})"
