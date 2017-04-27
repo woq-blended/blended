@@ -41,6 +41,7 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
+    scoverageMavenPlugin,
     Plugin(
       "org.apache.maven.plugins" % "maven-resources-plugin" % "3.0.1",
       executions = Seq(

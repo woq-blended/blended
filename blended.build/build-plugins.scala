@@ -118,7 +118,7 @@ val scalaMavenPlugin = Plugin(
 )
 
 val scalatestMavenPlugin = Plugin(
-  "org.scalatest" % "scalatest-maven-plugin" % "1.0",
+  gav = "org.scalatest" % "scalatest-maven-plugin" % "1.0",
   executions = Seq(
     Execution(
       id = "test",
@@ -132,6 +132,21 @@ val scalatestMavenPlugin = Plugin(
     systemProperties = Config(
       projectTestOutput = "${project.build.testOutputDirectory}"
     )
+  )
+)
+
+val scoverageMavenPlugin = Plugin(
+  gav = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0",
+  executions = Seq(
+    Execution(
+      id = "coverage",
+      phase = "test",
+      goals = Seq("report")
+    )
+  ),
+  configuration = Config(
+    aggregate = "true",
+    highlighting = "true"
   )
 )
 
