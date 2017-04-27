@@ -1,4 +1,7 @@
-# The basic image to run Blended containers
+# The basic image to run Blended container builds from Jenkins pipelines
+# Jenkins expects a jenkins account with user/pw: jenkins/jenkins which must have the same
+# UID/GID as on the host, therefore we set the UID/GID via ARG
+
 FROM debian:latest
 
 MAINTAINER Andreas Gies 
@@ -42,6 +45,7 @@ USER ${USER}
 
 RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2"
 
+# Jenkins needs access to an open SSH port
 EXPOSE 22
 
 CMD ["/usr/sbin/sshd", "-D"]
