@@ -1,4 +1,4 @@
-<configuration>
+<configuration scan="true" scanPeriod="15 seconds">
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <file>log/blended.log</file>
     <layout class="ch.qos.logback.classic.PatternLayout">
@@ -12,7 +12,16 @@
     </layout>
   </appender>
 
-  <logger name="blended" level="DEBUG" />
+  <logger name="blended.demo" level="debug" />
+  <logger name="blended.launcher" level="debug" />
+  <logger name="blended.mgmt" level="debug" />
+  <logger name="blended.mgmt.agent" level="info" />
+  <logger name="blended.security" level="debug" />
+  <logger name="blended.spray" level="info" />
+
+  <logger name="org.apache.shiro" level="debug" />
+
+  <logger name="org.ops4j.pax.web" level="debug" />
 
   <root level="info">
     <appender-ref ref="FILE" />
