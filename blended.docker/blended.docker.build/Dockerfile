@@ -5,17 +5,20 @@ MAINTAINER Andreas Gies
 
 ARG USER=jenkins
 ARG GROUP=jenkins 
-ARG UID=2000
-ARG GID=2000
+ARG UID=125
+ARG GID=131
+
+ARG JAVA_HOME=/opt/java
+ARG M2_HOME=/opt/maven
+ARG SBT_HOME=/opt/sbt
 
 # Installation section
-ENV JAVA_HOME=/opt/java \
-    M2_HOME=/opt/maven \
-    SBT_HOME=/opt/sbt 
+ENV JAVA_HOME=${JAVA_HOME} \
+    M2_HOME=${M2_HOME} \
+    SBT_HOME=${SBT_HOME} \
+    PATH=${JAVA_HOME}/bin:${M2_HOME}/bin:${SBT_HOME}/bin:$PATH
 
-ADD files/profile.d /etc/profile.d
-
-RUN groupadd -g ${GID} ${GROUP} ; useradd -d /home/${USER} -s /bin/bash -g ${GROUP} -m ${USER} \
+RUN groupadd -g ${GID} ${GROUP} ; useradd -u ${UID} -d /home/${USER} -s /bin/bash -g ${GROUP} -m ${USER} \
  && apt-get -y -q update \
  && apt-get -y -q install \
     openssh-server \
@@ -39,8 +42,7 @@ RUN ln -s /opt/jdk1.8.0_131 /opt/java \
 
 USER ${USER}
 
-RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" \
- && export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$SBT_HOME/bin:$PATH
+RUN wget -q -c -O - https://raw.githubusercontent.com/creationix/nvm/v0.33.1/install.sh | /bin/bash; /bin/bash -l -c "source $HOME/.nvm/nvm.sh ; nvm install 4.2" 
 
 EXPOSE 22
 
