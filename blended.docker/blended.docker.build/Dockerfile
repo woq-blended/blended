@@ -9,6 +9,10 @@ ARG UID=2000
 ARG GID=2000
 
 # Installation section
+ENV JAVA_HOME=/opt/java \
+    M2_HOME=/opt/maven \
+    SBT_HOME=/opt/sbt 
+
 ADD files/profile.d /etc/profile.d
 
 RUN groupadd -g ${GID} ${GROUP} ; useradd -d /home/${USER} -s /bin/bash -g ${GROUP} -m ${USER} \
@@ -30,7 +34,8 @@ RUN ln -s /opt/jdk1.8.0_131 /opt/java \
  && ln -s /opt/apache-maven-3.5.0 /opt/maven \
  && ln -s /opt/zinc-0.3.13 /opt/zinc  \
  && PATH=/opt/java/bin:$PATH; /opt/sbt/bin/sbt about \
- && echo "jenkins:jenkins" | chpasswd
+ && echo "jenkins:jenkins" | chpasswd \
+ && export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$SBT_HOME/bin:$PATH
 
 USER ${USER}
 
