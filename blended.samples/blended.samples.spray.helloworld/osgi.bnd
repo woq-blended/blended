@@ -8,9 +8,13 @@ Export-Package:
 
 Import-Package: \
   javax.servlet;version="[3,4)",\
-  scala.xml, \
   scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.xml, \
+  blended.security.boot, \
   *
+
+DynamicImport-Package: \
+  org.eclipse.jetty.*
 
 Private-Package:\
   ${bundle.namespace}.internal
