@@ -71,6 +71,7 @@ object BlendedModel{
   // Properties we attach to all BlendedModels
   val defaultProperties : Map[String, String] =
     Map(
+      "project.build.sourceEncoding" -> "UTF-8",
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
       "java.version" -> BlendedVersions.javaVersion,
