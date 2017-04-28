@@ -9,6 +9,8 @@ import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
 
 import scala.collection.immutable.Seq
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class ManagementCollectorSpec
     extends FreeSpec
@@ -42,6 +44,10 @@ class ManagementCollectorSpec
       }
     }
     
+  }
+
+  override def cleanUp(): Unit = {
+    Await.result(system.terminate(), 10.seconds)
   }
 
   override def actorConfig: OSGIActorConfig = ???
