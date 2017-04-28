@@ -5,6 +5,7 @@ import javax.servlet.ServletConfig
 import akka.actor.{ActorRef, ActorRefFactory, Props}
 import akka.event.Logging
 import akka.spray.RefUtils
+import akka.util.Timeout
 import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_watching.ServiceWatching
@@ -12,6 +13,9 @@ import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 import spray.http.Uri.Path
 import spray.servlet.{ConnectorSettings, Servlet30ConnectorServlet}
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSystemWatching with ServiceWatching { this: BlendedHttpRoute =>
 
@@ -60,6 +64,8 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
 
   def createServletActor(props : Props): ActorRef = {
 
+    implicit val timeout = Timeout(1.second)
+
     system = actorConfig.system
     log = Logging(system, this.getClass)
 
@@ -76,7 +82,12 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     if (Option(serviceActor).isEmpty) throw new Exception("No ServiceActor configured")
     if (Option(settings).isEmpty) throw new Exception("No ConnectorSettings configured")
     if (!RefUtils.isLocal(serviceActor)) throw new Exception("The serviceActor must live in the same JVM as the Servlet30ConnectorServlet")
-    timeoutHandler = if (settings.timeoutHandler.isEmpty) serviceActor else system.actorFor(settings.timeoutHandler)
+
+    timeoutHandler = if (settings.timeoutHandler.isEmpty)
+      serviceActor
+    else
+      Await.result(system.actorSelection(settings.timeoutHandler).resolveOne(), timeout.duration)
+
     if (!RefUtils.isLocal(timeoutHandler)) throw new Exception("The timeoutHandler must live in the same JVM as the Servlet30ConnectorServlet")
     log.info(s"Initialized Servlet API 3.0 (OSGi) <=> Spray Connector for [$symbolicName]")
 

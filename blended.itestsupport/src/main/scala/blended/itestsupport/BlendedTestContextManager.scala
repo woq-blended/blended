@@ -2,23 +2,20 @@ package blended.itestsupport
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.camel.CamelExtension
-import akka.event.LoggingReceive
 import akka.pattern._
-import com.github.dockerjava.api.DockerClient
 import blended.akka.MemoryStash
 import blended.itestsupport.condition.{Condition, ConditionActor, ConditionProvider}
-import blended.itestsupport.docker.{ContainerManager, DockerClientFactory, DockerClientProvider}
 import blended.itestsupport.docker.protocol._
+import blended.itestsupport.docker.{ContainerManager, DockerClientFactory, DockerClientProvider}
 import blended.itestsupport.protocol.{TestContextRequest, _}
+import com.github.dockerjava.api.DockerClient
 import org.apache.camel.CamelContext
-
-import scala.concurrent.Future
 
 class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
   
   val camel = CamelExtension(context.system)
   
-  def initializing : Receive = LoggingReceive {
+  def initializing : Receive = {
     case req : TestContextRequest => 
       log.debug("Configuring Camel Extension for the test...")
       val containerMgr = context.actorOf(Props(new ContainerManager with DockerClientProvider {
@@ -32,7 +29,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
       context.become(starting(List(sender()), containerMgr) orElse stashing)
   } 
   
-  def starting(requestors: List[ActorRef], containerMgr: ActorRef) : Receive = LoggingReceive {
+  def starting(requestors: List[ActorRef], containerMgr: ActorRef) : Receive = {
     case ContainerManagerStarted(result) => 
       result match {
         case Right(cuts) => 
@@ -44,7 +41,7 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
     case req : TestContextRequest => context.become(starting(sender :: requestors, containerMgr))
   }
   
-  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef) = LoggingReceive {
+  def working(cuts: Map[String, ContainerUnderTest], testContext: CamelContext, containerMgr: ActorRef) : Receive = {
     case req : TestContextRequest => sender ! testContext
     
     case ContainerReady_? => 

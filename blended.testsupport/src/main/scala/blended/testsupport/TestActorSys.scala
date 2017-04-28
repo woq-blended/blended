@@ -3,7 +3,10 @@ package blended.testsupport
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.testkit.TestKit
+import scala.concurrent.duration._
+
+import scala.concurrent.Await
 
 object TestActorSys {
   val uniqueId = new AtomicInteger(0)
@@ -20,6 +23,6 @@ class TestActorSys(name : String, f : TestKit => Unit)
   }
   finally {
     system.log.info("Shutting down TestKit[{}]", system.name)
-    system.shutdown()
+    Await.result(system.terminate(), 10.seconds)
   }
 }

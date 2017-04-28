@@ -16,6 +16,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = scalaReflect),
     FeatureBundle(dependency = scalaLib),
     FeatureBundle(dependency = scalaXml),
+    FeatureBundle(dependency = scalaCompatJava8),
     FeatureBundle(dependency = blendedAkka, start=true),
     FeatureBundle(dependency = blendedUtil, start=true),
     FeatureBundle(dependency = blendedContainerContext, start=true),

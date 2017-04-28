@@ -133,6 +133,7 @@ val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % paxwebVersion
 val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % paxwebVersion
 val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % paxwebVersion
 
+val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
 val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
 val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
 val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
@@ -173,7 +174,7 @@ val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.
 
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
-val typesafeConfig = "com.typesafe" % "config" % "1.2.1"
+val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
 
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
