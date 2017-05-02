@@ -1,12 +1,12 @@
 package blended.samples.spray.helloworld.internal
 
 import blended.akka.OSGIActorConfig
-import org.scalatest.{Matchers, WordSpec}
+import org.scalatest.{ Matchers, WordSpec }
 import org.slf4j.LoggerFactory
 import spray.testkit.ScalatestRouteTest
 import scala.concurrent.duration._
-
 import scala.concurrent.Await
+import spray.routing.Route
 
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 
@@ -31,6 +31,11 @@ class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with
         handled should be(false)
       }
     }
+  }
+
+  def requirePermission(permission: String)(route: Route): Route = {
+    // dummy: always permit
+    route
   }
 
 }
