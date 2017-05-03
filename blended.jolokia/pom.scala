@@ -52,11 +52,10 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     Plugin(
-    		scalatestMavenPlugin.gav,
-        configuration = Config(
-          argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-${jolokia.version}-agent.jar=port=7777,host=localhost"
-        )
-      ),
-    scoverageMavenPlugin
+      scalatestMavenPlugin.gav,
+      configuration = Config(
+        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-${jolokia.version}-agent.jar=port=7777,host=localhost"
+      )
+    )
   )
 )

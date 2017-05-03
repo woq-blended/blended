@@ -22,7 +22,6 @@ BlendedModel(
   ),
   plugins = Seq(
     scalaMavenPlugin,
-    scalatestMavenPlugin,
-    scoverageMavenPlugin
+    scalatestMavenPlugin
   )
 )
