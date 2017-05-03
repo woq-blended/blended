@@ -63,6 +63,14 @@ val releaseProfile =  Profile(
   )
 )
 
+val coverageProfile = Profile(
+  id = "coverage",
+  activation = Activation(),
+  build = BuildBase(
+    plugins = Seq(scoverageMavenPlugin)
+  )
+)
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -80,7 +88,7 @@ object BlendedModel{
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile)
+  val defaultProfiles = Seq(releaseProfile, coverageProfile)
 
   val defaultDevelopers = Seq(
     Developer(

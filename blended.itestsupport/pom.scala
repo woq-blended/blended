@@ -65,7 +65,6 @@ BlendedModel(
       configuration = Config(
         argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
       )
-    ),
-    scoverageMavenPlugin
+    )
   )
 )

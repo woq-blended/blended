@@ -28,7 +28,6 @@ BlendedModel(
     bundleWarPlugin,
     scalaMavenPlugin,
     scalatestMavenPlugin,
-    scoverageMavenPlugin,
     Plugin(
       gav = mavenWarPlugin,
       configuration = Config (
