@@ -18,6 +18,7 @@
   <logger name="blended.mgmt.agent" level="info" />
   <logger name="blended.security" level="debug" />
   <logger name="blended.spray" level="info" />
+  <logger name="blended.samples" level="debug" />
 
   <logger name="org.apache.shiro" level="debug" />
 
