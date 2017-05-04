@@ -54,9 +54,9 @@ class BrokerControlActor extends Actor
 
         val url = s"vm://$brokerName?create=false"
         val amqCF : ConnectionFactory = new ActiveMQConnectionFactory(url)
-        val cf : ConnectionFactory = new BlendedSingleConnectionFactory(
+        val cf : ConnectionFactory = BlendedSingleConnectionFactory(
           cfg, amqCF, provider
-        )
+        )(cfg.system)
 
         val svcReg = cf.providesService[ConnectionFactory](Map(
           "provider" -> provider,

@@ -21,7 +21,7 @@ trait Condition {
 
   lazy val config = {
     val config = ConfigFactory.load()
-    config.getConfig("de.wayofquality.blended.itestsupport.condition")
+    config.getConfig("blended.itestsupport.condition")
   }
 
   override def toString = s"Condition($description, $timeout)"

@@ -6,6 +6,7 @@ import com.typesafe.config.Config
 object BlendedJMSConnectionConfig {
 
   val defaultConfig = BlendedJMSConnectionConfig(
+    jmxEnabled = true,
     enabled = true,
     pingTolerance = 5,
     pingInterval = 30,
@@ -17,6 +18,7 @@ object BlendedJMSConnectionConfig {
   )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
+    val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
     val enabled = if (cfg.hasPath("enabled")) cfg.getBoolean("enabled") else defaultConfig.enabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
     val pingInterval = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
@@ -27,6 +29,7 @@ object BlendedJMSConnectionConfig {
     val clientId = if (cfg.hasPath("clientId")) cfg.getString("clientId") else defaultConfig.clientId
 
     BlendedJMSConnectionConfig(
+      jmxEnabled = jmxEnabled,
       enabled = enabled,
       pingTolerance = pingTolerance,
       pingInterval = pingInterval,
@@ -40,6 +43,7 @@ object BlendedJMSConnectionConfig {
 }
 
 case class BlendedJMSConnectionConfig(
+  jmxEnabled : Boolean,
   enabled : Boolean,
   pingTolerance : Int,
   pingInterval : Int,

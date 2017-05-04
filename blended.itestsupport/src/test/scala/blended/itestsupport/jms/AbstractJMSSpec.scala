@@ -15,7 +15,7 @@ abstract class AbstractJMSSpec extends WordSpec
   with BeforeAndAfterAll {
 
   protected var broker : Option[BrokerService] = None
-  protected val cf : ConnectionFactory = new ActiveMQConnectionFactory("vm://blended")
+  protected val cf : ConnectionFactory = new ActiveMQConnectionFactory("vm://blended?create=false")
 
   protected def connect(connector: ActorRef)(implicit system: ActorSystem) : Unit = {
     val probe = TestProbe()

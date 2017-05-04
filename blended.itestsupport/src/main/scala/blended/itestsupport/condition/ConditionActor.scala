@@ -22,9 +22,10 @@ class ConditionActor(cond: Condition) extends Actor with ActorLogging {
 
   def initializing : Receive = {
     case CheckCondition =>
-      log.debug(s"Checking condition [${cond.description}] on behalf of [${sender}]")
+      val requestor = sender()
+      log.debug(s"Checking condition [${cond.description}] with timeout [${cond.timeout}] on behalf of [${requestor}]")
       val timer = context.system.scheduler.scheduleOnce(cond.timeout, self, Tick)
-      context.become(checking(sender, timer))
+      context.become(checking(requestor, timer))
       self ! Check
   }
 
