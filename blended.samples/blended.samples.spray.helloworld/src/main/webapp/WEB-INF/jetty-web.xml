@@ -3,30 +3,15 @@
 
 <Configure class="org.eclipse.jetty.webapp.WebAppContext">
 
-	<Get name="securityHandler">
-		<!-- <Set name="loginService"> -->
-		<!-- <New class="org.eclipse.jetty.security.HashLoginService"> -->
-		<!-- <Set name="name">Test Realm</Set> -->
-		<!-- <Set name="config"> -->
-		<!-- <New class="java.lang.StringBuilder"> -->
-		<!-- <Arg> -->
-		<!-- <SystemProperty name="blended.home" default="." /> -->
-		<!-- </Arg> -->
-		<!-- <Call name="append"> -->
-		<!-- <Arg>/etc/realm.properties</Arg> -->
-		<!-- </Call> -->
-		<!-- </New> -->
-		<!-- </Set> -->
-		<!-- </New> -->
-		<!-- </Set> -->
+<!-- 	<Get name="securityHandler"> -->
 
-		<Set name="loginService">
-			<New class="org.eclipse.jetty.plus.jaas.JAASLoginService">
-				<Set name="name">blended</Set>
-				<Set name="loginModuleName">blended</Set>
-			</New>
-		</Set>
+<!-- 		<Set name="loginService"> -->
+<!-- 			<New class="org.eclipse.jetty.plus.jaas.JAASLoginService"> -->
+<!-- 				<Set name="name">blended</Set> -->
+<!-- 				<Set name="loginModuleName">blended</Set> -->
+<!-- 			</New> -->
+<!-- 		</Set> -->
 
-	</Get>
+<!-- 	</Get> -->
 
 </Configure>

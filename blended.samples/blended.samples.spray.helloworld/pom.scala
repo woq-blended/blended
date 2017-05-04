@@ -19,6 +19,8 @@ BlendedModel(
     orgOsgiCompendium,
     slf4j,
     geronimoServlet30Spec,
+    apacheShiroCore,
+    apacheShiroWeb,
     scalaTest % "test",
     sprayTestkit % "test",
     mockitoAll % "test",

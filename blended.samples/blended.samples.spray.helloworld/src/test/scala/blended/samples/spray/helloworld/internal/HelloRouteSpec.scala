@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory
 import spray.testkit.ScalatestRouteTest
 import scala.concurrent.duration._
 import scala.concurrent.Await
-import spray.routing.Route
+import spray.routing._
 
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 
@@ -33,9 +33,6 @@ class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with
     }
   }
 
-  def requirePermission(permission: String)(route: Route): Route = {
-    // dummy: always permit
-    route
-  }
+  def requirePermission(permission: String): Directive0 = noop
 
 }
