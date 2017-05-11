@@ -7,10 +7,10 @@ import akka.util.Timeout
 
 import scala.util.control.NonFatal
 
-class FileProcessActor extends Actor with ActorLogging {
+case class FileProcessCmd(f: File, cfg: FilePollConfig, handler: FilePollHandler)
+case class FileProcessed(cmd: FileProcessCmd, success: Boolean)
 
-  case class FileProcessCmd(f: File, cfg: FilePollConfig, handler: FilePollHandler)
-  case class FileProcessed(f: File, success: Boolean)
+class FileProcessActor extends Actor with ActorLogging {
 
   implicit val timeout = Timeout(FileManipulationActor.operationTimeout)
   implicit val eCtxt = context.system.dispatcher
@@ -34,12 +34,22 @@ class FileProcessActor extends Actor with ActorLogging {
               throw new Exception(s"Error opening file [${tempFile}]")
             case Some(s) =>
               cmd.handler.processFile(s, cmd.cfg.header)
-              requestor ! FileProcessed(cmd.f, true)
+              requestor ! FileProcessed(cmd, true)
+
+              val archiveCmd = cmd.cfg.backup match {
+                case None =>
+                  DeleteFile(tempFile)
+                case Some(d) =>
+                  RenameFile(tempFile, new File(d, cmd.f.getName()))
+              }
+
+              context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
+              context.become(cleanUp(requestor, cmd, true))
           }
         } catch {
           case NonFatal(t) => {
             context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
-            context.become(failed(requestor, cmd))
+            context.become(cleanUp(requestor, cmd, false))
           }
         } finally {
           is.foreach(_.close())
@@ -47,8 +57,11 @@ class FileProcessActor extends Actor with ActorLogging {
     }
   }
 
-  def failed(requestor: ActorRef, cmd: FileProcessCmd) : Receive = {
+  def cleanUp(requestor: ActorRef, cmd: FileProcessCmd, success: Boolean) : Receive = {
     case result : FileCmdResult =>
-      requestor ! FileProcessed(cmd.f, false)
+      val result = FileProcessed(cmd, success)
+      context.system.eventStream.publish(result)
+      requestor ! result
   }
+
 }
