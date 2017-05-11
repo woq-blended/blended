@@ -80,7 +80,8 @@ BlendedModel(
         "blended.activemq.client",
         "blended.launcher.features",
         "blended.demo",
-        "blended.mgmt.ui"
+        "blended.mgmt.ui",
+        "blended.file"
       )
     ),
     Profile(
