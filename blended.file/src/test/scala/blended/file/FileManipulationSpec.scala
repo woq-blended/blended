@@ -2,11 +2,11 @@ package blended.file
 
 import java.io.File
 
+import akka.actor.Props
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
 import org.slf4j.LoggerFactory
-import scala.collection.JavaConverters._
 
 class FileManipulationSpec extends FreeSpec with Matchers {
 
@@ -21,7 +21,9 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val f = new File(System.getProperty("projectTestOutput") + "/files", "toDelete.txt")
 
       val probe = TestProbe()
-      val actor = system.actorOf(FileManipulationActor.props(probe.ref, DeleteFile(f)))
+      val actor = system.actorOf(Props[FileManipulationActor])
+
+      actor.tell(DeleteFile(f), probe.ref)
 
       probe.expectMsg(FileCmdResult(DeleteFile(f), true))
 
@@ -36,8 +38,9 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val d = new File(System.getProperty("projectTestOutput") + "/files", "newName.txt")
 
       val probe = TestProbe()
-      val actor = system.actorOf(FileManipulationActor.props(probe.ref, RenameFile(s, d)))
+      val actor = system.actorOf(Props[FileManipulationActor])
 
+      actor.tell(RenameFile(s, d), probe.ref)
       probe.expectMsg(FileCmdResult(RenameFile(s, d), true))
 
       s.exists() should be (false)
@@ -53,7 +56,9 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val d = new File(System.getProperty("projectTestOutput") + "/files", "AlreadyExists.txt")
 
       val probe = TestProbe()
-      val actor = system.actorOf(FileManipulationActor.props(probe.ref, RenameFile(s, d)))
+      val actor = system.actorOf(Props[FileManipulationActor])
+
+      actor.tell(RenameFile(s, d), probe.ref)
 
       probe.expectMsg(FileCmdResult(RenameFile(s, d), false))
 
