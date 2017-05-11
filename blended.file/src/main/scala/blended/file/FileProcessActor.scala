@@ -53,6 +53,7 @@ class FileProcessActor extends Actor with ActorLogging {
       val result = FileProcessed(cmd, success)
       context.system.eventStream.publish(result)
       requestor ! result
-  }
 
+      context.stop(self)
+  }
 }
