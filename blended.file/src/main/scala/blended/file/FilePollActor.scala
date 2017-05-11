@@ -3,6 +3,10 @@ package blended.file
 import java.io.{File, FilenameFilter}
 
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.pattern.ask
+import akka.util.Timeout
+
+import scala.concurrent.Future
 
 object FilePollActor {
 
@@ -15,6 +19,7 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
   case object Tick
 
   implicit val eCtxt = context.system.dispatcher
+  implicit val timeout = Timeout(FileManipulationActor.operationTimeout)
 
   override def preStart(): Unit = {
     context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
@@ -58,10 +63,18 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
     case Tick =>
       log.info(s"Executing File Poll for directory [${cfg.sourceDir}]")
 
-      files().foreach { f=>
-        log.info(s"Processing file [${f.getAbsolutePath()}]")
+      val futures : Iterable[Future[FileProcessed]] = files().map { f =>
+        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(f, cfg, handler)).mapTo[FileProcessed]
       }
 
-      context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+      val listFuture : Future[Iterable[FileProcessed]] = Future.sequence(futures)
+
+      listFuture.onSuccess {
+        case results =>
+          val succeeded = results.count(_.success)
+          log.info(s"Processed [$succeeded] of [${results.size}] files from [${cfg.sourceDir}], ")
+
+          context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+      }
   }
 }

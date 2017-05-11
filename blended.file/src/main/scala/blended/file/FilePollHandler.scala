@@ -1,9 +1,9 @@
 package blended.file
 
-import java.io.InputStream
+import java.io.File
 
 trait FilePollHandler {
 
   @throws[Throwable]
-  def processFile(is: InputStream, props: Map[String, Object]) : Unit
+  def processFile(f : File, props: Map[String, Object]) : Unit
 }

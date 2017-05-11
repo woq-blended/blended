@@ -1,6 +1,6 @@
 package blended.file
 
-import java.io.{File, FileInputStream, InputStream}
+import java.io.File
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
@@ -26,33 +26,24 @@ class FileProcessActor extends Actor with ActorLogging {
     case result : FileCmdResult => result.success match {
       case false => log.warning(s"File [${cmd.f.getAbsolutePath()}] can#t be accessed yet - processing delayed.")
       case true =>
-        var is : Option[InputStream] = None
         try {
-          is = Some(new FileInputStream(tempFile))
-          is match {
+          cmd.handler.processFile(tempFile, cmd.cfg.header)
+          requestor ! FileProcessed(cmd, true)
+
+          val archiveCmd = cmd.cfg.backup match {
             case None =>
-              throw new Exception(s"Error opening file [${tempFile}]")
-            case Some(s) =>
-              cmd.handler.processFile(s, cmd.cfg.header)
-              requestor ! FileProcessed(cmd, true)
-
-              val archiveCmd = cmd.cfg.backup match {
-                case None =>
-                  DeleteFile(tempFile)
-                case Some(d) =>
-                  RenameFile(tempFile, new File(d, cmd.f.getName()))
-              }
-
-              context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
-              context.become(cleanUp(requestor, cmd, true))
+              DeleteFile(tempFile)
+            case Some(d) =>
+              RenameFile(tempFile, new File(d, cmd.f.getName()))
           }
+
+          context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
+          context.become(cleanUp(requestor, cmd, true))
         } catch {
           case NonFatal(t) => {
             context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
             context.become(cleanUp(requestor, cmd, false))
           }
-        } finally {
-          is.foreach(_.close())
         }
     }
   }
