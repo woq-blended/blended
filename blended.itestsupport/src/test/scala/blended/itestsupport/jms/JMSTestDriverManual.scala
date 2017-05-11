@@ -1,7 +1,6 @@
 package blended.itestsupport.jms
 import javax.jms.ConnectionFactory
 
-import com.typesafe.config.ConfigFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
