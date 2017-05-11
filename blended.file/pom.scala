@@ -12,6 +12,7 @@ BlendedModel(
   description = "Bundle to define a customizable Filedrop / Filepoll API.",
   dependencies = Seq(
     blendedAkka,
+    blendedTestSupport % "test",
     akkaTestkit % "test",
     akkaSlf4j % "test",
     scalaTest % "test"
