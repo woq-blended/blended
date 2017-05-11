@@ -41,11 +41,11 @@ class ProducerControlActor(cf: ConnectionFactory) extends Actor with ActorLoggin
 
   override def preStart(): Unit = {
 
-    val cfgMap = context.system.settings.config.getObject(classOf[ScheduledJMSProducer].getName()).entrySet().asScala
+    val cfgMap = context.system.settings.config.getObject(classOf[ScheduledJMSProducer].getName() + ".producer").entrySet().asScala
 
     cfgMap.foreach { entry =>
       log.info(s"Creating producer [${entry.getKey()}]")
-      val cfg = context.system.settings.config.getConfig(classOf[ScheduledJMSProducer].getName() + "." + entry.getKey())
+      val cfg = context.system.settings.config.getConfig(classOf[ScheduledJMSProducer].getName() + ".producer." + entry.getKey())
       context.actorOf(ScheduledJMSProducer.props(cf, cfg))
     }
 
