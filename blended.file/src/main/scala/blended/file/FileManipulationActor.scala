@@ -2,7 +2,8 @@ package blended.file
 
 import java.io.File
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 
@@ -13,27 +14,20 @@ case class FileCmdResult(cmd: FileCommand, success: Boolean)
 
 object FileManipulationActor {
 
-  def props(requestor: ActorRef, cmd: FileCommand) : Props = {
-    Props(new FileManipulationActor(requestor, cmd))
+  val operationTimeout : FiniteDuration = {
+    val config = ConfigFactory.load()
+    val toPath = "blended.file.operationTimeout"
+    (if (config.hasPath(toPath)) config.getLong(toPath) else 5000l).millis
   }
 }
 
-class FileManipulationActor(requestor: ActorRef, cmd: FileCommand) extends Actor with ActorLogging {
+class FileManipulationActor extends Actor with ActorLogging {
 
   case object Tick
   case object Timeout
 
   val config = context.system.settings.config
   implicit val eCtxt = context.system.dispatcher
-
-  override def preStart(): Unit = {
-
-    val toPath = "blended.file.operationTimeout"
-
-    val maxWait = (if (config.hasPath(toPath)) config.getLong(toPath) else 5000l).millis
-    context.become(waiting(List(context.system.scheduler.scheduleOnce(maxWait, self, Timeout))))
-    self ! Tick
-  }
 
   private[this] def executeCmd(cmd: FileCommand) : Boolean = {
     cmd match {
@@ -59,26 +53,30 @@ class FileManipulationActor(requestor: ActorRef, cmd: FileCommand) extends Actor
     }
   }
 
-  override def receive: Receive = Actor.emptyBehavior
+  override def receive: Receive = {
+    case cmd : FileCommand =>
+      context.become(executing(sender(), cmd, List(context.system.scheduler.scheduleOnce(FileManipulationActor.operationTimeout, self, Timeout))))
+      self ! Tick
+  }
 
   def stop(t: List[Cancellable]) = {
     t.foreach(_.cancel())
     context.stop(self)
   }
 
-  def waiting(t: List[Cancellable]): Receive = {
+  def executing(requestor: ActorRef, cmd: FileCommand, t: List[Cancellable]): Receive = {
     case Tick =>
       executeCmd(cmd) match {
         case true =>
-          log.debug(s"File command [$cmd] succeeded.")
+          log.info(s"File command [$cmd] succeeded.")
           requestor ! FileCmdResult(cmd, true)
           stop(t)
         case false =>
-          context.become(waiting(context.system.scheduler.scheduleOnce(10.millis, self, Tick) :: t.tail))
+          context.become(executing(requestor, cmd, context.system.scheduler.scheduleOnce(10.millis, self, Tick) :: t.tail))
       }
 
     case Timeout =>
-      log.info(s"Command [$cmd] timed out")
+      log.warning(s"Command [$cmd] timed out")
       requestor ! FileCmdResult(cmd, false)
       stop(t)
   }
