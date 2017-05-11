@@ -1,6 +1,6 @@
 package blended.file
 
-import akka.testkit.{ImplicitSender, TestProbe}
+import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import org.scalatest.{DoNotDiscover, FreeSpec, Matchers}
 
@@ -17,16 +17,13 @@ class FilePollSpec extends FreeSpec with Matchers {
 
       val cfg = system.settings.config.getConfig("blended.file.poll")
 
-      val actor = system.actorOf(FilePollActor.props(FilePollConfig(cfg), new TestFileHandler()))
+      val actor = system.actorOf(FilePollActor.props(FilePollConfig(cfg), new SucceedingFileHandler()))
 
       val probe = TestProbe()
 
-      probe.fishForMessage ( max = 10.seconds ) {
+      probe.fishForMessage ( max = 5.seconds ) {
         case _ => true
       }
-
     }
   }
-
-
 }
