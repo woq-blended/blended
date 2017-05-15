@@ -41,6 +41,10 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
   private[this] def files() : List[File] = {
     val srcDir = new File(cfg.sourceDir)
 
+    if (!srcDir.exists()) {
+      srcDir.mkdirs()
+    }
+
     if (!srcDir.exists() || !srcDir.isDirectory() || !srcDir.canRead()) {
       log.info(s"Directory [$srcDir] does not exist or is not readable.")
       List.empty
