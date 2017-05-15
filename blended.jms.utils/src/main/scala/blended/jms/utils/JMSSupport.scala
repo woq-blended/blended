@@ -104,11 +104,11 @@ trait JMSSupport {
     } (cf)
   }
 
-  def sendMessage(
+  def sendMessage[T](
     cf: ConnectionFactory,
     destName: String,
-    content: Option[Any],
-    msgFactory: JMSMessageFactory,
+    content: T,
+    msgFactory: JMSMessageFactory[T],
     deliveryMode: Int = DeliveryMode.NON_PERSISTENT,
     priority : Int = 4,
     ttl : Long = 0
