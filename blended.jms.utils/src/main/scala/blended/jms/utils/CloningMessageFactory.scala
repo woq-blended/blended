@@ -14,10 +14,9 @@ class CloningMessageFactory extends JMSMessageFactory[Message] {
     val result = content match {
       case tMsg : TextMessage =>
         val body = tMsg.getText()
-        log.debug(s"Received text message [${tMsg.getJMSMessageID()}] of length [${body.length()}] : [${body.take(50)}]...")
         session.createTextMessage(tMsg.getText())
       case bMsg : BytesMessage =>
-        log.debug(s"Received bytes message [${bMsg.getJMSMessageID()}] of length [${bMsg.getBodyLength()}]")
+        bMsg.reset()
         val bytes = new Array[Byte](1024)
         val r = session.createBytesMessage()
 

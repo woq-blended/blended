@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.GZIPInputStream
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import blended.util.StreamCopySupport
 
 import scala.util.control.NonFatal
@@ -14,9 +14,9 @@ case class FileDropCommand(
   content: Array[Byte],
   directory: String,
   fileName: String,
-  compressed: Boolean = false,
-  append: Boolean = false,
-  timestamp: Long = System.currentTimeMillis()
+  compressed: Boolean,
+  append: Boolean,
+  timestamp: Long
 ) {
   override def toString: String = {
 
@@ -101,6 +101,11 @@ class FileDropActor extends Actor with ActorLogging {
     os
   }
 
+  private[this] def respond(requestor: ActorRef, response: FileDropResult) : Unit = {
+    requestor ! response
+    context.stop(self)
+  }
+
   override def receive: Receive = {
 
     case cmd : FileDropCommand =>
@@ -139,8 +144,8 @@ class FileDropActor extends Actor with ActorLogging {
           tf.foreach{ f => f.delete() }
 
           log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath()}]")
+          respond(requestor, FileDropResult(cmd, true))
 
-          requestor ! FileDropResult(cmd, true)
         } catch {
           case NonFatal(t) =>
             log.warning(s"Error executing ${cmd}: ${t.getMessage()}")
@@ -148,14 +153,14 @@ class FileDropActor extends Actor with ActorLogging {
             tf.foreach { f => f.renameTo(new File(cmd.directory, cmd.fileName)) }
             outFile(cmd).delete()
 
-            requestor ! FileDropResult(cmd, false)
+            respond(requestor, FileDropResult(cmd, false))
         } finally {
           rawIs.foreach(_.close())
           is.close()
         }
       } else {
         log.warning(s"The directory [${outdir.getAbsolutePath()}] does not exist or is not writable.")
-        requestor ! FileDropResult(cmd, false)
+        respond(requestor, FileDropResult(cmd, false))
       }
   }
 }
