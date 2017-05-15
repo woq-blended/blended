@@ -17,6 +17,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = scalaLib),
     FeatureBundle(dependency = scalaXml),
     FeatureBundle(dependency = scalaCompatJava8),
+    FeatureBundle(dependency = scalaParser),
     FeatureBundle(dependency = blendedAkka, start=true),
     FeatureBundle(dependency = blendedUtil, start=true),
     FeatureBundle(dependency = blendedContainerContext, start=true),
@@ -34,9 +35,12 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = felixGogoCommand, start=true),
     FeatureBundle(dependency = felixMetatype, start=true),
     FeatureBundle(dependency = typesafeConfig),
+    FeatureBundle(dependency = typesafeConfigSSL),
+    FeatureBundle(dependency = reactiveStreams),
     FeatureBundle(dependency = akkaActor),
     FeatureBundle(dependency = akkaOsgi),
     FeatureBundle(dependency = akkaSlf4j),
+    FeatureBundle(dependency = akkaStream),
     FeatureBundle(dependency = domino),
     FeatureBundle(dependency = blendedDomino),
     FeatureBundle(dependency = blendedMgmtBase, start = true),
@@ -167,7 +171,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedActivemqClient, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedSamplesCamel, start = true),
-    FeatureBundle(dependency = blendedSamplesJms, start = true)
+    FeatureBundle(dependency = blendedSamplesJms, start = true),
+    FeatureBundle(dependency = blendedFile)
   )
 )
 
