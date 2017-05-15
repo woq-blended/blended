@@ -11,8 +11,8 @@ import scala.concurrent.duration._
 
 object ScheduledJMSProducer {
 
-  def props(cf: ConnectionFactory, cfg: Config) = Props(new ScheduledJMSProducer(cf, cfg) with JMSMessageFactory {
-    override def createMessage(session: Session, content: Option[Any]): Message = {
+  def props(cf: ConnectionFactory, cfg: Config) = Props(new ScheduledJMSProducer(cf, cfg) with JMSMessageFactory[Long] {
+    override def createMessage(session: Session, content: Long): Message = {
       val msg = session.createTextMessage(s"${content}")
 
       if (cfg.hasPath("properties")) {
@@ -25,7 +25,7 @@ object ScheduledJMSProducer {
   })
 }
 
-class ScheduledJMSProducer(cf: ConnectionFactory, cfg: Config) extends Actor with ActorLogging with JMSSupport { this: JMSMessageFactory =>
+class ScheduledJMSProducer(cf: ConnectionFactory, cfg: Config) extends Actor with ActorLogging with JMSSupport { this: JMSMessageFactory[Long] =>
 
   var counter : Long = 0
 
@@ -39,7 +39,7 @@ class ScheduledJMSProducer(cf: ConnectionFactory, cfg: Config) extends Actor wit
 
   override def receive: Receive = {
     case Tick =>
-      sendMessage(cf, cfg.getString("destination"), Some(counter), this, DeliveryMode.PERSISTENT, 4, 0)
+      sendMessage(cf, cfg.getString("destination"), counter, this, DeliveryMode.PERSISTENT, 4, 0)
       context.system.scheduler.scheduleOnce(schedule.millis, self, Tick)
   }
 

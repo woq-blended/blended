@@ -43,9 +43,9 @@ class JMSSupportSpec extends FreeSpec
     sendMessage(
       cf = cf,
       destName = destName,
-      content = None,
-      msgFactory = new JMSMessageFactory {
-        override def createMessage(session: Session, content: Option[Any]) = {
+      content = (),
+      msgFactory = new JMSMessageFactory[Unit] {
+        override def createMessage(session: Session, content: Unit) = {
           session.createTextMessage("Hello AMQ")
         }
       },

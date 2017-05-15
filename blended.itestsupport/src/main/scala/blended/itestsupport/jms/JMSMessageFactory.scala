@@ -6,7 +6,7 @@ import blended.jms.utils.JMSMessageFactory
 
 import scala.util.Random
 
-class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory {
+class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory[Unit] {
 
   private val rnd = new Random()
 
@@ -16,20 +16,16 @@ class FixedSizeMessageFactory(size: Int) extends JMSMessageFactory {
     result
   }
 
-  override def createMessage(session: Session, content: Option[Any]): Message = {
+  override def createMessage(session: Session, content: Unit): Message = {
     val m = session.createBytesMessage()
     m.writeBytes(body)
     m
   }
 }
 
-class TextMessageFactory extends JMSMessageFactory {
+class TextMessageFactory extends JMSMessageFactory[String] {
 
-  override def createMessage(session: Session, content: Option[Any]) = {
-    val body = content match {
-      case None => "None"
-      case Some(m) => m.toString
-    }
-    session.createTextMessage(body)
+  override def createMessage(session: Session, content: String) = {
+    session.createTextMessage(content)
   }
 }
