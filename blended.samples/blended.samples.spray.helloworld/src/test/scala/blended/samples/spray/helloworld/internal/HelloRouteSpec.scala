@@ -7,6 +7,7 @@ import spray.testkit.ScalatestRouteTest
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import spray.routing._
+import org.apache.shiro.subject.Subject
 
 class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with HelloService {
 
@@ -33,6 +34,8 @@ class HelloRouteSpec extends WordSpec with Matchers with ScalatestRouteTest with
     }
   }
 
-  def requirePermission(permission: String): Directive0 = noop
+  override def requirePermission(permission: String): Directive0 = noop
+
+  override def authenticated: Directive1[Subject] = provide(null)
 
 }

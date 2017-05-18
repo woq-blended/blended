@@ -1,14 +1,14 @@
 package blended.samples.spray.helloworld.internal
 
+import org.apache.shiro.subject.Subject
+
 import blended.spray.BlendedHttpRoute
-import spray.http.MediaTypes._
+import spray.http.MediaTypes.`text/html`
 import spray.routing._
-import org.apache.shiro.util.ThreadContext
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
 
 trait HelloService extends BlendedHttpRoute {
+
+  protected def authenticated: Directive1[Subject]
 
   protected def requirePermission(permission: String): Directive0
 
@@ -26,15 +26,17 @@ trait HelloService extends BlendedHttpRoute {
           """.stripMargin
           }
         } ~ path("secure" / "hello") {
-          requirePermission("hello:view") {
-            complete {
-              """
+          authenticated { subject =>
+            requirePermission("hello:view") {
+              complete {
+                s"""
             |<html>
             |<body>Say hello to (secured)
             | <i>spray routing</i>
-            | within OSGi.</body>
+            | within OSGi. You are ${subject.getPrincipal()}</body>
             |</html>
           """.stripMargin
+              }
             }
           }
         }
