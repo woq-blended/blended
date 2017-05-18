@@ -10,9 +10,6 @@ Import-Package: \
   javax.servlet;version="[3,4)",\
   scala.*;version="[${scala.version},${scala.version}.50)", \
   scala.xml, \
-  blended.security.boot, \
-  org.apache.shiro.web.env, \
-  org.apache.shiro.web.servlet, \
   *
 
 DynamicImport-Package: \
