@@ -1,10 +1,9 @@
 package blended.samples.spray.helloworld.internal
 
-import org.apache.shiro.subject.Subject
-
 import blended.spray.BlendedHttpRoute
+import blended.security.spray.BlendedSecuredRoute
 import spray.http.MediaTypes.`text/html`
-import spray.routing._
+import spray.routing.Route
 
 trait HelloService
     extends BlendedHttpRoute

@@ -8,6 +8,7 @@ import org.apache.shiro.mgt.SecurityManager
 import org.apache.shiro.subject.Subject
 import org.slf4j.LoggerFactory
 
+import blended.security.spray.ShiroBlendedSecuredRoute
 import blended.spray.SprayOSGIServlet
 import domino.service_consuming.ServiceConsuming
 import javax.naming.AuthenticationException

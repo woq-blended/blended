@@ -1,13 +1,15 @@
 package blended.samples.spray.helloworld.internal
 
-import blended.akka.OSGIActorConfig
-import org.scalatest.{ Matchers, WordSpec }
-import org.slf4j.LoggerFactory
-import spray.testkit.ScalatestRouteTest
-import scala.concurrent.duration._
 import scala.concurrent.Await
-import spray.routing._
-import org.apache.shiro.subject.Subject
+import scala.concurrent.duration.DurationInt
+
+import org.scalatest.Matchers
+import org.scalatest.WordSpec
+import org.slf4j.LoggerFactory
+
+import blended.akka.OSGIActorConfig
+import blended.security.spray.DummyBlendedSecuredRoute
+import spray.testkit.ScalatestRouteTest
 
 class HelloRouteSpec
     extends WordSpec

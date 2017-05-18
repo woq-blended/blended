@@ -1,9 +1,7 @@
-package blended.samples.spray.helloworld.internal
+package blended.security.spray
 
 import org.apache.shiro.subject.Subject
-
 import blended.spray.BlendedHttpRoute
-import domino.service_consuming.ServiceConsuming
 import spray.routing._
 
 trait DummyBlendedSecuredRoute extends BlendedSecuredRoute { this: BlendedHttpRoute =>

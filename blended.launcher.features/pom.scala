@@ -150,7 +150,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
   ),
   "blended-spray" -> Seq(
     FeatureBundle(dependency = blendedSprayApi),
-    FeatureBundle(dependency = blendedSpray)
+    FeatureBundle(dependency = blendedSpray),
+    FeatureBundle(dependency = blendedSecuritySpray)
   ),
   "blended-spring" -> Seq(
     FeatureBundle(dependency = aopAlliance),

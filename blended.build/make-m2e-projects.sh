@@ -47,6 +47,7 @@ blended.samples/blended.samples.jms \
 blended.samples/blended.samples.spray.helloworld \
 blended.security \
 blended.security.boot \
+blended.security.spray \
 blended.spray \
 blended.spray.api \
 blended.testsupport \

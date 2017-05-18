@@ -1,0 +1,15 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}
+
+Export-Package: \
+  ${bundle.namespace};version="${project.version}"
+
+Import-Package: \
+  javax.servlet;version="[3,4)",\
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.xml, \
+  *
+

@@ -70,6 +70,7 @@ BlendedModel(
         "blended.spray",
         "blended.security",
         "blended.security.boot",
+        "blended.security.spray",
         "blended.hawtio.login",
         "blended.persistence",
         "blended.persistence.orient",

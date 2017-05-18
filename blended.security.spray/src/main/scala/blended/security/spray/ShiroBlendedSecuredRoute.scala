@@ -1,4 +1,4 @@
-package blended.samples.spray.helloworld.internal
+package blended.security.spray
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -11,10 +11,12 @@ import org.slf4j.LoggerFactory
 import blended.spray.BlendedHttpRoute
 import domino.service_consuming.ServiceConsuming
 import javax.naming.AuthenticationException
+import spray.routing.Directive.pimpApply
 import spray.routing.Directive0
 import spray.routing.Directive1
 import spray.routing.authentication.BasicAuth
 import spray.routing.authentication.UserPass
+import spray.routing.directives.AuthMagnet.fromContextAuthenticator
 
 trait ShiroBlendedSecuredRoute extends BlendedSecuredRoute with ServiceConsuming { this: BlendedHttpRoute =>
 

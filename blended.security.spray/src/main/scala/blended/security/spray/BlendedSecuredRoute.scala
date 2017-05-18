@@ -1,4 +1,4 @@
-package blended.samples.spray.helloworld.internal
+package blended.security.spray
 
 import spray.routing._
 import org.apache.shiro.subject.Subject

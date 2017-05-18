@@ -12,9 +12,6 @@ Import-Package: \
   scala.xml, \
   *
 
-DynamicImport-Package: \
-  org.eclipse.jetty.*
-
 Private-Package:\
   ${bundle.namespace}.internal
 

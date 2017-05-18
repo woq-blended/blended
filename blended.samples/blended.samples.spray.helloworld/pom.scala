@@ -20,6 +20,7 @@ BlendedModel(
     slf4j,
     geronimoServlet30Spec,
     apacheShiroCore,
+    blendedSecuritySpray,
     scalaTest % "test",
     sprayTestkit % "test",
     mockitoAll % "test",
