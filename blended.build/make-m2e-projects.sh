@@ -13,7 +13,7 @@ blended.activemq.brokerstarter \
 blended.activemq.client \
 blended.activemq.defaultbroker \
 blended.akka \
-blended.akka.itest \
+blended.itest \
 blended.build \
 blended.camel.utils \
 blended.container.context \
