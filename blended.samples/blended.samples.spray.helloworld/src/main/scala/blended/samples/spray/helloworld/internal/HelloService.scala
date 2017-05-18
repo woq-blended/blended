@@ -6,11 +6,9 @@ import blended.spray.BlendedHttpRoute
 import spray.http.MediaTypes.`text/html`
 import spray.routing._
 
-trait HelloService extends BlendedHttpRoute {
-
-  protected def authenticated: Directive1[Subject]
-
-  protected def requirePermission(permission: String): Directive0
+trait HelloService
+    extends BlendedHttpRoute
+    with BlendedSecuredRoute {
 
   override val httpRoute: Route =
     get {
