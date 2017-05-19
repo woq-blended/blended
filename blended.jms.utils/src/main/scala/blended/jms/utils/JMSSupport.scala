@@ -66,6 +66,8 @@ trait JMSSupport {
     subscriptionName : Option[String]
   ) : Unit = {
 
+    log.trace(s"Receiving messages from [$destName], maximum count is [$maxMessages]")
+
     withConnection { conn =>
       withSession { session =>
 
@@ -85,20 +87,25 @@ trait JMSSupport {
 
         do {
           msg = Option(consumer.receive(10))
-          msg.foreach { m =>
-            msgCount += 1
-            val id = m.getJMSMessageID()
-            log.debug(s"Handling received message [$id] from [$destName]")
-            msgHandler.handleMessage(m) match {
-              case Some(t) =>
-                log.warn(s"Error handling message [$id] from [$destName]")
-                throw t
-              case None =>
-                log.debug(s"Successfully handled message [$id] from [$destName]")
-                m.acknowledge()
+
+          msg match {
+            case None =>
+              log.trace(s"No more messages to receive from [$destName]")
+            case Some(m) =>
+              msgCount += 1
+              val id = m.getJMSMessageID()
+              log.trace(s"Handling received message [$id] from [$destName]")
+              msgHandler.handleMessage(m) match {
+                case Some(t) =>
+                  log.warn(s"Error handling message [$id] from [$destName]")
+                  throw t
+                case None =>
+                  log.trace(s"Successfully handled message [$id] from [$destName]")
+                  m.acknowledge()
+              }
             }
-          }
         } while(msg.isDefined && (maxMessages <=0 || msgCount < maxMessages))
+
         consumer.close()
       } (con = conn, transacted = false, mode = Session.CLIENT_ACKNOWLEDGE)
     } (cf)
