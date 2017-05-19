@@ -6,19 +6,9 @@ import javax.jms._
 import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
 import blended.jms.utils.{CloningMessageFactory, JMSMessageHandler, JMSSupport}
 import org.slf4j.LoggerFactory
+import scala.collection.JavaConverters._
 
-case class JMSFileDropConfig(
-  system: ActorSystem,
-  cf : ConnectionFactory,
-  dest: String,
-  errDest: String,
-  dirHeader: String,
-  fileHeader: String,
-  compressHeader: String,
-  appendHeader: String,
-  charsetHeader: String,
-  defaultDir : String
-)
+
 
 class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with JMSSupport {
 
@@ -68,7 +58,8 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with 
               fileName = fileName,
               compressed = Option(msg.getBooleanProperty(cfg.compressHeader)).getOrElse(false),
               append = Option(msg.getBooleanProperty(cfg.appendHeader)).getOrElse(false),
-              timestamp = msg.getJMSTimestamp()
+              timestamp = msg.getJMSTimestamp(),
+              properties = msg.getPropertyNames().asScala.map { pn => (pn.toString(), msg.getObjectProperty(pn.toString())) }.toMap
             )
 
             cfg.system.actorOf(Props[FileDropActor]).tell(cmd, self)
