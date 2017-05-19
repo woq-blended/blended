@@ -16,7 +16,8 @@ case class FileDropCommand(
   fileName: String,
   compressed: Boolean,
   append: Boolean,
-  timestamp: Long
+  timestamp: Long,
+  properties: Map[String, Object]
 ) {
   override def toString: String = {
 
@@ -102,6 +103,7 @@ class FileDropActor extends Actor with ActorLogging {
   }
 
   private[this] def respond(requestor: ActorRef, response: FileDropResult) : Unit = {
+    context.system.eventStream.publish(response)
     requestor ! response
     context.stop(self)
   }

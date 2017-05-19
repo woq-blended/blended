@@ -19,7 +19,11 @@ class FileDropSpec extends FreeSpec with Matchers {
       val cmd = FileDropCommand(
         content = "Hallo Andreas".getBytes(),
         directory = System.getProperty("projectTestOutput") + "/drop",
-        fileName = "test.txt"
+        fileName = "test.txt",
+        compressed = false,
+        append = false,
+        timestamp = System.currentTimeMillis(),
+        properties = Map.empty
       )
 
       val probe = TestProbe()
