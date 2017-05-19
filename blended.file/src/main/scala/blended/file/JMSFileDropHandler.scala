@@ -3,31 +3,27 @@ package blended.file
 import java.io.ByteArrayOutputStream
 import javax.jms._
 
-import akka.actor.{Actor, ActorLogging, ActorSystem, Props}
-import blended.jms.utils.{CloningMessageFactory, JMSMessageHandler, JMSSupport}
+import akka.actor.{Actor, ActorLogging, Props}
+import blended.jms.utils.{JMSMessageHandler, JMSSupport}
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
 
-
-
-class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with JMSSupport {
+class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends JMSMessageHandler with JMSSupport {
 
   class JMSFileDropActor extends Actor with ActorLogging {
 
-    private[this] def sendErrorMessage(msg: Message) = sendMessage[Message](
-        cf = cfg.cf,
-        destName = cfg.errDest,
-        content = msg,
-        msgFactory = new CloningMessageFactory(),
-        deliveryMode = DeliveryMode.PERSISTENT
-      )
+    private[this] def handleError(msg : Message) : Unit = {
+      errorHandler.handleError(msg, cfg)
+      context.stop(self)
+    }
 
     override def receive: Receive = {
       case msg : Message =>
         Option(msg.getStringProperty(cfg.fileHeader)) match {
           case None =>
             log.error(s"Message [${msg.getJMSMessageID()}] is missing the filename property [${cfg.fileHeader}]")
-            sendErrorMessage(msg)
+            handleError(msg)
 
         case Some(fileName) =>
 
@@ -49,11 +45,11 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with 
 
             case msg =>
               log.error(s"Dropping files unsupported for msg [${msg.getJMSMessageID()}] of type [${msg.getClass().getName()}]")
-              sendErrorMessage(msg)
+              handleError(msg)
               None
           }).foreach{ content =>
             val cmd = FileDropCommand(
-              content = "Hallo Andreas".getBytes(),
+              content = content,
               directory = Option(msg.getStringProperty(cfg.dirHeader)).getOrElse(cfg.defaultDir),
               fileName = fileName,
               compressed = Option(msg.getBooleanProperty(cfg.compressHeader)).getOrElse(false),
@@ -70,11 +66,11 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with 
 
     def executing(msg: Message, cmd: FileDropCommand) : Receive = {
       case result : FileDropResult => result.success match {
-        case true => context.stop(self)
+        case true =>
+          context.stop(self)
         case false =>
           log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
-          sendErrorMessage(msg)
-          context.stop(self)
+          handleError(msg)
       }
     }
   }
@@ -86,5 +82,3 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with 
     None
   }
 }
-
-
