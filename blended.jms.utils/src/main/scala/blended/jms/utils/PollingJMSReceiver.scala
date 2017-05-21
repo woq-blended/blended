@@ -7,7 +7,8 @@ import javax.jms.ConnectionFactory
 class PollingJMSReceiver(
   cf: ConnectionFactory,
   destName : String,
-  interval: Long,
+  interval: Int,
+  receiveTimeout : Long,
   msgHandler: JMSMessageHandler,
   subscriptionName : Option[String] = None
 ) extends JMSSupport {
@@ -28,11 +29,18 @@ class PollingJMSReceiver(
     if (!stopping.get()) {
       timer.purge()
       // Get as many messages as possible
-      receiveMessage(cf, destName, msgHandler, 0, subscriptionName)
+      receiveMessage(
+        cf = cf,
+        destName = destName,
+        msgHandler = msgHandler,
+        maxMessages = 0,
+        receiveTimeout = receiveTimeout,
+        subscriptionName = subscriptionName
+      )
       timer.schedule(
         new TimerTask {
           override def run(): Unit = poll()
-        }, interval
+        }, interval * 1000l
       )
     }
   }

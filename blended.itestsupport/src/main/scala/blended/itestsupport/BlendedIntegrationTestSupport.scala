@@ -1,6 +1,6 @@
 package blended.itestsupport
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.{ByteArrayOutputStream, File, FileOutputStream}
 
 import akka.actor.{ActorRef, Props}
 import akka.pattern.ask
@@ -16,6 +16,8 @@ import org.apache.camel.CamelContext
 import scala.concurrent.{Await, Future}
 
 trait BlendedIntegrationTestSupport {
+
+  val testOutput = System.getProperty("projectTestOutput")
 
   def testContext(ctProxy: ActorRef)(implicit timeout: Timeout, testKit: TestKit) : CamelContext = {
     val probe = new TestProbe(testKit.system)
@@ -60,6 +62,20 @@ trait BlendedIntegrationTestSupport {
       cc.cut match {
         case None => throw new Exception(s"Container with name [$ctName] not found.")
         case Some(cut) => ctProxy.ask(GetContainerDirectory(cut, dirName)).mapTo[ContainerDirectory]
+      }
+    }
+  }
+
+  def saveContainerDirectory(baseDir: String, dir: ContainerDirectory) : Unit = {
+    dir.content.foreach { case (name, content) =>
+      val file = new File(s"$baseDir/$name")
+      file.getParentFile().mkdirs()
+
+      if (content.size > 0) {
+        val fos = new FileOutputStream(file)
+        fos.write(content)
+        fos.flush()
+        fos.close()
       }
     }
   }

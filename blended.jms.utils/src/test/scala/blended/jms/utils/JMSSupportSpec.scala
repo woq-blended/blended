@@ -123,7 +123,8 @@ class JMSSupportSpec extends FreeSpec
       val receiver = new PollingJMSReceiver(
         cf = cf,
         destName = "test1",
-        interval = 50l,
+        interval = 5,
+        receiveTimeout = 50l,
         msgHandler = new ForwardingMessageHandler(
           cf = cf,
           destName = "test2",

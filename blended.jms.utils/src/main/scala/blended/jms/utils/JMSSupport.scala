@@ -63,10 +63,14 @@ trait JMSSupport {
     destName: String,
     msgHandler: JMSMessageHandler,
     maxMessages : Int = 0,
-    subscriptionName : Option[String]
+    receiveTimeout : Long = 50,
+    subscriptionName : Option[String] = None
   ) : Unit = {
 
-    log.trace(s"Receiving messages from [$destName], maximum count is [$maxMessages]")
+    if (log.isTraceEnabled()) {
+      val maxMsg = if (maxMessages <= 0) "Unbounded" else s"$maxMessages"
+      log.trace(s"Receiving messages from [$destName], maximum count is [$maxMsg], receiveTimeout [$receiveTimeout]")
+    }
 
     withConnection { conn =>
       withSession { session =>
@@ -74,10 +78,13 @@ trait JMSSupport {
         val d = destination(session, destName)
 
         val consumer : MessageConsumer = if (d.isInstanceOf[Queue]) {
+          log.trace(s"Creating consumer for [$destName]")
           session.createConsumer(d)
         } else {
           subscriptionName match {
-            case Some(n) => session.createDurableSubscriber(d.asInstanceOf[Topic], n)
+            case Some(n) =>
+              log.trace(s"Creating durable subscriber for [$destName] with subscription Name [$n]")
+              session.createDurableSubscriber(d.asInstanceOf[Topic], n)
             case None => throw new JMSException(s"Subscriber Name undefined for creating durable subscriber for [$destName]")
           }
         }
@@ -86,7 +93,7 @@ trait JMSSupport {
         var msgCount : Int = 0
 
         do {
-          msg = Option(consumer.receive(10))
+          msg = Option(consumer.receive(receiveTimeout))
 
           msg match {
             case None =>
