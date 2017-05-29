@@ -152,6 +152,7 @@ val scoverageMavenPlugin = Plugin(
 
 val polyglotTranslatePlugin = Plugin(
   gav = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.0",
+  // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
   dependencies = Seq(
       "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
   ),
