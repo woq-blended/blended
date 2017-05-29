@@ -150,6 +150,24 @@ val scoverageMavenPlugin = Plugin(
   )
 )
 
+val polyglotTranslatePlugin = Plugin(
+  gav = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.0",
+  dependencies = Seq(
+      "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
+  ),
+  executions = Seq(
+    Execution(
+      id = "pom-scala-to-pom-xml",
+      phase = "initialize",
+      goals = Seq("translate-project"),
+      configuration = Config(
+        input = "pom.scala",
+        output = "pom.xml"
+      )
+    )
+  )
+)
+
 /*
  * Some helper plugins to compile ScalaJS code with SBT.
  */

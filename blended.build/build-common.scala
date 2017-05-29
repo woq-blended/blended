@@ -3,14 +3,13 @@
 
 import scala.collection.immutable
 
-val releaseProfile =  Profile(
+val releaseProfile = Profile(
   id = "release",
-  activation = Activation(
-  ),
+  activation = Activation(),
   build = BuildBase(
     plugins = Seq(
-    Plugin(
-      "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
+      Plugin(
+        "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
         executions = Seq(
           Execution(
             id = "attach-sources-no-fork",
@@ -71,13 +70,21 @@ val coverageProfile = Profile(
   )
 )
 
+val genPomXmlProfile = Profile(
+  id = "gen-pom-xml",
+  activation = Activation(),
+  build = BuildBase(
+    plugins = Seq(polyglotTranslatePlugin)
+  )
+)
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
-object BlendedModel{
+object BlendedModel {
 
   // Properties we attach to all BlendedModels
-  val defaultProperties : Map[String, String] =
+  val defaultProperties: Map[String, String] =
     Map(
       "project.build.sourceEncoding" -> "UTF-8",
       "bundle.symbolicName" -> "${project.artifactId}",
@@ -88,7 +95,7 @@ object BlendedModel{
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, coverageProfile)
+  val defaultProfiles = Seq(releaseProfile, coverageProfile, genPomXmlProfile)
 
   val defaultDevelopers = Seq(
     Developer(
@@ -270,26 +277,24 @@ object BlendedModel{
     resources: Seq[Resource] = Seq.empty,
     testResources: Seq[Resource] = Seq.empty,
     plugins: Seq[Plugin] = Seq.empty,
-    pluginManagement: Seq[Plugin] = null
-
-  ) = {
-    if(parent != null) println(s"Project with parent: ${gav}")
+    pluginManagement: Seq[Plugin] = null) = {
+    if (parent != null) println(s"Project with parent: ${gav}")
     val theBuild = {
       val usedPlugins = plugins ++ defaultPlugins
       Option(Build(
-          resources = resources ++ defaultResources,
-          testResources = testResources ++ defaultTestResources,
-          plugins = usedPlugins,
-          pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
-        ))
-      }
+        resources = resources ++ defaultResources,
+        testResources = testResources ++ defaultTestResources,
+        plugins = usedPlugins,
+        pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
+      ))
+    }
 
-    new Model (
+    new Model(
       gav = gav,
       build = theBuild,
       ciManagement = Option(ciManagement),
       contributors = contributors,
-      dependencyManagement= Option(dependencyManagement).orElse(Option(DependencyManagement(dependencies))),
+      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(dependencies))),
       dependencies = dependencies,
       description = Option(description),
       developers = defaultDevelopers ++ developers,
@@ -320,15 +325,14 @@ object BlendedModel{
 // Support for building features and containers
 
 case class FeatureBundle(
-  dependency : Dependency,
-  startLevel : Integer = -1,
-  start : Boolean = false
-) {
+    dependency: Dependency,
+    startLevel: Integer = -1,
+    start: Boolean = false) {
   override def toString: String = {
 
     val gav = dependency.gav
 
-    val builder : StringBuilder = new StringBuilder("{ ")
+    val builder: StringBuilder = new StringBuilder("{ ")
 
     builder.append("url=\"")
     builder.append("mvn:")
@@ -340,7 +344,7 @@ case class FeatureBundle(
 
     // if true, we render the long form with 5 parts (4 colons) instead of 3 parts (2 colons)
     val longForm = dependency.classifier.isDefined || !dependency.`type`.equals("jar")
-    
+
     if (longForm) {
       builder.append(dependency.classifier.getOrElse(""))
       builder.append(":")
@@ -386,7 +390,7 @@ def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependen
 }
 
 // This is the content of the feature file
-def featureFile(name : String, features: Seq[FeatureBundle]) : String = {
+def featureFile(name: String, features: Seq[FeatureBundle]): String = {
 
   val prefix = "\"\"\"name=\"" + name + "\"\nversion=\"${project.version}\"\n"
 
@@ -396,10 +400,11 @@ def featureFile(name : String, features: Seq[FeatureBundle]) : String = {
   prefix + bundles
 }
 
-def generateFeatures(features : Map[String, Seq[FeatureBundle]]) = {
+def generateFeatures(features: Map[String, Seq[FeatureBundle]]) = {
 
-  val writeFiles = features.map { case (key, bundles) =>
-"""
+  val writeFiles = features.map {
+    case (key, bundles) =>
+      """
 ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key + """.conf"), """ + featureFile(key, bundles) + """)
 """
   }.mkString("import java.io.File\n", "\n", "")
@@ -409,9 +414,9 @@ ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key 
 
 object Feature {
   def apply(name: String) = Dependency(
-      blendedLauncherFeatures,
-      `type` = "conf",
-      classifier = name
+    blendedLauncherFeatures,
+    `type` = "conf",
+    classifier = name
   )
 }
 
@@ -452,11 +457,10 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
 object BlendedContainer {
 
   def apply(
-    gav : Gav,
-    description : String,
-    properties : Map[String, String] = Map.empty,
-    features : immutable.Seq[Dependency] = Seq.empty
-  ) = BlendedModel(
+    gav: Gav,
+    description: String,
+    properties: Map[String, String] = Map.empty,
+    features: immutable.Seq[Dependency] = Seq.empty) = BlendedModel(
     gav = gav,
     description = description,
     packaging = "jar",
@@ -541,7 +545,7 @@ object BlendedContainer {
   val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
   ScriptHelper.writeFile(baseConfFile, "overlays = []")
   """
-              )
+            )
           )
         )
       ),
@@ -586,11 +590,10 @@ object BlendedContainer {
 
 object BlendedDockerContainer {
   def apply(
-    gav : Gav,
-    image : Dependency,
-    folder : String,
-    ports : List[Int] = List.empty
-  ) = BlendedModel(
+    gav: Gav,
+    image: Dependency,
+    folder: String,
+    ports: List[Int] = List.empty) = BlendedModel(
     gav = gav,
     packaging = "jar",
     description = "Packaging the launcher sample container into a docker image.",
