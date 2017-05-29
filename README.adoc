@@ -19,15 +19,21 @@ We are currently busy getting the initial use cases documented. Stay tuned for m
 
 We use Maven to build.
 You need at least Maven 3.3.1 as we are using the https://github.com/takari/polyglot-maven[Maven Polyglot Scala Extension] to build Blended.
+So, if you look for pom-Files, look for `pom.scala`.
+We recommend to use Maven 3.5.0 or newer.
 
-Currently we transition the build scripts and as a result, the scipts may look a bit cluttered and unclean.
-
-Once, we are finished with the transition, you can build with a simple:
+You can build with a simple:
 
 `mvn clean install`
 
-As most IDE's do not understand the `pom.scala` files, you can use the `blended.build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file.
+=== Generate `pom.xml` files
+
+As most IDE's do not understand the `pom.scala` files, you can either use the old but proven `blended.build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file.
 After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
+
+Or just use the (new) special profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
+
+`mvn -P build,gen-pom-xml initialize`
 
 == Download  artifacts from Maven Central
 
