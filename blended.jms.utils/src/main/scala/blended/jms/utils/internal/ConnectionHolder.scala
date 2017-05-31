@@ -20,12 +20,14 @@ case class ConnectionHolder(
     case Some(c) => c
     case None =>
       log.info(s"Creating underlying connection for provider [$provider] with client id [$id]")
+
       val c = cf.createConnection()
       c.setClientID(id)
       c.start()
 
-      conn = Some(new BlendedJMSConnection(c))
-      c
+      val wrappedConnection = new BlendedJMSConnection(c)
+      conn = Some(wrappedConnection)
+      wrappedConnection
   }
 
   def close() : Unit = {
