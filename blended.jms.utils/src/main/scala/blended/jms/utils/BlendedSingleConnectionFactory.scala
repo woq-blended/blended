@@ -14,10 +14,14 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
 
+trait IdAwareConnectionFactory extends ConnectionFactory {
+  def clientId() : String
+}
+
 object BlendedSingleConnectionFactory {
 
-  def apply(cfg: Config, cf : ConnectionFactory)(implicit system: ActorSystem) =
-    new BlendedSingleConnectionFactory(cfg, cf, "provider", system, "client", None)
+  def apply(cfg: Config, cf : ConnectionFactory, clientId: String)(implicit system: ActorSystem) =
+    new BlendedSingleConnectionFactory(cfg, cf, "provider", system, clientId, None)
 
   def apply(cfg: OSGIActorConfig, cf: ConnectionFactory, provider: String)(implicit system: ActorSystem) : BlendedSingleConnectionFactory = {
     val config = BlendedJMSConnectionConfig(cfg.config)
@@ -31,9 +35,9 @@ class BlendedSingleConnectionFactory(
   cf: ConnectionFactory,
   provider : String,
   system: ActorSystem,
-  clientId : String,
+  cId : String,
   bundleContext : Option[BundleContext]
-) extends ConnectionFactory {
+) extends IdAwareConnectionFactory {
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
@@ -51,7 +55,7 @@ class BlendedSingleConnectionFactory(
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
         val jmxServer = ManagementFactory.getPlatformMBeanServer()
-        val jmxBean = new ConnectionMonitor(provider)
+        val jmxBean = new ConnectionMonitor(provider, cId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,provider=$provider")
         jmxServer.registerMBean(jmxBean, objName)
@@ -63,7 +67,7 @@ class BlendedSingleConnectionFactory(
 
       val monitor = system.actorOf(ConnectionStateMonitor.props(bundleContext, mbean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
-      Some(system.actorOf(ConnectionStateManager.props(cfg, monitor, holder, clientId), stateMgrName))
+      Some(system.actorOf(ConnectionStateManager.props(cfg, monitor, holder, cId), stateMgrName))
     } else {
       log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None
@@ -96,4 +100,6 @@ class BlendedSingleConnectionFactory(
     log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
+
+  override def clientId() : String = cId
 }

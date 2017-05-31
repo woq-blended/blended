@@ -8,6 +8,8 @@ trait ConnectionMonitorMBean {
   def getLastDisconnect() : String
   def getFailedPings() : Int
 
+  def getClientId() : String
+
   def getMaxEvents() : Int
   def setMaxEvents(n : Int) : Unit
 

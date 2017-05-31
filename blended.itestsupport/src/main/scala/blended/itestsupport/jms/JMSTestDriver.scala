@@ -19,7 +19,7 @@ abstract class JMSTestDriver {
 
   def run() : Unit = {
     val config = ConfigFactory.load().getConfig(classOf[ScheduledJMSProducer].getName())
-    system.actorOf(ProducerControlActor.props(BlendedSingleConnectionFactory(config, cf)(system)))
+    system.actorOf(ProducerControlActor.props(BlendedSingleConnectionFactory(config, cf, "client")(system)))
   }
 
 }

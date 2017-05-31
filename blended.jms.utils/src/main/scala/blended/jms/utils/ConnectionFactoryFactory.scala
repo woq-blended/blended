@@ -48,7 +48,7 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
       configureConnectionFactory(cf, cfg)
 
       val singleConnectionFactory = BlendedSingleConnectionFactory(cfg, cf, providerName)(cfg.system)
-      singleConnectionFactory.providesService[ConnectionFactory]("provider" -> providerName)
+      singleConnectionFactory.providesService[ConnectionFactory, IdAwareConnectionFactory]("provider" -> providerName)
     }
   }
 
