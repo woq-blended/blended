@@ -16,6 +16,7 @@ BlendedModel(
     blendedMgmtBase,
     blendedSpray,
     blendedSprayApi,
+    blendedSecuritySpray,
     blendedContainerRegistry,
     blendedAkka,
     blendedUpdaterRemote,

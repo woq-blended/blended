@@ -1,12 +1,14 @@
 package blended.mgmt.rest.internal
 
 import akka.testkit.TestLatch
+
 import blended.akka.OSGIActorConfig
 import blended.spray.SprayPrickleSupport
 import blended.updater.config._
 import org.scalatest.{FreeSpec, Matchers}
 import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
+import blended.security.spray.DummyBlendedSecuredRoute
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
@@ -17,7 +19,8 @@ class ManagementCollectorSpec
     with Matchers
     with ScalatestRouteTest
     with CollectorService
-    with SprayPrickleSupport {
+    with SprayPrickleSupport 
+    with DummyBlendedSecuredRoute {
 
   val testPostLatch = TestLatch(1)
   val testGetLatch = TestLatch(1)

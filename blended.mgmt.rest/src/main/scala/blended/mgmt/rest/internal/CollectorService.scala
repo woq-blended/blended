@@ -1,26 +1,29 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
-import blended.spray.{BlendedHttpRoute, SprayPrickleSupport}
+import blended.spray.{ BlendedHttpRoute, SprayPrickleSupport }
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.slf4j.LoggerFactory
 import spray.http.MediaTypes
 import spray.routing.Route
+import blended.security.spray.BlendedSecuredRoute
 
 import scala.collection.immutable
 import scala.concurrent.duration._
 
-trait CollectorService extends BlendedHttpRoute {
+trait CollectorService
+    extends BlendedHttpRoute
+    with BlendedSecuredRoute {
   this: SprayPrickleSupport =>
 
   override val httpRoute: Route =
     collectorRoute ~
-    infoRoute ~
-    versionRoute ~
-    runtimeConfigRoute ~
-    overlayConfigRoute ~
-    updateActionRoute
+      infoRoute ~
+      versionRoute ~
+      runtimeConfigRoute ~
+      overlayConfigRoute ~
+      updateActionRoute
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
@@ -96,9 +99,11 @@ trait CollectorService extends BlendedHttpRoute {
         }
       } ~
         post {
-          entity(as[RuntimeConfig]) { rc =>
-            registerRuntimeConfig(rc)
-            complete(s"Registered ${rc.name}-${rc.version}")
+          requirePermission("profile:update") {
+            entity(as[RuntimeConfig]) { rc =>
+              registerRuntimeConfig(rc)
+              complete(s"Registered ${rc.name}-${rc.version}")
+            }
           }
         }
     }
@@ -114,9 +119,11 @@ trait CollectorService extends BlendedHttpRoute {
         }
       } ~
         post {
-          entity(as[OverlayConfig]) { oc =>
-            registerOverlayConfig(oc)
-            complete(s"Registered ${oc.name}-${oc.version}")
+          requirePermission("profile:update") {
+            entity(as[OverlayConfig]) { oc =>
+              registerOverlayConfig(oc)
+              complete(s"Registered ${oc.name}-${oc.version}")
+            }
           }
         }
     }
@@ -125,9 +132,11 @@ trait CollectorService extends BlendedHttpRoute {
   def updateActionRoute: Route = {
     path("container" / Segment / "update") { containerId =>
       post {
-        entity(as[UpdateAction]) { updateAction =>
-          addUpdateAction(containerId, updateAction)
-          complete(s"Added UpdateAction to ${containerId}")
+        requirePermission("profile:update") {
+          entity(as[UpdateAction]) { updateAction =>
+            addUpdateAction(containerId, updateAction)
+            complete(s"Added UpdateAction to ${containerId}")
+          }
         }
       }
     }

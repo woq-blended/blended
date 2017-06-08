@@ -7,10 +7,12 @@ import blended.updater.remote.RemoteUpdater
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable
+import blended.security.spray.ShiroBlendedSecuredRoute
 
 class ManagementCollectorServlet extends SprayOSGIServlet
   with CollectorService
-  with SprayPrickleSupport {
+  with SprayPrickleSupport 
+  with ShiroBlendedSecuredRoute {
 
   type ContainerId = String
 
