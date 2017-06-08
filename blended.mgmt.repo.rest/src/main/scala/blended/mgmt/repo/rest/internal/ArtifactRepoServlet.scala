@@ -1,14 +1,21 @@
 package blended.mgmt.repo.rest.internal
 
-import akka.actor.{ActorRef, ActorRefFactory, Props}
+import akka.actor.{ ActorRef, ActorRefFactory, Props }
 import blended.akka.OSGIActorConfig
 import blended.mgmt.repo.ArtifactRepo
-import blended.spray.{BlendedHttpActor, BlendedHttpRoute, SprayOSGIServlet}
-import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
+import blended.spray.{ BlendedHttpActor, BlendedHttpRoute, SprayOSGIServlet }
+import domino.service_watching.ServiceWatcherEvent.{ AddingService, ModifiedService, RemovedService }
 import org.slf4j.LoggerFactory
 import spray.routing.Route
+import blended.security.spray.ShiroBlendedSecuredRoute
+import org.apache.shiro.subject.Subject
+import spray.routing.Directive0
+import spray.routing.Directive1
 
-class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
+class ArtifactRepoServlet
+    extends SprayOSGIServlet
+    with BlendedHttpRoute
+    with ShiroBlendedSecuredRoute { self =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoServlet])
 
@@ -21,13 +28,15 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
       override def actorConfig: OSGIActorConfig = cfg
       override protected def artifactRepo: ArtifactRepo = repo
       override implicit def actorRefFactory: ActorRefFactory = cfg.system
+      override protected def authenticated: Directive1[Subject] = self.authenticated
+      override protected def requirePermission(permission: String): Directive0 = self.requirePermission(permission)
     }, contextPath)
 
   override def startSpray(): Unit = {
 
     /**
-      * create and start actor and add to state
-      */
+     * create and start actor and add to state
+     */
     def addRepo(repo: ArtifactRepo): Unit = {
       val repoContextPath = contextPath + "/" + repo.repoId
       val props = repoProps(repo)(actorConfig, repoContextPath)
@@ -38,8 +47,8 @@ class ArtifactRepoServlet extends SprayOSGIServlet with BlendedHttpRoute {
     }
 
     /**
-      *  stop actor and remove from state
-      */
+     *  stop actor and remove from state
+     */
     def removeRepo(repo: ArtifactRepo): Unit = {
       actors.get(repo).map { actor =>
         log.info("About to stop actor {} for artifact repo {}", Array(actor, repo): _*)

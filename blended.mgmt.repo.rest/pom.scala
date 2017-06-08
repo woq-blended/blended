@@ -17,6 +17,7 @@ BlendedModel(
     blendedMgmtBase,
     blendedMgmtRepo,
     blendedSpray,
+    blendedSecuritySpray,
     sprayJson,
     scalaTest % "test"
   ), 
