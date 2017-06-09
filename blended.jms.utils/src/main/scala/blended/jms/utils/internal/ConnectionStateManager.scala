@@ -7,33 +7,33 @@ import javax.jms.Connection
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
-import blended.akka.OSGIActorConfig
 import blended.jms.utils.internal.ConnectionState._
 import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
+import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 
 object ConnectionStateManager {
 
   def props(
-    cfg: OSGIActorConfig,
+    cfg: Config,
     monitor: ActorRef,
-    holder: ConnectionHolder
+    holder: ConnectionHolder,
+    clientId : String
   ) : Props =
-    Props(new ConnectionStateManager(cfg, monitor, holder))
+    Props(new ConnectionStateManager(cfg, monitor, holder, clientId))
 }
 
-class ConnectionStateManager(cfg: OSGIActorConfig, monitor: ActorRef, holder: ConnectionHolder)
+class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionHolder, clientId: String)
   extends Actor with ActorLogging {
 
   type StateReceive = ConnectionState => Receive
 
-  private[this] val config = BlendedJMSConnectionConfig(cfg.config)
+  private[this] val config = BlendedJMSConnectionConfig(cfg)
   private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
   private[this] implicit val eCtxt = context.system.dispatcher
   private[this] val provider = holder.provider
-  private[this] val clientId = cfg.idSvc.resolvePropertyString(config.clientId)
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
@@ -282,7 +282,7 @@ class ConnectionStateManager(cfg: OSGIActorConfig, monitor: ActorRef, holder: Co
 
     var result = false
 
-    log.info(s"Error connecting to JMS provider [$provider]. ${e.getMessage()}")
+    log.error(e, s"Error connecting to JMS provider [$provider].")
 
     if (config.maxReconnectTimeout > 0 && s.firstReconnectAttempt.isDefined) {
       s.firstReconnectAttempt.foreach { t =>

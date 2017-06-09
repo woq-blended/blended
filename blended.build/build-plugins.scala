@@ -244,7 +244,7 @@ val compileJsPlugin = Plugin(
 )
 
 val dockerMavenPlugin = Plugin(
-  "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.21",
+  "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.23",
   executions = Seq(
     Execution(
       id = "clean-docker",

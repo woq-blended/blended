@@ -29,12 +29,6 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker with JM
     case _ => SupervisorStrategy.Stop
   }
 
-  var jmsConnector: Option[ActorRef] = None
-
-  override def preStart() : Unit = {
-    jmsConnector = Some(context.actorOf(Props(JMSConnectorActor(cf))))
-  }
-
   override def performCheck(cond: AsyncCondition) : Future[Boolean] = {
 
     implicit val t = Timeout(5.seconds)

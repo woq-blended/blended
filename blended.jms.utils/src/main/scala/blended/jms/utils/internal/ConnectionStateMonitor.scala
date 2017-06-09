@@ -9,11 +9,16 @@ import org.osgi.framework.BundleContext
 import scala.concurrent.duration._
 
 object ConnectionStateMonitor {
-  def props(bc : BundleContext, monitorBean: ConnectionMonitor) : Props = Props(new ConnectionStateMonitor(bc, monitorBean))
+  def props(bc : Option[BundleContext], monitorBean: Option[ConnectionMonitor]) : Props = Props(new ConnectionStateMonitor(bc, monitorBean))
 }
 
-class ConnectionStateMonitor(override val bundleContext: BundleContext, val monitorBean: ConnectionMonitor)
+class ConnectionStateMonitor(val bc: Option[BundleContext], val monitorBean: Option[ConnectionMonitor])
   extends Actor with ActorLogging with ServiceConsuming {
+
+  override protected def bundleContext: BundleContext = bc match {
+    case None => throw new Exception("Bundle Context is not defined in this context")
+    case Some(ctxt) => ctxt
+  }
 
   private[this] implicit val eCtxt = context.system.dispatcher
 
@@ -25,20 +30,26 @@ class ConnectionStateMonitor(override val bundleContext: BundleContext, val moni
   }
 
   override def receive: Receive = LoggingReceive {
-    case ConnectionStateChanged(state) =>
-      val oldState = monitorBean.getState()
-      if (oldState.status != state.status) {
-        context.system.eventStream.publish(state)
-      }
-      monitorBean.setState(state)
+    case ConnectionStateChanged(state) => monitorBean match {
+      case Some(mb) =>
+        val oldState = mb.getState()
+        if (oldState.status != state.status) {
+          context.system.eventStream.publish(state)
+        }
+        mb.setState(state)
+      case None =>
+    }
 
     case RestartContainer(t) =>
       restartContainer(t.getMessage())
       context.stop(self)
 
-    case Tick =>
-      context.system.eventStream.publish(monitorBean.getCommand())
-      monitorBean.resetCommand()
+    case Tick => monitorBean match {
+      case Some(mb) =>
+        context.system.eventStream.publish(mb.getCommand())
+        mb.resetCommand()
+      case None =>
+    }
   }
 
   private[this] def restartContainer(msg: String) : Unit = {

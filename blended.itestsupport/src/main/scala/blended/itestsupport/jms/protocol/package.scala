@@ -20,16 +20,6 @@ package protocol {
 
   case object StopConsumer
 
-  case class ProduceMessage(
-    msgFactory: JMSMessageFactory,
-    content: Option[Any] = None,
-    count : Int = 1,
-    deliveryMode : Int = DeliveryMode.NON_PERSISTENT,
-    priority : Int = 4,
-    ttl : Long = 0
-  )
-  case object MessageProduced
-
   case class ProducerActor(producer: ActorRef)
   case class ConsumerActor(consumer: ActorRef)
 

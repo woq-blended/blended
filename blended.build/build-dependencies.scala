@@ -24,6 +24,7 @@ val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % Blen
 val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
 val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
+val akkaStream = "com.typesafe.akka" %% "akka-stream" % BlendedVersions.akkaVersion
 val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % BlendedVersions.akkaVersion
 val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % BlendedVersions.akkaVersion
 
@@ -133,11 +134,14 @@ val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % paxwebVersion
 val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % paxwebVersion
 val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % paxwebVersion
 
+val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
+
 val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
 val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
+val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
 val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
 val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
-val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.5"
+val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
 val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
 val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
@@ -175,6 +179,7 @@ val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.
 val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
 val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
+val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
 
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
@@ -211,6 +216,7 @@ val blendedDockerReactor = BlendedModule("blended.docker.reactor")
 val blendedDockerDemoNode = BlendedModule("blended.docker.demo.node")
 val blendedDockerDemoMgmt = BlendedModule("blended.docker.demo.mgmt")
 val blendedDomino = BlendedModule("blended.domino")
+val blendedFile = BlendedModule("blended.file")
 val blendedHawtioLogin = BlendedModule("blended.hawtio.login")
 val blendedItestReactor = BlendedModule("blended.itest.reactor")
 val blendedItestSupport = BlendedModule("blended.itestsupport")

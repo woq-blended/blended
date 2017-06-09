@@ -11,13 +11,13 @@ object BlendedVersions {
 
   val scalaTestVersion = "3.0.1"
   
-  val activeMqVersion = "5.14.2"
-  val akkaVersion = "2.5.0"
+  val activeMqVersion = "5.14.5"
+  val akkaVersion = "2.5.1"
   val apacheShiroVersion = "1.2.4"
 
   val camelVersion = "2.17.3"
 
-  val dockerJavaVersion = "3.0.8"
+  val dockerJavaVersion = "3.0.9"
 
   val jolokiaVersion = "1.3.3"
 

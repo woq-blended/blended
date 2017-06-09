@@ -43,9 +43,9 @@ class JMSSupportSpec extends FreeSpec
     sendMessage(
       cf = cf,
       destName = destName,
-      content = None,
-      msgFactory = new JMSMessageFactory {
-        override def createMessage(session: Session, content: Option[Any]) = {
+      content = (),
+      msgFactory = new JMSMessageFactory[Unit] {
+        override def createMessage(session: Session, content: Unit) = {
           session.createTextMessage("Hello AMQ")
         }
       },
@@ -123,7 +123,8 @@ class JMSSupportSpec extends FreeSpec
       val receiver = new PollingJMSReceiver(
         cf = cf,
         destName = "test1",
-        interval = 50l,
+        interval = 5,
+        receiveTimeout = 50l,
         msgHandler = new ForwardingMessageHandler(
           cf = cf,
           destName = "test2",
