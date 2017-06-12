@@ -50,11 +50,12 @@ class MaterializeProfileMojo extends AbstractMojo {
     val confArtifacts = project.getDependencyArtifacts.asScala.
       filter(a => a.getScope() == dependencyScope && a.getType() == dependencyType)
     getLog.info(s"Feature artifacts: ${confArtifacts.mkString(", ")}")
-    val featureFiles = confArtifacts.map(_.getFile())
-
-    getLog.debug("feature args: " + featureFiles.toArray.flatMap { f =>
+    val featureFiles = confArtifacts.toSeq.map(_.getFile())
+    val featureArgs = featureFiles.toArray.flatMap { f =>
       Array("-r", f.getAbsolutePath)
-    })
+    }
+
+    getLog.debug("feature args: " + featureArgs.mkString("Array(", ", ", ")"))
 
     val localRepoUrl = Option(localRepositoryUrl).getOrElse(project.getProjectBuildingRequest.getLocalRepository.getUrl)
     val remoteRepoUrls = project.getRepositories.asScala.map(r => r.getUrl)
@@ -68,6 +69,7 @@ class MaterializeProfileMojo extends AbstractMojo {
     } else {
       Array("--maven-url", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
     }
+    getLog.debug("repo args: " + repoArgs.mkString("Array(", ", ", ")"))
 
     val profileArgs = Array(
       "--debug",
@@ -75,9 +77,7 @@ class MaterializeProfileMojo extends AbstractMojo {
       "-o", targetProfile.getAbsolutePath,
       "--download-missing",
       "--update-checksums"
-    ) ++ featureFiles.toArray.flatMap { f =>
-        Array("-r", f.getAbsolutePath)
-      } ++ repoArgs
+    ) ++ featureArgs ++ repoArgs
     RuntimeConfigBuilder.run(profileArgs)
   }
 

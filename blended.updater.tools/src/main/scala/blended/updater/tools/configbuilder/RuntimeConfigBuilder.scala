@@ -103,6 +103,7 @@ object RuntimeConfigBuilder {
       val featureConfig = ConfigFactory.parseFile(new File(fileName), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
       FeatureConfigCompanion.read(featureConfig).get
     }
+    if (debug) Console.err.println("features: " + features)
 
     val configFile = new File(options.configFile).getAbsoluteFile()
     val outFile = Option(options.outFile.trim())
@@ -115,6 +116,7 @@ object RuntimeConfigBuilder {
     val unresolvedRuntimeConfig = RuntimeConfigCompanion.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 
+    if (debug) Console.err.println("unresolved runtime config: " + unresolvedRuntimeConfig)
     val resolved = FeatureResolver.resolve(unresolvedRuntimeConfig, features).get
     if (debug) Console.err.println("runtime config with resolved features: " + resolved)
 
