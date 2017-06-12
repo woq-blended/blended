@@ -33,7 +33,11 @@ After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run 
 
 Or just use the (new) special profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
 
+.Build `pom.xml` files from top level directory
 `mvn -P build,gen-pom-xml initialize`
+
+.Build `pom.xml` file in a local project
+`mvn -P gen-pom-xml initialize`
 
 == Download  artifacts from Maven Central
 
