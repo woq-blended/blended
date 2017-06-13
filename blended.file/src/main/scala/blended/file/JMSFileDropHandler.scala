@@ -9,21 +9,23 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 
-class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends JMSMessageHandler with JMSSupport {
+object JMSFileDropActor {
+  def props(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) : Props = Props(new JMSFileDropActor(cfg, errorHandler))
+}
 
-  class JMSFileDropActor extends Actor with ActorLogging {
+class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends Actor with ActorLogging {
 
-    private[this] def handleError(msg : Message) : Unit = {
-      errorHandler.handleError(msg, cfg)
-      context.stop(self)
-    }
+  private[this] def handleError(msg : Message) : Unit = {
+    errorHandler.handleError(msg, cfg)
+    context.stop(self)
+  }
 
-    override def receive: Receive = {
-      case msg : Message =>
-        Option(msg.getStringProperty(cfg.fileHeader)) match {
-          case None =>
-            log.error(s"Message [${msg.getJMSMessageID()}] is missing the filename property [${cfg.fileHeader}]")
-            handleError(msg)
+  override def receive: Receive = {
+    case msg : Message =>
+      Option(msg.getStringProperty(cfg.fileHeader)) match {
+        case None =>
+          log.error(s"Message [${msg.getJMSMessageID()}] is missing the filename property [${cfg.fileHeader}]")
+          handleError(msg)
 
         case Some(fileName) =>
 
@@ -62,23 +64,25 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorH
             context.become(executing(msg, cmd))
           }
       }
-    }
+  }
 
-    def executing(msg: Message, cmd: FileDropCommand) : Receive = {
-      case result : FileDropResult => result.success match {
-        case true =>
-          context.stop(self)
-        case false =>
-          log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
-          handleError(msg)
-      }
+  def executing(msg: Message, cmd: FileDropCommand) : Receive = {
+    case result : FileDropResult => result.success match {
+      case true =>
+        context.stop(self)
+      case false =>
+        log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
+        handleError(msg)
     }
   }
+}
+
+class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends JMSMessageHandler with JMSSupport {
 
   private[this] val log = LoggerFactory.getLogger(classOf[JMSFileDropHandler])
 
   override def handleMessage(msg: Message): Option[Throwable] = {
-    cfg.system.actorOf(Props[JMSFileDropActor]) ! msg
+    cfg.system.actorOf(JMSFileDropActor.props(cfg, errorHandler)) ! msg
     None
   }
 }
