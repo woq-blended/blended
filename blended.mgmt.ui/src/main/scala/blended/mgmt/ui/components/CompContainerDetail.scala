@@ -17,6 +17,9 @@ import blended.updater.config.UpdateAction
 import blended.updater.config.StageProfile
 import blended.updater.config.Profile.SingleProfile
 
+/**
+ * React component to render details of a [[ContainerInfo]].
+ */
 object CompContainerDetail {
 
   private[this] val log = Logger[CompContainerDetail.type]

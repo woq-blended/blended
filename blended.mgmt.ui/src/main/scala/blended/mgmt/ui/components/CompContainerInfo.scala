@@ -7,6 +7,9 @@ import blended.mgmt.ui.util.I18n
 import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.BackendScope
 
+/**
+ * React component to render a [[ContainerInfo]].
+ */
 object CompContainerInfo {
 
   private[this] val log = Logger[CompContainerInfo.type]

@@ -11,6 +11,11 @@ import blended.mgmt.ui.components.filter.And
 import blended.mgmt.ui.backend.DirectProfileUpdater
 import blended.mgmt.ui.ConsoleSettings
 
+/**
+ * React component showing a filterable page about containers and their details.
+ *
+ * @see [[ContainerInfo]]
+ */
 object CompManagementConsole {
 
   private[this] val log: Logger = Logger[CompManagementConsole.type]
@@ -45,6 +50,7 @@ object CompManagementConsole {
     def render(s: State) = {
       log.debug(s"Rerendering with $s")
       <.div(
+        ^.`class` := "row",
         <.div(
           CompEditFilter.Component(CompEditFilter.Props(s.filter, s.containerList, addFilter))),
         <.div(
@@ -52,7 +58,7 @@ object CompManagementConsole {
         <.div(
           CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
         <.div(
-          CompContainerDetail.Component(CompContainerDetail.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerBaseUrl)))))
+          CompContainerDetail.Component(CompContainerDetail.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerDataUrl)))))
       )
     }
   }

@@ -26,7 +26,7 @@ class MgmtConsole extends js.JSApp {
     <.div(
       navMenu(c),
       <.div(
-        ^.cls := "container", r.render()
+        ^.cls := "container-fluid", r.render()
       )
     )
 

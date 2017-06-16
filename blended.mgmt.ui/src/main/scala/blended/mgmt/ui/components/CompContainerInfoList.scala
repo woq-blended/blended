@@ -7,6 +7,9 @@ import blended.mgmt.ui.util.I18n
 import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.BackendScope
 
+/**
+ * React Component to render a list of [[ContainerInfo]]s.
+ */
 object CompContainerInfoList {
 
   private[this] val log = Logger[CompContainerInfoList.type]
@@ -16,10 +19,11 @@ object CompContainerInfoList {
 
   class Backend(scope: BackendScope[Props, Unit]) {
     def render(p: Props) = {
-      val rows = p.containerInfos.map(ci =>
+      val rows = p.containerInfos.map { ci =>
         CompContainerInfo.Component(CompContainerInfo.Props(
           ci,
-          { () => p.selectContainer(Some(ci)) })))
+          { () => p.selectContainer(Some(ci)) }))
+      }
       <.table(
         <.tbody(rows)
       )

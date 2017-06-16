@@ -12,6 +12,9 @@ import japgolly.scalajs.react.BackendScope
 import blended.mgmt.ui.components.filter.ContainerInfoFilter
 import blended.mgmt.ui.components.filter.And
 
+/**
+ * React component to render some navigation like bar showing the currently selected filters plus option to remove/reset them.
+ */
 object CompViewFilter {
 
   private[this] val i18n = I18n()
