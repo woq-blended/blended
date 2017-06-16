@@ -4,7 +4,14 @@ import javax.jms.{ConnectionFactory, DeliveryMode, Message, Session}
 
 import blended.jms.utils.{JMSMessageFactory, JMSSupport}
 
-class JMSFilePollHandler(cf: ConnectionFactory, dest: String, props: Map[String, String]) extends FilePollHandler with JMSSupport with JMSMessageFactory[File] {
+class JMSFilePollHandler(
+  cf: ConnectionFactory,
+  dest: String,
+  deliveryMode: Int,
+  priority: Int,
+  ttl: Long,
+  props: Map[String, String]
+) extends FilePollHandler with JMSSupport with JMSMessageFactory[File] {
 
   override def createMessage(session: Session, content: File) : Message = {
 
@@ -36,9 +43,9 @@ class JMSFilePollHandler(cf: ConnectionFactory, dest: String, props: Map[String,
       destName = dest,
       content = f,
       msgFactory = this,
-      deliveryMode = DeliveryMode.PERSISTENT,
-      priority = 4,
-      ttl = 0
+      deliveryMode = deliveryMode,
+      priority = priority,
+      ttl = ttl
     ).foreach{t => throw t}
   }
 }

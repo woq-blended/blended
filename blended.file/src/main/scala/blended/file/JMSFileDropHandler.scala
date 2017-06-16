@@ -15,8 +15,23 @@ object JMSFileDropActor {
 
 class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends Actor with ActorLogging {
 
+  private[this] def dropCmd(msg: Message) : FileDropCommand = FileDropCommand(
+    content = Array.empty,
+    directory = Option(msg.getStringProperty(cfg.dirHeader)).getOrElse(cfg.defaultDir),
+    fileName = Option(msg.getStringProperty(cfg.fileHeader)) match {
+      case None => ""
+      case Some(s) => s
+    },
+    compressed = Option(msg.getBooleanProperty(cfg.compressHeader)).getOrElse(false),
+    append = Option(msg.getBooleanProperty(cfg.appendHeader)).getOrElse(false),
+    timestamp = msg.getJMSTimestamp(),
+    properties = msg.getPropertyNames().asScala.map { pn => (pn.toString(), msg.getObjectProperty(pn.toString())) }.toMap
+  )
+
   private[this] def handleError(msg : Message) : Unit = {
     errorHandler.handleError(msg, cfg)
+    val cmd = dropCmd(msg)
+    context.system.eventStream.publish(FileDropResult(cmd, false))
     context.stop(self)
   }
 
@@ -50,16 +65,7 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
               handleError(msg)
               None
           }).foreach{ content =>
-            val cmd = FileDropCommand(
-              content = content,
-              directory = Option(msg.getStringProperty(cfg.dirHeader)).getOrElse(cfg.defaultDir),
-              fileName = fileName,
-              compressed = Option(msg.getBooleanProperty(cfg.compressHeader)).getOrElse(false),
-              append = Option(msg.getBooleanProperty(cfg.appendHeader)).getOrElse(false),
-              timestamp = msg.getJMSTimestamp(),
-              properties = msg.getPropertyNames().asScala.map { pn => (pn.toString(), msg.getObjectProperty(pn.toString())) }.toMap
-            )
-
+            val cmd = dropCmd(msg).copy(content = content)
             cfg.system.actorOf(Props[FileDropActor]).tell(cmd, self)
             context.become(executing(msg, cmd))
           }
