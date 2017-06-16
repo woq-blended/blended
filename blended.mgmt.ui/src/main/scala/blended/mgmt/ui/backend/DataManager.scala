@@ -14,6 +14,9 @@ import blended.updater.config.RemoteContainerState
 import blended.updater.config.Profile
 import blended.updater.config.ProfileInfo
 import blended.updater.config.ProfileInfo
+import blended.updater.config.OverlaySet
+import blended.updater.config.OverlayRef
+import blended.updater.config.OverlayState
 
 object DataManager {
 
@@ -47,7 +50,7 @@ object DataManager {
     override var data: List[Profile] = List(
       Profile("profileA", "1.0", List()),
       Profile("profileB", "1.0", List()),
-      Profile("profileA", "2.0", List())
+      Profile("profileA", "2.0", List(OverlaySet(List(OverlayRef("ov", "1")), state = OverlayState.Pending)))
     )
     
     override def refresh(): Unit = {

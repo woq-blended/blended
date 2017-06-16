@@ -4,6 +4,7 @@ import blended.mgmt.ui.backend.DataManager
 import blended.mgmt.ui.components.filter.And
 import blended.updater.config.ContainerInfo
 
+import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.ReactComponentB
 import japgolly.scalajs.react.BackendScope
 import japgolly.scalajs.react.vdom.prefix_<^._
@@ -45,8 +46,8 @@ object ProfilesComp {
       scope.modState(s => s.copy(filter = And()).consistent).runNow()
     }
 
-    def selectContainer(profile: Option[Profile]) = {
-      scope.modState(s => s.copy(selected = profile).consistent).runNow()
+    def selectContainer(profile: Option[Profile]): Callback = {
+      scope.modState(s => s.copy(selected = profile).consistent)
     }
 
     def render(s: State) = {
@@ -54,7 +55,8 @@ object ProfilesComp {
 
       val renderedProfiles = s.filteredProfiles.map { p =>
         <.div(
-          <.div(
+          <.span(
+            ^.onClick --> selectContainer(Some(p)),
             p.name,
             " ",
             p.version,
@@ -66,6 +68,7 @@ object ProfilesComp {
       <.div(
         ^.`class` := "row",
         <.div(renderedProfiles: _*),
+        // TODO: add filter comp
         //        <.div(
         //          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
         //        <.div(

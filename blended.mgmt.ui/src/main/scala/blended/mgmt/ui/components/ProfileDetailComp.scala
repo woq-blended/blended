@@ -34,6 +34,15 @@ object ProfileDetailComp {
         case Props(None) => <.span(i18n.tr("No Profile selected"))
         case Props(Some(profile)) =>
 
+          val overlays = profile.overlays.map { os =>
+            <.div(
+              os.overlays.map(o => o.name + " " + o.version).mkString(", "),
+              " (",
+              os.state.state,
+              ")"
+            )
+          }
+
           <.div(
             <.div(
               i18n.tr("Profile:"),
@@ -47,7 +56,7 @@ object ProfileDetailComp {
             ),
             <.div(
               i18n.tr("Overlays:"),
-              "TODO" // <.div(overlays: _*)
+              overlays
             )
           )
 
