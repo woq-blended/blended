@@ -30,6 +30,7 @@ object TopLevelPages {
     ContainerPage,
     ServicesPage,
     ProfilesPage,
+    RuntimeConfigsPage,
     OverlaysPage,
     SettingsPage,
     HelpPage

@@ -4,4 +4,6 @@ object ConsoleSettings {
   val mgmtUrl = "http://mgmt:9191/mgmt"
   val containerDataUrl = mgmtUrl + "/container"
   val profilesUrl = mgmtUrl + "/profiles"
+  val runtimeConfigsUrl = mgmtUrl + "/runtimeConfig"
+  val overlayConfigUrl = mgmtUrl + "/overlayConfig"
 }

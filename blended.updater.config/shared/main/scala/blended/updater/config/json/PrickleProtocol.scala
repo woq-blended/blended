@@ -10,11 +10,14 @@ import blended.updater.config.AddRuntimeConfig
 import blended.updater.config.AddOverlayConfig
 import prickle._
 import microjson.JsValue
+import blended.updater.config.RuntimeConfig
+import blended.updater.config.OverlayConfig
 
 object PrickleProtocol {
   
   implicit val prickleConfig: PConfig[JsValue] = JsConfig(areSharedObjectsSupported = false)
   
+  // sealed trait needs special handling
   implicit val updateActionPickler: PicklerPair[UpdateAction] = CompositePickler[UpdateAction].
     concreteType[ActivateProfile].
     concreteType[StageProfile].
@@ -34,5 +37,11 @@ object PrickleProtocol {
     concreteType[OverlayState.Valid.type].
     concreteType[OverlayState.Invalid.type].
     concreteType[OverlayState.Pending.type]
-
+  
+  implicit val runtimeConfigPickler: Pickler[RuntimeConfig] = Pickler.materializePickler[RuntimeConfig]
+  implicit val runtimeConfigUnpickler: Unpickler[RuntimeConfig] = Unpickler.materializeUnpickler[RuntimeConfig]
+  
+  implicit val overlayConfigPickler: Pickler[OverlayConfig] = Pickler.materializePickler[OverlayConfig]
+  implicit val overlayConfigUnpickler: Unpickler[OverlayConfig] = Unpickler.materializeUnpickler[OverlayConfig]
+  
 }
