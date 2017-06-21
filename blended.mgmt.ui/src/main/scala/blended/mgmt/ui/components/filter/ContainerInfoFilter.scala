@@ -18,6 +18,11 @@ object ContainerInfoFilter {
   case class ContainsContainerProperty(property: String) extends Filter[ContainerInfo] {
     override def matches(containerInfo: ContainerInfo): Boolean = containerInfo.properties.exists(p => p._1 == property)
   }
+  
+  case class Property(name: String, value: String, exact: Boolean = false) extends Filter[ContainerInfo] {
+    override def matches(containerInfo: ContainerInfo): Boolean = 
+      containerInfo.properties.exists(p => p._1 == name && (if(exact) p._2 == value else value.contains( p._2)))
+  }
 
   case class FreeText(text: String) extends Filter[ContainerInfo] {
     override def matches(containerInfo: ContainerInfo): Boolean = {

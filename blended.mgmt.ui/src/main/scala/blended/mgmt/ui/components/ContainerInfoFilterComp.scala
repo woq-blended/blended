@@ -22,11 +22,12 @@ object ContainerInfoFilterComp {
     containerInfos: List[ContainerInfo],
     addFilter: Filter[ContainerInfo] => Unit)
 
-  case class State(searchText: String = "", containerId: String = "") {
+  case class State(searchText: String = "", containerId: String = "", propertyName: String = "", propertyValue: String = "") {
     def toFilter(): Filter[ContainerInfo] = {
       var filter = Seq[Filter[ContainerInfo]]()
       if (!searchText.isEmpty) filter ++= Seq(ContainerInfoFilter.FreeText(searchText))
       if (!containerId.isEmpty) filter ++= Seq(ContainerInfoFilter.ContainerId(containerId))
+      if (!propertyName.isEmpty && !propertyValue.isEmpty) filter ++= Seq(ContainerInfoFilter.Property(propertyName, propertyValue))
       val f = And(filter: _*)
       log.trace("state: " + this + ", toFilter: " + f)
       f
@@ -56,6 +57,19 @@ object ContainerInfoFilterComp {
       e.extract(_.target.value) { v =>
         log.trace("container ID: " + v)
         scope.modState(_.copy(containerId = v))
+      }
+    }
+    def onPropertyNameChange(e: ReactEventI): Callback = {
+      e.extract(_.target.value) { v =>
+        log.trace("property name: " + v)
+        scope.modState(_.copy(propertyName = v))
+      }
+    }
+
+    def onPropertyValueChange(e: ReactEventI): Callback = {
+      e.extract(_.target.value) { v =>
+        log.trace("property value: " + v)
+        scope.modState(_.copy(propertyValue = v))
       }
     }
 
@@ -90,13 +104,20 @@ object ContainerInfoFilterComp {
         <.div(
           <.span(i18n.tr("Property")),
           <.select(
-            propKeys.map(p => <.option(^.value := p, p)): _*
+            (Seq(^.onChange ==> onPropertyNameChange) ++
+              propKeys.map(p => <.option(^.value := p,
+                // TODO: help needed here, don't know how to apply the "selected" option
+                //                  (state.propertyName == p) ?= ^.selected := "selected", 
+                p))
+            ): _*
           ),
           <.input(
             ^.`type` := "text",
-            ^.list := "propvalues"
-          ),
-          <.datalist(^.id := "propvalues")
+            // ^.list := "propvalues",
+            ^.value := state.propertyValue,
+            ^.onChange ==> onPropertyValueChange
+          ) // ,
+        // <.datalist(^.id := "propvalues")
         ),
         <.input(
           ^.`type` := "submit",
