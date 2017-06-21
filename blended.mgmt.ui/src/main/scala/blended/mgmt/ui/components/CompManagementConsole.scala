@@ -54,7 +54,7 @@ object CompManagementConsole {
         <.div(
           ContainerInfoFilterComp.Component(ContainerInfoFilterComp.Props(s.filter, s.containerList, addFilter))),
         <.div(
-          ContainerInfoFilerComp.Component(ContainerInfoFilerComp.Props(s.filter, removeFilter, removeAllFilter))),
+          ContainerInfoFilterBreadcrumpComp.Component(ContainerInfoFilterBreadcrumpComp.Props(s.filter, removeFilter, removeAllFilter))),
         <.div(
           ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.filteredContainerList, selectContainer))),
         <.div(

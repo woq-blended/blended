@@ -15,10 +15,10 @@ import blended.mgmt.ui.components.filter.And
 /**
  * React component to render a breadcrumb bar showing the currently selected filters plus option to remove/reset them.
  */
-object ContainerInfoFilerComp {
+object ContainerInfoFilterBreadcrumpComp {
 
   private[this] val i18n = I18n()
-  private[this] val log: Logger = Logger[ContainerInfoFilerComp.type]
+  private[this] val log: Logger = Logger[ContainerInfoFilterBreadcrumpComp.type]
 
   case class Props(
     filter: And[ContainerInfo],
