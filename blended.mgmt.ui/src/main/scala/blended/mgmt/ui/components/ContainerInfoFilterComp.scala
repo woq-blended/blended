@@ -12,10 +12,10 @@ import japgolly.scalajs.react.BackendScope
 import blended.mgmt.ui.components.filter.ContainerInfoFilter
 import blended.mgmt.ui.components.filter.And
 
-object CompEditFilter {
+object ContainerInfoFilterComp {
 
   private[this] val i18n = I18n()
-  private[this] val log: Logger = Logger[CompEditFilter.type]
+  private[this] val log: Logger = Logger[ContainerInfoFilterComp.type]
 
   case class Props(
     filter: Filter[ContainerInfo],

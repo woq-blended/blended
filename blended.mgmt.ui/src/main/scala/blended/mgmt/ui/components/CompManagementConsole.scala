@@ -52,13 +52,13 @@ object CompManagementConsole {
       <.div(
         ^.`class` := "row",
         <.div(
-          CompEditFilter.Component(CompEditFilter.Props(s.filter, s.containerList, addFilter))),
+          ContainerInfoFilterComp.Component(ContainerInfoFilterComp.Props(s.filter, s.containerList, addFilter))),
         <.div(
-          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
+          ContainerInfoFilerComp.Component(ContainerInfoFilerComp.Props(s.filter, removeFilter, removeAllFilter))),
         <.div(
-          CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
+          ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.filteredContainerList, selectContainer))),
         <.div(
-          CompContainerDetail.Component(CompContainerDetail.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerDataUrl)))))
+          ContainerDetailComp.Component(ContainerDetailComp.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerDataUrl)))))
       )
     }
   }

@@ -10,9 +10,9 @@ import japgolly.scalajs.react.BackendScope
 /**
  * React component to render a [[ContainerInfo]].
  */
-object CompContainerInfo {
+object ContainerInfoComp {
 
-  private[this] val log = Logger[CompContainerInfo.type]
+  private[this] val log = Logger[ContainerInfoComp.type]
   private[this] val i18n = I18n()
 
   case class Props(containerInfo: ContainerInfo, select: () => Unit)

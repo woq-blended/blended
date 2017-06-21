@@ -13,12 +13,12 @@ import blended.mgmt.ui.components.filter.ContainerInfoFilter
 import blended.mgmt.ui.components.filter.And
 
 /**
- * React component to render some navigation like bar showing the currently selected filters plus option to remove/reset them.
+ * React component to render a breadcrumb bar showing the currently selected filters plus option to remove/reset them.
  */
-object CompViewFilter {
+object ContainerInfoFilerComp {
 
   private[this] val i18n = I18n()
-  private[this] val log: Logger = Logger[CompViewFilter.type]
+  private[this] val log: Logger = Logger[ContainerInfoFilerComp.type]
 
   case class Props(
     filter: And[ContainerInfo],

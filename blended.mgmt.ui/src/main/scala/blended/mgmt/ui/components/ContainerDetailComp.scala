@@ -20,9 +20,9 @@ import blended.updater.config.Profile.SingleProfile
 /**
  * React component to render details of a [[ContainerInfo]].
  */
-object CompContainerDetail {
+object ContainerDetailComp {
 
-  private[this] val log = Logger[CompContainerDetail.type]
+  private[this] val log = Logger[ContainerDetailComp.type]
   private[this] val i18n = I18n()
 
   case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdater] = None)
