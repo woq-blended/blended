@@ -42,5 +42,13 @@ object MgmtMockServer {
       get(urlEqualTo("/mgmt/profiles")).willReturn(response(profilesList(validProfiles)))
     )
 
+    stubFor(
+      get(urlEqualTo("/mgmt/runtimeConfig")).willReturn(response(runtimeConfigs))
+    )
+    
+    stubFor(
+      get(urlEqualTo("/mgmt/overlayConfig")).willReturn(response(overlayConfigs))
+    )
+
   }
 }

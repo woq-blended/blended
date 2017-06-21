@@ -119,6 +119,19 @@ object MockObjects {
   // 3. A medium sized environment
   val mediumEnv = createContainer(5)
 
+  val runtimeConfigs = {
+    val rcs = List(
+      RuntimeConfig(name = "blended-example", version = "1.0.0", startLevel = 10, defaultStartLevel = 10))
+    Pickle.intoString(rcs)
+  }
+
+  val overlayConfigs = {
+    val ocs = List(
+      OverlayConfig(name = "test-overlay", version = "1.0.0", properties = Map("ENV" -> "TEST"))
+    )
+    Pickle.intoString(ocs)
+  }
+
 }
 
 
