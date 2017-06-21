@@ -9,27 +9,30 @@ import blended.updater.config.json.PrickleProtocol._
 import prickle._
 
 import scala.util.Random
+import org.slf4j.LoggerFactory
 
 object MockObjects {
 
-  private[this] lazy val countries : List[String] = List("de", "cz", "bg", "ro")
-  private[this] lazy val osTypes : List[String] = List("Lnx", "Windows")
-  private[this] lazy val connectIds : List[String] = List("A", "B")
+  private[this] val log = LoggerFactory.getLogger("blended.mgmt.mock.MockObjects")
+
+  private[this] lazy val countries: List[String] = List("de", "cz", "bg", "ro")
+  private[this] lazy val osTypes: List[String] = List("Lnx", "Windows")
+  private[this] lazy val connectIds: List[String] = List("A", "B")
 
   private[this] lazy val serviceCount = new AtomicInteger(0)
   private[this] lazy val containerCount = new AtomicInteger(0)
 
   private[this] lazy val rnd = new Random()
 
-  private[this] def pickOne[T](l : List[T]) : T = l(rnd.nextInt(l.size))
+  private[this] def pickOne[T](l: List[T]): T = l(rnd.nextInt(l.size))
 
-  private[this] def containerProps(ctNum : Integer) = Map(
+  private[this] def containerProps(ctNum: Integer) = Map(
     "sib.country" -> pickOne(countries),
     "sib.location" -> new DecimalFormat("00000").format(ctNum),
     "sib.connectId" -> pickOne(connectIds)
   )
 
-  private[this] def sizedProperties(namePrefix : String = "prop", numProps : Int) =
+  private[this] def sizedProperties(namePrefix: String = "prop", numProps: Int) =
     1.to(numProps).map(i => (s"$namePrefix-$i", s"value$i")).toMap
 
   private[this] def serviceInfo(numProps: Int = 10) = ServiceInfo(
@@ -40,10 +43,10 @@ object MockObjects {
     props = sizedProperties(namePrefix = "property", numProps = rnd.nextInt(10) + 1)
   )
 
-  private[this] def serviceSeq(numServices : Int) : List[ServiceInfo] =
+  private[this] def serviceSeq(numServices: Int): List[ServiceInfo] =
     1.to(numServices).map(i => serviceInfo()).toList
 
-  private[this] lazy val validProfiles = {
+  lazy val validProfiles = {
 
     val noOverlays = OverlaySet(
       overlays = List.empty[OverlayRef],
@@ -77,9 +80,9 @@ object MockObjects {
 
   }
 
-  def createContainer(numContainers: Integer) = 1.to(numContainers).map{ i =>
+  def createContainer(numContainers: Integer) = 1.to(numContainers).map { i =>
 
-    val serviceSeqs = 1.to(3).map{ i =>
+    val serviceSeqs = 1.to(3).map { i =>
       serviceSeq(rnd.nextInt(5) + 1)
     }.toList
 
@@ -92,7 +95,18 @@ object MockObjects {
   }.toList
 
   // use this method and one of the defined environments in the mock server
-  def containerList(l: List[ContainerInfo]) = Pickle.intoString(l)
+  def containerList(l: List[ContainerInfo]): String = {
+    log.debug("about to pickle: {}", l)
+    Pickle.intoString(l)
+  }
+
+  def remoteContainerStateList(l: List[ContainerInfo]): String = {
+    log.debug("about to pickle: {}", l)
+    val result = l.map(ci => RemoteContainerState(containerInfo = ci, outstandingUpdateActions = List()))
+    Pickle.intoString(result)
+  }
+
+  def profilesList(l: List[Profile]) = Pickle.intoString(l)
 
   // Define some test environments here
 
