@@ -1,6 +1,6 @@
 package blended.file
 import java.io.{File, FileInputStream}
-import javax.jms.{ConnectionFactory, DeliveryMode, Message, Session}
+import javax.jms.{ConnectionFactory, Message, Session}
 
 import blended.jms.utils.{JMSMessageFactory, JMSSupport}
 
@@ -11,12 +11,12 @@ class JMSFilePollHandler(
   priority: Int,
   ttl: Long,
   props: Map[String, String]
-) extends FilePollHandler with JMSSupport with JMSMessageFactory[File] {
+) extends FilePollHandler with JMSSupport with JMSMessageFactory[(FileProcessCmd, File)] {
 
-  override def createMessage(session: Session, content: File) : Message = {
+  override def createMessage(session: Session, content: (FileProcessCmd, File)) : Message = {
 
     val buffer : Array[Byte] = new Array[Byte](4096)
-    val is = new FileInputStream(content)
+    val is = new FileInputStream(content._2)
 
     val result = session.createBytesMessage()
 
@@ -30,18 +30,18 @@ class JMSFilePollHandler(
       result.setStringProperty(k, v)
     }
 
-    result.setStringProperty("BlendedFileName", content.getName())
-    result.setStringProperty("BledendFilePath", content.getAbsolutePath())
+    result.setStringProperty("BlendedFileName", content._1.f.getName())
+    result.setStringProperty("BledendFilePath", content._1.f.getAbsolutePath())
 
     result
   }
 
-  override def processFile(f: File): Unit = {
+  override def processFile(cmd: FileProcessCmd, f: File): Unit = {
 
     sendMessage(
       cf = cf,
       destName = dest,
-      content = f,
+      content = (cmd, f),
       msgFactory = this,
       deliveryMode = deliveryMode,
       priority = priority,

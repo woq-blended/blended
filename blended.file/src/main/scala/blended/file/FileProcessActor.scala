@@ -27,7 +27,7 @@ class FileProcessActor extends Actor with ActorLogging {
       case false => log.warning(s"File [${cmd.f.getAbsolutePath()}] can't be accessed yet - processing delayed.")
       case true =>
         try {
-          cmd.handler.processFile(tempFile)
+          cmd.handler.processFile(cmd, tempFile)
           requestor ! FileProcessed(cmd, true)
 
           val archiveCmd = cmd.cfg.backup match {

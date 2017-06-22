@@ -70,11 +70,11 @@ class FilePollSpec extends FreeSpec with Matchers {
         lock = Some("lock")
       )
 
-      val srcFile = new File(srcDir, "test.txt")
-      genFile(srcFile)
-
       val lockFile = new File(srcDir, "lock")
       genFile(lockFile)
+
+      val srcFile = new File(srcDir, "test.txt")
+      genFile(srcFile)
 
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
