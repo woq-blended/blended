@@ -16,17 +16,15 @@ import blended.mgmt.ui.util.I18n
 import blended.updater.config.RuntimeConfig
 import blended.updater.config.OverlayConfig
 
-object OverlaysComp {
+object OverlayConfigComp {
 
-  private[this] val log: Logger = Logger[OverlaysComp.type]
+  private[this] val log: Logger = Logger[OverlayConfigComp.type]
   private[this] val i18n = I18n()
 
   case class State(profiles: List[OverlayConfig], filter: And[OverlayConfig] = And(), selected: Option[OverlayConfig] = None) {
-    def filteredProfiles: List[OverlayConfig] = profiles.filter(c => filter.matches(c))
+    def filteredOverlayConfigs: List[OverlayConfig] = profiles.filter(c => filter.matches(c))
     def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
   }
-
-  // TODO: refactor shared code with CompManagementConsole
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[OverlayConfig]] {
 
@@ -52,34 +50,29 @@ object OverlaysComp {
     def render(s: State) = {
       log.debug(s"Rerendering with state $s")
 
-      val renderedProfiles = s.filteredProfiles.map { p =>
+      
+      val renderedOverlays = s.filteredOverlayConfigs.map { p =>
         <.div(
           <.span(
             ^.onClick --> selectContainer(Some(p)),
             p.name,
-            " ",
-            p.version,
-            " "
+            "-",
+            p.version
           )
         )
       }
 
       <.div(
         ^.`class` := "row",
-        <.div(renderedProfiles: _*)
-        // TODO: add filter comp
-        //        <.div(
-        //          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
-        //        <.div(
-        //          CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
-//        <.div(
-//          RuntimeConfigDetailComp.Component(RuntimeConfigDetailComp.Props(s.selected)))
+        <.div(renderedOverlays: _*),
+        <.div(
+          OverlayConfigDetailComp.Component(OverlayConfigDetailComp.Props(s.selected)))
       )
     }
   }
 
   val Component =
-    ReactComponentB[Unit]("Overlays").
+    ReactComponentB[Unit]("OverlayConfig").
       initialState(State(profiles = List()))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.overlayConfigsData.addObserver(c.backend))

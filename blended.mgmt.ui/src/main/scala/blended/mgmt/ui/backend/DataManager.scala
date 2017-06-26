@@ -86,7 +86,7 @@ object DataManager {
 
     override def refresh(): Unit = {
       update(data)
-      Ajax.get(ConsoleSettings.runtimeConfigsUrl).onComplete {
+      Ajax.get(ConsoleSettings.overlayConfigUrl).onComplete {
         case Success(xhr) =>
           log.trace("response: " + xhr.responseText)
           update(Unpickle[List[OverlayConfig]].fromString(xhr.responseText).get)

@@ -21,7 +21,7 @@ object RuntimeConfigsComp {
   private[this] val i18n = I18n()
 
   case class State(profiles: List[RuntimeConfig], filter: And[RuntimeConfig] = And(), selected: Option[RuntimeConfig] = None) {
-    def filteredProfiles: List[RuntimeConfig] = profiles.filter(c => filter.matches(c))
+    def filteredRuntimeConfigs: List[RuntimeConfig] = profiles.filter(c => filter.matches(c))
     def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
@@ -51,28 +51,22 @@ object RuntimeConfigsComp {
     def render(s: State) = {
       log.debug(s"Rerendering with state $s")
 
-      val renderedProfiles = s.filteredProfiles.map { p =>
+      val renderedConfigs = s.filteredRuntimeConfigs.map { p =>
         <.div(
           <.span(
             ^.onClick --> selectContainer(Some(p)),
             p.name,
-            " ",
-            p.version,
-            " "
+            "-",
+            p.version
           )
         )
       }
 
       <.div(
         ^.`class` := "row",
-        <.div(renderedProfiles: _*)
-        // TODO: add filter comp
-        //        <.div(
-        //          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
-        //        <.div(
-        //          CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
-//        <.div(
-//          RuntimeConfigDetailComp.Component(RuntimeConfigDetailComp.Props(s.selected)))
+        <.div(renderedConfigs: _*),
+        <.div(
+          RuntimeConfigDetailComp.Component(RuntimeConfigDetailComp.Props(s.selected)))
       )
     }
   }

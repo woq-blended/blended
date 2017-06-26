@@ -3,7 +3,7 @@ package blended.mgmt.ui.pages
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router.Path
 import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.components.OverlaysComp
+import blended.mgmt.ui.components.OverlayConfigComp
 
 object OverlaysPage extends TopLevelPage {
 
@@ -12,6 +12,6 @@ object OverlaysPage extends TopLevelPage {
   override val routerPath: Path = Path("#overlays")
 
   override val content: ReactElement = <.p(
-    OverlaysComp.Component()
+    OverlayConfigComp.Component()
   )
 }

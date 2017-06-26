@@ -68,11 +68,6 @@ object ProfilesComp {
       <.div(
         ^.`class` := "row",
         <.div(renderedProfiles: _*),
-        // TODO: add filter comp
-        //        <.div(
-        //          CompViewFilter.Component(CompViewFilter.Props(s.filter, removeFilter, removeAllFilter))),
-        //        <.div(
-        //          CompContainerInfoList.Component(CompContainerInfoList.Props(s.filteredContainerList, selectContainer))),
         <.div(
           ProfileDetailComp.Component(ProfileDetailComp.Props(s.selected)))
       )

@@ -125,7 +125,7 @@ object ContainerDetailComp {
           }
 
           <.div(
-            <.div(
+            <.h2(
               i18n.tr("Container ID:"),
               " ",
               containerInfo.containerId

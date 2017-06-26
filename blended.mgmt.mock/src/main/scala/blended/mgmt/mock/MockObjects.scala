@@ -46,39 +46,35 @@ object MockObjects {
   private[this] def serviceSeq(numServices: Int): List[ServiceInfo] =
     1.to(numServices).map(i => serviceInfo()).toList
 
-  lazy val validProfiles = {
+  val noOverlays = OverlaySet(
+    overlays = List.empty[OverlayRef],
+    state = OverlayState.Valid,
+    reason = None
+  )
 
-    val noOverlays = OverlaySet(
-      overlays = List.empty[OverlayRef],
-      state = OverlayState.Valid,
-      reason = None
-    )
+  val someOverlays = OverlaySet(
+    overlays = List(
+      OverlayRef(name = "java-medium", version = "1.0"),
+      OverlayRef(name = "shop-A", version = "1.0")
+    ),
+    state = OverlayState.Active,
+    reason = None
+  )
 
-    val someOverlays = OverlaySet(
-      overlays = List(
-        OverlayRef(name = "java-medium", version = "1.0"),
-        OverlayRef(name = "shop-A", version = "1.0")
-      ),
-      state = OverlayState.Active,
-      reason = None
-    )
+  val invalid = OverlaySet(
+    overlays = List(
+      OverlayRef(name = "java-small", version = "1.0"),
+      OverlayRef(name = "shop-Q", version = "1.0")
+    ),
+    state = OverlayState.Invalid,
+    reason = Some("Incorrect artifact checksums")
+  )
 
-    val invalid = OverlaySet(
-      overlays = List(
-        OverlayRef(name = "java-small", version = "1.0"),
-        OverlayRef(name = "shop-Q", version = "1.0")
-      ),
-      state = OverlayState.Invalid,
-      reason = Some("Incorrect artifact checksums")
-    )
-
-    List(
+  lazy val validProfiles =     List(
       Profile(name = "blended-demo", "1.0", List(noOverlays)),
       Profile(name = "blended-simple", "1.0", List(noOverlays, someOverlays, invalid)),
       Profile(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
     )
-
-  }
 
   def createContainer(numContainers: Integer) = 1.to(numContainers).map { i =>
 
@@ -121,13 +117,23 @@ object MockObjects {
 
   val runtimeConfigs = {
     val rcs = List(
-      RuntimeConfig(name = "blended-example", version = "1.0.0", startLevel = 10, defaultStartLevel = 10))
+      RuntimeConfig(
+        name = "blended-example",
+        version = "1.0.0",
+        startLevel = 10,
+        defaultStartLevel = 10,
+        properties = sizedProperties("prop", 3),
+        frameworkProperties = sizedProperties("frameworkProp", 2),
+        systemProperties = sizedProperties("sysProp", 1)
+      )
+    )
     Pickle.intoString(rcs)
   }
 
   val overlayConfigs = {
     val ocs = List(
-      OverlayConfig(name = "test-overlay", version = "1.0.0", properties = Map("ENV" -> "TEST"))
+      OverlayConfig(name = "test-overlay", version = "1.0.0", properties = sizedProperties("prop", 3),
+        generatedConfigs = List(GeneratedConfig(configFile = "conf/test.conf", config = "org.example { a = 1, b = 2 }")))
     )
     Pickle.intoString(ocs)
   }
