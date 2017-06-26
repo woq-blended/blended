@@ -99,6 +99,7 @@ trait BlendedIntegrationTestSupport {
     ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
       cc.cut match {
         case None => Future(ExecuteContainerResult(Left(new Exception(s"Container with name [$ctName] not found."))))
+        case Some(cut) => ctProxy.ask(ExecuteContainerCommand(cut, user, cmd:_*)).mapTo[ExecuteContainerResult]
       }
     }
   }

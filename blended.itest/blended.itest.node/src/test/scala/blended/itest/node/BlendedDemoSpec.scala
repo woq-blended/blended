@@ -15,6 +15,7 @@ import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 @DoNotDiscover
@@ -85,6 +86,22 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
               }
             }
         }
+      }
+    }
+
+    "Allow to execute an arbitrary command on the container" in {
+
+      try {
+        val er = Await.result(execContainerCommand(ctProxy, "blended_node_0", "blended", "ls", "-al", "/opt/node"), timeOut.duration)
+
+        er.result match {
+          case Left(t) => fail(t.getMessage())
+          case Right(s) =>
+            log.info(s"Result of execution is [${s._2}]")
+            succeed
+        }
+      } catch {
+        case NonFatal(e) => fail(e.getMessage())
       }
     }
   }
