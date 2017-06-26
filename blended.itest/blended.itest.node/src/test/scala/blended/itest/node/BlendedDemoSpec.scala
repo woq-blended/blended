@@ -15,6 +15,7 @@ import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.util.{Failure, Success}
 
 @DoNotDiscover
 class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends WordSpec
@@ -61,17 +62,29 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
       import blended.testsupport.BlendedTestSupport.projectTestOutput
 
       val file = new File(s"${projectTestOutput}/data")
-      val rc = Await.result(writeContainerDirectory(ctProxy, "blended_node_0", "/opt/node", file), timeOut.duration)
 
-      rc should be (Right(true))
-
-      val dir = Await.result(readContainerDirectory(ctProxy, "blended_node_0", "/opt/node/data"), timeOut.duration)
-
-      val fContent = FileHelper.readFile("data/testFile.txt")
-
-      dir.content.get("data/testFile.txt") match {
-        case None => fail("expected file [/opt/node/data/testFile.txt] not found in container")
-        case Some(c) => c should equal (fContent)
+      writeContainerDirectory(ctProxy, "blended_node_0", "/opt/node", file).onComplete {
+        case Failure(t) => fail(t.getMessage())
+        case Success(r) => r.result match {
+          case Left(t) => fail(t.getMessage())
+          case Right(f) =>
+            if (!f._2) fail("Error writing container directory")
+            else {
+              readContainerDirectory(ctProxy, "blended_node_0", "/opt/node/data") onComplete {
+                case Failure(t) => fail(t.getMessage())
+                case Success(cdr) => cdr.result match {
+                  case Left(t) => fail(t.getMessage())
+                  case Right(cd) =>
+                    cd.content.get("data/testFile.txt") match {
+                      case None => fail("expected file [/opt/node/data/testFile.txt] not found in container")
+                      case Some(c) =>
+                        val fContent = FileHelper.readFile("data/testFile.txt")
+                        c should equal (fContent)
+                    }
+                }
+              }
+            }
+        }
       }
     }
   }

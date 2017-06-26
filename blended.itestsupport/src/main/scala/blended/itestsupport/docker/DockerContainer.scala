@@ -57,20 +57,35 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
     this
   }
 
+  def executeCommand(user: String, cmd: String*) : Either[Throwable, String] = {
+
+    logger.info(s"Executing cmd [${cmd.foldLeft(""){case (v,e) => v + " " + e }}] for user [$user]")
+
+    try {
+      val command = client.execCreateCmd(id).withUser(user).withCmd(cmd:_*)
+      val response = command.exec()
+
+      logger.info(response.toString())
+      Right(response.toString())
+    } catch {
+      case NonFatal(e) => Left(e)
+    }
+  }
+
   def getContainerDirectory(dir: String) : InputStream = {
     logger.info(s"Getting directory [$dir] from container [${cut.ctName}]")
     client.copyArchiveFromContainerCmd(containerName, dir).exec()
   }
 
-  def writeContainerDirectory(dir: String, content: Array[Byte]) : Either[Throwable, Boolean]= {
+  def writeContainerDirectory(dir: String, content: Array[Byte]) : Boolean = {
     try {
       logger.info(s"Writing archive of size [${content.length}] to directory [$dir] in container [${cut.ctName}]")
       val cmd = client.copyArchiveToContainerCmd(containerName)
       cmd.withRemotePath(dir).withTarInputStream(new ByteArrayInputStream(content))
       cmd.exec()
-      Right(true)
+      true
     } catch {
-      case NonFatal(t) => Left(t)
+      case NonFatal(t) => false
     }
   }
 

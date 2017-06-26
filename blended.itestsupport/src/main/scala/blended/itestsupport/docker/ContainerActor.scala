@@ -9,6 +9,7 @@ import blended.itestsupport.docker.protocol._
 import com.github.dockerjava.api.DockerClient
 
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object ContainerActor {
   def apply(container: ContainerUnderTest)(implicit client: DockerClient) = new ContainerActor(container)
@@ -50,15 +51,34 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
   def started(cut: ContainerUnderTest) : Receive = LoggingReceive {
     case wcd : WriteContainerDirectory =>
       val requestor = sender()
-      requestor ! dc.writeContainerDirectory(wcd.dir, wcd.content)
+
+      try {
+        requestor ! WriteContainerDirectoryResult(Right((wcd.container, dc.writeContainerDirectory(wcd.dir, wcd.content))))
+      } catch {
+        case NonFatal(e) => requestor ! WriteContainerDirectoryResult(Left(e))
+      }
 
     case gcd : GetContainerDirectory =>
       val requestor = sender()
-      val result = TarFileSupport.untar(dc.getContainerDirectory(gcd.dir))
-      log.info(s"Extracted [${result.size}] entries for directory [${gcd.dir}] from container [${container.ctName}]")
-      log.info(s"Extracted entries are [${result.keys.mkString(", ")}]")
-      log.debug(s"Sending container director response to [${requestor.path}]")
-      requestor ! ContainerDirectory(gcd.container, gcd.dir, result)
+
+      try {
+        val result = TarFileSupport.untar(dc.getContainerDirectory(gcd.dir))
+        log.info(s"Extracted [${result.size}] entries for directory [${gcd.dir}] from container [${container.ctName}]")
+        log.info(s"Extracted entries are [${result.keys.mkString(", ")}]")
+        log.debug(s"Sending container director response to [${requestor.path}]")
+        requestor ! GetContainerDirectoryResult(Right(ContainerDirectory(gcd.container, gcd.dir, result)))
+      }
+
+    case exec : ExecuteContainerCommand =>
+      val requestor = sender()
+
+      try {
+        val result = dc.executeCommand(exec.user, exec.cmd:_*)
+
+        requestor ! ExecuteContainerResult(Right( (cut, result.toString) ))
+      } catch {
+        case NonFatal(e) => requestor ! ExecuteContainerResult(Left(e))
+      }
 
     case StopContainer => {
       new DockerContainer(cut).stopContainer

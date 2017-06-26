@@ -24,8 +24,14 @@ package protocol {
   case class ContainerStopped(name: DockerResult[String])
 
   case class WriteContainerDirectory(container: ContainerUnderTest, dir: String, content: Array[Byte])
+  case class WriteContainerDirectoryResult(result : Either[Throwable, (ContainerUnderTest, Boolean)])
+
+  case class ExecuteContainerCommand(container: ContainerUnderTest, user: String, cmd: String*)
+  case class ExecuteContainerResult(result : Either[Throwable, (ContainerUnderTest, String)])
 
   case class GetContainerDirectory(container: ContainerUnderTest, dir: String)
+
   case class ContainerDirectory(container: ContainerUnderTest, dir: String, content: Map[String, Array[Byte]])
+  case class GetContainerDirectoryResult(result: Either[Throwable, ContainerDirectory])
 
 }

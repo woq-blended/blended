@@ -12,12 +12,15 @@ import blended.itestsupport.condition.{Condition, ConditionActor}
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.protocol._
 import org.apache.camel.CamelContext
+import org.slf4j.LoggerFactory
 
 import scala.concurrent.{Await, Future}
 
 trait BlendedIntegrationTestSupport {
 
-  val testOutput = System.getProperty("projectTestOutput")
+  private[this] val logger = LoggerFactory.getLogger(classOf[BlendedIntegrationTestSupport])
+
+  val testOutput = System.getProperty("projectTestOutput", "")
 
   def testContext(ctProxy: ActorRef)(implicit timeout: Timeout, testKit: TestKit) : CamelContext = {
     val probe = new TestProbe(testKit.system)
@@ -39,29 +42,38 @@ trait BlendedIntegrationTestSupport {
     probe.expectMsg(timeout.duration, ContainerManagerStopped)
   }
 
-  def writeContainerDirectory(ctProxy : ActorRef, ctName: String, target: String, file: File)(implicit timeout: Timeout, testKit: TestKit) : Future[Either[Throwable, Boolean]] = {
+  def writeContainerDirectory(
+    ctProxy : ActorRef,
+    ctName: String,
+    target: String,
+    file: File,
+    user : Int = 0,
+    group : Int = 0
+  )(implicit timeout: Timeout, testKit: TestKit) : Future[WriteContainerDirectoryResult] = {
 
+    logger.info(s"Writing directory [${file.getAbsolutePath()}] to [$ctName:$target]")
     implicit val eCtxt = testKit.system.dispatcher
 
     val bos = new ByteArrayOutputStream()
-    TarFileSupport.tar(file, bos)
+    TarFileSupport.tar(file, bos, user, group)
 
     ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
       cc.cut match {
-        case None => throw new Exception(s"Container with name [$ctName] not found.")
-        case Some(cut) => ctProxy.ask(WriteContainerDirectory(cut, target, bos.toByteArray())).mapTo[Either[Throwable, Boolean]]
+        case None => Future(WriteContainerDirectoryResult(Left(new Exception(s"Container with name [$ctName] not found."))))
+        case Some(cut) => ctProxy.ask(WriteContainerDirectory(cut, target, bos.toByteArray())).mapTo[WriteContainerDirectoryResult]
       }
     }
   }
 
-  def readContainerDirectory(ctProxy: ActorRef, ctName: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : Future[ContainerDirectory] = {
+  def readContainerDirectory(ctProxy: ActorRef, ctName: String, dirName: String)(implicit timeout: Timeout, testKit: TestKit) : Future[GetContainerDirectoryResult] = {
 
+    logger.info(s"Reading container directory [$ctName:$dirName]")
     implicit val eCtxt = testKit.system.dispatcher
 
     ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
       cc.cut match {
         case None => throw new Exception(s"Container with name [$ctName] not found.")
-        case Some(cut) => ctProxy.ask(GetContainerDirectory(cut, dirName)).mapTo[ContainerDirectory]
+        case Some(cut) => ctProxy.ask(GetContainerDirectory(cut, dirName)).mapTo[GetContainerDirectoryResult]
       }
     }
   }
@@ -76,6 +88,17 @@ trait BlendedIntegrationTestSupport {
         fos.write(content)
         fos.flush()
         fos.close()
+      }
+    }
+  }
+
+  def execContainerCommand(ctProxy: ActorRef, ctName: String, user: String, cmd: String*)(implicit timeout: Timeout, testKit: TestKit) : Future[ExecuteContainerResult] = {
+
+    implicit val eCtxt = testKit.system.dispatcher
+
+    ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
+      cc.cut match {
+        case None => Future(ExecuteContainerResult(Left(new Exception(s"Container with name [$ctName] not found."))))
       }
     }
   }
