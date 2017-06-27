@@ -26,6 +26,20 @@ val jettyMavenPlugin = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v201
 val mavenInstallPlugin = "org.apache.maven.plugins" % "maven-install-plugin" % "2.5.2"
 val mavenWarPlugin = "org.apache.maven.plugins" % "maven-war-plugin" % "3.0.0"
 
+val skipInstallPlugin = Plugin(
+  "org.apache.maven.plugins" % "maven-install-plugin" % "2.4",
+   configuration = Config(
+     skip = "true"
+   )
+)
+
+val skipDeployPlugin = Plugin(
+  "org.apache.maven.plugins" % "maven-deploy-plugin" % "2.7",
+  configuration = Config(
+    skip = "true"
+  )
+)
+
 val mavenBundlePlugin = Plugin(
   gav = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
   extensions = true,

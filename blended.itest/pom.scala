@@ -11,18 +11,8 @@ BlendedModel(
   packaging = "pom",
   description = "The integration tests for the demo blended containers.",
   plugins = Seq(
-    Plugin(
-      "org.apache.maven.plugins" % "maven-install-plugin" % "2.4",
-      configuration = Config(
-        skip = "true"
-      )
-    ),
-    Plugin(
-      "org.apache.maven.plugins" % "maven-deploy-plugin" % "2.7",
-      configuration = Config(
-        skip = "true"
-      )
-    )
+    skipInstallPlugin,
+    skipDeployPlugin
   ),
   profiles = Seq(
     Profile(
