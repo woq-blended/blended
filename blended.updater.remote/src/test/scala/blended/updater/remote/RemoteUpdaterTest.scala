@@ -64,7 +64,7 @@ class RemoteUpdaterTest extends FreeSpec {
     val profiles = List(
       Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Valid)))
     )
-    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles))
+    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
     assert(ru.getContainerActions("1") === Seq())
   }
 
@@ -101,7 +101,7 @@ class RemoteUpdaterTest extends FreeSpec {
     val profiles = List(
       Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Active)))
     )
-    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles))
+    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
     assert(ru.getContainerActions("1") === Seq())
   }
 

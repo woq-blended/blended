@@ -28,7 +28,7 @@ class ManagementCollectorSpec
   "The Management collector routes" - {
 
     "should POST /container returns a registry response" in {
-      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List())) ~> collectorRoute ~> check {
+      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L)) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       testPostLatch.isOpen should be(true)
@@ -36,7 +36,7 @@ class ManagementCollectorSpec
 
     "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
-        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List()), List())))
+        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List())))
       }
       testGetLatch.isOpen should be(true)
     }
@@ -64,7 +64,7 @@ class ManagementCollectorSpec
 
   override def getCurrentState(): Seq[RemoteContainerState] = {
     testGetLatch.countDown()
-    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List()), List()))
+    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List()))
   }
 
   override def version: String = "TEST"

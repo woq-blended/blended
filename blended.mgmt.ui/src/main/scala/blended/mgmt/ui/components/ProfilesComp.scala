@@ -16,58 +16,51 @@ import blended.mgmt.ui.backend.Observer
 import blended.mgmt.ui.components.filter.Filter
 import blended.mgmt.ui.util.Logger
 import blended.mgmt.ui.util.I18n
+import blended.updater.config.Profile.SingleProfile
+import blended.updater.config.OverlayRef
 
 object ProfilesComp {
 
   private[this] val log: Logger = Logger[ProfilesComp.type]
   private[this] val i18n = I18n()
 
-  case class State(profiles: List[Profile], filter: And[Profile] = And(), selected: Option[Profile] = None) {
-    def filteredProfiles: List[Profile] = profiles.filter(c => filter.matches(c))
-    def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
+  case class ContainerProfile(containerId: String, profile: SingleProfile) {
+    def name: String = profile.name
+    def version: String = profile.version
+    def overlays: List[OverlayRef] = profile.overlaySet.overlays
   }
 
-  // TODO: refactor shared code with CompManagementConsole
+  case class State(containerInfos: List[ContainerInfo], filter: And[Profile] = And(), selected: Option[Profile] = None) {
+    def singleProfiles: List[SingleProfile] = containerInfos.flatMap(c => c.profiles.flatMap(p => p.toSingle))
+    def containerProfiles: List[ContainerProfile] = containerInfos.flatMap(c => c.profiles.flatMap(p => p.toSingle).map(p => ContainerProfile(c.containerId, p)))
+  }
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[Profile]] {
+  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
 
-    override def update(newData: List[Profile]): Unit = scope.setState(State(newData).consistent).runNow()
-
-    def addFilter(filter: Filter[Profile]) = {
-      log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
-      scope.modState(s => s.copy(filter = s.filter.append(filter).normalized).consistent).runNow()
-    }
-
-    def removeFilter(filter: Filter[Profile]) = {
-      scope.modState(s => s.copy(filter = And((s.filter.filters.filter(_ != filter)): _*)).consistent).runNow()
-    }
-
-    def removeAllFilter() = {
-      scope.modState(s => s.copy(filter = And()).consistent).runNow()
-    }
-
-    def selectContainer(profile: Option[Profile]): Callback = {
-      scope.modState(s => s.copy(selected = profile).consistent)
-    }
+    override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData)).runNow()
+//
+//    def selectContainerProfile(profile: Option[]): Callback = {
+//      //      scope.modState(s => s.copy(selected = profile).consistent)
+//      // FXIME
+//      Callback.empty
+//    }
 
     def render(s: State) = {
       log.debug(s"Rerendering with state $s")
 
-      val renderedProfiles = s.filteredProfiles.map { p =>
-        <.div(
-          <.span(
-            ^.onClick --> selectContainer(Some(p)),
-            p.name,
-            " ",
-            p.version,
-            " "
-          )
-        )
+      // we want a tree !
+      
+      val rendered = s.containerProfiles.toSeq.groupBy(cp => cp.name).toSeq.flatMap { case (name, cps) =>
+        cps.groupBy(cp => cp.version).toSeq.flatMap { case (version, cps) =>
+          cps.groupBy(cp => cp.overlays.toSet).toSeq.map { case (overlaySet, cps) =>
+            <.div(name, "-", version, !overlaySet.isEmpty ?= " with ",  <.span(overlaySet.toList.mkString(", ")))
+          }
+        }
       }
-
+      
       <.div(
         ^.`class` := "row",
-        <.div(renderedProfiles: _*),
+        <.div(rendered: _*),
         <.div(
           ProfileDetailComp.Component(ProfileDetailComp.Props(s.selected)))
       )
@@ -76,9 +69,9 @@ object ProfilesComp {
 
   val Component =
     ReactComponentB[Unit]("Profiles")
-      .initialState(State(profiles = List()))
+      .initialState(State(containerInfos = List()))
       .renderBackend[Backend]
-      .componentDidMount(c => DataManager.profilesData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.profilesData.removeObserver(c.backend))
+      .componentDidMount(c => DataManager.containerData.addObserver(c.backend))
+      .componentWillUnmount(c => DataManager.containerData.removeObserver(c.backend))
       .build
 }

@@ -86,7 +86,8 @@ object MockObjects {
       containerId = UUID.randomUUID().toString(),
       properties = containerProps(containerCount.incrementAndGet()),
       serviceInfos = pickOne(serviceSeqs),
-      profiles = validProfiles
+      profiles = validProfiles,
+      timestampMsec = System.currentTimeMillis()
     )
   }.toList
 

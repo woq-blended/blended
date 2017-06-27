@@ -34,7 +34,7 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
 
       val registry = TestActorRef(ContainerRegistryImpl.props(OSGIActorConfig(osgiContext, system, ConfigFactory.empty(), idSvc)))
       val profiles = List()
-      registry.tell(UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas"), serviceInfos = List(), profiles)), probe.ref)
+      registry.tell(UpdateContainerInfo(ContainerInfo("foo", Map("name" -> "andreas"), serviceInfos = List(), profiles, System.currentTimeMillis())), probe.ref)
 
       probe.expectMsg(ContainerRegistryResponseOK("foo"))
     }

@@ -69,7 +69,7 @@ class PrickleSpec extends FreeSpec with Matchers {
         )
       )
 
-      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List())))
+      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L)))
       println("serialized: " + info)
 
       val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
@@ -155,7 +155,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", List.empty)
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
       val json = Pickle.intoString(info)
       println("json: " + json)
@@ -184,7 +184,7 @@ class PrickleSpec extends FreeSpec with Matchers {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", List.empty)
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile))
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
       val overlay = OverlayRef("myOverlay", "1.0")
       val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
