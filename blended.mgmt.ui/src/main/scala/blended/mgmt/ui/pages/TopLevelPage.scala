@@ -29,8 +29,8 @@ object TopLevelPages {
   val values : List[TopLevelPage] = List(
     ContainerPage,
     ServicesPage,
+    DeploymentProfilesPage,
     ProfilesPage,
-    RuntimeConfigsPage,
     OverlaysPage,
     SettingsPage,
     HelpPage

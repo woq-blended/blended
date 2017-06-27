@@ -16,6 +16,7 @@ import blended.updater.config.ActivateProfile
 import blended.updater.config.UpdateAction
 import blended.updater.config.StageProfile
 import blended.updater.config.Profile.SingleProfile
+import blended.updater.config.RuntimeConfig
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -25,47 +26,57 @@ object ProfileDetailComp {
   private[this] val log = Logger[ProfileDetailComp.type]
   private[this] val i18n = I18n()
 
-  case class Props(profile: Option[Profile] = None)
+  case class Props(runtimeConfig: Option[RuntimeConfig] = None)
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
     def render(props: Props) = {
       props match {
-        case Props(None) => <.span(i18n.tr("No Profile selected"))
-        case Props(Some(profile)) =>
+        case Props(None) => <.span(i18n.tr("No RuntimeConfig selected"))
+        case Props(Some(rc)) =>
 
-          val overlays = profile.overlays.map { os =>
-            <.div(
-              os.overlays.map(o => o.name + " " + o.version).mkString(", "),
-              " (",
-              os.state.state,
-              ")"
-            )
-          }
+          def props(ps: Map[String, String]) = ps.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
           <.div(
-            <.div(
-              i18n.tr("Profile:"),
+            <.h2(
+              i18n.tr("Runtime Config:"),
               " ",
-              profile.name
+              rc.name,
+              "-",
+              rc.version
             ),
             <.div(
-              i18n.tr("Version:"),
-              " ",
-              profile.version
+              i18n.tr("Properties:"),
+              <.div(props(rc.properties): _*)
             ),
             <.div(
-              i18n.tr("Overlays:"),
-              overlays
-            )
+              i18n.tr("Framework Properties:"),
+              <.div(props(rc.frameworkProperties): _*)
+            ),
+            <.div(
+              i18n.tr("System Properties:"),
+              <.div(props(rc.systemProperties): _*)
+            ),
+            <.div(
+              i18n.tr("Features:"),
+              <.div(rc.features.map(f => <.span(f.name, "-", f.version)): _*)
+            ),
+            <.div(
+              i18n.tr("Bundles:"),
+              <.div(rc.bundles.map(b => <.span(b.url)): _*)
+            ),
+            <.div(
+              i18n.tr("Resources:"),
+              <.div(rc.resources.map(b => <.span(b.url)): _*)
+            ),
+            <.span()
           )
-
       }
     }
   }
 
   val Component =
-    ReactComponentB[Props]("ProfileDetail")
+    ReactComponentB[Props]("RuntimeConfigDetail")
       .renderBackend[Backend]
       .build
 }
