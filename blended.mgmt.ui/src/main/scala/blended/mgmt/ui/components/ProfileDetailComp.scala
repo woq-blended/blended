@@ -32,14 +32,14 @@ object ProfileDetailComp {
 
     def render(props: Props) = {
       props match {
-        case Props(None) => <.span(i18n.tr("No RuntimeConfig selected"))
+        case Props(None) => <.span(i18n.tr("No Profiles selected"))
         case Props(Some(rc)) =>
 
           def props(ps: Map[String, String]) = ps.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
           <.div(
             <.h2(
-              i18n.tr("Runtime Config:"),
+              i18n.tr("Profile:"),
               " ",
               rc.name,
               "-",

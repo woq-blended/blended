@@ -11,6 +11,9 @@ import blended.security.spray.BlendedSecuredRoute
 
 import scala.collection.immutable
 import scala.concurrent.duration._
+import spray.http.HttpHeader
+import spray.http.HttpHeaders
+import spray.http.AllOrigins
 
 trait CollectorService
     extends BlendedHttpRoute
@@ -58,6 +61,10 @@ trait CollectorService
     }
   }
 
+  def jsonReponse =
+    respondWithHeader(HttpHeaders.`Access-Control-Allow-Origin`(AllOrigins)) &
+      respondWithMediaType(MediaTypes.`application/json`)
+
   def collectorRoute: Route = {
 
     implicit val timeout = Timeout(1.second)
@@ -77,7 +84,7 @@ trait CollectorService
   def infoRoute: Route = {
     path("container") {
       get {
-        respondWithMediaType(MediaTypes.`application/json`) {
+        jsonReponse {
           complete {
             log.debug("About to provide container infos")
             val res = getCurrentState()
@@ -92,7 +99,7 @@ trait CollectorService
   def runtimeConfigRoute: Route = {
     path("runtimeConfig") {
       get {
-        respondWithMediaType(MediaTypes.`application/json`) {
+        jsonReponse {
           complete {
             getRuntimeConfigs()
           }
@@ -112,7 +119,7 @@ trait CollectorService
   def overlayConfigRoute: Route = {
     path("overlayConfig") {
       get {
-        respondWithMediaType(MediaTypes.`application/json`) {
+        jsonReponse {
           complete {
             getOverlayConfigs()
           }

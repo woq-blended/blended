@@ -18,6 +18,7 @@ import blended.mgmt.ui.util.Logger
 import blended.mgmt.ui.util.I18n
 import blended.updater.config.Profile.SingleProfile
 import blended.updater.config.OverlayRef
+import blended.updater.config.OverlayState
 
 object DeploymentProfilesComp {
 
@@ -38,26 +39,39 @@ object DeploymentProfilesComp {
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
 
     override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData)).runNow()
-//
-//    def selectContainerProfile(profile: Option[]): Callback = {
-//      //      scope.modState(s => s.copy(selected = profile).consistent)
-//      // FXIME
-//      Callback.empty
-//    }
+    //
+    //    def selectContainerProfile(profile: Option[]): Callback = {
+    //      //      scope.modState(s => s.copy(selected = profile).consistent)
+    //      // FXIME
+    //      Callback.empty
+    //    }
 
     def render(s: State) = {
       log.debug(s"Rerendering with state $s")
 
       // we want a tree !
-      
-      val rendered = s.containerProfiles.toSeq.groupBy(cp => cp.name).toSeq.flatMap { case (name, cps) =>
-        cps.groupBy(cp => cp.version).toSeq.flatMap { case (version, cps) =>
-          cps.groupBy(cp => cp.overlays.toSet).toSeq.map { case (overlaySet, cps) =>
-            <.div(name, "-", version, !overlaySet.isEmpty ?= " with ",  <.span(overlaySet.toList.mkString(", ")))
+
+      val rendered = s.containerProfiles.toSeq.groupBy(cp => cp.name).toSeq.flatMap {
+        case (name, cps) =>
+          cps.groupBy(cp => cp.version).toSeq.flatMap {
+            case (version, cps) =>
+              cps.groupBy(cp => cp.overlays.toSet).toSeq.map {
+                case (overlaySet, cps) =>
+                  val states = cps.map(dp => dp.profile.overlaySet.state)
+                  val active = states.filter(OverlayState.Active ==).size
+                  val valid = states.filter(OverlayState.Valid ==).size
+                  val invalid = states.filter(OverlayState.Invalid ==).size
+                  val pending = states.filter(OverlayState.Pending ==).size
+                  <.div(
+                    name, "-", version,
+                    overlaySet.isEmpty ?= " base",
+                    !overlaySet.isEmpty ?= " with ",!overlaySet.isEmpty ?= <.span(overlaySet.toList.mkString(", ")),
+                    i18n.tr(" ({0} active, {1} valid, {2} pending, {3} invalid)", active, valid, pending, invalid)
+                  )
+              }
           }
-        }
       }
-      
+
       <.div(
         ^.`class` := "row",
         <.div(rendered: _*),
