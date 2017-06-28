@@ -120,7 +120,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
         log.debug("Update profile info to:  {}", pi)
         profileInfo = pi
       } else {
-        log.debug("Ingnoring profile info with to old timestamp: {}", pi)
+        log.debug("Ingnoring profile info with timestamp [{}] which is older than [{}]: {}", Array[Object](timestamp.underlying(), profileInfo.timeStamp.underlying(), pi): _*)
       }
   }
 }
