@@ -21,12 +21,12 @@ trait IdAwareConnectionFactory extends ConnectionFactory {
 object BlendedSingleConnectionFactory {
 
   def apply(cfg: Config, cf : ConnectionFactory, clientId: String)(implicit system: ActorSystem) =
-    new BlendedSingleConnectionFactory(cfg, cf, "provider", system, clientId, None)
+    new BlendedSingleConnectionFactory(cfg, cf, "provider", system, clientId, None, true)
 
-  def apply(cfg: OSGIActorConfig, cf: ConnectionFactory, provider: String)(implicit system: ActorSystem) : BlendedSingleConnectionFactory = {
+  def apply(cfg: OSGIActorConfig, cf: ConnectionFactory, provider: String, enabled: Boolean)(implicit system: ActorSystem) : BlendedSingleConnectionFactory = {
     val config = BlendedJMSConnectionConfig(cfg.config)
     val clientId = cfg.idSvc.resolvePropertyString(config.clientId)
-    new BlendedSingleConnectionFactory(cfg.config, cf, provider, system, clientId, Some(cfg.bundleContext))
+    new BlendedSingleConnectionFactory(cfg.config, cf, provider, system, clientId, Some(cfg.bundleContext), enabled)
   }
 }
 
@@ -36,7 +36,8 @@ class BlendedSingleConnectionFactory(
   provider : String,
   system: ActorSystem,
   cId : String,
-  bundleContext : Option[BundleContext]
+  bundleContext : Option[BundleContext],
+  enabled : Boolean
 ) extends IdAwareConnectionFactory {
 
   private[this] implicit val eCtxt = system.dispatcher
@@ -51,7 +52,7 @@ class BlendedSingleConnectionFactory(
   val holder = new ConnectionHolder(provider, cf)
 
   private[this] val actor =
-    if (config.enabled) {
+    if (enabled) {
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
         val jmxServer = ManagementFactory.getPlatformMBeanServer()
@@ -78,7 +79,7 @@ class BlendedSingleConnectionFactory(
   @throws[JMSException]
   override def createConnection(): Connection = {
 
-    if (config.enabled) {
+    if (enabled) {
       try {
         holder.getConnection() match {
           case Some(c) => c

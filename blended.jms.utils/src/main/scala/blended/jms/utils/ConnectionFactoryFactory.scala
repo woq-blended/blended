@@ -22,6 +22,9 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
   val vendor : String
   def createConnectionFactory(osgiCfg: OSGIActorConfig, cfg: Config) : ConnectionFactory
 
+  def isEnabled(provider: String, osgiCfg: OSGIActorConfig, cfg: Config) : Boolean =
+    !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
+
   private[this] val log : Logger = LoggerFactory.getLogger(classOf[ConnectionFactoryFactory])
 
   protected def configureConnectionFactory(cf: ConnectionFactory, osgiActorCfg: OSGIActorConfig, cfg: Config) : Unit = {
@@ -58,7 +61,7 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
         val cf = createConnectionFactory(osgiCfg, cfCfg)
         configureConnectionFactory(cf, osgiCfg, cfCfg)
 
-        val singleCf = BlendedSingleConnectionFactory(osgiCfg, cf, provider)(osgiCfg.system)
+        val singleCf = BlendedSingleConnectionFactory(osgiCfg, cf, provider, isEnabled(provider, osgiCfg, cfCfg))(osgiCfg.system)
         singleCf.providesService[ConnectionFactory, IdAwareConnectionFactory](
           "vendor" -> vendor,
           "provider" -> provider
