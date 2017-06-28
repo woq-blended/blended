@@ -59,7 +59,8 @@ class BrokerControlActor extends Actor
         val cf = BlendedSingleConnectionFactory(
           cfg = cfg,
           cf = amqCF,
-          provider = provider
+          provider = provider,
+          enabled = true
         )(cfg.system)
 
         val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
