@@ -14,7 +14,7 @@ object BlendedJMSConnectionConfig {
     retryInterval = 5,
     minReconnect = 300,
     maxReconnectTimeout = -1,
-    clientId = "$[[" + ContainerIdentifierService.containerId + "]]"
+    clientId = ContainerIdentifierService.containerId
   )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
