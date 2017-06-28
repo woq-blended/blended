@@ -178,7 +178,7 @@ class Updater(
           self ! PublishProfileInfo
         }
     } else {
-      log.info("Publishing of service infos is disabled")
+      log.info("Publishing of service infos and profile infos is disabled")
     }
 
     context.system.eventStream.subscribe(context.self, classOf[UpdateAction])
