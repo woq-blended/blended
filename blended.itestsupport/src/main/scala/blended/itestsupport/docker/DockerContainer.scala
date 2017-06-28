@@ -1,10 +1,12 @@
 package blended.itestsupport.docker
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
 
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model._
 import blended.itestsupport.ContainerUnderTest
+import com.github.dockerjava.api.command.InspectExecResponse
+import com.github.dockerjava.core.command.ExecStartResultCallback
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
@@ -47,20 +49,34 @@ class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
     this
   }
 
-  def executeCommand(user: String, cmd: String*) : Either[Throwable, String] = {
+  def executeCommand(user: String, cmd: String*) : Either[Throwable, (String, ByteArrayOutputStream, ByteArrayOutputStream)] = {
 
     logger.info(s"Executing cmd [${cmd.foldLeft(""){case (v,e) => v + " " + e }}] for user [$user]")
 
     try {
-      val command = client.execCreateCmd(cut.dockerName).withUser(user).withCmd(cmd:_*)
-      val response = command.exec()
+      val command = client.execCreateCmd(cut.dockerName)
+        .withUser(user)
+        .withCmd(cmd:_*)
+        .withAttachStdout(true)
+        .withAttachStderr(true)
 
-      logger.info(response.toString())
-      Right(response.toString())
+      val execId : String = command.exec().getId()
+
+      val out = new ByteArrayOutputStream()
+      val err = new ByteArrayOutputStream()
+
+      val rcb = new ExecStartResultCallback(out, err)
+
+      val startExec = client.execStartCmd(execId).withTty(true)
+      startExec.exec[ExecStartResultCallback](rcb)
+
+      Right((execId, out, err))
     } catch {
       case NonFatal(e) => Left(e)
     }
   }
+
+  def inspectExec(id: String) : InspectExecResponse = client.inspectExecCmd(id).withExecId(id).exec()
 
   def getContainerDirectory(dir: String) : InputStream = {
     logger.info(s"Getting directory [$dir] from container [${cut.ctName}]")

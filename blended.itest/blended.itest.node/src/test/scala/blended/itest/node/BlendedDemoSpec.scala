@@ -13,9 +13,7 @@ import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
 import blended.util.FileHelper
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
-import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 @DoNotDiscover
@@ -38,20 +36,20 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
       val mockProbe = new TestProbe(system)
       testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
- 
+
       sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", binary = false) match {
         // We have successfully sent the message 
         case Right(msg) =>
           // make sure the message reaches the mock actors before we start assertions
           mockProbe.receiveN(1)
-          
-          checkAssertions(mock, 
-            expectedMessageCount(1), 
+
+          checkAssertions(mock,
+            expectedMessageCount(1),
             expectedBodies("Hello Blended!"),
             expectedHeaders(Map("foo" -> "bar"))
-          ) should be(List.empty) 
+          ) should be(List.empty)
         // The message has not been sent
-        case Left(e) => 
+        case Left(e) =>
           log.error(e.getMessage, e)
           fail(e.getMessage)
       }
@@ -80,7 +78,7 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
                       case None => fail("expected file [/opt/node/data/testFile.txt] not found in container")
                       case Some(c) =>
                         val fContent = FileHelper.readFile("data/testFile.txt")
-                        c should equal (fContent)
+                        c should equal(fContent)
                     }
                 }
               }
@@ -91,17 +89,21 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
 
     "Allow to execute an arbitrary command on the container" in {
 
-      try {
-        val er = Await.result(execContainerCommand(ctProxy, "blended_node_0", "blended", "ls", "-al", "/opt/node"), timeOut.duration)
-
-        er.result match {
-          case Left(t) => fail(t.getMessage())
-          case Right(s) =>
-            log.info(s"Result of execution is [${s._2}]")
-            succeed
-        }
-      } catch {
-        case NonFatal(e) => fail(e.getMessage())
+      execContainerCommand(
+        ctProxy = ctProxy,
+        ctName = "blended_node_0",
+        cmdTimeout = 5.seconds,
+        user = "blended",
+        cmd = "ls -al /opt/node".split(" "): _*
+      ) onComplete {
+        case Failure(t) => fail(t.getMessage())
+        case Success(r) =>
+          r.result match {
+            case Left(t) => fail(t.getMessage())
+            case Right(er) =>
+              log.info(s"Command output is [\n${new String(er._2.out)}\n]")
+              er._2.rc should be(0)
+          }
       }
     }
   }

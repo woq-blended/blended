@@ -14,6 +14,7 @@ import blended.itestsupport.protocol._
 import org.apache.camel.CamelContext
 import org.slf4j.LoggerFactory
 
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Await, Future}
 
 trait BlendedIntegrationTestSupport {
@@ -92,14 +93,17 @@ trait BlendedIntegrationTestSupport {
     }
   }
 
-  def execContainerCommand(ctProxy: ActorRef, ctName: String, user: String, cmd: String*)(implicit timeout: Timeout, testKit: TestKit) : Future[ExecuteContainerResult] = {
+  def execContainerCommand(
+    ctProxy: ActorRef, ctName: String, cmdTimeout: FiniteDuration, user: String, cmd: String*
+  )(implicit timeout: Timeout, testKit: TestKit) : Future[ExecuteContainerCommandResult] = {
 
     implicit val eCtxt = testKit.system.dispatcher
 
     ctProxy.ask(ConfiguredContainer_?(ctName)).mapTo[ConfiguredContainer].flatMap { cc =>
       cc.cut match {
-        case None => Future(ExecuteContainerResult(Left(new Exception(s"Container with name [$ctName] not found."))))
-        case Some(cut) => ctProxy.ask(ExecuteContainerCommand(cut, user, cmd:_*)).mapTo[ExecuteContainerResult]
+        case None => Future(ExecuteContainerCommandResult(Left(new Exception(s"Container with name [$ctName] not found."))))
+        case Some(cut) =>
+          ctProxy.ask(ExecuteContainerCommand(cut, cmdTimeout, user, cmd:_*))(cmdTimeout).mapTo[ExecuteContainerCommandResult]
       }
     }
   }

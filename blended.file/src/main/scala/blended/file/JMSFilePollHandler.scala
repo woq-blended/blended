@@ -20,11 +20,15 @@ class JMSFilePollHandler(
 
     val result = session.createBytesMessage()
 
-    var cnt = 0
-    do {
-      cnt = is.read(buffer)
-      if (cnt > 0) result.writeBytes(buffer, 0, cnt)
-    } while(cnt >= 0)
+    try {
+      var cnt = 0
+      do {
+        cnt = is.read(buffer)
+        if (cnt > 0) result.writeBytes(buffer, 0, cnt)
+      } while(cnt >= 0)
+    } finally {
+      is.close()
+    }
 
     props.foreach{ case (k,v) =>
       result.setStringProperty(k, v)

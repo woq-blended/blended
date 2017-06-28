@@ -7,8 +7,10 @@ import blended.itestsupport.ContainerUnderTest
 import blended.itestsupport.compress.TarFileSupport
 import blended.itestsupport.docker.protocol._
 import com.github.dockerjava.api.DockerClient
+import akka.pattern.ask
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 object ContainerActor {
@@ -18,13 +20,12 @@ object ContainerActor {
 class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClient) extends Actor with ActorLogging {
 
   private[this] val dc = new DockerContainer(container)
+  private[this] implicit val eCtxt   = context.dispatcher
+  implicit val timeout = new Timeout(5.seconds)
 
   case object PerformStart
 
   class ContainerStartActor() extends Actor with ActorLogging {
-
-    implicit val timeout = new Timeout(5.seconds)
-    implicit val eCtxt   = context.dispatcher
 
     def receive = LoggingReceive {
       case PerformStart =>
@@ -72,12 +73,13 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
     case exec : ExecuteContainerCommand =>
       val requestor = sender()
 
-      try {
-        val result = dc.executeCommand(exec.user, exec.cmd:_*)
-
-        requestor ! ExecuteContainerResult(Right( (cut, result.toString) ))
-      } catch {
-        case NonFatal(e) => requestor ! ExecuteContainerResult(Left(e))
+      dc.executeCommand(exec.user, exec.cmd:_*) match {
+        case left @ Left(t) => requestor ! left
+        case Right((execId, out, err))  =>
+          (context.actorOf(WatchExecActor.props(dc, execId, out, err)) ? WatchExec)(exec.timeout).mapTo[ExecResult].onComplete {
+            case Failure(t) => requestor ! ExecuteContainerCommandResult(Left(t))
+            case Success(result) => requestor ! ExecuteContainerCommandResult(Right((container, result)))
+          }
       }
 
     case StopContainer => {
