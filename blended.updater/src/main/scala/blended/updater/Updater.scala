@@ -454,6 +454,7 @@ class Updater(
 
       }
       val toSend = Profile.fromSingleProfiles(singleProfiles)
+      log.debug("About to publish profile info to event stream: {}", toSend)
       context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
     case PublishServiceInfo =>
@@ -550,7 +551,7 @@ object Updater {
 
   /**
    * Get all known profiles.
-   * Reply: Result[Set[Profile]], OperationFailed
+   * Reply: [[Result[Set[LocalProfile]]]], OperationFailed
    */
   final case class GetProfiles(override val requestId: String) extends Protocol
 

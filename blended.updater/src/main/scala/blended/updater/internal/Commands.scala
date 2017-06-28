@@ -45,7 +45,8 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
     val profiles = Await.result(
       ask(updater, Updater.GetProfiles(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],
-      timeout.duration).result
+      timeout.duration
+    ).result
 
     s"${profiles.size} profiles:\n${
       profiles.map {

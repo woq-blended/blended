@@ -153,7 +153,7 @@ class PrickleSpec extends FreeSpec with Matchers {
     "a ContainerInfo" in {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List.empty)
+      val profile = Profile("myProfile", "1.0", List(OverlaySet(List(), OverlayState.Valid, None)))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
@@ -182,7 +182,7 @@ class PrickleSpec extends FreeSpec with Matchers {
 
     "a RemoteContainerState" in {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List.empty)
+      val profile = Profile("myProfile", "1.0", List(OverlaySet(List(), OverlayState.Valid, None)))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 

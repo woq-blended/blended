@@ -1,6 +1,7 @@
 package blended.updater.config
 
 case class Profile(name: String, version: String, overlays: List[OverlaySet]) {
+  require(!overlays.isEmpty, "A Profile must have at least on OverlaySet.")
 
   def toSingle: List[Profile.SingleProfile] = overlays.map(o => Profile.SingleProfile(name, version, o))
 

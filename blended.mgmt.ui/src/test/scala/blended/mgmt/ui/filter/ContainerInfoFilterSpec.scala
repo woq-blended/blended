@@ -5,6 +5,8 @@ import blended.mgmt.ui.components.filter.ContainerInfoFilter
 import blended.updater.config.ContainerInfo
 import org.scalatest.Matchers
 import blended.updater.config.Profile
+import blended.updater.config.OverlayState
+import blended.updater.config.OverlaySet
 
 class ContainerInfoFilterSpec extends FreeSpec with Matchers {
 
@@ -45,11 +47,11 @@ class ContainerInfoFilterSpec extends FreeSpec with Matchers {
       ContainerInfoFilter.FreeText("value1").matches(ci) should equal(false)
     }
     "should match by profile name" in {
-      val ci = ContainerInfo(containerId = "123456", Map(), List(), List(Profile("p1", "3.2.1", List())), 1L)
+      val ci = ContainerInfo(containerId = "123456", Map(), List(), List(Profile("p1", "3.2.1", List(OverlaySet(List(), OverlayState.Valid, None)))), 1L)
       ContainerInfoFilter.FreeText("p1").matches(ci) should equal(true)
     }
     "should match by profile name and version" in {
-      val ci = ContainerInfo(containerId = "123456", Map(), List(), List(Profile("p1", "3.2.1", List())), 1L)
+      val ci = ContainerInfo(containerId = "123456", Map(), List(), List(Profile("p1", "3.2.1", List(OverlaySet(List(), OverlayState.Valid, None)))), 1L)
       ContainerInfoFilter.FreeText("p1-3.2.1").matches(ci) should equal(true)
     }
   }
