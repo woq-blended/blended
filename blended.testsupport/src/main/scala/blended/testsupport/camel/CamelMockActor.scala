@@ -80,7 +80,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
         camelContext.stopRoute(rid)
         camelContext.removeRoute(rid)
       }
-      sender ! ReceiveStopped(uri)
+      context.system.eventStream.publish(ReceiveStopped(uri))
       context.become(handleRquests(messages))
   }
 
