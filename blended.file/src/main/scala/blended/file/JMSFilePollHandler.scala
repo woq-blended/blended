@@ -1,44 +1,55 @@
 package blended.file
 import java.io.{File, FileInputStream}
-import javax.jms.{ConnectionFactory, DeliveryMode, Message, Session}
+import javax.jms.{ConnectionFactory, Message, Session}
 
 import blended.jms.utils.{JMSMessageFactory, JMSSupport}
 
-class JMSFilePollHandler(cf: ConnectionFactory, dest: String, props: Map[String, String]) extends FilePollHandler with JMSSupport with JMSMessageFactory[File] {
+class JMSFilePollHandler(
+  cf: ConnectionFactory,
+  dest: String,
+  deliveryMode: Int,
+  priority: Int,
+  ttl: Long,
+  props: Map[String, String]
+) extends FilePollHandler with JMSSupport with JMSMessageFactory[(FileProcessCmd, File)] {
 
-  override def createMessage(session: Session, content: File) : Message = {
+  override def createMessage(session: Session, content: (FileProcessCmd, File)) : Message = {
 
     val buffer : Array[Byte] = new Array[Byte](4096)
-    val is = new FileInputStream(content)
+    val is = new FileInputStream(content._2)
 
     val result = session.createBytesMessage()
 
-    var cnt = 0
-    do {
-      cnt = is.read(buffer)
-      if (cnt > 0) result.writeBytes(buffer, 0, cnt)
-    } while(cnt >= 0)
+    try {
+      var cnt = 0
+      do {
+        cnt = is.read(buffer)
+        if (cnt > 0) result.writeBytes(buffer, 0, cnt)
+      } while(cnt >= 0)
+    } finally {
+      is.close()
+    }
 
     props.foreach{ case (k,v) =>
       result.setStringProperty(k, v)
     }
 
-    result.setStringProperty("BlendedFileName", content.getName())
-    result.setStringProperty("BledendFilePath", content.getAbsolutePath())
+    result.setStringProperty("BlendedFileName", content._1.f.getName())
+    result.setStringProperty("BledendFilePath", content._1.f.getAbsolutePath())
 
     result
   }
 
-  override def processFile(f: File): Unit = {
+  override def processFile(cmd: FileProcessCmd, f: File): Unit = {
 
     sendMessage(
       cf = cf,
       destName = dest,
-      content = f,
+      content = (cmd, f),
       msgFactory = this,
-      deliveryMode = DeliveryMode.PERSISTENT,
-      priority = 4,
-      ttl = 0
+      deliveryMode = deliveryMode,
+      priority = priority,
+      ttl = ttl
     ).foreach{t => throw t}
   }
 }

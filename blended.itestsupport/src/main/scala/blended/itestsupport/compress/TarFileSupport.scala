@@ -39,13 +39,16 @@ object TarFileSupport {
     content.toMap
   }
 
-  def tar(file : File, os: OutputStream) : Unit = {
+  def tar(file : File, os: OutputStream, user: Int = 0, group : Int = 0) : Unit = {
 
     def addFileToTar(tarOs: TarArchiveOutputStream, file: File, base : String) : Unit = {
       val entryName = base + file.getName()
       val entry = new TarArchiveEntry(file, entryName)
 
-      log.debug(s"Adding [$entryName] to tar archive.")
+      entry.setUserId(user)
+      entry.setGroupId(group)
+
+      log.info(s"Adding [$entryName] to tar archive with [user($user), group($group)].")
 
       tarOs.putArchiveEntry(entry)
 

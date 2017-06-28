@@ -17,7 +17,7 @@ object FileManipulationActor {
   val operationTimeout : FiniteDuration = {
     val config = ConfigFactory.load()
     val toPath = "blended.file.operationTimeout"
-    (if (config.hasPath(toPath)) config.getLong(toPath) else 5000l).millis
+    (if (config.hasPath(toPath)) config.getLong(toPath) else 100l).millis
   }
 }
 
@@ -34,7 +34,7 @@ class FileManipulationActor extends Actor with ActorLogging {
       case DeleteFile(f) =>
         f.delete()
         if (f.exists()) {
-          log.info(s"Attempt to delete file [${f.getAbsolutePath()}] failed.")
+          log.warning(s"Attempt to delete file [${f.getAbsolutePath()}] failed.")
           false
         } else {
           true

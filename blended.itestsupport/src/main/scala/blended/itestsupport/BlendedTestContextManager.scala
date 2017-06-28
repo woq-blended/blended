@@ -70,6 +70,9 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
     case wcd : WriteContainerDirectory =>
       containerMgr.tell(wcd, sender())
 
+    case exec : ExecuteContainerCommand =>
+      containerMgr.tell(exec, sender())
+
     case scm : StopContainerManager =>
       camel.context.stop()
       containerMgr.forward(scm)

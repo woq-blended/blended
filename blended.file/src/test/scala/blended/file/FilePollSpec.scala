@@ -43,16 +43,18 @@ class FilePollSpec extends FreeSpec with Matchers {
       probe.expectMsgType[FileProcessed]
       f.exists() should be (false)
 
-      val f1 = new File(srcDir, "test.txt")
-      val f2 = new File(srcDir, "test.xml")
-      val f3 = new File(srcDir, "test2.txt")
+      val files = List(
+        new File(srcDir, "test.txt"),
+        new File(srcDir, "test.xml"),
+        new File(srcDir, "test2.txt")
+      )
 
-      List(f1, f2, f3).foreach(genFile)
+      files.foreach(genFile)
 
       probe.expectMsgType[FileProcessed]
-      f1.exists() should be (false)
-      f2.exists() should be (true)
-      f3.exists() should be (false)
+      probe.expectMsgType[FileProcessed]
+
+      files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
 
     }
 
@@ -68,11 +70,11 @@ class FilePollSpec extends FreeSpec with Matchers {
         lock = Some("lock")
       )
 
-      val srcFile = new File(srcDir, "test.txt")
-      genFile(srcFile)
-
       val lockFile = new File(srcDir, "lock")
       genFile(lockFile)
+
+      val srcFile = new File(srcDir, "test.txt")
+      genFile(srcFile)
 
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FileProcessed])

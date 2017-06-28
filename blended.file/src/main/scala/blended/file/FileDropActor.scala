@@ -3,7 +3,7 @@ package blended.file
 import java.io._
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.zip.GZIPInputStream
+import java.util.zip.{GZIPInputStream, ZipInputStream}
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import blended.util.StreamCopySupport
@@ -116,7 +116,6 @@ class FileDropActor extends Actor with ActorLogging {
       val outdir = new File(cmd.directory)
 
       var os : Option[OutputStream] = None
-      var rawIs : Option[InputStream] = None
       var tf : Option[File] = None
 
       if (checkDirectory(outdir)) {
@@ -124,9 +123,18 @@ class FileDropActor extends Actor with ActorLogging {
         val is : InputStream = cmd.compressed match {
           case true =>
             log.debug(s"Writing content with compression to ${outFile(cmd)}")
-            val bis = new ByteArrayInputStream(cmd.content)
-            rawIs = Some(bis)
-            new GZIPInputStream(bis)
+
+            val zippedIs = try {
+              log.debug("Trying to use GZIP compression")
+              new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
+            } catch {
+              case NonFatal(e) =>
+                log.debug("Trying to use ZIP compression")
+                val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
+                zis.getNextEntry()
+                zis
+            }
+            zippedIs
           case false =>
             log.debug(s"Writing content without compression to ${outFile(cmd)}")
             new ByteArrayInputStream(cmd.content)
@@ -157,7 +165,6 @@ class FileDropActor extends Actor with ActorLogging {
 
             respond(requestor, FileDropResult(cmd, false))
         } finally {
-          rawIs.foreach(_.close())
           is.close()
         }
       } else {

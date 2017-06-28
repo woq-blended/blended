@@ -5,7 +5,7 @@ import javax.jms.ConnectionFactory
 
 import akka.actor.{Actor, ActorLogging}
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.BlendedSingleConnectionFactory
+import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory}
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -20,7 +20,7 @@ class BrokerControlActor extends Actor
 
   private[this] var cleanUp : List[() => Unit] = List.empty
 
-  private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[ConnectionFactory]) = {
+  private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -50,15 +50,16 @@ class BrokerControlActor extends Actor
       val registrar = new Object with ServiceProviding {
 
         override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
+
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://$brokerName?create=false"
-        val amqCF : ConnectionFactory = new ActiveMQConnectionFactory(url)
-        val cf : ConnectionFactory = BlendedSingleConnectionFactory(
+        val amqCF: ConnectionFactory = new ActiveMQConnectionFactory(url)
+        val cf = BlendedSingleConnectionFactory(
           cfg, amqCF, provider
         )(cfg.system)
 
-        val svcReg = cf.providesService[ConnectionFactory](Map(
+        val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "provider" -> provider,
           "brokerName" -> brokerName
         ))
@@ -67,12 +68,13 @@ class BrokerControlActor extends Actor
       cleanUp = List(() => stopBroker(broker, registrar.svcReg))
 
       (broker, registrar.svcReg)
+
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
     }
   }
 
-  private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[ConnectionFactory]) : Unit = {
+  private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
     log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
     svcReg.unregister()
 
@@ -100,7 +102,7 @@ class BrokerControlActor extends Actor
       log.debug("Ignoring stop command for ActiveMQ as Broker is already stopped")
   }
 
-  def withBroker(broker: BrokerService, reg: ServiceRegistration[ConnectionFactory]) : Receive = {
+  def withBroker(broker: BrokerService, reg: ServiceRegistration[BlendedSingleConnectionFactory]) : Receive = {
     case StartBroker =>
       log.debug("Ignoring start command for ActiveMQ as Broker is already started")
     case StopBroker =>

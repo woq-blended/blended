@@ -10,7 +10,7 @@ import com.github.dockerjava.api.model._
 import com.typesafe.config.ConfigFactory
 import org.mockito.Matchers._
 import org.mockito.Mockito._
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 
 import scala.collection.convert.WrapAsJava._
 

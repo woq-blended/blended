@@ -7,6 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 object FilePollActor {
 
@@ -73,12 +74,17 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
 
       val listFuture : Future[Iterable[FileProcessed]] = Future.sequence(futures)
 
-      listFuture.onSuccess {
-        case results =>
-          val succeeded = results.count(_.success)
-          log.info(s"Processed [$succeeded] of [${results.size}] files from [${cfg.sourceDir}], ")
+      listFuture.onComplete { c =>
+        c match {
+          case Failure(t) =>
+            log.warning(s"Error processing directory [${cfg.sourceDir}] : [${t.getMessage()}]")
 
-          context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+          case Success(results) =>
+            val succeeded = results.count(_.success)
+            log.info(s"Processed [$succeeded] of [${results.size}] files from [${cfg.sourceDir}], ")
+        }
+
+        context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
       }
   }
 }

@@ -16,7 +16,8 @@ class BlendedDemoIntegrationSpec extends RefSpec
   with BlendedIntegrationTestSupport {
 
   implicit val testkit = new TestKit(ActorSystem("Blended"))
-  
+  implicit val eCtxt = testkit.system.dispatcher
+
   private[this] val ctProxy = testkit.system.actorOf(Props(new TestContainerProxy()))
   private[this] implicit val timeout = Timeout(60.seconds)
   
@@ -29,8 +30,12 @@ class BlendedDemoIntegrationSpec extends RefSpec
   
   override def afterAll() {
 
-    val logs = Await.result(readContainerDirectory(ctProxy, "blended_node_0", "/opt/node/log"), timeout.duration)
-    saveContainerDirectory(s"$testOutput/testlog", logs)
+    readContainerDirectory(ctProxy, "blended_node_0", "/opt/node/log").onSuccess {
+      case cdr => cdr.result match {
+        case Left(_) =>
+        case Right(cd) => saveContainerDirectory(s"$testOutput/testlog", cd)
+      }
+    }
 
     stopContainers(ctProxy)(timeout, testkit)
   }
