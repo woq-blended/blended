@@ -27,7 +27,7 @@ val mavenInstallPlugin = "org.apache.maven.plugins" % "maven-install-plugin" % "
 val mavenWarPlugin = "org.apache.maven.plugins" % "maven-war-plugin" % "3.0.0"
 
 val skipInstallPlugin = Plugin(
-  "org.apache.maven.plugins" % "maven-install-plugin" % "2.4",
+  mavenInstallPlugin,
    configuration = Config(
      skip = "true"
    )
