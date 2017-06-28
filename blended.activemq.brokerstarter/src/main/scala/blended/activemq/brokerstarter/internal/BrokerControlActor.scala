@@ -5,7 +5,7 @@ import javax.jms.ConnectionFactory
 
 import akka.actor.{Actor, ActorLogging}
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory}
+import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, IdAwareConnectionFactory}
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -54,12 +54,16 @@ class BrokerControlActor extends Actor
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://$brokerName?create=false"
-        val amqCF: ConnectionFactory = new ActiveMQConnectionFactory(url)
+        val amqCF = new ActiveMQConnectionFactory(url)
+
         val cf = BlendedSingleConnectionFactory(
-          cfg, amqCF, provider
+          cfg = cfg,
+          cf = amqCF,
+          provider = provider
         )(cfg.system)
 
         val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
+          "vendor" -> "ActiveMQ",
           "provider" -> provider,
           "brokerName" -> brokerName
         ))
