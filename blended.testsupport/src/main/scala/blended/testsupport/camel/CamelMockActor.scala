@@ -68,6 +68,8 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
   def receiving(messages: List[CamelMessage]) : Receive = {
     case msg : CamelMessage =>
       val newList = msg :: messages
+
+      log.info(s"CamelMockActor received message with Headers [${msg.headers.mkString}]")
       log.info(s"CamelMockActor [$uri] has now [${newList.size}] messages.")
       context.become(receiving(newList) orElse (handleRquests(newList)))
       context.system.eventStream.publish(MockMessageReceived(uri, msg))
@@ -78,7 +80,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
         camelContext.stopRoute(rid)
         camelContext.removeRoute(rid)
       }
-      sender ! ReceiveStopped(uri)
+      context.system.eventStream.publish(ReceiveStopped(uri))
       context.become(handleRquests(messages))
   }
 
