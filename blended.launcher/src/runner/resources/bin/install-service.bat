@@ -1,13 +1,13 @@
 
 set SCRIPTPATH=%~dp0
-set BLENDED_HOME=%SCRIPTPATH%..
+set BLENDED_HOME=%SCRIPTPATH%\..
 
 set JAVA_HOME=%BLENDED_HOME%\jre
-rem Das muss die Server VM sein!
-rem Wenn client VM, dann fehlt eine Windows DLL msvcr71.dll
-set JVM=%JAVA_HOME%\bin\server\jvm.dll
+set JVM=%JAVA_HOME%\bin\client\jvm.dll
 
 call %SCRIPTPATH%setenv.bat
+
+if "%SERVICE_NAME%"=="" (set SERVICE_NAME="BlendedDemo")
 
 set SERVICE_ENV=BLENDED_HOME=%BLENDED_HOME%;JAVA_HOME=%JAVA_HOME%
 
@@ -30,8 +30,8 @@ set CP=%BLENDED_HOME%/etc^
 set CLASS=blended.launcher.jvmrunner.JvmLauncher
 
 %SCRIPTPATH%prunsrv.exe ^
-  //IS//BlendedDemo ^
-  --DisplayName="Blended Demo (updateable)" ^
+  //IS//%SERVICE_NAME%" ^
+  --DisplayName="%SERVICE_NAME%" ^
   --Environment=%SERVICE_ENV% ^
   --Jvm=%JVM% ^
   --StartMode=jvm ^
