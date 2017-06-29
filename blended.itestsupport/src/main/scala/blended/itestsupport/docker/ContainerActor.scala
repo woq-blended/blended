@@ -68,7 +68,9 @@ class ContainerActor(container: ContainerUnderTest)(implicit client: DockerClien
         log.info(s"Extracted entries are [${result.keys.mkString(", ")}]")
         log.debug(s"Sending container director response to [${requestor.path}]")
         requestor ! GetContainerDirectoryResult(Right(ContainerDirectory(gcd.container, gcd.dir, result)))
-      }
+      } catch {
+        case NonFatal(t) => requestor ! GetContainerDirectoryResult(Left(t))
+       }
 
     case exec : ExecuteContainerCommand =>
       val requestor = sender()

@@ -6,6 +6,7 @@ import blended.jms.utils.BlendedJMSConnection
 import org.slf4j.LoggerFactory
 
 case class ConnectionHolder(
+  vendor: String,
   provider: String,
   cf: ConnectionFactory
 ) {
@@ -19,7 +20,7 @@ case class ConnectionHolder(
   def connect(id: String) : Connection = conn match {
     case Some(c) => c
     case None =>
-      log.info(s"Creating underlying connection for provider [$provider] with client id [$id]")
+      log.info(s"Creating underlying connection for [$vendor:$provider] with client id [$id]")
 
       val c = cf.createConnection()
       c.setClientID(id)

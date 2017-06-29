@@ -19,8 +19,9 @@ object ConnectionFactoryFactory {
 
 abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystemWatching {
 
-  val vendor : String
-  def createConnectionFactory(osgiCfg: OSGIActorConfig, cfg: Config) : ConnectionFactory
+  def createConnectionFactory(provider: String, osgiCfg: OSGIActorConfig, cfg: Config) : ConnectionFactory
+
+  def vendor(osgiActorConfig: OSGIActorConfig) : String = osgiActorConfig.config.getString("vendor")
 
   def isEnabled(provider: String, osgiCfg: OSGIActorConfig, cfg: Config) : Boolean =
     !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
@@ -49,21 +50,28 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
-      val cfMap = osgiCfg.config.getConfig("factories")
+      val cfMap = osgiCfg.config.getObject("factories")
 
       cfMap.entrySet().asScala.foreach { entry =>
 
         val provider = entry.getKey()
-        log.info(s"Configuring connection factory for vendor [$vendor] with provider [$provider]")
+        log.info(s"Configuring connection factory for vendor [${vendor(osgiCfg)}] with provider [$provider]")
 
-        val cfCfg = cfMap.getConfig(provider)
+        val cfCfg = osgiCfg.config.getConfig("factories").getConfig(provider)
 
-        val cf = createConnectionFactory(osgiCfg, cfCfg)
+        val cf = createConnectionFactory(provider, osgiCfg, cfCfg)
         configureConnectionFactory(cf, osgiCfg, cfCfg)
 
-        val singleCf = BlendedSingleConnectionFactory(osgiCfg, cf, provider, isEnabled(provider, osgiCfg, cfCfg))(osgiCfg.system)
+        val singleCf = BlendedSingleConnectionFactory(
+          osgiCfg = osgiCfg,
+          cfCfg = cfCfg,
+          cf = cf,
+          vendor = vendor(osgiCfg),
+          provider = provider,
+          enabled = isEnabled(provider, osgiCfg, cfCfg)
+        )(osgiCfg.system)
         singleCf.providesService[ConnectionFactory, IdAwareConnectionFactory](
-          "vendor" -> vendor,
+          "vendor" -> vendor(osgiCfg),
           "provider" -> provider
         )
 
