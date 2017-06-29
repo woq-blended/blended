@@ -19,13 +19,24 @@ package blended.persistence.internal
 import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import blended.persistence.PersistenceBackend
 import domino.DominoActivator
+import org.slf4j.LoggerFactory
 
 class PersistenceActivator extends DominoActivator with ActorSystemWatching {
-
+  
+  private[this] val log = LoggerFactory.getLogger(classOf[PersistenceActivator])
+  
   whenBundleActive {
+    log.debug("Activating {}", getClass())
     whenActorSystemAvailable { cfg =>
       whenServicePresent[PersistenceBackend] { backend =>
-        setupBundleActor(cfg, PersistenceManager.props(cfg, backend))
+        log.debug("A PersistenceBackend is available. About to setup peristence manager actor for it: {}", backend )
+        
+        val actorRef = setupBundleActor(cfg, PersistenceManager.props(cfg, backend))
+        log.debug("Pesistence manager actor: {}", actorRef)
+        
+        onStop {
+          log.debug("PersistenceBackend no longer available: {}", backend)
+        }
       }
     }
   }

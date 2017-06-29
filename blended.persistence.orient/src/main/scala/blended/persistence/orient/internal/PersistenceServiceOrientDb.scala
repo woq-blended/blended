@@ -9,12 +9,15 @@ import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 
 import blended.persistence.PersistenceService
+import org.slf4j.LoggerFactory
 
 class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
     extends PersistenceService {
 
+  private[this] val log = LoggerFactory.getLogger(classOf[PersistenceServiceOrientDb])
+
   private[this] var createdClasses: Set[String] = Set()
-  
+
   def withDb[T](f: ODatabaseDocument => T): T = {
     val dbTx = dbPool.acquire()
     try {
@@ -45,6 +48,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   override def persist(pClass: String, data: java.util.Map[String, _ <: AnyRef]): java.util.Map[String, _ <: AnyRef] = {
+    log.debug("About to persist pClass [{}] with data [{}]", Array[Object](pClass, data): _*)
     withDb { db =>
       val doc = new ODocument(pClass)
       data.asScala.foreach {
@@ -57,17 +61,18 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   protected[internal] def ensureClassCreated(pClass: String): Unit = {
-    if(createdClasses.find(_ == pClass).isEmpty) {
+    if (createdClasses.find(_ == pClass).isEmpty) {
       withDb { db =>
         val existingClass = Option(db.getMetadata().getSchema().getClass(pClass))
-        if(existingClass.isEmpty) {
+        if (existingClass.isEmpty) {
           db.getMetadata().getSchema().createClass(pClass);
         }
       }
     }
   }
-  
+
   override def findAll(pClass: String): Seq[java.util.Map[String, _ <: AnyRef]] = {
+    log.debug("About to findAll for pClass [{}]", pClass)
     withDb { db =>
       ensureClassCreated(pClass)
       val r = db.browseClass(pClass)
@@ -76,6 +81,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   override def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]] = {
+    log.debug("About to findByExample for pClass [{}] and example data [{}]", Array[Object](pClass, data): _*)
     withDb { db =>
       ensureClassCreated(pClass)
       val ordered = data.asScala.toList

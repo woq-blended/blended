@@ -18,6 +18,7 @@ import domino.DominoActivator
 import blended.persistence.PersistenceService
 import blended.domino.TypesafeConfigWatching
 import blended.updater.remote.PersistentContainerStatePersistor
+import scala.util.Try
 
 class RemoteUpdaterActivator
     extends DominoActivator
@@ -29,6 +30,7 @@ class RemoteUpdaterActivator
   whenBundleActive {
 
     whenTypesafeConfigAvailable { (config, idService) =>
+      log.debug("About to activate {}", getClass())
 
       try {
         val rcDir = new File(config.getString("repository.runtimeConfigsPath"))
@@ -38,11 +40,20 @@ class RemoteUpdaterActivator
         val overlayConfigPersistor = new FileSystemOverlayConfigPersistor(ocDir)
 
         whenServicePresent[PersistenceService] { persistenceService =>
+          log.debug("PersistenceService available. About to instantiate RemoteUpdater: {}", persistenceService)
+
+          onStop {
+            log.debug("PersistenceService no longer availabe: {}", persistenceService)
+          }
 
           val containerStatePersistor = new PersistentContainerStatePersistor(persistenceService)
+          log.debug("Created persistent container state peristor: {}", containerStatePersistor)
+          if (log.isDebugEnabled()) {
+            log.debug("Already persisted ContainerStates: {}", Try(containerStatePersistor.findAllContainerStates()))
+          }
 
           val remoteUpdater = new RemoteUpdater(runtimeConfigPersistor, containerStatePersistor, overlayConfigPersistor)
-          log.debug("About to register RemoteUpdater")
+          log.debug("About to register RemoteUpdater in OSGi service registry: {}", remoteUpdater)
           remoteUpdater.providesService[RemoteUpdater]
 
         }
@@ -54,6 +65,7 @@ class RemoteUpdaterActivator
 
       def registerCommands(srv: AnyRef, cmds: Seq[(String, String)]): ServiceRegistration[Object] = {
         val (commands, descriptions) = cmds.unzip
+        log.debug("About to register OSGi console commands: {}", commands)
         srv.providesService[Object](
           "osgi.command.scope" -> "blended.updater.remote",
           "osgi.command.function" -> commands.toArray,
@@ -61,7 +73,7 @@ class RemoteUpdaterActivator
       }
 
       whenServicePresent[RemoteUpdater] { remoteUpdater =>
-        log.debug("About to register osgi console commands for remote updater")
+        log.debug("About to register OSGi console commands for remote updater")
         val commands = new RemoteCommands(remoteUpdater)
         registerCommands(commands, commands.commands)
       }
