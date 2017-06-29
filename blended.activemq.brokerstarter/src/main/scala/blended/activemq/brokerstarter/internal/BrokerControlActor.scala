@@ -18,6 +18,8 @@ import scala.language.reflectiveCalls
 class BrokerControlActor extends Actor
   with ActorLogging {
 
+  private[this] val vendor = "activemq"
+
   private[this] var cleanUp : List[() => Unit] = List.empty
 
   private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
@@ -57,14 +59,16 @@ class BrokerControlActor extends Actor
         val amqCF = new ActiveMQConnectionFactory(url)
 
         val cf = BlendedSingleConnectionFactory(
-          cfg = cfg,
+          osgiCfg = cfg,
+          cfCfg = cfg.config,
           cf = amqCF,
+          vendor = vendor,
           provider = provider,
           enabled = true
         )(cfg.system)
 
         val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
-          "vendor" -> "ActiveMQ",
+          "vendor" -> vendor,
           "provider" -> provider,
           "brokerName" -> brokerName
         ))

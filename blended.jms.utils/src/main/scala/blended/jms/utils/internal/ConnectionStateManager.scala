@@ -34,6 +34,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
 
   private[this] implicit val eCtxt = context.system.dispatcher
   private[this] val provider = holder.provider
+  private[this] val vendor = holder.vendor
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
@@ -101,19 +102,19 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
     case PingResult(Right(m)) =>
       switchState(
         connected(),
-        publishEvents(state, s"JMS connection for provider [$provider] seems healthy [$m].").copy(failedPings = 0)
+        publishEvents(state, s"JMS connection for provider [$vendor:$provider] seems healthy [$m].").copy(failedPings = 0)
       )
       checkConnection(schedule)
 
     case PingResult(Left(t)) =>
       checkReconnect(
-        publishEvents(state, s"Error sending connection ping for provider [$provider].")
+        publishEvents(state, s"Error sending connection ping for provider [$vendor:$provider].")
           .copy(failedPings = state.failedPings + 1)
       )
 
     case PingTimeout =>
       checkReconnect(
-        publishEvents(state, s"Ping for provider [$provider] timed out.")
+        publishEvents(state, s"Ping for provider [$vendor:$provider] timed out.")
           .copy(failedPings = state.failedPings + 1)
       )
   }
@@ -137,7 +138,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       if (t == state.lastConnectAttempt.getOrElse(0l)) {
         conn = Some(new BlendedJMSConnection(c))
         checkConnection(schedule)
-        switchState(connected(), publishEvents(state, s"Successfully connected to provider [$provider]").copy(
+        switchState(connected(), publishEvents(state, s"Successfully connected to provider [$vendor:$provider]").copy(
           status = CONNECTED,
           firstReconnectAttempt = None,
           lastConnect = Some(new Date()),
@@ -164,13 +165,13 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       checkConnection(schedule, true)
       switchState(
         disconnected(),
-        publishEvents(state, s"Connection for provider [$provider] successfully closed.")
+        publishEvents(state, s"Connection for provider [$vendor:$provider] successfully closed.")
           .copy(status = DISCONNECTED, lastDisconnect = Some(new Date()))
       )
 
     // Once we encounter a timeout for a connection close we initiate a Container Restart via the monitor
     case CloseTimeout =>
-      val e = new Exception(s"Unable to close connection for provider [${provider}] in [${config.minReconnect}]s]. Restarting container ...")
+      val e = new Exception(s"Unable to close connection for provider [$vendor:$provider] in [${config.minReconnect}]s]. Restarting container ...")
       monitor ! RestartContainer(e)
   }
 
@@ -189,7 +190,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
   // A convenience method to let us know which state we are switching to
   private[this] def switchState(rec: StateReceive, newState: ConnectionState) : Unit = {
 
-    val nextState = publishEvents(newState, s"Connection State Manager [$provider] switching to state [${newState.status}]")
+    val nextState = publishEvents(newState, s"Connection State Manager [$vendor:$provider] switching to state [${newState.status}]")
     currentReceive = rec
     currentState = nextState
     monitor ! ConnectionStateChanged(nextState)
@@ -198,7 +199,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
 
   // A convenience method to capture unhandled messages
   def unhandled : Receive = {
-    case m => log.debug(s"received unhandled message for [$provider] : ${m.toString()}")
+    case m => log.debug(s"received unhandled message for [$vendor:$provider] : ${m.toString()}")
   }
 
   // We simply stay in the same state and maintain the list of events
@@ -232,7 +233,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
     if (!now && s.lastDisconnect.isDefined && remaining > 0) {
       switchState(
         currentReceive,
-        publishEvents(s, s"Container is waiting to reconnect for provider [${provider}], remaining wait time [${remaining / 1000.0}]s")
+        publishEvents(s, s"Container is waiting to reconnect for provider [$vendor:$provider], remaining wait time [${remaining / 1000.0}]s")
       )
       checkConnection(schedule)
     } else {
@@ -255,7 +256,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
 
   private[this] def connect(state: ConnectionState) : ConnectionState = {
 
-    var events : List[String] = List(s"Creating connection to JMS provider [$provider]")
+    var events : List[String] = List(s"Creating connection to JMS provider [$vendor:$provider]")
 
     val lastConnectAttempt = new Date()
 
@@ -264,7 +265,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
     // This only happens if we have configured a maximum reconnect timeout in the config and we ever
     // had a connection since this container was last restarted and we haven't started the timer yet
     val newState = if (config.maxReconnectTimeout > 0 && state.firstReconnectAttempt.isEmpty && state.lastDisconnect.isDefined) {
-      events = (s"Starting max reconnect timeout monitor for provider [${provider}] with [${config.maxReconnectTimeout}]s") :: events
+      events = (s"Starting max reconnect timeout monitor for provider [$vendor:$provider] with [${config.maxReconnectTimeout}]s") :: events
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
     } else state
 
@@ -282,12 +283,12 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
 
     var result = false
 
-    log.error(e, s"Error connecting to JMS provider [$provider].")
+    log.error(e, s"Error connecting to JMS provider [$vendor:$provider].")
 
     if (config.maxReconnectTimeout > 0 && s.firstReconnectAttempt.isDefined) {
       s.firstReconnectAttempt.foreach { t =>
         if ((System.currentTimeMillis() - t.getTime()) / 1000l > config.maxReconnectTimeout) {
-          val e = new Exception(s"Unable to reconnect to JMS provider [${provider}] in [${config.maxReconnectTimeout}]s. Restarting container ...")
+          val e = new Exception(s"Unable to reconnect to JMS provider [$vendor:$provider] in [${config.maxReconnectTimeout}]s. Restarting container ...")
           monitor ! RestartContainer(e)
           result = true
         }
@@ -315,10 +316,10 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
   // Otherwise we schedule a connection check for the retry schedule, which is usually much shorter
   // than the normal connection check
   private[this] def checkReconnect(s: ConnectionState) : Unit = {
-    log.debug(s"Checking reconnect for provider [$provider] state [$s] against tolerance [${config.pingTolerance}]")
+    log.debug(s"Checking reconnect for provider [$vendor:$provider] state [$s] against tolerance [${config.pingTolerance}]")
     if (s.failedPings == config.pingTolerance) {
       reconnect(
-        publishEvents(s, s"Maximum ping tolerance for provider [$provider] reached .... reconnecting.")
+        publishEvents(s, s"Maximum ping tolerance for provider [$vendor:$provider] reached .... reconnecting.")
       )
     } else {
       switchState(currentReceive, s)
@@ -332,7 +333,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
   }
 
   private[this] def ping(c: Connection) : Unit = {
-    log.info(s"Checking JMS connection for provider [$provider]")
+    log.info(s"Checking JMS connection for provider [$vendor:$provider]")
     val pinger = context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds))
     val jmsPingPerformer = new JmsPingPerformer(pinger, provider, c, "blended.ping")
     pinger ! jmsPingPerformer
