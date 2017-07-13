@@ -36,7 +36,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
 
   override def onMessage(m: Message): Unit = {
     val text = if (m.isInstanceOf[TextMessage]) m.asInstanceOf[TextMessage].getText() else "UNKNOWN"
-    log.debug(s"received ping message [$text] for provider [$provider]")
+    log.trace(s"received ping message [$text] for provider [$provider]")
     pingActor ! PingReceived(text)
   }
 
