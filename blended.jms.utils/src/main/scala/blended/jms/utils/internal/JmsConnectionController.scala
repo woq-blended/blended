@@ -50,8 +50,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
           context.become(disconnected)
           caller ! r
         case Failure(t) =>
-          log.warning(s"Unexpected exception closing connection for provider [${holder.provider}]")
-          if (log.isDebugEnabled) log.error(t.getMessage(), t)
+          log.warning(s"Unexpected exception closing connection for provider [${holder.provider}] : [${t.getMessage()}]")
       }
   }
 

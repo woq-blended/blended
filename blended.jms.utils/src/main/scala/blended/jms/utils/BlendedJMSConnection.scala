@@ -2,11 +2,7 @@ package blended.jms.utils
 
 import javax.jms._
 
-import org.slf4j.LoggerFactory
-
 class BlendedJMSConnection(conn: Connection) extends Connection {
-
-  private[this] val log = LoggerFactory.getLogger(classOf[BlendedJMSConnection])
 
   protected[utils] def connection = conn
 
