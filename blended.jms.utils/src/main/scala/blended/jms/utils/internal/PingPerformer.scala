@@ -49,9 +49,13 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
         consumer.setMessageListener(this)
 
         val producer = s.createProducer(dest)
-        producer.send(s.createTextMessage(pingId))
-        log.debug(s"sent ping message [$pingId] to provider [$provider]")
-        producer.close()
+
+        try {
+          producer.send(s.createTextMessage(pingId))
+          log.debug(s"sent ping message [$pingId] to provider [$provider]")
+        } finally {
+          producer.close()
+        }
     }
   }
 
@@ -59,6 +63,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
     session.foreach{ s => {
       try {
         s.close()
+        session = None
       } catch {
         case NonFatal(e) => log.warn(s"Error closing session for JMS checker [$provider, $pingId]")
       }

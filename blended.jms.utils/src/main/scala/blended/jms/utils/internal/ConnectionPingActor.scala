@@ -54,7 +54,7 @@ class ConnectionPingActor(timeout: FiniteDuration)
       }
       self ! Cleanup
 
-    case PingResult(r) =>
+    case r : PingResult =>
       timer.cancel()
       caller ! r
       self ! Cleanup

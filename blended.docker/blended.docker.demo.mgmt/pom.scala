@@ -15,5 +15,5 @@ BlendedDockerContainer(
     scope = "provided"
   ),
   folder = "mgmt",
-  ports = List(1099,1883,9191)
+  ports = List(1099,1883,9191,8849)
 )
