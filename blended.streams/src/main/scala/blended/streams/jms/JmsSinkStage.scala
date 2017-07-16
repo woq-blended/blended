@@ -30,6 +30,7 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
             r.writeBytes(b.getBytes().toArray)
 
             r
+          case _ => session.createMessage()
         }
 
         content.header.filter{
@@ -47,7 +48,8 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
         new InHandler {
 
           override def onPush(): Unit = {
-            val elem = grab(in)
+
+            val (elem, start) = (grab(in), System.currentTimeMillis())
 
             sendMessage[FlowMessage](
               cf = cf,
@@ -58,6 +60,9 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
               priority = 4,
               ttl = 0l
             )
+
+            log.debug(s"JMS message sent in [${System.currentTimeMillis() - start}]")
+
             pull(in)
           }
         }
