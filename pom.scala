@@ -72,7 +72,8 @@ BlendedModel(
         "blended.launcher.features",
         "blended.demo",
         "blended.mgmt.ui",
-        "blended.file"
+        "blended.file",
+        "blended.streams"
       )
     ),
     Profile(
