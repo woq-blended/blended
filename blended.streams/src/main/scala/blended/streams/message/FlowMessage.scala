@@ -1,5 +1,6 @@
 package blended.streams.message
 
+import akka.NotUsed
 import akka.util.ByteString
 
 sealed trait MsgProperty {
@@ -35,17 +36,27 @@ case object MsgProperty {
   }
 }
 
-sealed abstract class FlowMessage(h: Map[String, MsgProperty], b: Any) {
+sealed abstract class FlowMessage(h: Map[String, MsgProperty]) {
 
-  def body : Any = b
+  def body() : Any
   def header : Map[String, MsgProperty] = h
 
   override def toString: String = s"${getClass().getSimpleName()}(${header})($body)"
 }
 
-class BaseFlowMessage(override val header: Map[String, MsgProperty], body : Unit = ()) extends FlowMessage(header, body)
-class BinaryFlowMessage(header: Map[String, MsgProperty], body: ByteString) extends FlowMessage(header, body)
-class TextFlowMessage(header: Map[String, MsgProperty], body: String) extends FlowMessage(header, body)
+class BaseFlowMessage(override val header: Map[String, MsgProperty]) extends FlowMessage(header) {
+  override def body(): Any = NotUsed
+}
+
+class BinaryFlowMessage(header: Map[String, MsgProperty], content: ByteString) extends FlowMessage(header) {
+  override def body(): Any = content
+  def getBytes() = content
+}
+
+class TextFlowMessage(header: Map[String, MsgProperty], content: String) extends FlowMessage(header) {
+  override def body(): Any = content
+  def getText() = content
+}
 
 case object FlowMessage {
 
