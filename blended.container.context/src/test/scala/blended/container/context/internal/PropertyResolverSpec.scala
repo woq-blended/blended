@@ -69,7 +69,7 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[sysProp]]") should be("test")
     }
 
-    "should apply the paramters if given in the replacement rule" in {
+    "should apply the parameters if given in the replacement rule" in {
       ContainerPropertyResolver.resolve(idSvc, "$[[foo(upper)]]") should be("BAR")
       ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower)]]") should be("bar")
       ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower,capitalize)]]") should be("Bar")
