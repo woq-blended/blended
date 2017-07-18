@@ -22,7 +22,6 @@ class ConnectionPingActor(timeout: FiniteDuration)
   extends Actor with ActorLogging {
 
   case object Timeout
-  case object Cleanup
 
   implicit val eCtxt = context.system.dispatcher
 
@@ -41,7 +40,7 @@ class ConnectionPingActor(timeout: FiniteDuration)
           log.debug(s"Ping for provider [${p.provider}] failed : [${e.getMessage()}]")
           p.close()
           caller ! PingResult(Left(e))
-          context.stop(self)
+          stopPinger(p)
       }
   }
 
@@ -52,12 +51,12 @@ class ConnectionPingActor(timeout: FiniteDuration)
         isTimeout = true
         caller ! PingTimeout
       }
-      self ! Cleanup
+      stopPinger(performer)
 
-    case PingResult(r) =>
+    case r : PingResult =>
       timer.cancel()
       caller ! r
-      self ! Cleanup
+      stopPinger(performer)
 
     case PingReceived(m) =>
       if (!isTimeout) {
@@ -65,10 +64,12 @@ class ConnectionPingActor(timeout: FiniteDuration)
         caller ! PingResult(Right(m))
         hasPinged = true
       }
-      self ! Cleanup
+      stopPinger(performer)
 
-    case Cleanup =>
-      performer.close()
-      context.stop(self)
+  }
+
+  private def stopPinger(performer: PingPerformer) : Unit = {
+    performer.close()
+    context.stop(self)
   }
 }

@@ -16,9 +16,15 @@ public class EndpointURIDispatcher {
     String[] endpointUris = uriFactory.createEndpointUris(exchange);
 
     if (endpointUris != null && endpointUris.length > 0) {
+
       ProducerTemplate template = exchange.getContext().createProducerTemplate();
-      for (String uri : endpointUris) {
-        template.send(uri, exchange);
+
+      try {
+        for (String uri : endpointUris) {
+          template.send(uri, exchange);
+        }
+      } finally {
+        template.stop();
       }
     }
   }

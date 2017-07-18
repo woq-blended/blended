@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.jms.ConnectionFactory
 
 import blended.camel.utils.BlendedCamelContext
+import blended.container.context.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
 import org.apache.camel.builder.RouteBuilder
@@ -25,47 +26,47 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
       val jmsSampleCfg = JmsSampleConfig(cfg)
 
       whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)"){ cf =>
+        whenServicePresent[ContainerIdentifierService] { idSvc =>
+          val ctxt = BlendedCamelContext(name = "JmsSampleContext", withJmx = true, idSvc = Some(idSvc))
+          ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
-        val ctxt = BlendedCamelContext("JmsSampleContext")
-        ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
+          ctxt.addRoutes(new RouteBuilder() {
+            override def configure(): Unit = {
 
-        ctxt.addRoutes(new RouteBuilder() {
-          override def configure(): Unit = {
+              if (jmsSampleCfg.producerInterval > 0) {
+                log.info(s"Creating producer with interval [${jmsSampleCfg.producerInterval}]ms for destination [${jmsSampleCfg.destination}]")
+                from(s"timer:sample?period=${jmsSampleCfg.producerInterval}")
+                  .routeId("sampleProducer")
+                  .process(new Processor() {
+                    override def process(exchange: Exchange): Unit = {
+                      exchange.setOut(exchange.getIn())
+                      exchange.getOut().setHeader("SampleCounter", msgCounter.getAndIncrement().toString())
+                    }
+                  })
+                  .to(s"activemq:${jmsSampleCfg.destination}")
+              }
 
-            if (jmsSampleCfg.producerInterval > 0) {
-              log.info(s"Creating producer with interval [${jmsSampleCfg.producerInterval}]ms for destination [${jmsSampleCfg.destination}]")
-              from(s"timer:sample?period=${jmsSampleCfg.producerInterval}")
-                .routeId("sampleProducer")
-                .process(new Processor() {
-                  override def process(exchange: Exchange): Unit = {
-                    exchange.setOut(exchange.getIn())
-                    exchange.getOut().setHeader("SampleCounter", msgCounter.getAndIncrement().toString())
-                  }
-                })
-                .to(s"activemq:${jmsSampleCfg.destination}")
+              jmsSampleCfg.consumeSelector.foreach { sel =>
+                log.info(s"Creating consumer for destination [${jmsSampleCfg.destination}] with selector [$sel]")
+
+                var endpoint = "activemq:" + jmsSampleCfg.destination
+
+                if (sel.trim().length() > 0) endpoint = endpoint + "?selector=" + sel
+
+                from(endpoint)
+                  .routeId("sampleConsumer")
+                  .to("log:jmsSample?showHeaders=true&maxChars=500")
+              }
             }
+          })
 
-            jmsSampleCfg.consumeSelector.foreach { sel =>
-              log.info(s"Creating consumer for destination [${jmsSampleCfg.destination}] with selector [$sel]")
+          ctxt.start()
 
-              var endpoint = "activemq:" + jmsSampleCfg.destination
-
-              if (sel.trim().length() > 0) endpoint = endpoint + "?selector=" + sel
-
-              from(endpoint)
-                .routeId("sampleConsumer")
-                .to("log:jmsSample?showHeaders=true&maxChars=500")
-            }
+          onStop {
+            log.debug("Stopping Camel Context")
+            ctxt.stop()
           }
-        })
-
-        ctxt.start()
-
-        onStop {
-          log.debug("Stopping Camel Context")
-          ctxt.stop()
         }
-
       }
     }
   }

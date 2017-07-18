@@ -56,6 +56,15 @@ if [ -n "$DEBUG_PORT" ] ; then
   unset MY_DEBUG_WAIT
 fi
 
+if [ -n "$PROFILE_PORT" ] ; then
+ if [ -n "$PROFILE_WAIT" ] ; then
+   MY_PROFILE_WAIT="wait"
+  else
+   MY_PROFILE_WAIT="nowait"
+ fi
+ CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-agentpath:/opt/jprofiler10/bin/linux-x64/libjprofilerti.so=port=${PROFILE_PORT},${MY_PROFILE_WAIT}"
+ UNSET MY_DEBUG_WAIT
+fi
 
 # colun-separated
 OUTER_CP="${BLENDED_HOME}/lib/*"

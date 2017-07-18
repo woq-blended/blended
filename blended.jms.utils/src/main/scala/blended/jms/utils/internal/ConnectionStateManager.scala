@@ -41,6 +41,8 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
   private[this] var currentReceive : StateReceive = disconnected()
   private[this] var currentState : ConnectionState = ConnectionState(provider = holder.provider).copy(status = DISCONNECTED)
 
+  private[this] var pinger : Option[ActorRef] = None
+
   // the retry Schedule is the time interval we retry a connection after a failed connect attempt
   // usually that is only a fraction of the ping interval (i.e. 5 seconds)
   private[this] val retrySchedule = config.retryInterval.seconds
@@ -100,6 +102,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
 
     // For a successful ping we log the event and schedule the next connectionCheck
     case PingResult(Right(m)) =>
+      pinger = None
       switchState(
         connected(),
         publishEvents(state, s"JMS connection for provider [$vendor:$provider] seems healthy [$m].").copy(failedPings = 0)
@@ -107,12 +110,16 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       checkConnection(schedule)
 
     case PingResult(Left(t)) =>
+      pinger = None
+
       checkReconnect(
         publishEvents(state, s"Error sending connection ping for provider [$vendor:$provider].")
           .copy(failedPings = state.failedPings + 1)
       )
 
     case PingTimeout =>
+      pinger = None
+
       checkReconnect(
         publishEvents(state, s"Ping for provider [$vendor:$provider] timed out.")
           .copy(failedPings = state.failedPings + 1)
@@ -333,9 +340,17 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
   }
 
   private[this] def ping(c: Connection) : Unit = {
-    log.info(s"Checking JMS connection for provider [$vendor:$provider]")
-    val pinger = context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds))
-    val jmsPingPerformer = new JmsPingPerformer(pinger, provider, c, "blended.ping")
-    pinger ! jmsPingPerformer
+
+    pinger match {
+      case None =>
+        log.info(s"Checking JMS connection for provider [$vendor:$provider]")
+        pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
+
+        pinger.foreach { p =>
+          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, "blended.ping")
+          p ! jmsPingPerformer
+        }
+      case Some(a) =>
+    }
   }
 }
