@@ -51,8 +51,8 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
         val producer = s.createProducer(dest)
 
         try {
+          log.debug(s"sending ping message [$pingId] to provider [$provider]")
           producer.send(s.createTextMessage(pingId))
-          log.debug(s"sent ping message [$pingId] to provider [$provider]")
         } finally {
           producer.close()
         }
