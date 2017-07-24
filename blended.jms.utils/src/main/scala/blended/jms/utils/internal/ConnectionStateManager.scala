@@ -350,6 +350,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
           p ! jmsPingPerformer
         }
       case Some(a) =>
+        log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
     }
   }
 }
