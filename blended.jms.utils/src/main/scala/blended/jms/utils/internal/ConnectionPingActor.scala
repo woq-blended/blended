@@ -38,7 +38,6 @@ class ConnectionPingActor(timeout: FiniteDuration)
       } catch {
         case NonFatal(e) =>
           log.debug(s"Ping for provider [${p.provider}] failed : [${e.getMessage()}]")
-          p.close()
           caller ! PingResult(Left(e))
           stopPinger(p)
       }
