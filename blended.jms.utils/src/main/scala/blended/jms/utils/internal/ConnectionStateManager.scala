@@ -76,6 +76,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
     super.preStart()
     switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
+    context.system.eventStream.subscribe(self, classOf[ConnectionException])
   }
 
   // ---- State: Disconnected
@@ -191,6 +192,13 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       }
   }
 
+  def handleConnectionError(state : ConnectionState) : Receive = {
+    case ce : ConnectionException => if (ce.provider == provider) {
+      log.info(s"Initiating reconnect after connection exception [${ce.e.getMessage()}]")
+      reconnect(state)
+    }
+  }
+
   // helper methods
 
   // A convenience method to let us know which state we are switching to
@@ -200,7 +208,12 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
     currentReceive = rec
     currentState = nextState
     monitor ! ConnectionStateChanged(nextState)
-    context.become(LoggingReceive (rec(nextState).orElse(jmxOperations(nextState)).orElse(unhandled)) )
+    context.become(LoggingReceive (
+      rec(nextState)
+        .orElse(jmxOperations(nextState))
+        .orElse(handleConnectionError(nextState))
+        .orElse(unhandled))
+    )
   }
 
   // A convenience method to capture unhandled messages

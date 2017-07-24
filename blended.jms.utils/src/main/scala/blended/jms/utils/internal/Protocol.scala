@@ -1,7 +1,7 @@
 package blended.jms.utils.internal
 
 import java.util.Date
-import javax.jms.Connection
+import javax.jms.{Connection, JMSException}
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -57,3 +57,5 @@ case class ConnectionCommand(
   connectPending: Boolean = false,
   reconnectNow : Boolean = false
 )
+
+case class ConnectionException(provider: String, e: JMSException)
