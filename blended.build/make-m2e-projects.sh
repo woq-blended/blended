@@ -13,7 +13,6 @@ blended.activemq.brokerstarter \
 blended.activemq.client \
 blended.activemq.defaultbroker \
 blended.akka \
-blended.akka.itest \
 blended.itest \
 blended.build \
 blended.camel.utils \
@@ -25,8 +24,10 @@ blended.docker \
 blended.docker/blended.docker.base \
 blended.docker/blended.docker.launcher.demo \
 blended.domino \
+blended.file \
 blended.hawtio.login \
 blended.itestsupport \
+blended.jms.sampler \
 blended.jms.utils \
 blended.jmx \
 blended.jolokia \
@@ -38,10 +39,12 @@ blended.mgmt.mock \
 blended.mgmt.repo \
 blended.mgmt.repo.rest \
 blended.mgmt.rest \
+blended.mgmt.service.jmx \
 blended.mgmt.ui \
 blended.parent \
 blended.persistence \
 blended.persistence.orient \
+blended.prickle \
 blended.samples \
 blended.samples/blended.samples.camel \
 blended.samples/blended.samples.jms \
