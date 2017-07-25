@@ -23,7 +23,7 @@ object BlendedVersions {
 
   val parboiledVersion = "1.1.6"
 
-  val slf4jVersion = "1.7.12"
+  val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.2"
   val springVersion = "3.2.14.RELEASE_1"
 
