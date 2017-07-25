@@ -25,7 +25,8 @@ object BlendedVersions {
 
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.2"
-  val springVersion = "3.2.14.RELEASE_1"
+  // from apache servicemix
+  val springVersion = "3.2.18.RELEASE_1"
 
   val prickle = "1.1.13"
 
