@@ -55,7 +55,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a positive ConnectResult message in case of a succesful connect" in {
 
-      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended"))
+      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended"), system)
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -77,7 +77,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a negative ConnectResult message in case of a failed connect" in {
 
-      val holder = new ConnectionHolder("dirty", "dirty", connectionFactory("foobar"))
+      val holder = new ConnectionHolder("dirty", "dirty", connectionFactory("foobar"), system)
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -92,7 +92,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     }
 
     "should answer with a ConnectionClosed message in case of a successful disconnect" in {
-      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended"))
+      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended"), system)
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -112,7 +112,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     }
 
     "should answer with a CloseTimeout message in case a connection close timed out" in {
-      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended")) {
+      val holder = new ConnectionHolder("happy", "happy", connectionFactory("blended"), system) {
         override def close(): Unit = {
           // spend a long time here
           Thread.sleep(5000)
