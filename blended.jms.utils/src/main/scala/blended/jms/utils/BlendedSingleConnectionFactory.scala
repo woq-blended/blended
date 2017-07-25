@@ -66,7 +66,7 @@ class BlendedSingleConnectionFactory(
 
   private[this] val config = BlendedJMSConnectionConfig(cfg)
 
-  val holder = new ConnectionHolder(vendor, provider, cf)
+  val holder = new ConnectionHolder(vendor, provider, cf, system)
 
   private[this] val actor =
     if (enabled) {

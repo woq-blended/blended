@@ -66,8 +66,8 @@ val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
 val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
-    
-val domino = "com.github.domino-osgi" %% "domino" % "1.1.1"
+
+val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
 
 val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
 val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
