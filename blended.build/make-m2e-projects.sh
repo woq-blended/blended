@@ -13,6 +13,7 @@ blended.activemq.brokerstarter \
 blended.activemq.client \
 blended.activemq.defaultbroker \
 blended.akka \
+blended.akka.itest \
 blended.itest \
 blended.build \
 blended.camel.utils \
@@ -143,7 +144,7 @@ EOF
 <classpath>
 EOF
 
-  for path in src/main/scala src/main/java src/shared/scala src/main/binaryResources src/main/resources; do
+  for path in shared/main/scala shared/main/binaryResources shared/main/resources src/main/scala src/main/java src/shared/scala src/main/binaryResources src/main/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
         <classpathentry kind="src" path="$path"/>
@@ -151,7 +152,7 @@ EOF
     fi
   done
 
-  for path in src/test/scala src/test/java src/test/binaryResources src/test/resources; do
+  for path in shared/test/scala shared/test/binaryResources shared/test/resources src/test/scala src/test/java src/test/binaryResources src/test/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
         <classpathentry kind="src" output="${testClassesDir}" path="$path"/>
@@ -223,7 +224,7 @@ scala.compiler.installation=2.11
 scala.compiler.sourceLevel=2.11
 scala.compiler.useProjectSettings=true
 stopBuildOnError=false
-target=jvm-1.6
+target=jvm-1.8
 unchecked=false
 useScopesCompiler=true
 verbose=false
