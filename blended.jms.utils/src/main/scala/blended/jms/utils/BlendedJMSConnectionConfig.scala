@@ -14,7 +14,8 @@ object BlendedJMSConnectionConfig {
     retryInterval = 5,
     minReconnect = 300,
     maxReconnectTimeout = -1,
-    clientId = "$[[" + ContainerIdentifierService.containerId + "]]"
+    clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
+    pingDestination = "blended.ping"
   )
 
   def apply(cfg: Config) : BlendedJMSConnectionConfig = {
@@ -27,6 +28,7 @@ object BlendedJMSConnectionConfig {
     val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
     val clientId = if (cfg.hasPath("clientId")) cfg.getString("clientId") else defaultConfig.clientId
+    val destination = if (cfg.hasPath("destination")) cfg.getString("destination") else defaultConfig.pingDestination
 
     BlendedJMSConnectionConfig(
       jmxEnabled = jmxEnabled,
@@ -37,7 +39,8 @@ object BlendedJMSConnectionConfig {
       retryInterval = retryInterval,
       minReconnect = minReconnect,
       maxReconnectTimeout = maxReconnectTimeout,
-      clientId = clientId
+      clientId = clientId,
+      pingDestination = destination
     )
   }
 }
@@ -51,5 +54,6 @@ case class BlendedJMSConnectionConfig(
   retryInterval : Int,
   minReconnect : Int,
   maxReconnectTimeout: Int,
-  clientId : String
+  clientId : String,
+  pingDestination : String
 )

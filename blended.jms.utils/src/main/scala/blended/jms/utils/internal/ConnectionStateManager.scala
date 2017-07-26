@@ -113,7 +113,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       pinger = None
 
       checkReconnect(
-        publishEvents(state, s"Error sending connection ping for provider [$provider].")
+        publishEvents(state, s"Error sending connection ping for provider [$provider] : [${t.getMessage()}].")
           .copy(failedPings = state.failedPings + 1)
       )
 
@@ -359,7 +359,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
         pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
 
         pinger.foreach { p =>
-          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, "blended.ping")
+          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, config.pingDestination)
           p ! jmsPingPerformer
         }
       case Some(a) =>
