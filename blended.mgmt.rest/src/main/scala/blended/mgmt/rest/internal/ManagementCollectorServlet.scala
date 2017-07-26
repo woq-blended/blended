@@ -1,18 +1,21 @@
 package blended.mgmt.rest.internal
 
 import blended.akka.OSGIActorConfig
-import blended.spray.{SprayOSGIServlet, SprayPrickleSupport}
+import blended.spray.{ SprayOSGIServlet, SprayPrickleSupport }
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable
 import blended.security.spray.ShiroBlendedSecuredRoute
+import blended.persistence.PersistenceService
+import domino.capsule.CapsuleConvenience
 
 class ManagementCollectorServlet extends SprayOSGIServlet
-  with CollectorService
-  with SprayPrickleSupport 
-  with ShiroBlendedSecuredRoute {
+    with CollectorService
+    with SprayPrickleSupport
+    with ShiroBlendedSecuredRoute
+    with CapsuleConvenience {
 
   type ContainerId = String
 
@@ -20,22 +23,27 @@ class ManagementCollectorServlet extends SprayOSGIServlet
 
   private[this] var containerStates: Map[ContainerId, RemoteContainerState] = Map()
 
-  private[this] var remoteUpdater : Option[RemoteUpdater] = None
+  private[this] var remoteUpdater: Option[RemoteUpdater] = None
+  private[this] var remoteContainerStatePersistor: Option[RemoteContainerStatePersistor] = None
 
-  private[this] var cfg : Option[OSGIActorConfig] = None
+  private[this] var cfg: Option[OSGIActorConfig] = None
 
   override def startSpray(): Unit = {
 
-    whenServicePresent[RemoteUpdater]{ updater =>
-
-      remoteUpdater = Some(updater)
+    whenServicesPresent[RemoteUpdater, PersistenceService] { (updater, persistenceService) =>
+      this.remoteUpdater = Option(updater)
+      this.remoteContainerStatePersistor = Option(new RemoteContainerStatePersistor(persistenceService))
       val actor = createServletActor()
+
+      onStop {
+        this.remoteUpdater = None
+        this.remoteContainerStatePersistor = None
+      }
     }
   }
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
     mylog.debug("Processing container info: {}", info)
-
     cfg.foreach(_.system.eventStream.publish(UpdateContainerInfo(info)))
 
     val newActions = remoteUpdater match {
@@ -43,10 +51,18 @@ class ManagementCollectorServlet extends SprayOSGIServlet
         mylog.warn(s"Process container info called with no remote updater available.")
         List.empty
       case Some(updater) =>
-        val actions = updater.getContainerActions(info.containerId)
-        containerStates += info.containerId -> RemoteContainerState(info, actions)
+        val updated = updater.updateContainerState(info)
+        val actions = updated.outstandingActions
+
+        remoteContainerStatePersistor.map { p =>
+          val state = RemoteContainerState(info, actions)
+          p.updateState(state)
+        }
+
+        //        containerStates += info.containerId -> RemoteContainerState(info, actions)
         actions
     }
+
     ContainerRegistryResponseOK(info.containerId, newActions)
   }
 
@@ -56,8 +72,11 @@ class ManagementCollectorServlet extends SprayOSGIServlet
   }
 
   override def getCurrentState(): immutable.Seq[RemoteContainerState] = {
+    val states = remoteContainerStatePersistor.map { ps =>
+      ps.findAll()
+    }.getOrElse(List())
     mylog.debug("About to send state: {}", containerStates)
-    containerStates.values.toList
+    states
   }
 
   override def registerRuntimeConfig(rc: RuntimeConfig): Unit = remoteUpdater match {

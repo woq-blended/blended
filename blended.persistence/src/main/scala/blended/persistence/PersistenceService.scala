@@ -8,4 +8,5 @@ trait PersistenceService {
 
   def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]]
 
+  def deleteByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Long
 }

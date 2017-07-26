@@ -105,7 +105,6 @@ class OrientExperimentalTest extends FreeSpec with Matchers with TestFile {
     }
   }
 
-
   "TEST ensureClassCreated should work" in {
     withTestDir() { dir =>
       val url = "plocal:" + dir.getPath() + "/db-ensureClassCreated-should-work"

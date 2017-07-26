@@ -7,8 +7,11 @@ import scala.util.Try
 
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
+import org.slf4j.LoggerFactory
 
 class PersistentContainerStatePersistor(persistenceService: PersistenceService) extends ContainerStatePersistor {
+  
+  private[this] val log = LoggerFactory.getLogger(classOf[PersistentContainerStatePersistor])
 
   val pClassName = "ContainerState"
 
@@ -130,6 +133,7 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
   }
 
   override def updateContainerState(containerState: ContainerState): Unit = {
+    log.debug("About to persist container state: {}", containerState)
     persistenceService.persist(pClassName, fromContainerState(containerState))
   }
 }

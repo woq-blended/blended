@@ -18,8 +18,13 @@ BlendedModel(
     domino,
     orientDbCore,
     scalaTest % "test",
-    blendedTestSupport % "test",
-    mockitoAll % "test"
+    Dependency(
+      blendedTestSupport,
+      scope = "test",
+      exclusions = Seq("*" % "*")
+    ),
+    mockitoAll % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

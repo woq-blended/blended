@@ -61,9 +61,10 @@ class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
           }
 
           val dbPool = new OPartitionedDatabasePool(dbUrl, dbUserName, dbPassword)
+          log.debug("Created database pool: {}", dbPool)
 
           onStop {
-            log.debug("About to close database pool")
+            log.debug("About to close database pool: {}", dbPool)
             dbPool.close()
           }
 

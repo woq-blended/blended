@@ -2,14 +2,14 @@ package blended.updater.config
 
 import java.io._
 import java.net.URL
-import java.nio.file.{Files, Paths, StandardCopyOption}
-import java.security.{DigestInputStream, MessageDigest}
-import java.util.{Formatter, Properties}
+import java.nio.file.{ Files, Paths, StandardCopyOption }
+import java.security.{ DigestInputStream, MessageDigest }
+import java.util.{ Formatter, Properties }
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
-import scala.util.{Success, Try}
+import scala.collection.JavaConverters.{ asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter }
+import scala.util.{ Success, Try }
 import scala.util.control.NonFatal
 
 object RuntimeConfigCompanion {
@@ -59,6 +59,7 @@ object RuntimeConfigCompanion {
         else List.empty
     )
   }
+
 
   def toConfig(runtimeConfig: RuntimeConfig): Config = {
     val config = Map(
