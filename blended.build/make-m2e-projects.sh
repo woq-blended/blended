@@ -22,7 +22,6 @@ blended.demo/blended.demo.node \
 blended.demo/blended.demo.mgmt \
 blended.docker \
 blended.docker/blended.docker.base \
-blended.docker/blended.docker.launcher.demo \
 blended.domino \
 blended.file \
 blended.hawtio.login \
