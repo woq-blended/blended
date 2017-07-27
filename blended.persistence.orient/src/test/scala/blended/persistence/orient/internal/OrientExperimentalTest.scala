@@ -84,7 +84,7 @@ class OrientExperimentalTest extends FreeSpec with Matchers with TestFile {
 			  |  k3b=[ v3b1, v3b2 ]
 			  |}""".stripMargin)
 
-    withTestDir() { dir =>
+    withTestDir(new java.io.File("target/tmp")) { dir =>
       config.root().unwrapped()
       val url = "plocal:" + dir.getPath() + "/db3"
       new ODatabaseDocumentTx(url).create()

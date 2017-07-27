@@ -26,7 +26,7 @@ class PersistenceServiceOrientDbTest
 			  |  k3b=[ v3b1, v3b2 ]
 			  |}""".stripMargin)
 
-    		val config2 = ConfigFactory.parseString("""
+    val config2 = ConfigFactory.parseString("""
     				|key1=value2
     				|key2=[ kv3, kv4 ]
     				|key3 {
@@ -34,7 +34,7 @@ class PersistenceServiceOrientDbTest
     				|  k3b=[ v3b22, v3b22 ]
     				|}""".stripMargin)
 
-    				withTestDir() { dir =>
+    withTestDir(new java.io.File("target/tmp")) { dir =>
       config.root().unwrapped()
       val url = "plocal:" + dir.getPath() + "/db"
       new File(dir, "db").mkdirs()
@@ -45,7 +45,6 @@ class PersistenceServiceOrientDbTest
       } finally {
         db.close()
       }
-
 
       {
         val pool = new OPartitionedDatabasePool(url, "admin", "admin")
