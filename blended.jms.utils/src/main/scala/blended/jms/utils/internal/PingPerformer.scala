@@ -43,7 +43,7 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
         val producer = s.createProducer(dest)
 
         try {
-          log.debug(s"sending ping message [$pingId] to provider [$provider]")
+          log.debug(s"sending ping message [$pingId] to topic [$provider:$destName]")
           producer.send(s.createTextMessage(pingId))
 
           Option(consumer.receive(100l)) match {
