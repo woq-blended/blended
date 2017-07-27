@@ -82,14 +82,18 @@ trait TestFile {
       }
     }
 
-  def withTestDir[T]()(f: File => T)(implicit delete: DeletePolicy): T = {
-    val file = File.createTempFile("test", "")
+
+  def withTestDir[T](tmpDir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
+    if(tmpDir != null && !tmpDir.exists()) tmpDir.mkdirs()
+    val file = File.createTempFile("test", "", tmpDir)
     file.delete()
     file.mkdir()
     deleteAfter(file) {
       f(file)
     }
   }
+
+  def withTestDir[T]()(f: File => T)(implicit delete: DeletePolicy): T = withTestDir(null)(f)(delete)
 
   def deleteRecursive(files: File*): Unit = files.foreach { file =>
     if (file.isDirectory()) {

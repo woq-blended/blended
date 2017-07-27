@@ -9,8 +9,8 @@ object BlendedVersions {
   val scalaVersion = "2.11.11"
   val scalaJsVersion = "0.6.15"
 
-  val scalaTestVersion = "3.0.1"
-  
+  val scalaTestVersion = "3.0.3"
+
   val activeMqVersion = "5.14.5"
   val akkaVersion = "2.5.2"
   val apacheShiroVersion = "1.2.4"
@@ -23,9 +23,10 @@ object BlendedVersions {
 
   val parboiledVersion = "1.1.6"
 
-  val slf4jVersion = "1.7.12"
+  val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.2"
-  val springVersion = "3.2.14.RELEASE_1"
+  // from apache servicemix
+  val springVersion = "3.2.18.RELEASE_1"
 
   val prickle = "1.1.13"
 

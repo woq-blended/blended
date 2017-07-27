@@ -22,10 +22,11 @@ blended.demo/blended.demo.node \
 blended.demo/blended.demo.mgmt \
 blended.docker \
 blended.docker/blended.docker.base \
-blended.docker/blended.docker.launcher.demo \
 blended.domino \
+blended.file \
 blended.hawtio.login \
 blended.itestsupport \
+blended.jms.sampler \
 blended.jms.utils \
 blended.jmx \
 blended.jolokia \
@@ -37,10 +38,12 @@ blended.mgmt.mock \
 blended.mgmt.repo \
 blended.mgmt.repo.rest \
 blended.mgmt.rest \
+blended.mgmt.service.jmx \
 blended.mgmt.ui \
 blended.parent \
 blended.persistence \
 blended.persistence.orient \
+blended.prickle \
 blended.samples \
 blended.samples/blended.samples.camel \
 blended.samples/blended.samples.jms \
@@ -143,7 +146,7 @@ EOF
 <classpath>
 EOF
 
-  for path in src/main/scala src/main/java src/shared/scala src/main/binaryResources src/main/resources; do
+  for path in shared/main/scala shared/main/binaryResources shared/main/resources src/main/scala src/main/java src/shared/scala src/main/binaryResources src/main/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
         <classpathentry kind="src" path="$path"/>
@@ -151,7 +154,7 @@ EOF
     fi
   done
 
-  for path in src/test/scala src/test/java src/test/binaryResources src/test/resources; do
+  for path in shared/test/scala shared/test/binaryResources shared/test/resources src/test/scala src/test/java src/test/binaryResources src/test/resources; do
     if [ -e "$path" ]; then
       cat >> .classpath << EOF
         <classpathentry kind="src" output="${testClassesDir}" path="$path"/>
@@ -161,7 +164,7 @@ EOF
 
   cat >> .classpath << EOF
         <classpathentry kind="output" path="${classesDir}"/>
-        <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+        <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 EOF
 
   mkdir -p .settings
@@ -179,12 +182,12 @@ EOF
   cat > .settings/org.eclipse.jdt.core.prefs << EOF
 eclipse.preferences.version=1
 org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode=enabled
-org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.7
-org.eclipse.jdt.core.compiler.compliance=1.7
+org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.8
+org.eclipse.jdt.core.compiler.compliance=1.8
 org.eclipse.jdt.core.compiler.problem.assertIdentifier=error
 org.eclipse.jdt.core.compiler.problem.enumIdentifier=error
 org.eclipse.jdt.core.compiler.problem.forbiddenReference=warning
-org.eclipse.jdt.core.compiler.source=1.7
+org.eclipse.jdt.core.compiler.source=1.8
 EOF
 
   cat > .settings/org.scala-ide.sdt.core.prefs << EOF
@@ -223,7 +226,7 @@ scala.compiler.installation=2.11
 scala.compiler.sourceLevel=2.11
 scala.compiler.useProjectSettings=true
 stopBuildOnError=false
-target=jvm-1.6
+target=jvm-1.8
 unchecked=false
 useScopesCompiler=true
 verbose=false

@@ -13,6 +13,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     blendedUtil,
+    blendedUpdaterConfig,
     blendedLauncher,
     orgOsgiCompendium,
     orgOsgi,

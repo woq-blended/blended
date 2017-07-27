@@ -19,5 +19,8 @@ object OverlayState {
     override val state: String = "pending"
   }
 
+  def fromString(state: String): Option[OverlayState] = 
+    List(Active, Valid, Invalid, Pending).find(s => s.state == state)
+
 }
 

@@ -8,7 +8,7 @@ import com.typesafe.config.ConfigFactory
 import blended.updater.remote.ContainerState
 import java.util.Date
 
-class RemoteCommands(updater: RemoteUpdater) {
+class RemoteCommands(remoteUpdater: RemoteUpdater) {
 
   def commands = Seq(
     "remoteShow" -> "Show update information about remote container",
@@ -35,24 +35,24 @@ class RemoteCommands(updater: RemoteUpdater) {
   }
 
   def remoteShow(): String = {
-    updater.getContainerIds.map { id =>
-      s"Update state of container with ID ${id}:\n${updater.getContainerState(id).map(renderContainerState)}\n"
+    remoteUpdater.getContainerIds().map { id =>
+      s"Update state of container with ID ${id}:\n${remoteUpdater.getContainerState(id).map(renderContainerState)}\n"
     }.mkString("\n")
   }
 
   def remoteShow(containerId: String): String = {
-    updater.getContainerState(containerId) match {
+    remoteUpdater.getContainerState(containerId) match {
       case Some(state) => s"Update state of container with ID ${containerId}:\n${state}\n"
       case None => s"Unknown container ID: ${containerId}"
     }
   }
 
   def profiles(): String = {
-    updater.getRuntimeConfigs().map(rc => s"${rc.name}-${rc.version}").mkString("\n")
+    remoteUpdater.getRuntimeConfigs().map(rc => s"${rc.name}-${rc.version}").mkString("\n")
   }
 
   def overlays(): String = {
-    updater.getOverlayConfigs().map(oc => s"${oc.name}-${oc.version}").mkString("\n")
+    remoteUpdater.getOverlayConfigs().map(oc => s"${oc.name}-${oc.version}").mkString("\n")
   }
 
   def registerProfile(profileFile: String): Unit = {
@@ -64,24 +64,24 @@ class RemoteCommands(updater: RemoteUpdater) {
       val config = ConfigFactory.parseFile(file).resolve()
       val runtimeConfig = RuntimeConfigCompanion.read(config)
       println(s"Profile: ${runtimeConfig}")
-      updater.registerRuntimeConfig(runtimeConfig.get)
+      remoteUpdater.registerRuntimeConfig(runtimeConfig.get)
     }
   }
 
   def remoteStage(containerId: String, profileName: String, profileVersion: String): Unit = {
-    updater.getRuntimeConfigs().find(rc => rc.name == profileName && rc.version == profileVersion) match {
+    remoteUpdater.getRuntimeConfigs().find(rc => rc.name == profileName && rc.version == profileVersion) match {
       case None => println(s"Profile '${profileName}-${profileVersion}' not found")
       case Some(rc) =>
         // FIXME: support for overlay
-        updater.addAction(containerId, AddRuntimeConfig(rc))
-        updater.addAction(containerId, StageProfile(profileName, profileVersion, List.empty))
+        remoteUpdater.addAction(containerId, AddRuntimeConfig(rc))
+        remoteUpdater.addAction(containerId, StageProfile(profileName, profileVersion, List.empty))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${profileName}-${profileVersion}")
     }
   }
 
   def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
     // FIXME: support for overlays
-    updater.addAction(containerId, ActivateProfile(profileName, profileVersion, List.empty))
+    remoteUpdater.addAction(containerId, ActivateProfile(profileName, profileVersion, List.empty))
     println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 
