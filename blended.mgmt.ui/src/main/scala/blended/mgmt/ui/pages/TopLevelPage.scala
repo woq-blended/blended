@@ -1,9 +1,8 @@
 package blended.mgmt.ui.pages
 
-import blended.mgmt.ui.backend.DataManager
-import japgolly.scalajs.react.extra.router.{Path, RouterConfigDsl}
-import japgolly.scalajs.react.{Callback, ReactComponentB, ReactElement}
 import blended.mgmt.ui.util.I18n
+import japgolly.scalajs.react.extra.router.{Path, RouterConfigDsl}
+import japgolly.scalajs.react.{ReactComponentB, ReactElement}
 
 abstract class TopLevelPage {
 
@@ -17,10 +16,6 @@ abstract class TopLevelPage {
 
   def component =
     ReactComponentB.static(name, content)
-      .componentWillMount(c => Callback {
-        Callback.info("foooo " + routerPath)
-        DataManager.selectedPage = this
-      })
       .build
 }
 

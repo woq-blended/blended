@@ -16,9 +16,9 @@ import blended.mgmt.ui.ConsoleSettings
  *
  * @see [[ContainerInfo]]
  */
-object CompManagementConsole {
+object ContainerComp {
 
-  private[this] val log: Logger = Logger[CompManagementConsole.type]
+  private[this] val log: Logger = Logger[ContainerComp.type]
   private[this] val i18n = I18n()
 
   case class State(containerList: List[ContainerInfo], filter: And[ContainerInfo] = And(), selected: Option[ContainerInfo] = None) {

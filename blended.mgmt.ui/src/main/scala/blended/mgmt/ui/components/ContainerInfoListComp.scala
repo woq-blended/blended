@@ -1,13 +1,9 @@
 package blended.mgmt.ui.components
 
-import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.{ Callback, ReactComponentB, ReactEventI }
+import blended.mgmt.ui.util.{I18n, Logger}
+import blended.updater.config.{ContainerInfo, OverlayState}
 import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.BackendScope
-import blended.updater.config.Profile
-import blended.updater.config.OverlayState
+import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB}
 
 /**
  * React Component to render a list of [[ContainerInfo]]s.

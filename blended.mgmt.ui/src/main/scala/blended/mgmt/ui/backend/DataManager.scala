@@ -24,13 +24,6 @@ object DataManager {
 
   private[this] val log = Logger[DataManager.type]
 
-  var selectedPage: TopLevelPage = TopLevelPages.defaultPage
-
-  def setSelectedPage(page: TopLevelPage): Unit = {
-    log.debug("Selected Page : " + page.routerPath.toString)
-    selectedPage = page
-  }
-
   object containerData extends Observable[List[ContainerInfo]] {
 
     override var data: List[ContainerInfo] = List.empty

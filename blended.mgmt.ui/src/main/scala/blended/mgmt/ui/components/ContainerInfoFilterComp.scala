@@ -83,45 +83,89 @@ object ContainerInfoFilterComp {
       //        filters.collect {
       //          case ContainerInfoFilter.
       //        }}
-      <.form(
-        ^.onSubmit ==> onSubmit,
-        <.div(
-          <.span(i18n.tr("Search")),
-          <.input(
-            ^.`type` := "text",
-            ^.value := state.searchText,
-            ^.onChange ==> onSearchTextChange
-          )
-        ),
-        <.div(
-          <.span(i18n.tr("Container ID")),
-          <.input(
-            ^.`type` := "text",
-            ^.value := state.containerId,
-            ^.onChange ==> onContainerIdChange
-          )
-        ),
-        <.div(
-          <.span(i18n.tr("Property")),
-          <.select(
-            (Seq(^.onChange ==> onPropertyNameChange) ++
-              propKeys.map(p => <.option(^.value := p,
-                // TODO: help needed here, don't know how to apply the "selected" option
-                //                  (state.propertyName == p) ?= ^.selected := "selected", 
-                p))
-            ): _*
+      <.div(
+        ^.border := "1px solid",
+        ^.borderRadius := "5px",
+        ^.margin := "5px",
+        ^.padding := "30px",
+        <.form(
+          ^.onSubmit ==> onSubmit,
+          <.div(
+            ^.cls := "form-group row",
+            <.label(
+              ^.`for` := "searchText",
+              ^.cls := "col-sm-2 col-form-label",
+              i18n.tr("Search")
+            ),
+            <.div(
+              ^.cls := "col-sm-10",
+              <.input(
+                ^.id := "searchText",
+                ^.`type` := "text",
+                ^.cls := "form-control",
+                ^.value := state.searchText,
+                ^.onChange ==> onSearchTextChange
+              )
+            )
           ),
-          <.input(
-            ^.`type` := "text",
-            // ^.list := "propvalues",
-            ^.value := state.propertyValue,
-            ^.onChange ==> onPropertyValueChange
-          ) // ,
-        // <.datalist(^.id := "propvalues")
-        ),
-        <.input(
-          ^.`type` := "submit",
-          ^.value := "Filter"
+          <.div(
+            ^.cls := "form-group row",
+            <.label(
+              ^.`for` := "containerId",
+              ^.cls := "col-sm-2 col-form-label",
+              i18n.tr("Container ID")
+            ),
+            <.div(
+              ^.cls := "col-sm-10",
+              <.input(
+                ^.id := "containerId",
+                ^.`type` := "text",
+                ^.cls := "form-control",
+                ^.value := state.containerId,
+                ^.onChange ==> onContainerIdChange
+              )
+            )
+          ),
+          <.div(
+            ^.cls := "form-group row",
+            <.div(
+              ^.cls := "col-sm-2",
+              <.label(
+                ^.`for` := "propValue",
+                ^.cls := " col-form-label",
+                i18n.tr("Property")
+              ),
+              <.select(
+                (Seq(^.onChange ==> onPropertyNameChange) ++
+                  propKeys.map(p => <.option(^.value := p,
+                    // TODO: help needed here, don't know how to apply the "selected" option
+                    //                  (state.propertyName == p) ?= ^.selected := "selected",
+                    p))
+                  ): _*
+              )
+            ),
+            <.div(
+              ^.cls := "col-sm-10",
+              <.input(
+                ^.id := "propValue",
+                ^.`type` := "text",
+                ^.cls := "form-control",
+                // ^.list := "propvalues",
+                ^.value := state.propertyValue,
+                ^.onChange ==> onPropertyValueChange
+              ) // ,
+            )
+
+          // <.datalist(^.id := "propvalues")
+          ),
+          <.div(
+            ^.cls := "form-group row",
+            <.input(
+              ^.`type` := "submit",
+              ^.cls := "btn btn-primary pull-right ",
+              ^.value := "Filter"
+            )
+          )
         )
       )
     }
