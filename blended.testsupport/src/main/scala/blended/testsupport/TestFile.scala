@@ -29,6 +29,32 @@ trait TestFile {
     }
   }
 
+  
+  def withTestFile[T](content: String, dir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
+    val file = File.createTempFile("test", "", dir)
+    if (!file.exists()) {
+      throw new AssertionError("Just created file does not exist: " + file)
+    }
+
+    deleteAfter(file) {
+      val fos = new FileOutputStream(file)
+      val os = new PrintStream(new BufferedOutputStream(fos))
+      try {
+        os.print(content)
+      } finally {
+        os.flush()
+        fos.flush()
+        try {
+          fos.getFD().sync()
+        } catch {
+          case e: SyncFailedException => // at least we tried
+        }
+        os.close()
+      }
+      f(file)
+    }
+  }
+
   def withTestFile[T](content: String)(f: File => T)(implicit delete: DeletePolicy): T = {
     val file = File.createTempFile("test", "")
     if (!file.exists()) {
@@ -53,6 +79,7 @@ trait TestFile {
       f(file)
     }
   }
+
 
   def withTestFiles[T](content1: String, content2: String)(f: (File, File) => T)(implicit delete: DeletePolicy): T =
     withTestFile(content1) { file1 =>
