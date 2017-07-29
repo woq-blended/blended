@@ -45,7 +45,7 @@ class Updater(
   private[this] val log = LoggerFactory.getLogger(classOf[Updater])
 
   val artifactDownloader = context.actorOf(
-    BalancingPool(config.artifactDownloaderPoolSize).props(ArtifactDownloader.props()),
+    BalancingPool(config.artifactDownloaderPoolSize).props(ArtifactDownloader.props(config.mvnRepositories)),
     "artifactDownloader")
   val unpacker = context.actorOf(
     BalancingPool(config.unpackerPoolSize).props(Unpacker.props()),
