@@ -15,6 +15,7 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
     "remoteStage" -> "Stage a profile for a remote container",
     "remoteActivate" -> "Activate a profile for a remote container",
     "registerProfile" -> "Register a profile",
+    "registerOverlay" -> "Register an overlay",
     "profiles" -> "Show all registered profiles",
     "overlays" -> "Show all registered overlays"
   )
@@ -65,6 +66,19 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
       val runtimeConfig = RuntimeConfigCompanion.read(config)
       println(s"Profile: ${runtimeConfig}")
       remoteUpdater.registerRuntimeConfig(runtimeConfig.get)
+    }
+  }
+
+  def registerOverlay(overlayFile : String) : Unit = {
+    val file = new File(overlayFile)
+    if (!file.exists()) {
+      println(s"File ${file.toURI()} does not exist")
+    } else {
+      println(s"Reading overlay from file: ${file.toURI()}")
+      val config = ConfigFactory.parseFile(file).resolve()
+      val overlayConfig = OverlayConfigCompanion.read(config)
+      println(s"Overlay: ${overlayConfig}")
+      remoteUpdater.registerOverlayConfig(overlayConfig.get)
     }
   }
 
