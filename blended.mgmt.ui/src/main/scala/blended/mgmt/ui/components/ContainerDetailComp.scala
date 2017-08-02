@@ -71,7 +71,7 @@ object ContainerDetailComp {
               profile.state != OverlayState.Active ?= <.button(
                 ^.`type` := "button",
                 ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                (profileUpdater.isEmpty || profile.state != OverlayState.Valid) ?= (^.disabled := "disabled"),
                 ^.onClick ==> activateProfile(profile),
                 i18n.tr("Activate")
               ),
