@@ -64,7 +64,7 @@ object ContainerComp {
   }
 
   val Component =
-    ReactComponentB[Unit]("MgmtConsole")
+    ReactComponentB[Unit]("Container")
       .initialState(State(containerList = List.empty))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.containerData.addObserver(c.backend))

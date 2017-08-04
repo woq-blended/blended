@@ -1,8 +1,8 @@
 package blended.mgmt.ui.backend
 
 import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.pages.{ TopLevelPage, TopLevelPages }
-import blended.updater.config.ContainerInfo
+import blended.mgmt.ui.pages.{TopLevelPage, TopLevelPages}
+import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.scalajs.dom.ext.Ajax
 import prickle._
@@ -10,15 +10,6 @@ import prickle._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
 import blended.mgmt.ui.util.Logger
-import blended.updater.config.RemoteContainerState
-import blended.updater.config.Profile
-import blended.updater.config.ProfileInfo
-import blended.updater.config.ProfileInfo
-import blended.updater.config.OverlaySet
-import blended.updater.config.OverlayRef
-import blended.updater.config.OverlayState
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.OverlayConfig
 
 object DataManager {
 
@@ -37,7 +28,14 @@ object DataManager {
         case _ => log.error("Could not retrieve container list from server")
       }
     }
+  }
 
+  //TODO: implement
+  object serviceData extends Observable[List[ServiceInfo]] {
+
+    override var data: List[ServiceInfo] = List.empty
+
+    override def refresh(): Unit = {}
   }
 
   object profilesData extends Observable[List[Profile]] {

@@ -54,7 +54,8 @@ object ContainerDetailComp {
         case Props(None, _) => <.span(i18n.tr("No Container selected"))
         case Props(Some(containerInfo), profileUpdater) =>
 
-          val props = containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
+          val props = DataTableComp.Component(DataTableContent(title = "Properties", content = containerInfo.properties))
+            //containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
           val profiles = containerInfo.profiles.flatMap(_.toSingle).map { profile =>
 
@@ -120,10 +121,7 @@ object ContainerDetailComp {
               " ",
               containerInfo.containerId
             ),
-            <.div(
-              i18n.tr("Properties:"),
-              <.div(props: _*)
-            ),
+            props,
             <.div(
               i18n.tr("Profiles:"),
               <.div(profiles: _*)
