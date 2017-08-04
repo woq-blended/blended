@@ -54,7 +54,7 @@ object ContainerDetailComp {
         case Props(None, _) => <.span(i18n.tr("No Container selected"))
         case Props(Some(containerInfo), profileUpdater) =>
 
-          val props = DataTableComp.Component(DataTableContent(title = "Properties", content = containerInfo.properties))
+          val props = DataTableComp.Component(DataTableContent(title = "Container Properties", content = containerInfo.properties))
             //containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
 
           val profiles = containerInfo.profiles.flatMap(_.toSingle).map { profile =>
@@ -95,22 +95,7 @@ object ContainerDetailComp {
             )
           }
 
-          val services = containerInfo.serviceInfos.map { serviceInfo =>
-
-            val sProps = serviceInfo.props.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
-
-            <.div(
-              <.div(
-                i18n.tr("Service: "),
-                serviceInfo.name
-              ),
-              <.div(
-                i18n.tr("Type: "),
-                serviceInfo.serviceType
-              ),
-              DataTableComp.Component(DataTableContent(title = "Properties", content = serviceInfo.props))
-            )
-          }
+          val services = containerInfo.serviceInfos.map { info => <.div(ServiceInfoComp.Component(info)) }
 
           <.div(
             <.h2(
@@ -128,7 +113,8 @@ object ContainerDetailComp {
               <.div(profiles: _*)
             ),
             <.div(
-              i18n.tr("Services:"),
+              ^.cls := "panel panel-default",
+              <.h2(i18n.tr("Container Services:")),
               <.div(services: _*)
             )
           )

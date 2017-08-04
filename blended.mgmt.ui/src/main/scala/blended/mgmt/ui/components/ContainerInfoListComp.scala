@@ -39,10 +39,16 @@ object ContainerInfoListComp {
             ")"
           )
         )
-
       }
 
-      <.div(rows)
+      <.div(
+        ^.cls := "panel panel-default",
+        <.div(
+          ^.cls := "panel-heading",
+          i18n.tr("Container")
+        ),
+        <.div(rows)
+      )
     }
   }
 
