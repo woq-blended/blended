@@ -36,27 +36,26 @@ object OverlayConfigDetailComp {
         case Props(None) => <.span(i18n.tr("No OverlayConfig selected"))
         case Props(Some(oc)) =>
 
-          def props(ps: Map[String, String]) = ps.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
-
           val genConf = oc.generatedConfigs.map(c => <.div(c.configFile, <.pre(c.config)))
 
           <.div(
-            <.h2(
-              i18n.tr("Overlay Config:"),
-              " ",
-              oc.name,
-              "-",
-              oc.version
-            ),
+            ^.cls := "panel panel-default",
             <.div(
-              i18n.tr("Properties:"),
-              <.div(props(oc.properties): _*)
+              ^.cls := "panel-heading",
+              <.h3(i18n.tr("Overlay Config")),
+              <.h4(oc.name + " " + i18n.tr("Version") + " " + oc.version)
             ),
+            DataTableComp.Component(DataTableContent(
+              title = "Properties",
+              content = oc.properties
+            )),
             <.div(
-              i18n.tr("Generated Configs:"),
+              ^.cls := "panel panel-default",
               <.div(
-                genConf: _*
-              )
+                ^.cls := "panel-heading",
+                <.h3(i18n.tr("Generated Configs:"))
+              ),
+              genConf
             )
           )
       }

@@ -45,32 +45,35 @@ object ProfileDetailComp {
               "-",
               rc.version
             ),
-            <.div(
-              i18n.tr("Properties:"),
-              <.div(props(rc.properties): _*)
-            ),
-            <.div(
-              i18n.tr("Framework Properties:"),
-              <.div(props(rc.frameworkProperties): _*)
-            ),
-            <.div(
-              i18n.tr("System Properties:"),
-              <.div(props(rc.systemProperties): _*)
-            ),
-            <.div(
-              i18n.tr("Features:"),
-              <.div(rc.features.map(f => <.span(f.name, "-", f.version)): _*)
-            ),
-            <.div(
-              i18n.tr("Bundles:"),
-              <.div(rc.bundles.map(b => <.span(b.url)): _*)
-            ),
-            <.div(
-              i18n.tr("Resources:"),
-              <.div(rc.resources.map(b => <.span(b.url)): _*)
-            ),
-            <.span()
+            DataTableComp.Component(DataTableContent(
+              title = "Profile Properties",
+              content = rc.properties
+            )),
+            DataTableComp.Component(DataTableContent(
+              title = "Framework Properties",
+              content = rc.frameworkProperties
+            )),
+            DataTableComp.Component(DataTableContent(
+              title = "System Properties",
+              content = rc.systemProperties
+            )),
+            DataTableComp.Component(DataTableContent(
+              title = "Features",
+              headings = Array("Name", "Version"),
+              content = rc.features.map( f => Array(f.name, f.version))
+            )),
+            DataTableComp.Component(DataTableContent(
+              title = "Bundles",
+              headings = Array("Url", "AutoStart", "StartLevel"),
+              content = rc.bundles.map(b => Array(b.url, s"${b.start}", s"${b.startLevel}"))
+            )),
+            DataTableComp.Component(DataTableContent(
+              title = "Resources",
+              headings = Array("Url", "Filename"),
+              content = rc.resources.map(r => Array(r.url, r.fileName.getOrElse(""))
+            ))
           )
+        )
       }
     }
   }

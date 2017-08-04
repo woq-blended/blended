@@ -30,16 +30,24 @@ object DataTableComp {
     )
 
     def render(props: DataTableContent) = {
+
+      val width = 100 / props.headings.size
+
       <.div(
         ^.cls := "panel panel-default",
         <.div(
           ^.cls := "panel-heading",
-          i18n.tr(props.title)
+          <.h2(i18n.tr(props.title))
         ),
         <.table(
           ^.cls := "table",
           <.tr(
-            props.headings.map(h => <.th(i18n.tr(h))):_*
+            props.headings.map { h =>
+              <.th(
+                ^.width := s"$width%",
+                i18n.tr(h)
+              )
+            }:_*
           ),
           props.content.map(line)
         )
