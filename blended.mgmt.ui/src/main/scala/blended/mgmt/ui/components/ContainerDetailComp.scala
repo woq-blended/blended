@@ -108,10 +108,7 @@ object ContainerDetailComp {
                 i18n.tr("Type: "),
                 serviceInfo.serviceType
               ),
-              <.div(
-                i18n.tr("Properties: "),
-                <.div(sProps: _*)
-              )
+              DataTableComp.Component(DataTableContent(title = "Properties", content = serviceInfo.props))
             )
           }
 
@@ -123,7 +120,11 @@ object ContainerDetailComp {
             ),
             props,
             <.div(
-              i18n.tr("Profiles:"),
+              ^.cls := "panel panel-default",
+              <.div(
+                ^.cls := "panel-heading",
+                i18n.tr("Profiles:")
+              ),
               <.div(profiles: _*)
             ),
             <.div(
