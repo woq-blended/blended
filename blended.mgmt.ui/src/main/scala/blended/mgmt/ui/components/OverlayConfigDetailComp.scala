@@ -1,23 +1,11 @@
 package blended.mgmt.ui.components
 
-import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
+import blended.mgmt.ui.util.{I18n, Logger}
+import blended.updater.config.{ContainerInfo, OverlayConfig}
+import japgolly.scalajs.react.{BackendScope, ReactComponentB}
 import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.BackendScope
-import blended.updater.config.OverlayState
-import blended.updater.config.Profile
-import blended.updater.config.OverlaySet
-import japgolly.scalajs.react.CallbackTo
-import blended.mgmt.ui.backend.ProfileUpdater
-import blended.updater.config.ActivateProfile
-import blended.updater.config.UpdateAction
-import blended.updater.config.StageProfile
-import blended.updater.config.Profile.SingleProfile
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.OverlayConfig
+
+import scalajs.js.JSON
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -36,7 +24,22 @@ object OverlayConfigDetailComp {
         case Props(None) => <.span(i18n.tr("No OverlayConfig selected"))
         case Props(Some(oc)) =>
 
-          val genConf = oc.generatedConfigs.map(c => <.div(c.configFile, <.pre(c.config)))
+          val replacer : scalajs.js.Array[scalajs.js.Any] = null
+
+          val genConf = oc.generatedConfigs.map { c =>
+
+            val obj : scalajs.js.Any = JSON.parse(c.config)
+            val formatted = JSON.stringify(obj, replacer, 2)
+
+            <.div(
+              ^.cls := "panel panel-default",
+              <.div(
+                ^.cls := "panel-heading",
+                <.h3(c.configFile)
+              ),
+              <.pre(formatted)
+            )
+          }
 
           <.div(
             ^.cls := "panel panel-default",
