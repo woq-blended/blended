@@ -28,6 +28,11 @@
       </includes>
     </fileSet>
 
+    <fileSet>
+      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/bootstrap/fonts</directory>
+      <outputDirectory>fonts</outputDirectory>
+    </fileSet>
+
     <!-- JQuery -->
     <fileSet>
       <directory>${project.build.directory}/web/web-modules/main/webjars/lib/jquery</directory>

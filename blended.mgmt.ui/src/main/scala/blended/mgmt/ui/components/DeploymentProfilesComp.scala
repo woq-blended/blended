@@ -38,7 +38,7 @@ object DeploymentProfilesComp {
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
 
-    override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData)).runNow()
+    override def dataChanged(newData: List[ContainerInfo]): Unit = scope.setState(State(newData)).runNow()
     //
     //    def selectContainerProfile(profile: Option[]): Callback = {
     //      //      scope.modState(s => s.copy(selected = profile).consistent)

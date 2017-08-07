@@ -36,23 +36,43 @@ object ContainerInfoFilterBreadcrumpComp {
     }
 
     def render(props: Props) = {
+
       val filters = props.filter.filters
 
+      def button(f : Filter[ContainerInfo]) = <.div(
+        ^.cls := "glyphicon glyphicon-remove glyphicon-remove-sign glyphicon-white",
+        ^.onClick ==> removeFilter(f)
+      )
+
       val selectedFilters = filters.map { filter =>
-        <.span(
-          <.span(filter.toString()),
-          <.span(
-            i18n.trc("Remove filter", "X"),
-            ^.onClick ==> removeFilter(filter)
-          )
+        <.div(
+          ^.cls := "label label-primary",
+          ^.display := "inline-block",
+          ^.padding := "10px",
+          ^.margin := "5px",
+          filter.toString(),
+          button(filter)
         )
       }
 
-      val clearFilters = filters.headOption.map(_ => <.span(
+      val clearFilters = filters.headOption.map(_ => <.button(
+        ^.cls := "btn btn-xs btn-danger",
         i18n.tr("Clear Filter"),
-        ^.onClick ==> removeAllFilter))
+        ^.onClick ==> removeAllFilter)
+      ).toList
 
-      <.span((selectedFilters ++ clearFilters): _*)
+      <.div(
+        ^.cls := "panel panel-default",
+        <.div(
+          ^.cls := "panel-heading",
+          i18n.tr("Applied Filters")
+        ),
+        <.div(
+          ^.cls := "panel-body",
+          selectedFilters,
+          clearFilters
+        )
+      )
     }
   }
 

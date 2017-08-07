@@ -1,15 +1,12 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.{ DataManager, Observer }
+import blended.mgmt.ui.ConsoleSettings
+import blended.mgmt.ui.backend.{DataManager, DirectProfileUpdater, Observer}
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{ BackendScope, ReactComponentB, Callback }
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.components.filter.And
-import blended.mgmt.ui.backend.DirectProfileUpdater
-import blended.mgmt.ui.ConsoleSettings
+import japgolly.scalajs.react.{BackendScope, ReactComponentB}
 
 /**
  * React component showing a filterable page about containers and their details.
@@ -28,7 +25,7 @@ object ContainerComp {
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
 
-    override def update(newData: List[ContainerInfo]): Unit = scope.setState(State(newData).consistent).runNow()
+    override def dataChanged(newData: List[ContainerInfo]): Unit = scope.setState(State(newData).consistent).runNow()
 
     def addFilter(filter: Filter[ContainerInfo]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())

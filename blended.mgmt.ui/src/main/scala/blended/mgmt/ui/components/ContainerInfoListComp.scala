@@ -45,7 +45,7 @@ object ContainerInfoListComp {
         ^.cls := "panel panel-default",
         <.div(
           ^.cls := "panel-heading",
-          i18n.tr("Container")
+          <.h3(i18n.tr("Container"))
         ),
         <.div(rows)
       )

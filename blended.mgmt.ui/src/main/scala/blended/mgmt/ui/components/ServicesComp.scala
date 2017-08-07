@@ -18,11 +18,16 @@ object ServicesComp {
   }
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ServiceInfo]] {
-    override def update(newData: List[ServiceInfo]): Unit = scope.setState(State(newData).consistent).runNow()
+    override def dataChanged(newData: List[ServiceInfo]): Unit = scope.setState(State(newData).consistent).runNow()
 
     def render(s: State) = {
-      log.debug(s"Rerendering with $s")
-      <.h1("Services")
+
+      def services = s.serviceList.map(svc => ServiceInfoComp.Component(svc))
+
+      <.div(
+        <.h1("Services"),
+        <.div(services)
+      )
     }
   }
 

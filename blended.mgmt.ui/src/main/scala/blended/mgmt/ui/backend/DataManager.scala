@@ -1,7 +1,7 @@
 package blended.mgmt.ui.backend
 
 import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.pages.{TopLevelPage, TopLevelPages}
+import blended.mgmt.ui.util.Logger
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.scalajs.dom.ext.Ajax
@@ -9,7 +9,6 @@ import prickle._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Success
-import blended.mgmt.ui.util.Logger
 
 object DataManager {
 
@@ -30,23 +29,27 @@ object DataManager {
     }
   }
 
-  //TODO: implement
   object serviceData extends Observable[List[ServiceInfo]] {
 
     override var data: List[ServiceInfo] = List.empty
 
-    override def refresh(): Unit = {}
+    override def refresh(): Unit = {
+
+      Ajax.get(ConsoleSettings.containerDataUrl).onComplete {
+        case Success(xhr) =>
+          log.trace("response: " + xhr.responseText)
+          val ctData = Unpickle[List[RemoteContainerState]].fromString(xhr.responseText).get.map(_.containerInfo)
+          update(ctData.flatMap(ct => ct.serviceInfos))
+        case _ => log.error("Could not retrieve container list from server")
+      }
+    }
   }
 
   object profilesData extends Observable[List[Profile]] {
 
-    override var data: List[Profile] = List( //      Profile("profileA", "1.0", List()),
-    //      Profile("profileB", "1.0", List()),
-    //      Profile("profileA", "2.0", List(OverlaySet(List(OverlayRef("ov", "1")), state = OverlayState.Pending)))
-    )
+    override var data: List[Profile] = List.empty
 
     override def refresh(): Unit = {
-      update(data)
       Ajax.get(ConsoleSettings.profilesUrl).onComplete {
         case Success(xhr) =>
           log.trace("response: " + xhr.responseText)
@@ -58,10 +61,9 @@ object DataManager {
 
   object runtimeConfigsData extends Observable[List[RuntimeConfig]] {
 
-    override var data: List[RuntimeConfig] = List()
+    override var data: List[RuntimeConfig] = List.empty
 
     override def refresh(): Unit = {
-      update(data)
       Ajax.get(ConsoleSettings.runtimeConfigsUrl).onComplete {
         case Success(xhr) =>
           log.trace("response: " + xhr.responseText)
@@ -73,10 +75,9 @@ object DataManager {
 
   object overlayConfigsData extends Observable[List[OverlayConfig]] {
 
-    override var data: List[OverlayConfig] = List()
+    override var data: List[OverlayConfig] = List.empty
 
     override def refresh(): Unit = {
-      update(data)
       Ajax.get(ConsoleSettings.overlayConfigUrl).onComplete {
         case Success(xhr) =>
           log.trace("response: " + xhr.responseText)

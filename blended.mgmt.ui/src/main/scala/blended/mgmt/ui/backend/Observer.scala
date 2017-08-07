@@ -1,14 +1,16 @@
 package blended.mgmt.ui.backend
 
+import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.Callback
 
 trait Observer[T] {
 
-  def update (newData: T) : Unit
+  def dataChanged(newData: T) : Unit
 }
 
 trait Observable[T] {
 
+  private[this] val log = Logger(getClass.getName())
   var data : T
 
   def refresh() : Unit
@@ -17,11 +19,13 @@ trait Observable[T] {
 
   def addObserver(o : Observer[T]) = Callback {
     listener = o :: listener
+    log.trace(s"actual [${listener.size}] observers")
     refresh()
   }
 
   def removeObserver(o: Observer[T]) = Callback {
     listener = listener.filter(_ != o)
+    log.trace(s"actual [${listener.size}] observers")
   }
 
   def update(newData : T) : Unit = {
@@ -30,7 +34,7 @@ trait Observable[T] {
   }
 
   def notifyObservers() : Unit = {
-    listener.foreach(_.update(data))
+    listener.foreach(_.dataChanged(data))
   }
 }
 

@@ -29,7 +29,7 @@ object ProfilesComp {
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[RuntimeConfig]] {
 
-    override def update(newData: List[RuntimeConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override def dataChanged(newData: List[RuntimeConfig]): Unit = scope.setState(State(newData).consistent).runNow()
 
     def addFilter(filter: Filter[RuntimeConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())

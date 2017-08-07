@@ -28,7 +28,7 @@ object OverlayConfigComp {
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[OverlayConfig]] {
 
-    override def update(newData: List[OverlayConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override def dataChanged(newData: List[OverlayConfig]): Unit = scope.setState(State(newData).consistent).runNow()
 
     def addFilter(filter: Filter[OverlayConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
