@@ -4,8 +4,8 @@ import blended.mgmt.ui.backend.ProfileUpdater
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.Profile.SingleProfile
 import blended.updater.config._
-import japgolly.scalajs.react.{BackendScope, CallbackTo, ReactComponentB, ReactEventI}
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react._
+import vdom.html_<^._
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -19,7 +19,7 @@ object ContainerDetailComp {
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEventI) = {
+    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEvent) = {
       scope.props.map { p =>
         p.containerInfo match {
           case Some(ci) =>
@@ -35,15 +35,15 @@ object ContainerDetailComp {
       }
     }
 
-    def activateProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def activateProfile(profile: SingleProfile)(event: ReactEvent) = {
       sendUpdateAction(ActivateProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def resolveProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def resolveProfile(profile: SingleProfile)(event: ReactEvent) = {
       sendUpdateAction(StageProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def deleteProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def deleteProfile(profile: SingleProfile)(event: ReactEvent) = {
       CallbackTo {
         log.trace(s"Unimplemented callback: delete profile ${profile}")
       }
@@ -65,33 +65,33 @@ object ContainerDetailComp {
               ^.`class` := profile.state.toString,
               s"${profile.name}-${profile.version} ${genTitle} ",
               <.span(
-                profile.overlaySet.reason.isDefined ?= (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}"),
+                (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}").when(profile.overlaySet.reason.isDefined),
                 s"(${profile.state})"
               ),
               " ",
-              profile.state != OverlayState.Active ?= <.button(
+              <.button(
                 ^.`type` := "button",
                 ^.`class` := "btn btn-default btn-xs",
-                (profileUpdater.isEmpty || profile.state != OverlayState.Valid) ?= (^.disabled := "disabled"),
+                (^.disabled := true).when(profileUpdater.isEmpty || profile.state != OverlayState.Valid),
                 ^.onClick ==> activateProfile(profile),
                 i18n.tr("Activate")
-              ),
+              ).when(profile.state != OverlayState.Active),
               " ",
-              profile.state != OverlayState.Active ?= <.button(
+              <.button(
                 ^.`type` := "button",
                 ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> deleteProfile(profile),
                 i18n.tr("Delete")
-              ),
+              ).when(profile.state != OverlayState.Active),
               " ",
-              profile.state == OverlayState.Invalid ?= <.button(
+              <.button(
                 ^.`type` := "button",
                 ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> resolveProfile(profile),
                 i18n.tr("Try to Resolve")
-              )
+              ).when(profile.state == OverlayState.Invalid)
             )
           }
 
@@ -123,8 +123,7 @@ object ContainerDetailComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Props]("ContainerDetail")
-      .renderBackend[Backend]
-      .build
+  val Component = ScalaComponent.builder[Props]("ContainerDetail")
+    .renderBackend[Backend]
+    .build
 }

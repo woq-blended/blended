@@ -1,19 +1,11 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.DataManager
-import blended.mgmt.ui.components.filter.And
-
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.BackendScope
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.Observer
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
+import blended.mgmt.ui.backend.{DataManager, Observer}
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.RuntimeConfig
+import japgolly.scalajs.react.{Callback, _}
+import japgolly.scalajs.react.vdom.html_<^._
 
 object ProfilesComp {
 
@@ -44,7 +36,7 @@ object ProfilesComp {
       scope.modState(s => s.copy(filter = And()).consistent).runNow()
     }
 
-    def selectContainer(profile: Option[RuntimeConfig]): Callback = {
+    def selectProfile(profile: Option[RuntimeConfig]): Callback = {
       scope.modState(s => s.copy(selected = profile).consistent)
     }
 
@@ -54,7 +46,7 @@ object ProfilesComp {
       val renderedConfigs = s.filteredRuntimeConfigs.map { p =>
         <.div(
           <.span(
-            ^.onClick --> selectContainer(Some(p)),
+            ^.onClick --> selectProfile(Some(p)),
             p.name,
             "-",
             p.version
@@ -71,8 +63,7 @@ object ProfilesComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("Profiles").
+  val Component = ScalaComponent.builder[Unit]("Profiles").
       initialState(State(profiles = List()))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.runtimeConfigsData.addObserver(c.backend))

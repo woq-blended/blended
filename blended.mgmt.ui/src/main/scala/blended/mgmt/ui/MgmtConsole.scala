@@ -1,18 +1,15 @@
 package blended.mgmt.ui
 
-import blended.mgmt.ui.backend.DataManager
+import blended.mgmt.ui.pages.TopLevelPages.values
 import blended.mgmt.ui.pages._
-import org.scalajs.dom
 import japgolly.scalajs.react._
-import vdom.prefix_<^._
-import japgolly.scalajs.react.extra._
 import japgolly.scalajs.react.extra.router._
+import japgolly.scalajs.react.vdom.html_<^._
+import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
 
-@JSExport
-class MgmtConsole extends js.JSApp {
+object MgmtConsole extends js.JSApp {
 
   case class NavState(
     selected : TopLevelPage
@@ -44,9 +41,9 @@ class MgmtConsole extends js.JSApp {
         ^.cls := "navbar navbar-default",
         <.ul(
           ^.cls := "navbar-header",
-          TopLevelPages.values.map { tlp =>
+          TagMod(TopLevelPages.values.map { tlp =>
             nav(tlp.name, tlp)
-          }
+          }:_*)
         )
       )
     }
@@ -54,21 +51,29 @@ class MgmtConsole extends js.JSApp {
 
   val initial = NavState(TopLevelPages.defaultPage)
 
-  val navMenu = ReactComponentB[RouterCtl[TopLevelPage]]("Menu")
+  val navMenu = ScalaComponent.builder[RouterCtl[TopLevelPage]]("Menu")
     .initialState(initial)
     .backend(new Backend(_))
     .renderBackend
     .build
 
+  val routes = RouterConfigDsl[TopLevelPage].buildRule { dsl =>
+    import dsl._
+
+    values.foldLeft(trimSlashes){ (rule, page) =>
+      rule | staticRoute(page.routerPath, page) ~> renderR(_ => page.component())
+    }
+  }
+
   val routerConfig = RouterConfigDsl[TopLevelPage].buildConfig { dsl =>
     import dsl._
 
-    (trimSlashes | TopLevelPages.routes)
+    (trimSlashes | routes)
       .notFound(redirectToPage(TopLevelPages.defaultPage)(Redirect.Replace))
       .renderWith(layout(_, _))
   }
 
-  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) =
+  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement =
     <.div(
       navMenu(c),
       <.div(
@@ -79,9 +84,9 @@ class MgmtConsole extends js.JSApp {
   val baseUrl =
       BaseUrl.fromWindowOrigin / "management/"
 
-  override def main(): Unit = {
+  def main(): Unit = {
     val router = Router(baseUrl, routerConfig.logToConsole)
 
-    router().render(dom.document.body)
+    router().renderIntoDOM(dom.document.body)
   }
 }

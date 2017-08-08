@@ -2,7 +2,8 @@ package blended.mgmt.ui.pages
 
 import blended.mgmt.ui.util.I18n
 import japgolly.scalajs.react.extra.router.{Path, RouterConfigDsl}
-import japgolly.scalajs.react.{ReactComponentB, ReactElement}
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.VdomElement
 
 abstract class TopLevelPage {
 
@@ -12,11 +13,10 @@ abstract class TopLevelPage {
 
   val routerPath : Path
 
-  val content : ReactElement
+  val content : VdomElement
 
-  def component =
-    ReactComponentB.static(name, content)
-      .build
+  def component = ScalaComponent.builder.static(name)(content)
+    .build
 }
 
 object TopLevelPages {
@@ -32,13 +32,5 @@ object TopLevelPages {
   )
 
   val defaultPage = values.head
-
-  def routes = RouterConfigDsl[TopLevelPage].buildRule { dsl =>
-    import dsl._
-
-    values.foldLeft(trimSlashes){ (rule, page) =>
-      rule | staticRoute(page.routerPath, page) ~> renderR(_ => page.component())
-    }
-  }
 
 }

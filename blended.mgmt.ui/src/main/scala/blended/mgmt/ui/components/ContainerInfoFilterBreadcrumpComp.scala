@@ -1,16 +1,10 @@
 package blended.mgmt.ui.components
 
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.components.filter.Filter
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ContainerInfo
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.BackendScope
-import blended.mgmt.ui.components.filter.ContainerInfoFilter
-import blended.mgmt.ui.components.filter.And
+import japgolly.scalajs.react.{BackendScope, Callback, _}
+import japgolly.scalajs.react.vdom.html_<^._
 
 /**
  * React component to render a breadcrumb bar showing the currently selected filters plus option to remove/reset them.
@@ -27,11 +21,11 @@ object ContainerInfoFilterBreadcrumpComp {
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def removeFilter(filter: Filter[ContainerInfo])(e: ReactEventI): Callback = {
+    def removeFilter(filter: Filter[ContainerInfo])(e: ReactEvent): Callback = {
       scope.props.map(_.removeFilter(filter))
     }
 
-    def removeAllFilter(e: ReactEventI): Callback = {
+    def removeAllFilter(e: ReactEvent): Callback = {
       scope.props.map(_.removeAllFilter())
     }
 
@@ -69,14 +63,14 @@ object ContainerInfoFilterBreadcrumpComp {
         ),
         <.div(
           ^.cls := "panel-body",
-          selectedFilters,
-          clearFilters
+          <.div(TagMod(selectedFilters:_*)),
+          TagMod(clearFilters:_*)
         )
       )
     }
   }
 
-  val Component = ReactComponentB[Props]("ContainerViewFilter")
+  val Component = ScalaComponent.builder[Props]("ContainerViewFilter")
     .backend(new Backend(_))
     .renderBackend
     .build

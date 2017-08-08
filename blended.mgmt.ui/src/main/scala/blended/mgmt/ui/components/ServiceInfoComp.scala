@@ -2,8 +2,8 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ServiceInfo
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 
 object ServiceInfoComp {
 
@@ -24,7 +24,7 @@ object ServiceInfoComp {
     )
   }
 
-  val Component = ReactComponentB[ServiceInfo]("ServiceInfo")
+  val Component = ScalaComponent.builder[ServiceInfo]("ServiceInfo")
     .renderBackend[Backend]
     .build
 

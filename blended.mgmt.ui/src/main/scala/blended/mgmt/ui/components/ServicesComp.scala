@@ -4,8 +4,8 @@ import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ServiceInfo
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 
 object ServicesComp {
 
@@ -22,17 +22,16 @@ object ServicesComp {
 
     def render(s: State) = {
 
-      def services = s.serviceList.map(svc => ServiceInfoComp.Component(svc))
+      def services = s.serviceList.map(svc => <.div(ServiceInfoComp.Component(svc)))
 
       <.div(
         <.h1("Services"),
-        <.div(services)
+        <.div(TagMod(services:_*))
       )
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("Services")
+  val Component = ScalaComponent.builder[Unit]("Services")
       .initialState(State(serviceList = List.empty))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.serviceData.addObserver(c.backend))

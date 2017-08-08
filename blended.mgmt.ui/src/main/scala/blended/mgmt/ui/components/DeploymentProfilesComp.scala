@@ -1,24 +1,12 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.DataManager
+import japgolly.scalajs.react._
+import vdom.html_<^._
+import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
-import blended.updater.config.ContainerInfo
-
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.BackendScope
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.DirectProfileUpdater
-import blended.updater.config.Profile
-import blended.mgmt.ui.backend.Observer
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
+import blended.mgmt.ui.util.{I18n, Logger}
+import blended.updater.config.{ContainerInfo, OverlayRef, OverlayState, Profile}
 import blended.updater.config.Profile.SingleProfile
-import blended.updater.config.OverlayRef
-import blended.updater.config.OverlayState
 
 object DeploymentProfilesComp {
 
@@ -64,8 +52,8 @@ object DeploymentProfilesComp {
                   val pending = states.filter(OverlayState.Pending ==).size
                   <.div(
                     name, "-", version,
-                    overlaySet.isEmpty ?= " base",
-                    !overlaySet.isEmpty ?= " with ",!overlaySet.isEmpty ?= <.span(overlaySet.toList.mkString(", ")),
+                    " base".when(overlaySet.isEmpty),
+                    <.span(" with ", overlaySet.toList.mkString(", ")).unless(overlaySet.isEmpty),
                     i18n.tr(" ({0} active, {1} valid, {2} pending, {3} invalid)", active, valid, pending, invalid)
                   )
               }
@@ -81,8 +69,7 @@ object DeploymentProfilesComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("Deployment Profiles")
+  val Component = ScalaComponent.builder[Unit]("Deployment Profiles")
       .initialState(State(containerInfos = List()))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.containerData.addObserver(c.backend))

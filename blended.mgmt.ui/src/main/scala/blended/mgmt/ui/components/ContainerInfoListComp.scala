@@ -2,8 +2,8 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.{ContainerInfo, OverlayState}
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{BackendScope, Callback, ReactComponentB}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react._
 
 /**
  * React Component to render a list of [[ContainerInfo]]s.
@@ -29,15 +29,14 @@ object ContainerInfoListComp {
         <.div(
           ^.onClick --> selectContainerInfo(Some(ci)),
           ci.containerId,
-          activeProfile.isDefined ?= <.span(
+          <.span(
             " (",
             activeProfile.get.name,
             "-",
             activeProfile.get.version,
-            !activeProfile.get.overlaySet.overlays.isEmpty ?=
-              i18n.tr(" with {0}", activeProfile.get.overlaySet.overlays.mkString(", ")),
+            (i18n.tr(" with {0}", activeProfile.get.overlaySet.overlays.mkString(", "))).unless(activeProfile.get.overlaySet.overlays.isEmpty),
             ")"
-          )
+          ).when(activeProfile.isDefined)
         )
       }
 
@@ -47,13 +46,13 @@ object ContainerInfoListComp {
           ^.cls := "panel-heading",
           <.h3(i18n.tr("Container"))
         ),
-        <.div(rows)
+        <.div(rows:_*)
       )
     }
   }
 
   val Component =
-    ReactComponentB[Props]("ContainerInfoList")
+    ScalaComponent.builder[Props]("ContainerInfoList")
       .renderBackend[Backend]
       .build
 

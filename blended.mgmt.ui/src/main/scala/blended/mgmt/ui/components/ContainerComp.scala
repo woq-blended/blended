@@ -5,8 +5,8 @@ import blended.mgmt.ui.backend.{DataManager, DirectProfileUpdater, Observer}
 import blended.mgmt.ui.components.filter.{And, Filter}
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.vdom.prefix_<^._
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
+import japgolly.scalajs.react.vdom.html_<^._
+import japgolly.scalajs.react.{BackendScope, ScalaComponent}
 
 /**
  * React component showing a filterable page about containers and their details.
@@ -41,11 +41,14 @@ object ContainerComp {
     }
 
     def selectContainer(containerInfo: Option[ContainerInfo]) = {
+
+      log.debug(s"Selected Container [${containerInfo.map(_.containerId)}]")
+
       scope.modState(s => s.copy(selected = containerInfo).consistent).runNow()
     }
 
     def render(s: State) = {
-      log.debug(s"Rerendering with $s")
+      log.debug(s"Rerendering with [${s.containerList.size}] containers, selected = [${s.selected.map(_.containerId)}]")
       <.div(
         ^.`class` := "row",
         <.div(
@@ -53,7 +56,7 @@ object ContainerComp {
         <.div(
           ContainerInfoFilterBreadcrumpComp.Component(ContainerInfoFilterBreadcrumpComp.Props(s.filter, removeFilter, removeAllFilter))),
         <.div(
-          ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.filteredContainerList, selectContainer))),
+          ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.containerList, selectContainer))),
         <.div(
           ContainerDetailComp.Component(ContainerDetailComp.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerDataUrl)))))
       )
@@ -61,7 +64,7 @@ object ContainerComp {
   }
 
   val Component =
-    ReactComponentB[Unit]("Container")
+    ScalaComponent.builder[Unit]("Container")
       .initialState(State(containerList = List.empty))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.containerData.addObserver(c.backend))

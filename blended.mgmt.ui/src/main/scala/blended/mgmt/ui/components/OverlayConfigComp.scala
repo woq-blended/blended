@@ -1,20 +1,11 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.DataManager
-import blended.mgmt.ui.components.filter.And
-
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.BackendScope
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.Observer
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
-import blended.updater.config.RuntimeConfig
+import blended.mgmt.ui.backend.{DataManager, Observer}
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.OverlayConfig
+import japgolly.scalajs.react.{Callback, _}
+import japgolly.scalajs.react.vdom.html_<^._
 
 object OverlayConfigComp {
 
@@ -71,8 +62,7 @@ object OverlayConfigComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("OverlayConfig").
+  val Component = ScalaComponent.builder[Unit]("OverlayConfig").
       initialState(State(profiles = List()))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.overlayConfigsData.addObserver(c.backend))

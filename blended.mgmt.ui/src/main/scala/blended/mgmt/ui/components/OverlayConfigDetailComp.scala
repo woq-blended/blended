@@ -2,8 +2,8 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.{ContainerInfo, OverlayConfig}
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react._
+import vdom.html_<^._
 
 import scalajs.js.JSON
 
@@ -26,7 +26,7 @@ object OverlayConfigDetailComp {
 
           val replacer : scalajs.js.Array[scalajs.js.Any] = null
 
-          val genConf = oc.generatedConfigs.map { c =>
+          val genConf : TagMod = TagMod(oc.generatedConfigs.map { c =>
 
             val obj : scalajs.js.Any = JSON.parse(c.config)
             val formatted = JSON.stringify(obj, replacer, 2)
@@ -39,7 +39,7 @@ object OverlayConfigDetailComp {
               ),
               <.pre(formatted)
             )
-          }
+          }:_*)
 
           <.div(
             ^.cls := "panel panel-default",
@@ -65,8 +65,7 @@ object OverlayConfigDetailComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Props]("OverlayConfigDetail")
-      .renderBackend[Backend]
-      .build
+  val Component = ScalaComponent.builder[Props]("OverlayConfigDetail")
+    .renderBackend[Backend]
+    .build
 }

@@ -1,8 +1,7 @@
 package blended.mgmt.ui.components
 
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 import blended.mgmt.ui.util.I18n
 import blended.mgmt.ui.components.filter.Filter
 import blended.updater.config.ContainerInfo
@@ -36,7 +35,7 @@ object ContainerInfoFilterComp {
 
   class Backend(scope: BackendScope[Props, State]) {
 
-    def onSubmit(e: ReactEventI): Callback = {
+    def onSubmit(e: ReactEvent): Callback = {
       log.trace("onSubmit: " + e)
       e.preventDefaultCB >>
         scope.state.flatMap { s =>
@@ -46,27 +45,27 @@ object ContainerInfoFilterComp {
         }
     }
 
-    def onSearchTextChange(e: ReactEventI): Callback = {
+    def onSearchTextChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("search text: " + v)
         scope.modState(_.copy(searchText = v))
       }
     }
 
-    def onContainerIdChange(e: ReactEventI): Callback = {
+    def onContainerIdChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("container ID: " + v)
         scope.modState(_.copy(containerId = v))
       }
     }
-    def onPropertyNameChange(e: ReactEventI): Callback = {
+    def onPropertyNameChange(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("property name: " + v)
         scope.modState(_.copy(propertyName = v))
       }
     }
 
-    def onPropertyValueChange(e: ReactEventI): Callback = {
+    def onPropertyValueChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("property value: " + v)
         scope.modState(_.copy(propertyValue = v))
@@ -171,7 +170,7 @@ object ContainerInfoFilterComp {
     }
   }
 
-  val Component = ReactComponentB[Props]("ContainerEditFilter")
+  val Component = ScalaComponent.builder[Props]("ContainerEditFilter")
     .initialState(State())
     .backend(new Backend(_))
     .renderBackend

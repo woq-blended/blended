@@ -1,8 +1,8 @@
 package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
-import japgolly.scalajs.react.{BackendScope, ReactComponentB}
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.{BackendScope, ScalaComponent}
+import japgolly.scalajs.react.vdom.html_<^._
 
 object DataTableContent {
   def apply(title : String, content: Map[String, String]) : DataTableContent = DataTableContent(
@@ -41,21 +41,23 @@ object DataTableComp {
         ),
         <.table(
           ^.cls := "table",
-          <.tr(
-            props.headings.map { h =>
-              <.th(
-                ^.width := s"$width%",
-                i18n.tr(h)
-              )
-            }:_*
-          ),
-          props.content.map(line)
+          <.tbody(
+            <.tr(
+              props.headings.map { h =>
+                <.th(
+                  ^.width := s"$width%",
+                  i18n.tr(h)
+                )
+              }:_*
+            ),
+            TagMod(props.content.map(line):_*)
+          )
         )
       )
     }
   }
 
-  val Component = ReactComponentB[DataTableContent]("DataTable")
+  val Component = ScalaComponent.builder[DataTableContent]("DataTable")
     .renderBackend[Backend]
     .build
 }

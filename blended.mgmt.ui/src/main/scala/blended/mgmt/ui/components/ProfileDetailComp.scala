@@ -1,22 +1,9 @@
 package blended.mgmt.ui.components
 
-import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.BackendScope
-import blended.updater.config.OverlayState
-import blended.updater.config.Profile
-import blended.updater.config.OverlaySet
-import japgolly.scalajs.react.CallbackTo
-import blended.mgmt.ui.backend.ProfileUpdater
-import blended.updater.config.ActivateProfile
-import blended.updater.config.UpdateAction
-import blended.updater.config.StageProfile
-import blended.updater.config.Profile.SingleProfile
-import blended.updater.config.RuntimeConfig
+import blended.mgmt.ui.util.{I18n, Logger}
+import blended.updater.config.{ContainerInfo, RuntimeConfig}
+import japgolly.scalajs.react._
+import vdom.html_<^._
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -78,8 +65,7 @@ object ProfileDetailComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Props]("RuntimeConfigDetail")
+  val Component = ScalaComponent.builder[Props]("RuntimeConfigDetail")
       .renderBackend[Backend]
       .build
 }

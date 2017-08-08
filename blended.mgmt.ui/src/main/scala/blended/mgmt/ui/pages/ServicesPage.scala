@@ -1,9 +1,10 @@
 package blended.mgmt.ui.pages
 
-import blended.mgmt.ui.components.{DataTableComp, DataTableContent, ServicesComp}
 import japgolly.scalajs.react._
+import vdom.html_<^._
+import blended.mgmt.ui.components.ServicesComp
 import japgolly.scalajs.react.extra.router.Path
-import japgolly.scalajs.react.vdom.prefix_<^._
+import japgolly.scalajs.react.vdom.VdomElement
 
 object ServicesPage extends TopLevelPage {
 
@@ -11,6 +12,5 @@ object ServicesPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#services")
 
-  override val content: ReactElement =
-    <.div(ServicesComp.Component())
+  override val content: VdomElement = ServicesComp.Component()
 }
