@@ -64,10 +64,10 @@ object ContainerDetailComp {
             <.div(
               ^.`class` := profile.state.toString,
               s"${profile.name}-${profile.version} ${genTitle} ",
-              <.span(
-                (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}").when(profile.overlaySet.reason.isDefined),
-                s"(${profile.state})"
-              ),
+//              <.span(
+//                (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}").when(profile.overlaySet.reason.isDefined),
+//                s"(${profile.state})"
+//              ),
               " ",
               <.button(
                 ^.`type` := "button",

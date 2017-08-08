@@ -56,7 +56,7 @@ object ContainerComp {
         <.div(
           ContainerInfoFilterBreadcrumpComp.Component(ContainerInfoFilterBreadcrumpComp.Props(s.filter, removeFilter, removeAllFilter))),
         <.div(
-          ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.containerList, selectContainer))),
+          ContainerInfoListComp.Component(ContainerInfoListComp.Props(s.filteredContainerList, selectContainer))),
         <.div(
           ContainerDetailComp.Component(ContainerDetailComp.Props(s.selected, Some(new DirectProfileUpdater(ConsoleSettings.containerDataUrl)))))
       )
