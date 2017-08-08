@@ -59,7 +59,6 @@ class ManagementCollectorServlet extends SprayOSGIServlet
           p.updateState(state)
         }
 
-        //        containerStates += info.containerId -> RemoteContainerState(info, actions)
         actions
     }
 
