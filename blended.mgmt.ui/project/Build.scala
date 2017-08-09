@@ -131,6 +131,7 @@ object Build extends sbt.Build {
 
       "org.webjars" % "bootstrap" % Versions.bootstrap / "bootstrap.js",
       "org.webjars.bower" % "react" % Versions.react / "react.js",
+      "org.webjars.npm" % "react-motion" % Versions.reactMotion / "build/react-motion.js",
       RuntimeDOM,
       "org.webjars" % "jquery" % "2.1.4" / "2.1.4/jquery.js"
     ))

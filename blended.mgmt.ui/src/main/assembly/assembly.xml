@@ -52,6 +52,15 @@
       </includes>
     </fileSet>
 
+    <!-- React Motion -->
+    <fileSet>
+      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/react-motion/build</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <includes>
+        <include>react-motion.js</include>
+      </includes>
+    </fileSet>
+
     <!-- CSS -->
     <fileSet>
       <directory>${project.build.directory}/web/classes/main/META-INF/resources/webjars/blended-mgmt-ui/${project.version}</directory>
