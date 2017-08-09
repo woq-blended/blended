@@ -21,7 +21,7 @@ case class And[T](filters: Filter[T]*) extends Filter[T] {
         }.flatMap {
           case and: And[T] => and.filters
           case other => Seq(other)
-        }
+        }.distinct
 
         And(fs: _*)
     }
