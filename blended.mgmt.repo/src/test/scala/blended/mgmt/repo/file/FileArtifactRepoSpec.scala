@@ -29,13 +29,16 @@ class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
     }
     "should not accept a '..' in the path" in {
       withTestDir() { dir =>
-        TempFile.writeToFile(new File(dir, "g/a/1/a-1.jar"), "fake-jar")
-        TempFile.writeToFile(new File(dir, "g/a/1/1/a-1.jar"), "fake-jar")
+        val jar1 = new File(dir, "g/a/1/a-1.jar")
+        TempFile.writeToFile(jar1, "fake-jar")
+        val jar2 = new File(dir, "g/a/1/1/a-1.jar")
+        TempFile.writeToFile(jar2, "fake-jar")
         val repo = new FileArtifactRepo("test", dir)
-        // TODO: implement
-        pending
-        repo.findFile("g/a/1/../1/a-1.jar") should be(None)
-        repo.findFiles("..").toSet shouldBe empty 
+        repo.findFile("g/a/1/../1/a-1.jar") should be(Some(jar1))
+        repo.findFile("g/a/1/../../a/1/a-1.jar") should be(Some(jar1))
+        repo.findFile("g/a/1/../../../g/a/1/a-1.jar") should be(Some(jar1))
+//        repo.findFile("g/a/1/../../../../" + dir.getName() + "/g/a/1/a-1.jar") should be(None)
+        repo.findFiles("..").toSet shouldBe empty
       }
     }
     "should find all existing files" in {

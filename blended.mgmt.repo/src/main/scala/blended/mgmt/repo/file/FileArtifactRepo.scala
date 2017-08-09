@@ -13,13 +13,23 @@ import blended.mgmt.repo.ArtifactRepo
 import java.nio.file.Path
 import java.nio.file.Files
 import scala.collection.JavaConverters._
+import scala.util.Try
 
-// TODO: make path-arguments robust against ".." injections
 class FileArtifactRepo(override val repoId: String, baseDir: File) extends ArtifactRepo {
 
+  def withCheckedFilePath[T](path: String)(f: File => T): Try[T] = Try {
+    val base = baseDir.toURI().normalize()
+    val toCheck = new File(baseDir, path).toURI().normalize()
+    if (!toCheck.getPath().startsWith(base.getPath())) sys.error("invalid path given")
+    val pathToCheck = toCheck.getPath().substring(base.getPath().length())
+    if (pathToCheck.startsWith("..") || pathToCheck.startsWith("/..")) sys.error("invalid path given")
+    new File(toCheck)
+  }.map(f)
+
   def findFile(path: String): Option[File] = {
-    val file = new File(baseDir, path)
-    if (file.exists()) Option(file) else None
+    withCheckedFilePath(path) { file =>
+      if (file.exists()) Option(file) else None
+    }.getOrElse(None)
   }
 
   def findFileSha1Checksum(path: String): Option[String] = {
@@ -47,23 +57,24 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
   override def toString(): String = getClass().getSimpleName() + "(repoId=" + repoId + ",baseDir=" + baseDir + ")"
 
   def findFiles(path: String): Iterator[File] = {
-    val file = new File(baseDir, path)
-    if (!file.exists()) Iterator.empty else {
-      val fs = file.toPath().getFileSystem()
+    withCheckedFilePath(path) { file =>
+      if (!file.exists()) Iterator.empty else {
+        val fs = file.toPath().getFileSystem()
 
-      def getFiles(dir: Path): Iterator[Path] = {
-        val files = Files.newDirectoryStream(dir).iterator().asScala
-        files.flatMap { f =>
-          val isDir = Files.isDirectory(f)
-          val file = Iterator(f).filter(f => !isDir)
-          val childs = if (isDir) getFiles(f) else Iterator.empty
-          file ++ childs
+        def getFiles(dir: Path): Iterator[Path] = {
+          val files = Files.newDirectoryStream(dir).iterator().asScala
+          files.flatMap { f =>
+            val isDir = Files.isDirectory(f)
+            val file = Iterator(f).filter(f => !isDir)
+            val childs = if (isDir) getFiles(f) else Iterator.empty
+            file ++ childs
+          }
         }
-      }
 
-      val files = getFiles(file.toPath())
-      files.map(_.toFile())
-    }
+        val files = getFiles(file.toPath())
+        files.map(_.toFile())
+      }
+    }.getOrElse(Iterator.empty)
   }
 
 }
