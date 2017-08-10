@@ -23,6 +23,9 @@ import blended.updater.config.GeneratedConfig
 import blended.updater.config.OverlayState
 
 // TODO: move into same package as classes
+/**
+ * Mapper functions for bi-directional mapping of domain model case classes to [[java.util.Map]]'s with JVM-only types.
+ */
 object Mapper {
 
   def mapArtifact(a: Artifact): java.util.Map[String, AnyRef] =
