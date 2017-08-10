@@ -22,7 +22,11 @@ BlendedModel(
   ),
   plugins = Seq(
     prepareSbtPlugin,
-    compileJsPlugin,
+    compileJsPlugin(
+      execId = "compileJS",
+      phase = "compile",
+      args = List("-batch", "fastOptJS::webpack")
+    ),
     bundleWarPlugin,
     Plugin(
       "org.apache.maven.plugins" % "maven-assembly-plugin" % "2.6",
@@ -70,29 +74,6 @@ BlendedModel(
         webApp = Config(
           contextPath = "/management"
         )
-      )
-    ),
-
-    Plugin(
-      gav = "com.github.eirslett" % "frontend-maven-plugin" % "1.3",
-      executions = Seq(
-        Execution(
-          id = "install node and npm",
-          phase = "initialize",
-          goals = Seq(
-            "install-node-and-npm"
-          )
-        ),
-        Execution(
-          id = "npm install",
-          phase = "generate-resources",
-          goals = Seq(
-            "npm"
-          )
-        )
-      ),
-      configuration = Config(
-        nodeVersion = "v4.6.0"
       )
     )
   )

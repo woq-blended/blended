@@ -3,10 +3,11 @@ package blended.mgmt.ui.components
 import blended.mgmt.ui.ConsoleSettings
 import blended.mgmt.ui.backend.{DataManager, DirectProfileUpdater, Observer}
 import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.components.wrapper.ReactSplitPane
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{BackendScope, ScalaComponent}
+import japgolly.scalajs.react.{BackendScope, Children, ScalaComponent}
 
 /**
  * React component showing a filterable page about containers and their details.
@@ -29,7 +30,12 @@ object ContainerComp {
 
     def addFilter(filter: Filter[ContainerInfo]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
-      scope.modState(s => s.copy(filter = s.filter.append(filter).normalized).consistent).runNow()
+
+      scope.modState { s =>
+        val newFilter = s.filter.append(filter).normalized
+        log.debug(s"New Filter is [$newFilter]")
+        s.copy(filter = newFilter).consistent
+      }.runNow()
     }
 
     def removeFilter(filter: Filter[ContainerInfo]) = {
@@ -49,6 +55,11 @@ object ContainerComp {
 
     def render(s: State) = {
       log.debug(s"Rerendering with [${s.containerList.size}] containers, selected = [${s.selected.map(_.containerId)}]")
+
+//      ReactSplitPane.Component(
+//        ReactSplitPane.props(true, 50, 50)
+//      )(<.div("Panel 1"),<.div("Panel B"))
+
       <.div(
         ^.`class` := "row",
         <.div(
