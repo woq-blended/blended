@@ -25,7 +25,8 @@ BlendedModel(
     scalaMavenPlugin,
     scalatestMavenPlugin,
     prepareSbtPlugin,
-    compileJsPlugin,
+    compileJsPlugin(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
+    compileJsPlugin(execId = "packageJS", phase = "package", args = List("-batch", "packageBin")),
     Plugin(
       buildHelperPlugin,
       executions = Seq(

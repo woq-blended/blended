@@ -212,50 +212,38 @@ ScriptHelper.writeFile(
   "\n" +
   "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
   "\n" +
-  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")"
-)
+  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")\n" +
+  "\n" +
+  "addSbtPlugin(\"ch.epfl.scala\" % \"sbt-scalajs-bundler\" % \"0.7.0\")\n"
+ )
 """
       )
     )
   )
 )
 
-val compileJsPlugin = Plugin(
-  gav = execMavenPlugin,
-  executions = Seq(
-    Execution(
-      id = "compileAndTestJs",
-      phase = "compile",
-      goals = Seq(
-        "exec"
-      ),
-      configuration = Config(
-        executable = "sbt",
-        workingDirectory = "${project.basedir}",
-        arguments = Config(
-          argument = "-batch",
-          argument = "fastOptJS",
-          argument = "test"
-        )
-      )
-    ),
-    Execution(
-      id = "packageJS",
-      phase = "package",
-      goals = Seq(
-        "exec"
-      ),
-      configuration = Config(
-        executable = "sbt",
-        workingDirectory = "${project.basedir}",
-        arguments = Config(
-          argument = "-batch",
-          argument = "packageBin"
+def compileJsPlugin(execId: String, phase : String, args: List[String]) : Plugin = {
+
+  val cfg = new Config(args.map( a => ("argument", Some(a) ) ))
+
+  Plugin(
+    gav = execMavenPlugin,
+    executions = Seq(
+      Execution(
+        id = execId,
+        phase = phase,
+        goals = Seq(
+          "exec"
+        ),
+        configuration = Config(
+          executable = "sbt",
+          workingDirectory = "${project.basedir}",
+          arguments = cfg
         )
       )
     )
   )
-)
+}
 
 val dockerMavenPlugin = Plugin(
   "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.23",

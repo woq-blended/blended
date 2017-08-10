@@ -12,58 +12,16 @@
   <fileSets>
 
     <fileSet>
-      <directory>${project.build.directory}/scala-2.11</directory>
+      <directory>${project.build.directory}/scala-2.11/scalajs-bundler/main/</directory>
       <outputDirectory>/scripts</outputDirectory>
       <includes>
-        <include>blended-mgmt-ui*</include>
-      </includes>
-    </fileSet>
-
-    <!-- Bootstrap -->
-    <fileSet>
-      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/bootstrap/js</directory>
-      <outputDirectory>/lib</outputDirectory>
-      <includes>
-        <include>bootstrap.min.js</include>
-      </includes>
-    </fileSet>
-
-    <fileSet>
-      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/bootstrap/fonts</directory>
-      <outputDirectory>fonts</outputDirectory>
-    </fileSet>
-
-    <!-- JQuery -->
-    <fileSet>
-      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/jquery</directory>
-      <outputDirectory>/lib</outputDirectory>
-      <includes>
-        <include>jquery.min*</include>
-      </includes>
-    </fileSet>
-
-    <!-- React -->
-    <fileSet>
-      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/react</directory>
-      <outputDirectory>/lib</outputDirectory>
-      <includes>
-        <include>react.min.js</include>
-        <include>react-dom.min.js</include>
-      </includes>
-    </fileSet>
-
-    <!-- React Motion -->
-    <fileSet>
-      <directory>${project.build.directory}/web/web-modules/main/webjars/lib/react-motion/build</directory>
-      <outputDirectory>/lib</outputDirectory>
-      <includes>
-        <include>react-motion.js</include>
+        <include>blended-mgmt-ui*bundle*</include>
       </includes>
     </fileSet>
 
     <!-- CSS -->
     <fileSet>
-      <directory>${project.build.directory}/web/classes/main/META-INF/resources/webjars/blended-mgmt-ui/${project.version}</directory>
+      <directory>${project.build.directory}/web/less/main</directory>
       <outputDirectory>css</outputDirectory>
     </fileSet>
 
