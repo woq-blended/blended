@@ -1,6 +1,7 @@
 { 
   "dependencies" : 
   {
-    "jsdom" : ">=9.0 <10.0"
+    "jsdom" : ">=9.0 <10.0",
+    "react-split-pane": "0.1.65"
   }
 }
