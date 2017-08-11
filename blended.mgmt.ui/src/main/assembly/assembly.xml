@@ -19,6 +19,11 @@
       </includes>
     </fileSet>
 
+    <fileSet>
+      <directory>${project.build.directory}/scala-2.11/scalajs-bundler/main/node_modules/bootstrap/dist/fonts</directory>
+      <outputDirectory>fonts</outputDirectory>
+    </fileSet>
+
     <!-- CSS -->
     <fileSet>
       <directory>${project.build.directory}/web/less/main</directory>
