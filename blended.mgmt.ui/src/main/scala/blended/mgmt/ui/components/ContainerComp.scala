@@ -3,7 +3,6 @@ package blended.mgmt.ui.components
 import blended.mgmt.ui.ConsoleSettings
 import blended.mgmt.ui.backend.{DataManager, DirectProfileUpdater, Observer}
 import blended.mgmt.ui.components.filter.{And, Filter}
-import blended.mgmt.ui.components.wrapper.ReactSplitPane
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.html_<^._

@@ -3,20 +3,13 @@ package blended.mgmt.ui.components.wrapper
 import japgolly.scalajs.react._
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSGlobal
+import scala.scalajs.js.annotation.JSImport
 
 object ReactSplitPane {
 
-  @JSGlobal("SplitPane")
   @js.native
-  object RawSplitPanel extends js.Object
-
-  @js.native
-  trait State extends js.Object {
-    var active : Boolean = js.native
-    var resized : Boolean = js.native
-    var draggedSize : Double = js.native
-  }
+  @JSImport("react-split-pane", JSImport.Default)
+  object RawSplitPane extends js.Object
 
   @js.native
   trait Props extends js.Object {
@@ -41,5 +34,5 @@ object ReactSplitPane {
     p
   }
 
-  val Component = JsComponent[Props, Children.Varargs, State](RawSplitPanel)
+  val Component = JsComponent[Props, Children.Varargs, Null](RawSplitPane)
 }

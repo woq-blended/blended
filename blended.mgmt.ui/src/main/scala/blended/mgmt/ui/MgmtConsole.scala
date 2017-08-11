@@ -1,5 +1,6 @@
 package blended.mgmt.ui
 
+import blended.mgmt.ui.components.wrapper.ReactSplitPane
 import blended.mgmt.ui.pages.TopLevelPages.values
 import blended.mgmt.ui.pages._
 import japgolly.scalajs.react._
@@ -21,7 +22,6 @@ object MgmtConsole extends js.JSApp {
 
       def nav(name: String, target: TopLevelPage) = {
 
-        // TODO : why does page selection not propagate into menu ?
         val highlight : String = target.equals(state.selected) match {
           case true => " navbar-selected"
           case _ => ""
@@ -76,8 +76,17 @@ object MgmtConsole extends js.JSApp {
   def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement =
     <.div(
       navMenu(c),
-      <.div(
-        ^.cls := "container-fluid", r.render()
+      ReactSplitPane.Component(
+        ReactSplitPane.props(
+          allowResize = true,
+          minSize = 100,
+          defaultSize = 100
+        )
+      )(
+        <.div("first panel"),
+        <.div(
+          ^.cls := "container-fluid", r.render()
+        )
       )
     )
 
@@ -87,6 +96,6 @@ object MgmtConsole extends js.JSApp {
   def main(): Unit = {
     val router = Router(baseUrl, routerConfig.logToConsole)
 
-    router().renderIntoDOM(dom.document.body)
+    router().renderIntoDOM(dom.document.getElementById("content"))
   }
 }
