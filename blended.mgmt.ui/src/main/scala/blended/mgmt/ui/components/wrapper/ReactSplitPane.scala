@@ -17,12 +17,26 @@ object ReactSplitPane {
     var minSize : Double = js.native
     var defaultSize : Double = js.native
     var size : Double = js.native
+
+    var split : String = js.native
+
+    var style : js.Object = js.native
+    var paneStyle : js.Object = js.native
+    var pane1Style : js.Object = js.native
+    var pane2Style : js.Object = js.native
+    var resizerStyle : js.Object = js.native
   }
 
   def props(
-    allowResize : Boolean,
-    minSize : Double,
-    defaultSize : Double
+    allowResize : Boolean = true,
+    minSize : Double = 100,
+    defaultSize : Double = 100,
+    split : String = "vertical",
+    style : js.Object = new js.Object(),
+    paneStyle : js.Object = new js.Object(),
+    paneStyle1 : js.Object = new js.Object(),
+    paneStyle2 : js.Object = new js.Object(),
+    resizerStyle : js.Object = new js.Object()
   ) : Props = {
     val p = (new js.Object).asInstanceOf[Props]
 
@@ -30,6 +44,14 @@ object ReactSplitPane {
     p.minSize = minSize
     p.defaultSize = defaultSize
     p.size = defaultSize
+
+    p.split = split
+
+    p.style = style
+    p.paneStyle = paneStyle
+    p.pane1Style = paneStyle1
+    p.pane2Style = paneStyle2
+    p.resizerStyle = resizerStyle
 
     p
   }

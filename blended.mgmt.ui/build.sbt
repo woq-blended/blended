@@ -106,25 +106,25 @@ lazy val root = project
     LessKeys.verbose := true,
     LessKeys.cleancss := true,
 
+    webpackConfigFile in fastOptJS := Some(baseDirectory.value / "blended.mgmt.ui.webpack.js"),
+    enableReloadWorkflow := true,
+    emitSourceMaps := true,
+
     (sourceDirectory in Assets) := (baseDirectory.value / "src" / "main" / "less"),
     includeFilter in (Assets, LessKeys.less) := "main.less",
 
     warDir := new File(baseDirectory.value / "target" / appName + "-" + BlendedVersions.blendedVersion),
 
-    (LessKeys.less in Compile) := (LessKeys.less in Compile).dependsOn(cleanCSS in Compile).value,
-    (compile in Compile) := (compile in Compile).dependsOn(LessKeys.less in Compile).value,
-
-    (cleanCSS in Compile) := Def.task {
-      removeRecursive(baseDirectory.value / "target" / "web" / "less")
+    (LessKeys.less in Compile) := {
+      (LessKeys.less in Compile).value
     },
 
-    (copyCSS in Compile) := Def.task {
-      copyFiles((LessKeys.less in Compile).value, warDir.value / "css")
-    }.triggeredBy(LessKeys.less in Compile),
-
-    (copyJS in Compile) := Def.task {
-      copyFiles(jsFiles(new File((baseDirectory.value / "target" / "scala-2.11").getAbsolutePath())), warDir.value / "scripts")
-    }.triggeredBy(compile in Compile)
+    (compile in Compile) := {
+      val css = (LessKeys.less in Compile).value
+      val r = (compile in Compile).value
+      copyFiles(css, warDir.value / "css")
+      r
+    }
 
   )
   .enablePlugins(ScalaJSPlugin, SbtWeb, ScalaJSBundlerPlugin)

@@ -1,12 +1,19 @@
 // Application specific styles go here
 
+header {
+  height: @navbar-height;
+}
+
 .reverseHover {
   text-decoration: none;
   &:hover { text-decoration: underline }
 }
 
+ul.navbar-header {
+  margin-bottom: 0px;
+}
 
-.navbar-header {
+.navbar-nav {
 
   li {
     list-style-type: none;
@@ -14,6 +21,10 @@
 
   text-decoration: none;
   cursor: pointer;
+}
+
+.navbar {
+  margin-bottom: 0px;
 }
 
 .navbar-brand {
@@ -66,13 +77,13 @@
   border-left: 5px solid rgba(255, 255, 255, 0);
   border-right: 5px solid rgba(255, 255, 255, 0);
   cursor: col-resize;
+  height: 100%;
 }
 
 .Resizer.vertical:hover {
   border-left: 5px solid rgba(0, 0, 0, 0.5);
   border-right: 5px solid rgba(0, 0, 0, 0.5);
 }
-
 
 //div {
 //  border: 1px solid;

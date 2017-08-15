@@ -9,6 +9,7 @@ import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 
 import scala.scalajs.js
+import js.JSConverters._
 
 object MgmtConsole extends js.JSApp {
 
@@ -37,13 +38,15 @@ object MgmtConsole extends js.JSApp {
         )
       }
 
-      <.div(
-        ^.cls := "navbar navbar-default",
-        <.ul(
-          ^.cls := "navbar-header",
-          TagMod(TopLevelPages.values.map { tlp =>
-            nav(tlp.name, tlp)
-          }:_*)
+      <.header(
+        <.nav(
+          ^.cls := "navbar navbar-default navbar-fixed-top",
+          <.ul(
+            ^.cls := "navbar navbar-nav",
+            TagMod(TopLevelPages.values.map { tlp =>
+              nav(tlp.name, tlp)
+            }:_*)
+          )
         )
       )
     }
@@ -73,22 +76,32 @@ object MgmtConsole extends js.JSApp {
       .renderWith(layout(_, _))
   }
 
-  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement =
-    <.div(
+  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement = {
+
+    <.section(
       navMenu(c),
-      ReactSplitPane.Component(
-        ReactSplitPane.props(
-          allowResize = true,
-          minSize = 100,
-          defaultSize = 100
-        )
-      )(
-        <.div("first panel"),
-        <.div(
-          ^.cls := "container-fluid", r.render()
+      <.div(
+        ReactSplitPane.Component(
+          ReactSplitPane.props(
+            allowResize = true,
+            minSize = 100,
+            defaultSize = 100,
+
+            split = "vertical",
+            style = js.Dynamic.literal("bgcolor" -> "#eee"),
+            paneStyle = js.Dynamic.literal("height" -> "calc(100vh - 50px)"),
+            resizerStyle = js.Dynamic.literal("height" -> "calc(100vh - 50px)")
+          )
+        )(
+          <.div("first panel"),
+          <.div(
+            ^.cls := "container-fluid", r.render()
+          )
         )
       )
     )
+  }
+
 
   val baseUrl =
       BaseUrl.fromWindowOrigin / "management/"
@@ -96,6 +109,6 @@ object MgmtConsole extends js.JSApp {
   def main(): Unit = {
     val router = Router(baseUrl, routerConfig.logToConsole)
 
-    router().renderIntoDOM(dom.document.getElementById("content"))
+    router().renderIntoDOM(dom.document.body)
   }
 }
