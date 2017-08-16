@@ -28,7 +28,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
 
   def findFile(path: String): Option[File] = {
     withCheckedFilePath(path) { file =>
-      if (file.exists()) Option(file) else None
+      if (file.exists() && file.isFile()) Option(file) else None
     }.getOrElse(None)
   }
 
@@ -56,7 +56,8 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
 
   override def toString(): String = getClass().getSimpleName() + "(repoId=" + repoId + ",baseDir=" + baseDir + ")"
 
-  def findFiles(path: String): Iterator[File] = {
+  def listFiles(path: String): Iterator[String] = {
+    val base = baseDir.toURI().normalize()
     withCheckedFilePath(path) { file =>
       if (!file.exists()) Iterator.empty else {
         val fs = file.toPath().getFileSystem()
@@ -74,7 +75,7 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
         val files = getFiles(file.toPath())
         files.map(_.toFile())
       }
-    }.getOrElse(Iterator.empty)
+    }.getOrElse(Iterator.empty).map {f => base.relativize(f.toURI().normalize()).getPath()}
   }
 
 }

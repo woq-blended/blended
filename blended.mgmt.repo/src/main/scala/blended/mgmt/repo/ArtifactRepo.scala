@@ -23,8 +23,8 @@ trait ArtifactRepo {
   def findFileSha1Checksum(path: String): Option[String]
   
   /**
-   * Find all known files (recursive) under the given artifact path.
+   * Find all known files (recursive) under the given artifact path (with their relative path).
    */
-  def findFiles(path: String): Iterator[File]
+  def listFiles(path: String): Iterator[String]
 
 }
