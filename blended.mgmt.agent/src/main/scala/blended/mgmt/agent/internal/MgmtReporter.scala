@@ -92,7 +92,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
     case Tick =>
       config.foreach { config =>
         val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis())
-        log.info("Performing report [{}].", info)
+        log.debug("Performing report [{}].", info)
         val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
           sendReceive ~> unmarshal[ContainerRegistryResponseOK]
         }
@@ -100,7 +100,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
       }
 
     case ContainerRegistryResponseOK(id, actions) =>
-      log.info("Reported [{}] to management node", id)
+      log.debug("Reported [{}] to management node", id)
       if (!actions.isEmpty) {
         log.info("Received {} update actions from management node: {}", actions.size, actions)
         actions.foreach { action =>
