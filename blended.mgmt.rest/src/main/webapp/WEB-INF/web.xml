@@ -7,7 +7,7 @@ http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
   <description>${project.description}</description>
-  <display-name>Spray Sample Servlet</display-name>
+  <display-name>Blended Management Servlet</display-name>
 
   <servlet>
     <servlet-name>mgmt</servlet-name>
