@@ -73,9 +73,10 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
         }
 
         val files = getFiles(file.toPath())
-        files.map(_.toFile())
+        val baseFile = file.toURI()
+        files.map(f => baseFile.relativize(f.toUri().normalize()).getPath())
       }
-    }.getOrElse(Iterator.empty).map {f => base.relativize(f.toURI().normalize()).getPath()}
+    }.getOrElse(Iterator.empty)
   }
 
 }

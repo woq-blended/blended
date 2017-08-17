@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import spray.http.StatusCodes
 import blended.security.spray.BlendedSecuredRoute
 import spray.routing.Route
+import spray.http.MediaTypes
 
 trait ArtifactRepoRoutes
     extends BlendedHttpRoute
@@ -28,12 +29,34 @@ trait ArtifactRepoRoutes
           case Some(file) =>
             log.debug("Found file at path: " + path)
             getFromFile(file)
-          //            complete("Found File: " + file)
           case None =>
             log.debug("Could not find file at path: " + path)
             repo.listFiles(path) match {
               case Iterator.empty => complete(StatusCodes.NotFound)
-              case files => complete("<ul>" + files.mkString("<li>", "</li>\n<li>", "</li>") + "</ul>")
+              case files =>
+                respondWithMediaType(MediaTypes.`text/html`) & complete {
+                  val indexBase = repo.repoId + "/" + path
+                  
+                  val goUp =  if(path.isEmpty()) "" else """<br/><a href="..">..</a>"""
+                  
+                  val renderedFiles = files.map { f =>
+                    s"""<br/><a href="${f}">${f}</a>"""
+                  }.mkString
+
+                  val html = s"""<html>
+      |<head><title>Index of ${indexBase}</title></head>
+      |<body>
+      |<h1>Index of ${indexBase}</h1>
+      |<hr>
+      |${goUp}
+      |${renderedFiles}
+      |<hr>
+      |</body>
+      |</html>
+      |""".stripMargin
+
+                  html
+                }
             }
         }
     }
