@@ -39,18 +39,21 @@ object DataTableComp {
           ^.cls := "panel-heading",
           <.h2(i18n.tr(props.title))
         ),
-        <.table(
-          ^.cls := "table",
-          <.tbody(
-            <.tr(
-              props.headings.map { h =>
-                <.th(
-                  ^.width := s"$width%",
-                  i18n.tr(h)
-                )
-              }:_*
-            ),
-            TagMod(props.content.map(line):_*)
+        <.div(
+          ^.cls := "panel-body",
+          <.table(
+            ^.cls := "table",
+            <.tbody(
+              <.tr(
+                props.headings.map { h =>
+                  <.th(
+                    ^.width := s"$width%",
+                    i18n.tr(h)
+                  )
+                }:_*
+              ),
+              TagMod(props.content.map(line):_*)
+            )
           )
         )
       )

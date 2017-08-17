@@ -2,10 +2,9 @@ package blended.mgmt.ui.components
 
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
-import blended.mgmt.ui.util.I18n
+import blended.mgmt.ui.util.{FormHelper, I18n, Logger}
 import blended.mgmt.ui.components.filter.Filter
 import blended.updater.config.ContainerInfo
-import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.BackendScope
 import blended.mgmt.ui.components.filter.ContainerInfoFilter
@@ -58,6 +57,7 @@ object ContainerInfoFilterComp {
         scope.modState(_.copy(containerId = v))
       }
     }
+
     def onPropertyNameChange(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("property name: " + v)
@@ -77,92 +77,87 @@ object ContainerInfoFilterComp {
       val propKeys = properties.keySet.toList.sorted
       log.trace("Found properties: " + properties)
 
+      val cb = { e : ReactEventFromTextArea => onSearchTextChange(e) }
+
       //      case And(filters) =>
       //        // a list of potential filters with either the choosable options or the selected value
       //        filters.collect {
       //          case ContainerInfoFilter.
       //        }}
       <.div(
-        ^.border := "1px solid",
-        ^.borderRadius := "5px",
-        ^.margin := "5px",
-        ^.padding := "30px",
-        <.form(
-          ^.onSubmit ==> onSubmit,
-          <.div(
-            ^.cls := "form-group row",
-            <.label(
-              ^.`for` := "searchText",
-              ^.cls := "col-sm-2 col-form-label",
-              i18n.tr("Search")
+        ^.cls := "panel panel-default",
+        <.div(
+          ^.cls := "panel-heading",
+          <.h3(i18n.tr("Container Filter"))
+        ),
+        <.div(
+          ^.cls := "panel-body",
+          <.form(
+            ^.onSubmit ==> onSubmit,
+            FormHelper.input(
+              id = "searchText",
+              label = "Search",
+              value = state.searchText,
+              inputType = "text",
+              changeCallback = cb
             ),
             <.div(
-              ^.cls := "col-sm-10",
-              <.input(
-                ^.id := "searchText",
-                ^.`type` := "text",
-                ^.cls := "form-control",
-                ^.value := state.searchText,
-                ^.onChange ==> onSearchTextChange
-              )
-            )
-          ),
-          <.div(
-            ^.cls := "form-group row",
-            <.label(
-              ^.`for` := "containerId",
-              ^.cls := "col-sm-2 col-form-label",
-              i18n.tr("Container ID")
-            ),
-            <.div(
-              ^.cls := "col-sm-10",
-              <.input(
-                ^.id := "containerId",
-                ^.`type` := "text",
-                ^.cls := "form-control",
-                ^.value := state.containerId,
-                ^.onChange ==> onContainerIdChange
-              )
-            )
-          ),
-          <.div(
-            ^.cls := "form-group row",
-            <.div(
-              ^.cls := "col-sm-2",
+              ^.cls := "form-group row",
               <.label(
-                ^.`for` := "propValue",
-                ^.cls := " col-form-label",
-                i18n.tr("Property")
+                ^.`for` := "containerId",
+                ^.cls := "col-sm-2 col-form-label",
+                i18n.tr("Container ID")
               ),
-              <.select(
-                (Seq(^.onChange ==> onPropertyNameChange) ++
-                  propKeys.map(p => <.option(^.value := p,
-                    // TODO: help needed here, don't know how to apply the "selected" option
-                    //                  (state.propertyName == p) ?= ^.selected := "selected",
-                    p))
-                  ): _*
+              <.div(
+                ^.cls := "col-sm-10",
+                <.input(
+                  ^.id := "containerId",
+                  ^.`type` := "text",
+                  ^.cls := "form-control",
+                  ^.value := state.containerId,
+                  ^.onChange ==> onContainerIdChange
+                )
               )
             ),
             <.div(
-              ^.cls := "col-sm-10",
-              <.input(
-                ^.id := "propValue",
-                ^.`type` := "text",
-                ^.cls := "form-control",
-                // ^.list := "propvalues",
-                ^.value := state.propertyValue,
-                ^.onChange ==> onPropertyValueChange
-              ) // ,
-            )
+              ^.cls := "form-group row",
+              <.div(
+                ^.cls := "col-sm-2",
+                <.label(
+                  ^.`for` := "propValue",
+                  ^.cls := " col-form-label",
+                  i18n.tr("Property")
+                ),
+                <.select(
+                  (Seq(^.onChange ==> onPropertyNameChange) ++
+                    propKeys.map(p => <.option(^.value := p,
+                      // TODO: help needed here, don't know how to apply the "selected" option
+                      //                  (state.propertyName == p) ?= ^.selected := "selected",
+                      p))
+                    ): _*
+                )
+              ),
+              <.div(
+                ^.cls := "col-sm-10",
+                <.input(
+                  ^.id := "propValue",
+                  ^.`type` := "text",
+                  ^.cls := "form-control",
+                  // ^.list := "propvalues",
+                  ^.value := state.propertyValue,
+                  ^.onChange ==> onPropertyValueChange
+                ) // ,
+              )
 
-          // <.datalist(^.id := "propvalues")
-          ),
-          <.div(
-            ^.cls := "form-group row",
-            <.input(
-              ^.`type` := "submit",
-              ^.cls := "btn btn-primary pull-right ",
-              ^.value := "Filter"
+            // <.datalist(^.id := "propvalues")
+            ),
+            <.div(
+              ^.cls := "form-group row",
+              <.input(
+                ^.`type` := "submit",
+                ^.cls := "btn btn-primary pull-right ",
+                ^.value := "Filter"
+              )
             )
           )
         )

@@ -46,7 +46,10 @@ object ContainerInfoListComp {
           ^.cls := "panel-heading",
           <.h3(i18n.tr("Container"))
         ),
-        <.div(rows:_*)
+        <.div(
+          ^.cls := "panel-body",
+          TagMod(rows:_*)
+        )
       )
     }
   }

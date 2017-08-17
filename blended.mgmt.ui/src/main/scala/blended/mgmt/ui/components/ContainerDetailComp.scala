@@ -62,7 +62,7 @@ object ContainerDetailComp {
             val genTitle = if (profile.overlays.isEmpty) i18n.tr("without overlays") else profile.overlays.mkString(", ")
 
             <.div(
-              ^.`class` := profile.state.toString,
+              ^.cls := profile.state.toString,
               s"${profile.name}-${profile.version} ${genTitle} ",
               <.span(
                 (^.title := s"${profile.state}: ${profile.overlaySet.reason.getOrElse("")}").when(profile.overlaySet.reason.isDefined),
@@ -71,7 +71,7 @@ object ContainerDetailComp {
               " ",
               <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
+                ^.cls := "btn btn-default btn-xs",
                 (^.disabled := true).when(profileUpdater.isEmpty || profile.state != OverlayState.Valid),
                 ^.onClick ==> activateProfile(profile),
                 i18n.tr("Activate")
@@ -79,7 +79,7 @@ object ContainerDetailComp {
               " ",
               <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
+                ^.cls := "btn btn-default btn-xs",
                 (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> deleteProfile(profile),
                 i18n.tr("Delete")
@@ -87,7 +87,7 @@ object ContainerDetailComp {
               " ",
               <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
+                ^.cls := "btn btn-default btn-xs",
                 (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> resolveProfile(profile),
                 i18n.tr("Try to Resolve")
@@ -110,7 +110,10 @@ object ContainerDetailComp {
                 ^.cls := "panel-heading",
                 i18n.tr("Profiles:")
               ),
-              <.div(profiles: _*)
+              <.div(
+                ^.cls := "panel-body",
+                TagMod(profiles: _*)
+              )
             ),
             <.div(
               ^.cls := "panel panel-default",

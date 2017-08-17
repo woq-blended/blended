@@ -23,13 +23,13 @@ object MgmtConsole extends js.JSApp {
 
       def nav(name: String, target: TopLevelPage) = {
 
-        val highlight : String = target.equals(state.selected) match {
-          case true => " navbar-selected"
-          case _ => ""
+        val cls : String = target.equals(state.selected) match {
+          case true => "navbar-selected "
+          case _ => "navbar-brand"
         }
 
         <.li(
-          ^.cls := "navbar-brand " + highlight,
+          ^.cls := cls,
           ^.onClick --> scope.modState{ s =>
               ctl.set(target).runNow()
               s.copy(selected = target)
@@ -78,6 +78,8 @@ object MgmtConsole extends js.JSApp {
 
   def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement = {
 
+    val autoOverflow = js.Dynamic.literal("overflow" -> "auto")
+
     <.section(
       ^.height := "100vh",
       navMenu(c),
@@ -88,13 +90,31 @@ object MgmtConsole extends js.JSApp {
             allowResize = true,
             minSize = 100,
             defaultSize = 100,
-            paneStyle = js.Dynamic.literal("overflow" -> "auto"),
+            paneStyle = autoOverflow,
             split = "vertical"
           )
         )(
-          <.div("first panel"),
           <.div(
-            ^.cls := "container-fluid", r.render()
+            ^.cls := "splitPaneContent",
+            "first panel"
+          ),
+          ReactSplitPane.Component(
+            ReactSplitPane.props(
+              allowResize = true,
+              minSize = 100,
+              defaultSize = 100,
+              paneStyle = autoOverflow,
+              split = "horizontal"
+            )
+          )(
+            <.div(
+              ^.cls := "splitPaneContent",
+              "second panel"
+            ),
+            <.div(
+              ^.cls := "splitPaneContent",
+              r.render()
+            )
           )
         )
       )

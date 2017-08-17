@@ -55,18 +55,22 @@ object ContainerInfoFilterBreadcrumpComp {
         ^.onClick ==> removeAllFilter)
       ).toList
 
-      <.div(
-        ^.cls := "panel panel-default",
-        <.div(
-          ^.cls := "panel-heading",
-          i18n.tr("Applied Filters")
-        ),
-        <.div(
-          ^.cls := "panel-body",
-          <.div(TagMod(selectedFilters:_*)),
-          TagMod(clearFilters:_*)
-        )
-      )
+      filters match {
+        case Nil => <.div()
+        case f =>
+          <.div(
+            ^.cls := "panel panel-default",
+            <.div(
+              ^.cls := "panel-heading",
+              i18n.tr("Applied Filters")
+            ),
+            <.div(
+              ^.cls := "panel-body",
+              <.div(TagMod(selectedFilters:_*)),
+              TagMod(clearFilters:_*)
+            )
+          )
+      }
     }
   }
 
