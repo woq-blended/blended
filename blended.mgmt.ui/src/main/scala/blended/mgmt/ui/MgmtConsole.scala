@@ -79,18 +79,17 @@ object MgmtConsole extends js.JSApp {
   def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement = {
 
     <.section(
+      ^.height := "100vh",
       navMenu(c),
       <.div(
+        ^.cls := "viewport",
         ReactSplitPane.Component(
           ReactSplitPane.props(
             allowResize = true,
             minSize = 100,
             defaultSize = 100,
-
-            split = "vertical",
-            style = js.Dynamic.literal("bgcolor" -> "#eee"),
-            paneStyle = js.Dynamic.literal("height" -> "calc(100vh - 50px)"),
-            resizerStyle = js.Dynamic.literal("height" -> "calc(100vh - 50px)")
+            paneStyle = js.Dynamic.literal("overflow" -> "auto"),
+            split = "vertical"
           )
         )(
           <.div("first panel"),

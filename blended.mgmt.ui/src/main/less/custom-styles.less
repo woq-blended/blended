@@ -4,6 +4,14 @@ header {
   height: @navbar-height;
 }
 
+.viewport {
+  height: calc(~"100vh - @{navbar-height}");
+  width: 100%;
+  position: absolute;
+  left: 0;
+  top: @navbar-height;
+}
+
 .reverseHover {
   text-decoration: none;
   &:hover { text-decoration: underline }
