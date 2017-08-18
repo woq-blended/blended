@@ -10,7 +10,7 @@ object HelpPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#help")
 
-  override val mainContent: VdomElement = <.p(
+  override val content: VdomElement = <.p(
     i18n.tr("This is the help Page")
   )
 }

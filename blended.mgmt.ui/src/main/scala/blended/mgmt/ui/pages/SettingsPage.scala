@@ -11,7 +11,7 @@ object SettingsPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#settings")
 
-  override val mainContent: VdomElement = <.p(
+  override val content: VdomElement = <.p(
     i18n.tr("This is the settings Page")
   )
 }

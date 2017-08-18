@@ -78,43 +78,10 @@ object MgmtConsole extends js.JSApp {
 
   def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) : VdomElement = {
 
-    val autoOverflow = js.Dynamic.literal("overflow" -> "auto")
-
-    val mainComponent = <.div(
-      ^.cls := "splitPaneContent",
-      r.render()
-    )
-
-    val secondary : VdomElement = r.page.secondComponent match {
-      case None => mainComponent
-      case Some(sc) => ReactSplitPane.Component(
-        ReactSplitPane.props(
-          allowResize = true,
-          minSize = 100,
-          defaultSize = 100,
-          paneStyle = autoOverflow,
-          split = if (r.page.verticalFirst) "horizontal" else "vertical"
-        )
-      )(sc, mainComponent)
-    }
-
-    val primary : VdomElement = r.page.firstComponent match {
-      case None => secondary
-      case Some(fc) => ReactSplitPane.Component(
-        ReactSplitPane.props(
-          allowResize = true,
-          minSize = 100,
-          defaultSize = 100,
-          paneStyle = autoOverflow,
-          split = if (r.page.verticalFirst) "vertical" else "horizontal"
-        )
-      )(fc, secondary)
-    }
-
     <.section(
       ^.height := "100vh",
       navMenu(c),
-      <.div( ^.cls := "viewport", primary)
+      <.div( ^.cls := "viewport", r.render())
     )
   }
 

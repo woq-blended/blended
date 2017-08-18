@@ -12,5 +12,5 @@ object ServicesPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#services")
 
-  override val mainContent: VdomElement = ServicesComp.Component()
+  override val content: VdomElement = ServicesComp.Component()
 }
