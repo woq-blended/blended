@@ -13,9 +13,17 @@ abstract class TopLevelPage {
 
   val routerPath : Path
 
-  val content : VdomElement
+  // If set to true the first Component will be on the left hand side
+  // If set to false the first Component will be on the top
+  val verticalFirst : Boolean = true
 
-  def component = ScalaComponent.builder.static(name)(<.div(content))
+  val firstComponent : Option[VdomElement] = None
+
+  val secondComponent : Option[VdomElement] = None
+
+  val mainContent : VdomElement
+
+  def component = ScalaComponent.builder.static(name)(<.div(mainContent))
     .build
 }
 

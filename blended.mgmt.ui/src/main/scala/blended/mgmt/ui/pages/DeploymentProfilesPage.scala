@@ -10,5 +10,5 @@ object DeploymentProfilesPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#deploymentProfiles")
 
-  override val content: VdomElement = DeploymentProfilesComp.Component()
+  override val mainContent: VdomElement = DeploymentProfilesComp.Component()
 }

@@ -77,8 +77,6 @@ object ContainerInfoFilterComp {
       val propKeys = properties.keySet.toList.sorted
       log.trace("Found properties: " + properties)
 
-      val cb = { e : ReactEventFromTextArea => onSearchTextChange(e) }
-
       //      case And(filters) =>
       //        // a list of potential filters with either the choosable options or the selected value
       //        filters.collect {
@@ -99,25 +97,14 @@ object ContainerInfoFilterComp {
               label = "Search",
               value = state.searchText,
               inputType = "text",
-              changeCallback = cb
+              changeCallback = { e : ReactEventFromTextArea => onSearchTextChange(e) }
             ),
-            <.div(
-              ^.cls := "form-group row",
-              <.label(
-                ^.`for` := "containerId",
-                ^.cls := "col-sm-2 col-form-label",
-                i18n.tr("Container ID")
-              ),
-              <.div(
-                ^.cls := "col-sm-10",
-                <.input(
-                  ^.id := "containerId",
-                  ^.`type` := "text",
-                  ^.cls := "form-control",
-                  ^.value := state.containerId,
-                  ^.onChange ==> onContainerIdChange
-                )
-              )
+            FormHelper.input(
+              id = "containerId",
+              label = "Container ID",
+              value = state.containerId,
+              inputType = "text",
+              changeCallback = { e : ReactEventFromTextArea => onContainerIdChange(e) }
             ),
             <.div(
               ^.cls := "form-group row",
