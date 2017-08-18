@@ -44,7 +44,7 @@ BlendedModel(
   plugins = Seq(
     scalatestMavenPlugin,
     Plugin(
-      "org.apache.maven.plugins" % "maven-dependency-plugin",
+      gav = Plugins.dependency,
       executions = Seq(
         Execution(
           id = "extract-blended-container",

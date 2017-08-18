@@ -30,6 +30,8 @@ object Plugins {
   val gpg = mavenPluginGroup % "maven-gpg-plugin" % "1.6"
   val install = mavenPluginGroup % "maven-install-plugin" % "2.5.2"
   val jar = mavenPluginGroup % "maven-jar-plugin" % "2.6"
+  val plugin = mavenPluginGroup % "maven-plugin-plugin" % "3.2"
+  val resources = mavenPluginGroup % "maven-resources-plugin" % "3.0.1"
   val source = mavenPluginGroup % "maven-source-plugin" % "3.0.1"
   val war = mavenPluginGroup % "maven-war-plugin" % "3.0.0"
 

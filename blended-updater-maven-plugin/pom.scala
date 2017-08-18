@@ -25,7 +25,7 @@ BlendedModel(
   plugins = Seq(
     scalaMavenPlugin,
     Plugin(
-      gav = "org.apache.maven.plugins" % "maven-plugin-plugin" % "3.2",
+      gav = Plugins.plugin,
       executions = Seq(
         Execution(
           id = "default-descriptor",

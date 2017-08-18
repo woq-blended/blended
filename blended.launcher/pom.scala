@@ -42,7 +42,7 @@ BlendedModel(
     scalaMavenPlugin,
     scalatestMavenPlugin,
     Plugin(
-      "org.apache.maven.plugins" % "maven-resources-plugin" % "3.0.1",
+      gav = Plugins.resources,
       executions = Seq(
         Execution(
           id = "runner-resources",
@@ -68,7 +68,7 @@ BlendedModel(
       )
     ),
     Plugin(
-      "org.apache.maven.plugins" % "maven-assembly-plugin",
+      gav = Plugins.assembly,
       executions = Seq(
         Execution(
           id = "bin",
