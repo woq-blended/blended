@@ -28,7 +28,7 @@ BlendedModel(
     compileJsPlugin(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
     compileJsPlugin(execId = "packageJS", phase = "package", args = List("-batch", "packageBin")),
     Plugin(
-      buildHelperPlugin,
+      gav = Plugins.buildHelper,
       executions = Seq(
         Execution(
           id = "addSources",
@@ -53,7 +53,7 @@ BlendedModel(
       )
     ),
     Plugin(
-      gav = mavenInstallPlugin,
+      gav = Plugins.install,
       executions = Seq(
         Execution(
           id = "publishJS",

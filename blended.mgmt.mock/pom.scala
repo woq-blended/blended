@@ -25,7 +25,7 @@ BlendedModel(
   plugins = Seq(
     scalaMavenPlugin,
     Plugin(
-      execMavenPlugin,
+      gav = Plugins.exec,
       configuration = Config(
         mainClass = "blended.mgmt.mock.MgmtMockServer"
       )

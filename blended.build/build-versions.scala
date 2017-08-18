@@ -31,3 +31,4 @@ object BlendedVersions {
   val prickle = "1.1.13"
 
 }
+

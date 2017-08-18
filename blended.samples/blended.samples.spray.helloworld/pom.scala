@@ -31,7 +31,7 @@ BlendedModel(
     scalaMavenPlugin,
     scalatestMavenPlugin,
     Plugin(
-      gav = mavenWarPlugin,
+      gav = Plugins.war,
       configuration = Config (
         packagingExcludes = "WEB-INF/lib/*.jar",
         archive = Config(

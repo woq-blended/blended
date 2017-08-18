@@ -9,7 +9,7 @@ val releaseProfile = Profile(
   build = BuildBase(
     plugins = Seq(
       Plugin(
-        "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
+        gav = Plugins.source,
         executions = Seq(
           Execution(
             id = "attach-sources-no-fork",
@@ -35,7 +35,7 @@ val releaseProfile = Profile(
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-gpg-plugin" % "1.6",
+        gav = Plugins.gpg,
         executions = Seq(
           Execution(
             id = "sign-artifacts",
@@ -47,7 +47,7 @@ val releaseProfile = Profile(
         )
       ),
       Plugin(
-        "net.alchim31.maven" % "scala-maven-plugin",
+        gav = Plugins.scala,
         executions = Seq(
           Execution(
             id = "attach-doc",
@@ -184,7 +184,7 @@ object BlendedModel {
 
   val defaultPlugins = Seq(
     Plugin(
-      "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.9.1",
+      gav = Plugins.buildHelper,
       executions = Seq(
         Execution(
           id = "add-scala-sources",
@@ -213,7 +213,7 @@ object BlendedModel {
       )
     ),
     Plugin(
-      "org.apache.maven.plugins" % "maven-enforcer-plugin" % "1.3.1",
+      gav = Plugins.enforcer,
       executions = Seq(
         Execution(
           id = "enforce-maven",
@@ -231,7 +231,7 @@ object BlendedModel {
       )
     ),
     Plugin(
-      "org.apache.maven.plugins" % "maven-compiler-plugin" % "3.5.1",
+      gav = Plugins.compiler,
       configuration = Config(
         source = "${java.version}",
         target = "${java.version}",
@@ -422,7 +422,7 @@ object Feature {
 
 def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
   Plugin(
-    gav = scalaMavenPlugin.gav,
+    gav = Plugins.scala,
     executions = Seq(
       Execution(
         id = "build-product",
@@ -454,6 +454,9 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
   )
 )
 
+/**
+ * Maven project factory for Blended Container projects.
+ */
 object BlendedContainer {
 
   def apply(
@@ -494,7 +497,7 @@ object BlendedContainer {
         )
       ),
       Plugin(
-        gav = mavenDependencyPlugin,
+        gav = Plugins.dependency,
         executions = Seq(
           Execution(
             id = "unpack-launcher",
@@ -517,7 +520,7 @@ object BlendedContainer {
         )
       ),
       Plugin(
-        gav = scalaMavenPlugin.gav,
+        gav = Plugins.scala,
         executions = Seq(
           Execution(
             id = "build-product",
@@ -550,7 +553,7 @@ object BlendedContainer {
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-assembly-plugin",
+        gav = Plugins.assembly,
         executions = Seq(
           Execution(
             id = "assemle",
@@ -568,7 +571,7 @@ object BlendedContainer {
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-jar-plugin" % "2.6",
+        gav = Plugins.jar,
         executions = Seq(
           Execution(
             id = "default-jar",
@@ -610,7 +613,7 @@ object BlendedDockerContainer {
 
     plugins = Seq(
       Plugin(
-        "org.apache.maven.plugins" % "maven-dependency-plugin",
+        Plugins.dependency,
         executions = Seq(
           Execution(
             id = "extract-blended-container",
@@ -626,7 +629,7 @@ object BlendedDockerContainer {
         )
       ),
       Plugin(
-        gav = scalaMavenPlugin.gav,
+        gav = Plugins.scala,
         executions = Seq(
           Execution(
             id = "prepare-docker",

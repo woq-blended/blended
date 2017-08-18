@@ -29,7 +29,7 @@ BlendedModel(
     ),
     bundleWarPlugin,
     Plugin(
-      "org.apache.maven.plugins" % "maven-assembly-plugin" % "2.6",
+      gav = Plugins.assembly,
       executions = Seq(
         Execution(
           id = "prepareWar",
@@ -46,7 +46,7 @@ BlendedModel(
       )
     ),
     Plugin(
-      gav = "org.apache.maven.plugins" % "maven-war-plugin",
+      gav = Plugins.war,
       configuration = Config(
         archive = Config(
           manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
@@ -67,7 +67,7 @@ BlendedModel(
       )
     ),
     Plugin(
-      gav = jettyMavenPlugin,
+      gav = Plugins.jetty,
       configuration = Config(
         scanIntervalSeconds = "10",
         webAppSourceDirectory = "target/blended.mgmt.ui-" + BlendedVersions.blendedVersion,
