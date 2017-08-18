@@ -456,6 +456,13 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
 
 /**
  * Maven project factory for Blended Container projects.
+ * 
+ * Expectations
+ * ** `src/main/resources/container` - Container files, will go into `<container>
+ * ** `src/main/resources/profile` - Profiles files, will go into `<container>/profiles/<name>/<version>`
+ * ** `src/main/assembly/full-nojre.xml` - Assembly config for a complete container archive as `.tar.gz` and `.zip`
+ * ** `src/main/assembly/resources.xml` - Assembly config for the resources-files of the container as `.zip`. This is essentially the content of `src/main/resources/profile`
+ * ** `src/main/assembly/product.xml` - Assembly config (TODO, check if corrent und document where it is used)
  */
 object BlendedContainer {
 
@@ -566,7 +573,8 @@ object BlendedContainer {
         configuration = Config(
           descriptors = Config(
             descriptor = "src/main/assembly/full-nojre.xml",
-            descriptor = "src/main/assembly/product.xml"
+            descriptor = "src/main/assembly/product.xml",
+            descriptor = "src/main/assembly/resources.xml"
           )
         )
       ),
@@ -589,8 +597,9 @@ object BlendedContainer {
   )
 }
 
-// The blended docker container template 
-
+/**
+ * The blended docker container template.
+ */
 object BlendedDockerContainer {
   def apply(
     gav: Gav,
