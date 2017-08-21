@@ -2,7 +2,7 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.ConsoleSettings
 import blended.mgmt.ui.backend.{DataManager, DirectProfileUpdater, Observer}
-import blended.mgmt.ui.components.filter.{And, Filter, FilterBackend, FilterState}
+import blended.mgmt.ui.components.filter.{FilterBackend, FilterState}
 import blended.mgmt.ui.util.{I18n, LayoutHelper, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.html_<^._

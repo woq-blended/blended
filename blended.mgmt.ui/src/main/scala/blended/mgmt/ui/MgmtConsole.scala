@@ -1,15 +1,15 @@
 package blended.mgmt.ui
 
-import blended.mgmt.ui.components.wrapper.ReactSplitPane
 import blended.mgmt.ui.pages.TopLevelPages.values
 import blended.mgmt.ui.pages._
+import blended.mgmt.ui.styles.AppStyles
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 import org.scalajs.dom
 
 import scala.scalajs.js
-import js.JSConverters._
+import scalacss.DevDefaults._
 
 object MgmtConsole extends js.JSApp {
 
@@ -90,6 +90,9 @@ object MgmtConsole extends js.JSApp {
       BaseUrl.fromWindowOrigin / "management/"
 
   def main(): Unit = {
+
+    AppStyles.addToDocument()
+
     val router = Router(baseUrl, routerConfig.logToConsole)
 
     router().renderIntoDOM(dom.document.body)

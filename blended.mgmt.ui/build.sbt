@@ -79,6 +79,8 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
       "com.github.japgolly.scalajs-react" %%% "extra" % Versions.scalajsReact,
+      "com.github.japgolly.scalacss" %%% "ext-react" % Versions.scalaCss,
+
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,

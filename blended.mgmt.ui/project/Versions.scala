@@ -7,8 +7,8 @@ object Versions {
 
   val jQuery = "2.1.4"
 
+  val scalaCss = "0.5.3"
   val scalajsReact = "1.1.0"
-  val scalaTags = "0.6.0"
   val scalajsDom = "0.9.3"
   val scalajsJQuery = "0.9.2"
 
