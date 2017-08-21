@@ -8,6 +8,10 @@ import scala.collection.immutable.Seq
 
 val jsArtifact = blendedUpdaterConfig.groupId.get %%% blendedUpdaterConfig.artifactId % blendedUpdaterConfig.version.get
 
+/**
+ * Sources under "shared" dir are for scala-jvm and scala-js 
+ * Sources under "src" dir are only for scala-jvm
+ */
 BlendedModel(
   gav = blendedUpdaterConfig,
   packaging = "bundle",

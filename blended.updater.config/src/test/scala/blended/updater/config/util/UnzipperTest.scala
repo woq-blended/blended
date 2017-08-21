@@ -1,4 +1,4 @@
-package blended.updater.internal
+package blended.updater.config.util
 
 import org.scalatest.FreeSpec
 import java.io.File
