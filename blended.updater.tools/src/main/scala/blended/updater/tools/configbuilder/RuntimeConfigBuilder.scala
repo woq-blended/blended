@@ -221,6 +221,11 @@ object RuntimeConfigBuilder {
             case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
             case _ =>
           }
+        localRuntimeConfig.createResourceArchiveTouchFile(r, r.sha1Sum) match {
+          case Failure(e) =>
+            throw new RuntimeException("Could not create resource archive touch file for resource file: " + resourceFile, e)
+          case _ =>
+        }
       }
     }
 
