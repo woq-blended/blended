@@ -194,13 +194,8 @@ val xbeanSpring = "org.apache.xbean" % "xbean-spring" % xbeanVersion
 // Blended Projects
 
 object BlendedModule {
-  def apply(name : String) = BlendedVersions.blendedGroupId % name % BlendedVersions.blendedVersion
+  def apply(name: String) = BlendedVersions.blendedGroupId % name % BlendedVersions.blendedVersion
 }
-
-val blendedParent = Parent(
-  gav = BlendedModule("blended.parent"),
-  relativePath = "../blended.parent"
-)
 
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
 val blendedActivemqClient = BlendedModule("blended.activemq.client")
