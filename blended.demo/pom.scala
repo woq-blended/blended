@@ -13,6 +13,7 @@ BlendedModel(
   modules = Seq(
     "blended.demo.mgmt/blended.demo.mgmt.resources",
     "blended.demo.mgmt",
+    "blended.demo.node/blended.demo.node.resources",
     "blended.demo.node"
   )
 )
