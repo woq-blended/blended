@@ -35,7 +35,7 @@ val activeMqClient = "org.apache.activemq" % "activemq-client" % BlendedVersions
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % BlendedVersions.activeMqVersion
 val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
 val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
-    
+
 val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
 val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
@@ -221,7 +221,9 @@ val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedContainerRegistry = BlendedModule("blended.container.registry")
 val blendedDemoReactor = BlendedModule("blended.demo.reactor")
 val blendedDemoMgmt = BlendedModule("blended.demo.mgmt")
+val blendedDemoMgmtResources = BlendedModule("blended.demo.mgmt.resources")
 val blendedDemoNode = BlendedModule("blended.demo.node")
+val blendedDemoNodeResources = BlendedModule("blended.demo.node.resources")
 val blendedDockerReactor = BlendedModule("blended.docker.reactor")
 val blendedDockerDemoNode = BlendedModule("blended.docker.demo.node")
 val blendedDockerDemoMgmt = BlendedModule("blended.docker.demo.mgmt")

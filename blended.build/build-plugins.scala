@@ -1,6 +1,6 @@
 
 val scriptHelper =
-"""
+  """
 object ScriptHelper {
 
   import java.io.File
@@ -38,26 +38,45 @@ object Plugins {
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.23"
-  val exec =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+  val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
+  val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
+  
 
 }
 
 val skipInstallPlugin = Plugin(
   Plugins.install,
   configuration = Config(
-     skip = "true"
-   )
+    skip = "true"
+  )
 )
 
 val skipDeployPlugin = Plugin(
   Plugins.deploy,
   configuration = Config(
     skip = "true"
+  )
+)
+
+val skipDefaultJarPlugin = Plugin(
+  gav = Plugins.jar,
+  executions = Seq(
+    Execution(
+      id = "default-jar",
+      phase = "none"
+    )
+  )
+)
+
+val skipNexusStagingPlugin = Plugin(
+  gav = Plugins.nexusStaging,
+  configuration = Config(
+    skipNexusStagingDeployMojo = "true"
   )
 )
 
@@ -189,7 +208,7 @@ val polyglotTranslatePlugin = Plugin(
   gav = Plugins.polyglot,
   // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
   dependencies = Seq(
-      "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
+    "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
   ),
   executions = Seq(
     Execution(
@@ -243,9 +262,9 @@ ScriptHelper.writeFile(
   )
 )
 
-def compileJsPlugin(execId: String, phase : String, args: List[String]) : Plugin = {
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
 
-  val cfg = new Config(args.map( a => ("argument", Some(a) ) ))
+  val cfg = new Config(args.map(a => ("argument", Some(a))))
 
   Plugin(
     gav = Plugins.exec,
