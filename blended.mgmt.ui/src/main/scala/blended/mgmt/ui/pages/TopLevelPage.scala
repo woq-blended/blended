@@ -7,8 +7,10 @@ import japgolly.scalajs.react.vdom.html_<^._
 
 abstract class TopLevelPage {
 
+  /** Use this to internationalize mesages. */
 	val i18n = I18n()
   
+	/** The name of the page. */
   val name : String
 
   val routerPath : Path
