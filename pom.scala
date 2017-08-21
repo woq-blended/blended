@@ -12,7 +12,7 @@ BlendedModel(
   description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
   plugins = Seq(
     Plugin(
-      "org.sonatype.plugins" % "nexus-staging-maven-plugin",
+      Plugins.nexusStaging,
       extensions = true,
       configuration = Config(
         serverId = "ossrh",
@@ -70,9 +70,9 @@ BlendedModel(
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
         "blended.launcher.features",
-        "blended.demo",
         "blended.mgmt.ui",
-        "blended.file"
+        "blended.file",
+        "blended.demo"
       )
     ),
     Profile(
