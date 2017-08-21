@@ -75,8 +75,8 @@ case class LocalRuntimeConfig(
         val touchFile = resourceArchiveTouchFileLocation(artifact)
         if (touchFile.exists()) {
           val persistedChecksum = Source.fromFile(touchFile).getLines().mkString("\n")
-          if (persistedChecksum != artifact.sha1Sum) {
-            List(s"Resource ${artifact.fileName} was unpacked from an archive with a different checksum.")
+          if (artifact.sha1Sum.isDefined && persistedChecksum != artifact.sha1Sum.get) {
+            List(s"Resource ${artifact.fileName.getOrElse(runtimeConfig.resolveFileName(artifact.url).get)} was unpacked from an archive with a different checksum (${persistedChecksum}).")
           } else Nil
         } else {
           List(s"Resource ${artifact.fileName.getOrElse(runtimeConfig.resolveFileName(artifact.url).get)} not unpacked")
