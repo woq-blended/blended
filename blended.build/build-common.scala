@@ -368,21 +368,6 @@ case class FeatureBundle(
   }
 }
 
-/**
- * Provide a copy method for non-case class [[Dependency]].
- */
-implicit class CopyDependency(d: Dependency) {
-  def copy(
-    gav: Gav = d.gav,
-    `type`: String = d.`type`,
-    classifier: Option[String] = d.classifier,
-    scope: Option[String] = d.scope,
-    systemPath: Option[String] = d.systemPath,
-    exclusions: immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional): Dependency =
-    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-}
-
 // Create the String content of a feature file from a sequence of FeatureBundles
 
 def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {

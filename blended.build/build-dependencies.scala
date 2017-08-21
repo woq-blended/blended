@@ -12,6 +12,21 @@ implicit class ScalaJsGroupId(groupId: String) {
   }
 }
 
+/**
+ * Provide a copy method for non-case class [[Dependency]].
+ */
+implicit class RichDependency(d: Dependency) {
+  def copy(
+    gav: Gav = d.gav,
+    `type`: String = d.`type`,
+    classifier: Option[String] = d.classifier,
+    scope: Option[String] = d.scope,
+    systemPath: Option[String] = d.systemPath,
+    exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
+    optional: Boolean = d.optional): Dependency =
+    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
+}
+
 // Dependencies
 val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
 
