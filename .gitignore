@@ -27,3 +27,4 @@ libs/
 *.iml
 mvn.out
 nohup.out
+3rdparty
