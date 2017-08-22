@@ -1,4 +1,4 @@
-package blended.updater.internal
+package blended.updater.config.util
 
 import java.io.PrintStream
 import java.io.FileOutputStream

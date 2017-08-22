@@ -11,7 +11,9 @@ BlendedModel(
   packaging = "pom",
   description = "A collection of container definitions to demonstrate the functionality of blended.",
   modules = Seq(
+    "blended.demo.mgmt/blended.demo.mgmt.resources",
     "blended.demo.mgmt",
+    "blended.demo.node/blended.demo.node.resources",
     "blended.demo.node"
   )
 )

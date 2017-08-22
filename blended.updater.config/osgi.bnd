@@ -11,4 +11,5 @@ Import-Package: \
 Export-Package: \
   ${bundle.namespace}, \
   ${bundle.namespace}.json, \
+  ${bundle.namespace}.util, \
   blended.launcher.config

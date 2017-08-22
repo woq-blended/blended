@@ -368,21 +368,6 @@ case class FeatureBundle(
   }
 }
 
-/**
- * Provide a copy method for non-case class [[Dependency]].
- */
-implicit class CopyDependency(d: Dependency) {
-  def copy(
-    gav: Gav = d.gav,
-    `type`: String = d.`type`,
-    classifier: Option[String] = d.classifier,
-    scope: Option[String] = d.scope,
-    systemPath: Option[String] = d.systemPath,
-    exclusions: immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional): Dependency =
-    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-}
-
 // Create the String content of a feature file from a sequence of FeatureBundles
 
 def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {
@@ -454,9 +439,41 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
   )
 )
 
+object BlendedProfileResourcesContainer {
+  def apply(
+    gav: Gav,
+    properties: Map[String, String] = Map.empty) = {
+    
+    BlendedModel(
+      gav = gav,
+      packaging = "jar",
+      description = "Container Profile Resources " + gav.artifactId,
+      properties = properties,
+      plugins = Seq(
+        skipDefaultJarPlugin,
+        Plugin(
+          gav = Plugins.assembly,
+          executions = Seq(
+            Execution(
+              id = "assemble",
+              phase = "package",
+              goals = Seq("single")
+            )
+          ),
+          configuration = Config(
+            descriptors = Config(
+              descriptor = "src/main/assembly/resources.xml"
+            ),
+            appendAssemblyId = false
+          )
+        )
+      ))
+  }
+}
+
 /**
  * Maven project factory for Blended Container projects.
- * 
+ *
  * Expectations
  * ** `src/main/resources/container` - Container files, will go into `<container>
  * ** `src/main/resources/profile` - Profiles files, will go into `<container>/profiles/<name>/<version>`
@@ -470,73 +487,81 @@ object BlendedContainer {
     gav: Gav,
     description: String,
     properties: Map[String, String] = Map.empty,
-    features: immutable.Seq[Dependency] = Seq.empty) = BlendedModel(
-    gav = gav,
-    description = description,
-    packaging = "jar",
-    prerequisites = Prerequisites(
-      maven = "3.3.3"
-    ),
-    properties = Map(
-      "profile.name" -> gav.artifactId,
-      "profile.version" -> gav.version.get
-    ) ++ properties,
-    dependencies = features ++ Seq(Dependency(
-      blendedLauncher,
-      `type` = "zip",
-      classifier = "bin"
-    )),
-    plugins = Seq(
-      Plugin(
-        gav = blendedUpdaterMavenPlugin,
-        executions = Seq(
-          Execution(
-            id = "materialize-profile",
-            phase = "compile",
-            goals = Seq(
-              "materialize-profile"
-            ),
-            configuration = Config(
-              srcProfile = "${project.build.directory}/classes/profile/profile.conf",
-              destDir = "${project.build.directory}/classes/profile"
+    features: immutable.Seq[Dependency] = Seq.empty,
+    blendedProfileResouces: Gav = null) = {
+
+    BlendedModel(
+      gav = gav,
+      description = description,
+      packaging = "jar",
+      prerequisites = Prerequisites(
+        maven = "3.3.3"
+      ),
+      properties = Map(
+        "profile.name" -> gav.artifactId,
+        "profile.version" -> gav.version.get
+      ) ++ properties,
+      dependencies = features ++ Seq(
+        Dependency(
+          blendedLauncher,
+          `type` = "zip",
+          classifier = "bin"
+        )
+      ) ++
+        // the profile resources dep as ZIP file
+        Option(blendedProfileResouces).map(g => Dependency(gav = g, `type` = "zip")).toList,
+      plugins = Seq(
+        Plugin(
+          gav = blendedUpdaterMavenPlugin,
+          executions = Seq(
+            Execution(
+              id = "materialize-profile",
+              phase = "compile",
+              goals = Seq(
+                "materialize-profile"
+              ),
+              configuration = Config(
+                srcProfile = "${project.build.directory}/classes/profile/profile.conf",
+                destDir = "${project.build.directory}/classes/profile",
+                explodeResources = true
+              )
             )
           )
-        )
-      ),
-      Plugin(
-        gav = Plugins.dependency,
-        executions = Seq(
-          Execution(
-            id = "unpack-launcher",
-            phase = "compile",
-            goals = Seq(
-              "unpack"
-            ),
-            configuration = Config(
-              artifactItems = Config(
-                artifactItem = Config(
-                  groupId = "${project.groupId}",
-                  artifactId = "blended.launcher",
-                  classifier = "bin",
-                  `type` = "zip",
-                  outputDirectory = "${project.build.directory}/launcher"
+        ),
+        Plugin(
+          gav = Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "unpack-launcher",
+              phase = "compile",
+              goals = Seq(
+                "unpack"
+              ),
+              configuration = Config(
+                artifactItems = Config(
+                  artifactItem = Config(
+                    groupId = "${project.groupId}",
+                    artifactId = "blended.launcher",
+                    classifier = "bin",
+                    `type` = "zip",
+                    outputDirectory = "${project.build.directory}/launcher"
+                  )
                 )
               )
             )
           )
-        )
-      ),
-      Plugin(
-        gav = Plugins.scala,
-        executions = Seq(
-          Execution(
-            id = "build-product",
-            phase = "generate-resources",
-            goals = Seq(
-              "script"
-            ),
-            configuration = Config(
-              script = scriptHelper + """
+        ),
+        Plugin(
+          gav = Plugins.scala,
+          executions = Seq(
+            Execution(
+              id = "build-product",
+              phase = "generate-resources",
+              goals = Seq(
+                "script"
+              ),
+              configuration = Config(
+                script = scriptHelper + """
   import java.io.File
 
   // make launchfile
@@ -555,46 +580,36 @@ object BlendedContainer {
   val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
   ScriptHelper.writeFile(baseConfFile, "overlays = []")
   """
-            )
-          )
-        )
-      ),
-      Plugin(
-        gav = Plugins.assembly,
-        executions = Seq(
-          Execution(
-            id = "assemle",
-            phase = "package",
-            goals = Seq(
-              "single"
+              )
             )
           )
         ),
-        configuration = Config(
-          descriptors = Config(
-            descriptor = "src/main/assembly/full-nojre.xml",
-            descriptor = "src/main/assembly/product.xml",
-            descriptor = "src/main/assembly/resources.xml"
+        Plugin(
+          gav = Plugins.assembly,
+          executions = Seq(
+            Execution(
+              id = "assemble",
+              phase = "package",
+              goals = Seq(
+                "single"
+              )
+            )
+          ),
+          configuration = Config(
+            tarLongFileMode = "gnu",
+            descriptors = Config(
+              descriptor = "src/main/assembly/full-nojre.xml",
+              descriptor = "src/main/assembly/product.xml"
+            )
           )
-        )
-      ),
-      Plugin(
-        gav = Plugins.jar,
-        executions = Seq(
-          Execution(
-            id = "default-jar",
-            phase = "none"
-          )
-        )
-      ),
-      Plugin(
-        "org.sonatype.plugins" % "nexus-staging-maven-plugin",
-        configuration = Config(
-          skipNexusStagingDeployMojo = "true"
-        )
+        ),
+        skipDefaultJarPlugin,
+        skipNexusStagingPlugin
       )
     )
-  )
+
+  }
+
 }
 
 /**

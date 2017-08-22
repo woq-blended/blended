@@ -34,6 +34,9 @@ class MaterializeProfileMojo extends AbstractMojo {
   @Parameter(defaultValue = "conf", property = "dependencyType")
   var dependencyType: String = _
 
+  @Parameter(defaultValue = "false", property = "explodeResources")
+  var explodeResources: Boolean = false
+  
   // TODO add filter for conf dependencies
 
   /**
@@ -71,13 +74,15 @@ class MaterializeProfileMojo extends AbstractMojo {
     }
     getLog.debug("repo args: " + repoArgs.mkString("Array(", ", ", ")"))
 
+    val explodeResourcesArgs = if(explodeResources) Array("--explode-resources") else Array()
+    
     val profileArgs = Array(
       "--debug",
       "-f", srcProfile.getAbsolutePath,
       "-o", targetProfile.getAbsolutePath,
       "--download-missing",
       "--update-checksums"
-    ) ++ featureArgs ++ repoArgs
+    ) ++ featureArgs ++ repoArgs ++ explodeResourcesArgs
     RuntimeConfigBuilder.run(profileArgs)
   }
 

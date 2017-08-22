@@ -8,11 +8,9 @@
   </formats>
   <includeBaseDirectory>false</includeBaseDirectory>
   <fileSets>
-
     <fileSet>
-      <directory>target/classes/profile/etc</directory>
-      <outputDirectory>./etc</outputDirectory>
+      <directory>target/classes</directory>
+      <outputDirectory>.</outputDirectory>
     </fileSet>
-
   </fileSets>
 </assembly>

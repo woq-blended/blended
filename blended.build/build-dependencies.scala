@@ -12,6 +12,21 @@ implicit class ScalaJsGroupId(groupId: String) {
   }
 }
 
+/**
+ * Provide a copy method for non-case class [[Dependency]].
+ */
+implicit class RichDependency(d: Dependency) {
+  def copy(
+    gav: Gav = d.gav,
+    `type`: String = d.`type`,
+    classifier: Option[String] = d.classifier,
+    scope: Option[String] = d.scope,
+    systemPath: Option[String] = d.systemPath,
+    exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
+    optional: Boolean = d.optional): Dependency =
+    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
+}
+
 // Dependencies
 val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
 
@@ -20,7 +35,7 @@ val activeMqClient = "org.apache.activemq" % "activemq-client" % BlendedVersions
 val activeMqSpring = "org.apache.activemq" % "activemq-spring" % BlendedVersions.activeMqVersion
 val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
 val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
-    
+
 val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
 val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
 val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
@@ -194,13 +209,8 @@ val xbeanSpring = "org.apache.xbean" % "xbean-spring" % xbeanVersion
 // Blended Projects
 
 object BlendedModule {
-  def apply(name : String) = BlendedVersions.blendedGroupId % name % BlendedVersions.blendedVersion
+  def apply(name: String) = BlendedVersions.blendedGroupId % name % BlendedVersions.blendedVersion
 }
-
-val blendedParent = Parent(
-  gav = BlendedModule("blended.parent"),
-  relativePath = "../blended.parent"
-)
 
 val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter")
 val blendedActivemqClient = BlendedModule("blended.activemq.client")
@@ -211,7 +221,9 @@ val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedContainerRegistry = BlendedModule("blended.container.registry")
 val blendedDemoReactor = BlendedModule("blended.demo.reactor")
 val blendedDemoMgmt = BlendedModule("blended.demo.mgmt")
+val blendedDemoMgmtResources = BlendedModule("blended.demo.mgmt.resources")
 val blendedDemoNode = BlendedModule("blended.demo.node")
+val blendedDemoNodeResources = BlendedModule("blended.demo.node.resources")
 val blendedDockerReactor = BlendedModule("blended.docker.reactor")
 val blendedDockerDemoNode = BlendedModule("blended.docker.demo.node")
 val blendedDockerDemoMgmt = BlendedModule("blended.docker.demo.mgmt")
