@@ -37,7 +37,7 @@ object Plugins {
 
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
-  val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.23"
+  val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
