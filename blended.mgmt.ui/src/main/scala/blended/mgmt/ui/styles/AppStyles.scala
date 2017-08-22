@@ -2,13 +2,14 @@ package blended.mgmt.ui.styles
 
 import scalacss.DevDefaults._
 
-object AppStyles extends StyleSheet.Inline {
+
+object PanelDefault extends StyleSheet.Inline {
 
   import dsl._
 
-  val panelDefault = style(
+  val container = style(
     addClassNames("panel", "panel-default")
   )
-
-
 }
+
+

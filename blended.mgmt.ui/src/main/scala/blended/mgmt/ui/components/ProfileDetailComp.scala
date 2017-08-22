@@ -22,44 +22,41 @@ object ProfileDetailComp {
         case Props(None) => <.span(i18n.tr("No Profiles selected"))
         case Props(Some(rc)) =>
 
-          def props(ps: Map[String, String]) = ps.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
-
-          <.div(
-            <.h2(
-              i18n.tr("Profile:"),
-              " ",
-              rc.name,
-              "-",
-              rc.version
-            ),
-            DataTableComp.Component(DataTableContent(
-              title = "Profile Properties",
-              content = rc.properties
-            )),
-            DataTableComp.Component(DataTableContent(
-              title = "Framework Properties",
-              content = rc.frameworkProperties
-            )),
-            DataTableComp.Component(DataTableContent(
-              title = "System Properties",
-              content = rc.systemProperties
-            )),
-            DataTableComp.Component(DataTableContent(
-              title = "Features",
-              headings = Array("Name", "Version"),
-              content = rc.features.map( f => Array(f.name, f.version))
-            )),
-            DataTableComp.Component(DataTableContent(
-              title = "Bundles",
-              headings = Array("Url", "AutoStart", "StartLevel"),
-              content = rc.bundles.map(b => Array(b.url, s"${b.start}", s"${b.startLevel}"))
-            )),
-            DataTableComp.Component(DataTableContent(
-              title = "Resources",
-              headings = Array("Url", "Filename"),
-              content = rc.resources.map(r => Array(r.url, r.fileName.getOrElse(""))
-            ))
-          )
+        <.div(
+          <.h2(
+            i18n.tr("Profile:"),
+            " ",
+            rc.name,
+            "-",
+            rc.version
+          ),
+          DataTableComp.Component(DataTableContent(
+            title = "Profile Properties",
+            content = rc.properties
+          )),
+          DataTableComp.Component(DataTableContent(
+            title = "Framework Properties",
+            content = rc.frameworkProperties
+          )),
+          DataTableComp.Component(DataTableContent(
+            title = "System Properties",
+            content = rc.systemProperties
+          )),
+          DataTableComp.Component(DataTableContent(
+            title = "Features",
+            headings = List("name", "version"),
+            content = rc.features.map( f => Map("name" -> f.name, "version" -> f.version)).toVector
+          )),
+          DataTableComp.Component(DataTableContent(
+            title = "Bundles",
+            headings = List("url", "autoStart", "startLevel"),
+            content = rc.bundles.map(b => Map("url" -> b.url, "autoStart" -> b.start, "startLevel" -> b.startLevel)).toVector
+          )),
+          DataTableComp.Component(DataTableContent(
+            title = "Resources",
+            headings = List("url", "filename"),
+            content = rc.resources.map(r => Map("url" -> r.url, "filename" -> r.fileName.getOrElse(""))).toVector
+          ))
         )
       }
     }

@@ -1,21 +1,31 @@
 package blended.mgmt.ui.components
 
+import blended.mgmt.ui.styles.PanelDefault
 import blended.mgmt.ui.util.{I18n, Logger}
+import chandu0101.scalajs.react.components.ReactTable
 import japgolly.scalajs.react.{BackendScope, ScalaComponent}
 import japgolly.scalajs.react.vdom.html_<^._
 
+import scalacss.internal.mutable.GlobalRegistry
+import scalacss.ScalaCssReact._
+
 object DataTableContent {
-  def apply(title : String, content: Map[String, String]) : DataTableContent = DataTableContent(
-    title = title,
-    headings = Array("Name", "Value"),
-    content = content.map{ case (k,v) => Array(k,v) }.toList
-  )
+  def apply(title : String, content: Map[String, String]) : DataTableContent = {
+
+    val tContent = content.map{ case (k,v) => Map("name" -> k, "value" -> v) }.toVector
+
+    DataTableContent(
+      title = title,
+      headings = List("name", "value"),
+      tContent
+    )
+  }
 }
 
 case class DataTableContent(
   title : String,
-  headings : Array[String],
-  content : List[Array[String]]
+  headings : List[String],
+  content : Vector[ReactTable.Model]
 )
 
 object DataTableComp {
@@ -25,36 +35,20 @@ object DataTableComp {
 
   class Backend(scope: BackendScope[DataTableContent, Unit]) {
 
-    def line(items : Array[String]) = <.tr(
-      items.map(i => <.td(i18n.tr(i))):_*
-    )
-
     def render(props: DataTableContent) = {
 
       val width = 100 / props.headings.size
+      val panelStyle = GlobalRegistry[PanelDefault.type].get
 
       <.div(
-        ^.cls := "panel panel-default",
+        panelStyle.container,
         <.div(
           ^.cls := "panel-heading",
           <.h2(i18n.tr(props.title))
         ),
-        <.div(
-          ^.cls := "panel-body",
-          <.table(
-            ^.cls := "table",
-            <.tbody(
-              <.tr(
-                props.headings.map { h =>
-                  <.th(
-                    ^.width := s"$width%",
-                    i18n.tr(h)
-                  )
-                }:_*
-              ),
-              TagMod(props.content.map(line):_*)
-            )
-          )
+        ReactTable(
+          data = props.content,
+          columns = props.headings
         )
       )
     }

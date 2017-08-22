@@ -84,6 +84,7 @@ lazy val root = project
       "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
       organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
+      "com.olvind" %%% "scalajs-react-components" % "0.7.0",
 
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
       "org.scalatest" %%% "scalatest" % BlendedVersions.scalaTestVersion % "test"

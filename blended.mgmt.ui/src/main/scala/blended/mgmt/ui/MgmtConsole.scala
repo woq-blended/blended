@@ -2,7 +2,8 @@ package blended.mgmt.ui
 
 import blended.mgmt.ui.pages.TopLevelPages.values
 import blended.mgmt.ui.pages._
-import blended.mgmt.ui.styles.AppStyles
+import blended.mgmt.ui.styles.PanelDefault
+import chandu0101.scalajs.react.components.ReactTable
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
@@ -10,6 +11,7 @@ import org.scalajs.dom
 
 import scala.scalajs.js
 import scalacss.DevDefaults._
+import scalacss.internal.mutable.GlobalRegistry
 
 object MgmtConsole extends js.JSApp {
 
@@ -91,7 +93,12 @@ object MgmtConsole extends js.JSApp {
 
   def main(): Unit = {
 
-    AppStyles.addToDocument()
+    GlobalRegistry.register(
+      PanelDefault,
+      ReactTable.DefaultStyle
+    )
+
+    GlobalRegistry.addToDocumentOnRegistration()
 
     val router = Router(baseUrl, routerConfig.logToConsole)
 

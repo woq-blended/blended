@@ -1,12 +1,13 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.styles.AppStyles
+import blended.mgmt.ui.styles.PanelDefault
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.{ContainerInfo, OverlayState}
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react._
 
 import scalacss.ScalaCssReact._
+import scalacss.internal.mutable.GlobalRegistry
 
 /**
  * React Component to render a list of [[ContainerInfo]]s.
@@ -25,6 +26,9 @@ object ContainerInfoListComp {
     }
 
     def render(p: Props) = {
+
+      val panelStyle = GlobalRegistry[PanelDefault.type].get
+
       val rows = p.containerInfos.map { ci =>
         val singleProfiles = ci.profiles.flatMap(_.toSingle)
         val activeProfile = singleProfiles.find(p => p.state == OverlayState.Active)
@@ -44,7 +48,7 @@ object ContainerInfoListComp {
       }
 
       <.div(
-        AppStyles.panelDefault,
+        panelStyle.container,
         <.div(
           ^.cls := "panel-heading",
           <.h3(i18n.tr("Container"))
