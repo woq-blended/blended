@@ -131,8 +131,8 @@ val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
 val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
-val logbackCore = "ch.qos.logback" % "logback-core" % "1.1.3"
-val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.1.3"
+val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
+val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
 val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
