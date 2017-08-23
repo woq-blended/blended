@@ -22,11 +22,7 @@ BlendedModel(
     jsonLenses,
     slf4j,
     akkaSlf4j % "test",
-    Dependency(
-      "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion,
-      classifier = "agent",
-      scope = "runtime"
-    ),
+    jolokiaJvmAgent % "runtime",
     scalaTest % "test",
     blendedTestSupport % "test",
     mockitoAll % "test",

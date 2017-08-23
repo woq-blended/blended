@@ -19,7 +19,7 @@ BlendedModel(
     blendedJolokia,
     blendedTestSupport,
     blendedJmsUtils,
-    "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion,
+    dockerJava,
     akkaCamel,
     typesafeConfig,
     junit,
@@ -35,11 +35,7 @@ BlendedModel(
     mockitoAll % "test",
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
-    Dependency(
-      "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion,
-      classifier = "agent",
-      scope = "runtime"
-    )
+    jolokiaJvmAgent % "runtime"
   ),
   plugins = Seq(
     scalatestMavenPlugin,

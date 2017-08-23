@@ -25,6 +25,8 @@ implicit class RichDependency(d: Dependency) {
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
     optional: Boolean = d.optional): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
+  
+  def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
 }
 
 // Dependencies
@@ -83,6 +85,7 @@ val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
 val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
+val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
 
 val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
 val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
@@ -115,10 +118,14 @@ val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
 val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
 val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
 val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
-
 val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
 val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
+val jolokiaJvmAgent = Dependency(
+      jolokiaJvm,
+      classifier = "agent"
+    )
 val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 val junit = "junit" % "junit" % "4.11"
 val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
