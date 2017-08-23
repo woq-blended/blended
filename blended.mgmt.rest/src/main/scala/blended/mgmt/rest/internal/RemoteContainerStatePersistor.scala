@@ -7,6 +7,7 @@ import blended.updater.config.RemoteContainerState
 import scala.util.Try
 import scala.util.Success
 import scala.util.Failure
+import blended.updater.config.Mapper
 
 class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
 

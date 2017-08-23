@@ -1,32 +1,15 @@
-package blended.mgmt.rest.internal
+package blended.updater.config
 
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.FeatureConfig
-import blended.updater.config.FeatureRef
-import blended.updater.config.Artifact
-import scala.collection.JavaConverters._
-import blended.updater.config.BundleConfig
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.util.Try
-import blended.updater.config.RemoteContainerState
-import blended.updater.config.ContainerInfo
-import blended.updater.config.UpdateAction
-import blended.updater.config.AddRuntimeConfig
-import blended.updater.config.ServiceInfo
-import blended.updater.config.Profile
-import blended.updater.config.OverlaySet
-import blended.updater.config.OverlayRef
-import blended.updater.config.ActivateProfile
-import blended.updater.config.AddOverlayConfig
-import blended.updater.config.StageProfile
-import blended.updater.config.OverlayConfig
-import blended.updater.config.GeneratedConfig
-import blended.updater.config.OverlayState
 
-// TODO: move into same package as classes
 /**
  * Mapper functions for bi-directional mapping of domain model case classes to [[java.util.Map]]'s with JVM-only types.
  */
-object Mapper {
+trait Mapper {
 
   def mapArtifact(a: Artifact): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
@@ -58,7 +41,7 @@ object Mapper {
       "bundles" -> f.bundles.map { b => mapBundleConfig(b) }.asJava
     ).asJava
 
-  def mapRuntimeConfg(runtimeConfig: RuntimeConfig): java.util.Map[String, AnyRef] =
+  def mapRuntimeConfig(runtimeConfig: RuntimeConfig): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
@@ -93,7 +76,7 @@ object Mapper {
       "containerId" -> ci.containerId,
       "properties" -> ci.properties.asJava,
       "serviceInfos" -> ci.serviceInfos.map(si => mapServiceInfo(si)).asJava,
-      "profiles" -> ci.profiles.map(p => mapProfiles(p)).asJava,
+      "profiles" -> ci.profiles.map(p => mapProfile(p)).asJava,
       "timestampMsec" -> java.lang.Long.valueOf(ci.timestampMsec)
     ).asJava
 
@@ -101,7 +84,7 @@ object Mapper {
     case AddRuntimeConfig(rc) =>
       Map(
         "kind" -> UpdateAction.KindAddRuntimeConfig,
-        "runtimeConfig" -> mapRuntimeConfg(rc)
+        "runtimeConfig" -> mapRuntimeConfig(rc)
       ).asJava
     case AddOverlayConfig(oc) =>
       Map(
@@ -138,7 +121,7 @@ object Mapper {
       "config" -> c.config
     ).asJava
 
-  def mapProfiles(p: Profile): java.util.Map[String, AnyRef] =
+  def mapProfile(p: Profile): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> p.name,
       "version" -> p.version,
@@ -319,3 +302,5 @@ object Mapper {
   }
 
 }
+
+object Mapper extends Mapper
