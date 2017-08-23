@@ -153,8 +153,8 @@ trait Mapper {
     val m = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     Artifact(
       url = m("url").asInstanceOf[String],
-      fileName = m.get("fileName").map(_.asInstanceOf[String]),
-      sha1Sum = m.get("sha1Sum").map(_.asInstanceOf[String])
+      fileName = m.get("fileName").flatMap(f => Option(f.asInstanceOf[String])),
+      sha1Sum = m.get("sha1Sum").flatMap(s => Option(s.asInstanceOf[String]))
     )
   }
 
