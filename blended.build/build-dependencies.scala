@@ -147,14 +147,13 @@ val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
 val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val paxwebVersion = "3.1.6"
-val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % paxwebVersion
-val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % paxwebVersion
-val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % paxwebVersion
-val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % paxwebVersion
-val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % paxwebVersion
-val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % paxwebVersion
-val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % paxwebVersion
+val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % BlendedVersions.paxWeb
+val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % BlendedVersions.paxWeb
+val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % BlendedVersions.paxWeb
+val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % BlendedVersions.paxWeb
+val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % BlendedVersions.paxWeb
+val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % BlendedVersions.paxWeb
+val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % BlendedVersions.paxWeb
 
 val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 
@@ -206,12 +205,11 @@ val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
 val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
 val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
 
-val xbeanVersion = "3.16"
-val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % xbeanVersion
-val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % xbeanVersion
-val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % xbeanVersion
-val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % xbeanVersion
-val xbeanSpring = "org.apache.xbean" % "xbean-spring" % xbeanVersion
+val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % BlendedVersions.xbean
+val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % BlendedVersions.xbean
+val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % BlendedVersions.xbean
+val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % BlendedVersions.xbean
+val xbeanSpring = "org.apache.xbean" % "xbean-spring" % BlendedVersions.xbean
 
 // Blended Projects
 
