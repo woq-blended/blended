@@ -28,6 +28,9 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
 
   override def updateContainerState(containerState: ContainerState): Unit = {
     log.debug("About to persist container state: {}", containerState)
-    persistenceService.persist(pClassName, Mapper.mapContainerState(containerState))
+    val deleteCount = persistenceService.deleteByExample(pClassName, Map("containerId" -> containerState.containerId).asJava)
+    log.debug("deleted {} old entries", deleteCount)
+    val entry = persistenceService.persist(pClassName, Mapper.mapContainerState(containerState))
+    log.debug("persisted 1 new entry: {}", entry)
   }
 }
