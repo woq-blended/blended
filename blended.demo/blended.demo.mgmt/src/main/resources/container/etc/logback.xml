@@ -1,4 +1,4 @@
-<configuration>
+<configuration scan="true" scanPeriod="30 seconds">
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <file>log/blended.log</file>
     <layout class="ch.qos.logback.classic.PatternLayout">
