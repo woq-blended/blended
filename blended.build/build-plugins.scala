@@ -250,11 +250,7 @@ ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/plugins.sbt"),
   "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
   "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
-  "\n" +
-  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")\n" +
-  "\n" +
-  "addSbtPlugin(\"ch.epfl.scala\" % \"sbt-scalajs-bundler\" % \"0.7.0\")\n"
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n"
  )
 """
       )

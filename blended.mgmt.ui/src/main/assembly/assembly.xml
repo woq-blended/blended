@@ -12,22 +12,13 @@
   <fileSets>
 
     <fileSet>
-      <directory>${project.build.directory}/scala-2.11/scalajs-bundler/main/</directory>
-      <outputDirectory>/scripts</outputDirectory>
-      <includes>
-        <include>blended-mgmt-ui*bundle*</include>
-      </includes>
+      <directory>${project.build.directory}/assets</directory>
+      <outputDirectory>assets</outputDirectory>
     </fileSet>
 
     <fileSet>
-      <directory>${project.build.directory}/scala-2.11/scalajs-bundler/main/node_modules/bootstrap/dist/fonts</directory>
-      <outputDirectory>fonts</outputDirectory>
-    </fileSet>
-
-    <!-- CSS -->
-    <fileSet>
-      <directory>${project.build.directory}/web/less/main</directory>
-      <outputDirectory>css</outputDirectory>
+      <directory>${project.basedir}/node_modules/bootstrap/dist</directory>
+      <outputDirectory>bootstrap/dist</outputDirectory>
     </fileSet>
 
   </fileSets>

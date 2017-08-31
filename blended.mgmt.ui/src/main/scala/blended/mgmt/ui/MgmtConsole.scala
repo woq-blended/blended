@@ -26,7 +26,7 @@ object MgmtConsole extends js.JSApp {
       def nav(name: String, target: TopLevelPage) = {
 
         val cls : String = target.equals(state.selected) match {
-          case true => "navbar-selected "
+          case true => "navbar-selected"
           case _ => "navbar-brand"
         }
 

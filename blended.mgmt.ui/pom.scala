@@ -25,7 +25,7 @@ BlendedModel(
     compileJsPlugin(
       execId = "compileJS",
       phase = "compile",
-      args = List("-batch", "fastOptJS::webpack")
+      args = List("-batch", "fastOptJS")
     ),
     bundleWarPlugin,
     Plugin(
@@ -58,10 +58,6 @@ BlendedModel(
             includes = Config(
               include = "**/*"
             )
-          ),
-          resource = Config(
-            directory = "${project.build.directory}/web/less/main",
-            targetPath = "css"
           )
         )
       )
