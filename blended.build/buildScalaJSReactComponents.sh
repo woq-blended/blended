@@ -3,7 +3,7 @@
 mkdir -p "../3rdparty"
 
 DIR=scalajs-react-components
-BRANCH=upgrade-1.1.0
+BRANCH=master
 VERSION=0.7.0
 
 (

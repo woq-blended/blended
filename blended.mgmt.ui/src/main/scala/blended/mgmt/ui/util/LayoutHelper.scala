@@ -1,6 +1,6 @@
 package blended.mgmt.ui.util
 
-import blended.mgmt.ui.components.wrapper.ReactSplitPane
+import chandu0101.scalajs.react.components.reactsplitpane.ReactSplitPane
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js
@@ -23,27 +23,23 @@ object LayoutHelper {
 
     val secondary: VdomElement = secondComponent match {
       case None => mainComponent
-      case Some(sc) => ReactSplitPane.Component(
-        ReactSplitPane.props(
-          allowResize = true,
-          minSize = 100,
-          defaultSize = 100,
-          paneStyle = autoOverflow,
-          split = if (verticalFirst) "horizontal" else "vertical"
-        )
+      case Some(sc) => ReactSplitPane(
+        allowResize = true,
+        minSize = 100.0,
+        defaultSize = 100.0,
+        paneStyle = autoOverflow,
+        split = if (verticalFirst) "horizontal" else "vertical"
       )(sc, mainComponent)
     }
 
     firstComponent match {
       case None => secondary
-      case Some(fc) => ReactSplitPane.Component(
-        ReactSplitPane.props(
-          allowResize = true,
-          minSize = 100,
-          defaultSize = 100,
-          paneStyle = autoOverflow,
-          split = if (verticalFirst) "vertical" else "horizontal"
-        )
+      case Some(fc) => ReactSplitPane(
+        allowResize = true,
+        minSize = 100.0,
+        defaultSize = 100.0,
+        paneStyle = autoOverflow,
+        split = if (verticalFirst) "vertical" else "horizontal"
       )(fc, secondary)
     }
 
