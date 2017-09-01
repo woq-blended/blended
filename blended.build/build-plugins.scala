@@ -22,6 +22,7 @@ object ScriptHelper {
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
+  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
   val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
   val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.5.1"
   val dependency = mavenPluginGroup % "maven-dependency-plugin" % "2.10"
@@ -258,7 +259,7 @@ ScriptHelper.writeFile(
   )
 )
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
+def execPlugin(executable: String, execId: String, phase: String, args: List[String]) : Plugin = {
 
   val cfg = new Config(args.map(a => ("argument", Some(a))))
 
@@ -272,14 +273,18 @@ def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin =
           "exec"
         ),
         configuration = Config(
-          executable = "sbt",
+          executable = executable,
           workingDirectory = "${project.basedir}",
           arguments = cfg
         )
       )
     )
   )
+
 }
+
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = 
+  execPlugin("sbt", execId, phase, args)
 
 val dockerMavenPlugin = Plugin(
   gav = Plugins.docker,

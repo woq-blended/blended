@@ -23,8 +23,8 @@ object MgmtConsole extends js.JSApp {
       def nav(name: String, target: TopLevelPage) = {
 
         val cls : String = target.equals(state.selected) match {
-          case true => "navbar-selected"
-          case _ => "navbar-brand"
+          case true => "navbar-selected navbar-brand"
+          case _ => "navbar-blended navbar-brand"
         }
 
         <.li(
@@ -39,7 +39,9 @@ object MgmtConsole extends js.JSApp {
 
       <.header(
         <.nav(
-          ^.cls := "navbar navbar-default navbar-fixed-top",
+          ^.cls := "navbar navbar-fixed-top",
+          ^.margin := "5px",
+          ^.borderRadius := "5px",
           <.ul(
             ^.cls := "navbar navbar-nav",
             TagMod(TopLevelPages.values.map { tlp =>

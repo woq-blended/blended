@@ -3,6 +3,8 @@
 var path = require("path");
 var webpack = require('webpack');
 
+const CleanWebPackPlugin = require('clean-webpack-plugin');
+
 module.exports = {
 
   entry: {
@@ -27,6 +29,7 @@ module.exports = {
   },
 
   plugins: [
+    new CleanWebPackPlugin('target/assets'),
     new webpack.NoEmitOnErrorsPlugin(),
     new webpack.ProvidePlugin({
       $: 'jquery',

@@ -21,30 +21,25 @@ BlendedModel(
       scalaTest % "test"
   ),
   plugins = Seq(
-    prepareSbtPlugin,
-    compileJsPlugin(
-      execId = "compileJS",
-      phase = "compile",
-      args = List("-batch", "fastOptJS")
-    ),
-    bundleWarPlugin,
     Plugin(
-      gav = Plugins.assembly,
-      executions = Seq(
-        Execution(
-          id = "prepareWar",
-          phase = "prepare-package",
-          goals = Seq(
-            "single"
-          ),
-          configuration = Config(
-            descriptors = Config(
-              descriptor = "src/main/assembly/assembly.xml"
-            )
+      gav = Plugins.clean,
+      configuration = Config(
+        filesets = Config(
+          fileset = Config(
+            directory = "node_modules"
           )
         )
       )
     ),
+    execPlugin("npm", "npm-install", "process-classes", List("install")),
+    execPlugin("node", "webpack", "prepare-package", List("node_modules/webpack/bin/webpack.js")),
+    prepareSbtPlugin,
+    compileJsPlugin(
+      execId = "compileJS",
+      phase = "compile",
+      args = List("-batch", "fullOptJS")
+    ),
+    bundleWarPlugin,
     Plugin(
       gav = Plugins.war,
       configuration = Config(
@@ -53,22 +48,19 @@ BlendedModel(
         ),
         webResources = Config(
           resource = Config(
-            directory = "${project.build.directory}/${project.artifactId}-${project.version}-preWar/${project.artifactId}-${project.version}",
-            targetPath = "/",
+            directory = "${project.build.directory}/assets",
+            targetPath = "/assets",
             includes = Config(
               include = "**/*"
             )
+          ),
+          resource = Config(
+            directory = "${project.basedir}",
+            targetPath = "/",
+            includes = Config(
+              include = "index.html"
+            )
           )
-        )
-      )
-    ),
-    Plugin(
-      gav = Plugins.jetty,
-      configuration = Config(
-        scanIntervalSeconds = "10",
-        webAppSourceDirectory = "target/blended.mgmt.ui-" + BlendedVersions.blendedVersion,
-        webApp = Config(
-          contextPath = "/management"
         )
       )
     )
