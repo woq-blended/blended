@@ -1,14 +1,12 @@
 'use strict';
 
 var path = require("path");
-
 var webpack = require('webpack');
-var CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin;
-
 
 module.exports = {
 
   entry: {
+    css: 'bootstrap-loader',
     index: './bundles/index.js',
     mgmtUi: './target/blended-mgmt-ui-opt.js'
   },
@@ -30,19 +28,37 @@ module.exports = {
 
   plugins: [
     new webpack.NoEmitOnErrorsPlugin(),
-    new CommonsChunkPlugin({
-      name: "index"
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
     })
   ],
+  devtool: "source-map",
   module: {
-    rules: [
-      {
-        test: /\.css$/,
-        use: [
-          { loader: 'style-loader/url' },
-          { loader: 'file-loader' }
-        ]
-      }
-    ]
+    rules: [{
+      test: /\.scss$/,
+      use: [{
+        loader: "style-loader"
+      }, {
+        loader: "css-loader",
+        options: {
+          alias: {
+            "../fonts/bootstrap": "bootstrap-sass/assets/fonts/bootstrap"
+          }
+        }
+      }, {
+        loader: "sass-loader",
+        options: {
+          includePaths: [
+            path.resolve("./node_modules/bootstrap-sass/assets/stylesheets")
+          ]
+        }
+      }]
+    }, {
+      test: /\.woff2?$|\.ttf$|\.eot$|\.svg$/,
+      use: [{
+        loader: "file-loader"
+      }]
+    }]
   }
 };
