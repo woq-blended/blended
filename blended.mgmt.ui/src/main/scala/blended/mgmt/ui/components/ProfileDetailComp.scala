@@ -1,7 +1,10 @@
 package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
-import blended.updater.config.{ContainerInfo, RuntimeConfig}
+import blended.updater.config.{BundleConfig, ContainerInfo, RuntimeConfig}
+import chandu0101.scalajs.react.components.ReactTable
+import ReactTable._
+import chandu0101.scalajs.react.components.ReactTable.ColumnConfig
 import japgolly.scalajs.react._
 import vdom.html_<^._
 
@@ -30,33 +33,27 @@ object ProfileDetailComp {
             "-",
             rc.version
           ),
-          DataTableComp.Component(DataTableContent(
-            title = "Profile Properties",
-            content = rc.properties
-          )),
-          DataTableComp.Component(DataTableContent(
-            title = "Framework Properties",
-            content = rc.frameworkProperties
-          )),
-          DataTableComp.Component(DataTableContent(
-            title = "System Properties",
-            content = rc.systemProperties
-          )),
-          DataTableComp.Component(DataTableContent(
-            title = "Features",
-            headings = List("name", "version"),
-            content = rc.features.map( f => Map("name" -> f.name, "version" -> f.version)).toVector
-          )),
-          DataTableComp.Component(DataTableContent(
-            title = "Bundles",
-            headings = List("url", "autoStart", "startLevel"),
-            content = rc.bundles.map(b => Map("url" -> b.url, "autoStart" -> b.start, "startLevel" -> b.startLevel)).toVector
-          )),
-          DataTableComp.Component(DataTableContent(
-            title = "Resources",
-            headings = List("url", "filename"),
-            content = rc.resources.map(r => Map("url" -> r.url, "filename" -> r.fileName.getOrElse(""))).toVector
-          ))
+          PropertyTable("Profile Properties", rc.properties),
+          PropertyTable("Framework Properties", rc.frameworkProperties),
+          PropertyTable("System Properties", rc.systemProperties),
+          PropertyTable(
+            "Features",
+            rc.features.map(f => (f.name, f.version)).toMap,
+            ("name", "version")
+          ),
+          ReactTable(
+            data = rc.bundles,
+            configs = List(
+              ColumnConfig[BundleConfig](name = i18n.tr("url"),  bc => <.span(bc.url))(ignoreCaseStringOrdering(_.url)),
+              ColumnConfig[BundleConfig](name = i18n.tr("autoStart"),  bc => <.span(bc.start.toString()))(ignoreCaseStringOrdering(_.start.toString())),
+              ColumnConfig[BundleConfig](name = i18n.tr("startLevel"),  bc => <.span(bc.startLevel.toString()))(DefaultOrdering(_.startLevel))
+            )
+          )(),
+          PropertyTable(
+            "Resources",
+            rc.resources.map(r => (r.url, r.fileName.getOrElse(""))).toMap,
+            ("url", "filename")
+          )
         )
       }
     }

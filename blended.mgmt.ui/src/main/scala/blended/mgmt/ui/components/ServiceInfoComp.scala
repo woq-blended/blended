@@ -17,9 +17,7 @@ object ServiceInfoComp {
       <.div(
         <.h3(i18n.tr("Service"), " ", info.name),
         <.h4(i18n.tr("Type: "), info.serviceType),
-        <.div(
-          DataTableComp.Component(DataTableContent(title = "Service Properties", content = info.props))
-        )
+        PropertyTable("Service Properties", info.props)
       )
     )
   }
