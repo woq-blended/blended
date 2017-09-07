@@ -27,7 +27,8 @@ object PropertyTable {
         configs = List(
           ReactTable.SimpleStringConfig[(String, String)](i18n.tr(headings._1), _._1, width = Some("50%")),
           ReactTable.SimpleStringConfig[(String, String)](i18n.tr(headings._2), _._2, width = Some("50%"))
-        )
+        ),
+        paging = false
       )()
     )
 

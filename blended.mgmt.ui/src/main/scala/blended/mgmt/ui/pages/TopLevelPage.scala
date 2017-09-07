@@ -29,6 +29,7 @@ object TopLevelPages {
     DeploymentProfilesPage,
     ProfilesPage,
     OverlaysPage,
+    RolloutPage,
     SettingsPage,
     HelpPage
   )

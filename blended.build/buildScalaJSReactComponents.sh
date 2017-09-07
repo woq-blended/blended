@@ -3,8 +3,8 @@
 mkdir -p "../3rdparty"
 
 DIR=scalajs-react-components
-BRANCH=master
-VERSION=0.7.0
+BRANCH=selectable-table
+VERSION=0.8.1
 
 (
   cd ../3rdparty &&
