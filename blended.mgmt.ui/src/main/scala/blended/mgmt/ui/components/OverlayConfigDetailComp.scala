@@ -48,7 +48,7 @@ object OverlayConfigDetailComp {
               <.h3(i18n.tr("Overlay Config")),
               <.h4(oc.name + " " + i18n.tr("Version") + " " + oc.version)
             ),
-            PropertyTable("Properties", oc.properties),
+            DataTable("Properties", oc.properties),
             <.div(
               ^.cls := "panel panel-default",
               <.div(

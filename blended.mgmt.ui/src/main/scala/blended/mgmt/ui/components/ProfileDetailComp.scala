@@ -2,9 +2,8 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.{BundleConfig, ContainerInfo, RuntimeConfig}
-import chandu0101.scalajs.react.components.ReactTable
+import chandu0101.scalajs.react.components.reacttable.ReactTable
 import ReactTable._
-import chandu0101.scalajs.react.components.ReactTable.ColumnConfig
 import japgolly.scalajs.react._
 import vdom.html_<^._
 
@@ -21,9 +20,16 @@ object ProfileDetailComp {
   class Backend(scope: BackendScope[Props, Unit]) {
 
     def render(props: Props) = {
+
       props match {
         case Props(None) => <.span(i18n.tr("No Profiles selected"))
         case Props(Some(rc)) =>
+
+        val bundles : Seq[Seq[String]] = rc.bundles.map { bc =>
+          Seq(bc.url)
+        }
+
+
 
         <.div(
           <.h2(
@@ -33,23 +39,29 @@ object ProfileDetailComp {
             "-",
             rc.version
           ),
-          PropertyTable("Profile Properties", rc.properties),
-          PropertyTable("Framework Properties", rc.frameworkProperties),
-          PropertyTable("System Properties", rc.systemProperties),
-          PropertyTable(
-            "Features",
-            rc.features.map(f => (f.name, f.version)).toMap,
-            ("name", "version")
+          DataTable(
+            panelHeading = "Profile Properties",
+            content = rc.properties
           ),
-          ReactTable(
-            data = rc.bundles,
-            configs = List(
-              ColumnConfig[BundleConfig](name = i18n.tr("url"),  bc => <.span(bc.url))(ignoreCaseStringOrdering(_.url)),
-              ColumnConfig[BundleConfig](name = i18n.tr("autoStart"),  bc => <.span(bc.start.toString()))(ignoreCaseStringOrdering(_.start.toString())),
-              ColumnConfig[BundleConfig](name = i18n.tr("startLevel"),  bc => <.span(bc.startLevel.toString()))(DefaultOrdering(_.startLevel))
-            )
-          )(),
-          PropertyTable(
+          DataTable(
+            panelHeading = "Framework Properties",
+            content = rc.frameworkProperties
+          ),
+          DataTable(
+            panelHeading = "System Properties",
+            content = rc.systemProperties
+          ),
+          DataTable(
+            panelHeading = "Features",
+            content = rc.features.map(f => (f.name, f.version)).toMap,
+            headings = ("name", "version")
+          ),
+          DataTable(
+            panelHeading = "Bundles",
+            content = bundles,
+            headings = Seq("url", "autoStart", "startLevel").zipWithIndex
+          ),
+          DataTable(
             "Resources",
             rc.resources.map(r => (r.url, r.fileName.getOrElse(""))).toMap,
             ("url", "filename")
