@@ -6,7 +6,7 @@ import blended.mgmt.ui.components.filter.{FilterBackend, FilterState}
 import blended.mgmt.ui.util.{I18n, LayoutHelper, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.html_<^._
-import japgolly.scalajs.react.{BackendScope, ScalaComponent}
+import japgolly.scalajs.react.{BackendScope, Callback, ScalaComponent}
 
 /**
  * React component showing a filterable page about containers and their details.
@@ -62,7 +62,7 @@ object ContainerComp {
     ScalaComponent.builder[Unit]("Container")
       .initialState(FilterState[ContainerInfo]())
       .renderBackend[Backend]
-      .componentDidMount(c => DataManager.containerData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.containerData.removeObserver(c.backend))
+      .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
+      .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
       .build
 }

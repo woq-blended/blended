@@ -12,7 +12,11 @@ object ProfilesComp {
   private[this] val log: Logger = Logger[ProfilesComp.type]
   private[this] val i18n = I18n()
 
-  case class State(profiles: List[RuntimeConfig], filter: And[RuntimeConfig] = And(), selected: Option[RuntimeConfig] = None) {
+  case class State(
+    profiles: List[RuntimeConfig],
+    filter: And[RuntimeConfig] = And(),
+    selected: Option[RuntimeConfig] = None
+  ) {
     def filteredRuntimeConfigs: List[RuntimeConfig] = profiles.filter(c => filter.matches(c))
     def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
   }
@@ -65,10 +69,10 @@ object ProfilesComp {
     }
   }
 
-  val Component = ScalaComponent.builder[Unit]("Profiles").
-      initialState(State(profiles = List()))
-      .renderBackend[Backend]
-      .componentDidMount(c => DataManager.runtimeConfigsData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.runtimeConfigsData.removeObserver(c.backend))
-      .build
+  val Component = ScalaComponent.builder[Unit]("Profiles")
+    .initialState(State(profiles = List()))
+    .renderBackend[Backend]
+    .componentDidMount(c => Callback { DataManager.runtimeConfigsData.addObserver(c.backend)})
+    .componentWillUnmount(c => Callback { DataManager.runtimeConfigsData.removeObserver(c.backend)})
+    .build
 }

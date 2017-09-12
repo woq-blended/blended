@@ -37,7 +37,7 @@ object ServicesComp {
   val Component = ScalaComponent.builder[Unit]("Services")
       .initialState(State(serviceList = List.empty))
       .renderBackend[Backend]
-      .componentDidMount(c => DataManager.serviceData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.serviceData.removeObserver(c.backend))
+      .componentDidMount(c => Callback { DataManager.serviceData.addObserver(c.backend) })
+      .componentWillUnmount(c => Callback { DataManager.serviceData.removeObserver(c.backend) })
       .build
 }

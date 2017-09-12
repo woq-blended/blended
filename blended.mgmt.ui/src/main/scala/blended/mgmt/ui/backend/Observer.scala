@@ -17,13 +17,13 @@ trait Observable[T] {
 
   var listener : List[Observer[T]] = List.empty
 
-  def addObserver(o : Observer[T]) = Callback {
+  def addObserver(o : Observer[T]) : Unit =  {
     listener = o :: listener
     log.trace(s"actual [${listener.size}] observers")
     refresh()
   }
 
-  def removeObserver(o: Observer[T]) = Callback {
+  def removeObserver(o: Observer[T]) : Unit = {
     listener = listener.filter(_ != o)
     log.trace(s"actual [${listener.size}] observers")
   }

@@ -38,8 +38,6 @@ object DeploymentProfilesComp {
     //    }
 
     def render(s: State) = {
-      log.debug(s"Rerendering with state $s")
-
       // we want a tree !
 
       val rendered = s.containerProfiles.toSeq.groupBy(cp => cp.name).toSeq.flatMap {
@@ -75,7 +73,7 @@ object DeploymentProfilesComp {
   val Component = ScalaComponent.builder[Unit]("Deployment Profiles")
       .initialState(State(containerInfos = List()))
       .renderBackend[Backend]
-      .componentDidMount(c => DataManager.containerData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.containerData.removeObserver(c.backend))
+      .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
+      .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
       .build
 }

@@ -22,7 +22,6 @@ object DataManager {
 
       Ajax.get(ConsoleSettings.containerDataUrl).onComplete {
         case Success(xhr) =>
-          log.trace("response: " + xhr.responseText)
           update(Unpickle[List[RemoteContainerState]].fromString(xhr.responseText).get.map(_.containerInfo))
         case _ => log.error("Could not retrieve container list from server")
       }
@@ -37,7 +36,6 @@ object DataManager {
 
       Ajax.get(ConsoleSettings.containerDataUrl).onComplete {
         case Success(xhr) =>
-          log.trace("response: " + xhr.responseText)
           val ctData = Unpickle[List[RemoteContainerState]].fromString(xhr.responseText).get.map(_.containerInfo)
           update(ctData.flatMap(ct => ct.serviceInfos))
         case _ => log.error("Could not retrieve container list from server")
@@ -52,7 +50,6 @@ object DataManager {
     override def refresh(): Unit = {
       Ajax.get(ConsoleSettings.profilesUrl).onComplete {
         case Success(xhr) =>
-          log.trace("response: " + xhr.responseText)
           update(Unpickle[ProfileInfo].fromString(xhr.responseText).get.profiles)
         case _ => log.error("Could not retrieve profile list from server")
       }
@@ -66,7 +63,6 @@ object DataManager {
     override def refresh(): Unit = {
       Ajax.get(ConsoleSettings.runtimeConfigsUrl).onComplete {
         case Success(xhr) =>
-          log.trace("response: " + xhr.responseText)
           update(Unpickle[List[RuntimeConfig]].fromString(xhr.responseText).get)
         case _ => log.error("Could not retrieve runtime config list from server")
       }
@@ -80,7 +76,6 @@ object DataManager {
     override def refresh(): Unit = {
       Ajax.get(ConsoleSettings.overlayConfigUrl).onComplete {
         case Success(xhr) =>
-          log.trace("response: " + xhr.responseText)
           update(Unpickle[List[OverlayConfig]].fromString(xhr.responseText).get)
         case _ => log.error("Could not retrieve overlay list from server")
       }

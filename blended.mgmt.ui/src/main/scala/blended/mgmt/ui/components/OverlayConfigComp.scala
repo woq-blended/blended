@@ -68,7 +68,11 @@ object OverlayConfigComp {
   val Component = ScalaComponent.builder[Unit]("OverlayConfig").
       initialState(State(overlays = List()))
       .renderBackend[Backend]
-      .componentDidMount(c => DataManager.overlayConfigsData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.overlayConfigsData.removeObserver(c.backend))
+      .componentDidMount(c => Callback {
+        DataManager.overlayConfigsData.addObserver(c.backend)
+      })
+      .componentWillUnmount{c => Callback {
+        DataManager.overlayConfigsData.removeObserver(c.backend)
+      }}
       .build
 }
