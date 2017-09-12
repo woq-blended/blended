@@ -1,7 +1,7 @@
 package blended.mgmt.ui.components
 
 import blended.mgmt.ui.backend.ProfileUpdater
-import blended.mgmt.ui.util.{I18n, Logger}
+import blended.mgmt.ui.util.{DisplayHelper, I18n, Logger}
 import blended.updater.config.Profile.SingleProfile
 import blended.updater.config._
 import japgolly.scalajs.react._
@@ -54,16 +54,18 @@ object ContainerDetailComp {
         case Props(None, _) => <.span(i18n.tr("No Container selected"))
         case Props(Some(containerInfo), profileUpdater) =>
 
-          val props = DataTable("Container Properties", content = containerInfo.properties)
-            //containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
+          val props = DataTable.fromProperties(
+            panelHeading = "Container Properties",
+            content = containerInfo.properties
+          )
 
           val profiles = containerInfo.profiles.flatMap(_.toSingle).map { profile =>
 
-            val genTitle = if (profile.overlays.isEmpty) i18n.tr("without overlays") else profile.overlays.mkString(", ")
+            val genTitle : String = DisplayHelper.profileToString(profile)
 
             <.div(
               ^.cls := profile.state.toString,
-              s"${profile.name}-${profile.version} ${genTitle} ",
+              DisplayHelper.profileToString(profile),
               <.span(
                 (^.title := s"${profile.state}: ${profile.overlaySet.reason.getOrElse("")}").when(profile.overlaySet.reason.isDefined),
                 s"(${profile.state})"

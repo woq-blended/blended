@@ -22,8 +22,9 @@ object ContainerComp {
     extends FilterBackend[ContainerInfo]
     with Observer[List[ContainerInfo]] {
 
-    override def dataChanged(newData: List[ContainerInfo]): Unit =
-      scope.setState(FilterState[ContainerInfo](items = newData).consistent).runNow()
+    override val dataChanged = { newData : List[ContainerInfo] =>
+      scope.modState(_.copy(items = newData))
+    }
 
     def render(s: FilterState[ContainerInfo]) = {
       log.debug(s"Rerendering with [${s.items.size}] containers, selected = [${s.selected.map(_.containerId)}]")

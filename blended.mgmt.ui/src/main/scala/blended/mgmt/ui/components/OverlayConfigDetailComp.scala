@@ -19,16 +19,16 @@ object OverlayConfigDetailComp {
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def render(props: Props) = {
+    def render(props: Props) : VdomElement = {
       props match {
         case Props(None) => <.span(i18n.tr("No OverlayConfig selected"))
         case Props(Some(oc)) =>
 
-          val replacer : scalajs.js.Array[scalajs.js.Any] = null
+          val replacer: scalajs.js.Array[scalajs.js.Any] = null
 
-          val genConf : TagMod = TagMod(oc.generatedConfigs.map { c =>
+          val genConf: TagMod = TagMod(oc.generatedConfigs.map { c =>
 
-            val obj : scalajs.js.Any = JSON.parse(c.config)
+            val obj: scalajs.js.Any = JSON.parse(c.config)
             val formatted = JSON.stringify(obj, replacer, 2)
 
             <.div(
@@ -39,25 +39,16 @@ object OverlayConfigDetailComp {
               ),
               <.pre(formatted)
             )
-          }:_*)
+          }: _*)
 
-          <.div(
-            ^.cls := "panel panel-default",
-            <.div(
-              ^.cls := "panel-heading",
-              <.h3(i18n.tr("Overlay Config")),
-              <.h4(oc.name + " " + i18n.tr("Version") + " " + oc.version)
+          ContentPanel("Overlay Config")(TagMod(
+            <.h3("oc.name + \" \" + i18n.tr(\"Version\") + \" \" + oc.version"),
+            DataTable.fromProperties(
+              panelHeading = "Properties",
+              content = oc.properties
             ),
-            DataTable("Properties", oc.properties),
-            <.div(
-              ^.cls := "panel panel-default",
-              <.div(
-                ^.cls := "panel-heading",
-                <.h3(i18n.tr("Generated Configs:"))
-              ),
-              genConf
-            )
-          )
+            ContentPanel("Generated Configs")(genConf)
+          ))
       }
     }
   }

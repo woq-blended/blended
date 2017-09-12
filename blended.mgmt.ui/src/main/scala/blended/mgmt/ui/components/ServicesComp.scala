@@ -18,7 +18,10 @@ object ServicesComp {
   }
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ServiceInfo]] {
-    override def dataChanged(newData: List[ServiceInfo]): Unit = scope.setState(State(newData).consistent).runNow()
+
+    override val dataChanged = { newData : List[ServiceInfo] =>
+      scope.modState(_.copy(serviceList = newData))
+    }
 
     def render(s: State) = {
 

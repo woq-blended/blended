@@ -29,8 +29,6 @@ object ProfileDetailComp {
           Seq(bc.url)
         }
 
-
-
         <.div(
           <.h2(
             i18n.tr("Profile:"),
@@ -39,29 +37,29 @@ object ProfileDetailComp {
             "-",
             rc.version
           ),
-          DataTable(
+          DataTable.fromProperties(
             panelHeading = "Profile Properties",
             content = rc.properties
           ),
-          DataTable(
+          DataTable.fromProperties(
             panelHeading = "Framework Properties",
             content = rc.frameworkProperties
           ),
-          DataTable(
+          DataTable.fromProperties(
             panelHeading = "System Properties",
             content = rc.systemProperties
           ),
-          DataTable(
+          DataTable.fromProperties(
             panelHeading = "Features",
             content = rc.features.map(f => (f.name, f.version)).toMap,
             headings = ("name", "version")
           ),
-          DataTable(
+          DataTable.fromStringSeq(
             panelHeading = "Bundles",
             content = bundles,
             headings = Seq("url", "autoStart", "startLevel").zipWithIndex
           ),
-          DataTable(
+          DataTable.fromProperties(
             "Resources",
             rc.resources.map(r => (r.url, r.fileName.getOrElse(""))).toMap,
             ("url", "filename")

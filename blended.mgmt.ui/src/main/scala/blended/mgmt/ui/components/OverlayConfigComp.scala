@@ -12,14 +12,17 @@ object OverlayConfigComp {
   private[this] val log: Logger = Logger[OverlayConfigComp.type]
   private[this] val i18n = I18n()
 
-  case class State(profiles: List[OverlayConfig], filter: And[OverlayConfig] = And(), selected: Option[OverlayConfig] = None) {
-    def filteredOverlayConfigs: List[OverlayConfig] = profiles.filter(c => filter.matches(c))
-    def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
+  case class State(overlays: List[OverlayConfig], filter: And[OverlayConfig] = And(), selected: Option[OverlayConfig] = None) {
+    def filteredOverlayConfigs: List[OverlayConfig] = overlays.filter(c => filter.matches(c))
+    def consistent = this.copy(selected = selected.filter(s => overlays.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[OverlayConfig]] {
 
-    override def dataChanged(newData: List[OverlayConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override val dataChanged = { newData: List[OverlayConfig] =>
+      scope.modState(_.copy(overlays = newData))
+    }
+
 
     def addFilter(filter: Filter[OverlayConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
@@ -41,7 +44,7 @@ object OverlayConfigComp {
     def render(s: State) = {
       log.debug(s"Rerendering with state $s")
 
-      
+
       val renderedOverlays = s.filteredOverlayConfigs.map { p =>
         <.div(
           <.span(
@@ -63,7 +66,7 @@ object OverlayConfigComp {
   }
 
   val Component = ScalaComponent.builder[Unit]("OverlayConfig").
-      initialState(State(profiles = List()))
+      initialState(State(overlays = List()))
       .renderBackend[Backend]
       .componentDidMount(c => DataManager.overlayConfigsData.addObserver(c.backend))
       .componentWillUnmount(c => DataManager.overlayConfigsData.removeObserver(c.backend))

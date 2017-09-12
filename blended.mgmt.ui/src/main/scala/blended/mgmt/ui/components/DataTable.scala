@@ -11,10 +11,13 @@ import scalacss.internal.mutable.GlobalRegistry
 
 object DataTable {
 
-  def apply(
+  def fromStringSeq(
     panelHeading : String,
     content : Seq[Seq[String]],
-    headings : Seq[(String, Int)]
+    headings : Seq[(String, Int)],
+    selectable : Boolean = false,
+    multiSelectable : Boolean = false,
+    allSelectable : Boolean = false
   ) : VdomElement = {
 
     val i18n = I18n()
@@ -22,37 +25,34 @@ object DataTable {
 
     val width = 100.0 / headings.size
 
-    <.div(
-      panelStyle.container,
-      <.div(
-        ^.cls := "panel-heading",
-        <.h2(i18n.tr(panelHeading))
-      ),
+    ContentPanel(panelHeading)(
       ReactTable(
         data = content,
         configs = headings.map{ h =>
           ReactTable.SimpleStringConfig[Seq[String]](
             name = i18n.tr(h._1),
             _(h._2),
-            width = Some(s"$width")
+            width = Some(s"$width%")
           )
         },
-        paging = false
+        paging = false,
+        selectable = selectable,
+        multiSelectable = multiSelectable,
+        allSelectable = allSelectable
       )()
     )
   }
 
-  def apply(
+  def fromProperties(
     panelHeading: String,
     content: Map[String, String],
     headings : (String, String) = ("name", "value")
   ) : VdomElement = {
 
-    apply(
+    fromStringSeq(
       panelHeading = panelHeading,
       content = content.map { case (k,v) => Seq(k,v) }.toSeq,
       headings = Seq((headings._1, 0), (headings._2, 1))
     )
-
   }
 }

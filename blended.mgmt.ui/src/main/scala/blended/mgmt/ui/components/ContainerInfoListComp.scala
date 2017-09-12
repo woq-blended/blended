@@ -47,17 +47,7 @@ object ContainerInfoListComp {
         )
       }
 
-      <.div(
-        panelStyle.container,
-        <.div(
-          ^.cls := "panel-heading",
-          <.h3(i18n.tr("Container"))
-        ),
-        <.div(
-          ^.cls := "panel-body",
-          TagMod(rows:_*)
-        )
-      )
+      ContentPanel("Container")(<.div(TagMod(rows:_*)))
     }
   }
 

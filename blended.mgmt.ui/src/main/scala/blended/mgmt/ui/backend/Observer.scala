@@ -5,7 +5,7 @@ import japgolly.scalajs.react.Callback
 
 trait Observer[T] {
 
-  def dataChanged(newData: T) : Unit
+  val dataChanged : T => Callback
 }
 
 trait Observable[T] {
@@ -34,7 +34,7 @@ trait Observable[T] {
   }
 
   def notifyObservers() : Unit = {
-    listener.foreach(_.dataChanged(data))
+    listener.foreach(_.dataChanged(data).runNow())
   }
 }
 

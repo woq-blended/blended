@@ -21,7 +21,9 @@ object ProfilesComp {
 
   class Backend(scope: BackendScope[Unit, State]) extends Observer[List[RuntimeConfig]] {
 
-    override def dataChanged(newData: List[RuntimeConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override val dataChanged = { newData: List[RuntimeConfig] =>
+      scope.modState(_.copy(profiles = newData))
+    }
 
     def addFilter(filter: Filter[RuntimeConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
