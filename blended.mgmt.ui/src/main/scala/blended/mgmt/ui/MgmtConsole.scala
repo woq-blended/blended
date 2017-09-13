@@ -12,28 +12,25 @@ import scala.scalajs.js
 
 object MgmtConsole extends js.JSApp {
 
-  case class NavState(
-    selected : TopLevelPage
-  )
+  class Backend(scope: BackendScope[RouterCtl[TopLevelPage], Unit]) {
 
-  class Backend(scope: BackendScope[RouterCtl[TopLevelPage], NavState]) {
+    def render(ctl : RouterCtl[TopLevelPage]) = {
 
-    def render(ctl : RouterCtl[TopLevelPage], state : NavState) = {
+      val currentUrl : String = js.Dynamic.global.window.location.href.toString
 
       def nav(name: String, target: TopLevelPage) = {
 
-        val cls : String = target.equals(state.selected) match {
+        val cls : String = currentUrl.endsWith(target.routerPath.value) match {
           case true => "navbar-selected navbar-brand"
           case _ => "navbar-blended navbar-brand"
         }
 
         <.li(
           ^.cls := cls,
-          ^.onClick --> scope.modState{ s =>
-              ctl.set(target).runNow()
-              s.copy(selected = target)
-            },
-          name
+          <.a(
+            ^.href := target.routerPath.value,
+            name
+          )
         )
       }
 
@@ -53,12 +50,8 @@ object MgmtConsole extends js.JSApp {
     }
   }
 
-  val initial = NavState(TopLevelPages.defaultPage)
-
   val navMenu = ScalaComponent.builder[RouterCtl[TopLevelPage]]("Menu")
-    .initialState(initial)
-    .backend(new Backend(_))
-    .renderBackend
+    .renderBackend[Backend]
     .build
 
   val routes = RouterConfigDsl[TopLevelPage].buildRule { dsl =>

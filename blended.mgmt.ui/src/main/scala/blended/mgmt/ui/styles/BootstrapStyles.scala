@@ -37,25 +37,32 @@ object BootstrapStyles extends StyleSheet.Inline {
   )
 
   val navbarNav = style("navbar-nav") (
-    border.none,
-    unsafeChild("li") {
-      listStyleType := "none"
-    }
+    border.none
   )
 
+  val navbarNavLi = style("navbar-nav li") {
+    listStyleType := "none"
+  }
+
+
   val navbarBlended = style("navbar-blended") (
-    textDecoration := "none",
     &.hover (
       textDecoration := "underline"
     ),
-    cursor.pointer
+    cursor.pointer,
+    unsafeChild("a") (
+      textDecoration := "none",
+      color(black)
+    )
   )
 
   val navbarSelected = style("navbar-selected") (
     navbarBlended,
+    borderRadius(10.px),
     backgroundColor(brandPrimary),
-    color(white),
-    borderRadius(10.px)
+    unsafeChild("a") (
+      color(white)
+    )
   )
 
   val panelDefault = style("panel-default") (

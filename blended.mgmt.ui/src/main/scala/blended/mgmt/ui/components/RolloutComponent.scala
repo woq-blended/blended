@@ -3,7 +3,6 @@ package blended.mgmt.ui.components
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.util.DisplayHelper
 import blended.updater.config._
-import chandu0101.scalajs.react.components.reacttable
 import chandu0101.scalajs.react.components.reacttable.ReactTable
 import japgolly.scalajs.react._
 import vdom.html_<^._
@@ -41,6 +40,10 @@ object RolloutComponent {
       }
     }
 
+    val selectContainer : Set[(ContainerInfo, Int)] => Callback = { selected =>
+      scope.modState(s => s.copy(selectedContainer = selected.map(_._1).toSeq))
+    }
+
     def render(s: RolloutState) = {
 
       val profiles = ContentPanel("Profile")(
@@ -56,7 +59,6 @@ object RolloutComponent {
           searchStringRetriever = (cfg => cfg.name + cfg.version)
         )()
       )
-
 
       val overlayTable = ContentPanel("Overlays")(
         ReactTable[OverlayConfig](
@@ -91,9 +93,20 @@ object RolloutComponent {
             selectable = true,
             multiSelectable = true,
             allSelectable = true,
-            searchStringRetriever = (ct => ct.containerId + profileString(ct) + ct.properties.mkString)
+            searchStringRetriever = (ct => ct.containerId + profileString(ct) + ct.properties.mkString),
+            onSelectionChanged = selectContainer
           )()
         )
+      }
+
+      val deployable =
+        s.selectedProfile.isDefined &&
+        s.selectedContainer.size > 0
+
+      val rollout = if (deployable) {
+        <.div("Deploy")
+      } else {
+        <.div()
       }
 
       <.div(
