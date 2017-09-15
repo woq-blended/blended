@@ -1,5 +1,7 @@
 package blended.mgmt.ui.styles
 
+import chandu0101.scalajs.react.components.ReactSearchBox
+
 import scalacss.DevDefaults._
 import scalacss.ScalaCssReact._
 import scalacss.internal.mutable.GlobalRegistry
@@ -23,6 +25,7 @@ object AppStyles {
       PanelDefault,
       ReactTable.DefaultStyle,
       ReactSplitPane.DefaultStyle,
+      ReactSearchBox.DefaultStyle,
       BootstrapStyles
     )
 
