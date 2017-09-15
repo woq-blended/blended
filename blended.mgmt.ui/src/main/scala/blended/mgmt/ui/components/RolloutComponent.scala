@@ -15,7 +15,7 @@ object RolloutComponent {
     overlays : List[OverlayConfig],
     profiles : List[RuntimeConfig],
 
-    selectedProfile : Option[ProfileInfo],
+    selectedProfile : Option[RuntimeConfig],
     selectedOverlays : Seq[OverlayConfig],
     selectedContainer : Seq[ContainerInfo]
   )
@@ -40,38 +40,63 @@ object RolloutComponent {
       }
     }
 
-    val selectContainer : Set[(ContainerInfo, Int)] => Callback = { selected =>
+    val selectContainer : Set[(ContainerInfo, String)] => Callback = { selected =>
       scope.modState(s => s.copy(selectedContainer = selected.map(_._1).toSeq))
     }
 
+    val selectProfile : Set[(RuntimeConfig, String)] => Callback = { selected =>
+      scope.modState(s =>
+        s.copy(
+          selectedProfile = selected match {
+            case e if e.isEmpty => None
+            case s  => Some(s.head._1)
+          }
+        )
+      )
+    }
+
+    val selectOverlays : Set[(OverlayConfig, String)] => Callback = { selected =>
+      scope.modState( _.copy(selectedOverlays = selected.map(_._1).toSeq ))
+    }
+
     def render(s: RolloutState) = {
+
+      val profileKey : RuntimeConfig => String = p => p.name + "-" + p.version
 
       val profiles = ContentPanel("Profile")(
         ReactTable[RuntimeConfig](
           data = s.profiles,
           configs = Seq(
-            ReactTable.SimpleStringConfig("Name", _.name, Some("50%")),
+            ReactTable.SimpleStringConfig("Name", _.name),
             ReactTable.SimpleStringConfig("Version", _.version)
           ),
           paging = false,
           selectable = true,
           multiSelectable = false,
-          searchStringRetriever = (cfg => cfg.name + cfg.version)
+          searchStringRetriever = (cfg => cfg.name + cfg.version),
+          keyStringRetriever = profileKey,
+          onSelectionChanged = selectProfile,
+          initialSelection = s.selectedProfile.map(profileKey).toSeq
         )()
       )
+
+      val overlayKey : OverlayConfig => String = cfg => cfg.name + "-" + cfg.version
 
       val overlayTable = ContentPanel("Overlays")(
         ReactTable[OverlayConfig](
           data = s.overlays,
           configs = Seq(
-            ReactTable.SimpleStringConfig("Name", _.name, Some("50%")),
+            ReactTable.SimpleStringConfig("Name", _.name),
             ReactTable.SimpleStringConfig("Version", _.version)
           ),
           paging = false,
           selectable = true,
           multiSelectable = true,
           allSelectable = true,
-          searchStringRetriever = (cfg => cfg.name + cfg.version)
+          searchStringRetriever = (cfg => cfg.name + cfg.version),
+          keyStringRetriever = overlayKey,
+          onSelectionChanged = selectOverlays,
+          initialSelection = s.selectedOverlays.map(overlayKey)
         )()
       )
 
@@ -85,8 +110,8 @@ object RolloutComponent {
           ReactTable[ContainerInfo](
             data = s.container,
             configs = Seq(
-              ReactTable.SimpleStringConfig("Container ID", _.containerId, Some("33%")),
-              ReactTable.SimpleStringConfig("Active Profile", profileString, Some("33%")),
+              ReactTable.SimpleStringConfig("Container ID", _.containerId),
+              ReactTable.SimpleStringConfig("Active Profile", profileString),
               ReactTable.SimpleStringConfig("Properties", _.properties.mkString(", "))
             ),
             paging = false,
@@ -94,6 +119,8 @@ object RolloutComponent {
             multiSelectable = true,
             allSelectable = true,
             searchStringRetriever = (ct => ct.containerId + profileString(ct) + ct.properties.mkString),
+            keyStringRetriever = _.containerId,
+            initialSelection = s.selectedContainer.map(_.containerId),
             onSelectionChanged = selectContainer
           )()
         )
