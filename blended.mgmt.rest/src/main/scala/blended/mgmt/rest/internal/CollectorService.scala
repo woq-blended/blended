@@ -156,6 +156,7 @@ trait CollectorService
         requirePermission("profile:update") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             complete {
+              // TODO: check, if we already know the profile
               rolloutProfile.containerIds.foreach { containerId =>
                 addUpdateAction(
                   containerId = containerId,
