@@ -29,6 +29,7 @@ object AppStyles {
       BootstrapStyles
     )
 
+    println(BootstrapStyles.lessVariables.brandPrimary)
     GlobalRegistry.addToDocumentOnRegistration()
   }
 

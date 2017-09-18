@@ -1,13 +1,18 @@
 package blended.mgmt.ui.styles
 
+import scala.scalajs.js
 import scalacss.DevDefaults._
 
 object BootstrapStyles extends StyleSheet.Inline {
 
+  val lessVariables = js.Dynamic.global.bsVars
+
   import dsl._
 
   // TODO: Can we get default values from Bootstrap less somehow ?
+
   val brandPrimary = c"#337ab7"
+
   val navbarHeight = 61.px;
 
   val header = style("header") (

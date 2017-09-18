@@ -26,7 +26,7 @@ object ProfileDetailComp {
         case Props(Some(rc)) =>
 
         val bundles : Seq[Seq[String]] = rc.bundles.map { bc =>
-          Seq(bc.url)
+          Seq(bc.url, bc.start.toString, bc.startLevel.map(_.toString).getOrElse(""))
         }
 
         <.div(

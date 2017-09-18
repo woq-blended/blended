@@ -8,15 +8,18 @@ const CleanWebPackPlugin = require('clean-webpack-plugin');
 module.exports = {
 
   entry: {
-    css: 'bootstrap-loader',
     index: './bundles/index.js',
     mgmtUi: './target/blended-mgmt-ui-opt.js'
   },
+
   output: {
     path: path.resolve(__dirname, 'target/assets'),
     publicPath: "/assets/",
     filename: '[name]-bundle.js'
   },
+
+  devtool: "source-map",
+
   devServer: {
     port: 8090,
     clientLogLevel: "info",
@@ -36,32 +39,57 @@ module.exports = {
       jQuery: 'jquery'
     })
   ],
-  devtool: "source-map",
+
   module: {
-    rules: [{
-      test: /\.scss$/,
-      use: [{
-        loader: "style-loader"
-      }, {
-        loader: "css-loader",
-        options: {
-          alias: {
-            "../fonts/bootstrap": "bootstrap-sass/assets/fonts/bootstrap"
+    loaders: [
+      {
+        test: /\.css$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader'
           }
-        }
-      }, {
-        loader: "sass-loader",
-        options: {
-          includePaths: [
-            path.resolve("./node_modules/bootstrap-sass/assets/stylesheets")
-          ]
-        }
-      }]
-    }, {
-      test: /\.woff2?$|\.ttf$|\.eot$|\.svg$/,
-      use: [{
-        loader: "file-loader"
-      }]
-    }]
+        ]
+      },
+
+      {
+        test: /\.woff2?$|\.ttf$|\.eot$|\.svg$/,
+        use: [{
+          loader: "file-loader"
+        }]
+      },
+
+      {
+        test: /\.(png|jpg|svg)$/,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              query: {
+                limit: '8192'
+              }
+            }
+          },
+          {
+            loader: 'image-webpack-loader',
+            options: {
+              query: {
+                mozjpeg: {
+                  progressive: true
+                },
+                gifsicle: {
+                  interlaced: true
+                },
+                optipng: {
+                  optimizationLevel: 7
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
   }
 };
