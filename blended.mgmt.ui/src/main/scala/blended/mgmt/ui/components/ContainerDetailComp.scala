@@ -2,7 +2,6 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.backend.ProfileUpdater
 import blended.mgmt.ui.util.{DisplayHelper, I18n, Logger}
-import blended.updater.config.Profile.SingleProfile
 import blended.updater.config._
 import japgolly.scalajs.react._
 import vdom.html_<^._

@@ -28,7 +28,6 @@ import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import blended.updater.config.Profile.SingleProfile
 
 class Updater(
   installBaseDir: File,

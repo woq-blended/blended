@@ -2,6 +2,8 @@
 
 == mgmt: Management API via `blended.mgmt.rest`
 
+Case classes are converted to JSON with prickle.
+
 GET `mgmt/container`::
 Description: List all known remote container states. +
 Response: `Seq[RemoteContainerState]`
@@ -25,6 +27,14 @@ Response: `Seq[RuntimeConfig]`
 POST `mgmt/runtimeConfig`::
 Description: Registers a new runtime config. +
 Parameter: `RuntimeConfig`
+
+POST `mgmt/container/{containerId}/update`::
+Description: Record an update action for the given containerId. +
+Parameter: `UpdateAction`
+
+POST `mgmt/rollout/profile`::
+Description: Record a given collection of containers for a new profile rollout. +
+Parameter: `RolloutProfile`
 
 == mgmt.repo: Repository Access via `blended.mgmt.repo.rest`
 

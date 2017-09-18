@@ -5,8 +5,11 @@ import vdom.html_<^._
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
 import blended.mgmt.ui.util.{I18n, Logger}
-import blended.updater.config.{ContainerInfo, OverlayRef, OverlayState, Profile}
-import blended.updater.config.Profile.SingleProfile
+import blended.updater.config.ContainerInfo
+import blended.updater.config.OverlayRef
+import blended.updater.config.OverlayState
+import blended.updater.config.Profile
+import blended.updater.config.SingleProfile
 
 object DeploymentProfilesComp {
 
