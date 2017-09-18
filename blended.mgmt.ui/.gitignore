@@ -4,4 +4,4 @@ project/plugins.sbt
 node_modules
 node
 assets
-
+.tmpBin/
