@@ -50,7 +50,7 @@ trait ShiroBlendedSecuredRoute extends BlendedSecuredRoute with ServiceConsuming
 
   override protected def requirePermission(permission: String): Directive0 = mapInnerRoute { inner =>
     authenticated { subject =>
-      log.info("subject: {}", subject)
+      log.info("subject: {} with principal: {}", Array(subject, Option(subject).map(_.getPrincipal()).getOrElse("null")): _*)
       log.debug("checking required permission: {}", permission)
       authorize(subject.isPermitted(permission)) {
         log.info("subject: {} has required permissions: {}", Array(subject, permission): _*)

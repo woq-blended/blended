@@ -1,7 +1,5 @@
 package blended.mgmt.ui.components
 
-import japgolly.scalajs.react._
-import vdom.html_<^._
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
 import blended.mgmt.ui.util.{I18n, Logger}
@@ -9,6 +7,8 @@ import blended.updater.config.{ContainerInfo, OverlayRef, OverlayState, Profile}
 import blended.updater.config.Profile.SingleProfile
 import chandu0101.scalajs.react.components.reacttable.ReactTable
 import chandu0101.scalajs.react.components.reacttable.ReactTable.CellRenderer
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
 
 object DeploymentProfilesComp {
 

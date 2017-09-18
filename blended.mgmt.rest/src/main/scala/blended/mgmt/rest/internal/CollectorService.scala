@@ -26,7 +26,8 @@ trait CollectorService
       versionRoute ~
       runtimeConfigRoute ~
       overlayConfigRoute ~
-      updateActionRoute
+      updateActionRoute ~
+      rolloutProfileRoute
 
   private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
 
@@ -147,6 +148,30 @@ trait CollectorService
         }
       }
     }
+  }
+
+  def rolloutProfileRoute: Route = {
+    path("rollout" / "profile") {
+      post {
+        requirePermission("profile:update") {
+          entity(as[RolloutProfile]) { rolloutProfile =>
+            complete {
+              // TODO: check, if we already know the profile
+              rolloutProfile.containerIds.foreach { containerId =>
+                addUpdateAction(
+                  containerId = containerId,
+                  updateAction = StageProfile(
+                    profileName = rolloutProfile.profileName,
+                    profileVersion = rolloutProfile.profileVersion,
+                    overlays = rolloutProfile.overlays))
+              }
+              s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
+            }
+          }
+        }
+      }
+    }
+
   }
 
 }
