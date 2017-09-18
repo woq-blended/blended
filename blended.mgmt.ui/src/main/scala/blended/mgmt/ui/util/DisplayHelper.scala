@@ -1,6 +1,7 @@
 package blended.mgmt.ui.util
 
-import blended.updater.config.Profile.SingleProfile
+import blended.updater.config.SingleProfile
+
 
 object DisplayHelper {
 

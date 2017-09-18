@@ -3,8 +3,7 @@ package blended.mgmt.ui.components
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
 import blended.mgmt.ui.util.{I18n, Logger}
-import blended.updater.config.{ContainerInfo, OverlayRef, OverlayState, Profile}
-import blended.updater.config.Profile.SingleProfile
+import blended.updater.config._
 import chandu0101.scalajs.react.components.reacttable.ReactTable
 import chandu0101.scalajs.react.components.reacttable.ReactTable.CellRenderer
 import japgolly.scalajs.react._
@@ -50,8 +49,6 @@ object DeploymentProfilesComp {
           None
         else
           Some(p.head._1)
-
-        println(newSelected)
 
         s.copy(selected = newSelected)
       }
@@ -131,9 +128,9 @@ object DeploymentProfilesComp {
   }
 
   val Component = ScalaComponent.builder[Unit]("Deployment Profiles")
-      .initialState(State(containerInfos = List()))
-      .renderBackend[Backend]
-      .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
-      .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
-      .build
+    .initialState(State(containerInfos = List()))
+    .renderBackend[Backend]
+    .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
+    .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
+    .build
 }

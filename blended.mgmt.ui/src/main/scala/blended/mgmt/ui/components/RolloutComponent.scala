@@ -44,6 +44,10 @@ object RolloutComponent {
       scope.modState(s => s.copy(selectedContainer = selected.map(_._1).toSeq))
     }
 
+    val deploy : RolloutState => Callback = s => Callback {
+      println("Deploying")
+    }
+
     val selectProfile : Set[(RuntimeConfig, String)] => Callback = { selected =>
       scope.modState(s =>
         s.copy(
@@ -131,15 +135,46 @@ object RolloutComponent {
         s.selectedContainer.size > 0
 
       val rollout = if (deployable) {
-        <.div("Deploy")
+        ContentPanel("Deploy")(
+          <.div(
+            ^.display := "flex",
+            ^.flexDirection := "column",
+            <.div(
+              ^.display := "flex",
+              ^.flexDirection := "row",
+              <.div(^.flex := "1", "Profile to be deployed : "),
+              <.div(^.flex := "1", s"${s.selectedProfile.map(rc => rc.name + "-" + rc.version).getOrElse("")}")
+            ),
+            <.div(
+              ^.display := "flex",
+              ^.flexDirection := "row",
+              <.div(^.flex := "1", "Overlays to be deployed : "),
+              <.div(^.flex := "1", s.selectedOverlays.map(oc => oc.name + "-" + oc.version).mkString(","))
+            ).unless(s.selectedOverlays.isEmpty),
+            <.div(
+              ^.height := "2rem"
+            ),
+            <.div(
+              ^.margin := "auto",
+              <.button(
+                ^.cls := "btn btn-primary btn-lg",
+                ^.onClick --> deploy(s),
+                s"Deploy to ${s.selectedContainer.size} containers"
+              )
+            )
+          )
+        )
       } else {
-        <.div()
+        ContentPanel("Deploy")(
+          "You have to select one Profile and least one Container for deployment."
+        )
       }
 
       <.div(
         profiles,
         overlayTable,
-        container
+        container,
+        rollout
       )
     }
   }

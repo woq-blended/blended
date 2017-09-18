@@ -1,8 +1,7 @@
 package blended.mgmt.ui.components
 
 import blended.mgmt.ui.util.{I18n, Logger}
-import blended.updater.config.Profile.SingleProfile
-import blended.updater.config.ContainerInfo
+import blended.updater.config._
 import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
