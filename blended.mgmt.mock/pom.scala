@@ -16,7 +16,8 @@ BlendedModel(
     slf4j,
     slf4jLog4j12,
     prickle,
-    wiremockStandalone
+    wiremockStandalone,
+    Deps.cmdOption
   ),
   properties = Map(
     "bundle.symbolicName" -> "${project.artifactId}",
@@ -26,8 +27,25 @@ BlendedModel(
     scalaMavenPlugin,
     Plugin(
       gav = Plugins.exec,
-      configuration = Config(
-        mainClass = "blended.mgmt.mock.MgmtMockServer"
+      executions = Seq(
+        // To run the mock server, exec: mvn exec:java@mock-server
+        Execution(
+          id = "mock-server",
+          goals = Seq("java"),
+          phase = "none",
+          configuration = Config(
+            mainClass = "blended.mgmt.mock.server.MgmtMockServer"
+          )
+        ),
+        // To run the mock server, exec: mvn exec:java@mock-clients
+        Execution(
+          id = "mock-clients",
+          goals = Seq("java"),
+          phase = "none",
+          configuration = Config(
+            mainClass = "blended.mgmt.mock.clients.MgmtMockClients"
+          )
+        )
       )
     )
   )

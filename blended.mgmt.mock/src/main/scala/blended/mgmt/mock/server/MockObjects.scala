@@ -1,4 +1,4 @@
-package blended.mgmt.mock
+package blended.mgmt.mock.server
 
 import java.text.DecimalFormat
 import java.util.UUID

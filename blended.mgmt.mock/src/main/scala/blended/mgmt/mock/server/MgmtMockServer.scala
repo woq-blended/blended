@@ -1,4 +1,4 @@
-package blended.mgmt.mock
+package blended.mgmt.mock.server
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
