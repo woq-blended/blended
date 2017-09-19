@@ -42,7 +42,7 @@ object Plugins {
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
-  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.0"
+  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
