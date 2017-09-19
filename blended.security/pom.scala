@@ -17,6 +17,7 @@ BlendedModel(
     blendedAkka,
     jjwt,
     scalaTest % "test",
+    slf4jLog4j12 % "test",
     scalaLib % "provided"
   ),
   plugins = Seq(

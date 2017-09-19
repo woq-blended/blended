@@ -58,3 +58,43 @@ what the user may see, must be included in the JWT.
 Whenever client issues a request to a secured REST endpoint, it will
 include the JWT in the Authentication header of the call. This will
 avoid that the password is transmitted over the wire again and again.
+
+https://github.com/jwtk/jjwt[JJWT home page]
+
+https://github.com/jwtk/njwt[NJWT home page]
+
+https://github.com/jwtk/jjwt/issues/131[Using private / public keys in JJWT]
+
+== Implementation notes
+
+=== Generate the keystore in blended.demo.mgmt resources
+
+- Keystore password: SoU8MzmyxNmNhqg1
+- Private key password: VGSJA94MOklhavlJ
+
+....
+22:51 $ keytool -genkey -keyalg RSA -alias jwtkey -keystore blended-mgmt.jks -storepass SoU8MzmyxNmNhqg1 -validity 360 -keysize 2048
+What is your first and last name?
+  [Unknown]:  Blended Management Server
+What is the name of your organizational unit?
+  [Unknown]:  Blended
+What is the name of your organization?
+  [Unknown]:  WoQ - Way of Quality GmbH
+What is the name of your City or Locality?
+  [Unknown]:  Regensburg
+What is the name of your State or Province?
+  [Unknown]:  Bavaria
+What is the two-letter country code for this unit?
+  [Unknown]:  DE
+Is CN=Blended Management Server, OU="Blended ", O=WoQ - Way of Quality GmbH, L="Regensburg ", ST="Bavaria ", C=DE correct?
+  [no]:  yes
+
+Enter key password for <jwtkey>
+	(RETURN if same as keystore password):
+Re-enter new password:
+✔ ~/projects/blended/blended.demo/blended.demo.mgmt/blended.demo.mgmt.resources/src/main/resources/etc [master|✚ 1…1]
+....
+
+On the server side, use the "jwtkey" certificate to create a signed JWT.
+
+See https://github.com/woq-blended/blended/blob/master/blended.security/src/test/scala/blended/security/JJwtSpec.scala[JJwtSpec.scala]
