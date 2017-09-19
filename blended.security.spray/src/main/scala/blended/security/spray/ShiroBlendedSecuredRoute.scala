@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory
 
 import blended.spray.BlendedHttpRoute
 import domino.service_consuming.ServiceConsuming
-import javax.naming.AuthenticationException
+import org.apache.shiro.authc.AuthenticationException
 import spray.routing.Directive.pimpApply
 import spray.routing.Directive0
 import spray.routing.Directive1
@@ -53,7 +53,7 @@ trait ShiroBlendedSecuredRoute extends BlendedSecuredRoute with ServiceConsuming
       log.info("subject: {} with principal: {}", Array(subject, Option(subject).map(_.getPrincipal()).getOrElse("null")): _*)
       log.debug("checking required permission: {}", permission)
       authorize(subject.isPermitted(permission)) {
-        log.info("subject: {} has required permissions: {}", Array(subject, permission): _*)
+        log.info("subject/principal: {} has required permissions: {}", Array(Option(subject).map(_.getPrincipal()).getOrElse(subject), permission): _*)
         inner
       }
     }
