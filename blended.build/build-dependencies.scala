@@ -12,9 +12,7 @@ implicit class ScalaJsGroupId(groupId: String) {
   }
 }
 
-/**
- * Provide a copy method for non-case class [[Dependency]].
- */
+/** Helper class, to improve writing dependency experience. */
 implicit class RichDependency(d: Dependency) {
   def copy(
     gav: Gav = d.gav,
@@ -25,191 +23,201 @@ implicit class RichDependency(d: Dependency) {
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
     optional: Boolean = d.optional): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-  
+
   def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
+
+  def classifier(classifier: String): Dependency = copy(classifier = Option(classifier))
+
+  def pure: Dependency = copy(exclusions = Seq("*" % "*"))
+
+  def exclude(ga: GroupArtifactId): Dependency = copy(exclusions = d.exclusions ++ Seq(ga))
 }
 
 // Dependencies
-val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
+object Deps {
+  val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
 
-val activeMqBroker = "org.apache.activemq" % "activemq-broker" % BlendedVersions.activeMqVersion
-val activeMqClient = "org.apache.activemq" % "activemq-client" % BlendedVersions.activeMqVersion
-val activeMqSpring = "org.apache.activemq" % "activemq-spring" % BlendedVersions.activeMqVersion
-val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
-val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
+  val activeMqBroker = "org.apache.activemq" % "activemq-broker" % BlendedVersions.activeMqVersion
+  val activeMqClient = "org.apache.activemq" % "activemq-client" % BlendedVersions.activeMqVersion
+  val activeMqSpring = "org.apache.activemq" % "activemq-spring" % BlendedVersions.activeMqVersion
+  val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
+  val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
 
-val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
-val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
-val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
-val akkaStream = "com.typesafe.akka" %% "akka-stream" % BlendedVersions.akkaVersion
-val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % BlendedVersions.akkaVersion
-val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % BlendedVersions.akkaVersion
+  val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
+  val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
+  val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
+  val akkaStream = "com.typesafe.akka" %% "akka-stream" % BlendedVersions.akkaVersion
+  val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % BlendedVersions.akkaVersion
+  val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % BlendedVersions.akkaVersion
 
-val aopAlliance = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.aopalliance" % "1.0_6"
+  val aopAlliance = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.aopalliance" % "1.0_6"
 
-val apacheShiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
-val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
+  val apacheShiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
+  val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
 
-val ariesBlueprintApi = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.api" % "1.0.1"
-val ariesBlueprintCore = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.core" % "1.4.3"
-val ariesJmxApi = "org.apache.aries.jmx" % "org.apache.aries.jmx.api" % "1.1.1"
-val ariesJmxCore = "org.apache.aries.jmx" % "org.apache.aries.jmx.core" % "1.1.1"
-val ariesProxyApi = "org.apache.aries.proxy" % "org.apache.aries.proxy.api" % "1.0.1"
-val ariesUtil = "org.apache.aries" % "org.apache.aries.util" % "1.1.0"
+  val ariesBlueprintApi = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.api" % "1.0.1"
+  val ariesBlueprintCore = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.core" % "1.4.3"
+  val ariesJmxApi = "org.apache.aries.jmx" % "org.apache.aries.jmx.api" % "1.1.1"
+  val ariesJmxCore = "org.apache.aries.jmx" % "org.apache.aries.jmx.core" % "1.1.1"
+  val ariesProxyApi = "org.apache.aries.proxy" % "org.apache.aries.proxy.api" % "1.0.1"
+  val ariesUtil = "org.apache.aries" % "org.apache.aries.util" % "1.1.0"
 
-val asmAll = "org.ow2.asm" % "asm-all" % "4.1"
-val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
+  val asmAll = "org.ow2.asm" % "asm-all" % "4.1"
+  val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
-val camelCore = "org.apache.camel" % "camel-core" % BlendedVersions.camelVersion
-val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
-val camelHttp = "org.apache.camel" % "camel-http" % BlendedVersions.camelVersion
-val camelHttpCommon = "org.apache.camel" % "camel-http-common" % BlendedVersions.camelVersion
-val camelServlet = "org.apache.camel" % "camel-servlet" % BlendedVersions.camelVersion
-val camelServletListener = "org.apache.camel" % "camel-servletlistener" % BlendedVersions.camelVersion
-val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
+  val camelCore = "org.apache.camel" % "camel-core" % BlendedVersions.camelVersion
+  val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
+  val camelHttp = "org.apache.camel" % "camel-http" % BlendedVersions.camelVersion
+  val camelHttpCommon = "org.apache.camel" % "camel-http-common" % BlendedVersions.camelVersion
+  val camelServlet = "org.apache.camel" % "camel-servlet" % BlendedVersions.camelVersion
+  val camelServletListener = "org.apache.camel" % "camel-servletlistener" % BlendedVersions.camelVersion
+  val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
 
-val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"
-val commonsCodec = "org.apache.commons" % "com.springsource.org.apache.commons.codec" % "1.6.0"
-val commonsCompress = "org.apache.commons" % "commons-compress" % "1.13"
-val commonsCollections = "org.apache.commons" % "com.springsource.org.apache.commons.collections" % "3.2.1"
-val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
-val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
-val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
-val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
-val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
-val commonsLang = "commons-lang" % "commons-lang" % "2.6"
-val commonsNet = "commons-net" % "commons-net" % "3.3"
-val commonsPool = "commons-pool" % "commons-pool" % "1.6"
+  val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"
+  val commonsCodec = "org.apache.commons" % "com.springsource.org.apache.commons.codec" % "1.6.0"
+  val commonsCompress = "org.apache.commons" % "commons-compress" % "1.13"
+  val commonsCollections = "org.apache.commons" % "com.springsource.org.apache.commons.collections" % "3.2.1"
+  val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
+  val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
+  val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
+  val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
+  val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
+  val commonsLang = "commons-lang" % "commons-lang" % "2.6"
+  val commonsNet = "commons-net" % "commons-net" % "3.3"
+  val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
-val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
-val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
+  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
+  val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
-val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
-val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
+  val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
+  val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
 
-val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
-val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
-val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
-val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
-val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
-val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
-val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
+  val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
+  val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
+  val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
+  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
+  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
+  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
+  val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
-val geronimoAnnotation = "org.apache.geronimo.specs" % "geronimo-annotation_1.1_spec" % "1.0.1"
-val geronimoJaspic = "org.apache.geronimo.specs" % "geronimo-jaspic_1.0_spec" % "1.1"
-val geronimoJ2eeMgmtSpec = "org.apache.geronimo.specs" % "geronimo-j2ee-management_1.1_spec" % "1.0.1"
-val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
-val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
+  val geronimoAnnotation = "org.apache.geronimo.specs" % "geronimo-annotation_1.1_spec" % "1.0.1"
+  val geronimoJaspic = "org.apache.geronimo.specs" % "geronimo-jaspic_1.0_spec" % "1.1"
+  val geronimoJ2eeMgmtSpec = "org.apache.geronimo.specs" % "geronimo-j2ee-management_1.1_spec" % "1.0.1"
+  val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+  val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
+  val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
 
-val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.4.65", `type` = "war")
+  val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.4.65", `type` = "war")
 
-val javaxMail = "javax.mail" % "mail" % "1.4.5"
-val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
+  val javaxMail = "javax.mail" % "mail" % "1.4.5"
+  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
-val jacksonCoreAsl = "org.codehaus.jackson" % "jackson-core-asl" % "1.9.12"
-val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
-val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
-val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
+  val jacksonCoreAsl = "org.codehaus.jackson" % "jackson-core-asl" % "1.9.12"
+  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
+  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
+  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
 
-val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
-val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
-val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
-val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
-val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
-val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
-val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
-val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
-val jolokiaJvmAgent = Dependency(
-      jolokiaJvm,
-      classifier = "agent"
-    )
-val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
-val junit = "junit" % "junit" % "4.11"
-val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
+  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
+  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
+  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
+  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
+  val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
+  val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+  val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
+  val jolokiaJvmAgent = Dependency(
+    jolokiaJvm,
+    classifier = "agent"
+  )
+  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
+  val junit = "junit" % "junit" % "4.11"
+  val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
-val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
-val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
-val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
+  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
+  val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
+  val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
-val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
-val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
+  val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
+  val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
 
-val paxSwissboxCore = "org.ops4j.pax.swissbox" % "pax-swissbox-core" % "1.7.0"
-val paxSwissboxOptJcl = "org.ops4j.pax.swissbox" % "pax-swissbox-optional-jcl" % "1.7.0"
-val prickle = "com.github.benhutchison" %% "prickle" % BlendedVersions.prickle
+  val paxSwissboxCore = "org.ops4j.pax.swissbox" % "pax-swissbox-core" % "1.7.0"
+  val paxSwissboxOptJcl = "org.ops4j.pax.swissbox" % "pax-swissbox-optional-jcl" % "1.7.0"
+  val prickle = "com.github.benhutchison" %% "prickle" % BlendedVersions.prickle
 
-val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
+  val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 
-val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
-val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
-val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
+  val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
+  val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+  val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % BlendedVersions.paxWeb
-val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % BlendedVersions.paxWeb
-val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % BlendedVersions.paxWeb
-val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % BlendedVersions.paxWeb
-val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % BlendedVersions.paxWeb
-val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % BlendedVersions.paxWeb
-val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % BlendedVersions.paxWeb
+  val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % BlendedVersions.paxWeb
+  val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % BlendedVersions.paxWeb
+  val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % BlendedVersions.paxWeb
+  val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % BlendedVersions.paxWeb
+  val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % BlendedVersions.paxWeb
+  val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % BlendedVersions.paxWeb
+  val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % BlendedVersions.paxWeb
 
-val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
+  val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 
-val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
-val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
-val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
-val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
-val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
-val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+  val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
+  val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
+  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+  val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
+  val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
+  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
-val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
-val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
-val servicemixJaxbRuntime = "org.jvnet.jaxb2_commons" % "jaxb2-basics-runtime" % "0.6.4"
-val servicemixStaxApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.stax-api-1.0" % "2.4.0"
+  val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
+  val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
+  val servicemixJaxbRuntime = "org.jvnet.jaxb2_commons" % "jaxb2-basics-runtime" % "0.6.4"
+  val servicemixStaxApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.stax-api-1.0" % "2.4.0"
 
-val shiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
-val shiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
+  val shiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
+  val shiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
 
-val slf4j = "org.slf4j" % "slf4j-api" % BlendedVersions.slf4jVersion
-val slf4jJcl = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
-val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
-val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
+  val slf4j = "org.slf4j" % "slf4j-api" % BlendedVersions.slf4jVersion
+  val slf4jJcl = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
+  val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
 
-val sprayClient = "io.spray" %% "spray-client" % BlendedVersions.sprayVersion
-val sprayCaching = "io.spray" %% "spray-caching" % BlendedVersions.sprayVersion
-val sprayHttp = "io.spray" %% "spray-http" % BlendedVersions.sprayVersion
-val sprayHttpx = "io.spray" %% "spray-httpx" % BlendedVersions.sprayVersion
-val sprayIo = "io.spray" %% "spray-io" % BlendedVersions.sprayVersion
-val sprayJson = "io.spray" %% "spray-json" % BlendedVersions.sprayVersion
-val sprayRouting = "io.spray" %% "spray-routing" % BlendedVersions.sprayVersion
-val sprayServlet = "io.spray" %% "spray-servlet" % BlendedVersions.sprayVersion
-val sprayTestkit = "io.spray" %% "spray-testkit" % BlendedVersions.sprayVersion
-val sprayUtil = "io.spray" %% "spray-util" % BlendedVersions.sprayVersion
+  val sprayClient = "io.spray" %% "spray-client" % BlendedVersions.sprayVersion
+  val sprayCaching = "io.spray" %% "spray-caching" % BlendedVersions.sprayVersion
+  val sprayHttp = "io.spray" %% "spray-http" % BlendedVersions.sprayVersion
+  val sprayHttpx = "io.spray" %% "spray-httpx" % BlendedVersions.sprayVersion
+  val sprayIo = "io.spray" %% "spray-io" % BlendedVersions.sprayVersion
+  val sprayJson = "io.spray" %% "spray-json" % BlendedVersions.sprayVersion
+  val sprayRouting = "io.spray" %% "spray-routing" % BlendedVersions.sprayVersion
+  val sprayServlet = "io.spray" %% "spray-servlet" % BlendedVersions.sprayVersion
+  val sprayTestkit = "io.spray" %% "spray-testkit" % BlendedVersions.sprayVersion
+  val sprayUtil = "io.spray" %% "spray-util" % BlendedVersions.sprayVersion
 
-val springBeans = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-beans" % BlendedVersions.springVersion
-val springAop = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-aop" % BlendedVersions.springVersion
-val springContext = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context" % BlendedVersions.springVersion
-val springContextSupport = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context-support" % BlendedVersions.springVersion
-val springExpression = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-expression" % BlendedVersions.springVersion
-val springCore = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-core" % BlendedVersions.springVersion
-val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % BlendedVersions.springVersion
-val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % BlendedVersions.springVersion
+  val springBeans = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-beans" % BlendedVersions.springVersion
+  val springAop = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-aop" % BlendedVersions.springVersion
+  val springContext = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context" % BlendedVersions.springVersion
+  val springContextSupport = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context-support" % BlendedVersions.springVersion
+  val springExpression = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-expression" % BlendedVersions.springVersion
+  val springCore = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-core" % BlendedVersions.springVersion
+  val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % BlendedVersions.springVersion
+  val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % BlendedVersions.springVersion
 
-val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
+  val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
 
-val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
-val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
+  val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
+  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
 
-val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
-val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
+  val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
+  val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
 
-val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % BlendedVersions.xbean
-val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % BlendedVersions.xbean
-val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % BlendedVersions.xbean
-val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % BlendedVersions.xbean
-val xbeanSpring = "org.apache.xbean" % "xbean-spring" % BlendedVersions.xbean
+  val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % BlendedVersions.xbean
+  val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % BlendedVersions.xbean
+  val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % BlendedVersions.xbean
+  val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % BlendedVersions.xbean
+  val xbeanSpring = "org.apache.xbean" % "xbean-spring" % BlendedVersions.xbean
+}
+// convenience and backward compatibility
+import Deps._
 
 // Blended Projects
 
