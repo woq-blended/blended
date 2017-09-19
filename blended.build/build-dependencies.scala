@@ -118,22 +118,23 @@ object Deps {
   val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
   val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
 
-  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
-  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
-  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
-  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
-  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
-  val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
-  val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
-  val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
-  val jolokiaJvmAgent = Dependency(
-    jolokiaJvm,
-    classifier = "agent"
-  )
-  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
-  val junit = "junit" % "junit" % "4.11"
-  val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
+val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
+val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
+val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
+val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
+val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
+val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
+val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
+val jolokiaJvmAgent = Dependency(
+      jolokiaJvm,
+      classifier = "agent"
+    )
+val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
+val junit = "junit" % "junit" % "4.11"
+val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"

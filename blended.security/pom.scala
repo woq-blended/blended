@@ -15,10 +15,13 @@ BlendedModel(
     apacheShiroCore,
     apacheShiroWeb,
     blendedAkka,
+    jjwt,
+    scalaTest % "test",
     scalaLib % "provided"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )
