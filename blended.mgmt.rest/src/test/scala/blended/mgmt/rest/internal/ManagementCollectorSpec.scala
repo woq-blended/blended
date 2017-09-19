@@ -22,8 +22,8 @@ class ManagementCollectorSpec
     with SprayPrickleSupport 
     with DummyBlendedSecuredRoute {
 
-  val testPostLatch = TestLatch(1)
-  val testGetLatch = TestLatch(1)
+  val processContainerInfoLatch = TestLatch(1)
+  val getCurrentStateLatch = TestLatch(1)
 
   "The Management collector routes" - {
 
@@ -31,14 +31,14 @@ class ManagementCollectorSpec
       Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L)) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
-      testPostLatch.isOpen should be(true)
+      processContainerInfoLatch.isOpen should be(true)
     }
 
     "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
         responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List())))
       }
-      testGetLatch.isOpen should be(true)
+      getCurrentStateLatch.isOpen should be(true)
     }
 
     "should GET version returns the version" in {
@@ -58,12 +58,12 @@ class ManagementCollectorSpec
   override implicit def actorRefFactory = system
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
-    testPostLatch.countDown()
+    processContainerInfoLatch.countDown()
     ContainerRegistryResponseOK(info.containerId)
   }
 
   override def getCurrentState(): Seq[RemoteContainerState] = {
-    testGetLatch.countDown()
+    getCurrentStateLatch.countDown()
     List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List()))
   }
 
