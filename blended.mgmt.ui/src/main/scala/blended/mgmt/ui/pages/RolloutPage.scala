@@ -3,6 +3,7 @@ package blended.mgmt.ui.pages
 import blended.mgmt.ui.components.RolloutComponent
 import japgolly.scalajs.react.extra.router.Path
 import japgolly.scalajs.react.vdom.html_<^._
+import blended.mgmt.ui.backend.RolloutProfileAction
 
 object RolloutPage extends TopLevelPage {
 
@@ -10,6 +11,6 @@ object RolloutPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#rollout")
 
-  override val content: VdomElement = <.div(RolloutComponent.Component())
+  override val content: VdomElement = <.div(RolloutComponent.Component(RolloutComponent.RolloutProps(Some(RolloutProfileAction.DefaultAjax))))
 
 }

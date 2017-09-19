@@ -1,13 +1,16 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.{DataManager, Observer}
+import blended.mgmt.ui.backend.{ DataManager, Observer }
 import blended.mgmt.ui.util.DisplayHelper
 import blended.updater.config._
 import chandu0101.scalajs.react.components.reacttable.ReactTable
 import japgolly.scalajs.react._
 import vdom.html_<^._
+import blended.mgmt.ui.backend.RolloutProfileAction
 
 object RolloutComponent {
+
+  case class RolloutProps(rolloutProfileAction: Option[RolloutProfileAction] = None)
 
   case class RolloutState(
 
@@ -20,7 +23,7 @@ object RolloutComponent {
     selectedContainer : Seq[ContainerInfo]
   )
 
-  class Backend(scope : BackendScope[Unit, RolloutState]) {
+  class Backend(scope: BackendScope[RolloutProps, RolloutState]) {
 
     val ctObserver = new Observer[List[ContainerInfo]] {
       override val dataChanged = { data : List[ContainerInfo] =>
@@ -44,8 +47,20 @@ object RolloutComponent {
       scope.modState(s => s.copy(selectedContainer = selected.map(_._1).toSeq))
     }
 
-    val deploy : RolloutState => Callback = s => Callback {
+    val deploy: RolloutState => Callback = { s =>
       println("Deploying")
+      scope.props.map { p =>
+        p.rolloutProfileAction.map { a =>
+          val rp = RolloutProfile(
+            profileName = s.selectedProfile.get.name,
+            profileVersion = s.selectedProfile.get.version,
+            overlays = s.selectedOverlays.map(_.overlayRef).toList,
+            containerIds = s.selectedContainer.map(_.containerId).toList
+          )
+          a.rolloutProfile(rp)
+        }
+        scope.modState(s => s.copy(selectedProfile = None, selectedOverlays = List(), selectedContainer = List())).runNow()
+      }
     }
 
     val selectProfile : Set[(RuntimeConfig, String)] => Callback = { selected =>
@@ -63,7 +78,7 @@ object RolloutComponent {
       scope.modState( _.copy(selectedOverlays = selected.map(_._1).toSeq ))
     }
 
-    def render(s: RolloutState) = {
+    def render(p: RolloutProps, s: RolloutState) = {
 
       val profileKey : RuntimeConfig => String = p => p.name + "-" + p.version
 
@@ -179,7 +194,7 @@ object RolloutComponent {
     }
   }
 
-  val Component = ScalaComponent.builder[Unit]("Rollout")
+  val Component = ScalaComponent.builder[RolloutProps]("Rollout")
     .initialState(RolloutState(
       container = List.empty,
       overlays = List.empty,

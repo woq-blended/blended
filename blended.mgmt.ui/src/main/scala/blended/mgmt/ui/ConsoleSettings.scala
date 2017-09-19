@@ -6,4 +6,5 @@ object ConsoleSettings {
   val profilesUrl = mgmtUrl + "/profiles"
   val runtimeConfigsUrl = mgmtUrl + "/runtimeConfig"
   val overlayConfigUrl = mgmtUrl + "/overlayConfig"
+  val rolloutProfile: String = mgmtUrl + "/rollout/profile"
 }

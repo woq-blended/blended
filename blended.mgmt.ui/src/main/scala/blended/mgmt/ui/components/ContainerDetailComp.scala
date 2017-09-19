@@ -1,6 +1,6 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.ProfileUpdater
+import blended.mgmt.ui.backend.ProfileUpdateAction
 import blended.mgmt.ui.util.{DisplayHelper, I18n, Logger}
 import blended.updater.config._
 import japgolly.scalajs.react._
@@ -14,11 +14,11 @@ object ContainerDetailComp {
   private[this] val log = Logger[ContainerDetailComp.type]
   private[this] val i18n = I18n()
 
-  case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdater] = None)
+  case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdateAction] = None)
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEvent) = {
+    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEvent): Callback = {
       scope.props.map { p =>
         p.containerInfo match {
           case Some(ci) =>
@@ -34,15 +34,15 @@ object ContainerDetailComp {
       }
     }
 
-    def activateProfile(profile: SingleProfile)(event: ReactEvent) = {
+    def activateProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       sendUpdateAction(ActivateProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def resolveProfile(profile: SingleProfile)(event: ReactEvent) = {
+    def resolveProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       sendUpdateAction(StageProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def deleteProfile(profile: SingleProfile)(event: ReactEvent) = {
+    def deleteProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       CallbackTo {
         log.trace(s"Unimplemented callback: delete profile ${profile}")
       }

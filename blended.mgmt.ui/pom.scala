@@ -18,6 +18,8 @@ BlendedModel(
       blendedUpdaterConfig,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle % "provided",
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "provided",
+      "com.olvind" %%% "scalajs-react-components" % "0.8.1" % "provided",
+      "com.github.japgolly.scalacss" %%% "ext-react" % Versions.scalaCss % "provided",
       scalaTest % "test"
   ),
   plugins = Seq(
