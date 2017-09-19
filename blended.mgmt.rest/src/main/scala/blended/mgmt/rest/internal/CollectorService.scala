@@ -172,7 +172,6 @@ trait CollectorService
                 findMissingOverlayRef(rolloutProfile.overlays) match {
                   case Some(r) => 
                     reject(ValidationRejection(s"Unknown vverlay ${r.name} ${r.version}"))
-                    failWith(new NoSuchElementException(s"Overlay ${r.name} ${r.version}"))
                   case None =>
                     // all ok, complete
                     complete {
