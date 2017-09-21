@@ -74,7 +74,7 @@ class MaterializeProfileMojo extends AbstractMojo {
     }
     getLog.debug("repo args: " + repoArgs.mkString("Array(", ", ", ")"))
 
-    val explodeResourcesArgs = if(explodeResources) Array("--explode-resources") else Array()
+    val explodeResourcesArgs = if(explodeResources) Array("--explode-resources") else Array[String]()
     
     val profileArgs = Array(
       "--debug",
