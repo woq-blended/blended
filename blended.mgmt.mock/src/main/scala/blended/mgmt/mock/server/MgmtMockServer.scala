@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.http.{ HttpHeader, HttpHeaders }
 import blended.updater.config.ContainerInfo
+import blended.mgmt.mock.MockObjects
 
 object MgmtMockServer {
 

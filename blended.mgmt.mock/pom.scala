@@ -12,12 +12,14 @@ BlendedModel(
   description = "Mock server to simulate a larger network of blended containers for UI testing.",
   dependencies = Seq(
     blendedMgmtBase,
+    blendedMgmtAgent,
     scalaLib,
     slf4j,
     slf4jLog4j12,
     prickle,
     wiremockStandalone,
-    Deps.cmdOption
+    Deps.cmdOption,
+    Deps.akkaActor
   ),
   properties = Map(
     "bundle.symbolicName" -> "${project.artifactId}",

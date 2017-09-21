@@ -1,13 +1,11 @@
-package blended.mgmt.mock.server
+package blended.mgmt.mock
 
 import java.text.DecimalFormat
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
-
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import prickle._
-
 import scala.util.Random
 import org.slf4j.LoggerFactory
 
