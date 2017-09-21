@@ -25,13 +25,14 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
     compressed = Option(msg.getBooleanProperty(cfg.compressHeader)).getOrElse(false),
     append = Option(msg.getBooleanProperty(cfg.appendHeader)).getOrElse(false),
     timestamp = msg.getJMSTimestamp(),
-    properties = msg.getPropertyNames().asScala.map { pn => (pn.toString(), msg.getObjectProperty(pn.toString())) }.toMap
+    properties = msg.getPropertyNames().asScala.map { pn => (pn.toString(), msg.getObjectProperty(pn.toString())) }.toMap,
+    dropNotification =  cfg.dropNotification
   )
 
-  private[this] def handleError(msg : Message) : Unit = {
+  private[this] def handleError(msg : Message, notify: Boolean = true) : Unit = {
     errorHandler.handleError(msg, cfg)
     val cmd = dropCmd(msg)
-    context.system.eventStream.publish(FileDropResult(cmd, false))
+    if (cfg.dropNotification && notify) context.system.eventStream.publish(FileDropResult(cmd, false))
     context.stop(self)
   }
 
@@ -73,13 +74,15 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
   }
 
   def executing(msg: Message, cmd: FileDropCommand) : Receive = {
-    case result : FileDropResult => result.success match {
-      case true =>
-        context.stop(self)
-      case false =>
-        log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
-        handleError(msg)
-    }
+    case result : FileDropResult =>
+
+      result.success match {
+        case true =>
+          context.stop(self)
+        case false =>
+          log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
+          handleError(msg, false)
+      }
   }
 }
 
