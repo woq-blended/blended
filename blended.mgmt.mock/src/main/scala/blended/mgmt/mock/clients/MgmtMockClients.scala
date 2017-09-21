@@ -43,7 +43,7 @@ class MgmtMockClients(config: Config) {
 object MgmtMockClients {
 
   def main(args: Array[String]): Unit = {
-    val cf = new ConfigFactory()
+    val cf = new Config.Factory()
     val cp = new CmdlineParser(cf)
     cp.parse(args: _*)
 
