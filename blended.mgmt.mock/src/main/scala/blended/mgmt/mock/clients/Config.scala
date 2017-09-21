@@ -32,16 +32,16 @@ object Config {
     def url(url: String): Unit =
       config = config.copy(url = url)
 
-    @CmdOption(names = Array("--help", "-h"), description = "Print this help")
+    @CmdOption(names = Array("--help", "-h"), description = "Print this help", isHelp = true)
     var showHelp: Boolean = false
 
     @CmdOption(names = Array("--update-interval", "-i"), args = Array("msec"),
       description = "The interval in milliseconds in which the mock containers should report itself to the management server")
-    def updateIntervalMsec(i: Long): Unit = config = config.copy(updateIntervalMsec = i)
+    def updateIntervalMsec(i: Int): Unit = config = config.copy(updateIntervalMsec = i)
 
     @CmdOption(names = Array("--inital-delay", "-d"), args = Array("msec"),
       description = "The delay in milliseconds, the mock containers should wait before thei start reporting to the managment server")
-    def initialUpdateDelayMsec(i: Long): Unit = config = config.copy(initialUpdateDelayMsec = i)
+    def initialUpdateDelayMsec(i: Int): Unit = config = config.copy(initialUpdateDelayMsec = i)
   }
 
 }
