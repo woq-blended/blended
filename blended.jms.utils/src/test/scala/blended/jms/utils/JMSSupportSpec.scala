@@ -56,7 +56,7 @@ class JMSSupportSpec extends FreeSpec
   private def checkMessage(destName: String, assertions: MockAssertion*) : Unit = {
 
     val probe = TestProbe()
-    val mock = system.actorOf(Props(new CamelMockActor("jms:" + destName)))
+    val mock = system.actorOf(Props(CamelMockActor("jms:" + destName)))
     system.eventStream.subscribe(probe.ref, classOf[MockMessageReceived])
 
     probe.receiveOne(timeout.duration)

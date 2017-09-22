@@ -1,6 +1,7 @@
 package blended.testsupport.camel
 
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.{Actor, ActorLogging}
 import akka.camel.{CamelExtension, CamelMessage}
@@ -11,10 +12,12 @@ import org.apache.camel.{Exchange, Processor}
 import scala.collection.convert.Wrappers.JMapWrapper
 
 object CamelMockActor {
-  def apply(uri: String) = new CamelMockActor(uri)
+
+  val counter : AtomicInteger = new AtomicInteger(0)
+  def apply(uri: String) = new CamelMockActor(uri, counter.incrementAndGet())
 }
 
-class CamelMockActor(uri: String) extends Actor with ActorLogging {
+class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
 
   private[this] val camelContext = CamelExtension(context.system).context
   private[this] var routeId : Option[String] = None
@@ -55,7 +58,7 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case ca : CheckAssertions =>
       val requestor = sender()
       val mockMessages = messages.reverse
-      log.info(s"Checking assertions for [$uri] on [${mockMessages.size}] messages.")
+      log.info(s"Checking assertions for [$id, $uri] on [${mockMessages.size}] messages.")
       val results = CheckResults(ca.assertions.toList.map { a => a(mockMessages) })
       errors(results) match {
         case e if e.isEmpty =>
@@ -69,14 +72,14 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case msg : CamelMessage =>
       val newList = msg :: messages
 
-      log.info(s"CamelMockActor received message with Headers [${msg.headers.mkString(",")}]")
-      log.info(s"CamelMockActor [$uri] has now [${newList.size}] messages.")
+      log.info(s"CamelMockActor [$id, $uri] received message with Headers [${msg.headers.mkString(",")}]")
+      log.info(s"CamelMockActor [$id, $uri] has now [${newList.size}] messages.")
       context.become(receiving(newList) orElse (handleRquests(newList)))
       context.system.eventStream.publish(MockMessageReceived(uri, msg))
 
     case StopReceive =>
       routeId.foreach { rid =>
-        log.debug("Stopping route [{}]", rid)
+        log.debug(s"Stopping route for [$id, $uri] [$rid]")
         camelContext.stopRoute(rid)
         camelContext.removeRoute(rid)
       }
@@ -95,5 +98,5 @@ class CamelMockActor(uri: String) extends Actor with ActorLogging {
     case Left(t) => t.getMessage 
   }
 
-  override def toString: String = s"CamelMockActor[$uri]"
+  override def toString: String = s"CamelMockActor[$id, $uri]"
 }
