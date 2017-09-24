@@ -480,6 +480,7 @@ object BlendedProfileResourcesContainer {
  * ** `src/main/assembly/full-nojre.xml` - Assembly config for a complete container archive as `.tar.gz` and `.zip`
  * ** `src/main/assembly/resources.xml` - Assembly config for the resources-files of the container as `.zip`. This is essentially the content of `src/main/resources/profile`
  * ** `src/main/assembly/product.xml` - Assembly config (TODO, check if corrent und document where it is used)
+ * ** `src/main/assembly/deploymentpack.xml` - Deploymentpack, used to deploy/register the profile into the management server
  */
 object BlendedContainer {
 
@@ -599,7 +600,8 @@ object BlendedContainer {
             tarLongFileMode = "gnu",
             descriptors = Config(
               descriptor = "src/main/assembly/full-nojre.xml",
-              descriptor = "src/main/assembly/product.xml"
+              descriptor = "src/main/assembly/product.xml",
+              descirptor = "src/main/assembly/deploymentpack.xml"
             )
           )
         ),
