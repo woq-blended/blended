@@ -7,18 +7,19 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurity,
+  gav = blendedSecurityLogin,
   packaging = "bundle",
-  description = "Configuration bundle for the Apache Shiro security framework.",
+  description = "OSGI Services to support a token based authentication and authorization.",
   dependencies = Seq(
-    blendedSecurityBoot,
-    apacheShiroCore,
-    apacheShiroWeb,
-    blendedAkka,
-    scalaLib % "provided"
-  ),
+    scalaLib % "provided",
+    blendedDomino,
+    jjwt,
+    slf4jLog4j12 % "test",
+    scalaTest % "test"
+  ), 
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin
+    scalaMavenPlugin,
+    scalatestMavenPlugin
   )
 )

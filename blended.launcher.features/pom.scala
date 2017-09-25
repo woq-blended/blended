@@ -109,7 +109,9 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = orientDbCore),
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true)
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true),
+    FeatureBundle(dependency = blendedSecurityLogin, start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
   ),
   "blended-http" -> Seq(
     FeatureBundle(dependency = ops4jBaseLang),

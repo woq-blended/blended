@@ -105,6 +105,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
       osgiActorCfg = Some(cfg)
       refFactory = Some(cfg.system)
       startSpray()
+
     }
   }
 }
