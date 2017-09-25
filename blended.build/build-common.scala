@@ -74,7 +74,24 @@ val genPomXmlProfile = Profile(
   id = "gen-pom-xml",
   activation = Activation(),
   build = BuildBase(
-    plugins = Seq(polyglotTranslatePlugin)
+    plugins = Seq(
+      // clean: remove generated pom.xml
+      Plugin(
+        Plugins.clean,
+        configuration = Config(
+          filesets = Config(
+            fileset = Config(
+              directory = "${basedir}",
+              includes = Config(
+                include = "pom.xml"
+              )
+            )
+          )
+        )
+      ),
+      // initialize: generate pom.xml 
+      polyglotTranslatePlugin
+    )
   )
 )
 
