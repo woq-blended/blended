@@ -85,7 +85,7 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
         <Set name="host">
           <Property name="jetty.host" />
         </Set>
-        <Set name="port"><SystemProperty name="jetty.httpsport" default="0443" /></Set>
+        <Set name="port"><SystemProperty name="jetty.httpsport" default="9443" /></Set>
         <Set name="maxIdleTime">300000</Set>
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
