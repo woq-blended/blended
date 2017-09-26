@@ -30,7 +30,7 @@ set CP=%BLENDED_HOME%/etc^
 set CLASS=blended.launcher.jvmrunner.JvmLauncher
 
 %SCRIPTPATH%prunsrv.exe ^
-  //IS//%SERVICE_NAME%" ^
+  //IS//%SERVICE_NAME% ^
   --DisplayName="%SERVICE_NAME%" ^
   --Environment=%SERVICE_ENV% ^
   --Jvm=%JVM% ^
