@@ -2,6 +2,7 @@ package blended.mgmt.repo
 
 import java.io.File
 import scala.collection.immutable
+import blended.updater.config.MvnGav
 
 trait ArtifactRepo {
   
@@ -27,4 +28,15 @@ trait ArtifactRepo {
    */
   def listFiles(path: String): Iterator[String]
 
+}
+
+object ArtifactRepo {
+  
+  /**
+   * Converts the given Maven GAV into an artifact path eligible for [[ArtifactRepo]] methods.
+   */
+  def mvnArtifactPath(mvnGav: MvnGav): String = {
+    mvnGav.toUrl("")
+  }
+  
 }

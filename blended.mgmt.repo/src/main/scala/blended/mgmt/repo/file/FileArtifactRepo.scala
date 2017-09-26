@@ -14,8 +14,12 @@ import java.nio.file.Path
 import java.nio.file.Files
 import scala.collection.JavaConverters._
 import scala.util.Try
+import blended.mgmt.repo.WritableArtifactRepo
+import java.io.InputStream
 
-class FileArtifactRepo(override val repoId: String, baseDir: File) extends ArtifactRepo {
+class FileArtifactRepo(override val repoId: String, baseDir: File)
+    extends ArtifactRepo
+    with WritableArtifactRepo {
 
   def withCheckedFilePath[T](path: String)(f: File => T): Try[T] = Try {
     val base = baseDir.toURI().normalize()
@@ -77,6 +81,10 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
         files.map(f => baseFile.relativize(f.toUri().normalize()).getPath())
       }
     }.getOrElse(Iterator.empty)
+  }
+
+  override def uploadFile(path: String, file: InputStream, sha1Sum: Option[String]): Try[Unit] = {
+   ??? 
   }
 
 }

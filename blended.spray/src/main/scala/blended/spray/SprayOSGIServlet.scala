@@ -2,33 +2,39 @@ package blended.spray
 
 import javax.servlet.ServletConfig
 
-import akka.actor.{ActorRef, ActorRefFactory, Props}
+import akka.actor.{ ActorRef, ActorRefFactory, Props }
 import akka.event.Logging
 import akka.spray.RefUtils
 import akka.util.Timeout
-import blended.akka.{ActorSystemWatching, OSGIActorConfig}
-import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
+import blended.akka.{ ActorSystemWatching, OSGIActorConfig }
+import domino.capsule.{ CapsuleContext, SimpleDynamicCapsuleContext }
 import domino.service_watching.ServiceWatching
 import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 import spray.http.Uri.Path
-import spray.servlet.{ConnectorSettings, Servlet30ConnectorServlet}
+import spray.servlet.{ ConnectorSettings, Servlet30ConnectorServlet }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import domino.capsule.CapsuleConvenience
 
-abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSystemWatching with ServiceWatching { this: BlendedHttpRoute =>
+abstract class SprayOSGIServlet
+    extends Servlet30ConnectorServlet
+    with ActorSystemWatching
+    with ServiceWatching
+    with CapsuleConvenience {
+  this: BlendedHttpRoute =>
 
   private[this] val sLog = LoggerFactory.getLogger(classOf[SprayOSGIServlet])
-  private[this] var refFactory : Option[ActorRefFactory] = None
-  private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
+  private[this] var refFactory: Option[ActorRefFactory] = None
+  private[this] var osgiActorCfg: Option[OSGIActorConfig] = None
 
-  def actorConfig : OSGIActorConfig = osgiActorCfg match {
+  def actorConfig: OSGIActorConfig = osgiActorCfg match {
     case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wrong context ")
     case Some(cfg) => cfg
   }
 
-  def servletConfig : ServletConfig = getServletConfig()
+  def servletConfig: ServletConfig = getServletConfig()
 
   def bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 
@@ -53,16 +59,16 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     case Some(f) => f
   }
 
-  def contextPath : String =
+  def contextPath: String =
     Option(bundleContext.getBundle().getHeaders().get("Web-ContextPath")).getOrElse(bundleContext.getBundle().getSymbolicName())
 
-  def props(route: BlendedHttpRoute) : Props =
+  def props(route: BlendedHttpRoute): Props =
     BlendedHttpActor.props(actorConfig, this, contextPath)
 
-  def createServletActor() : Unit =
+  def createServletActor(): Unit =
     createServletActor(props(this))
 
-  def createServletActor(props : Props): ActorRef = {
+  def createServletActor(props: Props): ActorRef = {
     sLog.debug("About to create servlet actor with props: {}", props)
     implicit val timeout = Timeout(1.second)
 
@@ -94,8 +100,16 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     serviceActor
   }
 
+  def stopServletActor(): Unit = {
+    actorConfig.system.stop(serviceActor)
+  }
+
   def startSpray(): Unit = {
     createServletActor()
+  }
+
+  def stopSpray(): Unit = {
+    stopServletActor()
   }
 
   override def init(): Unit = {
@@ -106,6 +120,9 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
       refFactory = Some(cfg.system)
       startSpray()
 
+      onStop {
+        stopSpray()
+      }
     }
   }
 }

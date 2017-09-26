@@ -67,6 +67,7 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
         <Set name="confidentialPort"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set>
+        <Set name="requestBufferSize">80000000</Set>
       </New>
     </Arg>
   </Call>
@@ -89,6 +90,7 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
         <Set name="maxIdleTime">300000</Set>
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
+        <Set name="requestBufferSize">80000000</Set>
       </New>
     </Arg>
   </Call>

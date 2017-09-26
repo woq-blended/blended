@@ -5,7 +5,7 @@ import akka.testkit.TestLatch
 import blended.akka.OSGIActorConfig
 import blended.spray.SprayPrickleSupport
 import blended.updater.config._
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 import spray.testkit.ScalatestRouteTest
 import blended.updater.config.json.PrickleProtocol._
 import blended.security.spray.DummyBlendedSecuredRoute
@@ -13,13 +13,15 @@ import blended.security.spray.DummyBlendedSecuredRoute
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
+import java.io.File
 
 class ManagementCollectorSpec
     extends FreeSpec
     with Matchers
     with ScalatestRouteTest
     with CollectorService
-    with SprayPrickleSupport 
+    with SprayPrickleSupport
     with DummyBlendedSecuredRoute {
 
   val processContainerInfoLatch = TestLatch(1)
@@ -46,7 +48,7 @@ class ManagementCollectorSpec
         responseAs[String] should be("TEST")
       }
     }
-    
+
   }
 
   override def cleanUp(): Unit = {
@@ -78,4 +80,7 @@ class ManagementCollectorSpec
   override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
 
   override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
+
+  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
+
 }

@@ -15,6 +15,17 @@ import spray.routing.ValidationRejection
 import spray.http.HttpHeader
 import spray.http.HttpHeaders
 import spray.http.AllOrigins
+import spray.http.MultipartFormData
+import spray.http.BodyPart
+import java.io.ByteArrayInputStream
+import scala.util.Try
+import spray.http.HttpData
+import java.io.File
+import java.io.InputStream
+import blended.updater.config.util.Unzipper
+import scala.util.Failure
+import scala.util.Success
+import com.typesafe.config.ConfigFactory
 
 trait CollectorService
     extends BlendedHttpRoute
@@ -170,7 +181,7 @@ trait CollectorService
               case _ =>
                 // check existence of overlays
                 findMissingOverlayRef(rolloutProfile.overlays) match {
-                  case Some(r) => 
+                  case Some(r) =>
                     reject(ValidationRejection(s"Unknown vverlay ${r.name} ${r.version}"))
                   case None =>
                     // all ok, complete
@@ -194,5 +205,115 @@ trait CollectorService
     }
 
   }
+
+  def uploadDeploymentPackRoute: Route = {
+    path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
+      post {
+        requirePermission("profile:update") {
+          requirePermission("repository:upload:" + repoId) {
+            entity(as[MultipartFormData]) { formData =>
+              detach() {
+                complete {
+                  val details = formData.fields.map {
+                    case BodyPart(entity, headers) =>
+                      // Warning, this loads the whole file into memory
+                      //                      val content = new ByteArrayInputStream(entity.data.toByteArray)
+                      //                      val contentType = headers.find(h => h.is("content-type")).get.value
+                      //                      val fileName = headers.find(h => h.is("content-disposition")).get.value.split("filename=").last
+                      //                      val result = processDeploymentpack(content)
+                      //                      (contentType, result)
+
+                      val byteArray = entity.data.toByteArray
+                      val baip = new ByteArrayInputStream(byteArray)
+                      val result = try {
+                        processDeploymentPack(repoId, baip)
+                      } finally {
+                        baip.close()
+                      }
+
+                      val profile = result.get
+                      s"Uploaded profile ${profile._1 + " " + profile._2}"
+                    case _ =>
+                  }
+                  s"""{"status": "Processed POST request, details=$details" }"""
+                }
+              }
+            }
+          }
+        }
+      }
+
+    }
+  }
+
+  /**
+   * Process the input stream as it it were a ZIP file stram containing the deploymentpack for a profile.
+   * If the deployment was successful, this method returns the profile name and version as tuple, else the exception is returned.
+   */
+  def processDeploymentPack(repoId: String, content: InputStream): Try[(String, String)] = {
+    val tempDir = File.createTempFile("upload", "")
+    tempDir.delete()
+    tempDir.mkdirs()
+
+    val unzipped = Unzipper.unzip(
+      inputStream = content,
+      targetDir = tempDir,
+      selectedFiles = List(),
+      fileSelector = None,
+      placeholderReplacer = None,
+      archive = Some("<stream>")
+    )
+
+    val result = unzipped flatMap { files =>
+      Try {
+
+        log.debug("Extraced files: {}", files)
+
+        val profileConfFile = files.find(f => f.getName() == "profile.conf").get
+
+        val config = ConfigFactory.parseFile(profileConfFile)
+        val local = RuntimeConfigCompanion.
+          read(config).
+          flatMap(_.resolve()).
+          flatMap(c => Try { LocalRuntimeConfig(c, tempDir) }).
+          get
+        val issues =
+          local.validate(includeResourceArchives = true, explodedResourceArchives = false, checkPropertiesFile = false) ++
+            local.resolvedRuntimeConfig.allBundles.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported bundle URL: ${u}") ++
+            local.runtimeConfig.resources.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported resource URL: ${u}")
+
+        if (!issues.isEmpty) sys.error(issues.mkString("; "))
+        // everything is ok
+
+        // now install bundles and resources
+        local.resolvedRuntimeConfig.allBundles.map { b =>
+          val file = local.bundleLocation(b)
+          val path = b.url
+          installBundle(repoId, path, file, b.artifact.sha1Sum)
+        }
+
+        local.runtimeConfig.name -> local.runtimeConfig.version
+      }
+
+    }
+
+    deleteRecursive(tempDir)
+    result
+  }
+
+  def deleteRecursive(files: File*): Unit = files.foreach { file =>
+    if (file.isDirectory()) {
+      file.listFiles() match {
+        case null =>
+        case files => deleteRecursive(files: _*)
+      }
+    }
+    file.delete()
+  }
+
+  /**
+   * Install the file under path. If there is an collision, only reject the file if the sha1Sum does not compare equal.
+   */
+  def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit]
 
 }

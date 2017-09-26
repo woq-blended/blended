@@ -39,6 +39,23 @@ class Unzipper {
     unzip(archive, targetDir, _selectedFiles, None, None)
   }
 
+  def unzip(archive: File,
+    targetDir: File,
+    selectedFiles: List[(String, File)],
+    fileSelector: Option[String => Boolean],
+    placeholderReplacer: Option[PlaceholderConfig]): Try[Seq[File]] = {
+
+    if (!archive.exists() || !archive.isFile()) throw new FileNotFoundException("Zip file cannot be found: " + archive)
+    targetDir.mkdirs
+
+    val is = new FileInputStream(archive)
+    try {
+      unzip(is, targetDir, selectedFiles, fileSelector, placeholderReplacer, Some(archive.getPath()))
+    } finally {
+      is.close()
+    }
+  }
+
   /**
    * Extract files from a ZIP archive.
    * If the list of `selectedFiles` is empty and no `fileSelector` was given, than all files will be extracted.
@@ -55,22 +72,20 @@ class Unzipper {
    *
    * @return A `Seq` of all extracted files.
    */
-  def unzip(archive: File,
+  def unzip(inputStream: InputStream,
     targetDir: File,
     selectedFiles: List[(String, File)],
     fileSelector: Option[String => Boolean],
-    placeholderReplacer: Option[PlaceholderConfig]): Try[Seq[File]] = Try {
+    placeholderReplacer: Option[PlaceholderConfig],
+    archive: Option[String]): Try[Seq[File]] = Try {
 
-    if (!archive.exists() || !archive.isFile()) throw new FileNotFoundException("Zip file cannot be found: " + archive)
-    targetDir.mkdirs
-
-    log.debug("Extracting zip archive {} to {}", Array(archive, targetDir): _*)
+    log.debug("Extracting zip archive {} to {}", Array(archive.getOrElse(""), targetDir): _*)
 
     val partial = !selectedFiles.isEmpty || fileSelector.isDefined
     if (partial) log.debug("Only extracting some content of zip file")
 
     val fileWriter: (InputStream, OutputStream) => Unit = placeholderReplacer match {
-      case None => copy _
+      case None => StreamCopy.copy _
       case Some(PlaceholderConfig(openSeq, closeSeq, escapeChar, props, failOnMissing)) =>
         val pp = new PlaceholderProcessor(props, openSeq, closeSeq, escapeChar, failOnMissing)
         (in, out) => pp.process(in, out).get
@@ -112,7 +127,7 @@ class Unzipper {
     var extractedFilesInv: List[File] = Nil
 
     try {
-      val zipIs = new ZipInputStream(new FileInputStream(archive))
+      val zipIs = new ZipInputStream(inputStream)
       var zipEntry = zipIs.getNextEntry
       val finished = partial && fileSelector.isEmpty && filesToExtract.isEmpty
       while (zipEntry != null && !finished) {
@@ -162,7 +177,6 @@ class Unzipper {
         zipEntry = zipIs.getNextEntry()
       }
 
-      zipIs.close
     } catch {
       //      case e: IOException =>
       //        throw new RuntimeException("Could not unzip file: " + archive,
@@ -176,17 +190,6 @@ class Unzipper {
     }
 
     extractedFilesInv.reverse
-  }
-
-  def copy(in: InputStream, out: OutputStream) {
-    val buf = new Array[Byte](1024)
-    var len = 0
-    while ({
-      len = in.read(buf)
-      len > 0
-    }) {
-      out.write(buf, 0, len)
-    }
   }
 
 }
