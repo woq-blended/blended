@@ -1,9 +1,13 @@
 = Security in Blended Container
+:toc: preamble
+
+Decumentaiton of the security in blended.
 
 == Used technology
 
 * JAAS
 * Apache Shiro
+* HTTPS
 
 == Birds eye view
 
@@ -24,3 +28,81 @@ NOTE: Section incomplete and need review
 NOTE: Section pending
 
 == Securing WAR / WAB bundles
+
+NOTE: Sectin pending
+
+== HTTPS support for Jetty
+To enable HTTPS for Jetty, we need a server key and a certificate.
+For development purposes, it is enough to work with self-signed certificates.
+In production mode, it is highly encouraged to use certificates signed by well-accepted certification authorities.
+
+To create a self-signed certificate, you can use the `blended.build/create-certificate.sh` script and follow the instructions.
+
+Also the `jetty.xml` as well as the pax web configutation needs to be extended to support HTTPS.
+
+NOTE: You have to use your own passwords and replace the `export` in the examples below.
+
+=== Jetty
+
+The following system properties should be defined in `profile.conf`:
+
+[sourc,properties]
+----
+jetty.httpsport="9443"
+blended.jetty.keystore="${blended.container.home}/etc/keystore"
+----
+
+The following lines need to be added to `jetty.xml`:
+
+[source,xml]
+----
+<Call name="addConnector">
+  <Arg>
+    <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+      <Arg>
+        <New class="org.eclipse.jetty.http.ssl.SslContextFactory">
+          <Set name="keyStore"><SystemProperty name="blended.jetty.keystore"/></Set>
+          <Set name="keyStorePassword">export</Set>
+          <Set name="keyManagerPassword">export</Set>
+          <Set name="trustStore"><SystemProperty name="blended.jetty.keystore" /></Set>
+          <Set name="trustStorePassword">export</Set>
+        </New>
+      </Arg>
+      <Set name="host">
+        <Property name="jetty.host" />
+      </Set>
+      <Set name="port"><SystemProperty name="jetty.httpsport" default="9443" /></Set>
+      <Set name="maxIdleTime">300000</Set>
+      <Set name="Acceptors">5</Set>
+      <Set name="statsOn">false</Set>
+    </New>
+  </Arg>
+</Call>
+----
+
+For more details have a look at http://wiki.eclipse.org/Jetty/Howto/Configure_SSL[Jetty Wiki].
+
+
+NOTE: Jetty also support obfucated password in config files starting with `"OBF:"`.
+You can obfuscate passwords with the http://wiki.eclipse.org/Jetty/Howto/Secure_Passwords[Jetty password utility].
+
+=== Pax Web
+
+Pax web can be configured either via OSGi Config Admin or via system properties.
+
+If you go the system properties route, you need to add the following properties to `profile.conf`:
+
+[source,config]
+----
+systemProperties {
+    org.ops4j.pax.web.config.file="${blended.container.home}/etc/jetty.xml"
+    org.osgi.service.http.port="9191"
+    org.osgi.service.http.port.secure="9443"
+    org.osgi.service.http.secure.enabled="true"
+    org.ops4j.pax.web.ssl.keystore="${blended.container.home}/etc/keystore"
+    org.ops4j.pax.web.ssl.password="export"
+    org.ops4j.pax.web.ssl.keypassword="export"
+}
+----
+
+For more details have a look at https://ops4j.github.io/pax/web/SNAPSHOT/Configuration.html[Pax Web Documentation]
