@@ -3,7 +3,6 @@ window.React    = require('react');
 
 window.ReactSplitPane = require('react-split-pane');
 
-window.bootstrap = require('bootstrap/dist/css/bootstrap.min.css');
+window.bootstrap = require('../src/main/less/main.less');
 
-window.bsVars = require('less-vars-loader?camelCase,resolveVariables!bootstrap/less/variables.less');
 

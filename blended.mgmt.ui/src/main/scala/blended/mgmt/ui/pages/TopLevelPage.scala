@@ -17,8 +17,8 @@ abstract class TopLevelPage {
 
   val content : VdomElement
 
-  def component = ScalaComponent.builder.static(name)(<.div(content))
-    .build
+  def requiresLogin : Boolean = true
+
 }
 
 object TopLevelPages {

@@ -1,19 +1,13 @@
 package blended.mgmt.ui.styles
 
-import scala.scalajs.js
 import scalacss.DevDefaults._
 
 object BootstrapStyles extends StyleSheet.Inline {
 
-  val lessVariables = js.Dynamic.global.bsVars
-
+  import Colors._
   import dsl._
 
-  // TODO: Can we get default values from Bootstrap less somehow ?
-
-  val brandPrimary = c"#337ab7"
-
-  val navbarHeight = 61.px;
+  val navbarHeight = 61.px
 
   val header = style("header") (
     height(navbarHeight)
@@ -23,13 +17,23 @@ object BootstrapStyles extends StyleSheet.Inline {
     margin(0.px)
   )
 
-  val viewport = style("viewport") (
-    height := s"calc(100vh - ${navbarHeight.value})",
+  val baseView = style (
     width(100.%%),
     position.absolute,
     left(0.px),
-    top(navbarHeight),
     overflow.auto
+  )
+
+  val loginView = style("login")(
+    baseView,
+    top.`0`,
+    height(100.%%)
+  )
+
+  val viewport = style("viewport") (
+    baseView,
+    top(navbarHeight),
+    height := s"calc(100vh - ${navbarHeight.value})"
   )
 
   val ulNavbarHeader = style("ul.navbar-header") (
