@@ -66,7 +66,29 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
         <Set name="maxIdleTime">300000</Set>
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
-        <Set name="confidentialPort">9999</Set>
+        <Set name="confidentialPort">9443</Set>
+      </New>
+    </Arg>
+  </Call>
+  <Call name="addConnector">
+    <Arg>
+      <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
+        <Arg>
+          <New class="org.eclipse.jetty.http.ssl.SslContextFactory">
+            <Set name="keyStore"><SystemProperty name="blended.jetty.keystore"/></Set>
+            <Set name="keyStorePassword">export</Set>
+            <Set name="keyManagerPassword">export</Set>
+            <Set name="trustStore"><SystemProperty name="blended.jetty.keystore" /></Set>
+            <Set name="trustStorePassword">export</Set>
+          </New>
+        </Arg>
+        <Set name="host">
+          <Property name="jetty.host" />
+        </Set>
+        <Set name="port"><SystemProperty name="jetty.httpsport" default="0443" /></Set>
+        <Set name="maxIdleTime">300000</Set>
+        <Set name="Acceptors">5</Set>
+        <Set name="statsOn">false</Set>
       </New>
     </Arg>
   </Call>
