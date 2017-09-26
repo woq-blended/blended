@@ -10,5 +10,5 @@ object ProfilesPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#profiles")
 
-  override val content : VdomElement = <.div(ProfilesComp.Component())
+  override val content : VdomElement = ProfilesComp()()
 }

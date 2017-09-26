@@ -75,4 +75,6 @@ object ProfilesComp {
     .componentDidMount(c => Callback { DataManager.runtimeConfigsData.addObserver(c.backend)})
     .componentWillUnmount(c => Callback { DataManager.runtimeConfigsData.removeObserver(c.backend)})
     .build
+
+  def apply() = Component
 }

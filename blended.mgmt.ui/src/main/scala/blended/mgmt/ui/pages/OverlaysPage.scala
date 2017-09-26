@@ -11,5 +11,5 @@ object OverlaysPage extends TopLevelPage {
 
   override val routerPath: Path = Path("#overlays")
 
-  override val content: VdomElement = OverlayConfigComp.Component()
+  override val content: VdomElement = OverlayConfigComp()()
 }
