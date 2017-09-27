@@ -31,7 +31,9 @@ class LauncherConfigTest extends FreeSpec {
     "read() -> toConfig() -> read() must result in same config" in {
       import LauncherConfig._
       val config = read(ConfigFactory.parseString(minimalConfig))
-      assert(config === read(toConfig(config)))
+      val toCfg = toConfig(config)
+      val config2 = read(toCfg)
+      assert(config === config2)
     }
   }
 
@@ -103,6 +105,7 @@ class LauncherConfigTest extends FreeSpec {
       val a = read(ConfigFactory.parseString(config))
       val b = read(toConfig(a))
 
+      val fwp = b.frameworkProperties
       assert(a === b)
     }
   }

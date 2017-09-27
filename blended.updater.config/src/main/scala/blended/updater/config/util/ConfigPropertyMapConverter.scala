@@ -1,32 +1,33 @@
 package blended.updater.config.util
 
-import scala.collection.JavaConverters._
+import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
 
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueFactory
+import scala.collection.JavaConverters._
 
 object ConfigPropertyMapConverter {
 
   def unpackStringKey(key: String): String = key.replaceAll("[\"]", "")
 
-  def getKeyAsPropertyMap(config: Config, key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-    if (default.isDefined && !config.hasPath(key)) {
-      default.get.apply()
-    } else {
-      config.getConfig(key)
-        .entrySet().asScala.map {
+  def getKeyAsPropertyMap(config: Config, key: String, default: Option[() => Map[String, String]] = None): Map[String, String] = {
+    val result =
+      if (default.isDefined && !config.hasPath(key)) {
+        default.get.apply()
+      } else {
+        val fromCfg = config.getConfig(key).entrySet().asScala
+
+        fromCfg.map {
           entry => unpackStringKey(entry.getKey()) -> entry.getValue().unwrapped().asInstanceOf[String]
         }.toMap
-    }
+      }
 
-//  def propertyMapToConfig(map: Map[String, String]): Config = {
-//    map.foldLeft(ConfigFactory.empty()) { (c, p) =>
-//      c.withValue("\"" + c + "\"", ConfigValueFactory.fromAnyRef(p))
-//    }
-//  }
+    result
+  }
 
-  def propertyMapToConfigValue(map: Map[String, String]): java.util.Map[String, String] = {
-    map.map { case (k, v) => "\"" + k + "\"" -> v }.toMap.asJava
+  def propertyMapToConfigValue(m: Map[String, String]): ConfigValue = {
+
+//    val m1 = m.map{ case (k, v) => "\"" + k + "\"" -> v }
+    val result = ConfigValueFactory.fromMap(m.asJava)
+
+    result
   }
 }

@@ -14,6 +14,8 @@ BlendedModel(
     scalaLib,
     orgOsgi,
     slf4j,
+    logbackCore,
+    logbackClassic,
     typesafeConfig,
     commonsDaemon,
     blendedUpdaterConfig,

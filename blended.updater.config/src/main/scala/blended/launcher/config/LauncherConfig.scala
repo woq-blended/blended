@@ -2,7 +2,7 @@ package blended.launcher.config
 
 import java.io.File
 
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import com.typesafe.config._
 
 import scala.collection.JavaConverters._
 import blended.updater.config.util.ConfigPropertyMapConverter
@@ -82,7 +82,7 @@ object LauncherConfig {
       }.asJava,
       "branding" -> ConfigPropertyMapConverter.propertyMapToConfigValue(launcherConfig.branding)
     ).asJava
-    ConfigFactory.parseMap(config)
+    ConfigValueFactory.fromMap(config).toConfig
   }
 
 }
