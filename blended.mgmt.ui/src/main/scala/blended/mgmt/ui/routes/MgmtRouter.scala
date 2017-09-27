@@ -2,11 +2,14 @@ package blended.mgmt.ui.routes
 
 import blended.mgmt.ui.backend.{LoginManager, RolloutProfileAction}
 import blended.mgmt.ui.components._
+import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.CallbackTo
 import japgolly.scalajs.react.extra.router._
 import japgolly.scalajs.react.vdom.html_<^._
 
 object MgmtRouter {
+
+  private[this] val logger = Logger[MgmtRouter.type]
 
   private[this] val loginRouterPath = "#login"
 
@@ -60,17 +63,20 @@ object MgmtRouter {
     loginRequired = false
   )
 
+  private[this] val stdLogin = loginPage(ctPage)
+
   val pages : List[MgmtPage] = List(ctPage, svcPage, profPage, overlaypage, rolloutPage, settingsPage, helpPage)
 
   // We define a condition to determine whether someone has logged in already
   private[this] val accessGranted : MgmtPage => CallbackTo[Boolean] = p => CallbackTo[Boolean] {
+    logger.trace(s"Checking access to page [${p.routeInfo.name}]")
     !p.routeInfo.loginRequired || LoginManager.loggedIn
   }
 
   // If no user is currently logged, we define an Action to redirect the user to
   // a login page
 
-  private[this] val login : MgmtPage => Action[MgmtPage] = p => RedirectToPage[MgmtPage](loginPage(p), Redirect.Replace)
+  private[this] val login : MgmtPage => Action[MgmtPage] = p => RedirectToPath(Path(loginRouterPath), Redirect.Replace)
   private[this] val performLogin : MgmtPage => Option[Action[MgmtPage]] = p => Some(login(p))
 
   private[this] val routes = RouterConfigDsl[MgmtPage].buildRule { dsl =>
@@ -104,12 +110,10 @@ object MgmtRouter {
 
     import dsl._
 
-    val stdLogin = loginPage(ctPage)
-
-    routes
+    (routes | staticRedirect(root) ~> redirectToPage(ctPage)(Redirect.Replace))
       .addCondition(accessGranted)(performLogin)
       .notFound(redirectToPage(ctPage)(Redirect.Replace))
-      .renderWith(layout(_, _))
+      .renderWith((ctl, res) => layout(ctl, res))
   }
 
 }

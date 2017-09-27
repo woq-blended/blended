@@ -28,7 +28,7 @@ object MenuComp {
 
         <.li(
           ^.cls := cls,
-          p.ctl.link(target)
+          p.ctl.link(target)(target.routeInfo.name)
         )
       }
 
