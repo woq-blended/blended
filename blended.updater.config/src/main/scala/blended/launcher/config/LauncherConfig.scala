@@ -2,9 +2,10 @@ package blended.launcher.config
 
 import java.io.File
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
 
 import scala.collection.JavaConverters._
+import blended.updater.config.util.ConfigPropertyMapConverter
 
 case class LauncherConfig(
     frameworkJar: String,
@@ -36,20 +37,10 @@ object LauncherConfig {
     val reference = ConfigFactory.parseResources(getClass(), "LauncherConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false))
     config.withFallback(optionals).checkValid(reference)
 
-    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-      if (default.isDefined && !config.hasPath(key)) {
-        default.get.apply()
-      } else {
-        config.getConfig(key)
-          .entrySet().asScala.map {
-            entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-          }.toMap
-      }
-
     LauncherConfig(
       frameworkJar = config.getString("frameworkBundle"),
-      systemProperties = configAsMap("systemProperties", Some(() => Map())),
-      frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
+      systemProperties = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "systemProperties", Some(() => Map())),
+      frameworkProperties = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "frameworkProperties", Some(() => Map())),
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
       bundles = config.getObjectList("bundles")
@@ -61,7 +52,7 @@ object LauncherConfig {
             startLevel = if (c.hasPath("startLevel")) c.getInt("startLevel") else config.getInt("defaultStartLevel")
           )
         }.toList,
-      branding = configAsMap("branding", Some(() => Map()))
+      branding = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "branding", Some(() => Map()))
     )
 
   }
@@ -78,8 +69,8 @@ object LauncherConfig {
   def toConfig(launcherConfig: LauncherConfig): Config = {
     val config = Map(
       "frameworkBundle" -> launcherConfig.frameworkJar,
-      "systemProperties" -> launcherConfig.systemProperties.asJava,
-      "frameworkProperties" -> launcherConfig.frameworkProperties.asJava,
+      "systemProperties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(launcherConfig.systemProperties),
+      "frameworkProperties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(launcherConfig.frameworkProperties),
       "startLevel" -> launcherConfig.startLevel,
       "defaultStartLevel" -> launcherConfig.defaultStartLevel,
       "bundles" -> launcherConfig.bundles.map { b =>
@@ -89,7 +80,7 @@ object LauncherConfig {
           "startLevel" -> b.startLevel
         ).asJava
       }.asJava,
-      "branding" -> launcherConfig.branding.asJava
+      "branding" -> ConfigPropertyMapConverter.propertyMapToConfigValue(launcherConfig.branding)
     ).asJava
     ConfigFactory.parseMap(config)
   }
