@@ -61,12 +61,12 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
           <Property name="jetty.host" />
         </Set>
         <Set name="port">
-          <Property name="jetty.port" default="9191"/>
+          <SystemProperty name="org.osgi.service.http.port" default="9191"/>
         </Set>
         <Set name="maxIdleTime">300000</Set>
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
-        <Set name="confidentialPort">9443</Set>
+        <Set name="confidentialPort"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set>
       </New>
     </Arg>
   </Call>
@@ -74,18 +74,18 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
     <Arg>
       <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
         <Arg>
-          <New class="org.eclipse.jetty.http.ssl.SslContextFactory">
-            <Set name="keyStore"><SystemProperty name="blended.jetty.keystore"/></Set>
+          <New class="org.eclipse.jetty.util.ssl.SslContextFactory">
+            <Set name="keyStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore"/></Set>
             <Set name="keyStorePassword">export</Set>
             <Set name="keyManagerPassword">export</Set>
-            <Set name="trustStore"><SystemProperty name="blended.jetty.keystore" /></Set>
+            <Set name="trustStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore" /></Set>
             <Set name="trustStorePassword">export</Set>
           </New>
         </Arg>
         <Set name="host">
           <Property name="jetty.host" />
         </Set>
-        <Set name="port"><SystemProperty name="jetty.httpsport" default="9443" /></Set>
+        <Set name="port"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set>
         <Set name="maxIdleTime">300000</Set>
         <Set name="Acceptors">5</Set>
         <Set name="statsOn">false</Set>
