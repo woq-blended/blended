@@ -2,6 +2,7 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.ServiceInfo
 import japgolly.scalajs.react._
@@ -17,13 +18,13 @@ object ServicesComp {
     def consistent = this.copy(selected = selected.filter(outer => serviceList.filter( inner => filter.matches(inner)).exists(_ == outer)))
   }
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ServiceInfo]] {
+  class Backend(scope: BackendScope[NavigationInfo[MgmtPage], State]) extends Observer[List[ServiceInfo]] {
 
     override val dataChanged = { newData : List[ServiceInfo] =>
       scope.modState(_.copy(serviceList = newData))
     }
 
-    def render(s: State) = {
+    def render(p: NavigationInfo[MgmtPage], s: State) = {
 
       def services = s.serviceList.map(svc => <.div(ServiceInfoComp.Component(svc)))
 
@@ -34,10 +35,12 @@ object ServicesComp {
     }
   }
 
-  val Component = ScalaComponent.builder[Unit]("Services")
-      .initialState(State(serviceList = List.empty))
-      .renderBackend[Backend]
-      .componentDidMount(c => Callback { DataManager.serviceData.addObserver(c.backend) })
-      .componentWillUnmount(c => Callback { DataManager.serviceData.removeObserver(c.backend) })
-      .build
+  val Component = ScalaComponent.builder[NavigationInfo[MgmtPage]]("Services")
+    .initialState(State(serviceList = List.empty))
+    .renderBackend[Backend]
+    .componentDidMount(c => Callback { DataManager.serviceData.addObserver(c.backend) })
+    .componentWillUnmount(c => Callback { DataManager.serviceData.removeObserver(c.backend) })
+    .build
+
+  def apply(n : NavigationInfo[MgmtPage]) = Component(n)
 }

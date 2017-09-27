@@ -1,8 +1,8 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.{DataManager, ProfileUpdateAction, Observer}
+import blended.mgmt.ui.backend.{DataManager, Observer, ProfileUpdateAction}
 import blended.mgmt.ui.components.filter.{FilterBackend, FilterState}
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
 import blended.mgmt.ui.util.{I18n, LayoutHelper, Logger}
 import blended.updater.config.ContainerInfo
 import japgolly.scalajs.react.vdom.html_<^._
@@ -18,15 +18,15 @@ object ContainerComp {
   private[this] val log: Logger = Logger[ContainerComp.type]
   private[this] val i18n = I18n()
 
-  class Backend(override val scope: BackendScope[Unit, FilterState[ContainerInfo]])
-    extends FilterBackend[ContainerInfo]
+  class Backend(override val scope: BackendScope[NavigationInfo[MgmtPage], FilterState[ContainerInfo]])
+    extends FilterBackend[NavigationInfo[MgmtPage], ContainerInfo]
     with Observer[List[ContainerInfo]] {
 
     override val dataChanged = { newData : List[ContainerInfo] =>
       scope.modState(_.copy(items = newData))
     }
 
-    def render(s: FilterState[ContainerInfo]) = {
+    def render(p: NavigationInfo[MgmtPage], s: FilterState[ContainerInfo]) = {
       log.debug(s"Rerendering with [${s.items.size}] containers, selected = [${s.selected.map(_.containerId)}]")
 
       val filter : VdomElement = <.div(
@@ -59,10 +59,12 @@ object ContainerComp {
   }
 
   val Component =
-    ScalaComponent.builder[Unit]("Container")
+    ScalaComponent.builder[NavigationInfo[MgmtPage]]("Container")
       .initialState(FilterState[ContainerInfo]())
       .renderBackend[Backend]
       .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
       .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
       .build
+
+  def apply(n : NavigationInfo[MgmtPage]) = Component(n)
 }

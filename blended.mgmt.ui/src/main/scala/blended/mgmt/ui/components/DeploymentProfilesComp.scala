@@ -2,6 +2,7 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.And
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config._
 import chandu0101.scalajs.react.components.reacttable.ReactTable
@@ -35,7 +36,7 @@ object DeploymentProfilesComp {
     )
   }
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[ContainerInfo]] {
+  class Backend(scope: BackendScope[NavigationInfo[MgmtPage], State]) extends Observer[List[ContainerInfo]] {
 
     override val dataChanged = { newData: List[ContainerInfo] =>
       scope.modState(_.copy(containerInfos = newData))
@@ -127,10 +128,12 @@ object DeploymentProfilesComp {
     }
   }
 
-  val Component = ScalaComponent.builder[Unit]("Deployment Profiles")
+  val Component = ScalaComponent.builder[NavigationInfo[MgmtPage]]("Deployment Profiles")
     .initialState(State(containerInfos = List()))
     .renderBackend[Backend]
     .componentDidMount(c => Callback { DataManager.containerData.addObserver(c.backend)})
     .componentWillUnmount(c => Callback { DataManager.containerData.removeObserver(c.backend)})
     .build
+
+  def apply(n: NavigationInfo[MgmtPage]) = Component(n)
 }

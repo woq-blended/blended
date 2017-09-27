@@ -1,16 +1,20 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.{ DataManager, Observer }
+import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.util.DisplayHelper
 import blended.updater.config._
 import chandu0101.scalajs.react.components.reacttable.ReactTable
 import japgolly.scalajs.react._
 import vdom.html_<^._
 import blended.mgmt.ui.backend.RolloutProfileAction
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
 
 object RolloutComponent {
 
-  case class RolloutProps(rolloutProfileAction: Option[RolloutProfileAction] = None)
+  case class RolloutProps(
+    navigationInfo : NavigationInfo[MgmtPage],
+    rolloutProfileAction: Option[RolloutProfileAction] = None
+  )
 
   case class RolloutState(
 
@@ -64,8 +68,8 @@ object RolloutComponent {
     }
 
     val selectProfile : Set[(RuntimeConfig, String)] => Callback = { selected =>
-      scope.modState(s =>
-        s.copy(
+      scope.modState(state =>
+        state.copy(
           selectedProfile = selected match {
             case e if e.isEmpty => None
             case s  => Some(s.head._1)
@@ -215,5 +219,10 @@ object RolloutComponent {
       DataManager.runtimeConfigsData.removeObserver(c.backend.rtObserver)
     }}
     .build
+
+  def apply(
+    n: NavigationInfo[MgmtPage],
+    a: Option[RolloutProfileAction] = Some(RolloutProfileAction.DefaultAjax)
+  ) = Component(RolloutProps(n, a))
 
 }

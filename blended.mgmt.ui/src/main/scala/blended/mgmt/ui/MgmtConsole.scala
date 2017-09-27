@@ -1,5 +1,6 @@
 package blended.mgmt.ui
 
+import blended.mgmt.ui.routes.MgmtRouter
 import blended.mgmt.ui.styles.AppStyles
 import japgolly.scalajs.react.extra.router._
 import org.scalajs.dom

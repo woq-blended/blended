@@ -2,6 +2,7 @@ package blended.mgmt.ui.components
 
 import blended.mgmt.ui.backend.{DataManager, Observer}
 import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
 import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.OverlayConfig
 import japgolly.scalajs.react.{Callback, _}
@@ -17,7 +18,7 @@ object OverlayConfigComp {
     def consistent = this.copy(selected = selected.filter(s => overlays.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[OverlayConfig]] {
+  class Backend(scope: BackendScope[NavigationInfo[MgmtPage], State]) extends Observer[List[OverlayConfig]] {
 
     override val dataChanged = { newData: List[OverlayConfig] =>
       scope.modState(_.copy(overlays = newData))
@@ -41,7 +42,7 @@ object OverlayConfigComp {
       scope.modState(s => s.copy(selected = profile).consistent)
     }
 
-    def render(s: State) = {
+    def render(p: NavigationInfo[MgmtPage], s: State) = {
       log.debug(s"Rerendering with state $s")
 
 
@@ -65,7 +66,7 @@ object OverlayConfigComp {
     }
   }
 
-  val Component = ScalaComponent.builder[Unit]("OverlayConfig")
+  val Component = ScalaComponent.builder[NavigationInfo[MgmtPage]]("OverlayConfig")
     . initialState(State(overlays = List()))
     .renderBackend[Backend]
     .componentDidMount(c => Callback {
@@ -76,5 +77,5 @@ object OverlayConfigComp {
     }}
     .build
 
-  def apply() = Component
+  def apply(n: NavigationInfo[MgmtPage]) = Component(n)
 }

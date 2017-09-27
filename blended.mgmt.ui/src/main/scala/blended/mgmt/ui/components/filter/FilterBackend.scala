@@ -32,9 +32,9 @@ class FilterState[T](
 
 }
 
-trait FilterBackend[T] {
+trait FilterBackend[P,T] {
 
-  val scope: BackendScope[Unit, FilterState[T]]
+  val scope: BackendScope[P, FilterState[T]]
 
   def addFilter(filter: Filter[T]) = {
     scope.modState { s =>
