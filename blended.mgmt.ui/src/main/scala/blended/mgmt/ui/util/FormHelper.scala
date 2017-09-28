@@ -13,24 +13,30 @@ object FormHelper {
     label : String,
     inputType : String,
     value : String,
+    lblWidth : String = "100px",
     changeCallback : (ReactEventFromTextArea => Callback)
   ) : VdomElement = {
     <.div(
       ^.cls := "form-group row",
+      ^.marginBottom := "1em",
+      ^.display := "flex",
+      ^.flexDirection.row,
       <.label(
+        ^.display := "flex",
+        ^.flex := lblWidth,
+        ^.alignItems.center,
         ^.`for` := id,
-        ^.cls := "col-sm-2 col-form-label",
+        ^.cls := "col-form-label",
         i18n.tr(label)
       ),
-      <.div(
-        ^.cls := "col-sm-10",
-        <.input(
-          ^.id := id,
-          ^.`type` := inputType,
-          ^.cls := "form-control",
-          ^.value := value,
-          ^.onChange ==> changeCallback
-        )
+      <.input(
+        ^.display := "flex",
+        ^.alignItems.center,
+        ^.id := id,
+        ^.`type` := inputType,
+        ^.cls := "form-control",
+        ^.value := value,
+        ^.onChange ==> changeCallback
       )
     )
   }

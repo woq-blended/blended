@@ -41,13 +41,13 @@ object OverlayConfigDetailComp {
             )
           }: _*)
 
-          ContentPanel("Overlay Config")(TagMod(
+          ContentPanel(Some("Overlay Config"))(TagMod(
             <.h3("oc.name + \" \" + i18n.tr(\"Version\") + \" \" + oc.version"),
             DataTable.fromProperties(
-              panelHeading = "Properties",
+              panelHeading = Some("Properties"),
               content = oc.properties
             ),
-            ContentPanel("Generated Configs")(genConf)
+            ContentPanel(Some("Generated Configs"))(genConf)
           ))
       }
     }

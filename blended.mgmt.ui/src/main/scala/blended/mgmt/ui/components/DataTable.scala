@@ -12,7 +12,7 @@ import scalacss.internal.mutable.GlobalRegistry
 object DataTable {
 
   def fromStringSeq(
-    panelHeading : String,
+    panelHeading : Option[String],
     content : Seq[Seq[String]],
     headings : Seq[(String, Int)],
     selectable : Boolean = false,
@@ -44,7 +44,7 @@ object DataTable {
   }
 
   def fromProperties(
-    panelHeading: String,
+    panelHeading: Option[String],
     content: Map[String, String],
     headings : (String, String) = ("name", "value")
   ) : VdomElement = {

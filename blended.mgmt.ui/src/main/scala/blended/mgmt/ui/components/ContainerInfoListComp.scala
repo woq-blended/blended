@@ -47,7 +47,7 @@ object ContainerInfoListComp {
         )
       }
 
-      ContentPanel("Container")(<.div(TagMod(rows:_*)))
+      ContentPanel(Some("Container"))(<.div(TagMod(rows:_*)))
     }
   }
 

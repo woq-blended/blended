@@ -136,7 +136,6 @@ object ContainerInfoFilterComp {
                 ) // ,
               )
 
-            // <.datalist(^.id := "propvalues")
             ),
             <.div(
               ^.cls := "form-group row",

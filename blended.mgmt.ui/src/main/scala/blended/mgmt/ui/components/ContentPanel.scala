@@ -13,7 +13,7 @@ object ContentPanel {
   val i18n = I18n()
 
   def apply(
-    panelHeading : String
+    panelHeading : Option[String] = None
   )(content : TagMod) : VdomElement = {
 
     val panelStyle = GlobalRegistry[PanelDefault.type].get
@@ -22,8 +22,8 @@ object ContentPanel {
       panelStyle.container,
       <.div(
         ^.cls := "panel-heading",
-        <.h2(i18n.tr(panelHeading))
-      ),
+        <.h2(i18n.tr(panelHeading.mkString))
+      ).when(panelHeading.isDefined),
       <.div(
         ^.cls := "panel-body",
         content

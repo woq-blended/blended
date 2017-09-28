@@ -52,7 +52,6 @@ object RolloutComponent {
     }
 
     val deploy: RolloutState => Callback = { s =>
-      println("Deploying")
       scope.props.map { p =>
         p.rolloutProfileAction.map { a =>
           val rp = RolloutProfile(
@@ -86,7 +85,7 @@ object RolloutComponent {
 
       val profileKey : RuntimeConfig => String = p => p.name + "-" + p.version
 
-      val profiles = ContentPanel("Profile")(
+      val profiles = ContentPanel(Some("Profile"))(
         ReactTable[RuntimeConfig](
           data = s.profiles,
           configs = Seq(
@@ -105,7 +104,7 @@ object RolloutComponent {
 
       val overlayKey : OverlayConfig => String = cfg => cfg.name + "-" + cfg.version
 
-      val overlayTable = ContentPanel("Overlays")(
+      val overlayTable = ContentPanel(Some("Overlays"))(
         ReactTable[OverlayConfig](
           data = s.overlays,
           configs = Seq(
@@ -129,7 +128,7 @@ object RolloutComponent {
           activeProfile.map(DisplayHelper.profileToString).getOrElse("")
         }
 
-        ContentPanel("Container")(
+        ContentPanel(Some("Container"))(
           ReactTable[ContainerInfo](
             data = s.container,
             configs = Seq(
@@ -154,7 +153,7 @@ object RolloutComponent {
         s.selectedContainer.size > 0
 
       val rollout = if (deployable) {
-        ContentPanel("Deploy")(
+        ContentPanel(Some("Deploy"))(
           <.div(
             ^.display := "flex",
             ^.flexDirection := "column",
@@ -184,7 +183,7 @@ object RolloutComponent {
           )
         )
       } else {
-        ContentPanel("Deploy")(
+        ContentPanel(Some("Deploy"))(
           "You have to select one Profile and least one Container for deployment."
         )
       }

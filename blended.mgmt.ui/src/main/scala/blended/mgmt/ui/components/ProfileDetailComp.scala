@@ -38,29 +38,29 @@ object ProfileDetailComp {
             rc.version
           ),
           DataTable.fromProperties(
-            panelHeading = "Profile Properties",
+            panelHeading = Some("Profile Properties"),
             content = rc.properties
           ),
           DataTable.fromProperties(
-            panelHeading = "Framework Properties",
+            panelHeading = Some("Framework Properties"),
             content = rc.frameworkProperties
           ),
           DataTable.fromProperties(
-            panelHeading = "System Properties",
+            panelHeading = Some("System Properties"),
             content = rc.systemProperties
           ),
           DataTable.fromProperties(
-            panelHeading = "Features",
+            panelHeading = Some("Features"),
             content = rc.features.map(f => (f.name, f.version)).toMap,
             headings = ("name", "version")
           ),
           DataTable.fromStringSeq(
-            panelHeading = "Bundles",
+            panelHeading = Some("Bundles"),
             content = bundles,
             headings = Seq("url", "autoStart", "startLevel").zipWithIndex
           ),
           DataTable.fromProperties(
-            "Resources",
+            Some("Resources"),
             rc.resources.map(r => (r.url, r.fileName.getOrElse(""))).toMap,
             ("url", "filename")
           )

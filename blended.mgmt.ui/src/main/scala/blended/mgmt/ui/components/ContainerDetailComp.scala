@@ -54,7 +54,7 @@ object ContainerDetailComp {
         case Props(Some(containerInfo), profileUpdater) =>
 
           val props = DataTable.fromProperties(
-            panelHeading = "Container Properties",
+            panelHeading = Some("Container Properties"),
             content = containerInfo.properties
           )
 

@@ -18,7 +18,7 @@ object ServiceInfoComp {
         <.h3(i18n.tr("Service"), " ", info.name),
         <.h4(i18n.tr("Type: "), info.serviceType),
         DataTable.fromProperties(
-          panelHeading = "Service Properties",
+          panelHeading = Some("Service Properties"),
           content = info.props
         )
       )
