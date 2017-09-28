@@ -24,7 +24,6 @@ object OverlayConfigComp {
       scope.modState(_.copy(overlays = newData))
     }
 
-
     def addFilter(filter: Filter[OverlayConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
       scope.modState(s => s.copy(filter = s.filter.append(filter).normalized).consistent).runNow()

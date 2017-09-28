@@ -4,18 +4,22 @@ class LoginFailedException extends Exception
 
 object LoginManager {
 
-  var isLoggedIn : Boolean = false
+  private[this] var isLoggedIn : Boolean = false
 
   def loggedIn = isLoggedIn
 
   def login(user : String, passwd: String) : Unit = {
 
     if (!isLoggedIn) {
-      if ( user == "andreas" || passwd == "secret")
+      if ( user == "andreas" && passwd == "secret")
         isLoggedIn = true
       else
         throw new LoginFailedException
     }
+  }
+
+  def logout() : Unit = {
+    isLoggedIn = false
   }
 
 }

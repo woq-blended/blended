@@ -11,6 +11,8 @@ trait MgmtPage {
 	val i18n = I18n()
   val routeInfo : RouteInfo[MgmtPage]
 
+  override def toString = s"MgmtPage(${routeInfo.name}, ${routeInfo.routerPath})"
+
 }
 
 object MgmtPage {
@@ -28,5 +30,6 @@ object MgmtPage {
       loginRequired = loginRequired
     )
   }
+
 }
 

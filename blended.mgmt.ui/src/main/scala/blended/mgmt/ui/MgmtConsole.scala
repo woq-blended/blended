@@ -16,7 +16,7 @@ object MgmtConsole extends js.JSApp {
 
     AppStyles.load()
 
-    val router = Router(baseUrl, MgmtRouter.routerConfig.logToConsole)
+    val router = Router(baseUrl, MgmtRouter.routerConfig)
 
     router().renderIntoDOM(dom.document.getElementById("content"))
   }
