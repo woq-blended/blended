@@ -15,7 +15,7 @@ BlendedContainer(
     Feature("blended-commons"),
     Feature("blended-http"),
     Feature("blended-jetty"),
-    Feature("blended-jaxrs"),
+    //Feature("blended-jaxrs"),
     Feature("blended-spray"),
     Feature("blended-hawtio"),
     Feature("blended-spring"),

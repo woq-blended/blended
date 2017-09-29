@@ -21,7 +21,8 @@ implicit class RichDependency(d: Dependency) {
     scope: Option[String] = d.scope,
     systemPath: Option[String] = d.systemPath,
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional): Dependency =
+    optional: Boolean = d.optional
+  ): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
 
   def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
@@ -113,28 +114,29 @@ object Deps {
   val javaxMail = "javax.mail" % "mail" % "1.4.5"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
-  val jacksonCoreAsl = "org.codehaus.jackson" % "jackson-core-asl" % "1.9.12"
-  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
-  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
-  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
+  val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1"
+//  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
+//  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
+//  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
+//
+//  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
+//  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
+//  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
+//  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
+//  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
 
-val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
-val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
-val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
-val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
-val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
-val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
-val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
-val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
-val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
-val jolokiaJvmAgent = Dependency(
-      jolokiaJvm,
-      classifier = "agent"
-    )
-val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
-val junit = "junit" % "junit" % "4.11"
-val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
+  val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
+  val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+  val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
+  val jolokiaJvmAgent = Dependency(
+    jolokiaJvm,
+    classifier = "agent"
+  )
+  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
+  val junit = "junit" % "junit" % "4.11"
+  val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
@@ -217,6 +219,7 @@ val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
   val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % BlendedVersions.xbean
   val xbeanSpring = "org.apache.xbean" % "xbean-spring" % BlendedVersions.xbean
 }
+
 // convenience and backward compatibility
 import Deps._
 
