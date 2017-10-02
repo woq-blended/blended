@@ -115,7 +115,9 @@ object Deps {
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
   val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1"
-//  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
+  val jacksonBind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
+
+  //  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
 //  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
 //  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
 //

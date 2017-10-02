@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory
 case class ConnectionHolder(
   vendor: String,
   provider: String,
+  user: Option[String],
+  password : Option[String],
   cf: ConnectionFactory,
   system: ActorSystem
 ) {
@@ -24,13 +26,18 @@ case class ConnectionHolder(
   def connect(id: String) : Connection = conn match {
     case Some(c) => c
     case None =>
-      log.info(s"Creating underlying connection for [$vendor:$provider] with client id [$id]")
       if (!connecting.getAndSet(true)) {
-
         try {
           log.info(s"Creating underlying connection for provider [$provider] with client id [$id]")
 
-          val c = cf.createConnection()
+          val c = if (user.isEmpty) {
+            cf.createConnection()
+          } else {
+            cf.createConnection(
+              user.get,
+              password.getOrElse(null)
+            )
+          }
           c.setClientID(id)
 
           c.setExceptionListener(new ExceptionListener {

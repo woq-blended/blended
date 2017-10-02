@@ -3,6 +3,8 @@ package blended.jms.utils
 import blended.container.context.ContainerIdentifierService
 import com.typesafe.config.Config
 
+import ConnectionFactoryFactory.{DEFAULT_USER, DEFAULT_PWD}
+
 object BlendedJMSConnectionConfig {
 
   val defaultConfig = BlendedJMSConnectionConfig(
@@ -15,6 +17,8 @@ object BlendedJMSConnectionConfig {
     minReconnect = 300,
     maxReconnectTimeout = -1,
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
+    defaultUser = None,
+    defaultPassword  = None,
     pingDestination = "blended.ping"
   )
 
@@ -28,6 +32,8 @@ object BlendedJMSConnectionConfig {
     val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
     val clientId = if (cfg.hasPath("clientId")) cfg.getString("clientId") else defaultConfig.clientId
+    val defaultUser = if (cfg.hasPath(DEFAULT_USER)) Some(cfg.getString(DEFAULT_USER)) else defaultConfig.defaultUser
+    val defaultPasswd = if (cfg.hasPath(DEFAULT_PWD)) Some(cfg.getString(DEFAULT_PWD)) else defaultConfig.defaultPassword
     val destination = if (cfg.hasPath("destination")) cfg.getString("destination") else defaultConfig.pingDestination
 
     BlendedJMSConnectionConfig(
@@ -40,6 +46,8 @@ object BlendedJMSConnectionConfig {
       minReconnect = minReconnect,
       maxReconnectTimeout = maxReconnectTimeout,
       clientId = clientId,
+      defaultUser = defaultUser,
+      defaultPassword = defaultPasswd,
       pingDestination = destination
     )
   }
@@ -55,5 +63,7 @@ case class BlendedJMSConnectionConfig(
   minReconnect : Int,
   maxReconnectTimeout: Int,
   clientId : String,
+  defaultUser : Option[String],
+  defaultPassword : Option[String],
   pingDestination : String
 )

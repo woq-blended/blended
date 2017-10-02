@@ -14,6 +14,7 @@ import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
 import scala.language.reflectiveCalls
+import scala.util.control.NonFatal
 
 class BrokerControlActor extends Actor
   with ActorLogging {
@@ -26,12 +27,14 @@ class BrokerControlActor extends Actor
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
+    val brokerName = cfg.config.getString("brokerName")
+    val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+    val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
+
     try {
 
-      val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+      log.info(s"Starting ActiveMQ broker [$brokerName] with config file [$uri] ")
 
-      val brokerName = cfg.config.getString("brokerName")
-      val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
       val provider = cfg.config.getString("provider")
 
       BrokerFactory.setStartDefault(false)
@@ -71,13 +74,18 @@ class BrokerControlActor extends Actor
           "vendor" -> vendor,
           "provider" -> provider,
           "brokerName" -> brokerName
-        ))
+        )
+        )
       }
 
       cleanUp = List(() => stopBroker(broker, registrar.svcReg))
 
       (broker, registrar.svcReg)
 
+    } catch {
+      case NonFatal(t) =>
+        log.warning(s"Error starting ActiveMQ broker [$brokerName]", t.getMessage())
+        throw t
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
     }

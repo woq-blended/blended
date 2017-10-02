@@ -110,6 +110,8 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
     FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true),
+    FeatureBundle(dependency = jacksonCore),
+    FeatureBundle(dependency = jacksonBind),
     FeatureBundle(dependency = jjwt),
     FeatureBundle(dependency = blendedSecurityLogin, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)

@@ -8,6 +8,9 @@ import com.typesafe.config.Config
 import domino.DominoActivator
 import domino.capsule.Capsule
 import org.osgi.framework.BundleContext
+import org.slf4j.LoggerFactory
+
+import scala.util.control.NonFatal
 
 object BlendedAkkaActivator {
   implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
@@ -18,6 +21,8 @@ object BlendedAkkaActivator {
 
 class BlendedAkkaActivator extends DominoActivator {
 
+  private[this] val log = LoggerFactory.getLogger(classOf[BlendedAkkaActivator])
+
   private class AkkaCapsule(bundleContext: BundleContext, containerContext: ContainerContext)
       extends ActorSystemActivator with Capsule {
 
@@ -26,17 +31,22 @@ class BlendedAkkaActivator extends DominoActivator {
     override def stop(): Unit = stop(bundleContext)
 
     def configure(osgiContext: BundleContext, system: ActorSystem): Unit = {
-      val log = system.log
 
-      log info "Registering Actor System as Service."
+      log.info("Registering Actor System as Service.")
       registerService(osgiContext, system)
 
-      log info s"ActorSystem [${system.name}] initialized."
+      log.info(s"ActorSystem [${system.name}] initialized.")
     }
 
     override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
 
-    override def getActorSystemConfiguration(context: BundleContext): Config = containerContext.getContainerConfig()
+    override def getActorSystemConfiguration(context: BundleContext): Config = try {
+      containerContext.getContainerConfig()
+    } catch {
+      case NonFatal(e) =>
+        log.warn(s"Error retrieving config for ActorSystem [${e.getMessage()}]")
+        throw e
+    }
   }
 
   whenBundleActive {
