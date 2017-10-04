@@ -6,12 +6,14 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils.internal._
+import com.typesafe.config.ConfigFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 import scala.concurrent.duration._
+import scala.collection.JavaConverters._
 
 class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
   with FreeSpecLike
@@ -49,13 +51,33 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     broker = None
   }
 
+  def connHolder (
+    vendor : String,
+    provider : String
+  ) : ConnectionHolder = {
+
+    val cfg = ConfigFactory.parseMap(Map(
+      "vendor" -> vendor,
+      "provider" -> provider
+    ).asJava)
+
+    val jmsCfg = BlendedJMSConnectionConfig(
+      vendor = vendor,
+      cfg = cfg
+    ).copy(
+      cfClassName = Some(classOf[ActiveMQConnectionFactory].getName())
+    )
+
+    new ConnectionHolder(jmsCfg, system)
+  }
+
   private[this] def connectionFactory(brokerName : String) = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
 
   "The JMS Connection Controller" - {
 
     "should answer with a positive ConnectResult message in case of a succesful connect" in {
 
-      val holder = new ConnectionHolder("happy", "happy", None, None, connectionFactory("blended"), system)
+      val holder = connHolder("happy", "happy")
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -77,7 +99,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     "should answer with a negative ConnectResult message in case of a failed connect" in {
 
-      val holder = new ConnectionHolder("dirty", "dirty", None, None, connectionFactory("foobar"), system)
+      val holder = connHolder("dirty", "dirty")
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -92,7 +114,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     }
 
     "should answer with a ConnectionClosed message in case of a successful disconnect" in {
-      val holder = new ConnectionHolder("happy", "happy", None, None, connectionFactory("blended"), system)
+      val holder = connHolder("happy", "happy")
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 
       val t = new Date()
@@ -112,12 +134,12 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
     }
 
     "should answer with a CloseTimeout message in case a connection close timed out" in {
-      val holder = new ConnectionHolder("happy", "happy", None, None, connectionFactory("blended"), system) {
-        override def close(): Unit = {
-          // spend a long time here
-          Thread.sleep(5000)
-        }
-      }
+      val holder = connHolder("happy", "happy")
+//        override def close(): Unit = {
+//          // spend a long time here
+//          Thread.sleep(5000)
+//        }
+//      }
 
       val testActor = system.actorOf(JmsConnectionController.props(holder))
 

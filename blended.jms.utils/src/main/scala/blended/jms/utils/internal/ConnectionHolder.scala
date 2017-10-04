@@ -1,44 +1,124 @@
 package blended.jms.utils.internal
 
+import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
+import javax.naming.{Context, InitialContext}
 
 import akka.actor.ActorSystem
-import blended.jms.utils.BlendedJMSConnection
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
+import blended.util.ReflectionHelper
+import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 
+import scala.util.control.NonFatal
+
 case class ConnectionHolder(
-  vendor: String,
-  provider: String,
-  user: Option[String],
-  password : Option[String],
-  cf: ConnectionFactory,
-  system: ActorSystem
+  config : BlendedJMSConnectionConfig,
+  system : ActorSystem,
+  bundleContext: Option[BundleContext] = None
 ) {
+
+  lazy val vendor = config.vendor
+  lazy val provider = config.provider
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
 
+  private[this] lazy val initialContextEnv : util.Hashtable[String, Object] = {
+    val envMap = new util.Hashtable[String, Object]()
+
+    val cfgMap : Map[String, String] =
+      config.properties ++ (config.ctxtClassName.map( c => (Context.INITIAL_CONTEXT_FACTORY -> c) ).toMap)
+
+    cfgMap.foreach { case (k,v) =>
+      envMap.put(k,v)
+    }
+
+    log.info(s"Initial context properties [${cfgMap.mkString(", ")}]")
+
+    envMap
+  }
+
+  private[this] def lookupConnectionFactory() : ConnectionFactory = {
+
+    val oldLoader = Thread.currentThread().getContextClassLoader()
+
+    try {
+
+      val (name, contextFactoryClass) = (config.jndiName, config.ctxtClassName) match {
+        case (Some(n), Some(c)) => (n,c)
+        case (_, _) =>
+          throw new JMSException(s"Context Factory class and JNDI name have to be defined for JNDI lookup [$vendor:$provider].")
+       }
+
+      config.jmsClassloader.foreach(Thread.currentThread().setContextClassLoader)
+
+      val context = new InitialContext(initialContextEnv)
+      log.info(s"Looking up JNDI name [$name]")
+
+      context.lookup(name).asInstanceOf[ConnectionFactory]
+    } catch {
+      case NonFatal(t) =>
+        log.warn(s"Could not lookup ConnectionFactory : [${t.getMessage()}]")
+        val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
+        throw ex
+    } finally {
+      Thread.currentThread().setContextClassLoader(oldLoader)
+    }
+  }
+
+  private[this] def createConnectionFactory() : ConnectionFactory = {
+
+    val oldLoader = Thread.currentThread().getContextClassLoader()
+
+    try {
+      val cf : ConnectionFactory = config.cfClassName match {
+        case None => throw new Exception(s"Connection Factory class must be specified for [$vendor:$provider]")
+        case Some(c) =>
+
+          config.jmsClassloader.foreach(Thread.currentThread().setContextClassLoader)
+
+          log.info(s"Configuring connection factory of type [$c].")
+          Thread.currentThread().getContextClassLoader().loadClass(c).newInstance().asInstanceOf[ConnectionFactory]
+      }
+
+      config.properties.foreach { case (k, v) =>
+        log.info(s"Setting property [$k] for connection factory [$vendor:$provider] to [$v].")
+        ReflectionHelper.setProperty(cf, v, k)
+      }
+
+      cf
+    } catch {
+      case NonFatal(t) =>
+        log.warn(s"Could not create ConnectionFactory : [${t.getMessage()}]")
+        val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
+        throw ex
+    } finally {
+      Thread.currentThread().setContextClassLoader(oldLoader)
+    }
+  }
+
   def getConnection() : Option[BlendedJMSConnection] = conn
 
-  def connect(id: String) : Connection = conn match {
+  def connect() : Connection = conn match {
     case Some(c) => c
     case None =>
+
+      val cf : ConnectionFactory = if (config.useJndi) lookupConnectionFactory() else createConnectionFactory()
+
       if (!connecting.getAndSet(true)) {
         try {
-          log.info(s"Creating underlying connection for provider [$provider] with client id [$id]")
+          log.info(s"Creating underlying connection for provider [$provider] with client id [${config.clientId}]")
 
-          val c = if (user.isEmpty) {
-            cf.createConnection()
-          } else {
-            cf.createConnection(
-              user.get,
-              password.getOrElse(null)
-            )
+          val c = config.defaultUser match {
+            case None => cf.createConnection()
+            case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
           }
-          c.setClientID(id)
+
+          c.setClientID(config.clientId)
 
           c.setExceptionListener(new ExceptionListener {
             override def onException(e: JMSException): Unit = {

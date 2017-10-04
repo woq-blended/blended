@@ -1,19 +1,21 @@
 package blended.jms.utils
 
-import java.util
-import javax.jms.{ConnectionFactory, JMSException}
-import javax.naming.InitialContext
+import javax.jms.ConnectionFactory
+import javax.naming.spi.InitialContextFactory
 
-import blended.akka.{ActorSystemWatching, OSGIActorConfig}
-import blended.container.context.ContainerPropertyResolver
-import blended.util.ReflectionHelper
-import com.typesafe.config.Config
+import blended.akka.ActorSystemWatching
 import domino.DominoActivator
+import org.osgi.framework.BundleContext
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
+import scala.reflect.ClassTag
 
 object ConnectionFactoryFactory {
+
+  type CFCreator = (BlendedJMSConnectionConfig, Option[BundleContext]) => ConnectionFactory
+  type CFEnabled = (BlendedJMSConnectionConfig, Option[BundleContext]) => Boolean
+
   val CONNECTION_URLS = "connectionURLs"
   val DEFAULT_USER = "defaultUser"
   val DEFAULT_PWD = "defaultPassword"
@@ -21,64 +23,20 @@ object ConnectionFactoryFactory {
   val CF_JNDI_NAME = "jndiName"
 }
 
-abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystemWatching {
+abstract class ConnectionFactoryFactory[T >: ConnectionFactory, S >: InitialContextFactory](
+  implicit cfTag : ClassTag[T], ctxtTag : ClassTag[S]
+) extends DominoActivator with ActorSystemWatching {
 
   import ConnectionFactoryFactory._
 
-  def createConnectionFactory(provider: String, osgiCfg: OSGIActorConfig, cfg: Config) : ConnectionFactory =
-    throw new JMSException("Not implemented")
+  val createConnectionFactory : Option[CFCreator] = None
+  val connectionFactoryEnabled : Option[CFEnabled] = None
 
-  def vendor(osgiActorConfig: OSGIActorConfig) : String = osgiActorConfig.config.getString("vendor")
+  private[this] lazy val loader = getClass().getClassLoader()
+  private[this] lazy val cfClass = cfTag.runtimeClass.getName
+  private[this] lazy val ctxtClass = ctxtTag.runtimeClass.getName
 
-  def isEnabled(provider: String, osgiCfg: OSGIActorConfig, cfg: Config) : Boolean =
-    !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
-
-  private[this] val log : Logger = LoggerFactory.getLogger(classOf[ConnectionFactoryFactory])
-
-  protected def configureConnectionFactory(cf: ConnectionFactory, osgiActorCfg: OSGIActorConfig, cfg: Config) : ConnectionFactory = {
-
-    log.info(s"Configuring connection factory of type [${cf.getClass().getName()}].")
-    val symbolicName = bundleContext.getBundle().getSymbolicName
-
-    if (cfg.hasPath("properties")) {
-      val propCfg = cfg.getObject("properties")
-
-      propCfg.entrySet().asScala.foreach { entry =>
-
-        val key = entry.getKey
-        val value = ContainerPropertyResolver.resolve(osgiActorCfg.idSvc, cfg.getConfig("properties").getString(key))
-
-        log.info(s"Setting property [$key] for connection factory [$symbolicName] to [$value].")
-        ReflectionHelper.setProperty(cf, value, key)
-      }
-    }
-
-    cf
-  }
-
-  protected def lookupConnectionFactory(cfg : Config, name: String) : ConnectionFactory = {
-
-    val envMap = new util.Hashtable[String, Object]()
-
-    val cfgMap : Map[String, String] = cfg.getConfig("properties").entrySet().asScala.map{ e =>
-      (e.getKey(), e.getValue().toString())
-    }.toMap
-
-    cfgMap.foreach{ case (k,v) => envMap.put(k, v) }
-
-    try {
-      log.info(s"Creating Initial context with properties [${cfgMap.mkString(", ")}]")
-      val context = new InitialContext(envMap)
-      log.info(s"Looking up JNDI name [$name]")
-      context.lookup("foo").asInstanceOf[ConnectionFactory]
-    } catch {
-      case e : Exception =>
-        log.warn(s"Could not lookup ConnectionFactory : [${e.getMessage()}]")
-        val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
-        ex.setLinkedException(e)
-        throw ex
-    }
-  }
+  private[this] val log : Logger = LoggerFactory.getLogger(getClass().getName())
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
@@ -87,35 +45,25 @@ abstract class ConnectionFactoryFactory extends DominoActivator with ActorSystem
 
       cfMap.entrySet().asScala.foreach { entry =>
 
-        val cfVendor = vendor(osgiCfg)
+        val cfVendor = osgiCfg.config.getString("vendor")
         val cfProvider = entry.getKey()
+
+        val cfCfg = BlendedJMSConnectionConfig(cfVendor, osgiCfg.config.getConfig("factories").getConfig(cfProvider)).copy(
+          cfEnabled = connectionFactoryEnabled,
+          cfCreator = createConnectionFactory,
+          cfClassName = Some(cfClass),
+          ctxtClassName = Some(ctxtClass),
+          jmsClassloader = Some(Thread.currentThread().getContextClassLoader())
+        )
 
         log.info(s"Configuring connection factory for vendor [$cfVendor] with provider [$cfProvider]")
 
-        val cfCfg = osgiCfg.config.getConfig("factories").getConfig(cfProvider)
-
-        val useJndi = if (cfCfg.hasPath(USE_JNDI)) cfCfg.getBoolean(USE_JNDI) else false
-        val cfEnabled = isEnabled(cfProvider, osgiCfg, cfCfg)
-
-        log.info(s"Connection factory for vendor [$cfVendor] uses JNDI [$useJndi], enabled [$cfEnabled]")
-
-        val cf : ConnectionFactory = if (!useJndi) {
-          configureConnectionFactory(
-            createConnectionFactory(cfProvider, osgiCfg, cfCfg),
-            osgiCfg, cfCfg
-          )
-        } else {
-          lookupConnectionFactory(cfCfg, cfCfg.getString(CF_JNDI_NAME))
-        }
-
         val singleCf = BlendedSingleConnectionFactory(
-          osgiCfg = osgiCfg,
-          cfCfg = cfCfg,
-          cf = cf,
-          vendor = vendor(osgiCfg),
-          provider = cfProvider,
-          enabled = cfEnabled
-        )(osgiCfg.system)
+          jmsConfig = cfCfg,
+          system = osgiCfg.system,
+          bundleContext = Some(osgiCfg.bundleContext)
+        )
+
         singleCf.providesService[ConnectionFactory, IdAwareConnectionFactory](
           "vendor" -> cfVendor,
           "provider" -> cfProvider

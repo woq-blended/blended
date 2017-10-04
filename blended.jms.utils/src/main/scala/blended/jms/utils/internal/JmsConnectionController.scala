@@ -27,7 +27,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
       val caller = sender()
 
       try {
-        val c = holder.connect(id)
+        val c = holder.connect()
         caller ! ConnectResult(t, Right(c))
         context.become(connected(c))
       } catch {

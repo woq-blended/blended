@@ -30,13 +30,13 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
   private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
   private[this] implicit val eCtxt = context.system.dispatcher
-  private[this] val provider = holder.provider
-  private[this] val vendor = holder.vendor
+  private[this] val provider = config.provider
+  private[this] val vendor = config.vendor
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var currentReceive : StateReceive = disconnected()
-  private[this] var currentState : ConnectionState = ConnectionState(provider = holder.provider).copy(status = DISCONNECTED)
+  private[this] var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
 
   private[this] var pinger : Option[ActorRef] = None
 
