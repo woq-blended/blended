@@ -1,5 +1,6 @@
 package blended.jms.utils.internal
 
+import java.io.{PrintWriter, StringWriter}
 import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
@@ -27,7 +28,7 @@ case class ConnectionHolder(
 
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
 
-  private[this] lazy val initialContextEnv : util.Hashtable[String, Object] = {
+  private[this] val initialContextEnv : util.Hashtable[String, Object] = {
     val envMap = new util.Hashtable[String, Object]()
 
     val cfgMap : Map[String, String] =
@@ -62,7 +63,10 @@ case class ConnectionHolder(
       context.lookup(name).asInstanceOf[ConnectionFactory]
     } catch {
       case NonFatal(t) =>
+        val sw = new StringWriter()
+        t.printStackTrace(new PrintWriter(sw))
         log.warn(s"Could not lookup ConnectionFactory : [${t.getMessage()}]")
+        log.error(sw.toString)
         val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
         throw ex
     } finally {
@@ -107,11 +111,13 @@ case class ConnectionHolder(
     case Some(c) => c
     case None =>
 
-      val cf : ConnectionFactory = if (config.useJndi) lookupConnectionFactory() else createConnectionFactory()
-
       if (!connecting.getAndSet(true)) {
+
+
         try {
           log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
+
+          val cf : ConnectionFactory = if (config.useJndi) lookupConnectionFactory() else createConnectionFactory()
 
           val c = config.defaultUser match {
             case None => cf.createConnection()

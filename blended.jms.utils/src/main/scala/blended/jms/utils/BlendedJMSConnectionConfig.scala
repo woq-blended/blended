@@ -26,8 +26,10 @@ object BlendedJMSConnectionConfig {
     properties = Map.empty
   )
 
-  def apply(vendor: String, cfg: Config) : BlendedJMSConnectionConfig = {
-    val provider = cfg.getString("provider")
+  def apply(vendor: String, cfg: Config): BlendedJMSConnectionConfig = apply(vendor = vendor, provider = None, cfg = cfg)
+
+  def apply(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
+    val prov = if (cfg.hasPath("provider")) cfg.getString("provider") else provider.getOrElse(defaultConfig.provider)
     val enabled = !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
     val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
@@ -51,7 +53,7 @@ object BlendedJMSConnectionConfig {
     BlendedJMSConnectionConfig(
       vendor = vendor,
       enabled = enabled,
-      provider = provider,
+      provider = prov,
       jmxEnabled = jmxEnabled,
       pingTolerance = pingTolerance,
       pingInterval = pingInterval,
