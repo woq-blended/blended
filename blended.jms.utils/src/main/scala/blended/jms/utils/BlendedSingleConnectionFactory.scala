@@ -16,22 +16,6 @@ trait IdAwareConnectionFactory extends ConnectionFactory {
   val clientId : String
 }
 
-object BlendedSingleConnectionFactory {
-
-  def apply(
-    jmsConfig : BlendedJMSConnectionConfig,
-    system : ActorSystem,
-    bundleContext: Option[BundleContext]
-  ) = {
-
-    new BlendedSingleConnectionFactory(
-      config = jmsConfig,
-      system = system,
-      bundleContext = bundleContext
-    )
-  }
-}
-
 class BlendedSingleConnectionFactory(
   config : BlendedJMSConnectionConfig,
   system: ActorSystem,

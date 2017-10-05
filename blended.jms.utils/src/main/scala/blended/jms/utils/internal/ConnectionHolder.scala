@@ -94,7 +94,7 @@ case class ConnectionHolder(
     } catch {
       case NonFatal(t) =>
         log.warn(s"Could not create ConnectionFactory : [${t.getMessage()}]")
-        val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
+        val ex : JMSException = new JMSException("Could not create ConnectionFactory")
         throw ex
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
@@ -111,7 +111,7 @@ case class ConnectionHolder(
 
       if (!connecting.getAndSet(true)) {
         try {
-          log.info(s"Creating underlying connection for provider [$provider] with client id [${config.clientId}]")
+          log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
 
           val c = config.defaultUser match {
             case None => cf.createConnection()
@@ -129,12 +129,15 @@ case class ConnectionHolder(
 
           c.start()
 
+          log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
           val wrappedConnection = new BlendedJMSConnection(c)
           conn = Some(wrappedConnection)
 
           wrappedConnection
         } catch {
-          case e : JMSException => throw e
+          case e : JMSException =>
+            log.warn(s"Error creating connection [$vendor:$provider] : [${e.getMessage()}] ")
+            throw e
         } finally {
           connecting.set(false)
         }

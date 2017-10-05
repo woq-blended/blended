@@ -58,8 +58,8 @@ abstract class ConnectionFactoryFactory[T >: ConnectionFactory, S >: InitialCont
 
         log.info(s"Configuring connection factory for vendor [$cfVendor] with provider [$cfProvider]")
 
-        val singleCf = BlendedSingleConnectionFactory(
-          jmsConfig = cfCfg,
+        val singleCf = new BlendedSingleConnectionFactory(
+          config = cfCfg,
           system = osgiCfg.system,
           bundleContext = Some(osgiCfg.bundleContext)
         )

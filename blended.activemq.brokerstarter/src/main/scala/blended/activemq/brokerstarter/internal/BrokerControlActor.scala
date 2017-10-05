@@ -59,23 +59,25 @@ class BrokerControlActor extends Actor
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://$brokerName?create=false"
-        val amqCF = new ActiveMQConnectionFactory(url)
 
-        val cf = BlendedSingleConnectionFactory(
-          osgiCfg = cfg,
-          cfCfg = cfg.config,
-          cf = amqCF,
-          vendor = vendor,
-          provider = provider,
-          enabled = true
-        )(cfg.system)
+        val jmsCfg = BlendedJMSConnectionConfig("activemq", cfg.config)
+
+        val props = jmsCfg.properties + ("brokerURL" -> url)
+
+        val cf = new BlendedSingleConnectionFactory(
+          jmsCfg.copy(
+            properties = props,
+            cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)
+          ),
+          cfg.system,
+          Some(cfg.bundleContext)
+        )
 
         val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "vendor" -> vendor,
           "provider" -> provider,
           "brokerName" -> brokerName
-        )
-        )
+        ))
       }
 
       cleanUp = List(() => stopBroker(broker, registrar.svcReg))
