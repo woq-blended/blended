@@ -1,20 +1,16 @@
 package blended.jms.utils
 
 import javax.jms.ConnectionFactory
-import javax.naming.spi.InitialContextFactory
 
-import blended.akka.ActorSystemWatching
+import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import domino.DominoActivator
-import org.osgi.framework.BundleContext
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import scala.reflect.ClassTag
 
-object ConnectionFactoryFactory {
+object ConnectionFactoryActivator {
 
-  type CFCreator = (BlendedJMSConnectionConfig, Option[BundleContext]) => ConnectionFactory
-  type CFEnabled = (BlendedJMSConnectionConfig, Option[BundleContext]) => Boolean
+  type CFEnabled = OSGIActorConfig => BlendedJMSConnectionConfig => Boolean
 
   val CONNECTION_URLS = "connectionURLs"
   val DEFAULT_USER = "defaultUser"
@@ -23,18 +19,15 @@ object ConnectionFactoryFactory {
   val CF_JNDI_NAME = "jndiName"
 }
 
-abstract class ConnectionFactoryFactory[T >: ConnectionFactory, S >: InitialContextFactory](
-  implicit cfTag : ClassTag[T], ctxtTag : ClassTag[S]
-) extends DominoActivator with ActorSystemWatching {
+abstract class ConnectionFactoryActivator extends DominoActivator with ActorSystemWatching {
 
-  import ConnectionFactoryFactory._
-
-  val createConnectionFactory : Option[CFCreator] = None
-  val connectionFactoryEnabled : Option[CFEnabled] = None
+  import ConnectionFactoryActivator._
 
   private[this] lazy val loader = getClass().getClassLoader()
-  private[this] lazy val cfClass = cfTag.runtimeClass.getName
-  private[this] lazy val ctxtClass = ctxtTag.runtimeClass.getName
+
+  val connectionFactoryEnabled : Option[CFEnabled] = None
+  protected val cfClass : Option[String] = None
+  protected val ctxtClass : Option[String] = None
 
   private[this] val log : Logger = LoggerFactory.getLogger(getClass().getName())
 
@@ -49,10 +42,9 @@ abstract class ConnectionFactoryFactory[T >: ConnectionFactory, S >: InitialCont
         val cfProvider = entry.getKey()
 
         val cfCfg = BlendedJMSConnectionConfig(cfVendor, osgiCfg.config.getConfig("factories").getConfig(cfProvider)).copy(
-          cfEnabled = connectionFactoryEnabled,
-          cfCreator = createConnectionFactory,
-          cfClassName = Some(cfClass),
-          ctxtClassName = Some(ctxtClass),
+          cfEnabled = connectionFactoryEnabled.map(f => f(osgiCfg)),
+          cfClassName = cfClass,
+          ctxtClassName = ctxtClass,
           jmsClassloader = Some(Thread.currentThread().getContextClassLoader())
         )
 

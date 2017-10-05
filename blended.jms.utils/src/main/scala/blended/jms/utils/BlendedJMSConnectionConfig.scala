@@ -1,19 +1,17 @@
 package blended.jms.utils
 
-import javax.jms.ConnectionFactory
-import javax.naming.spi.InitialContextFactory
-
 import blended.container.context.ContainerIdentifierService
+import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
-import ConnectionFactoryFactory.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 
 object BlendedJMSConnectionConfig {
 
   val defaultConfig = BlendedJMSConnectionConfig(
     vendor = "",
     provider = "",
+    enabled = true,
     jmxEnabled = true,
     pingTolerance = 5,
     pingInterval = 30,
@@ -30,6 +28,7 @@ object BlendedJMSConnectionConfig {
 
   def apply(vendor: String, cfg: Config) : BlendedJMSConnectionConfig = {
     val provider = cfg.getString("provider")
+    val enabled = !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
     val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
     val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
     val pingInterval = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
@@ -51,6 +50,7 @@ object BlendedJMSConnectionConfig {
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
+      enabled = enabled,
       provider = provider,
       jmxEnabled = jmxEnabled,
       pingTolerance = pingTolerance,
@@ -73,6 +73,7 @@ object BlendedJMSConnectionConfig {
 case class BlendedJMSConnectionConfig(
   vendor : String,
   provider : String,
+  enabled : Boolean,
   jmxEnabled : Boolean,
   pingTolerance : Int,
   pingInterval : Int,
@@ -87,8 +88,7 @@ case class BlendedJMSConnectionConfig(
   properties : Map[String, String],
   useJndi : Boolean = false,
   jndiName : Option[String] = None,
-  cfCreator : Option[ConnectionFactoryFactory.CFCreator] = None,
-  cfEnabled : Option[ConnectionFactoryFactory.CFEnabled] = None,
+  cfEnabled : Option[BlendedJMSConnectionConfig => Boolean] = None,
   cfClassName: Option[String] = None,
   ctxtClassName : Option[String] = None,
   jmsClassloader : Option[ClassLoader] = None

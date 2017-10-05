@@ -38,12 +38,7 @@ class BlendedSingleConnectionFactory(
     bundleContext = bundleContext
   )
 
-  private[this] lazy val cfEnabled : Boolean = {
-    config.cfEnabled match {
-      case None => true
-      case Some(f) => f(config, bundleContext)
-    }
-  }
+  private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
 
   private[this] val actor =
     if (cfEnabled) {
