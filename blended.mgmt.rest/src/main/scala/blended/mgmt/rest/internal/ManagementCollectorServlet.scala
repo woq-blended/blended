@@ -134,7 +134,7 @@ class ManagementCollectorServlet
 
   override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = Try {
     val repo = artifactRepos.getOrElse(repoId, sys.error(s"No artifact repository with ID ${repoId} registered"))
-    val stream = file.toURL().openStream()
+    val stream = file.toURI().toURL().openStream()
     try {
       repo.uploadFile(path, stream, sha1Sum).get
     } finally {

@@ -285,6 +285,8 @@ trait CollectorService
         if (!issues.isEmpty) sys.error(issues.mkString("; "))
         // everything is ok
 
+        // TODO: install profile itself
+
         // now install bundles and resources
         local.resolvedRuntimeConfig.allBundles.map { b =>
           val file = local.bundleLocation(b)

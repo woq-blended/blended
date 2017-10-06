@@ -5,7 +5,7 @@ import java.io.InputStream
 
 object StreamCopy {
 
-  def copy(in: InputStream, out: OutputStream) {
+  def copy(in: InputStream, out: OutputStream): Unit = {
     val buf = new Array[Byte](1024)
     var len = 0
     while ({
