@@ -49,6 +49,7 @@ public class ResourceResolver implements URIResolver {
       try {
         LOG.debug("Resolving resource {} as File", location);
         final String path = ResourceResolver.class.getResource(location).getPath();
+        LOG.debug("Resolved path is {}", path);
         is = new FileInputStream(path);
       } catch (Exception e) {
         LOG.debug(e.getMessage());

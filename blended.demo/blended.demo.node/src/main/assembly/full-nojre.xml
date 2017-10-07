@@ -12,17 +12,17 @@
 
     <fileSet>
       <directory>target/classes/container</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
     </fileSet>
 
     <fileSet>
       <directory>${project.build.directory}/classes/profile</directory>
-      <outputDirectory>/profiles/${profile.name}/${profile.version}</outputDirectory>
+      <outputDirectory>./profiles/${profile.name}/${profile.version}</outputDirectory>
     </fileSet>
 
     <fileSet>
       <directory>${project.build.directory}/launcher/blended.launcher-${blended.version}</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
     </fileSet>
 
   </fileSets>

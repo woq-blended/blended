@@ -4,7 +4,7 @@ import javax.jms.ConnectionFactory
 
 import akka.actor.SupervisorStrategy.Restart
 import akka.actor.{Actor, ActorLogging, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy}
-import blended.jms.utils.BlendedSingleConnectionFactory
+import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
@@ -18,14 +18,22 @@ abstract class JMSTestDriver {
   private[this] val system = ActorSystem("JMSTestDriver")
 
   def run() : Unit = {
+
+    val jmsConfig = BlendedJMSConnectionConfig("unknown", ConfigFactory.parseMap(
+      Map(
+        "provider" -> "unknown",
+        "clientId" -> "client"
+      ).asJava
+    )).copy(
+      cfClassName = Some(cf.getClass.getName)
+    )
+
     val config = ConfigFactory.load().getConfig(classOf[ScheduledJMSProducer].getName())
-    system.actorOf(ProducerControlActor.props(BlendedSingleConnectionFactory(
-      cfg = config,
-      vendor = "unknown",
-      provider = "unknown",
-      cf = cf,
-      clientId = "client"
-    )(system)))
+    system.actorOf(ProducerControlActor.props(new BlendedSingleConnectionFactory(
+      config = jmsConfig,
+      system = system,
+      bundleContext = None
+    )))
   }
 }
 

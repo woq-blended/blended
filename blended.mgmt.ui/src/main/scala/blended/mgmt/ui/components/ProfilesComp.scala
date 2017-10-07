@@ -1,35 +1,34 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.DataManager
-import blended.mgmt.ui.components.filter.And
-
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.BackendScope
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.Observer
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
+import blended.mgmt.ui.backend.{DataManager, Observer}
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.RuntimeConfig
+import japgolly.scalajs.react.{Callback, _}
+import japgolly.scalajs.react.vdom.html_<^._
 
 object ProfilesComp {
 
   private[this] val log: Logger = Logger[ProfilesComp.type]
   private[this] val i18n = I18n()
 
-  case class State(profiles: List[RuntimeConfig], filter: And[RuntimeConfig] = And(), selected: Option[RuntimeConfig] = None) {
+  case class State(
+    profiles: List[RuntimeConfig],
+    filter: And[RuntimeConfig] = And(),
+    selected: Option[RuntimeConfig] = None
+  ) {
     def filteredRuntimeConfigs: List[RuntimeConfig] = profiles.filter(c => filter.matches(c))
     def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
   // TODO: refactor shared code with CompManagementConsole
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[RuntimeConfig]] {
+  class Backend(scope: BackendScope[NavigationInfo[MgmtPage], State]) extends Observer[List[RuntimeConfig]] {
 
-    override def update(newData: List[RuntimeConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override val dataChanged = { newData: List[RuntimeConfig] =>
+      scope.modState(_.copy(profiles = newData))
+    }
 
     def addFilter(filter: Filter[RuntimeConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
@@ -44,17 +43,17 @@ object ProfilesComp {
       scope.modState(s => s.copy(filter = And()).consistent).runNow()
     }
 
-    def selectContainer(profile: Option[RuntimeConfig]): Callback = {
+    def selectProfile(profile: Option[RuntimeConfig]): Callback = {
       scope.modState(s => s.copy(selected = profile).consistent)
     }
 
-    def render(s: State) = {
+    def render(n: NavigationInfo[MgmtPage], s: State) = {
       log.debug(s"Rerendering with state $s")
 
       val renderedConfigs = s.filteredRuntimeConfigs.map { p =>
         <.div(
           <.span(
-            ^.onClick --> selectContainer(Some(p)),
+            ^.onClick --> selectProfile(Some(p)),
             p.name,
             "-",
             p.version
@@ -71,11 +70,12 @@ object ProfilesComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("Profiles").
-      initialState(State(profiles = List()))
-      .renderBackend[Backend]
-      .componentDidMount(c => DataManager.runtimeConfigsData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.runtimeConfigsData.removeObserver(c.backend))
-      .build
+  val Component = ScalaComponent.builder[NavigationInfo[MgmtPage]]("Profiles")
+    .initialState(State(profiles = List()))
+    .renderBackend[Backend]
+    .componentDidMount(c => Callback { DataManager.runtimeConfigsData.addObserver(c.backend)})
+    .componentWillUnmount(c => Callback { DataManager.runtimeConfigsData.removeObserver(c.backend)})
+    .build
+
+  def apply(n : NavigationInfo[MgmtPage]) = Component(n)
 }

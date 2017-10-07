@@ -9,7 +9,7 @@ val releaseProfile = Profile(
   build = BuildBase(
     plugins = Seq(
       Plugin(
-        "org.apache.maven.plugins" % "maven-source-plugin" % "2.4",
+        gav = Plugins.source,
         executions = Seq(
           Execution(
             id = "attach-sources-no-fork",
@@ -35,7 +35,7 @@ val releaseProfile = Profile(
         )
       ),
       Plugin(
-        "org.apache.maven.plugins" % "maven-gpg-plugin" % "1.6",
+        gav = Plugins.gpg,
         executions = Seq(
           Execution(
             id = "sign-artifacts",
@@ -47,7 +47,7 @@ val releaseProfile = Profile(
         )
       ),
       Plugin(
-        "net.alchim31.maven" % "scala-maven-plugin",
+        gav = Plugins.scala,
         executions = Seq(
           Execution(
             id = "attach-doc",
@@ -74,7 +74,24 @@ val genPomXmlProfile = Profile(
   id = "gen-pom-xml",
   activation = Activation(),
   build = BuildBase(
-    plugins = Seq(polyglotTranslatePlugin)
+    plugins = Seq(
+      // clean: remove generated pom.xml
+      Plugin(
+        Plugins.clean,
+        configuration = Config(
+          filesets = Config(
+            fileset = Config(
+              directory = "${basedir}",
+              includes = Config(
+                include = "pom.xml"
+              )
+            )
+          )
+        )
+      ),
+      // initialize: generate pom.xml 
+      polyglotTranslatePlugin
+    )
   )
 )
 
@@ -184,7 +201,7 @@ object BlendedModel {
 
   val defaultPlugins = Seq(
     Plugin(
-      "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.9.1",
+      gav = Plugins.buildHelper,
       executions = Seq(
         Execution(
           id = "add-scala-sources",
@@ -213,7 +230,7 @@ object BlendedModel {
       )
     ),
     Plugin(
-      "org.apache.maven.plugins" % "maven-enforcer-plugin" % "1.3.1",
+      gav = Plugins.enforcer,
       executions = Seq(
         Execution(
           id = "enforce-maven",
@@ -231,7 +248,7 @@ object BlendedModel {
       )
     ),
     Plugin(
-      "org.apache.maven.plugins" % "maven-compiler-plugin" % "3.5.1",
+      gav = Plugins.compiler,
       configuration = Config(
         source = "${java.version}",
         target = "${java.version}",
@@ -368,21 +385,6 @@ case class FeatureBundle(
   }
 }
 
-/**
- * Provide a copy method for non-case class [[Dependency]].
- */
-implicit class CopyDependency(d: Dependency) {
-  def copy(
-    gav: Gav = d.gav,
-    `type`: String = d.`type`,
-    classifier: Option[String] = d.classifier,
-    scope: Option[String] = d.scope,
-    systemPath: Option[String] = d.systemPath,
-    exclusions: immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional): Dependency =
-    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-}
-
 // Create the String content of a feature file from a sequence of FeatureBundles
 
 def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {
@@ -422,7 +424,7 @@ object Feature {
 
 def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
   Plugin(
-    gav = scalaMavenPlugin.gav,
+    gav = Plugins.scala,
     executions = Seq(
       Execution(
         id = "build-product",
@@ -454,79 +456,130 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
   )
 )
 
+object BlendedProfileResourcesContainer {
+  def apply(
+    gav: Gav,
+    properties: Map[String, String] = Map.empty) = {
+    
+    BlendedModel(
+      gav = gav,
+      packaging = "jar",
+      description = "Container Profile Resources " + gav.artifactId,
+      properties = properties,
+      plugins = Seq(
+        skipDefaultJarPlugin,
+        Plugin(
+          gav = Plugins.assembly,
+          executions = Seq(
+            Execution(
+              id = "assemble",
+              phase = "package",
+              goals = Seq("single")
+            )
+          ),
+          configuration = Config(
+            descriptors = Config(
+              descriptor = "src/main/assembly/resources.xml"
+            ),
+            appendAssemblyId = false
+          )
+        )
+      ))
+  }
+}
+
+/**
+ * Maven project factory for Blended Container projects.
+ *
+ * Expectations
+ * ** `src/main/resources/container` - Container files, will go into `<container>
+ * ** `src/main/resources/profile` - Profiles files, will go into `<container>/profiles/<name>/<version>`
+ * ** `src/main/assembly/full-nojre.xml` - Assembly config for a complete container archive as `.tar.gz` and `.zip`
+ * ** `src/main/assembly/resources.xml` - Assembly config for the resources-files of the container as `.zip`. This is essentially the content of `src/main/resources/profile`
+ * ** `src/main/assembly/product.xml` - Assembly config (TODO, check if corrent und document where it is used)
+ * ** `src/main/assembly/deploymentpack.xml` - Deploymentpack, used to deploy/register the profile into the management server
+ */
 object BlendedContainer {
 
   def apply(
     gav: Gav,
     description: String,
     properties: Map[String, String] = Map.empty,
-    features: immutable.Seq[Dependency] = Seq.empty) = BlendedModel(
-    gav = gav,
-    description = description,
-    packaging = "jar",
-    prerequisites = Prerequisites(
-      maven = "3.3.3"
-    ),
-    properties = Map(
-      "profile.name" -> gav.artifactId,
-      "profile.version" -> gav.version.get
-    ) ++ properties,
-    dependencies = features ++ Seq(Dependency(
-      blendedLauncher,
-      `type` = "zip",
-      classifier = "bin"
-    )),
-    plugins = Seq(
-      Plugin(
-        gav = blendedUpdaterMavenPlugin,
-        executions = Seq(
-          Execution(
-            id = "materialize-profile",
-            phase = "compile",
-            goals = Seq(
-              "materialize-profile"
-            ),
-            configuration = Config(
-              srcProfile = "${project.build.directory}/classes/profile/profile.conf",
-              destDir = "${project.build.directory}/classes/profile"
+    features: immutable.Seq[Dependency] = Seq.empty,
+    blendedProfileResouces: Gav = null) = {
+
+    BlendedModel(
+      gav = gav,
+      description = description,
+      packaging = "jar",
+      prerequisites = Prerequisites(
+        maven = "3.3.3"
+      ),
+      properties = Map(
+        "profile.name" -> gav.artifactId,
+        "profile.version" -> gav.version.get
+      ) ++ properties,
+      dependencies = features ++ Seq(
+        Dependency(
+          blendedLauncher,
+          `type` = "zip",
+          classifier = "bin"
+        )
+      ) ++
+        // the profile resources dep as ZIP file
+        Option(blendedProfileResouces).map(g => Dependency(gav = g, `type` = "zip")).toList,
+      plugins = Seq(
+        Plugin(
+          gav = blendedUpdaterMavenPlugin,
+          executions = Seq(
+            Execution(
+              id = "materialize-profile",
+              phase = "compile",
+              goals = Seq(
+                "materialize-profile"
+              ),
+              configuration = Config(
+                srcProfile = "${project.build.directory}/classes/profile/profile.conf",
+                destDir = "${project.build.directory}/classes/profile",
+                explodeResources = true
+              )
             )
           )
-        )
-      ),
-      Plugin(
-        gav = mavenDependencyPlugin,
-        executions = Seq(
-          Execution(
-            id = "unpack-launcher",
-            phase = "compile",
-            goals = Seq(
-              "unpack"
-            ),
-            configuration = Config(
-              artifactItems = Config(
-                artifactItem = Config(
-                  groupId = "${project.groupId}",
-                  artifactId = "blended.launcher",
-                  classifier = "bin",
-                  `type` = "zip",
-                  outputDirectory = "${project.build.directory}/launcher"
+        ),
+        Plugin(
+          gav = Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "unpack-launcher",
+              phase = "compile",
+              goals = Seq(
+                "unpack"
+              ),
+              configuration = Config(
+                artifactItems = Config(
+                  artifactItem = Config(
+                    groupId = "${project.groupId}",
+                    artifactId = "blended.launcher",
+                    classifier = "bin",
+                    `type` = "zip",
+                    outputDirectory = "${project.build.directory}/launcher"
+                  )
                 )
               )
             )
           )
-        )
-      ),
-      Plugin(
-        gav = scalaMavenPlugin.gav,
-        executions = Seq(
-          Execution(
-            id = "build-product",
-            phase = "generate-resources",
-            goals = Seq(
-              "script"
-            ),
-            configuration = Config(
-              script = scriptHelper + """
+        ),
+        Plugin(
+          gav = Plugins.scala,
+          executions = Seq(
+            Execution(
+              id = "build-product",
+              phase = "generate-resources",
+              goals = Seq(
+                "script"
+              ),
+              configuration = Config(
+                script = scriptHelper + """
   import java.io.File
 
   // make launchfile
@@ -545,49 +598,42 @@ object BlendedContainer {
   val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
   ScriptHelper.writeFile(baseConfFile, "overlays = []")
   """
-            )
-          )
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-assembly-plugin",
-        executions = Seq(
-          Execution(
-            id = "assemle",
-            phase = "package",
-            goals = Seq(
-              "single"
+              )
             )
           )
         ),
-        configuration = Config(
-          descriptors = Config(
-            descriptor = "src/main/assembly/full-nojre.xml",
-            descriptor = "src/main/assembly/product.xml"
+        Plugin(
+          gav = Plugins.assembly,
+          executions = Seq(
+            Execution(
+              id = "assemble",
+              phase = "package",
+              goals = Seq(
+                "single"
+              )
+            )
+          ),
+          configuration = Config(
+            tarLongFileMode = "gnu",
+            descriptors = Config(
+              descriptor = "src/main/assembly/full-nojre.xml",
+              descriptor = "src/main/assembly/product.xml",
+              descirptor = "src/main/assembly/deploymentpack.xml"
+            )
           )
-        )
-      ),
-      Plugin(
-        "org.apache.maven.plugins" % "maven-jar-plugin" % "2.6",
-        executions = Seq(
-          Execution(
-            id = "default-jar",
-            phase = "none"
-          )
-        )
-      ),
-      Plugin(
-        "org.sonatype.plugins" % "nexus-staging-maven-plugin",
-        configuration = Config(
-          skipNexusStagingDeployMojo = "true"
-        )
+        ),
+        skipDefaultJarPlugin,
+        skipNexusStagingPlugin
       )
     )
-  )
+
+  }
+
 }
 
-// The blended docker container template 
-
+/**
+ * The blended docker container template.
+ */
 object BlendedDockerContainer {
   def apply(
     gav: Gav,
@@ -610,7 +656,7 @@ object BlendedDockerContainer {
 
     plugins = Seq(
       Plugin(
-        "org.apache.maven.plugins" % "maven-dependency-plugin",
+        Plugins.dependency,
         executions = Seq(
           Execution(
             id = "extract-blended-container",
@@ -626,7 +672,7 @@ object BlendedDockerContainer {
         )
       ),
       Plugin(
-        gav = scalaMavenPlugin.gav,
+        gav = Plugins.scala,
         executions = Seq(
           Execution(
             id = "prepare-docker",

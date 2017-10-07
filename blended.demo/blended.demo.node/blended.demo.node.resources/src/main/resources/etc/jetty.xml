@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//
+DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
+
+<Configure class="org.eclipse.jetty.server.Server">
+
+  <!-- Initialize the MBeanServer -->
+  <Call id="jettyMBeanServer" class="java.lang.management.ManagementFactory" name="getPlatformMBeanServer"/>
+
+  <!-- Create the MBean Container -->
+  <New id="MBeanContainer" class="org.eclipse.jetty.jmx.MBeanContainer">
+    <Arg>
+      <Ref id="jettyMBeanServer"/>
+    </Arg>
+    <Call name="start"/>
+  </New>
+
+  <!-- Add the Container to the Jetty Server -->
+  <Call name="addBean">
+    <Arg>
+      <Ref id="MBeanContainer"/>
+    </Arg>
+    <Arg type="boolean">true</Arg>
+  </Call>
+
+  <Get id="Container" name="container">
+    <Call name="addEventListener">
+      <Arg>
+        <Ref id="MBeanContainer"/>
+      </Arg>
+    </Call>
+  </Get>
+
+  <!-- Add the static log -->
+  <Ref id="MBeanContainer">
+    <Call name="addBean">
+      <Arg>
+        <New class="org.eclipse.jetty.util.log.Log"/>
+      </Arg>
+    </Call>
+  </Ref>
+
+  <!-- =========================================================== -->
+  <!-- Set connectors                                              -->
+  <!-- =========================================================== -->
+  <!-- One of each type!                                           -->
+  <!-- =========================================================== -->
+
+  <!--
+       !!WARNING!! We use a blocking instead of a selector connector here to
+       make the default configuration avoid the jetty issue 357318. If you're
+       sure that the JDK/JRE you're usign does not face that issue feel free
+       to change that back but please make sure that you've read the Jetty
+       bug and make sure that it does not affect you first! !! WARNING!!
+  -->
+  <Call name="addConnector">
+    <Arg>
+      <New class="org.eclipse.jetty.server.nio.SelectChannelConnector">
+        <Set name="port">
+          <Property name="org.osgi.service.http.port" default="8181"/>
+        </Set>
+        <Set name="maxIdleTime">300000</Set>
+        <Set name="Acceptors">5</Set>
+        <Set name="statsOn">false</Set>
+        <Set name="confidentialPort">9999</Set>
+      </New>
+    </Arg>
+  </Call>
+
+</Configure>

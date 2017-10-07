@@ -1,21 +1,10 @@
 package blended.mgmt.ui.components
 
-import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.BackendScope
-import blended.updater.config.OverlayState
-import blended.updater.config.Profile
-import blended.updater.config.OverlaySet
-import japgolly.scalajs.react.CallbackTo
-import blended.mgmt.ui.backend.ProfileUpdater
-import blended.updater.config.ActivateProfile
-import blended.updater.config.UpdateAction
-import blended.updater.config.StageProfile
-import blended.updater.config.Profile.SingleProfile
+import blended.mgmt.ui.backend.ProfileUpdateAction
+import blended.mgmt.ui.util.{DisplayHelper, I18n, Logger}
+import blended.updater.config._
+import japgolly.scalajs.react._
+import vdom.html_<^._
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -25,11 +14,11 @@ object ContainerDetailComp {
   private[this] val log = Logger[ContainerDetailComp.type]
   private[this] val i18n = I18n()
 
-  case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdater] = None)
+  case class Props(containerInfo: Option[ContainerInfo] = None, profileUpdater: Option[ProfileUpdateAction] = None)
 
   class Backend(scope: BackendScope[Props, Unit]) {
 
-    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEventI) = {
+    def sendUpdateAction(updateActions: UpdateAction*)(event: ReactEvent): Callback = {
       scope.props.map { p =>
         p.containerInfo match {
           case Some(ci) =>
@@ -45,15 +34,15 @@ object ContainerDetailComp {
       }
     }
 
-    def activateProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def activateProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       sendUpdateAction(ActivateProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def resolveProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def resolveProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       sendUpdateAction(StageProfile(profile.name, profile.version, profile.overlays))(event)
     }
 
-    def deleteProfile(profile: SingleProfile)(event: ReactEventI) = {
+    def deleteProfile(profile: SingleProfile)(event: ReactEvent): Callback = {
       CallbackTo {
         log.trace(s"Unimplemented callback: delete profile ${profile}")
       }
@@ -64,65 +53,50 @@ object ContainerDetailComp {
         case Props(None, _) => <.span(i18n.tr("No Container selected"))
         case Props(Some(containerInfo), profileUpdater) =>
 
-          val props = containerInfo.properties.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
+          val props = DataTable.fromProperties(
+            panelHeading = Some("Container Properties"),
+            content = containerInfo.properties
+          )
 
           val profiles = containerInfo.profiles.flatMap(_.toSingle).map { profile =>
 
-            val genTitle = if (profile.overlays.isEmpty) i18n.tr("without overlays") else profile.overlays.mkString(", ")
+            val genTitle : String = DisplayHelper.profileToString(profile)
 
             <.div(
-              ^.`class` := profile.state.toString,
-              s"${profile.name}-${profile.version} ${genTitle} ",
+              ^.cls := profile.state.toString,
+              DisplayHelper.profileToString(profile),
               <.span(
-                profile.overlaySet.reason.isDefined ?= (^.title := s"${profile.state}: ${profile.overlaySet.reason.get}"),
+                (^.title := s"${profile.state}: ${profile.overlaySet.reason.getOrElse("")}").when(profile.overlaySet.reason.isDefined),
                 s"(${profile.state})"
               ),
               " ",
-              profile.state != OverlayState.Active ?= <.button(
+              <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.cls := "btn btn-default btn-xs",
+                (^.disabled := true).when(profileUpdater.isEmpty || profile.state != OverlayState.Valid),
                 ^.onClick ==> activateProfile(profile),
                 i18n.tr("Activate")
-              ),
+              ).when(profile.state != OverlayState.Active),
               " ",
-              profile.state != OverlayState.Active ?= <.button(
+              <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.cls := "btn btn-default btn-xs",
+                (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> deleteProfile(profile),
                 i18n.tr("Delete")
-              ),
+              ).when(profile.state != OverlayState.Active),
               " ",
-              profile.state == OverlayState.Invalid ?= <.button(
+              <.button(
                 ^.`type` := "button",
-                ^.`class` := "btn btn-default btn-xs",
-                profileUpdater.isEmpty ?= (^.disabled := "disabled"),
+                ^.cls := "btn btn-default btn-xs",
+                (^.disabled := true).when(profileUpdater.isEmpty),
                 ^.onClick ==> resolveProfile(profile),
                 i18n.tr("Try to Resolve")
-              )
+              ).when(profile.state == OverlayState.Invalid)
             )
           }
 
-          val services = containerInfo.serviceInfos.map { serviceInfo =>
-
-            val sProps = serviceInfo.props.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
-
-            <.div(
-              <.div(
-                i18n.tr("Service: "),
-                serviceInfo.name
-              ),
-              <.div(
-                i18n.tr("Type: "),
-                serviceInfo.serviceType
-              ),
-              <.div(
-                i18n.tr("Properties: "),
-                <.div(sProps: _*)
-              )
-            )
-          }
+          val services = containerInfo.serviceInfos.map { info => <.div(ServiceInfoComp.Component(info)) }
 
           <.div(
             <.h2(
@@ -130,16 +104,21 @@ object ContainerDetailComp {
               " ",
               containerInfo.containerId
             ),
+            props,
             <.div(
-              i18n.tr("Properties:"),
-              <.div(props: _*)
+              ^.cls := "panel panel-default",
+              <.div(
+                ^.cls := "panel-heading",
+                i18n.tr("Profiles:")
+              ),
+              <.div(
+                ^.cls := "panel-body",
+                TagMod(profiles: _*)
+              )
             ),
             <.div(
-              i18n.tr("Profiles:"),
-              <.div(profiles: _*)
-            ),
-            <.div(
-              i18n.tr("Services:"),
+              ^.cls := "panel panel-default",
+              <.h2(i18n.tr("Container Services:")),
               <.div(services: _*)
             )
           )
@@ -148,8 +127,7 @@ object ContainerDetailComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Props]("ContainerDetail")
-      .renderBackend[Backend]
-      .build
+  val Component = ScalaComponent.builder[Props]("ContainerDetail")
+    .renderBackend[Backend]
+    .build
 }

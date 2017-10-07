@@ -6,56 +6,24 @@ import javax.management.ObjectName
 
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import blended.akka.OSGIActorConfig
 import blended.jms.utils.internal._
-import com.typesafe.config.Config
 import org.osgi.framework.BundleContext
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
 
 trait IdAwareConnectionFactory extends ConnectionFactory {
-  def clientId() : String
-}
-
-object BlendedSingleConnectionFactory {
-
-  def apply(cfg: Config, vendor: String, provider: String, cf : ConnectionFactory, clientId: String)(implicit system: ActorSystem) =
-    new BlendedSingleConnectionFactory(cfg, cf, vendor, provider, system, clientId, None, true)
-
-  def apply(
-    osgiCfg: OSGIActorConfig,
-    cfCfg : Config,
-    cf: ConnectionFactory,
-    vendor : String,
-    provider: String,
-    enabled: Boolean
-  )(implicit system: ActorSystem) : BlendedSingleConnectionFactory = {
-    val config = BlendedJMSConnectionConfig(cfCfg)
-    val clientId = osgiCfg.idSvc.resolvePropertyString(config.clientId)
-    new BlendedSingleConnectionFactory(
-      cfg = cfCfg,
-      cf = cf,
-      vendor = vendor,
-      provider = provider,
-      system = system,
-      cId = clientId,
-      bundleContext = Some(osgiCfg.bundleContext),
-      enabled = enabled
-    )
-  }
+  val clientId : String
 }
 
 class BlendedSingleConnectionFactory(
-  cfg : Config,
-  cf: ConnectionFactory,
-  vendor: String,
-  provider : String,
+  config : BlendedJMSConnectionConfig,
   system: ActorSystem,
-  cId : String,
-  bundleContext : Option[BundleContext],
-  enabled : Boolean
+  bundleContext : Option[BundleContext]
 ) extends IdAwareConnectionFactory {
+
+  private[this] val vendor = config.vendor
+  private[this] val provider = config.provider
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
@@ -64,16 +32,20 @@ class BlendedSingleConnectionFactory(
   private[this] val monitorName = s"Monitor-$vendor-$provider"
   private[this] val stateMgrName = s"JMS-$vendor-$provider"
 
-  private[this] val config = BlendedJMSConnectionConfig(cfg)
+  val holder = new ConnectionHolder(
+    config = config,
+    system = system,
+    bundleContext = bundleContext
+  )
 
-  val holder = new ConnectionHolder(vendor, provider, cf, system)
+  private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
 
   private[this] val actor =
-    if (enabled) {
+    if (cfEnabled) {
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
         val jmxServer = ManagementFactory.getPlatformMBeanServer()
-        val jmxBean = new ConnectionMonitor(provider, cId)
+        val jmxBean = new ConnectionMonitor(provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
         jmxServer.registerMBean(jmxBean, objName)
@@ -85,7 +57,7 @@ class BlendedSingleConnectionFactory(
 
       val monitor = system.actorOf(ConnectionStateMonitor.props(bundleContext, mbean), monitorName)
       log.info(s"Connection State Monitor [$stateMgrName] created.")
-      Some(system.actorOf(ConnectionStateManager.props(cfg, monitor, holder, cId), stateMgrName))
+      Some(system.actorOf(ConnectionStateManager.props(config, monitor, holder), stateMgrName))
     } else {
       log.info(s"Connection State Monitor [$stateMgrName] is disabled by config setting.")
       None
@@ -96,7 +68,7 @@ class BlendedSingleConnectionFactory(
   @throws[JMSException]
   override def createConnection(): Connection = {
 
-    if (enabled) {
+    if (cfEnabled) {
       try {
         holder.getConnection() match {
           case Some(c) => c
@@ -119,5 +91,5 @@ class BlendedSingleConnectionFactory(
     createConnection()
   }
 
-  override def clientId() : String = cId
+  override val clientId : String = config.clientId
 }

@@ -18,6 +18,7 @@ import scala.util.{ Failure, Try }
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.config.Profile
 import blended.updater.config.ProfileInfo
+import akka.actor.Actor
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -38,29 +39,31 @@ import blended.updater.config.ProfileInfo
  * The target URL of the management container is configured with the `registryUrl` config entry.
  *
  */
-class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickleSupport {
+trait MgmtReporter extends Actor with SprayPrickleSupport {
 
   import MgmtReporter._
 
   ////////////////////
-  // MUTABLE
-  private[this] var ticker: Option[Cancellable] = None
-  private[this] var serviceInfos: Map[String, ServiceInfo] = Map()
-  private[this] var profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
+  // ABSTRACT
+  protected val config: Try[MgmtReporterConfig]
+  //
+  protected def createContainerInfo: ContainerInfo
   ////////////////////
 
-  private[this] val log = LoggerFactory.getLogger(classOf[MgmtReporter])
+  ////////////////////
+  // MUTABLE
+  private[this] var _ticker: Option[Cancellable] = None
+  private[this] var _serviceInfos: Map[String, ServiceInfo] = Map()
+  private[this] var _profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
+  ////////////////////
 
-  implicit private[this] val eCtxt = context.system.dispatcher
-  private[this] val idSvc = cfg.idSvc
-  private[this] val config: Try[MgmtReporterConfig] = MgmtReporterConfig.fromConfig(cfg.config) match {
-    case f @ Failure(e) =>
-      log.warn("Incomplete management reporter config. Disabled connection to management server.", e)
-      f
-    case x =>
-      log.info("Management reporter config: {}", x)
-      x
-  }
+  private[this] lazy val log = LoggerFactory.getLogger(classOf[MgmtReporter])
+
+  implicit private[this] lazy val eCtxt = context.system.dispatcher
+
+  protected def serviceInfos: Map[String, ServiceInfo] = _serviceInfos
+
+  protected def profileInfo: ProfileInfo = _profileInfo
 
   override def preStart(): Unit = {
     super.preStart()
@@ -70,7 +73,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
         log.warn("Inapropriate timing configuration detected. Disabling automatic container status reporting")
       } else {
         log.info("Activating automatic container status reporting with update interval [{}]", config.updateIntervalMsec)
-        ticker = Some(context.system.scheduler.schedule(config.initialUpdateDelayMsec.milliseconds, config.updateIntervalMsec.milliseconds, self, Tick))
+        _ticker = Some(context.system.scheduler.schedule(config.initialUpdateDelayMsec.milliseconds, config.updateIntervalMsec.milliseconds, self, Tick))
       }
     }
 
@@ -81,8 +84,8 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
   override def postStop(): Unit = {
     context.system.eventStream.unsubscribe(context.self)
 
-    ticker.foreach(_.cancel())
-    ticker = None
+    _ticker.foreach(_.cancel())
+    _ticker = None
 
     super.postStop()
   }
@@ -91,8 +94,8 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
 
     case Tick =>
       config.foreach { config =>
-        val info = ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis())
-        log.info("Performing report [{}].", info)
+        val info = createContainerInfo
+        log.debug("Performing report [{}].", info)
         val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
           sendReceive ~> unmarshal[ContainerRegistryResponseOK]
         }
@@ -100,7 +103,7 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
       }
 
     case ContainerRegistryResponseOK(id, actions) =>
-      log.info("Reported [{}] to management node", id)
+      log.debug("Reported [{}] to management node", id)
       if (!actions.isEmpty) {
         log.info("Received {} update actions from management node: {}", actions.size, actions)
         actions.foreach { action =>
@@ -112,15 +115,15 @@ class MgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with SprayPrickl
     // from event stream
     case serviceInfo @ ServiceInfo(name, svcType, ts, lifetime, props) =>
       log.debug("Update service info for: {}", name)
-      serviceInfos += name -> serviceInfo
+      _serviceInfos += name -> serviceInfo
 
     // from event stream
     case pi @ ProfileInfo(timestamp, _) =>
-      if (timestamp > profileInfo.timeStamp) {
+      if (timestamp > _profileInfo.timeStamp) {
         log.debug("Update profile info to:  {}", pi)
-        profileInfo = pi
+        _profileInfo = pi
       } else {
-        log.debug("Ingnoring profile info with timestamp [{}] which is older than [{}]: {}", Array[Object](timestamp.underlying(), profileInfo.timeStamp.underlying(), pi): _*)
+        log.debug("Ingnoring profile info with timestamp [{}] which is older than [{}]: {}", Array[Object](timestamp.underlying(), _profileInfo.timeStamp.underlying(), pi): _*)
       }
   }
 }
@@ -147,5 +150,4 @@ object MgmtReporter {
 
   case object Tick
 
-  def props(cfg: OSGIActorConfig): Props = Props(new MgmtReporter(cfg))
 }

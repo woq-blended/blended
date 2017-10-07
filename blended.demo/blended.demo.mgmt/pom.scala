@@ -9,12 +9,13 @@ import scala.collection.immutable.Seq
 BlendedContainer(
   gav = blendedDemoMgmt,
   description = "A sample management container for the blended launcher.",
+  blendedProfileResouces = blendedDemoMgmtResources,
   features = Seq(
     Feature("blended-base"),
     Feature("blended-commons"),
     Feature("blended-http"),
     Feature("blended-jetty"),
-    Feature("blended-jaxrs"),
+    //Feature("blended-jaxrs"),
     Feature("blended-security"),
     Feature("blended-spray"),
     Feature("blended-hawtio"),
@@ -25,8 +26,5 @@ BlendedContainer(
     Feature("blended-samples"),
     Feature("blended-mgmt-client"),
     Feature("blended-mgmt-server")
-  ),
-  properties = Map(
-    "spray.version" -> BlendedVersions.sprayVersion
   )
 )

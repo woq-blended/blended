@@ -2,34 +2,27 @@ package blended.updater.config
 
 import java.io._
 import java.net.URL
-import java.nio.file.{ Files, Paths, StandardCopyOption }
-import java.security.{ DigestInputStream, MessageDigest }
-import java.util.{ Formatter, Properties }
+import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.security.{DigestInputStream, MessageDigest}
+import java.util.{Formatter, Properties}
 
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import blended.updater.config.util.ConfigPropertyMapConverter
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
 
-import scala.collection.JavaConverters.{ asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter }
-import scala.util.{ Success, Try }
+import scala.collection.JavaConverters.{asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.{Success, Try}
 import scala.util.control.NonFatal
 
 object RuntimeConfigCompanion {
 
   def read(config: Config): Try[RuntimeConfig] = Try {
 
+    val getProperties : String => Map[String, String] =
+      key => ConfigPropertyMapConverter.getKeyAsPropertyMap(config, key, Some(() => Map.empty))
+
     val optionals = ConfigFactory.parseResources(getClass(), "RuntimeConfig-optional.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     val reference = ConfigFactory.parseResources(getClass(), "RuntimeConfig-reference.conf", ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
     config.withFallback(optionals).checkValid(reference)
-
-    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-      if (default.isDefined && !config.hasPath(key)) {
-        default.get.apply()
-      } else {
-        config.getConfig(key).entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap
-      }
-
-    val properties = configAsMap("properties", Some(() => Map()))
 
     RuntimeConfig(
       name = config.getString("name"),
@@ -40,9 +33,9 @@ object RuntimeConfigCompanion {
         else List.empty,
       startLevel = config.getInt("startLevel"),
       defaultStartLevel = config.getInt("defaultStartLevel"),
-      properties = properties,
-      frameworkProperties = configAsMap("frameworkProperties", Some(() => Map())),
-      systemProperties = configAsMap("systemProperties", Some(() => Map())),
+      properties = getProperties("properties"),
+      frameworkProperties = getProperties("frameworkProperties"),
+      systemProperties = getProperties("systemProperties"),
       features =
         if (config.hasPath("features"))
           config.getObjectList("features").asScala.map { f =>
@@ -62,15 +55,18 @@ object RuntimeConfigCompanion {
 
 
   def toConfig(runtimeConfig: RuntimeConfig): Config = {
+
+    val propCfg : Map[String, String] => ConfigValue = m => ConfigPropertyMapConverter.propertyMapToConfigValue(m)
+
     val config = Map(
       "name" -> runtimeConfig.name,
       "version" -> runtimeConfig.version,
       "bundles" -> runtimeConfig.bundles.map(BundleConfigCompanion.toConfig).map(_.root().unwrapped()).asJava,
       "startLevel" -> runtimeConfig.startLevel,
       "defaultStartLevel" -> runtimeConfig.defaultStartLevel,
-      "properties" -> runtimeConfig.properties.asJava,
-      "frameworkProperties" -> runtimeConfig.frameworkProperties.asJava,
-      "systemProperties" -> runtimeConfig.systemProperties.asJava,
+      "properties" -> propCfg(runtimeConfig.properties),
+      "frameworkProperties" -> propCfg(runtimeConfig.frameworkProperties),
+      "systemProperties" -> propCfg(runtimeConfig.systemProperties),
       "features" -> runtimeConfig.features.map(FeatureRefCompanion.toConfig).map(_.root().unwrapped()).asJava,
       "resources" -> runtimeConfig.resources.map(ArtifactCompanion.toConfig).map(_.root().unwrapped()).asJava,
       "resolvedFeatures" -> runtimeConfig.resolvedFeatures.map(FeatureConfigCompanion.toConfig).map(_.root().unwrapped()).asJava

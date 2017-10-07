@@ -1,12 +1,10 @@
 package blended.mgmt.ui.components
 
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
+import japgolly.scalajs.react._
+import japgolly.scalajs.react.vdom.html_<^._
+import blended.mgmt.ui.util.{FormHelper, I18n, Logger}
 import blended.mgmt.ui.components.filter.Filter
 import blended.updater.config.ContainerInfo
-import blended.mgmt.ui.util.Logger
 import japgolly.scalajs.react.Callback
 import japgolly.scalajs.react.BackendScope
 import blended.mgmt.ui.components.filter.ContainerInfoFilter
@@ -36,7 +34,7 @@ object ContainerInfoFilterComp {
 
   class Backend(scope: BackendScope[Props, State]) {
 
-    def onSubmit(e: ReactEventI): Callback = {
+    def onSubmit(e: ReactEvent): Callback = {
       log.trace("onSubmit: " + e)
       e.preventDefaultCB >>
         scope.state.flatMap { s =>
@@ -46,27 +44,28 @@ object ContainerInfoFilterComp {
         }
     }
 
-    def onSearchTextChange(e: ReactEventI): Callback = {
+    def onSearchTextChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("search text: " + v)
         scope.modState(_.copy(searchText = v))
       }
     }
 
-    def onContainerIdChange(e: ReactEventI): Callback = {
+    def onContainerIdChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("container ID: " + v)
         scope.modState(_.copy(containerId = v))
       }
     }
-    def onPropertyNameChange(e: ReactEventI): Callback = {
+
+    def onPropertyNameChange(e: ReactEventFromInput): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("property name: " + v)
         scope.modState(_.copy(propertyName = v))
       }
     }
 
-    def onPropertyValueChange(e: ReactEventI): Callback = {
+    def onPropertyValueChange(e: ReactEventFromTextArea): Callback = {
       e.extract(_.target.value) { v =>
         log.trace("property value: " + v)
         scope.modState(_.copy(propertyValue = v))
@@ -83,51 +82,76 @@ object ContainerInfoFilterComp {
       //        filters.collect {
       //          case ContainerInfoFilter.
       //        }}
-      <.form(
-        ^.onSubmit ==> onSubmit,
+      <.div(
+        ^.cls := "panel panel-default",
         <.div(
-          <.span(i18n.tr("Search")),
-          <.input(
-            ^.`type` := "text",
-            ^.value := state.searchText,
-            ^.onChange ==> onSearchTextChange
+          ^.cls := "panel-heading",
+          <.h3(i18n.tr("Container Filter"))
+        ),
+        <.div(
+          ^.cls := "panel-body",
+          <.form(
+            ^.onSubmit ==> onSubmit,
+            FormHelper.input(
+              id = "searchText",
+              label = "Search",
+              value = state.searchText,
+              inputType = "text",
+              changeCallback = { e : ReactEventFromTextArea => onSearchTextChange(e) }
+            ),
+            FormHelper.input(
+              id = "containerId",
+              label = "Container ID",
+              value = state.containerId,
+              inputType = "text",
+              changeCallback = { e : ReactEventFromTextArea => onContainerIdChange(e) }
+            ),
+            <.div(
+              ^.cls := "form-group row",
+              <.div(
+                ^.cls := "col-sm-2",
+                <.label(
+                  ^.`for` := "propValue",
+                  ^.cls := " col-form-label",
+                  i18n.tr("Property")
+                ),
+                <.select(
+                  (Seq(^.onChange ==> onPropertyNameChange) ++
+                    propKeys.map(p => <.option(^.value := p,
+                      // TODO: help needed here, don't know how to apply the "selected" option
+                      //                  (state.propertyName == p) ?= ^.selected := "selected",
+                      p))
+                    ): _*
+                )
+              ),
+              <.div(
+                ^.cls := "col-sm-10",
+                <.input(
+                  ^.id := "propValue",
+                  ^.`type` := "text",
+                  ^.cls := "form-control",
+                  // ^.list := "propvalues",
+                  ^.value := state.propertyValue,
+                  ^.onChange ==> onPropertyValueChange
+                ) // ,
+              )
+
+            ),
+            <.div(
+              ^.cls := "form-group row",
+              <.input(
+                ^.`type` := "submit",
+                ^.cls := "btn btn-primary pull-right ",
+                ^.value := "Filter"
+              )
+            )
           )
-        ),
-        <.div(
-          <.span(i18n.tr("Container ID")),
-          <.input(
-            ^.`type` := "text",
-            ^.value := state.containerId,
-            ^.onChange ==> onContainerIdChange
-          )
-        ),
-        <.div(
-          <.span(i18n.tr("Property")),
-          <.select(
-            (Seq(^.onChange ==> onPropertyNameChange) ++
-              propKeys.map(p => <.option(^.value := p,
-                // TODO: help needed here, don't know how to apply the "selected" option
-                //                  (state.propertyName == p) ?= ^.selected := "selected", 
-                p))
-            ): _*
-          ),
-          <.input(
-            ^.`type` := "text",
-            // ^.list := "propvalues",
-            ^.value := state.propertyValue,
-            ^.onChange ==> onPropertyValueChange
-          ) // ,
-        // <.datalist(^.id := "propvalues")
-        ),
-        <.input(
-          ^.`type` := "submit",
-          ^.value := "Filter"
         )
       )
     }
   }
 
-  val Component = ReactComponentB[Props]("ContainerEditFilter")
+  val Component = ScalaComponent.builder[Props]("ContainerEditFilter")
     .initialState(State())
     .backend(new Backend(_))
     .renderBackend

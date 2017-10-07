@@ -6,6 +6,10 @@
     </layout>
   </appender>
 
+  <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="FILE" />
+  </appender>
+
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
     <layout class="ch.qos.logback.classic.PatternLayout">
       <Pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</Pattern>
@@ -25,6 +29,6 @@
   <logger name="org.ops4j.pax.web" level="debug" />
 
   <root level="info">
-    <appender-ref ref="FILE" />
+    <appender-ref ref="ASYNC_FILE" />
   </root>
 </configuration>

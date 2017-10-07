@@ -11,6 +11,7 @@ import blended.security.spray.BlendedSecuredRoute
 
 import scala.collection.immutable
 import scala.concurrent.duration._
+import spray.routing.ValidationRejection
 import spray.http.HttpHeader
 import spray.http.HttpHeaders
 import spray.http.AllOrigins
@@ -21,14 +22,17 @@ trait CollectorService
   this: SprayPrickleSupport =>
 
   override val httpRoute: Route =
-    collectorRoute ~
-      infoRoute ~
-      versionRoute ~
-      runtimeConfigRoute ~
-      overlayConfigRoute ~
-      updateActionRoute
+    respondWithSingletonHeader(HttpHeaders.`Access-Control-Allow-Origin`(AllOrigins)) {
+      collectorRoute ~
+        infoRoute ~
+        versionRoute ~
+        runtimeConfigRoute ~
+        overlayConfigRoute ~
+        updateActionRoute ~
+        rolloutProfileRoute
+    }
 
-  private[this] val log = LoggerFactory.getLogger(classOf[CollectorService])
+  private[this] lazy val log = LoggerFactory.getLogger(classOf[CollectorService])
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
@@ -51,6 +55,13 @@ trait CollectorService
 
   def version: String
 
+  def findMissingOverlayRef(configs: immutable.Seq[OverlayRef]): Option[OverlayRef] =
+    if (configs.isEmpty) None
+    else {
+      val ocs = getOverlayConfigs()
+      configs.find(c => !ocs.exists(oc => oc.name == c.name && oc.version == c.name))
+    }
+
   def versionRoute: Route = {
     path("version") {
       get {
@@ -61,9 +72,7 @@ trait CollectorService
     }
   }
 
-  def jsonReponse =
-    respondWithHeader(HttpHeaders.`Access-Control-Allow-Origin`(AllOrigins)) &
-      respondWithMediaType(MediaTypes.`application/json`)
+  def jsonReponse = respondWithMediaType(MediaTypes.`application/json`)
 
   def collectorRoute: Route = {
 
@@ -147,6 +156,43 @@ trait CollectorService
         }
       }
     }
+  }
+
+  def rolloutProfileRoute: Route = {
+    path("rollout" / "profile") {
+      post {
+        requirePermission("profile:update") {
+          entity(as[RolloutProfile]) { rolloutProfile =>
+            // check existence of profile
+            getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
+              case None =>
+                reject(ValidationRejection(s"Unknown profile ${rolloutProfile.profileName} ${rolloutProfile.profileVersion}"))
+              case _ =>
+                // check existence of overlays
+                findMissingOverlayRef(rolloutProfile.overlays) match {
+                  case Some(r) => 
+                    reject(ValidationRejection(s"Unknown vverlay ${r.name} ${r.version}"))
+                  case None =>
+                    // all ok, complete
+                    complete {
+                      log.debug("looks good, rollout can continue")
+                      rolloutProfile.containerIds.foreach { containerId =>
+                        addUpdateAction(
+                          containerId = containerId,
+                          updateAction = StageProfile(
+                            profileName = rolloutProfile.profileName,
+                            profileVersion = rolloutProfile.profileVersion,
+                            overlays = rolloutProfile.overlays))
+                      }
+                      s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
+                    }
+                }
+            }
+          }
+        }
+      }
+    }
+
   }
 
 }

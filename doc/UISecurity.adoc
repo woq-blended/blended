@@ -1,0 +1,100 @@
+= UI Security
+
+== Basic concept (Client)
+
+Blended uses Json Web Tokens (JWT) to implement the client side security within it's
+management console. As long as there is no token available within the client app,
+the user is not considered to logged in and all requests to secured pages
+will be redirected to a login page.
+
+== Basic concept (Server)
+
+The server will provide a login service as a REST service that can be used
+from the client side. Upon a successful login the server will respond with
+a JWT.
+
+The login needs the following details:
+
+  - username
+  - password
+  - list of required permissions
+
+The resulting JWT contain in it's claims all permissions that are actually
+granted to the user.
+
+****
+For example, if the client would require profile-read and profile-write as paermissions,
+but the user would have only profile-read granted, the resulting JWT
+would only include profile-read in it's claims.
+****
+
+The server would memorize all tokens handed out to clients. The clients
+will pass their token in the Authentication header of any REST calls issued.
+It is then the responsibility of the server to determine whether the token is
+valid and the user has the permission to execute the call.
+
+== Implementation (Server)
+
+=== Login Service
+
+The server will authenticate the user with the given username and password
+using the Shiro security manager. It will then use the configured shiro
+permissions to determine which permission shall be added as claims to
+the token.
+
+=== Token Authenticator
+
+The token authenticator will be used from within any secured REST route.
+It will determine whether the token is valid and if so, whether the user
+has the permission to execute the REST call.
+
+== Implementation (Client)
+
+The client will use the login service to login into the application,
+the claims within the JWT may restrict the pages the user can navigate
+to or the content actually displayed. The information required to determine
+what the user may see, must be included in the JWT.
+
+Whenever client issues a request to a secured REST endpoint, it will
+include the JWT in the Authentication header of the call. This will
+avoid that the password is transmitted over the wire again and again.
+
+https://github.com/jwtk/jjwt[JJWT home page]
+
+https://github.com/jwtk/njwt[NJWT home page]
+
+https://github.com/jwtk/jjwt/issues/131[Using private / public keys in JJWT]
+
+== Implementation notes
+
+=== Generate the keystore in blended.demo.mgmt resources
+
+- Keystore password: SoU8MzmyxNmNhqg1
+- Private key password: VGSJA94MOklhavlJ
+
+....
+22:51 $ keytool -genkey -keyalg RSA -alias jwtkey -keystore blended-mgmt.jks -storepass SoU8MzmyxNmNhqg1 -validity 360 -keysize 2048
+What is your first and last name?
+  [Unknown]:  Blended Management Server
+What is the name of your organizational unit?
+  [Unknown]:  Blended
+What is the name of your organization?
+  [Unknown]:  WoQ - Way of Quality GmbH
+What is the name of your City or Locality?
+  [Unknown]:  Regensburg
+What is the name of your State or Province?
+  [Unknown]:  Bavaria
+What is the two-letter country code for this unit?
+  [Unknown]:  DE
+Is CN=Blended Management Server, OU="Blended ", O=WoQ - Way of Quality GmbH, L="Regensburg ", ST="Bavaria ", C=DE correct?
+  [no]:  yes
+
+Enter key password for <jwtkey>
+	(RETURN if same as keystore password):
+Re-enter new password:
+✔ ~/projects/blended/blended.demo/blended.demo.mgmt/blended.demo.mgmt.resources/src/main/resources/etc [master|✚ 1…1]
+....
+
+On the server side, use the "jwtkey" certificate to create a signed JWT.
+
+See https://github.com/woq-blended/blended/blob/master/blended.security/src/test/scala/blended/security/JJwtSpec.scala[JJwtSpec.scala]

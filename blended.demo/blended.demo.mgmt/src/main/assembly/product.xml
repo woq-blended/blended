@@ -10,12 +10,12 @@
 
     <fileSet>
       <directory>target/classes/container</directory>
-      <outputDirectory>/</outputDirectory>
+      <outputDirectory>.</outputDirectory>
     </fileSet>
 
     <fileSet>
       <directory>target/classes/profile</directory>
-      <outputDirectory>/${profile.name}/${profile.version}</outputDirectory>
+      <outputDirectory>./profiles/${profile.name}/${profile.version}</outputDirectory>
     </fileSet>
 
   </fileSets>

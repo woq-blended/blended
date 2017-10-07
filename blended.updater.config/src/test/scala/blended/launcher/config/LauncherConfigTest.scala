@@ -1,10 +1,10 @@
 package blended.launcher.config
 
-import blended.launcher.config.LauncherConfig.{read, toConfig}
-import com.typesafe.config.{ConfigException, ConfigFactory}
+import blended.launcher.config.LauncherConfig.{ read, toConfig }
+import com.typesafe.config.{ ConfigException, ConfigFactory }
 import org.scalatest.FreeSpec
 
-class   LauncherConfigTest extends FreeSpec {
+class LauncherConfigTest extends FreeSpec {
 
   val minimalConfig = """
     |startLevel = 10
@@ -31,11 +31,41 @@ class   LauncherConfigTest extends FreeSpec {
     "read() -> toConfig() -> read() must result in same config" in {
       import LauncherConfig._
       val config = read(ConfigFactory.parseString(minimalConfig))
-      assert(config === read(toConfig(config)))
+      val toCfg = toConfig(config)
+      val config2 = read(toCfg)
+      assert(config === config2)
     }
   }
 
   "Complex config" - {
+
+    "with prefix overlaying key in system settings" in {
+      import LauncherConfig._
+
+      val config = """
+        |startLevel = 10
+        |defaultStartLevel = 20
+        |frameworkBundle = "framework.jar"
+        |bundles = []
+        |systemProperties {
+        |  "org.osgi.service.http.port" = "8777"
+        |  "org.osgi.service.http.port.secure" = "9443"
+        |  org.osgi2.service {
+        |    "http.port" = "8777"
+        |    "http.port.secure" = "9443"
+        |  }
+        |}
+        |""".stripMargin
+
+      val a = read(ConfigFactory.parseString(config))
+      val expectedSysProps = Map(
+        "org.osgi.service.http.port" -> "8777",
+        "org.osgi.service.http.port.secure" -> "9443",
+        "org.osgi2.service.http.port" -> "8777",
+        "org.osgi2.service.http.port.secure" -> "9443"
+      )
+      assert(a.systemProperties.toSet === expectedSysProps.toSet)
+    }
 
     "read() -> toConfig() -> read() must result in same config" in {
       import LauncherConfig._
@@ -75,6 +105,7 @@ class   LauncherConfigTest extends FreeSpec {
       val a = read(ConfigFactory.parseString(config))
       val b = read(toConfig(a))
 
+      val fwp = b.frameworkProperties
       assert(a === b)
     }
   }

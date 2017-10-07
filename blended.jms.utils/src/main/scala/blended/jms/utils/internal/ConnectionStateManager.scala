@@ -9,37 +9,34 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
 import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
-import com.typesafe.config.Config
 
 import scala.concurrent.duration._
 
 object ConnectionStateManager {
 
   def props(
-    cfg: Config,
+    config: BlendedJMSConnectionConfig,
     monitor: ActorRef,
-    holder: ConnectionHolder,
-    clientId : String
+    holder: ConnectionHolder
   ) : Props =
-    Props(new ConnectionStateManager(cfg, monitor, holder, clientId))
+    Props(new ConnectionStateManager(config, monitor, holder))
 }
 
-class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionHolder, clientId: String)
+class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorRef, holder: ConnectionHolder)
   extends Actor with ActorLogging {
 
   type StateReceive = ConnectionState => Receive
 
-  private[this] val config = BlendedJMSConnectionConfig(cfg)
   private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
   private[this] implicit val eCtxt = context.system.dispatcher
-  private[this] val provider = holder.provider
-  private[this] val vendor = holder.vendor
+  private[this] val provider = config.provider
+  private[this] val vendor = config.vendor
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var currentReceive : StateReceive = disconnected()
-  private[this] var currentState : ConnectionState = ConnectionState(provider = holder.provider).copy(status = DISCONNECTED)
+  private[this] var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
 
   private[this] var pinger : Option[ActorRef] = None
 
@@ -289,7 +286,7 @@ class ConnectionStateManager(cfg: Config, monitor: ActorRef, holder: ConnectionH
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
     } else state
 
-    controller ! Connect(lastConnectAttempt, clientId)
+    controller ! Connect(lastConnectAttempt, config.clientId)
 
     // push the events into the newState in reverse order and set
     // the new state name

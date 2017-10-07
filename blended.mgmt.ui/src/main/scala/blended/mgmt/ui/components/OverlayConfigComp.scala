@@ -1,34 +1,28 @@
 package blended.mgmt.ui.components
 
-import blended.mgmt.ui.backend.DataManager
-import blended.mgmt.ui.components.filter.And
-
-import japgolly.scalajs.react.Callback
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.BackendScope
-import japgolly.scalajs.react.vdom.prefix_<^._
-
-import blended.mgmt.ui.ConsoleSettings
-import blended.mgmt.ui.backend.Observer
-import blended.mgmt.ui.components.filter.Filter
-import blended.mgmt.ui.util.Logger
-import blended.mgmt.ui.util.I18n
-import blended.updater.config.RuntimeConfig
+import blended.mgmt.ui.backend.{DataManager, Observer}
+import blended.mgmt.ui.components.filter.{And, Filter}
+import blended.mgmt.ui.routes.{MgmtPage, NavigationInfo}
+import blended.mgmt.ui.util.{I18n, Logger}
 import blended.updater.config.OverlayConfig
+import japgolly.scalajs.react.{Callback, _}
+import japgolly.scalajs.react.vdom.html_<^._
 
 object OverlayConfigComp {
 
   private[this] val log: Logger = Logger[OverlayConfigComp.type]
   private[this] val i18n = I18n()
 
-  case class State(profiles: List[OverlayConfig], filter: And[OverlayConfig] = And(), selected: Option[OverlayConfig] = None) {
-    def filteredOverlayConfigs: List[OverlayConfig] = profiles.filter(c => filter.matches(c))
-    def consistent = this.copy(selected = selected.filter(s => profiles.filter(c => filter.matches(c)).exists(_ == s)))
+  case class State(overlays: List[OverlayConfig], filter: And[OverlayConfig] = And(), selected: Option[OverlayConfig] = None) {
+    def filteredOverlayConfigs: List[OverlayConfig] = overlays.filter(c => filter.matches(c))
+    def consistent = this.copy(selected = selected.filter(s => overlays.filter(c => filter.matches(c)).exists(_ == s)))
   }
 
-  class Backend(scope: BackendScope[Unit, State]) extends Observer[List[OverlayConfig]] {
+  class Backend(scope: BackendScope[NavigationInfo[MgmtPage], State]) extends Observer[List[OverlayConfig]] {
 
-    override def update(newData: List[OverlayConfig]): Unit = scope.setState(State(newData).consistent).runNow()
+    override val dataChanged = { newData: List[OverlayConfig] =>
+      scope.modState(_.copy(overlays = newData))
+    }
 
     def addFilter(filter: Filter[OverlayConfig]) = {
       log.debug("addFilter called with filter: " + filter + ", current state: " + scope.state.runNow())
@@ -47,10 +41,10 @@ object OverlayConfigComp {
       scope.modState(s => s.copy(selected = profile).consistent)
     }
 
-    def render(s: State) = {
+    def render(p: NavigationInfo[MgmtPage], s: State) = {
       log.debug(s"Rerendering with state $s")
 
-      
+
       val renderedOverlays = s.filteredOverlayConfigs.map { p =>
         <.div(
           <.span(
@@ -71,11 +65,16 @@ object OverlayConfigComp {
     }
   }
 
-  val Component =
-    ReactComponentB[Unit]("OverlayConfig").
-      initialState(State(profiles = List()))
-      .renderBackend[Backend]
-      .componentDidMount(c => DataManager.overlayConfigsData.addObserver(c.backend))
-      .componentWillUnmount(c => DataManager.overlayConfigsData.removeObserver(c.backend))
-      .build
+  val Component = ScalaComponent.builder[NavigationInfo[MgmtPage]]("OverlayConfig")
+    . initialState(State(overlays = List()))
+    .renderBackend[Backend]
+    .componentDidMount(c => Callback {
+      DataManager.overlayConfigsData.addObserver(c.backend)
+    })
+    .componentWillUnmount{c => Callback {
+      DataManager.overlayConfigsData.removeObserver(c.backend)
+    }}
+    .build
+
+  def apply(n: NavigationInfo[MgmtPage]) = Component(n)
 }

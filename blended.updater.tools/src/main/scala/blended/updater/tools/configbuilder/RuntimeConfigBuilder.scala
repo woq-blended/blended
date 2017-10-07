@@ -3,8 +3,8 @@ package blended.updater.tools.configbuilder
 import java.io.File
 
 import blended.updater.config._
-import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
-import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
+import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
 
 import scala.collection.immutable._
 import scala.util.Failure
@@ -14,6 +14,7 @@ import java.io.PrintWriter
 import com.typesafe.config.ConfigParseOptions
 
 import scala.util.Success
+import blended.updater.config.util.Unzipper
 
 object RuntimeConfigBuilder {
 
@@ -62,6 +63,9 @@ object RuntimeConfigBuilder {
     @CmdOption(names = Array("--maven-artifact"), args = Array("GAV", "file"), maxCount = -1)
     def addMavenDir(gav: String, file: String) = this.mavenArtifacts ++= Seq(gav -> file)
     var mavenArtifacts: Seq[(String, String)] = Seq()
+
+    @CmdOption(names = Array("--explode-resources"), description = "Explode resources (unpack and update touch-files)")
+    var explodeResources: Boolean = false
 
   }
 
@@ -204,6 +208,26 @@ object RuntimeConfigBuilder {
         )
       ).runtimeConfig
     } else resolved.runtimeConfig
+
+    if (options.explodeResources) {
+      newRuntimeConfig.resources.map { r =>
+        val resourceFile = localRuntimeConfig.resourceArchiveLocation(r)
+        if (!resourceFile.exists()) sys.error("Could not unpack missing resource file: " + resourceFile)
+        val blacklist = List("profile.conf", "bundles", "resources")
+        Unzipper.unzip(resourceFile, localRuntimeConfig.baseDir, Nil,
+          fileSelector = Some { fileName: String => !blacklist.exists(fileName == _) },
+          placeholderReplacer = None
+        ) match {
+            case Failure(e) => throw new RuntimeException("Could not update resource file: " + resourceFile, e)
+            case _ =>
+          }
+        localRuntimeConfig.createResourceArchiveTouchFile(r, r.sha1Sum) match {
+          case Failure(e) =>
+            throw new RuntimeException("Could not create resource archive touch file for resource file: " + resourceFile, e)
+          case _ =>
+        }
+      }
+    }
 
     outFile match {
       case None =>

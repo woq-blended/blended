@@ -21,7 +21,7 @@ class CamelMockActorSpec extends WordSpec
 
   implicit val timeout = Timeout(3.seconds)
   
-  def mockActor(uri: String)(implicit system : ActorSystem) = TestActorRef(Props(new CamelMockActor(s"direct-vm:$uri")))
+  def mockActor(uri: String)(implicit system : ActorSystem) = TestActorRef(Props(CamelMockActor(s"direct-vm:$uri")))
   
   def producer(uri: String)(implicit system : ActorSystem) = TestActorRef(Props(new Producer with Oneway {
     def endpointUri = s"direct-vm:$uri?block=true"    

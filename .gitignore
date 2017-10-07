@@ -1,3 +1,4 @@
+project.bak/
 zinc-0.3.11/
 zinc-0.3.11.tgz
 target
@@ -26,3 +27,4 @@ libs/
 *.iml
 mvn.out
 nohup.out
+3rdparty

@@ -109,7 +109,12 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = orientDbCore),
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true)
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true),
+    FeatureBundle(dependency = jacksonCore),
+    FeatureBundle(dependency = jacksonBind),
+    FeatureBundle(dependency = jjwt),
+    FeatureBundle(dependency = blendedSecurityLogin, start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
   ),
   "blended-http" -> Seq(
     FeatureBundle(dependency = ops4jBaseLang),
@@ -133,20 +138,20 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = javaxMail),
     FeatureBundle(dependency = geronimoAnnotation),
     FeatureBundle(dependency = geronimoJaspic),
-    FeatureBundle(dependency = jettyServer, start = true)
+    FeatureBundle(dependency = jettyServer)
   ),
-  "blended-jaxrs" -> Seq(
-    FeatureBundle(dependency = jettison),
-    FeatureBundle(dependency = jacksonCoreAsl),
-    FeatureBundle(dependency = jacksonMapperAsl),
-    FeatureBundle(dependency = jacksonJaxrs),
-    FeatureBundle(dependency = jerseyCore),
-    FeatureBundle(dependency = jerseyJson),
-    FeatureBundle(dependency = jerseyServer),
-    FeatureBundle(dependency = jerseyServlet),
-    FeatureBundle(dependency = jerseyClient),
-    FeatureBundle(dependency = geronimoServlet30Spec)
-  ),
+//  "blended-jaxrs" -> Seq(
+//    FeatureBundle(dependency = jettison),
+//    FeatureBundle(dependency = jacksonCoreAsl),
+//    FeatureBundle(dependency = jacksonMapperAsl),
+//    FeatureBundle(dependency = jacksonJaxrs),
+//    FeatureBundle(dependency = jerseyCore),
+//    FeatureBundle(dependency = jerseyJson),
+//    FeatureBundle(dependency = jerseyServer),
+//    FeatureBundle(dependency = jerseyServlet),
+//    FeatureBundle(dependency = jerseyClient),
+//    FeatureBundle(dependency = geronimoServlet30Spec)
+//  ),
   "blended-security" -> Seq(
     FeatureBundle(dependency = shiroCore),
     FeatureBundle(dependency = shiroWeb),

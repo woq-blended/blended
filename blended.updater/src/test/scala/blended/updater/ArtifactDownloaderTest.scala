@@ -49,6 +49,30 @@ class ArtifactDownloaderTest
       }
     }
 
+    "Download of a local file (without checksum) with Maven coordinates should work" in {
+      val id = nextId()
+      withTestDir(new File("target/tmp")) { dir =>
+        val mvnRepo = dir.toURI().toString()
+        val sourceFile = new File(dir, s"g1/g2/art/1/art-1.jar")
+        sourceFile.getParentFile().mkdirs()
+        val ps = new PrintStream(sourceFile)
+        ps.print("content")
+        ps.flush()
+        ps.close()
+        assert(sourceFile.exists() === true)
+
+        val mvnUrl = "mvn:g1.g2:art:1"
+        val target = new File(dir, "target.jar")
+
+        val actorRef = system.actorOf(ArtifactDownloader.props(List(mvnRepo)))
+        actorRef ! ArtifactDownloader.Download(id, Artifact(url = mvnUrl), target)
+        fishForMessage() {
+          case ArtifactDownloader.DownloadFinished(`id`) => true
+        }
+        assert(Source.fromFile(target).getLines().toList === List("content"))
+      }
+    }
+
     "Download of a missing file should fail" in {
       val id = nextId()
       withTestFiles("content", "") { (file, target) =>

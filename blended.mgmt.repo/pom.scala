@@ -18,7 +18,7 @@ BlendedModel(
     sprayJson,
     scalaTest % "test",
     blendedTestSupport % "test",
-    Dependency(lambdaTest, scope = "test", classifier = "java7")
+    lambdaTest % "test"
   ), 
   plugins = Seq(
     mavenBundlePlugin,

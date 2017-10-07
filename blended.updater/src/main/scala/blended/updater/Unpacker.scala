@@ -17,7 +17,7 @@ import java.io.BufferedInputStream
 import java.io.FileOutputStream
 import java.io.BufferedOutputStream
 import blended.updater.config.RuntimeConfig
-import blended.updater.internal.Unzipper
+import blended.updater.config.util.Unzipper
 import scala.util.Failure
 import scala.collection.immutable._
 

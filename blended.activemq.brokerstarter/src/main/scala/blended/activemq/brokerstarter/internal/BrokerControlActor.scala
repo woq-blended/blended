@@ -14,6 +14,7 @@ import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
 import scala.language.reflectiveCalls
+import scala.util.control.NonFatal
 
 class BrokerControlActor extends Actor
   with ActorLogging {
@@ -26,12 +27,14 @@ class BrokerControlActor extends Actor
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
+    val brokerName = cfg.config.getString("brokerName")
+    val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+    val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
+
     try {
 
-      val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+      log.info(s"Starting ActiveMQ broker [$brokerName] with config file [$uri] ")
 
-      val brokerName = cfg.config.getString("brokerName")
-      val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
       val provider = cfg.config.getString("provider")
 
       BrokerFactory.setStartDefault(false)
@@ -56,16 +59,20 @@ class BrokerControlActor extends Actor
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
         val url = s"vm://$brokerName?create=false"
-        val amqCF = new ActiveMQConnectionFactory(url)
 
-        val cf = BlendedSingleConnectionFactory(
-          osgiCfg = cfg,
-          cfCfg = cfg.config,
-          cf = amqCF,
-          vendor = vendor,
-          provider = provider,
-          enabled = true
-        )(cfg.system)
+        val jmsCfg = BlendedJMSConnectionConfig("activemq", Some("activemq"), cfg.config)
+
+        val props = jmsCfg.properties + ("brokerURL" -> url)
+
+        val cf = new BlendedSingleConnectionFactory(
+          jmsCfg.copy(
+            properties = props,
+            cfClassName = Some(classOf[ActiveMQConnectionFactory].getName),
+            clientId = cfg.idSvc.resolvePropertyString(jmsCfg.clientId)
+          ),
+          cfg.system,
+          Some(cfg.bundleContext)
+        )
 
         val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "vendor" -> vendor,
@@ -78,6 +85,10 @@ class BrokerControlActor extends Actor
 
       (broker, registrar.svcReg)
 
+    } catch {
+      case NonFatal(t) =>
+        log.warning(s"Error starting ActiveMQ broker [$brokerName]", t.getMessage())
+        throw t
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
     }

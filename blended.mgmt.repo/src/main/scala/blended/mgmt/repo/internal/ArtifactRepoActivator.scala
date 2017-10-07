@@ -32,7 +32,7 @@ class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatchin
         val repoService = new FileArtifactRepo(repoId, baseDir)
         log.info("Created service: {}", repoService)
 
-        log.debug("About to register file based artifact repository to OSGi service registry")
+        log.debug("About to register file based artifact repository to OSGi service registry: {}", repoService)
         repoService.providesService[ArtifactRepo](
           "repoId" -> repoId,
           "baseDir" -> baseDir.getAbsolutePath()

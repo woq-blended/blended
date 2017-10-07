@@ -28,7 +28,6 @@ import scala.concurrent.duration.Duration
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
-import blended.updater.config.Profile.SingleProfile
 
 class Updater(
   installBaseDir: File,
@@ -45,7 +44,7 @@ class Updater(
   private[this] val log = LoggerFactory.getLogger(classOf[Updater])
 
   val artifactDownloader = context.actorOf(
-    BalancingPool(config.artifactDownloaderPoolSize).props(ArtifactDownloader.props()),
+    BalancingPool(config.artifactDownloaderPoolSize).props(ArtifactDownloader.props(config.mvnRepositories)),
     "artifactDownloader")
   val unpacker = context.actorOf(
     BalancingPool(config.unpackerPoolSize).props(Unpacker.props()),

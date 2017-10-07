@@ -16,7 +16,7 @@ BlendedModel(
     junit,
     camelCore,
     slf4j,
-    slf4jLog4j12,
+    slf4jLog4j12 % "test",
     akkaTestkit,
     scalaTest,
     akkaCamel

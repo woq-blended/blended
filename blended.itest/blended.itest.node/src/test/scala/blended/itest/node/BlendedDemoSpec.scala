@@ -36,6 +36,7 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
       val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
       val mockProbe = new TestProbe(system)
       testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
+      testKit.system.eventStream.subscribe(mockProbe.ref, classOf[ReceiveStopped])
 
       sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", binary = false) match {
         // We have successfully sent the message 
@@ -48,6 +49,9 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
             expectedBodies("Hello Blended!"),
             expectedHeaders(Map("foo" -> "bar"))
           ) should be(List.empty)
+
+          mock.tell(StopReceive, mockProbe.ref)
+          mockProbe.receiveN(1)
         // The message has not been sent
         case Left(e) =>
           log.error(e.getMessage, e)

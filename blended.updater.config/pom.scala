@@ -8,6 +8,10 @@ import scala.collection.immutable.Seq
 
 val jsArtifact = blendedUpdaterConfig.groupId.get %%% blendedUpdaterConfig.artifactId % blendedUpdaterConfig.version.get
 
+/**
+ * Sources under "shared" dir are for scala-jvm and scala-js 
+ * Sources under "src" dir are only for scala-jvm
+ */
 BlendedModel(
   gav = blendedUpdaterConfig,
   packaging = "bundle",
@@ -25,9 +29,10 @@ BlendedModel(
     scalaMavenPlugin,
     scalatestMavenPlugin,
     prepareSbtPlugin,
-    compileJsPlugin,
+    compileJsPlugin(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
+    compileJsPlugin(execId = "packageJS", phase = "package", args = List("-batch", "packageBin")),
     Plugin(
-      buildHelperPlugin,
+      gav = Plugins.buildHelper,
       executions = Seq(
         Execution(
           id = "addSources",
@@ -52,7 +57,7 @@ BlendedModel(
       )
     ),
     Plugin(
-      gav = mavenInstallPlugin,
+      gav = Plugins.install,
       executions = Seq(
         Execution(
           id = "publishJS",

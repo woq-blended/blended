@@ -63,7 +63,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     createServletActor(props(this))
 
   def createServletActor(props : Props): ActorRef = {
-
+    sLog.debug("About to create servlet actor with props: {}", props)
     implicit val timeout = Timeout(1.second)
 
     system = actorConfig.system
@@ -105,6 +105,7 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
       osgiActorCfg = Some(cfg)
       refFactory = Some(cfg.system)
       startSpray()
+
     }
   }
 }

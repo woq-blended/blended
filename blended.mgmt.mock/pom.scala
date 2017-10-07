@@ -12,11 +12,14 @@ BlendedModel(
   description = "Mock server to simulate a larger network of blended containers for UI testing.",
   dependencies = Seq(
     blendedMgmtBase,
+    blendedMgmtAgent,
     scalaLib,
     slf4j,
     slf4jLog4j12,
     prickle,
-    wiremockStandalone
+    wiremockStandalone,
+    Deps.cmdOption,
+    Deps.akkaActor
   ),
   properties = Map(
     "bundle.symbolicName" -> "${project.artifactId}",
@@ -25,9 +28,26 @@ BlendedModel(
   plugins = Seq(
     scalaMavenPlugin,
     Plugin(
-      execMavenPlugin,
-      configuration = Config(
-        mainClass = "blended.mgmt.mock.MgmtMockServer"
+      gav = Plugins.exec,
+      executions = Seq(
+        // To run the mock server, exec: mvn exec:java@mock-server
+        Execution(
+          id = "mock-server",
+          goals = Seq("java"),
+          phase = "none",
+          configuration = Config(
+            mainClass = "blended.mgmt.mock.server.MgmtMockServer"
+          )
+        ),
+        // To run the mock server, exec: mvn exec:java@mock-clients
+        Execution(
+          id = "mock-clients",
+          goals = Seq("java"),
+          phase = "none",
+          configuration = Config(
+            mainClass = "blended.mgmt.mock.clients.MgmtMockClients"
+          )
+        )
       )
     )
   )

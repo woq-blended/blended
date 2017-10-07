@@ -1,22 +1,11 @@
 package blended.mgmt.ui.components
 
-import blended.updater.config.ContainerInfo
-import japgolly.scalajs.react.ReactComponentB
-import japgolly.scalajs.react.ReactEventI
-import japgolly.scalajs.react.vdom.prefix_<^._
-import blended.mgmt.ui.util.I18n
-import blended.mgmt.ui.util.Logger
-import japgolly.scalajs.react.BackendScope
-import blended.updater.config.OverlayState
-import blended.updater.config.Profile
-import blended.updater.config.OverlaySet
-import japgolly.scalajs.react.CallbackTo
-import blended.mgmt.ui.backend.ProfileUpdater
-import blended.updater.config.ActivateProfile
-import blended.updater.config.UpdateAction
-import blended.updater.config.StageProfile
-import blended.updater.config.Profile.SingleProfile
-import blended.updater.config.RuntimeConfig
+import blended.mgmt.ui.util.{I18n, Logger}
+import blended.updater.config.{BundleConfig, ContainerInfo, RuntimeConfig}
+import chandu0101.scalajs.react.components.reacttable.ReactTable
+import ReactTable._
+import japgolly.scalajs.react._
+import vdom.html_<^._
 
 /**
  * React component to render details of a [[ContainerInfo]].
@@ -31,52 +20,56 @@ object ProfileDetailComp {
   class Backend(scope: BackendScope[Props, Unit]) {
 
     def render(props: Props) = {
+
       props match {
         case Props(None) => <.span(i18n.tr("No Profiles selected"))
         case Props(Some(rc)) =>
 
-          def props(ps: Map[String, String]) = ps.map(p => <.div(<.span("  ", p._1, ": "), <.span(p._2))).toSeq
+        val bundles : Seq[Seq[String]] = rc.bundles.map { bc =>
+          Seq(bc.url, bc.start.toString, bc.startLevel.map(_.toString).getOrElse(""))
+        }
 
-          <.div(
-            <.h2(
-              i18n.tr("Profile:"),
-              " ",
-              rc.name,
-              "-",
-              rc.version
-            ),
-            <.div(
-              i18n.tr("Properties:"),
-              <.div(props(rc.properties): _*)
-            ),
-            <.div(
-              i18n.tr("Framework Properties:"),
-              <.div(props(rc.frameworkProperties): _*)
-            ),
-            <.div(
-              i18n.tr("System Properties:"),
-              <.div(props(rc.systemProperties): _*)
-            ),
-            <.div(
-              i18n.tr("Features:"),
-              <.div(rc.features.map(f => <.span(f.name, "-", f.version)): _*)
-            ),
-            <.div(
-              i18n.tr("Bundles:"),
-              <.div(rc.bundles.map(b => <.span(b.url)): _*)
-            ),
-            <.div(
-              i18n.tr("Resources:"),
-              <.div(rc.resources.map(b => <.span(b.url)): _*)
-            ),
-            <.span()
+        <.div(
+          <.h2(
+            i18n.tr("Profile:"),
+            " ",
+            rc.name,
+            "-",
+            rc.version
+          ),
+          DataTable.fromProperties(
+            panelHeading = Some("Profile Properties"),
+            content = rc.properties
+          ),
+          DataTable.fromProperties(
+            panelHeading = Some("Framework Properties"),
+            content = rc.frameworkProperties
+          ),
+          DataTable.fromProperties(
+            panelHeading = Some("System Properties"),
+            content = rc.systemProperties
+          ),
+          DataTable.fromProperties(
+            panelHeading = Some("Features"),
+            content = rc.features.map(f => (f.name, f.version)).toMap,
+            headings = ("name", "version")
+          ),
+          DataTable.fromStringSeq(
+            panelHeading = Some("Bundles"),
+            content = bundles,
+            headings = Seq("url", "autoStart", "startLevel").zipWithIndex
+          ),
+          DataTable.fromProperties(
+            Some("Resources"),
+            rc.resources.map(r => (r.url, r.fileName.getOrElse(""))).toMap,
+            ("url", "filename")
           )
+        )
       }
     }
   }
 
-  val Component =
-    ReactComponentB[Props]("RuntimeConfigDetail")
+  val Component = ScalaComponent.builder[Props]("RuntimeConfigDetail")
       .renderBackend[Backend]
       .build
 }

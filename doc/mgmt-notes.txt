@@ -1,0 +1,11 @@
+runtimeConfig : Profile (synonym)
+overlayConfig : JVM small medium large etc ...
+
+
+Workflow: build a profile, drop into mgmt container .... magic happens. 
+
+Container / Services pages = Runtime pages 
+Profile / Overlay pages = Registry Pages 
+
+remote register profile 
+remote register overlay 

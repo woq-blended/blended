@@ -1,6 +1,6 @@
 
 val scriptHelper =
-"""
+  """
 object ScriptHelper {
 
   import java.io.File
@@ -19,29 +19,70 @@ object ScriptHelper {
 
 // Plugins
 
-val mavenDependencyPlugin = "org.apache.maven.plugins" % "maven-dependency-plugin" % "2.10"
-val buildHelperPlugin = "org.codehaus.mojo" % "build-helper-maven-plugin" % "1.12"
-val execMavenPlugin =  "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
-val jettyMavenPlugin = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
-val mavenInstallPlugin = "org.apache.maven.plugins" % "maven-install-plugin" % "2.5.2"
-val mavenWarPlugin = "org.apache.maven.plugins" % "maven-war-plugin" % "3.0.0"
+object Plugins {
+  val mavenPluginGroup = "org.apache.maven.plugins"
+
+  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
+  val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
+  val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.5.1"
+  val dependency = mavenPluginGroup % "maven-dependency-plugin" % "2.10"
+  val deploy = mavenPluginGroup % "maven-deploy-plugin" % "2.8.2"
+  val enforcer = mavenPluginGroup % "maven-enforcer-plugin" % "1.3.1"
+  val gpg = mavenPluginGroup % "maven-gpg-plugin" % "1.6"
+  val install = mavenPluginGroup % "maven-install-plugin" % "2.5.2"
+  val jar = mavenPluginGroup % "maven-jar-plugin" % "2.6"
+  val plugin = mavenPluginGroup % "maven-plugin-plugin" % "3.2"
+  val resources = mavenPluginGroup % "maven-resources-plugin" % "3.0.1"
+  val source = mavenPluginGroup % "maven-source-plugin" % "3.0.1"
+  val war = mavenPluginGroup % "maven-war-plugin" % "3.0.0"
+
+  val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
+  val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
+  val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
+  val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
+  val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
+  val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
+  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
+  val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
+  val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
+  val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
+  
+
+}
 
 val skipInstallPlugin = Plugin(
-  mavenInstallPlugin,
-   configuration = Config(
-     skip = "true"
-   )
-)
-
-val skipDeployPlugin = Plugin(
-  "org.apache.maven.plugins" % "maven-deploy-plugin" % "2.7",
+  Plugins.install,
   configuration = Config(
     skip = "true"
   )
 )
 
+val skipDeployPlugin = Plugin(
+  Plugins.deploy,
+  configuration = Config(
+    skip = "true"
+  )
+)
+
+val skipDefaultJarPlugin = Plugin(
+  gav = Plugins.jar,
+  executions = Seq(
+    Execution(
+      id = "default-jar",
+      phase = "none"
+    )
+  )
+)
+
+val skipNexusStagingPlugin = Plugin(
+  gav = Plugins.nexusStaging,
+  configuration = Config(
+    skipNexusStagingDeployMojo = "true"
+  )
+)
+
 val mavenBundlePlugin = Plugin(
-  gav = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0",
+  gav = Plugins.bundle,
   extensions = true,
   executions = Seq(
     Execution(
@@ -68,7 +109,7 @@ val mavenBundlePlugin = Plugin(
 )
 
 val bundleWarPlugin = Plugin(
-  gav = mavenBundlePlugin.gav,
+  gav = Plugins.bundle,
   executions = Seq(
     Execution(
       id = "manifest",
@@ -109,7 +150,7 @@ val scalaCompilerConfig = Config(
 )
 
 val scalaMavenPlugin = Plugin(
-  gav = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1",
+  gav = Plugins.scala,
   executions = Seq(
     Execution(
       id = "compile-scala",
@@ -132,7 +173,7 @@ val scalaMavenPlugin = Plugin(
 )
 
 val scalatestMavenPlugin = Plugin(
-  gav = "org.scalatest" % "scalatest-maven-plugin" % "1.0",
+  gav = Plugins.scalaTest,
   executions = Seq(
     Execution(
       id = "test",
@@ -150,7 +191,7 @@ val scalatestMavenPlugin = Plugin(
 )
 
 val scoverageMavenPlugin = Plugin(
-  gav = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0",
+  gav = Plugins.scoverage,
   executions = Seq(
     Execution(
       id = "coverage",
@@ -165,10 +206,10 @@ val scoverageMavenPlugin = Plugin(
 )
 
 val polyglotTranslatePlugin = Plugin(
-  gav = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.0",
+  gav = Plugins.polyglot,
   // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
   dependencies = Seq(
-      "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
+    "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
   ),
   executions = Seq(
     Execution(
@@ -188,7 +229,7 @@ val polyglotTranslatePlugin = Plugin(
  */
 
 val prepareSbtPlugin = Plugin(
-  gav = scalaMavenPlugin.gav,
+  gav = Plugins.scala,
   executions = Seq(
     Execution(
       id = "prepareSBT",
@@ -210,55 +251,43 @@ ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/plugins.sbt"),
   "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
   "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
-  "\n" +
-  "addSbtPlugin(\"com.typesafe.sbt\" % \"sbt-less\" % \"1.1.1\")"
-)
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n"
+ )
 """
       )
     )
   )
 )
 
-val compileJsPlugin = Plugin(
-  gav = execMavenPlugin,
-  executions = Seq(
-    Execution(
-      id = "compileAndTestJs",
-      phase = "compile",
-      goals = Seq(
-        "exec"
-      ),
-      configuration = Config(
-        executable = "sbt",
-        workingDirectory = "${project.basedir}",
-        arguments = Config(
-          argument = "-batch",
-          argument = "fastOptJS",
-          argument = "test"
-        )
-      )
-    ),
-    Execution(
-      id = "packageJS",
-      phase = "package",
-      goals = Seq(
-        "exec"
-      ),
-      configuration = Config(
-        executable = "sbt",
-        workingDirectory = "${project.basedir}",
-        arguments = Config(
-          argument = "-batch",
-          argument = "packageBin"
+def execPlugin(executable: String, execId: String, phase: String, args: List[String]) : Plugin = {
+
+  val cfg = new Config(args.map(a => ("argument", Some(a))))
+
+  Plugin(
+    gav = Plugins.exec,
+    executions = Seq(
+      Execution(
+        id = execId,
+        phase = phase,
+        goals = Seq(
+          "exec"
+        ),
+        configuration = Config(
+          executable = executable,
+          workingDirectory = "${project.basedir}",
+          arguments = cfg
         )
       )
     )
   )
-)
+
+}
+
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = 
+  execPlugin("sbt", execId, phase, args)
 
 val dockerMavenPlugin = Plugin(
-  "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.23",
+  gav = Plugins.docker,
   executions = Seq(
     Execution(
       id = "clean-docker",

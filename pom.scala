@@ -12,7 +12,7 @@ BlendedModel(
   description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
   plugins = Seq(
     Plugin(
-      "org.sonatype.plugins" % "nexus-staging-maven-plugin",
+      Plugins.nexusStaging,
       extensions = true,
       configuration = Config(
         serverId = "ossrh",
@@ -60,6 +60,8 @@ BlendedModel(
         "blended.spray",
         "blended.security",
         "blended.security.boot",
+        "blended.security.login",
+        "blended.security.login.rest",
         "blended.security.spray",
         "blended.hawtio.login",
         "blended.persistence",

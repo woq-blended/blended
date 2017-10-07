@@ -18,81 +18,52 @@ BlendedModel(
       blendedUpdaterConfig,
       "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle % "provided",
       "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "provided",
+      "com.olvind" %%% "scalajs-react-components" % "0.8.1" % "provided",
+      "com.github.japgolly.scalacss" %%% "ext-react" % Versions.scalaCss % "provided",
       scalaTest % "test"
   ),
   plugins = Seq(
-    prepareSbtPlugin,
-    compileJsPlugin,
-    bundleWarPlugin,
     Plugin(
-      "org.apache.maven.plugins" % "maven-assembly-plugin" % "2.6",
-      executions = Seq(
-        Execution(
-          id = "prepareWar",
-          phase = "prepare-package",
-          goals = Seq(
-            "single"
-          ),
-          configuration = Config(
-            descriptors = Config(
-              descriptor = "src/main/assembly/assembly.xml"
-            )
+      gav = Plugins.clean,
+      configuration = Config(
+        filesets = Config(
+          fileset = Config(
+            directory = "node_modules"
           )
         )
       )
     ),
+    execPlugin("npm", "npm-install", "process-classes", List("install")),
+    execPlugin("node", "webpack", "prepare-package", List("node_modules/webpack/bin/webpack.js")),
+    prepareSbtPlugin,
+    compileJsPlugin(
+      execId = "compileJS",
+      phase = "compile",
+      args = List("-batch", "fullOptJS")
+    ),
+    bundleWarPlugin,
     Plugin(
-      gav = "org.apache.maven.plugins" % "maven-war-plugin",
+      gav = Plugins.war,
       configuration = Config(
         archive = Config(
           manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
         ),
         webResources = Config(
           resource = Config(
-            directory = "${project.build.directory}/${project.artifactId}-${project.version}-preWar/${project.artifactId}-${project.version}",
-            targetPath = "/",
+            directory = "${project.build.directory}/assets",
+            targetPath = "/assets",
             includes = Config(
               include = "**/*"
             )
           ),
           resource = Config(
-            directory = "${project.build.directory}/web/less/main",
-            targetPath = "css"
+            directory = "${project.basedir}",
+            targetPath = "/",
+            includes = Config(
+              include = "index.html"
+            )
           )
         )
-      )
-    ),
-    Plugin(
-      gav = jettyMavenPlugin,
-      configuration = Config(
-        scanIntervalSeconds = "10",
-        webAppSourceDirectory = "target/blended.mgmt.ui-" + BlendedVersions.blendedVersion,
-        webApp = Config(
-          contextPath = "/management"
-        )
-      )
-    ),
-
-    Plugin(
-      gav = "com.github.eirslett" % "frontend-maven-plugin" % "1.3",
-      executions = Seq(
-        Execution(
-          id = "install node and npm",
-          phase = "initialize",
-          goals = Seq(
-            "install-node-and-npm"
-          )
-        ),
-        Execution(
-          id = "npm install",
-          phase = "generate-resources",
-          goals = Seq(
-            "npm"
-          )
-        )
-      ),
-      configuration = Config(
-        nodeVersion = "v4.6.0"
       )
     )
   )

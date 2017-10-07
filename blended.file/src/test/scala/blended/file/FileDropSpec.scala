@@ -23,7 +23,8 @@ class FileDropSpec extends FreeSpec with Matchers {
         compressed = false,
         append = false,
         timestamp = System.currentTimeMillis(),
-        properties = Map.empty
+        properties = Map.empty,
+        dropNotification = false
       )
 
       val probe = TestProbe()

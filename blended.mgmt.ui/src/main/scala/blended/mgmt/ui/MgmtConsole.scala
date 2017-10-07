@@ -1,75 +1,23 @@
 package blended.mgmt.ui
 
-import blended.mgmt.ui.backend.DataManager
-import blended.mgmt.ui.pages._
-import org.scalajs.dom
-import japgolly.scalajs.react._
-import vdom.prefix_<^._
-import japgolly.scalajs.react.extra._
+import blended.mgmt.ui.routes.MgmtRouter
+import blended.mgmt.ui.styles.AppStyles
 import japgolly.scalajs.react.extra.router._
+import org.scalajs.dom
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
 
-@JSExport
-class MgmtConsole extends js.JSApp {
-
-  val routerConfig = RouterConfigDsl[TopLevelPage].buildConfig { dsl =>
-    import dsl._
-
-    (trimSlashes | TopLevelPages.routes)
-      .notFound(redirectToPage(TopLevelPages.defaultPage)(Redirect.Replace))
-      .renderWith(layout(_, _))
-  }
-
-  def layout(c: RouterCtl[TopLevelPage], r: Resolution[TopLevelPage]) =
-    <.div(
-      navMenu(c),
-      <.div(
-        ^.cls := "container-fluid", r.render()
-      )
-    )
-
-  val navMenu = ReactComponentB[RouterCtl[TopLevelPage]]("Menu")
-    .render_P { ctl =>
-
-
-      def nav(name: String, target: TopLevelPage) = {
-
-        val selected : String = target.equals(DataManager.selectedPage) match {
-          case true => " navbar-selected"
-          case _ => ""
-        }
-
-        <.li(
-          ^.cls := "navbar-brand" + selected,
-          ^.onClick --> CallbackTo[Unit] {
-            DataManager.setSelectedPage(target)
-            ctl.set(target).runNow()
-          },
-          name
-        )
-      }
-
-      <.div(
-        ^.cls := "navbar navbar-default",
-        <.ul(
-          ^.cls := "navbar-header",
-          TopLevelPages.values.map { tlp =>
-            nav(tlp.name, tlp)
-          }
-        )
-      )
-    }
-    .configure(Reusability.shouldComponentUpdate)
-    .build
+object MgmtConsole extends js.JSApp {
 
   val baseUrl =
       BaseUrl.fromWindowOrigin / "management/"
 
-  override def main(): Unit = {
-    val router = Router(baseUrl, routerConfig.logToConsole)
+  def main(): Unit = {
 
-    router().render(dom.document.body)
+    AppStyles.load()
+
+    val router = Router(baseUrl, MgmtRouter.routerConfig)
+
+    router().renderIntoDOM(dom.document.getElementById("content"))
   }
 }

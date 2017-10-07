@@ -2,10 +2,13 @@ package blended.streams.testapps
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import blended.jms.utils.BlendedSingleConnectionFactory
+import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory}
+import com.typesafe.config.ConfigFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
+
+import scala.collection.JavaConverters._
 
 abstract class AbstractStreamRunner(s : String) {
 
@@ -13,7 +16,7 @@ abstract class AbstractStreamRunner(s : String) {
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  val broker : BrokerService = {
+  def broker() : BrokerService = {
 
     val b = new BrokerService()
     b.setBrokerName("blended")
@@ -27,16 +30,19 @@ abstract class AbstractStreamRunner(s : String) {
     b
   }
 
-  val config = system.settings.config
+  val config = ConfigFactory.parseMap(Map(
+    "provider" -> "activemq",
+    "clientId" -> "JmsSender",
+    "properties.brokerURL" -> s"vm://blended?create=false"
+  ).asJava)
 
-  val cf = BlendedSingleConnectionFactory(
-    cfg = config.getConfig("blended.activemq"),
-    vendor = "activemq",
-    provider = "activemq",
-    cf = new ActiveMQConnectionFactory("vm://blended?create=false"),
-    clientId = "JmsSender"
+  val cf = new BlendedSingleConnectionFactory(
+    BlendedJMSConnectionConfig("activemq", config).copy(
+      cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)
+    ),
+    system,
+    None
   )
-
 
 }
 

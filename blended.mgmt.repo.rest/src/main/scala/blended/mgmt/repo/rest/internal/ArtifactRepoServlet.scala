@@ -15,47 +15,25 @@ import spray.routing.Directive1
 class ArtifactRepoServlet
     extends SprayOSGIServlet
     with BlendedHttpRoute
-    with ShiroBlendedSecuredRoute { self =>
+    with ShiroBlendedSecuredRoute
+    with ArtifactRepoRoutes { self =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoServlet])
 
-  var actors: Map[ArtifactRepo, ActorRef] = Map()
-
-  override val httpRoute: Route = throw new Exception("Servlet Actor can't be created without a repo reference")
-
-  def repoProps(repo: ArtifactRepo)(cfg: OSGIActorConfig, contextPath: String): Props =
-    BlendedHttpActor.props(cfg, new ArtifactRepoRoutes {
-      override def actorConfig: OSGIActorConfig = cfg
-      override protected def artifactRepo: ArtifactRepo = repo
-      override implicit def actorRefFactory: ActorRefFactory = cfg.system
-      override protected def authenticated: Directive1[Subject] = self.authenticated
-      override protected def requirePermission(permission: String): Directive0 = self.requirePermission(permission)
-    }, contextPath)
+  protected var artifactRepos: List[ArtifactRepo] = List()
 
   override def startSpray(): Unit = {
 
-    /**
-     * create and start actor and add to state
-     */
     def addRepo(repo: ArtifactRepo): Unit = {
-      val repoContextPath = contextPath + "/" + repo.repoId
-      val props = repoProps(repo)(actorConfig, repoContextPath)
-      val actorRef = createServletActor(props)
-      log.info("Created actor {} for artifact repo {}", Array(actorRef, repo): _*)
-      actors += repo -> actorRef
-      log.debug("known repos and their actors: {}", actors)
+      log.debug("Registering artifactRepo: {}", repo)
+      artifactRepos = repo :: artifactRepos
+      log.debug("known repos: {}", artifactRepos)
     }
 
-    /**
-     *  stop actor and remove from state
-     */
     def removeRepo(repo: ArtifactRepo): Unit = {
-      actors.get(repo).map { actor =>
-        log.info("About to stop actor {} for artifact repo {}", Array(actor, repo): _*)
-        actorConfig.system.stop(actor)
-        actors -= repo
-      }
-      log.debug("known repos and their actors: {}", actors)
+      log.debug("Registering artifactRepo: {}", repo)
+      artifactRepos = artifactRepos.filter(r => r.repoId != repo.repoId)
+      log.debug("known repos: {}", artifactRepos)
     }
 
     watchServices[ArtifactRepo] {
@@ -67,5 +45,8 @@ class ArtifactRepoServlet
       case RemovedService(repo, context) =>
         removeRepo(repo)
     }
+
+    super.createServletActor()
   }
+
 }

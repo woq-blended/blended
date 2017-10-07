@@ -22,11 +22,7 @@ BlendedModel(
     jsonLenses,
     slf4j,
     akkaSlf4j % "test",
-    Dependency(
-      "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion,
-      classifier = "agent",
-      scope = "runtime"
-    ),
+    jolokiaJvmAgent % "runtime",
     scalaTest % "test",
     blendedTestSupport % "test",
     mockitoAll % "test",
@@ -34,7 +30,7 @@ BlendedModel(
   ),
   plugins = Seq(
     Plugin(
-        gav = mavenDependencyPlugin,
+        gav = Plugins.dependency,
         executions = Seq(
           Execution(
             id = "extract-blended-container",
@@ -52,7 +48,7 @@ BlendedModel(
     mavenBundlePlugin,
     scalaMavenPlugin,
     Plugin(
-      scalatestMavenPlugin.gav,
+      gav = Plugins.scalaTest,
       configuration = Config(
         argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-${jolokia.version}-agent.jar=port=7777,host=localhost"
       )
