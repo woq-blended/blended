@@ -89,7 +89,7 @@ val genPomXmlProfile = Profile(
           )
         )
       ),
-      // initialize: generate pom.xml 
+      // initialize: generate pom.xml
       polyglotTranslatePlugin
     )
   )
@@ -100,6 +100,41 @@ val checkDepsProfile = Profile(
   build = BuildBase(
     plugins = Seq(
       checkDepsPlugin
+    )
+  )
+)
+
+val scalaIdePrefs = """
+scala.compiler.installation=2.11
+scala.compiler.sourceLevel=2.11
+target=jvm-1.8
+"""
+
+val eclipseProfile = Profile(
+  id = "eclipse",
+  build = BuildBase(
+    plugins = Seq(
+      Plugin(
+        gav = Plugins.antrun,
+        executions = Seq(
+          Execution(
+            id = "gen-eclipse-settings",
+            goals = Seq("run"),
+            phase = "initialize",
+            configuration = Config(
+              target = Config(
+                mkdir = Config(
+                  `@dir` = "${project.basedir}/.settings"
+                ),
+                echo = Config(
+                  `@file` = "${project.basedir}/.settings/org.scala-ide.sdt.core.prefs",
+                  `@message` = scalaIdePrefs
+                )
+              )
+            )
+          )
+        )
+      )
     )
   )
 )
@@ -121,7 +156,13 @@ object BlendedModel {
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, coverageProfile, genPomXmlProfile, checkDepsProfile)
+  val defaultProfiles = Seq(
+    releaseProfile,
+    coverageProfile,
+    genPomXmlProfile,
+    eclipseProfile,
+    checkDepsProfile
+  )
 
   val defaultDevelopers = Seq(
     Developer(
