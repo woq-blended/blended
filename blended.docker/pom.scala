@@ -6,6 +6,11 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
+val dockerModules = Seq(
+        "blended.docker.demo.mgmt",
+        "blended.docker.demo.node"
+      )
+
 BlendedModel(
   gav = blendedDockerReactor,
   packaging = "pom",
@@ -13,10 +18,11 @@ BlendedModel(
   profiles = Seq(
     Profile(
       id = "docker",
-      modules = Seq(
-        "blended.docker.demo.mgmt",
-        "blended.docker.demo.node"
-      )
+      modules = dockerModules
+    ),
+    Profile(
+      id = "all",
+      modules = dockerModules
     )
   )
 )

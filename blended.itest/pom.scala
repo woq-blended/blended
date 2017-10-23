@@ -6,6 +6,10 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
+val itestModules = Seq(
+  "blended.itest.node"
+)
+
 BlendedModel(
   gav = BlendedModule("blended.itest.reactor"),
   packaging = "pom",
@@ -20,9 +24,11 @@ BlendedModel(
       activation = Activation(
         activeByDefault = false
       ),
-      modules = Seq(
-        "blended.itest.node"
-      )
+      modules = itestModules
+    ),
+    Profile(
+      id = "all",
+      modules = itestModules
     )
   )
 )
