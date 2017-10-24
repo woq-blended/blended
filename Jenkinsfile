@@ -4,7 +4,7 @@ pipeline {
     stage('Build externals') {
       steps {
         ansiColor('xterm') {
-          sh './blended.build/01_1_buildScalaJSReactComponents.sh ${WORKSPACE}'
+          sh 'sh ./blended.build/01_1_buildScalaJSReactComponents.sh ${WORKSPACE}'
         }
       }
     }
