@@ -26,6 +26,7 @@ import blended.updater.config.util.Unzipper
 import scala.util.Failure
 import scala.util.Success
 import com.typesafe.config.ConfigFactory
+import spray.http.HttpRequest
 
 trait CollectorService
     extends BlendedHttpRoute
@@ -40,7 +41,8 @@ trait CollectorService
         runtimeConfigRoute ~
         overlayConfigRoute ~
         updateActionRoute ~
-        rolloutProfileRoute
+        rolloutProfileRoute ~
+        uploadDeploymentPackRoute
     }
 
   private[this] lazy val log = LoggerFactory.getLogger(classOf[CollectorService])
