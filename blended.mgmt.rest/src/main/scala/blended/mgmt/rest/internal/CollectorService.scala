@@ -180,16 +180,38 @@ trait CollectorService
             getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
               case None =>
                 reject(ValidationRejection(s"Unknown profile ${rolloutProfile.profileName} ${rolloutProfile.profileVersion}"))
-              case _ =>
+              case Some(rc) =>
                 // check existence of overlays
                 findMissingOverlayRef(rolloutProfile.overlays) match {
                   case Some(r) =>
-                    reject(ValidationRejection(s"Unknown vverlay ${r.name} ${r.version}"))
+                    reject(ValidationRejection(s"Unknown overlay ${r.name} ${r.version}"))
                   case None =>
                     // all ok, complete
                     complete {
                       log.debug("looks good, rollout can continue")
                       rolloutProfile.containerIds.foreach { containerId =>
+                        
+                        // Make sure, we have the required runtime config 
+                        addUpdateAction(
+                          containerId = containerId,
+                          updateAction = AddRuntimeConfig(
+                            runtimeConfig = rc
+                          )
+                        )
+                        
+                        // Also register all required overlay configs
+                        val ocs = getOverlayConfigs()
+                        rolloutProfile.overlays.map { o =>
+                          val oc = ocs.find(oc => oc.name == o.name && oc.version == o.version).get
+                          addUpdateAction(
+                            containerId = containerId,
+                            updateAction = AddOverlayConfig(
+                              overlay = oc
+                            )
+                          )
+                        }
+
+                        // finally stage the new runtime config
                         addUpdateAction(
                           containerId = containerId,
                           updateAction = StageProfile(
@@ -197,6 +219,7 @@ trait CollectorService
                             profileVersion = rolloutProfile.profileVersion,
                             overlays = rolloutProfile.overlays))
                       }
+                      
                       s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
                     }
                 }
@@ -287,7 +310,7 @@ trait CollectorService
 
         // now install bundles and resources
         // we know the urls all start with "mvn:"
-        
+
         local.resolvedRuntimeConfig.allBundles.map { b =>
           val file = local.bundleLocation(b)
           val path = MvnGav.parse(b.url.substring("mvn:".size)).get.toUrl("")
@@ -299,7 +322,7 @@ trait CollectorService
           val path = MvnGav.parse(r.url.substring("mvn:".size)).get.toUrl("")
           installBundle(repoId, path, file, r.sha1Sum)
         }
-        
+
         local.runtimeConfig.name -> local.runtimeConfig.version
       }
 
