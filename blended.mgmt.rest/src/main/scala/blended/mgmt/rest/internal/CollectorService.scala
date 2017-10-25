@@ -219,12 +219,6 @@ trait CollectorService
                   val details = formData.fields.map {
                     case BodyPart(entity, headers) =>
                       // Warning, this loads the whole file into memory
-                      //                      val content = new ByteArrayInputStream(entity.data.toByteArray)
-                      //                      val contentType = headers.find(h => h.is("content-type")).get.value
-                      //                      val fileName = headers.find(h => h.is("content-disposition")).get.value.split("filename=").last
-                      //                      val result = processDeploymentpack(content)
-                      //                      (contentType, result)
-
                       val byteArray = entity.data.toByteArray
                       val baip = new ByteArrayInputStream(byteArray)
                       val result = try {
@@ -288,17 +282,24 @@ trait CollectorService
         if (!issues.isEmpty) sys.error(issues.mkString("; "))
         // everything is ok
 
-        log.debug("Found profile.conf: {}", local)
-
-        // TODO: install profile itself
+        log.debug("Uploaded profile.conf: {}", local)
+        registerRuntimeConfig(local.runtimeConfig)
 
         // now install bundles and resources
+        // we know the urls all start with "mvn:"
+        
         local.resolvedRuntimeConfig.allBundles.map { b =>
           val file = local.bundleLocation(b)
-          val path = b.url
+          val path = MvnGav.parse(b.url.substring("mvn:".size)).get.toUrl("")
           installBundle(repoId, path, file, b.artifact.sha1Sum)
         }
 
+        local.runtimeConfig.resources.map { r =>
+          val file = local.resourceArchiveLocation(r)
+          val path = MvnGav.parse(r.url.substring("mvn:".size)).get.toUrl("")
+          installBundle(repoId, path, file, r.sha1Sum)
+        }
+        
         local.runtimeConfig.name -> local.runtimeConfig.version
       }
 
