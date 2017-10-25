@@ -13,7 +13,7 @@ pipeline {
     stage('Blended build') {
       steps {
         ansiColor('xterm') {
-          sh 'bash ./blended.build/01_1_buildScalaJSReactComponents.sh ${WORKSPACE}'
+          sh 'bash ./blended.build/02_buildBlended.sh ${WORKSPACE}'
         }
       }
     }
