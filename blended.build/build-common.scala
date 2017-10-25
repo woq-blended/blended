@@ -95,6 +95,15 @@ val genPomXmlProfile = Profile(
   )
 )
 
+val checkDepsProfile = Profile(
+  id = "check-deps",
+  build = BuildBase(
+    plugins = Seq(
+      checkDepsPlugin
+    )
+  )
+)
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -112,7 +121,7 @@ object BlendedModel {
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, coverageProfile, genPomXmlProfile)
+  val defaultProfiles = Seq(releaseProfile, coverageProfile, genPomXmlProfile, checkDepsProfile)
 
   val defaultDevelopers = Seq(
     Developer(
@@ -255,8 +264,7 @@ object BlendedModel {
         encoding = "${project.build.sourceEncoding}",
         fork = "true"
       )
-    ),
-    checkDepsPlugin
+    )
   )
 
   val distMgmt = DistributionManagement(
