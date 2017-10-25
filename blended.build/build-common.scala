@@ -255,7 +255,8 @@ object BlendedModel {
         encoding = "${project.build.sourceEncoding}",
         fork = "true"
       )
-    )
+    ),
+    checkDepsPlugin
   )
 
   val distMgmt = DistributionManagement(

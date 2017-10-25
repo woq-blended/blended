@@ -38,6 +38,7 @@ object Plugins {
 
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
+  val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.0.1"
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
@@ -46,7 +47,6 @@ object Plugins {
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
-  
 
 }
 
@@ -70,6 +70,18 @@ val skipDefaultJarPlugin = Plugin(
     Execution(
       id = "default-jar",
       phase = "none"
+    )
+  )
+)
+
+val checkDepsPlugin = Plugin(
+  gav = Plugins.dependencyCheck,
+  executions = Seq(
+    Execution(
+      goals = Seq("check"),
+      configuration = Config(
+        failBuildOnCVSS = "11"
+      )
     )
   )
 )
