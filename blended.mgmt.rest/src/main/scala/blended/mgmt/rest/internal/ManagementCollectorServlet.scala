@@ -133,6 +133,7 @@ class ManagementCollectorServlet
   }
 
   override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = Try {
+    mylog.debug("About to install bundle into repoId: {} at path: {}, file: {} with checksum: {}", Array(repoId, path, file, sha1Sum): _*)
     val repo = artifactRepos.getOrElse(repoId, sys.error(s"No artifact repository with ID ${repoId} registered"))
     val stream = file.toURI().toURL().openStream()
     try {

@@ -251,6 +251,7 @@ trait CollectorService
    * If the deployment was successful, this method returns the profile name and version as tuple, else the exception is returned.
    */
   def processDeploymentPack(repoId: String, content: InputStream): Try[(String, String)] = {
+    log.debug("About to process deploymentpack as inputstream for repoId: {}", repoId)
     val tempDir = File.createTempFile("upload", "")
     tempDir.delete()
     tempDir.mkdirs()
@@ -284,6 +285,8 @@ trait CollectorService
 
         if (!issues.isEmpty) sys.error(issues.mkString("; "))
         // everything is ok
+
+        log.debug("Found profile.conf: {}", local)
 
         // TODO: install profile itself
 
