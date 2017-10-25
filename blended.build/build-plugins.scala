@@ -1,3 +1,4 @@
+val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home" + "/.ivy2"))
 
 val scriptHelper =
   """
