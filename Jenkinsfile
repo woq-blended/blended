@@ -24,7 +24,7 @@ pipeline {
         }
       }
     }
-    stage('Blended build') {
+    stage('Integration Tests') {
       steps {
         ansiColor('xterm') {
           sh 'bash ./blended.build/04_integrationTests.sh ${WORKSPACE}'
