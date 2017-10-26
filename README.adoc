@@ -28,16 +28,34 @@ You can build with a simple:
 
 === Generate `pom.xml` files
 
-As most IDE's do not understand the `pom.scala` files, you can either use the old but proven `blended.build/gen-pom-xml.sh` script, which generates (and updates) a `pom.xml` file for each `pom.scala` file.
-After that, your IDE can use the generate `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
+As most IDE's do not understand the `pom.scala` files, you can use the Maven profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
 
-Or just use the (new) special profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
+
+After that, your IDE can use the generated `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
 
 .Build `pom.xml` files from top level directory
-`mvn -P build,gen-pom-xml initialize`
+----
+mvn -P gen-pom-xml,build,docker,itest initialize
+----
 
 .Build `pom.xml` file in a local project
-`mvn -P gen-pom-xml initialize`
+----
+mvn -P gen-pom-xml initialize
+----
+
+=== IntelliJ
+
+Newer versions of IntelliJ have support for polyglot-maven, thus you don't need to generate the `pom.xml`s at al. In fact, current IntelliJ has some issues and double-detects projects when it founds a `pom.scala` and a `pom.xml`.
+
+=== Eclipse
+
+The following plugins are recommended, to properly import the Maven projects.
+
+* m2e - Maven Integration for Eclipse
+* Maven Integration for Scala IDE
+
+For polyglot-maven support, you should also install the m2e-polyglot-poc plugin. It needs a present `pom.xml` in each project, but automatically updates it, when the `pom.scala` changes.
+
 
 == Download  artifacts from Maven Central
 

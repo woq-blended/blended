@@ -3,6 +3,7 @@ import sbt._
 
 val appName = "blended.mgmt.ui"
 val jsDir = "target"
+val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
 lazy val root = project
   .in(file("."))
@@ -23,7 +24,7 @@ lazy val root = project
     scalaVersion := BlendedVersions.scalaVersion,
     sourcesInBase := false,
 
-    resolvers += Resolver.mavenLocal,
+    resolvers += "Local Maven Repository" at m2Repo,
 
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,

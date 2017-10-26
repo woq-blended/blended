@@ -1,10 +1,3 @@
-project.bak/
-zinc-0.3.11/
-zinc-0.3.11.tgz
-target
-target-eclipse
-eclipse-target
-.DS_Store
 felix-cache
 *.log
 *.log
@@ -12,19 +5,32 @@ felix-cache
 *.backup
 *~
 *.pdf
+libs/
+mvn.out
+nohup.out
+3rdparty
+
+# Macosx
+.DS_Store
+
+# IntelliJ files
+.idea
+*.iml
+
+# Maven settings and generated files
+.mvn/maven.settings
+.mvn/maven.config
+.polyglot.pom.scala
+pom.xml
+target/
+
+# Eclipse settings and caches
+.project
+.classpath
 .settings/
 .cache
 .cache-main
 .cache-tests
-.project
-.classpath
-libs/
-.mvn/maven.settings
-.mvn/maven.config
-.polyglot.pom.scala
-/pom.xml
-.idea
-*.iml
-mvn.out
-nohup.out
-3rdparty
+target-eclipse/
+eclipse-target/
+

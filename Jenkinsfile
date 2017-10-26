@@ -1,23 +1,34 @@
 pipeline {
   agent any
   stages {
-    stage('Prepare Build') {
+
+    stage('Build externals') {
       steps {
         ansiColor('xterm') {
-          sh 'cd blended.docker/blended.docker.build; docker build -t atooni/blended-build .'
+          sh 'bash ./blended.build/01_1_buildScalaJSReactComponents.sh ${WORKSPACE}'
         }
       }
     }
-    stage('Containerized Build') {
-      agent {
-        docker 'atooni/blended-build'
-      }
+
+    stage('Blended build') {
       steps {
         ansiColor('xterm') {
-          sh '/opt/zinc/bin/zinc -start -nailed -scala-home=$SCALA_HOME'
-          sh 'source $HOME/.nvm/nvm.sh ; nvm use 4.2; mvn clean install'
+          sh 'bash ./blended.build/02_buildBlended.sh ${WORKSPACE}'
         }
-        junit allowEmptyResults: true, testResults: '**/surefire-reports/*.xml'
+      }
+    }
+    stage('Docker images') {
+      steps {
+        ansiColor('xterm') {
+          sh 'bash ./blended.build/03_createDockerImages.sh ${WORKSPACE}'
+        }
+      }
+    }
+    stage('Integration Tests') {
+      steps {
+        ansiColor('xterm') {
+          sh 'bash ./blended.build/04_integrationTest.sh ${WORKSPACE}'
+        }
       }
     }
   }

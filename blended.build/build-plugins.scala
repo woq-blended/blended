@@ -1,3 +1,5 @@
+val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home") + "/.ivy2")
+val m2Repo = System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
 val scriptHelper =
   """
@@ -38,6 +40,7 @@ object Plugins {
 
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
+  val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.0.1"
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
@@ -46,7 +49,6 @@ object Plugins {
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
-  
 
 }
 
@@ -70,6 +72,18 @@ val skipDefaultJarPlugin = Plugin(
     Execution(
       id = "default-jar",
       phase = "none"
+    )
+  )
+)
+
+val checkDepsPlugin = Plugin(
+  gav = Plugins.dependencyCheck,
+  executions = Seq(
+    Execution(
+      goals = Seq("check"),
+      configuration = Config(
+        failBuildOnCVSS = "11"
+      )
     )
   )
 )
@@ -283,8 +297,10 @@ def execPlugin(executable: String, execId: String, phase: String, args: List[Str
 
 }
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = 
-  execPlugin("sbt", execId, phase, args)
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
+  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  execPlugin("sbt", execId, phase, defArgs ::: args)
+}
 
 val dockerMavenPlugin = Plugin(
   gav = Plugins.docker,
