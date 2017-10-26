@@ -1,4 +1,5 @@
-val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home" + "/.ivy2"))
+val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home") + "/.ivy2")
+val m2Repo = System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
 val scriptHelper =
   """
@@ -296,8 +297,10 @@ def execPlugin(executable: String, execId: String, phase: String, args: List[Str
 
 }
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = 
-  execPlugin("sbt", execId, phase, args)
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
+  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  execPlugin("sbt", execId, phase, defArgs ::: args)
+}
 
 val dockerMavenPlugin = Plugin(
   gav = Plugins.docker,

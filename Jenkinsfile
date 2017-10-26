@@ -17,5 +17,19 @@ pipeline {
         }
       }
     }
+    stage('Docker images') {
+      steps {
+        ansiColor('xterm') {
+          sh 'bash ./blended.build/03_createDockerImages.sh ${WORKSPACE}'
+        }
+      }
+    }
+    stage('Blended build') {
+      steps {
+        ansiColor('xterm') {
+          sh 'bash ./blended.build/04_integrationTests.sh ${WORKSPACE}'
+        }
+      }
+    }
   }
 }
