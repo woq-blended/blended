@@ -17,6 +17,7 @@ pipeline {
         }
       }
     }
+
     stage('Docker images') {
       steps {
         ansiColor('xterm') {
@@ -24,6 +25,7 @@ pipeline {
         }
       }
     }
+
     stage('Integration Tests') {
       steps {
         ansiColor('xterm') {
@@ -31,5 +33,6 @@ pipeline {
         }
       }
     }
+
   }
 }
