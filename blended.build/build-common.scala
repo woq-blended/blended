@@ -66,7 +66,18 @@ val coverageProfile = Profile(
   id = "coverage",
   activation = Activation(),
   build = BuildBase(
-    plugins = Seq(scoverageMavenPlugin)
+    plugins = Seq(
+      Plugin(
+        gav = Plugins.scoverage,
+        executions = Seq(
+          Execution(
+            id = "coverage",
+            phase = "test",
+            goals = Seq("test")
+          )
+        )
+      )
+    )
   )
 )
 

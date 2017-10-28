@@ -90,5 +90,18 @@ BlendedModel(
         "blended.docker"
       )
     )
+//    Profile(
+//      id = "coverage",
+//      Plugin(
+//        gav = Plugins.scoverage,
+//        executions = Seq(
+//          Execution(
+//            id = "coverage",
+//            phase = "post-integration-test",
+//            goals = Seq("report-only")
+//          )
+//        )
+//      )
+//    )
   )
 )

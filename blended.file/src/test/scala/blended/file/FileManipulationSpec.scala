@@ -36,6 +36,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
 
       val s = new File(System.getProperty("projectTestOutput") + "/files", "toRename.txt")
       val d = new File(System.getProperty("projectTestOutput") + "/files", "newName.txt")
+      if (d.exists()) d.delete()
 
       val probe = TestProbe()
       val actor = system.actorOf(Props[FileManipulationActor])

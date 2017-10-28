@@ -204,21 +204,6 @@ val scalatestMavenPlugin = Plugin(
   )
 )
 
-val scoverageMavenPlugin = Plugin(
-  gav = Plugins.scoverage,
-  executions = Seq(
-    Execution(
-      id = "coverage",
-      phase = "test",
-      goals = Seq("report")
-    )
-  ),
-  configuration = Config(
-    aggregate = "true",
-    highlighting = "true"
-  )
-)
-
 val polyglotTranslatePlugin = Plugin(
   gav = Plugins.polyglot,
   // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
