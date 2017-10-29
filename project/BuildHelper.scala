@@ -14,6 +14,7 @@ object BuildHelper {
       Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("http://www.wayofquality.de"))
     ),
 
+    crossScalaVersions := Seq(BlendedVersions.scala), //Seq("2.11.11", "2.12.4"),
     scalaVersion := BlendedVersions.scala,
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
     sourcesInBase := false
