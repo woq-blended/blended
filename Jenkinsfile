@@ -41,5 +41,6 @@ pipeline {
     always {
       junit "**/surefire-reports/*.xml"
     }
+
   }
 }

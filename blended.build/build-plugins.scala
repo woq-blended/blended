@@ -47,9 +47,12 @@ object Plugins {
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
+  val scalaSbt = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
-  val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.0"
+  val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
+  val site = mavenPluginGroup % "maven-site-plugin" % "3.3"
+  val projectReports = mavenPluginGroup % "maven-project-info-reports-plugin" % "2.9"
 }
 
 val skipInstallPlugin = Plugin(
@@ -164,25 +167,21 @@ val scalaCompilerConfig = Config(
 )
 
 val scalaMavenPlugin = Plugin(
-  gav = Plugins.scala,
+  gav = Plugins.scalaSbt,
   executions = Seq(
     Execution(
-      id = "compile-scala",
-      goals = Seq(
-        "compile"
-      ),
-      configuration = scalaCompilerConfig
+      id="scala-source",
+      goals=Seq("addScalaSources"),
+      phase="initialize"
     ),
     Execution(
-      id = "test-compile-scala",
-      goals = Seq(
-        "testCompile"
-      ),
-      configuration = scalaCompilerConfig
+      id = "compile",
+      goals = Seq("compile", "testCompile"),
+      configuration = Config(
+        scalacOptions = "-deprecation -feature -Xlint -Ywarn-nullary-override",
+        scalaVersion = BlendedVersions.scalaVersion
+      )
     )
-  ),
-  configuration = Config(
-    scalaVersion = BlendedVersions.scalaVersion
   )
 )
 
