@@ -7,7 +7,12 @@ object BuildHelper {
 
   lazy val defaultSettings : Seq[Def.SettingsDefinition] = Seq(
     organization := BlendedVersions.blendedGroupId,
+    homepage := Some(url("https://github.com/woq-blended/blended")),
     version := BlendedVersions.blended,
+    licenses += ("Apache 2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    developers := List(
+      Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("http://www.wayofquality.de"))
+    ),
 
     scalaVersion := BlendedVersions.scala,
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
@@ -66,7 +71,10 @@ object BuildHelper {
     Seq(
       OsgiKeys.bundleSymbolicName := symbolicName,
       OsgiKeys.bundleVersion := BlendedVersions.blended,
-      OsgiKeys.exportPackage := exports.map(symbolicName + "." + _),
+      OsgiKeys.exportPackage := exports.map(p => p match {
+        case e if e.isEmpty => symbolicName
+        case s => symbolicName + "." + s
+      }),
       OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")
     )
   }
