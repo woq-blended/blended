@@ -3,18 +3,9 @@ import sbt._
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
-lazy val defaultSettings : Seq[Def.SettingsDefinition] = Seq(
-  organization := BlendedVersions.blendedGroupId,
-  version := BlendedVersions.blended,
-
-  scalaVersion := BlendedVersions.scala,
-  scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
-  sourcesInBase := false
-)
-
 lazy val root = project
   .in(file("."))
-  .settings(defaultSettings:_*)
+  .settings(BuildHelper.defaultSettings:_*)
   .settings(
     name := "blended"
   )
