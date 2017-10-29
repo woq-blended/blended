@@ -20,6 +20,28 @@ object BuildHelper {
     sourcesInBase := false
   )
 
+  def bundleSettings(
+    symbolicName : String,
+    exports: Seq[String] = Seq.empty,
+    imports: Seq[String] = Seq.empty
+  ) : Seq[Def.SettingsDefinition] = {
+
+    val scalaRange : String => String = { sv =>
+      val v = sv.split("\\.").take(2).mkString(".")
+      "scala.*;version=\"[" + v + "," + v + ".50)\""
+    }
+
+    Seq(
+      OsgiKeys.bundleSymbolicName := symbolicName,
+      OsgiKeys.bundleVersion := BlendedVersions.blended,
+      OsgiKeys.exportPackage := exports.map(p => p match {
+        case e if e.isEmpty => symbolicName
+        case s => symbolicName + "." + s
+      }),
+      OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")
+    )
+  }
+
   def blendedOsgiProject(
     pName: String,
     pDescription: Option[String] = None,
@@ -57,27 +79,4 @@ object BuildHelper {
       )
 
   }
-
-  def bundleSettings(
-    symbolicName : String,
-    exports: Seq[String] = Seq.empty,
-    imports: Seq[String] = Seq.empty
-  ) : Seq[Def.SettingsDefinition] = {
-
-    val scalaRange : String => String = { sv =>
-      val v = sv.split("\\.").take(2).mkString(".")
-      "scala.*;version=\"[" + v + "," + v + ".50)\""
-    }
-
-    Seq(
-      OsgiKeys.bundleSymbolicName := symbolicName,
-      OsgiKeys.bundleVersion := BlendedVersions.blended,
-      OsgiKeys.exportPackage := exports.map(p => p match {
-        case e if e.isEmpty => symbolicName
-        case s => symbolicName + "." + s
-      }),
-      OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")
-    )
-  }
-
 }

@@ -2,18 +2,18 @@ package blended.updater.config.util
 
 import org.scalatest.FreeSpec
 import java.io.File
+
 import scala.io.Source
 import scala.util.Failure
-import scala.util.Failure
-import blended.testsupport.TestFile
+import blended.testsupport.{BlendedTestSupport, TestFile}
 
 class UnzipperTest extends FreeSpec
     with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 
-  val testZip = new File("src/test/binaryResources/test.zip")
-  val test2Zip = new File("src/test/binaryResources/test2.zip")
+  val testZip = new File(BlendedTestSupport.projectTestOutput + "/test.zip")
+  val test2Zip = new File(BlendedTestSupport.projectTestOutput + "/test2.zip")
 
   "test environment" - {
     "should contain a usable test.zip file" in {

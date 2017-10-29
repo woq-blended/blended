@@ -7,12 +7,17 @@ lazy val root = project
   .in(file("."))
   .settings(BuildHelper.defaultSettings:_*)
   .settings(
-    name := "blended"
+    name := "blended",
+    publish := {},
+    publishLocal := {},
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedUpdaterConfigJs)
   )
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
     blendedUtil,
-    blendedTestsupport
+    blendedTestsupport,
+    blendedUpdaterConfigJs,
+    blendedUpdaterConfigJvm
   )
 
 lazy val blendedUtil = BuildHelper.blendedOsgiProject(
@@ -45,3 +50,39 @@ lazy val blendedTestsupport = BuildHelper.blendedProject(
     Dependencies.logbackClassic % "test"
   )
 ).dependsOn(blendedUtil)
+
+lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
+  .settings(BuildHelper.defaultSettings:_*)
+  .settings(
+    name := "blended.updater.config",
+    description := "Configurations for Updater and Launcher",
+
+    libraryDependencies ++= Seq(
+      Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
+      Dependencies.scalatest.organization %%% Dependencies.scalatest.name % Dependencies.scalatestVersion % "test"
+    )
+  )
+  .jvmSettings(BuildHelper.bundleSettings(
+    symbolicName = "blended.updater.config",
+    exports = Seq("", "json", "util"), // blended.launcher.config,
+    imports = Seq.empty
+  ):_*)
+  .jvmSettings(
+    unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "binaryResources",
+    unmanagedResourceDirectories in Test += baseDirectory.value / "src" / "test" / "binaryResources",
+    javaOptions in Test += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes") ,
+    fork in Test := true,
+    libraryDependencies ++= Seq(
+      Dependencies.typesafeConfig,
+      Dependencies.slf4j,
+      Dependencies.scalatest % "test",
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test"
+    )
+  )
+
+lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
+  .dependsOn(blendedTestsupport % "test")
+  .enablePlugins(SbtOsgi)
+
+lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
