@@ -2,34 +2,10 @@ pipeline {
   agent any
   stages {
 
-    stage('Build externals') {
+    stage('Preliminary SBT Build') {
       steps {
         ansiColor('xterm') {
-          sh 'bash ./blended.build/01_1_buildScalaJSReactComponents.sh ${WORKSPACE}'
-        }
-      }
-    }
-
-    stage('Blended build') {
-      steps {
-        ansiColor('xterm') {
-          sh 'bash ./blended.build/02_buildBlended.sh ${WORKSPACE}'
-        }
-      }
-    }
-
-    stage('Docker images') {
-      steps {
-        ansiColor('xterm') {
-          sh 'bash ./blended.build/03_createDockerImages.sh ${WORKSPACE}'
-        }
-      }
-    }
-
-    stage('Integration Tests') {
-      steps {
-        ansiColor('xterm') {
-          sh 'bash ./blended.build/04_integrationTest.sh ${WORKSPACE}'
+          sh 'sbt clean test publishLocal osgiBundle unidoc'
         }
       }
     }
@@ -39,7 +15,7 @@ pipeline {
   post {
 
     always {
-      junit "**/surefire-reports/*.xml"
+      junit "**/test-reports/*.xml"
     }
 
   }
