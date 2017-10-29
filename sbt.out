@@ -1,0 +1,544 @@
+# Executing command line:
+java
+-Xms1024m
+-Xmx1024m
+-XX:ReservedCodeCacheSize=128m
+-XX:MaxMetaspaceSize=256m
+-jar
+/opt/sbt/bin/sbt-launch.jar
+clean
+test
+publishLocal
+unidoc
+
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from plugins.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading project definition from /home/andreas/projects/blended/project[0m
+[0m[[0m[0minfo[0m] [0m[0mLoading settings from build.sbt ...[0m
+[0m[[0m[0minfo[0m] [0m[0mSet current project to blended (in build file:/home/andreas/projects/blended/)[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 0 s, completed Oct 29, 2017 11:22:53 PM[0m
+[0m[[0m[0minfo[0m] [0m[0mUpdating {file:/home/andreas/projects/blended/}root...[0m
+[0m[[0m[0minfo[0m] [0m[0mUpdating {file:/home/andreas/projects/blended/}blendedUpdaterConfigJS...[0m
+[0m[[0m[0minfo[0m] [0m[0mUpdating {file:/home/andreas/projects/blended/}BlendedUtil...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone updating.[0m
+[0m[[0m[0minfo[0m] [0m[0mDone updating.[0m
+[0m[[0m[0minfo[0m] [0m[0mUpdating {file:/home/andreas/projects/blended/}BlendedTestsupport...[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 3 Scala sources and 5 Java sources to /home/andreas/projects/blended/blended.util/target/scala-2.11/classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone updating.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 25 Scala sources to /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone updating.[0m
+[0m[[0m[0minfo[0m] [0m[0mUpdating {file:/home/andreas/projects/blended/}blendedUpdaterConfigJVM...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone updating.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 49 Scala sources to /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/classes ...[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/launcher/config/LauncherConfig.scala:76:51: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m      "bundles" -> launcherConfig.bundles.map { b =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/RuntimeConfigCompanion.scala:61:9: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m    val config = Map([0m
+[0m[[0m[33mwarn[0m] [0m[0m        ^[0m
+[0m[[0m[0minfo[0m] [0m[0m/home/andreas/projects/blended/blended.util/src/main/java/blended/util/ReflectionHelper.java: /home/andreas/projects/blended/blended.util/src/main/java/blended/util/ReflectionHelper.java uses unchecked or unsafe operations.[0m
+[0m[[0m[0minfo[0m] [0m[0m/home/andreas/projects/blended/blended.util/src/main/java/blended/util/ReflectionHelper.java: Recompile with -Xlint:unchecked for details.[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 7 Scala sources and 2 Java sources to /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 2 Scala sources and 3 Java sources to /home/andreas/projects/blended/blended.util/target/scala-2.11/test-classes ...[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelMockActor.scala:54:31: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def handleRquests(messages: List[CamelMessage]) : Receive = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelMockActor.scala:70:45: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def receiving(routeId : String)(messages: List[CamelMessage]) : Receive = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                            ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:16:103: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit context: CamelContext): Either[Exception, CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:20:137: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                        ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:24:159: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:45:137: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                        ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:49:159: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:68:25: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def headerExists(msg: CamelMessage, headerName: String) = msg.getHeaders.containsKey(headerName)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                        ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:70:36: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def missingHeaderNames(exchange: CamelMessage, mandatoryHeaders: List[String]) =[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:73:68: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def camelMessage(msg: Message)(implicit context: CamelContext) : CamelMessage =[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:76:171: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  private [CamelTestSupport] def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : CamelMessage =[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                                                          ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:86:151: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  private[CamelTestSupport] def createMessageFromFile(message: String, binary: Boolean, props: Map[String, String])(implicit context: CamelContext) : Option[CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                                                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:96:122: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  private[CamelTestSupport] def createMessageFromXML(message: String, binary: Boolean)(implicit context: CamelContext) : Option[CamelMessage] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                                                         ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/CamelTestSupport.scala:108:40: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  private[this] def camelExchange(msg: CamelMessage)(implicit context: CamelContext) : Exchange = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                       ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:17:40: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  private[this] def extractHeader (m : CamelMessage) : Map[String, Any] = m.getHeaders.asScala.toMap[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                       ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:24:55: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def minMessageCount(n: Int) : MockAssertion = { l : List[CamelMessage] =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                      ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:35:60: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def expectedMessageCount(n: Int) : MockAssertion = { l : List[CamelMessage] => [0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:42:59: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def expectedBodies(bodies: Any*) : MockAssertion = { l: List[CamelMessage] =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                          ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:67:75: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  def expectedHeaders(headers : Map[String, Any]*) : MockAssertion = { l: List[CamelMessage] =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                          ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:69:31: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m    def misMatchedHeaders(m : CamelMessage, expected: Map[String, Any]) : Map[String, Any] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                              ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/assertions.scala:77:35: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m    def compareHeaders(matchList: Map[CamelMessage, Map[String, Any]]) : Either[Throwable, String] = {[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/protocol/protocol.scala:7:43: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  type MockAssertion = List[CamelMessage] => AssertionResult[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                          ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/protocol/protocol.scala:12:14: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  case class ReceivedMessages(messages: List[CamelMessage])[0m
+[0m[[0m[33mwarn[0m] [0m[0m             ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/protocol/protocol.scala:12:41: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  case class ReceivedMessages(messages: List[CamelMessage])[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                        ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/protocol/protocol.scala:14:14: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  case class MockMessageReceived(uri: String, msg: CamelMessage)[0m
+[0m[[0m[33mwarn[0m] [0m[0m             ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.testsupport/src/main/scala/blended/testsupport/camel/protocol/protocol.scala:14:52: class CamelMessage in package camel is deprecated: Akka Camel is deprecated in favour of 'Alpakka', the Akka Streams based collection of integrations to various endpoints (including Camel).[0m
+[0m[[0m[33mwarn[0m] [0m[0m  case class MockMessageReceived(uri: String, msg: CamelMessage)[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                   ^[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[33mwarn[0m] [0m[0m26 warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 1 Scala source and 1 Java source to /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/test-classes ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+23:23:05,876 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback-test.xml]
+23:23:05,876 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Could NOT find resource [logback.groovy]
+23:23:05,879 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback.xml] at [file:/home/andreas/projects/blended/blended.util/target/scala-2.11/test-classes/logback.xml]
+23:23:06,035 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - debug attribute not set
+23:23:06,075 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - Will scan for changes in [file:/home/andreas/projects/blended/blended.util/target/scala-2.11/test-classes/logback.xml] 
+23:23:06,075 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - Setting ReconfigureOnChangeTask scanning period to 15 seconds
+23:23:06,085 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
+23:23:06,090 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]
+23:23:06,242 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - This appender no longer admits a layout as a sub-component, set an encoder instead.
+23:23:06,242 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - To ensure compatibility, wrapping your layout in LayoutWrappingEncoder.
+23:23:06,242 |-WARN in ch.qos.logback.core.ConsoleAppender[STDOUT] - See also http://logback.qos.ch/codes.html#layoutInsteadOfEncoder for details
+23:23:06,247 |-INFO in ch.qos.logback.classic.joran.action.RootLoggerAction - Setting level of ROOT logger to INFO
+23:23:06,247 |-INFO in ch.qos.logback.core.joran.action.AppenderRefAction - Attaching appender named [STDOUT] to Logger[ROOT]
+23:23:06,249 |-INFO in ch.qos.logback.classic.joran.action.ConfigurationAction - End of configuration.
+23:23:06,251 |-INFO in ch.qos.logback.classic.joran.JoranConfigurator@44611050 - Registering current configuration as safe fallback point
+
+INFO  | 2017-10-29-23:23.06.275 |      441 | akka.event.slf4j.Slf4jLogger   | Slf4jLogger started
+INFO  | 2017-10-29-23:23.06.284 |      450 | akka.event.slf4j.Slf4jLogger   | Slf4jLogger started
+INFO  | 2017-10-29-23:23.06.905 |     1071 | b.u.protocol.TrackingCounter   | Tracking counter ending with [CounterInfo(0,None,None)] for [Actor[akka://TrackingCounterSpec/system/testActor-2#-1990776471]]
+INFO  | 2017-10-29-23:23.07.235 |     1401 | b.u.protocol.TrackingCounter   | Tracking counter ending with [CounterInfo(0,None,None)] for [Actor[akka://TrackingCounterSpec/system/testActor-2#-1990776471]]
+INFO  | 2017-10-29-23:23.07.260 |     1426 | b.u.protocol.TrackingCounter   | Tracking counter ending with [CounterInfo(1,Some(1509315787258),Some(1509315787258))] for [Actor[akka://TrackingCounterSpec/system/testActor-2#-1990776471]]
+[0m[[0m[0minfo[0m] [0m[0m[32mTestFileTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mwithTestFile[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should create a file[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  when DeletePolicy is DeleteNever[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should not delete when no failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should not delete when failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  when DeletePolicy is DeleteWhenNoFailure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should delete when no failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should not delete when failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  when DeletePolicy is DeleteAlways[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should delete when no failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - should delete when failure[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should create a file with correct content[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 1 second, 464 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 8[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 1, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 8, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+INFO  | 2017-10-29-23:23.08.315 |     2481 | b.u.protocol.TrackingCounter   | Tracking counter ending with [CounterInfo(2,Some(1509315787285),Some(1509315788304))] for [Actor[akka://TrackingCounterSpec/system/testActor-2#-1990776471]]
+INFO  | 2017-10-29-23:23.08.326 |     2492 | akka.actor.ActorSystemImpl     | speed is [1.9627085377821392/s]
+[0m[[0m[0minfo[0m] [0m[0m[32mTrackingCounterSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mA tracking counter[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should send a Counter Info after it has timed out[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should respond with a counter info once it is stopped[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should perform normal count operations[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should perform normal stats operations[0m[0m
+INFO  | 2017-10-29-23:23.08.346 |     2512 | akka.actor.ActorSystemImpl     | Speed is [1.9569471624266144 / s]
+[0m[[0m[0minfo[0m] [0m[0m[32mStatsCounterSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mThe StatsCounter[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should start with count 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should increment the counter when an Increment message is received[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should keep track of the first and last time the count has changed[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should Start with an uninitialized interval[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should have the max speed after sending only on counter message[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should track the throughput as count / time unit[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 3 seconds, 840 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 10[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 2, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 10, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 1 Scala source to /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/test-classes ...[0m
+[0m[[0m[33mwarn[0m] [0m[0mtwo warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[0minfo[0m] [0m[0mCompiling 11 Scala sources to /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes ...[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/launcher/config/LauncherConfigTest.scala:116:20: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m      val config = """[0m
+[0m[[0m[33mwarn[0m] [0m[0m                   ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/updater/config/SystemPropertyResolverSpec.scala:19:51: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m      SystemPropertyResolver.resolve(Map("foo" -> "bla${prop}bla", "prop" -> "bla")) should be (Map("foo" -> "blablabla", "prop" -> "bla"))[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/updater/config/SystemPropertyResolverSpec.scala:23:28: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m      val m = Map("foo" -> "${prop1} ${prop1} ${prop1}", "prop1" -> "${prop2}", "prop2" -> "bar")[0m
+[0m[[0m[33mwarn[0m] [0m[0m                           ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/updater/config/SystemPropertyResolverSpec.scala:23:69: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m      val m = Map("foo" -> "${prop1} ${prop1} ${prop1}", "prop1" -> "${prop2}", "prop2" -> "bar")[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                    ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/updater/config/util/UnzipperTest.scala:78:83: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m        assert(files.asInstanceOf[Failure[_]].exception.getCause.getMessage() === "No property found to replace: ${VERSION}")[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/test/scala/blended/updater/config/util/UnzipperTest.scala:88:91: possible missing interpolator: detected an interpolated expression[0m
+[0m[[0m[33mwarn[0m] [0m[0m        assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                                                          ^[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[33mwarn[0m] [0m[0m6 warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0mDone compiling.[0m
+[0m[[0m[0minfo[0m] [0m[0mFast optimizing /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/blended-updater-config-test-fastopt.js[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mFeatureResolverSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAn unresolved Feature[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should resolve[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should resolve transitive[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mLauncherConfigTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMinimal config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read() must succeed[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 0 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 1 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 2 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 3 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read() -> toConfig() -> read() must result in same config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mComplex config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- with prefix overlaying key in system settings[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read() -> toConfig() -> read() must result in same config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mConfig with placeholders[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read() -> toConfig must translate escaped placeholders[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mOverlaysTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mSerialization of OverlayConfig[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- deserializes a config file[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- serializes and desializes to the same config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mOverlay materialized dir for [0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  an empty LocalOverlays[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - materializes not into the same directory[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  a non-empty LocalOverlays[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - materializes into a sub directory[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m  - materializes into same sub dir even if the overlays have different order[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mLocalOverlays validation[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- detects overlays with same name[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- detects overlays with conflicting propetries[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- detects overlays with conflicting generators[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mOverlayConfig validation[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- detects conflicting generators[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mLocalOverlays file generator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- generates nothing if no generators are present[0m[0m
+23:23:21.544 [pool-1-thread-1-ScalaTest-running-OverlaysTest] DEBUG blended.updater.config.ConfigWriter - Creating dir: /tmp/test1363207575962758906/o1-1/o2-1/etc
+[0m[[0m[0minfo[0m] [0m[0m[32m- generates one config file with merged content[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- generates nothing and aborts when configs have conflicts[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickleSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickle real world test cases[0m[0m
+serialized: {"#elems": [{"properties": {"#elems": []}, "containerId": "c840c57d-a357-4b85-937a-2bb6440417d2", "serviceInfos": {"#elems": [{"serviceType": "jmsQueue", "name": "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn", "lifetimeMsec": {"l": 3000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["Name", "SampleIn"], ["InFlightCount", "0"], ["DequeueCount", "0"], ["QueueSize", "0"], ["EnqueueCount", "0"]]}, "timestampMsec": {"l": 3895797.0, "m": 359848.0, "h": 0.0}}, {"serviceType": "jmsQueue", "name": "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn,endpoint=Consumer,clientId=ID_x3.local-45075-1488278206331-3_1,consumerId=ID_x3.local-45075-1488278206331-4_1_2_1", "lifetimeMsec": {"l": 3000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["Name", "SampleIn"], ["InFlightCount", "0"], ["DequeueCount", "0"], ["QueueSize", "0"], ["EnqueueCount", "0"]]}, "timestampMsec": {"l": 3895797.0, "m": 359848.0, "h": 0.0}}, {"serviceType": "Runtime", "name": "java.lang:type=Memory", "lifetimeMsec": {"l": 3000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["HeapMemoryUsage.committed", "383254528"], ["HeapMemoryUsage.init", "260046848"], ["HeapMemoryUsage.max", "3693084672"], ["HeapMemoryUsage.used", "135072144"]]}, "timestampMsec": {"l": 3895797.0, "m": 359848.0, "h": 0.0}}, {"serviceType": "Runtime", "name": "java.lang:type=OperationSystem", "lifetimeMsec": {"l": 3000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["Name", "Linux"]]}, "timestampMsec": {"l": 3895797.0, "m": 359848.0, "h": 0.0}}, {"serviceType": "Updater", "name": "akka:\/\/BlendedActorSystem\/user\/blended.updater", "lifetimeMsec": {"l": 3000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["profile.active", "blended.demo.node-2.1.0-SNAPSHOT"], ["profiles.valid", "blended.demo.node-2.1.0-SNAPSHOT"]]}, "timestampMsec": {"l": 3895797.0, "m": 359848.0, "h": 0.0}}]}, "timestampMsec": {"l": 1.0, "m": 0.0, "h": 0.0}, "profiles": {"#elems": []}}]}
+[0m[[0m[0minfo[0m] [0m[0m[32m- 1. deserialize a container info[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickle should (de)serialize[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- an ActivateProfile[0m[0m
+json: {"#cls": "blended.updater.config.ActivateProfile", "#val": {"profileName": "test", "profileVersion": "1.0", "overlays": {"#elems": [{"name": "myOverlay", "version": "1.0"}]}}}
+[0m[[0m[0minfo[0m] [0m[0m[32m- an ActivateProfile as UpdateAction[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a GeneratedConfig[0m[0m
+json: {"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3896026.0, "m": 359848.0, "h": 0.0}}
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ServiceInfo[0m[0m
+json: {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3896030.0, "m": 359848.0, "h": 0.0}}]}
+[0m[[0m[0minfo[0m] [0m[0m[32m- a list of ServiceInfo's[0m[0m
+json: {"properties": {"#elems": [["foo", "bar"]]}, "containerId": "myId", "serviceInfos": {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3896034.0, "m": 359848.0, "h": 0.0}}]}, "timestampMsec": {"l": 1.0, "m": 0.0, "h": 0.0}, "profiles": {"#elems": [{"name": "myProfile", "version": "1.0", "overlays": {"#elems": [{"overlays": {"#elems": []}, "state": {"#cls": "blended.updater.config.OverlayState$Valid$", "#val": {"#scalaObj": "blended.updater.config.OverlayState.Valid"}}, "reason": {"#elems": []}}]}}]}}
+json: {"id": "response", "actions": {"#elems": []}}
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ContainerInfo[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ContainerRegistryResponseOK[0m[0m
+json: {"containerInfo": {"properties": {"#elems": [["foo", "bar"]]}, "containerId": "myId", "serviceInfos": {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000.0, "m": 0.0, "h": 0.0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3896059.0, "m": 359848.0, "h": 0.0}}]}, "timestampMsec": {"l": 1.0, "m": 0.0, "h": 0.0}, "profiles": {"#elems": [{"name": "myProfile", "version": "1.0", "overlays": {"#elems": [{"overlays": {"#elems": []}, "state": {"#cls": "blended.updater.config.OverlayState$Valid$", "#val": {"#scalaObj": "blended.updater.config.OverlayState.Valid"}}, "reason": {"#elems": []}}]}}]}}, "outstandingUpdateActions": {"#elems": [{"#cls": "blended.updater.config.ActivateProfile", "#val": {"profileName": "test", "profileVersion": "1.0", "overlays": {"#elems": [{"name": "myOverlay", "version": "1.0"}]}}}]}}
+[0m[[0m[0minfo[0m] [0m[0m[32m- a RemoteContainerState[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickleJvmSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mJVM: Prickle should (de)serialize[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a GeneratedConfig[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mResolvedRuntimeConfigSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mA Config with features references[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be constructable with extra features[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should be constructable with optional resolved features[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not be constructable when some feature refs are not resolved[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not be constructable when no bundle with startlevel 0 is present[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[33m- should not be constructable when cycles between feature refs exist (pending)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should migrate all known features into RuntimeConfig.resolvedFeatures[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mRuntimeConfigTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMinimal config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 0 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 1 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 2 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 3 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- without line 4 must fail[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- read -> toConfig -> read must result in same config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mresolveFileName[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should infer the correct filename from a file URL[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should infer the correct filename from a http URL[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should infer the correct filename from a mvn URL without a repo setting[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mA Config with features references[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should resolve to a valid config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mProperty file generator[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not write a properties file without required settings[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should write properties file without a previous config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should write properties file from previous config[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not loose old non-mandatory properties but overwrite existing mandatory ones[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should accept new mandatory properties and their initial values[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mDownload[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 1)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 2)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 3)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 4)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 5)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 6)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 7)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 8)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 9)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should download a local file (try 10)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mSystemPropertyResolverSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mThe System Property Resolver[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should Resolve an empty set[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should Resolve a map without place holders[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should Resolve a map with simple placeholders[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should Resolve a map with chained placeholders[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mMvnUrlTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mtoUrl[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(g,a,1,None,jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,None,jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,None,zip)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,Some(test),jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,Some(etc),zip)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,None,war)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should process MvnGav(a.b.c,d.e.f,1,Some(jar),jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mparse[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a:1 to MvnGav(g,a,1,None,jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a:pom:1 to MvnGav(g,a,1,Some(pom),pom)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a:pom:1:pom to MvnGav(g,a,1,Some(pom),pom)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a:jdk16:1 to MvnGav(g,a,1,Some(jdk16),jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a::1:war to MvnGav(g,a,1,None,war)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse g:a:jar:1 to MvnGav(g,a,1,None,jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should parse io.hawt:hawtio-osgi-jmx::1.4.51:jar to MvnGav(io.hawt,hawtio-osgi-jmx,1.4.51,None,jar)[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not parse g:a[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not parse a[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not parse g:a:1:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should not parse a:b:c:d:e:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mUnzipperTest:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mtest environment[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- should contain a usable test.zip file[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mWith a usable test.zip file[0m[0m
+23:23:22.823 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test.zip to /tmp/test5755325696169397789
+23:23:22.826 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting file1.txt
+23:23:22.827 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir1/
+23:23:22.828 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting dir1/file2a.txt
+23:23:22.828 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir1/dir1a/
+23:23:22.829 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir2/
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking everything should work[0m[0m
+23:23:22.845 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test.zip to /tmp/test914351814159022712
+23:23:22.845 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Only extracting some content of zip file
+23:23:22.850 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir2
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking with blacklist 1 should work[0m[0m
+23:23:22.861 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test.zip to /tmp/test8349682379823095673
+23:23:22.861 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Only extracting some content of zip file
+23:23:22.862 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting file1.txt
+23:23:22.863 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir1
+23:23:22.864 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting dir1/file2a.txt
+23:23:22.865 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating dir2
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking with blacklist 2 should work[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mWith a usable test2.zip file[0m[0m
+23:23:22.894 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test2.zip to /tmp/test3411886829981596523
+23:23:22.896 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating etc/
+23:23:22.897 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting etc/test.conf
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking everything and replacing a varible should work[0m[0m
+23:23:22.925 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test2.zip to /tmp/test4660341438385119077
+23:23:22.926 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating etc/
+23:23:22.928 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting etc/test.conf
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking everything and replacing a missing varible should not work[0m[0m
+23:23:22.965 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper - Extracting zip archive /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/test-classes/test2.zip to /tmp/test563669523412387725
+23:23:22.966 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Creating etc/
+23:23:22.967 [pool-1-thread-1-ScalaTest-running-UnzipperTest] DEBUG blended.updater.config.util.Unzipper -   Extracting etc/test.conf
+[0m[[0m[0minfo[0m] [0m[0m[32m- unpacking everything and replacing a missing varible should work when failOnMissing is false[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 3 seconds, 683 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 93[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 10, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 93, failed 0, canceled 0, ignored 0, pending 1[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+serialized: {"#elems": [{"properties": {"#elems": []}, "containerId": "c840c57d-a357-4b85-937a-2bb6440417d2", "serviceInfos": {"#elems": [{"serviceType": "jmsQueue", "name": "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn", "lifetimeMsec": {"l": 3000, "m": 0, "h": 0}, "props": {"#elems": [["Name", "SampleIn"], ["InFlightCount", "0"], ["DequeueCount", "0"], ["QueueSize", "0"], ["EnqueueCount", "0"]]}, "timestampMsec": {"l": 3902374, "m": 359848, "h": 0}}, {"serviceType": "jmsQueue", "name": "org.apache.activemq:type=Broker,brokerName=blended,destinationType=Queue,destinationName=SampleIn,endpoint=Consumer,clientId=ID_x3.local-45075-1488278206331-3_1,consumerId=ID_x3.local-45075-1488278206331-4_1_2_1", "lifetimeMsec": {"l": 3000, "m": 0, "h": 0}, "props": {"#elems": [["Name", "SampleIn"], ["InFlightCount", "0"], ["DequeueCount", "0"], ["QueueSize", "0"], ["EnqueueCount", "0"]]}, "timestampMsec": {"l": 3902374, "m": 359848, "h": 0}}, {"serviceType": "Runtime", "name": "java.lang:type=Memory", "lifetimeMsec": {"l": 3000, "m": 0, "h": 0}, "props": {"#elems": [["HeapMemoryUsage.committed", "383254528"], ["HeapMemoryUsage.init", "260046848"], ["HeapMemoryUsage.max", "3693084672"], ["HeapMemoryUsage.used", "135072144"]]}, "timestampMsec": {"l": 3902375, "m": 359848, "h": 0}}, {"serviceType": "Runtime", "name": "java.lang:type=OperationSystem", "lifetimeMsec": {"l": 3000, "m": 0, "h": 0}, "props": {"#elems": [["Name", "Linux"]]}, "timestampMsec": {"l": 3902375, "m": 359848, "h": 0}}, {"serviceType": "Updater", "name": "akka:\/\/BlendedActorSystem\/user\/blended.updater", "lifetimeMsec": {"l": 3000, "m": 0, "h": 0}, "props": {"#elems": [["profile.active", "blended.demo.node-2.1.0-SNAPSHOT"], ["profiles.valid", "blended.demo.node-2.1.0-SNAPSHOT"]]}, "timestampMsec": {"l": 3902375, "m": 359848, "h": 0}}]}, "timestampMsec": {"l": 1, "m": 0, "h": 0}, "profiles": {"#elems": []}}]}
+json: {"#cls": "blended.updater.config.ActivateProfile", "#val": {"profileName": "test", "profileVersion": "1.0", "overlays": {"#elems": [{"name": "myOverlay", "version": "1.0"}]}}}
+json: {"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000, "m": 0, "h": 0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3902464, "m": 359848, "h": 0}}
+json: {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000, "m": 0, "h": 0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3902468, "m": 359848, "h": 0}}]}
+json: {"properties": {"#elems": [["foo", "bar"]]}, "containerId": "myId", "serviceInfos": {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000, "m": 0, "h": 0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3902476, "m": 359848, "h": 0}}]}, "timestampMsec": {"l": 1, "m": 0, "h": 0}, "profiles": {"#elems": [{"name": "myProfile", "version": "1.0", "overlays": {"#elems": [{"overlays": {"#elems": []}, "state": {"#cls": "blended.updater.config.OverlayState$Valid$", "#val": {"#scalaObj": "blended.updater.config.OverlayState.Valid"}}, "reason": {"#elems": []}}]}}]}}
+json: {"id": "response", "actions": {"#elems": []}}
+json: {"containerInfo": {"properties": {"#elems": [["foo", "bar"]]}, "containerId": "myId", "serviceInfos": {"#elems": [{"serviceType": "myType", "name": "mySvc", "lifetimeMsec": {"l": 1000, "m": 0, "h": 0}, "props": {"#elems": [["svc", "test"]]}, "timestampMsec": {"l": 3902503, "m": 359848, "h": 0}}]}, "timestampMsec": {"l": 1, "m": 0, "h": 0}, "profiles": {"#elems": [{"name": "myProfile", "version": "1.0", "overlays": {"#elems": [{"overlays": {"#elems": []}, "state": {"#cls": "blended.updater.config.OverlayState$Valid$", "#val": {"#scalaObj": "blended.updater.config.OverlayState.Valid"}}, "reason": {"#elems": []}}]}}]}}, "outstandingUpdateActions": {"#elems": [{"#cls": "blended.updater.config.ActivateProfile", "#val": {"profileName": "test", "profileVersion": "1.0", "overlays": {"#elems": [{"name": "myOverlay", "version": "1.0"}]}}}]}}
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickleSpec:[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickle real world test cases[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- 1. deserialize a container info[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mPrickle should (de)serialize[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- an ActivateProfile[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- an ActivateProfile as UpdateAction[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a GeneratedConfig[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ServiceInfo[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a list of ServiceInfo's[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ContainerInfo[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a ContainerRegistryResponseOK[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32m- a RemoteContainerState[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mRun completed in 670 milliseconds.[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTotal number of tests run: 9[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mSuites: completed 1, aborted 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[36mTests: succeeded 9, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0m[0minfo[0m] [0m[0m[32mAll tests passed.[0m[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 35 s, completed Oct 29, 2017 11:23:28 PM[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/blended-testsupport_2.11-2.3.0-RC5-SNAPSHOT-sources.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/blended-updater-config_sjs0.6_2.11-2.3.0-RC5-SNAPSHOT-sources.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/blended-updater-config_2.11-2.3.0-RC5-SNAPSHOT-sources.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.util/target/scala-2.11/blended-util_2.11-2.3.0-RC5-SNAPSHOT-sources.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0mWrote /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/blended-updater-config_sjs0.6_2.11-2.3.0-RC5-SNAPSHOT.pom[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation to /home/andreas/projects/blended/blended.util/target/scala-2.11/api...[0m
+[0m[[0m[0minfo[0m] [0m[0mWrote /home/andreas/projects/blended/blended.util/target/scala-2.11/blended-util_2.11-2.3.0-RC5-SNAPSHOT.pom[0m
+[0m[[0m[0minfo[0m] [0m[0mWrote /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/blended-testsupport_2.11-2.3.0-RC5-SNAPSHOT.pom[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation to /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/api...[0m
+[0m[[0m[0minfo[0m] [0m[0mWrote /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/blended-updater-config_2.11-2.3.0-RC5-SNAPSHOT.pom[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation to /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/api...[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation to /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/api...[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/blended-updater-config_sjs0.6_2.11-2.3.0-RC5-SNAPSHOT.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/blended-testsupport_2.11-2.3.0-RC5-SNAPSHOT.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/blended-updater-config_2.11-2.3.0-RC5-SNAPSHOT.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/util/Unzipper.scala:84:5: discarding unmoored doc comment[0m
+[0m[[0m[33mwarn[0m] [0m[0m    /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m    ^[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+model contains 19 documentable templates
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/launcher/config/LauncherConfig.scala:76:51: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m      "bundles" -> launcherConfig.bundles.map { b =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+model contains 31 documentable templates
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation successful.[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.util/target/scala-2.11/blended-util_2.11-2.3.0-RC5-SNAPSHOT-javadoc.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0m:: delivering :: de.wayofquality.blended#blended-util_2.11;2.3.0-RC5-SNAPSHOT :: 2.3.0-RC5-SNAPSHOT :: integration :: Sun Oct 29 23:23:31 CET 2017[0m
+[0m[[0m[0minfo[0m] [0m[0m	delivering ivy file to /home/andreas/projects/blended/blended.util/target/scala-2.11/ivy-2.3.0-RC5-SNAPSHOT.xml[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-util_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-util_2.11/2.3.0-RC5-SNAPSHOT/poms/blended-util_2.11.pom[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-util_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-util_2.11/2.3.0-RC5-SNAPSHOT/bundles/blended-util_2.11.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-util_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-util_2.11/2.3.0-RC5-SNAPSHOT/srcs/blended-util_2.11-sources.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-util_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-util_2.11/2.3.0-RC5-SNAPSHOT/docs/blended-util_2.11-javadoc.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published ivy to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-util_2.11/2.3.0-RC5-SNAPSHOT/ivys/ivy.xml[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation successful.[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/blended-testsupport_2.11-2.3.0-RC5-SNAPSHOT-javadoc.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0m:: delivering :: de.wayofquality.blended#blended-testsupport_2.11;2.3.0-RC5-SNAPSHOT :: 2.3.0-RC5-SNAPSHOT :: integration :: Sun Oct 29 23:23:31 CET 2017[0m
+[0m[[0m[0minfo[0m] [0m[0m	delivering ivy file to /home/andreas/projects/blended/blended.testsupport/target/scala-2.11/ivy-2.3.0-RC5-SNAPSHOT.xml[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-testsupport_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-testsupport_2.11/2.3.0-RC5-SNAPSHOT/poms/blended-testsupport_2.11.pom[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/RuntimeConfigCompanion.scala:61:9: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m    val config = Map([0m
+[0m[[0m[33mwarn[0m] [0m[0m        ^[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-testsupport_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-testsupport_2.11/2.3.0-RC5-SNAPSHOT/jars/blended-testsupport_2.11.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-testsupport_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-testsupport_2.11/2.3.0-RC5-SNAPSHOT/srcs/blended-testsupport_2.11-sources.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-testsupport_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-testsupport_2.11/2.3.0-RC5-SNAPSHOT/docs/blended-testsupport_2.11-javadoc.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published ivy to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-testsupport_2.11/2.3.0-RC5-SNAPSHOT/ivys/ivy.xml[0m
+model contains 50 documentable templates
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/shared/src/main/scala/blended/updater/config/Mapper.scala:9:1: Could not find any member to link for "java.util.Map".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0mone warning found[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation successful.[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/blended-updater-config_sjs0.6_2.11-2.3.0-RC5-SNAPSHOT-javadoc.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0m:: delivering :: de.wayofquality.blended#blended-updater-config_sjs0.6_2.11;2.3.0-RC5-SNAPSHOT :: 2.3.0-RC5-SNAPSHOT :: integration :: Sun Oct 29 23:23:33 CET 2017[0m
+[0m[[0m[0minfo[0m] [0m[0m	delivering ivy file to /home/andreas/projects/blended/blended.updater.config/js/target/scala-2.11/ivy-2.3.0-RC5-SNAPSHOT.xml[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_sjs0.6_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_sjs0.6_2.11/2.3.0-RC5-SNAPSHOT/poms/blended-updater-config_sjs0.6_2.11.pom[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_sjs0.6_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_sjs0.6_2.11/2.3.0-RC5-SNAPSHOT/jars/blended-updater-config_sjs0.6_2.11.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_sjs0.6_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_sjs0.6_2.11/2.3.0-RC5-SNAPSHOT/srcs/blended-updater-config_sjs0.6_2.11-sources.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_sjs0.6_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_sjs0.6_2.11/2.3.0-RC5-SNAPSHOT/docs/blended-updater-config_sjs0.6_2.11-javadoc.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published ivy to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_sjs0.6_2.11/2.3.0-RC5-SNAPSHOT/ivys/ivy.xml[0m
+model contains 90 documentable templates
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ConfigConverter.scala:10:1: Could not find any member to link for "LauncherConfig".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ConfigWriter.scala:8:1: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/shared/src/main/scala/blended/updater/config/Mapper.scala:9:1: Could not find any member to link for "java.util.Map".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:10:1: Could not find any member to link for "blended.updater.Updater".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:47:3: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:72:3: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:31:3: Could not find any member to link for "OverlayConfigCompanion#materializedDir".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m10 warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation successful.[0m
+[0m[[0m[0minfo[0m] [0m[0mPackaging /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/blended-updater-config_2.11-2.3.0-RC5-SNAPSHOT-javadoc.jar ...[0m
+[0m[[0m[0minfo[0m] [0m[0mDone packaging.[0m
+[0m[[0m[0minfo[0m] [0m[0m:: delivering :: de.wayofquality.blended#blended-updater-config_2.11;2.3.0-RC5-SNAPSHOT :: 2.3.0-RC5-SNAPSHOT :: integration :: Sun Oct 29 23:23:35 CET 2017[0m
+[0m[[0m[0minfo[0m] [0m[0m	delivering ivy file to /home/andreas/projects/blended/blended.updater.config/jvm/target/scala-2.11/ivy-2.3.0-RC5-SNAPSHOT.xml[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_2.11/2.3.0-RC5-SNAPSHOT/poms/blended-updater-config_2.11.pom[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_2.11/2.3.0-RC5-SNAPSHOT/jars/blended-updater-config_2.11.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_2.11/2.3.0-RC5-SNAPSHOT/srcs/blended-updater-config_2.11-sources.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published blended-updater-config_2.11 to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_2.11/2.3.0-RC5-SNAPSHOT/docs/blended-updater-config_2.11-javadoc.jar[0m
+[0m[[0m[0minfo[0m] [0m[0m	published ivy to /home/andreas/.ivy2/local/de.wayofquality.blended/blended-updater-config_2.11/2.3.0-RC5-SNAPSHOT/ivys/ivy.xml[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 7 s, completed Oct 29, 2017 11:23:35 PM[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation to /home/andreas/projects/blended/target/scala-2.11/unidoc...[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/util/Unzipper.scala:84:5: discarding unmoored doc comment[0m
+[0m[[0m[33mwarn[0m] [0m[0m    /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m    ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/launcher/config/LauncherConfig.scala:76:51: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m      "bundles" -> launcherConfig.bundles.map { b =>[0m
+[0m[[0m[33mwarn[0m] [0m[0m                                                  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/RuntimeConfigCompanion.scala:61:9: a type was inferred to be `Any`; this may indicate a programming error.[0m
+[0m[[0m[33mwarn[0m] [0m[0m    val config = Map([0m
+[0m[[0m[33mwarn[0m] [0m[0m        ^[0m
+model contains 134 documentable templates
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ConfigConverter.scala:10:1: Could not find any member to link for "LauncherConfig".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ConfigWriter.scala:8:1: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/shared/src/main/scala/blended/updater/config/Mapper.scala:9:1: Could not find any member to link for "java.util.Map".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:10:1: Could not find any member to link for "blended.updater.Updater".[0m
+[0m[[0m[33mwarn[0m] [0m[0m/**[0m
+[0m[[0m[33mwarn[0m] [0m[0m^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:47:3: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:72:3: Could not find any member to link for "Config".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m/home/andreas/projects/blended/blended.updater.config/jvm/src/main/scala/blended/updater/config/ProfileLookup.scala:31:3: Could not find any member to link for "OverlayConfigCompanion#materializedDir".[0m
+[0m[[0m[33mwarn[0m] [0m[0m  /**[0m
+[0m[[0m[33mwarn[0m] [0m[0m  ^[0m
+[0m[[0m[33mwarn[0m] [0m[0m10 warnings found[0m
+[0m[[0m[0minfo[0m] [0m[0mMain Scala API documentation successful.[0m
+[0m[[0m[32msuccess[0m] [0m[0mTotal time: 5 s, completed Oct 29, 2017 11:23:40 PM[0m
+INFO  | 2017-10-29-23:23.40.265 |    34431 | akka.actor.CoordinatedShutdown | Starting coordinated shutdown from JVM shutdown hook
+INFO  | 2017-10-29-23:23.40.270 |    34436 | akka.actor.CoordinatedShutdown | Starting coordinated shutdown from JVM shutdown hook

@@ -11,7 +11,8 @@ object BuildHelper {
     version := BlendedVersions.blended,
     licenses += ("Apache 2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
     developers := List(
-      Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("http://www.wayofquality.de"))
+      Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("https://github.com/woq-blended/blended")),
+      Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/woq-blended/blended"))
     ),
 
     crossScalaVersions := Seq(BlendedVersions.scala), //Seq("2.11.11", "2.12.4"),
@@ -36,6 +37,7 @@ object BuildHelper {
       OsgiKeys.bundleVersion := BlendedVersions.blended,
       OsgiKeys.exportPackage := exports.map(p => p match {
         case e if e.isEmpty => symbolicName
+        case s if s.startsWith("/") => s.substring(1)
         case s => symbolicName + "." + s
       }),
       OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")

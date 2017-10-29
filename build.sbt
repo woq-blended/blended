@@ -64,7 +64,7 @@ lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
   )
   .jvmSettings(BuildHelper.bundleSettings(
     symbolicName = "blended.updater.config",
-    exports = Seq("", "json", "util"), // blended.launcher.config,
+    exports = Seq("", "json", "util", "/blended.launcher.config"),
     imports = Seq.empty
   ):_*)
   .jvmSettings(
