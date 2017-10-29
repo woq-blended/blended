@@ -1,6 +1,5 @@
 import sbt.Keys._
 import sbt._
-import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
@@ -20,30 +19,38 @@ lazy val root = project
     name := "blended"
   )
   .enablePlugins(ScalaUnidocPlugin)
-  .aggregate(blendedUtil)
-
-lazy val blendedUtil = project
-  .in(file("blended.util"))
-  .settings(defaultSettings:_*)
-  .settings(
-    name := "blended.util",
-    description := "Utility classes to use in other bundles.",
-
-    osgiSettings,
-
-    libraryDependencies ++= Seq(
-      Dependencies.akkaActor,
-      Dependencies.slf4j,
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.junit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
-    )
+  .aggregate(
+    blendedUtil,
+    blendedTestsupport
   )
-  .settings(BuildHelper.bundleSettings(
-    symbolicName = "blended.util",
-    exports = Seq("", "protocol")):_*
+
+lazy val blendedUtil = BuildHelper.blendedOsgiProject(
+  pName = "blended.util",
+  pDescription = Some("Utility classes to use in other bundles."),
+  deps = Seq(
+    Dependencies.akkaActor,
+    Dependencies.slf4j,
+    Dependencies.akkaTestkit % "test",
+    Dependencies.akkaSlf4j % "test",
+    Dependencies.scalatest % "test",
+    Dependencies.junit % "test",
+    Dependencies.logbackCore % "test",
+    Dependencies.logbackClassic % "test"
+  ),
+  exports = Seq("", "protocol")
+)
+
+lazy val blendedTestsupport = BuildHelper.blendedProject(
+  pName = "blended.testsupport",
+  pDescription = Some("Some test helper classes."),
+  deps = Seq(
+    Dependencies.akkaActor,
+    Dependencies.akkaCamel,
+    Dependencies.akkaTestkit,
+    Dependencies.camelCore,
+    Dependencies.scalatest % "test",
+    Dependencies.junit % "test",
+    Dependencies.logbackCore % "test",
+    Dependencies.logbackClassic % "test"
   )
-  .enablePlugins(SbtOsgi)
+).dependsOn(blendedUtil)

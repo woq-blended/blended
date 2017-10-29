@@ -3,6 +3,7 @@ import sbt._
 object Dependencies {
 
   val akkaVersion = "2.5.6"
+  val camelVersion = "2.17.3"
   val slf4jVersion = "1.7.25"
   val scalatestVersion = "3.0.4"
 
@@ -12,6 +13,8 @@ object Dependencies {
   val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
   val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+
+  val camelCore = "org.apache.camel" % "camel-core" % camelVersion
 
   val junit = "junit" % "junit" % "4.11"
 
