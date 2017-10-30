@@ -18,12 +18,16 @@ object Dependencies {
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 
+  val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
+
+  val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
 
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
+  val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
   val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 

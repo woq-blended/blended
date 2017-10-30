@@ -19,7 +19,8 @@ lazy val root = project
     blendedTestsupport,
     blendedUpdaterConfigJs,
     blendedUpdaterConfigJvm,
-    blendedLauncher
+    blendedLauncher,
+    blendedContainerContext
   )
 
 lazy val blendedUtil = BuildHelper.blendedOsgiProject(
@@ -103,3 +104,23 @@ lazy val blendedLauncher = BuildHelper.blendedOsgiProject(
     Dependencies.cmdOption
   )
 ).dependsOn(blendedUpdaterConfigJvm)
+
+lazy val blendedContainerContext = BuildHelper.blendedOsgiProject(
+  pName = "blended.container.context",
+  pDescription = Some("A simple OSGI service to provide access to the container's config directory."),
+  exports = Seq(""),
+  imports = Seq("blended.launcher.runtime;resolution:=optional")
+).settings(
+  OsgiKeys.bundleActivator := Some(name.value + ".internal.ContainerContextActivator"),
+  libraryDependencies ++= Seq(
+    Dependencies.typesafeConfig,
+    Dependencies.slf4j,
+    Dependencies.julToSlf4j,
+    Dependencies.domino,
+    Dependencies.orgOsgi,
+    Dependencies.scalatest % "test",
+    Dependencies.logbackCore % "test",
+    Dependencies.logbackClassic % "test",
+    Dependencies.mockitoAll % "test"
+  )
+).dependsOn(blendedUpdaterConfigJvm,blendedLauncher)
