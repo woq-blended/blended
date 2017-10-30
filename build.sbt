@@ -1,5 +1,6 @@
 import sbt.Keys._
 import sbt._
+import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
@@ -17,13 +18,16 @@ lazy val root = project
     blendedUtil,
     blendedTestsupport,
     blendedUpdaterConfigJs,
-    blendedUpdaterConfigJvm
+    blendedUpdaterConfigJvm,
+    blendedLauncher
   )
 
 lazy val blendedUtil = BuildHelper.blendedOsgiProject(
   pName = "blended.util",
   pDescription = Some("Utility classes to use in other bundles."),
-  deps = Seq(
+  exports = Seq("", "protocol")
+).settings(
+  libraryDependencies ++= Seq(
     Dependencies.akkaActor,
     Dependencies.slf4j,
     Dependencies.akkaTestkit % "test",
@@ -32,14 +36,14 @@ lazy val blendedUtil = BuildHelper.blendedOsgiProject(
     Dependencies.junit % "test",
     Dependencies.logbackCore % "test",
     Dependencies.logbackClassic % "test"
-  ),
-  exports = Seq("", "protocol")
+  )
 )
 
 lazy val blendedTestsupport = BuildHelper.blendedProject(
   pName = "blended.testsupport",
-  pDescription = Some("Some test helper classes."),
-  deps = Seq(
+  pDescription = Some("Some test helper classes.")
+).settings(
+  libraryDependencies ++= Seq(
     Dependencies.akkaActor,
     Dependencies.akkaCamel,
     Dependencies.akkaTestkit,
@@ -86,3 +90,16 @@ lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
   .enablePlugins(SbtOsgi)
 
 lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
+
+lazy val blendedLauncher = BuildHelper.blendedOsgiProject(
+  pName = "blended.launcher",
+  pDescription = Some("Provide an OSGi Launcher"),
+  exports = Seq(""),
+  imports = Seq("org.apache.commons.daemon;resolution:=optional", "de.tototec.cmdoption.*;resolution:=optional"),
+  privates = Seq("jvmrunner", "runtime")
+).settings(
+  libraryDependencies ++= Seq(
+    Dependencies.orgOsgi,
+    Dependencies.cmdOption
+  )
+).dependsOn(blendedUpdaterConfigJvm)

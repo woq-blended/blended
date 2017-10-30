@@ -24,7 +24,8 @@ object BuildHelper {
   def bundleSettings(
     symbolicName : String,
     exports: Seq[String] = Seq.empty,
-    imports: Seq[String] = Seq.empty
+    imports: Seq[String] = Seq.empty,
+    privates: Seq[String] = Seq.empty
   ) : Seq[Def.SettingsDefinition] = {
 
     val scalaRange : String => String = { sv =>
@@ -32,14 +33,17 @@ object BuildHelper {
       "scala.*;version=\"[" + v + "," + v + ".50)\""
     }
 
+    val mapPkg : String => String = {
+      case e if e.isEmpty => symbolicName
+      case s if s.startsWith("/") => s.substring(1)
+      case s => symbolicName + "." + s
+    }
+
     Seq(
       OsgiKeys.bundleSymbolicName := symbolicName,
       OsgiKeys.bundleVersion := BlendedVersions.blended,
-      OsgiKeys.exportPackage := exports.map(p => p match {
-        case e if e.isEmpty => symbolicName
-        case s if s.startsWith("/") => s.substring(1)
-        case s => symbolicName + "." + s
-      }),
+      OsgiKeys.exportPackage := exports.map(mapPkg),
+      OsgiKeys.privatePackage := (Seq("internal") ++ privates).map(mapPkg),
       OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")
     )
   }
@@ -47,20 +51,20 @@ object BuildHelper {
   def blendedOsgiProject(
     pName: String,
     pDescription: Option[String] = None,
-    deps : Seq[ModuleID] = Seq.empty,
     exports : Seq[String] = Seq.empty,
-    imports : Seq[String] = Seq.empty
+    imports : Seq[String] = Seq.empty,
+    privates : Seq[String] = Seq.empty
   ) : Project = {
     blendedProject(
       pName = pName,
-      pDescription = pDescription,
-      deps = deps
+      pDescription = pDescription
     )
     .settings(osgiSettings)
     .settings(
       BuildHelper.bundleSettings(
         symbolicName = pName,
-        exports = exports
+        exports = exports,
+        privates = privates
       ):_*
     )
     .enablePlugins(SbtOsgi)
@@ -68,16 +72,13 @@ object BuildHelper {
 
   def blendedProject(
     pName: String,
-    pDescription: Option[String] = None,
-    deps : Seq[ModuleID] = Seq.empty
+    pDescription: Option[String] = None
   ) : Project = {
     sbt.Project.apply(pName.split("\\.").map(s => s.toLowerCase.capitalize).mkString, file(pName))
       .settings(defaultSettings:_*)
       .settings(
         name := pName,
-        description := pDescription.getOrElse(pName),
-
-        libraryDependencies ++= deps
+        description := pDescription.getOrElse(pName)
       )
 
   }

@@ -16,6 +16,7 @@ object Dependencies {
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
+  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
 
   val junit = "junit" % "junit" % "4.11"
 
@@ -23,6 +24,8 @@ object Dependencies {
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
+
+  val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
 
   val prickle = "com.github.benhutchison" %% "prickle" % prickleVersion
 
