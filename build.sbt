@@ -22,7 +22,8 @@ lazy val root = project
     blendedLauncher,
     blendedContainerContext,
     blendedDomino,
-    blendedMgmtBase
+    blendedMgmtBase,
+    blendedAkka
   )
 
 lazy val blendedUtil = BuildHelper.blendedOsgiProject(
@@ -147,3 +148,15 @@ lazy val blendedMgmtBase = BuildHelper.blendedOsgiProject(
     Dependencies.prickle,
   )
 ).dependsOn(blendedUtil, blendedDomino, blendedUpdaterConfigJvm)
+
+lazy val blendedAkka = BuildHelper.blendedOsgiProject(
+  pName = "blended.akka",
+  pDescription = Some("The main bundle to provide an Actor based interface to the main OSGI services."),
+  exports = Seq("", "protocol")
+).settings(
+  OsgiKeys.bundleActivator := Some(name.value + ".internal.BlendedAkkaActivator"),
+  libraryDependencies ++= Seq(
+    Dependencies.akkaActor,
+    Dependencies.akkaOsgi
+  )
+).dependsOn(blendedContainerContext, blendedDomino)
