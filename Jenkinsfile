@@ -5,9 +5,7 @@ pipeline {
     stage('Preliminary SBT Build') {
       steps {
         ansiColor('xterm') {
-          sh 'sbt clean coverage test publishLocal osgiBundle unidoc'
-          sh 'sbt coverageReport'
-          sh 'sbt coverageAggregate'
+          sh 'sbt clean coverage test coverageReport coverageAggregate coverageOff publishLocal osgiBundle unidoc'
         }
       }
     }

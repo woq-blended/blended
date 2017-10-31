@@ -20,7 +20,9 @@ lazy val root = project
     blendedUpdaterConfigJs,
     blendedUpdaterConfigJvm,
     blendedLauncher,
-    blendedContainerContext
+    blendedContainerContext,
+    blendedDomino,
+    blendedMgmtBase
   )
 
 lazy val blendedUtil = BuildHelper.blendedOsgiProject(
@@ -124,3 +126,24 @@ lazy val blendedContainerContext = BuildHelper.blendedOsgiProject(
     Dependencies.mockitoAll % "test"
   )
 ).dependsOn(blendedUpdaterConfigJvm,blendedLauncher)
+
+lazy val blendedDomino = BuildHelper.blendedOsgiProject(
+  pName = "blended.domino",
+  pDescription = Some("Blended Domino extension for new Capsule scopes."),
+  exports = Seq("")
+).settings(
+  libraryDependencies ++= Seq(
+    Dependencies.typesafeConfig
+  )
+).dependsOn(blendedContainerContext)
+
+lazy val blendedMgmtBase = BuildHelper.blendedOsgiProject(
+  pName = "blended.mgmt.base",
+  pDescription = Some("Shared classes for management and reporting facility."),
+  exports = Seq("", "json")
+).settings(
+  OsgiKeys.bundleActivator := Some(name.value + ".internal.MgmtActivator"),
+  libraryDependencies ++= Seq(
+    Dependencies.prickle,
+  )
+).dependsOn(blendedUtil, blendedDomino, blendedUpdaterConfigJvm)
