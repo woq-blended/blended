@@ -6,7 +6,22 @@ val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProper
 
 lazy val root = project
   .in(file("."))
-  .settings(BuildHelper.defaultSettings:_*)
+  .settings(inThisBuild(Seq(
+    organization := BlendedVersions.blendedGroupId,
+    homepage := Some(url("https://github.com/woq-blended/blended")),
+    version := BlendedVersions.blended,
+    licenses += ("Apache 2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
+    developers := List(
+      Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("https://github.com/woq-blended/blended")),
+      Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/woq-blended/blended"))
+    ),
+
+    crossScalaVersions := Seq(BlendedVersions.scala), //Seq("2.11.11", "2.12.4"),
+    scalaVersion := BlendedVersions.scala,
+    scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
+    sourcesInBase := false,
+    publishMavenStyle := true
+  )))
   .settings(
     name := "blended",
     publish := {},
@@ -26,52 +41,19 @@ lazy val root = project
     blendedAkka
   )
 
-lazy val blendedUtil = BuildHelper.blendedOsgiProject(
-  pName = "blended.util",
-  pDescription = Some("Utility classes to use in other bundles."),
-  exports = Seq("", "protocol")
-).settings(
-  libraryDependencies ++= Seq(
-    Dependencies.akkaActor,
-    Dependencies.slf4j,
-    Dependencies.akkaTestkit % "test",
-    Dependencies.akkaSlf4j % "test",
-    Dependencies.scalatest % "test",
-    Dependencies.junit % "test",
-    Dependencies.logbackCore % "test",
-    Dependencies.logbackClassic % "test"
-  )
-)
+lazy val blendedUtil = project.in(file("blended.util"))
 
-lazy val blendedTestsupport = BuildHelper.blendedProject(
-  pName = "blended.testsupport",
-  pDescription = Some("Some test helper classes.")
-).settings(
-  libraryDependencies ++= Seq(
-    Dependencies.akkaActor,
-    Dependencies.akkaCamel,
-    Dependencies.akkaTestkit,
-    Dependencies.camelCore,
-    Dependencies.scalatest % "test",
-    Dependencies.junit % "test",
-    Dependencies.logbackCore % "test",
-    Dependencies.logbackClassic % "test"
-  )
-).dependsOn(blendedUtil)
+lazy val blendedTestsupport = project.in(file("blended.testsupport"))
+    .dependsOn(blendedUtil)
 
 lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
-  .settings(BuildHelper.defaultSettings:_*)
   .settings(
-    name := "blended.updater.config",
-    description := "Configurations for Updater and Launcher",
-
     libraryDependencies ++= Seq(
       Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
       Dependencies.scalatest.organization %%% Dependencies.scalatest.name % Dependencies.scalatestVersion % "test"
     )
   )
   .jvmSettings(BuildHelper.bundleSettings(
-    symbolicName = "blended.updater.config",
     exports = Seq("", "json", "util", "/blended.launcher.config"),
     imports = Seq.empty
   ):_*)
@@ -95,68 +77,17 @@ lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
 
 lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
 
-lazy val blendedLauncher = BuildHelper.blendedOsgiProject(
-  pName = "blended.launcher",
-  pDescription = Some("Provide an OSGi Launcher"),
-  exports = Seq(""),
-  imports = Seq("org.apache.commons.daemon;resolution:=optional", "de.tototec.cmdoption.*;resolution:=optional"),
-  privates = Seq("jvmrunner", "runtime")
-).settings(
-  libraryDependencies ++= Seq(
-    Dependencies.orgOsgi,
-    Dependencies.cmdOption
-  )
-).dependsOn(blendedUpdaterConfigJvm)
+lazy val blendedLauncher = project.in(file("blended.launcher"))
+  .dependsOn(blendedUpdaterConfigJvm)
 
-lazy val blendedContainerContext = BuildHelper.blendedOsgiProject(
-  pName = "blended.container.context",
-  pDescription = Some("A simple OSGI service to provide access to the container's config directory."),
-  exports = Seq(""),
-  imports = Seq("blended.launcher.runtime;resolution:=optional")
-).settings(
-  OsgiKeys.bundleActivator := Some(name.value + ".internal.ContainerContextActivator"),
-  libraryDependencies ++= Seq(
-    Dependencies.typesafeConfig,
-    Dependencies.slf4j,
-    Dependencies.julToSlf4j,
-    Dependencies.domino,
-    Dependencies.orgOsgi,
-    Dependencies.scalatest % "test",
-    Dependencies.logbackCore % "test",
-    Dependencies.logbackClassic % "test",
-    Dependencies.mockitoAll % "test"
-  )
-).dependsOn(blendedUpdaterConfigJvm,blendedLauncher)
+lazy val blendedContainerContext = project.in(file("blended.container.context"))
+  .dependsOn(blendedUpdaterConfigJvm, blendedLauncher)
 
-lazy val blendedDomino = BuildHelper.blendedOsgiProject(
-  pName = "blended.domino",
-  pDescription = Some("Blended Domino extension for new Capsule scopes."),
-  exports = Seq("")
-).settings(
-  libraryDependencies ++= Seq(
-    Dependencies.typesafeConfig
-  )
-).dependsOn(blendedContainerContext)
+lazy val blendedDomino = project.in(file("blended.domino"))
+  .dependsOn(blendedContainerContext)
 
-lazy val blendedMgmtBase = BuildHelper.blendedOsgiProject(
-  pName = "blended.mgmt.base",
-  pDescription = Some("Shared classes for management and reporting facility."),
-  exports = Seq("", "json")
-).settings(
-  OsgiKeys.bundleActivator := Some(name.value + ".internal.MgmtActivator"),
-  libraryDependencies ++= Seq(
-    Dependencies.prickle,
-  )
-).dependsOn(blendedUtil, blendedDomino, blendedUpdaterConfigJvm)
+lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
+  .dependsOn(blendedUtil, blendedDomino, blendedUpdaterConfigJvm)
 
-lazy val blendedAkka = BuildHelper.blendedOsgiProject(
-  pName = "blended.akka",
-  pDescription = Some("The main bundle to provide an Actor based interface to the main OSGI services."),
-  exports = Seq("", "protocol")
-).settings(
-  OsgiKeys.bundleActivator := Some(name.value + ".internal.BlendedAkkaActivator"),
-  libraryDependencies ++= Seq(
-    Dependencies.akkaActor,
-    Dependencies.akkaOsgi
-  )
-).dependsOn(blendedContainerContext, blendedDomino)
+lazy val blendedAkka = project.in(file("blended.akka"))
+  .dependsOn(blendedContainerContext, blendedDomino)
