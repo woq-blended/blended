@@ -5,9 +5,9 @@ name := "blended.launcher"
 description := "Provide an OSGi Launcher"
 
 BuildHelper.bundleSettings(
-  exports = Seq(""),
-  imports = Seq("org.apache.commons.daemon;resolution:=optional", "de.tototec.cmdoption.*;resolution:=optional"),
-  privates = Seq("jvmrunner", "runtime")
+  exportPkgs = Seq(""),
+  importPkgs = Seq("org.apache.commons.daemon;resolution:=optional", "de.tototec.cmdoption.*;resolution:=optional"),
+  privatePkgs = Seq("jvmrunner", "runtime")
 )
 
 libraryDependencies ++= Seq(

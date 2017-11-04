@@ -1,8 +1,8 @@
 import sbt.Keys._
 import sbt._
-import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
+
 
 lazy val root = project
   .in(file("."))
@@ -21,6 +21,7 @@ lazy val root = project
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
     sourcesInBase := false,
     publishMavenStyle := true
+
   )))
   .settings(
     name := "blended",
@@ -38,13 +39,14 @@ lazy val root = project
     blendedContainerContext,
     blendedDomino,
     blendedMgmtBase,
-    blendedAkka
+    blendedAkka,
+    blendedSprayApi
   )
 
 lazy val blendedUtil = project.in(file("blended.util"))
 
 lazy val blendedTestsupport = project.in(file("blended.testsupport"))
-    .dependsOn(blendedUtil)
+  .dependsOn(blendedUtil)
 
 lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
   .settings(
@@ -54,8 +56,8 @@ lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
     )
   )
   .jvmSettings(BuildHelper.bundleSettings(
-    exports = Seq("", "json", "util", "/blended.launcher.config"),
-    imports = Seq.empty
+    exportPkgs = Seq("", "json", "util", "/blended.launcher.config"),
+    importPkgs = Seq.empty
   ):_*)
   .jvmSettings(
     unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "binaryResources",
@@ -91,3 +93,5 @@ lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
 
 lazy val blendedAkka = project.in(file("blended.akka"))
   .dependsOn(blendedContainerContext, blendedDomino)
+
+lazy val blendedSprayApi = project.in(file("blended.spray.api"))

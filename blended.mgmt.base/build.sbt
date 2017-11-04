@@ -4,7 +4,7 @@ name := "blended.mgmt.base"
 
 description := "Shared classes for management and reporting facility."
 
-BuildHelper.bundleSettings(exports = Seq("", "json"))
+BuildHelper.bundleSettings(exportPkgs = Seq("", "json"))
 
 OsgiKeys.bundleActivator := Some(name.value + ".internal.MgmtActivator")
 

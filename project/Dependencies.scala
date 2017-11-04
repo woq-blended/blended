@@ -4,9 +4,11 @@ object Dependencies {
 
   val akkaVersion = "2.5.6"
   val camelVersion = "2.17.3"
+  val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val slf4jVersion = "1.7.25"
   val scalatestVersion = "3.0.4"
+  val sprayVersion = "1.3.3"
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
@@ -17,6 +19,7 @@ object Dependencies {
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
+  val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
 
@@ -34,7 +37,19 @@ object Dependencies {
   val prickle = "com.github.benhutchison" %% "prickle" % prickleVersion
 
   val scalatest = "org.scalatest" %% "scalatest" % scalatestVersion
+  val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
+
+  val sprayClient = "io.spray" %% "spray-client" % sprayVersion
+  val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
+  val sprayHttp = "io.spray" %% "spray-http" % sprayVersion
+  val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
+  val sprayIo = "io.spray" %% "spray-io" % sprayVersion
+  val sprayJson = "io.spray" %% "spray-json" % sprayVersion
+  val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
+  val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
+  val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
+  val sprayUtil = "io.spray" %% "spray-util" % sprayVersion
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"

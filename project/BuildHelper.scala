@@ -1,32 +1,25 @@
 import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 import sbt._
 import sbt.Keys._
+import blended.sbt.BlendedPlugin.autoImport._
 
 object BuildHelper {
 
+  def mapPkg(symbolicName : String, export: String) : String = { export match {
+    case e if e.isEmpty => symbolicName
+    case s if s.startsWith("/") => s.substring(1)
+    case s => symbolicName + "." + s
+  }}
+
   def bundleSettings(
-    exports: Seq[String] = Seq.empty,
-    imports: Seq[String] = Seq.empty,
-    privates: Seq[String] = Seq.empty
-  ): Seq[Setting[_]] = {
-
-    val scalaRange: String => String = { sv =>
-      val v = sv.split("\\.").take(2).mkString(".")
-      "scala.*;version=\"[" + v + "," + v + ".50)\""
-    }
-
-    def mapPkg(symbolicName : String, export: String) : String = { export match {
-      case e if e.isEmpty => symbolicName
-      case s if s.startsWith("/") => s.substring(1)
-      case s => symbolicName + "." + s
-    }}
-
-    Seq(
-      OsgiKeys.bundleSymbolicName := name.value,
-      OsgiKeys.bundleVersion := version.value,
-      OsgiKeys.exportPackage := exports.map(e => mapPkg(name.value, e)),
-      OsgiKeys.privatePackage := (Seq("internal") ++ privates).map(p => mapPkg(name.value, p)),
-      OsgiKeys.importPackage := Seq(scalaRange(scalaVersion.value)) ++ imports ++ Seq("*")
-    )
-  }
+    exportPkgs: Seq[String] = Seq.empty,
+    importPkgs: Seq[String] = Seq.empty,
+    privatePkgs: Seq[String] = Seq.empty
+  ): Seq[Setting[_]] = Seq(
+    OsgiKeys.bundleSymbolicName := name.value,
+    OsgiKeys.bundleVersion := version.value,
+    OsgiKeys.exportPackage := exportPkgs.map(e => mapPkg(name.value, e)),
+    OsgiKeys.privatePackage := (Seq("internal") ++ privatePkgs).map(p => mapPkg(name.value, p)),
+    OsgiKeys.importPackage := Seq(scalaRange.value) ++ importPkgs ++ Seq("*")
+  )
 }

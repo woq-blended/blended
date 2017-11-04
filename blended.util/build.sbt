@@ -16,7 +16,7 @@ libraryDependencies ++= Seq(
 )
 
 BuildHelper.bundleSettings(
-  exports = Seq("", "protocol")
+  exportPkgs = Seq("", "protocol")
 )
 
 enablePlugins(SbtOsgi)

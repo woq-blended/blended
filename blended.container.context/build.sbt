@@ -5,8 +5,8 @@ name := "blended.container.context"
 description := "A simple OSGI service to provide access to the container's config directory."
 
 BuildHelper.bundleSettings(
-  exports = Seq(""),
-  imports = Seq("blended.launcher.runtime;resolution:=optional")
+  exportPkgs = Seq(""),
+  importPkgs = Seq("blended.launcher.runtime;resolution:=optional")
 )
 
 OsgiKeys.bundleActivator := Some(name.value + ".internal.ContainerContextActivator")

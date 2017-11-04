@@ -4,7 +4,7 @@ name := "blended.akka"
 
 description := "The main bundle to provide an Actor based interface to the main OSGI services."
 
-BuildHelper.bundleSettings(exports = Seq("", "protocol"))
+BuildHelper.bundleSettings(exportPkgs = Seq("", "protocol"))
 
 OsgiKeys.bundleActivator := Some(name.value + ".internal.BlendedAkkaActivator")
 
