@@ -5,11 +5,11 @@ pipeline {
     stage('Preliminary SBT Build') {
       steps {
         ansiColor('xterm') {
+          sh 'sh ./blended.build/01_1_buildScalaJSReactComponents.sh $WORKSPACE'
           sh 'sbt clean coverage test coverageReport coverageAggregate coverageOff publishLocal osgiBundle unidoc'
         }
       }
     }
-
   }
 
   post {
