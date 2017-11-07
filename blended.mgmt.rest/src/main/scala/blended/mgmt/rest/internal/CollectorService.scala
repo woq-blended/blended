@@ -190,7 +190,7 @@ trait CollectorService
                     complete {
                       log.debug("looks good, rollout can continue")
                       rolloutProfile.containerIds.foreach { containerId =>
-                        
+
                         // Make sure, we have the required runtime config 
                         addUpdateAction(
                           containerId = containerId,
@@ -198,7 +198,7 @@ trait CollectorService
                             runtimeConfig = rc
                           )
                         )
-                        
+
                         // Also register all required overlay configs
                         val ocs = getOverlayConfigs()
                         rolloutProfile.overlays.map { o =>
@@ -219,7 +219,7 @@ trait CollectorService
                             profileVersion = rolloutProfile.profileVersion,
                             overlays = rolloutProfile.overlays))
                       }
-                      
+
                       s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
                     }
                 }
@@ -308,15 +308,16 @@ trait CollectorService
         log.debug("Uploaded profile.conf: {}", local)
         registerRuntimeConfig(local.runtimeConfig)
 
-        // now install bundles and resources
         // we know the urls all start with "mvn:"
 
+        // now install bundles 
         local.resolvedRuntimeConfig.allBundles.map { b =>
           val file = local.bundleLocation(b)
           val path = MvnGav.parse(b.url.substring("mvn:".size)).get.toUrl("")
           installBundle(repoId, path, file, b.artifact.sha1Sum)
         }
 
+        // install resources
         local.runtimeConfig.resources.map { r =>
           val file = local.resourceArchiveLocation(r)
           val path = MvnGav.parse(r.url.substring("mvn:".size)).get.toUrl("")
