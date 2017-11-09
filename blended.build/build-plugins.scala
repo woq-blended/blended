@@ -170,9 +170,9 @@ val scalaMavenPlugin = Plugin(
   gav = Plugins.scalaSbt,
   executions = Seq(
     Execution(
-      id="scala-source",
-      goals=Seq("addScalaSources"),
-      phase="initialize"
+      id = "scala-source",
+      goals = Seq("addScalaSources"),
+      phase = "initialize"
     ),
     Execution(
       id = "compile",
@@ -257,33 +257,28 @@ ScriptHelper.writeFile(
   )
 )
 
-def execPlugin(executable: String, execId: String, phase: String, args: List[String]) : Plugin = {
+def execExecution(executable: String, execId: String, phase: String, args: List[String]): Execution = {
 
   val cfg = new Config(args.map(a => ("argument", Some(a))))
 
-  Plugin(
-    gav = Plugins.exec,
-    executions = Seq(
-      Execution(
-        id = execId,
-        phase = phase,
-        goals = Seq(
-          "exec"
-        ),
-        configuration = Config(
-          executable = executable,
-          workingDirectory = "${project.basedir}",
-          arguments = cfg
-        )
-      )
+  Execution(
+    id = execId,
+    phase = phase,
+    goals = Seq(
+      "exec"
+    ),
+    configuration = Config(
+      executable = executable,
+      workingDirectory = "${project.basedir}",
+      arguments = cfg
     )
   )
 
 }
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
-  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
-  execPlugin("sbt", execId, phase, defArgs ::: args)
+def compileJsExecution(execId: String, phase: String, args: List[String]): Execution = {
+  val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  execExecution("sbt", execId, phase, defArgs ::: args)
 }
 
 val dockerMavenPlugin = Plugin(

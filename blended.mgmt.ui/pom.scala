@@ -22,14 +22,29 @@ BlendedModel(
         )
       )
     ),
-    execPlugin("npm", "npm-install", "process-classes", List("install")),
-    execPlugin("node", "webpack", "prepare-package", List("node_modules/webpack/bin/webpack.js")),
-    prepareSbtPlugin,
-    compileJsPlugin(
-      execId = "compileJS",
-      phase = "compile",
-      args = List("-batch", "fullOptJS")
+    Plugin(
+      gav = Plugins.exec,
+      executions = Seq(
+        execExecution(
+            executable = "npm", 
+            execId = "npm-install", 
+            phase = "process-classes", 
+            args = List("install")
+        ),
+        execExecution(
+            executable = "node", 
+            execId = "webpack", 
+            phase = "prepare-package", 
+            args = List("node_modules/webpack/bin/webpack.js")
+        ),
+        compileJsExecution(
+        		execId = "compileJS",
+        		phase = "compile",
+        		args = List("-batch", "fullOptJS")
+        )
+      )
     ),
+    prepareSbtPlugin,
     bundleWarPlugin,
     Plugin(
       gav = Plugins.war,
