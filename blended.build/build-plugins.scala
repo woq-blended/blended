@@ -276,9 +276,9 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
 
 }
 
-def compileJsExecution(execId: String, phase: String, args: List[String]): Execution = {
-  val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
-  execExecution("sbt", execId, phase, defArgs ::: args)
+def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
+  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  execPlugin("sbt", execId, phase, defArgs ::: args)
 }
 
 val dockerMavenPlugin = Plugin(

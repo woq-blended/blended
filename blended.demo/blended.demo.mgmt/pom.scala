@@ -21,7 +21,6 @@ BlendedContainer(
     Feature("blended-spring"),
     Feature("blended-activemq"),
     Feature("blended-camel"),
-    Feature("blended-security"),
     Feature("blended-samples"),
     Feature("blended-mgmt-client"),
     Feature("blended-mgmt-server")
