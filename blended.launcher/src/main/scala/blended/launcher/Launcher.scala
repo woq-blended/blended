@@ -66,7 +66,7 @@ object Launcher {
         " If disabled and the framework was updated, the exit code is 2.")
     var handleFrameworkRestart: Boolean = true
 
-    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("configfile"),
+    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("config file"),
       description = "Lookup to profile file or directory from the config file {0}",
       conflictsWith = Array("--profile", "--config")
     )
@@ -109,7 +109,7 @@ object Launcher {
           Console.err.println(s"${t.getMessage()}")
         sys.exit(t.errorCode)
       case t: Throwable =>
-        log.error("Caugth an exception. Exiting with error code: 1", t)
+        log.error("Caught an exception. Exiting with error code: 1", t)
         Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(1)
     }
