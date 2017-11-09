@@ -38,7 +38,6 @@ BlendedModel(
     jolokiaJvmAgent % "runtime"
   ),
   plugins = Seq(
-    scalatestMavenPlugin,
     Plugin(
       gav = Plugins.dependency,
       executions = Seq(
@@ -58,8 +57,14 @@ BlendedModel(
     scalaMavenPlugin,
     Plugin(
       scalatestMavenPlugin.gav,
-      configuration = Config(
-        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
+      executions = Seq(
+        scalatestExecution    
+      ),
+      configuration = new Config(
+          scalatestConfiguration.elements ++ 
+          Seq(
+            "argLine" -> Some("-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost")
+          )
       )
     )
   )

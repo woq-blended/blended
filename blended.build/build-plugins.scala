@@ -185,22 +185,27 @@ val scalaMavenPlugin = Plugin(
   )
 )
 
+val scalatestConfiguration = Config(
+  reportsDirectory = "${project.build.directory}/surefire-reports",
+  junitxml = ".",
+  stdout = "FT",
+  systemProperties = Config(
+    projectTestOutput = "${project.build.testOutputDirectory}"
+  )
+)
+
+val scalatestExecution =
+  Execution(
+    id = "test",
+    goals = Seq("test")
+  )
+
 val scalatestMavenPlugin = Plugin(
   gav = Plugins.scalaTest,
   executions = Seq(
-    Execution(
-      id = "test",
-      goals = Seq("test")
-    )
+    scalatestExecution
   ),
-  configuration = Config(
-    reportsDirectory = "${project.build.directory}/surefire-reports",
-    junitxml = ".",
-    stdout = "FT",
-    systemProperties = Config(
-      projectTestOutput = "${project.build.testOutputDirectory}"
-    )
-  )
+  configuration = scalatestConfiguration
 )
 
 val polyglotTranslatePlugin = Plugin(
@@ -276,9 +281,9 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
 
 }
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
-  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
-  execPlugin("sbt", execId, phase, defArgs ::: args)
+def compileJsExecution(execId: String, phase: String, args: List[String]): Execution = {
+  val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  execExecution("sbt", execId, phase, defArgs ::: args)
 }
 
 val dockerMavenPlugin = Plugin(
