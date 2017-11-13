@@ -1,3 +1,4 @@
+
 import sbt.Keys._
 import sbt._
 
@@ -16,9 +17,10 @@ lazy val root = project
       Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/woq-blended/blended"))
     ),
 
-    crossScalaVersions := Seq(BlendedVersions.scala), //Seq("2.11.11", "2.12.4"),
+    crossScalaVersions := Seq(BlendedVersions.scala), //Seq(BlendedVersions.scala, "2.12.4"),
     scalaVersion := BlendedVersions.scala,
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
+    // essential for Maven scala files
     sourcesInBase := false,
     publishMavenStyle := true
 
