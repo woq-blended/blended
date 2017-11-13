@@ -102,7 +102,6 @@ object ContainerPropertyResolver {
     log.debug(s"Resolved [$line] to [$result]")
     result
   }
-
 }
 
 class ContainerPropertyResolver

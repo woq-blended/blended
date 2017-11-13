@@ -39,7 +39,7 @@ LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-profile-props"
 # Options for the service daemen JVM (outer) with controls the container JVM
 JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
 JAVA_OPTS="${JAVA_OPTS} -Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml"
-JAVA_OPTS="${JAVA_OPTS} -Dlog4j.configurationFile=${BLENDED_HOME}/etc/log4j.xml -Dblended.home=${BLENDED_HOME}"
+JAVA_OPTS="${JAVA_OPTS} -Dblended.home=${BLENDED_HOME}"
 JAVA_OPTS="${JAVA_OPTS} -Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500"
 
 # Options for the container JVM (inner) started/managed by the service daemon JVM

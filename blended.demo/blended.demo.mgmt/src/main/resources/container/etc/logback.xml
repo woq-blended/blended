@@ -16,9 +16,9 @@
     </layout>
   </appender>
 
-  <logger name="blended.mgmt.repo" level="DEBUG" />
+  <logger name="blended" level="DEBUG" />
 
-  <root level="DEBUG">
+  <root level="INFO">
     <appender-ref ref="ASYNC_FILE" />
   </root>
 </configuration>

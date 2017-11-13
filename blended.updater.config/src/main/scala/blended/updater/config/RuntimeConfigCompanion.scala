@@ -194,8 +194,11 @@ object RuntimeConfigCompanion {
   def createPropertyFile(curRuntime: LocalRuntimeConfig,
     prevRuntime: Option[LocalRuntimeConfig]): Option[Try[File]] = createPropertyFile(curRuntime, prevRuntime, false)
 
-  def createPropertyFile(curRuntime: LocalRuntimeConfig,
-    prevRuntime: Option[LocalRuntimeConfig], onlyIfMisssing: Boolean): Option[Try[File]] = {
+  def createPropertyFile(
+    curRuntime: LocalRuntimeConfig,
+    prevRuntime: Option[LocalRuntimeConfig],
+    onlyIfMisssing: Boolean
+  ): Option[Try[File]] = {
 
     curRuntime.runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_FILE).flatMap { fileName =>
       val propFile = new File(curRuntime.baseDir, fileName)

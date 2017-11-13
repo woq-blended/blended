@@ -100,10 +100,11 @@ class JvmLauncher() {
 
               val xmsOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
               val xmxOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
+              val ssOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_STACK_SIZE, x) => s"-Xss${x}" }
 
               val p = startJava(
                 classpath = config.classpath,
-                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
+                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ ssOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
                 arguments = config.otherArgs.toArray,
                 interactive = true,
                 errorsIntoOutput = false,
