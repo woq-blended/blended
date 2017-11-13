@@ -1,7 +1,8 @@
 package blended.updater.config
 
+@deprecated("To be used only be the updater and will be renamed. Use SingleProfile instead.")
 case class Profile(name: String, version: String, overlays: List[OverlaySet]) {
-  require(!overlays.isEmpty, "A Profile must have at least on OverlaySet.")
+  require(!overlays.isEmpty, "A Profile must have at least one OverlaySet.")
 
   def toSingle: List[SingleProfile] = overlays.map(o => SingleProfile(name, version, o))
 
