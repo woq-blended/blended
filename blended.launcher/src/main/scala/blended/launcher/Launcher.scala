@@ -353,9 +353,10 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Validate this Launcher's configuration and return the issues if any found.
    */
-  def validate(): Seq[String] = {
+  def validate() : Seq[String] = {
     val files = ("Framework JAR", config.frameworkJar) ::
       config.bundles.toList.map(b => "Bundle JAR" -> b.location)
+
     files.flatMap {
       case (kind, file) =>
         val f = new File(file).getAbsoluteFile()
