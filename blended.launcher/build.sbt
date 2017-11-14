@@ -1,18 +1,31 @@
 import sbt.Keys._
 
-name := "blended.launcher"
+enablePlugins(SbtOsgi)
 
+val namespace = "blended.launcher"
+
+name := namespace
 description := "Provide an OSGi Launcher"
-
-BuildHelper.bundleSettings(
-  exportPkgs = Seq(""),
-  importPkgs = Seq("org.apache.commons.daemon;resolution:=optional", "de.tototec.cmdoption.*;resolution:=optional"),
-  privatePkgs = Seq("jvmrunner", "runtime")
-)
-
 libraryDependencies ++= Seq(
   Dependencies.orgOsgi,
   Dependencies.cmdOption
 )
 
-enablePlugins(SbtOsgi)
+BlendedBundle(
+  exportPackage = Seq(
+    namespace
+  ),
+  importPackage = Seq(
+    "org.apache.commons.daemon;resolution:=optional",
+    // only used as cmdline app to parse cmdline params
+    "de.tototec.cmdoption.*;resolution:=optional",
+    "*"
+  ),
+  privatePackage = Seq(
+    namespace + ".jvmrunner",
+    namespace + ".runtime"
+  )
+)
+
+
+

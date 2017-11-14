@@ -1,13 +1,18 @@
 import sbt.Keys._
 
-name := "blended.domino"
+enablePlugins(SbtOsgi)
+val namespace = "blended.domino"
 
+name := namespace
 description := "Blended Domino extension for new Capsule scopes."
-
-BuildHelper.bundleSettings(exportPkgs = Seq(""))
 
 libraryDependencies ++= Seq(
   Dependencies.typesafeConfig
 )
 
-enablePlugins(SbtOsgi)
+BlendedBundle(
+  exportPackage = Seq(
+    namespace
+  )
+)
+

@@ -1,7 +1,11 @@
 import sbt._
 import sbt.Keys._
 
-name := "blended.util"
+enablePlugins(SbtOsgi)
+
+val namespace = "blended.util"
+
+name := namespace
 description := "Utility classes to use in other bundles."
 
 libraryDependencies ++= Seq(
@@ -15,8 +19,10 @@ libraryDependencies ++= Seq(
   Dependencies.logbackClassic % "test"
 )
 
-BuildHelper.bundleSettings(
-  exportPkgs = Seq("", "protocol")
+BlendedBundle(
+  exportPackage = Seq(
+    namespace,
+    namespace + ".protocol"
+  )
 )
 
-enablePlugins(SbtOsgi)

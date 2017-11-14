@@ -1,15 +1,12 @@
 import sbt.Keys._
 
-name := "blended.container.context"
+enablePlugins(SbtOsgi)
 
+val namespace = "blended.container.context"
+
+name := namespace
 description := "A simple OSGI service to provide access to the container's config directory."
 
-BuildHelper.bundleSettings(
-  exportPkgs = Seq(""),
-  importPkgs = Seq("blended.launcher.runtime;resolution:=optional")
-)
-
-OsgiKeys.bundleActivator := Some(name.value + ".internal.ContainerContextActivator")
 
 libraryDependencies ++= Seq(
   Dependencies.typesafeConfig,
@@ -23,4 +20,13 @@ libraryDependencies ++= Seq(
   Dependencies.mockitoAll % "test"
 )
 
-enablePlugins(SbtOsgi)
+BlendedBundle(
+  bundleActivator = namespace + ".internal.ContainerContextActivator",
+  exportPackage = Seq(
+    namespace
+  ),
+  importPackage = Seq(
+    "blended.launcher.runtime;resolution:=optional",
+    "*"
+  )
+)

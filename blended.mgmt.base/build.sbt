@@ -1,15 +1,22 @@
 import sbt.Keys._
 
-name := "blended.mgmt.base"
+enablePlugins(SbtOsgi)
 
+val namespace = "blended.mgmt.base"
+
+name := namespace
 description := "Shared classes for management and reporting facility."
-
-BuildHelper.bundleSettings(exportPkgs = Seq("", "json"))
-
-OsgiKeys.bundleActivator := Some(name.value + ".internal.MgmtActivator")
 
 libraryDependencies ++= Seq(
   Dependencies.prickle,
 )
 
-enablePlugins(SbtOsgi)
+BlendedBundle(
+  bundleActivator = namespace + ".internal.MgmtActivator",
+  exportPackage = Seq(
+    namespace,
+    namespace + ".json"
+  )
+)
+
+
