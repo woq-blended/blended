@@ -16,11 +16,11 @@ libraryDependencies ++= Seq(
 )
 
 excludeDependencies in (Compile, packageBin) ++= Seq(
-  ExclusionRule(organization = "org.scala-lang"),
+  ExclusionRule(organization = Dependencies.scalaLibrary.organization),
   ExclusionRule(organization = "org.scala-lang.modules")
 )
 
-packageBin in (Compile) :=  {
+packageBin in (Compile) := {
   (packageBin in Compile).value
   OsgiKeys.bundle.value
 }
@@ -42,12 +42,12 @@ OsgiKeys.importPackage := Seq(
   "*"
 )
 
-OsgiKeys.additionalHeaders := Map[String,String](
-  ("-exportcontents" ,
+OsgiKeys.additionalHeaders := Map[String, String](
+  ("-exportcontents",
     "spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first" +
-    "akka.spray.*;version="+ Dependencies.sprayVersion + ";-split-package:=merge-first," +
-    "org.parboiled.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first," +
-    "shapeless.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first"
+      "akka.spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first," +
+      "org.parboiled.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first," +
+      "shapeless.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first"
   )
 )
 

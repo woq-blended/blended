@@ -40,6 +40,10 @@ object Dependencies {
   val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 
+  val scalaLibrary = "org.scala-lang" % "scala-library" % BlendedVersions.scala
+  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+  val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scala
+  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
   val sprayClient = "io.spray" %% "spray-client" % sprayVersion
   val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
   val sprayHttp = "io.spray" %% "spray-http" % sprayVersion
