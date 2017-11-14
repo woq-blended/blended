@@ -1,9 +1,8 @@
 import sbt.Keys._
 
-enablePlugins(SbtOsgi, BlendedPlugin)
+enablePlugins(SbtOsgi)
 
 name := "blended.spray.api"
-
 description := "Package the complete Spray API into a bundle."
 
 // exactly those deps we want to embed
@@ -33,13 +32,11 @@ packageBin in (Compile) := {
 osgiSettings
 
 OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
-
 OsgiKeys.bundleSymbolicName := name.value
-
 OsgiKeys.bundleVersion := version.value
 
 OsgiKeys.importPackage := Seq(
-  "scala.*;version=\"[" + BlendedVersions.scalaBin + "," + BlendedVersions.scalaBin + ".50)\"",
+  s"""scala.*;version="[${scalaBinaryVersion.value},${scalaBinaryVersion.value}.50)"""",
   "com.sun.*;resolution:=optional",
   "sun.*;resolution:=optional",
   "net.liftweb.*;resolution:=optional",
@@ -51,10 +48,10 @@ OsgiKeys.importPackage := Seq(
 
 OsgiKeys.additionalHeaders := Map[String, String](
   "-exportcontents" -> Seq(
-    "spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first",
-    "akka.spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first",
-    "org.parboiled.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first",
-    "shapeless.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first"
+    s"spray.*;version=${Dependencies.sprayVersion};-split-package:=merge-first",
+    s"akka.spray.*;version=${Dependencies.sprayVersion};-split-package:=merge-first",
+    s"org.parboiled.*;version=${Dependencies.parboiledVersion};-split-package:=merge-first",
+    s"shapeless.*;version=${Dependencies.parboiledVersion};-split-package:=merge-first"
   ).mkString(",")
 )
 
