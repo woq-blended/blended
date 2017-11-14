@@ -1,31 +1,38 @@
 package blended.container.context.internal
 
-import blended.container.context.ContainerIdentifierService
-import blended.container.context.ContainerContext
-import java.util.Properties
+import java.io.File
+import java.nio.file.Files
 
-object ContainerIdentifierServiceImpl {
+import blended.container.context.{ContainerContext, ContainerIdentifierService}
+import com.typesafe.config.ConfigFactory
+import org.slf4j.LoggerFactory
+import scala.collection.JavaConverters._
 
-  val PROP_UUID = "UUID"
-  val PROP_PROPERTY = "property."
+class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
 
-}
+  private[this] val bundleName = classOf[ContainerIdentifierService].getPackage.getName
 
-class ContainerIdentifierServiceImpl(containerContext: ContainerContext, uuid: String, props: Map[String, String])
-    extends ContainerIdentifierService {
+  private[this] val log = LoggerFactory.getLogger(classOf[ContainerIdentifierServiceImpl])
 
-  override def getContainerContext(): ContainerContext = containerContext
-
-  override def getUUID(): String = uuid
-
-  override def getProperties(): Properties = {
-    // always create a new Properties, as it is mutable
-    val export = new Properties()
-    props.foreach {
-      case (k, v) =>
-        export.setProperty(k, v)
+  override val uuid : String = {
+    val idFile = new File(System.getProperty("blended.home") + "/etc", s"$bundleName.id")
+    val lines = Files.readAllLines(idFile.toPath)
+    if (!lines.isEmpty) {
+      log.info(s"Using Container ID [${lines.get(0)}]")
+      lines.get(0)
+    } else {
+      throw new Exception("Unable to determine Container Id")
     }
-    export
   }
 
+  override val properties : Map[String,String] = {
+    val cfgFile = new File(containerContext.getContainerConfigDirectory(), s"$bundleName.conf")
+    val ctxtConfig = ConfigFactory.parseFile(cfgFile)
+    val cfg = containerContext.getContainerConfig().withValue(bundleName, ctxtConfig.root().get()).getConfig(bundleName)
+
+    val unresolved = cfg.entrySet().asScala.map { case entry =>
+      (entry.getKey, cfg.getString(entry.getKey)) }.toMap
+
+    unresolved.map{ case (k,v) => (k, resolvePropertyString(v)) }
+  }
 }

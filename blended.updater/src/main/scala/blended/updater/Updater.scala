@@ -497,9 +497,7 @@ class Updater(
               ))
           }
       }
-
   }
-
 }
 
 object Updater {

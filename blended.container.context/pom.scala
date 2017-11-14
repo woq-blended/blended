@@ -21,8 +21,9 @@ BlendedModel(
     slf4j,
     julToSlf4j,
     scalaTest % "test",
-    slf4jLog4j12 % "test",
-    mockitoAll % "test"
+    mockitoAll % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

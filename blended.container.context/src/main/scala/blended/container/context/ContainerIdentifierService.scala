@@ -1,7 +1,5 @@
 package blended.container.context
 
-import java.util.Properties
-
 class PropertyResolverException(msg : String) extends Exception(msg)
 
 /**
@@ -12,9 +10,9 @@ class PropertyResolverException(msg : String) extends Exception(msg)
  * container meta data.
  */
 trait ContainerIdentifierService {
-  def getUUID(): String
-  def getProperties(): Properties
-  def getContainerContext(): ContainerContext
+  val uuid: String
+  val properties : Map[String,String]
+  val containerContext: ContainerContext
 
   def resolvePropertyString(value: String) : String = ContainerPropertyResolver.resolve(this, value)
 }

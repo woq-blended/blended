@@ -85,8 +85,6 @@ case class LocalRuntimeConfig(
       }
     } else Nil
 
-    // TODO: check overlay criteria
-
     // TODO: check for mandatory properties
     val propertyIssues = if (checkPropertiesFile) {
       propertiesFileLocation match {

@@ -52,7 +52,7 @@ object ContainerPropertyResolver {
     )
 
     val resolvers : Map[String, Resolver] = Map(
-      ContainerIdentifierService.containerId -> ( _ => idSvc.getUUID() )
+      ContainerIdentifierService.containerId -> ( _ => idSvc.uuid )
     )
 
     val (ruleName : String, modifier : List[String]) = rule.indexOf("(") match {
@@ -70,7 +70,7 @@ object ContainerPropertyResolver {
       (modifiers(modName), param)
     }
 
-    var result = Option(idSvc.getProperties().getProperty(ruleName)) match {
+    var result : String = idSvc.properties.get(ruleName) match {
       case Some(s) => s
       case None =>
         log.debug(s"Resolving [$ruleName] from System properties.")
