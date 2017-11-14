@@ -1,15 +1,16 @@
 import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
-import sbt._
 import sbt.Keys._
-import blended.sbt.BlendedPlugin.autoImport._
+import sbt._
 
 object BuildHelper {
 
-  def mapPkg(symbolicName : String, export: String) : String = { export match {
+  def mapPkg(symbolicName: String, export: String): String = export match {
     case e if e.isEmpty => symbolicName
     case s if s.startsWith("/") => s.substring(1)
     case s => symbolicName + "." + s
-  }}
+  }
+
+  def scalaRangeImport(scalaBinaryVersion: String) = s"""scala.*;version="[${scalaBinaryVersion},${scalaBinaryVersion}.50)""""
 
   def bundleSettings(
     exportPkgs: Seq[String] = Seq.empty,
@@ -20,6 +21,6 @@ object BuildHelper {
     OsgiKeys.bundleVersion := version.value,
     OsgiKeys.exportPackage := exportPkgs.map(e => mapPkg(name.value, e)),
     OsgiKeys.privatePackage := (Seq("internal") ++ privatePkgs).map(p => mapPkg(name.value, p)),
-    OsgiKeys.importPackage := Seq(scalaRange.value) ++ importPkgs ++ Seq("*")
+    OsgiKeys.importPackage := Seq(scalaRangeImport(scalaBinaryVersion.value)) ++ importPkgs ++ Seq("*")
   )
 }

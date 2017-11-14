@@ -15,8 +15,8 @@ lazy val commonSettings = Seq(
   version := BlendedVersions.blended,
   licenses += ("Apache 2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
   developers := List(
-    Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("https://github.com/woq-blended/blended")),
-    Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/woq-blended/blended"))
+    Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("https://github.com/atooni")),
+    Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/lefou"))
   ),
 
   crossScalaVersions := Seq(BlendedVersions.scala), //Seq(BlendedVersions.scala, "2.12.4"),
@@ -34,7 +34,7 @@ lazy val root = project
     name := "blended",
     publish := {},
     publishLocal := {},
-    unidocProjectFilter in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedUpdaterConfigJs)
+    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedUpdaterConfigJs)
   )
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
@@ -58,13 +58,13 @@ lazy val blendedTestsupport = project.in(file("blended.testsupport"))
   .dependsOn(blendedUtil)
 
 lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
-  .enablePlugins(BlendedPlugin)
+  //  .enablePlugins(BlendedPlugin)
   .settings(commonSettings,
-    libraryDependencies ++= Seq(
-      Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
-      Dependencies.scalatest.organization %%% Dependencies.scalatest.name % Dependencies.scalatestVersion % "test"
-    )
+  libraryDependencies ++= Seq(
+    Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
+    Dependencies.scalatest.organization %%% Dependencies.scalatest.name % Dependencies.scalatestVersion % "test"
   )
+)
   .jvmSettings(BuildHelper.bundleSettings(
     exportPkgs = Seq("", "json", "util", "/blended.launcher.config"),
     importPkgs = Seq.empty
@@ -95,7 +95,10 @@ lazy val blendedLauncher = project.in(file("blended.launcher"))
 
 lazy val blendedContainerContext = project.in(file("blended.container.context"))
   .settings(commonSettings)
-  .dependsOn(blendedUpdaterConfigJvm, blendedLauncher)
+  .dependsOn(
+    blendedUpdaterConfigJvm,
+    blendedLauncher
+  )
 
 lazy val blendedDomino = project.in(file("blended.domino"))
   .settings(commonSettings)
@@ -103,11 +106,18 @@ lazy val blendedDomino = project.in(file("blended.domino"))
 
 lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
   .settings(commonSettings)
-  .dependsOn(blendedUtil, blendedDomino, blendedUpdaterConfigJvm)
+  .dependsOn(
+    blendedUtil,
+    blendedDomino,
+    blendedUpdaterConfigJvm
+  )
 
 lazy val blendedAkka = project.in(file("blended.akka"))
   .settings(commonSettings)
-  .dependsOn(blendedContainerContext, blendedDomino)
+  .dependsOn(
+    blendedContainerContext,
+    blendedDomino
+  )
 
 lazy val blendedSprayApi = project.in(file("blended.spray.api"))
   .settings(commonSettings)

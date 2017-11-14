@@ -24,36 +24,22 @@ libraryDependencies := Seq(
   Dependencies.parboiledCore
 ).map(_ intransitive())
 
-packageBin in (Compile) := {
-  packageBin.in(Compile).value
-  OsgiKeys.bundle.value
-}
-
-osgiSettings
-
-OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
-OsgiKeys.bundleSymbolicName := name.value
-OsgiKeys.bundleVersion := version.value
-
-OsgiKeys.importPackage := Seq(
-  s"""scala.*;version="[${scalaBinaryVersion.value},${scalaBinaryVersion.value}.50)"""",
-  "com.sun.*;resolution:=optional",
-  "sun.*;resolution:=optional",
-  "net.liftweb.*;resolution:=optional",
-  "play.*;resolution:=optional",
-  "twirl.*;resolution:=optional",
-  "org.json4s.*;resolution:=optional",
-  "*"
-)
-
-OsgiKeys.additionalHeaders := Map[String, String](
-  "-exportcontents" -> Seq(
+BlendedBundle(
+  importPackage = Seq(
+    "com.sun.*;resolution:=optional",
+    "sun.*;resolution:=optional",
+    "net.liftweb.*;resolution:=optional",
+    "play.*;resolution:=optional",
+    "twirl.*;resolution:=optional",
+    "org.json4s.*;resolution:=optional",
+    "*"
+  ),
+  embeddedJars =
+    OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files,
+  exportContents = Seq(
     s"spray.*;version=${Dependencies.sprayVersion};-split-package:=merge-first",
     s"akka.spray.*;version=${Dependencies.sprayVersion};-split-package:=merge-first",
     s"org.parboiled.*;version=${Dependencies.parboiledVersion};-split-package:=merge-first",
     s"shapeless.*;version=${Dependencies.parboiledVersion};-split-package:=merge-first"
-  ).mkString(",")
+  )
 )
-
-OsgiKeys.privatePackage := Seq()
-

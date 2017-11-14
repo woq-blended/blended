@@ -1,16 +1,21 @@
 import sbt.Keys._
 
-name := "blended.akka"
+enablePlugins(SbtOsgi)
 
+val namespace = "blended.akka"
+
+name := namespace
 description := "The main bundle to provide an Actor based interface to the main OSGI services."
-
-BuildHelper.bundleSettings(exportPkgs = Seq("", "protocol"))
-
-OsgiKeys.bundleActivator := Some(name.value + ".internal.BlendedAkkaActivator")
 
 libraryDependencies ++= Seq(
   Dependencies.akkaActor,
   Dependencies.akkaOsgi
 )
 
-enablePlugins(SbtOsgi)
+BlendedBundle(
+  bundleActivator = namespace + ".internal.BlendedAkkaActivator",
+  exportPackage = Seq(
+    namespace,
+    namespace + ".protocol"
+  )
+)
