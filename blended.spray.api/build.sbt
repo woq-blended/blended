@@ -1,38 +1,45 @@
 import sbt.Keys._
-import blended.sbt.BlendedPlugin.autoImport._
+
+enablePlugins(SbtOsgi, BlendedPlugin)
 
 name := "blended.spray.api"
 
 description := "Package the complete Spray API into a bundle."
 
-libraryDependencies ++= Seq(
+// exactly those deps we want to embed
+libraryDependencies := Seq(
   Dependencies.sprayServlet,
   Dependencies.sprayClient,
   Dependencies.sprayRouting,
+  Dependencies.sprayIo,
+  Dependencies.sprayUtil,
   Dependencies.sprayJson,
   Dependencies.sprayCaching,
+  Dependencies.sprayCan,
+  Dependencies.sprayHttp,
+  Dependencies.sprayHttpx,
   Dependencies.shapeless,
-  Dependencies.concurrentLinkedHashMapLru
-)
-
-excludeDependencies in (Compile, packageBin) ++= Seq(
-  ExclusionRule(organization = Dependencies.scalaLibrary.organization),
-  ExclusionRule(organization = "org.scala-lang.modules")
-)
+  Dependencies.concurrentLinkedHashMapLru,
+  Dependencies.mimepull,
+  Dependencies.parboiledScala,
+  Dependencies.parboiledCore
+).map(_ intransitive())
 
 packageBin in (Compile) := {
-  (packageBin in Compile).value
+  packageBin.in(Compile).value
   OsgiKeys.bundle.value
 }
 
-OsgiKeys.embeddedJars := compileDeps.value
+osgiSettings
+
+OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
 
 OsgiKeys.bundleSymbolicName := name.value
 
 OsgiKeys.bundleVersion := version.value
 
 OsgiKeys.importPackage := Seq(
-  scalaRange.value,
+  "scala.*;version=\"[" + BlendedVersions.scalaBin + "," + BlendedVersions.scalaBin + ".50)\"",
   "com.sun.*;resolution:=optional",
   "sun.*;resolution:=optional",
   "net.liftweb.*;resolution:=optional",
@@ -43,14 +50,13 @@ OsgiKeys.importPackage := Seq(
 )
 
 OsgiKeys.additionalHeaders := Map[String, String](
-  ("-exportcontents",
-    "spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first" +
-      "akka.spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first," +
-      "org.parboiled.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first," +
-      "shapeless.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first"
-  )
+  "-exportcontents" -> Seq(
+    "spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first",
+    "akka.spray.*;version=" + Dependencies.sprayVersion + ";-split-package:=merge-first",
+    "org.parboiled.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first",
+    "shapeless.*;version=" + Dependencies.parboiledVersion + ";-split-package:=merge-first"
+  ).mkString(",")
 )
 
-OsgiKeys.privatePackage := Seq.empty
+OsgiKeys.privatePackage := Seq()
 
-enablePlugins(SbtOsgi, BlendedPlugin)

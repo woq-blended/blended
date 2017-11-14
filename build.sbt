@@ -2,6 +2,11 @@
 import sbt.Keys._
 import sbt._
 
+// this is required to use proper values in osgi manifest require capability
+val initSystemEarly = Option(System.getProperty("java.version"))
+  .map(v => v.split("[.]", 3).take(2).mkString("."))
+  .foreach(v => System.setProperty("java.version", v))
+
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
 lazy val commonSettings = Seq(
@@ -29,7 +34,7 @@ lazy val root = project
     name := "blended",
     publish := {},
     publishLocal := {},
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedUpdaterConfigJs)
+    unidocProjectFilter in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedUpdaterConfigJs)
   )
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
@@ -53,6 +58,7 @@ lazy val blendedTestsupport = project.in(file("blended.testsupport"))
   .dependsOn(blendedUtil)
 
 lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
+  .enablePlugins(BlendedPlugin)
   .settings(commonSettings,
     libraryDependencies ++= Seq(
       Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
