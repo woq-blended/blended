@@ -23,9 +23,9 @@ With polyglot-scala extension and it's support for include files, we try to aban
 
 == Generating `pom.xml` files
 
- To generate `pom.xml` from the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which works recursively.
+To generate `pom.xml` from the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which works recursively.
 
- Please note, that you can use the `blended-build/del-pom-xml.sh` script to remove these poms.
+Please note, that you can use the `blended-build/del-pom-xml.sh` script to remove these poms.
 
 == Working with IntelliJ IDEA
 

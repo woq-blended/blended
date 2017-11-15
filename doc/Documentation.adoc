@@ -1,30 +1,45 @@
 = Documentation of Project Blended
+:toc:
+:toc-placement: macro
 
 Maybe unsorted collection of Documentations
 
+toc::[]
 
-.[File: README.adoc]
+_[File: README.adoc]_
+
 include::../README.adoc[leveloffset=+1]
 
-.[File: Development.adoc]
+_[File: Development.adoc]_
+
 include::Development.adoc[leveloffset=+1]
 
-.[File: WebConsoleDev.adoc]
+_[File: WebConsoleDev.adoc]_
+
 include::WebConsoleDev.adoc[leveloffset=+1]
 
-.[File: Docker.adoc]
+_[File: Docker.adoc]_
+
 include::Docker.adoc[leveloffset=+1]
 
-.[File: Security.adoc]
+_[File: Security.adoc]_
+
 include::Security.adoc[leveloffset=+1]
+
+_[File: UISecurity.adoc]_
+
+include::UISecurity.adoc[leveloffset=+1]
 
 == Specific aspects
 
-.[File: RestAPI.adoc]
+_[File: RestAPI.adoc]_
+
 include::RestAPI.adoc[leveloffset=+2]
 
-.[File: FileRepository.adoc]
+_[File: FileRepository.adoc]_
+
 include::FileRepository.adoc[leveloffset=+2]
 
-.[File: ProfileOverlays.adoc]
+_[File: ProfileOverlays.adoc]_
+
 include::ProfileOverlays.adoc[leveloffset=+2]
