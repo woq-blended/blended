@@ -37,14 +37,19 @@ BlendedModel(
             phase = "prepare-package", 
             args = List("node_modules/webpack/bin/webpack.js")
         ),
-        compileJsExecution(
+        execExecution_compileJs(
         		execId = "compileJS",
         		phase = "compile",
         		args = List("-batch", "fullOptJS")
         )
       )
     ),
-    prepareSbtPlugin,
+    Plugin(
+      gav = Plugins.scala,
+      executions = Seq(
+        scalaExecution_prepareSbt
+      )
+    ),
     bundleWarPlugin,
     Plugin(
       gav = Plugins.war,

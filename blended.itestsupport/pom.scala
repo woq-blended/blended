@@ -54,7 +54,7 @@ BlendedModel(
         )
       )
     ),
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     Plugin(
       scalatestMavenPlugin.gav,
       executions = Seq(

@@ -41,7 +41,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     scalatestMavenPlugin,
     Plugin(
       gav = Plugins.resources,

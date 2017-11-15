@@ -22,7 +22,7 @@ BlendedModel(
     akkaCamel
   ),
   plugins = Seq(
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     scalatestMavenPlugin
   )
 )

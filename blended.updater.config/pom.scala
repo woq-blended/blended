@@ -26,14 +26,19 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
+    Plugin(
+      gav = Plugins.scala,
+      executions = Seq(
+        scalaExecution_prepareSbt
+      )
+    ),
     scalatestMavenPlugin,
-    prepareSbtPlugin,
     Plugin(
       gav = Plugins.exec,
       executions = Seq(
-        compileJsExecution(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
-        compileJsExecution(execId = "packageJS", phase = "package", args = List("-batch", "packageBin"))
+        execExecution_compileJs(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
+        execExecution_compileJs(execId = "packageJS", phase = "package", args = List("-batch", "packageBin"))
       )
     ),
     Plugin(

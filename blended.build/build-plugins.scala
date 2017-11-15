@@ -1,6 +1,9 @@
 val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home") + "/.ivy2")
 val m2Repo = System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
+/**
+ * Useful helper methods that can be used inside scala scripts (scala-maven-plugin:script).
+ */
 val scriptHelper =
   """
 object ScriptHelper {
@@ -19,8 +22,9 @@ object ScriptHelper {
 }
 """
 
-// Plugins
-
+/**
+ * Used Maven plugins
+ */
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
@@ -46,8 +50,8 @@ object Plugins {
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
+  val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
-  val scalaSbt = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
@@ -166,22 +170,26 @@ val scalaCompilerConfig = Config(
   )
 )
 
-val scalaMavenPlugin = Plugin(
-  gav = Plugins.scalaSbt,
+val sbtCompilerExecution_addSource = Execution(
+  id = "add-source",
+  goals = Seq("addScalaSources"),
+  phase = "initialize"
+)
+
+val sbtCompilerExecution_compile = Execution(
+  id = "compile",
+  goals = Seq("compile", "testCompile"),
+  configuration = Config(
+    scalacOptions = "-deprecation -feature -Xlint -Ywarn-nullary-override",
+    scalaVersion = BlendedVersions.scalaVersion
+  )
+)
+
+val sbtCompilerPlugin = Plugin(
+  gav = Plugins.sbtCompiler,
   executions = Seq(
-    Execution(
-      id = "scala-source",
-      goals = Seq("addScalaSources"),
-      phase = "initialize"
-    ),
-    Execution(
-      id = "compile",
-      goals = Seq("compile", "testCompile"),
-      configuration = Config(
-        scalacOptions = "-deprecation -feature -Xlint -Ywarn-nullary-override",
-        scalaVersion = BlendedVersions.scalaVersion
-      )
-    )
+    sbtCompilerExecution_addSource,
+    sbtCompilerExecution_compile
   )
 )
 
@@ -231,18 +239,15 @@ val polyglotTranslatePlugin = Plugin(
  * Some helper plugins to compile ScalaJS code with SBT.
  */
 
-val prepareSbtPlugin = Plugin(
-  gav = Plugins.scala,
-  executions = Seq(
-    Execution(
-      id = "prepareSBT",
-      phase = "generate-resources",
-      goals = Seq(
-        "script"
-      ),
-      configuration = Config(
-        script = scriptHelper +
-          """
+val scalaExecution_prepareSbt: Execution = Execution(
+  id = "prepareSBT",
+  phase = "generate-resources",
+  goals = Seq(
+    "script"
+  ),
+  configuration = Config(
+    script = scriptHelper +
+      """
 import java.io.File
 
 ScriptHelper.writeFile(
@@ -257,8 +262,6 @@ ScriptHelper.writeFile(
   "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n"
  )
 """
-      )
-    )
   )
 )
 
@@ -281,7 +284,7 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
 
 }
 
-def compileJsExecution(execId: String, phase: String, args: List[String]): Execution = {
+def execExecution_compileJs(execId: String, phase: String, args: List[String]): Execution = {
   val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
   execExecution("sbt", execId, phase, defArgs ::: args)
 }

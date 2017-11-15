@@ -21,7 +21,7 @@ BlendedModel(
     akkaSlf4j % "test"
   ),
   plugins = Seq(
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     scalatestMavenPlugin
   )
 )
