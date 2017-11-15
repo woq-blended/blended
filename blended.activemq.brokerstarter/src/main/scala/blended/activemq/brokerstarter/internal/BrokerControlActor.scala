@@ -28,7 +28,7 @@ class BrokerControlActor extends Actor
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
     val brokerName = cfg.config.getString("brokerName")
-    val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+    val cfgDir = cfg.idSvc.containerContext.getProfileConfigDirectory()
     val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
 
     try {

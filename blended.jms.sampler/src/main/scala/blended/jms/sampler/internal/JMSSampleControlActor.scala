@@ -29,7 +29,7 @@ class JMSSampleControlActor(cfg: OSGIActorConfig, cf: ConnectionFactory, sampler
     case Init =>
 
       val dir : File = {
-        val f = new File(cfg.idSvc.getContainerContext().getContainerLogDirectory() + "/../trace")
+        val f = new File(cfg.idSvc.containerContext.getContainerLogDirectory() + "/../trace")
         if (!f.exists()) f.mkdirs()
         f.getAbsoluteFile()
       }
