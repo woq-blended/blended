@@ -460,8 +460,11 @@ object BlendedProfileResourcesContainer {
             ),
             appendAssemblyId = false
           )
-        )
-      ))
+        ),
+        skipDeployPlugin,
+        skipNexusStagingPlugin
+      )
+    )
   }
 }
 
@@ -600,6 +603,7 @@ object BlendedContainer {
           )
         ),
         skipDefaultJarPlugin,
+        skipDeployPlugin,
         skipNexusStagingPlugin
       )
     )
