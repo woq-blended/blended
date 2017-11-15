@@ -16,6 +16,8 @@ BlendedModel(
     blendedTestSupport % "test",
     akkaTestkit % "test",
     akkaSlf4j % "test",
+    logbackCore % "test",
+    logbackClassic % "test",
     scalaTest % "test"
   ),
   plugins = Seq(

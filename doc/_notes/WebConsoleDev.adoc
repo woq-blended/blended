@@ -1,4 +1,4 @@
-= Web Console development nodes
+= Web Console development notes
 
 == Using the Management Mock Server
 

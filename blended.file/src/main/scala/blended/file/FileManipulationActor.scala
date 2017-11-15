@@ -41,7 +41,6 @@ class FileManipulationActor extends Actor with ActorLogging {
         }
       case RenameFile(src, dest) =>
         if (dest.exists()) {
-          log.warning(s"Rename target file [${dest.getAbsolutePath()}] already exists.")
           false
         } else {
           src.renameTo(dest)

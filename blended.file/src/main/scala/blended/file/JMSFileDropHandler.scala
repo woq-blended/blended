@@ -3,11 +3,16 @@ package blended.file
 import java.io.ByteArrayOutputStream
 import javax.jms._
 
+import akka.pattern.ask
 import akka.actor.{Actor, ActorLogging, Props}
+import akka.util.Timeout
 import blended.jms.utils.{JMSMessageHandler, JMSSupport}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 object JMSFileDropActor {
   def props(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) : Props = Props(new JMSFileDropActor(cfg, errorHandler))
@@ -38,6 +43,7 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
 
   override def receive: Receive = {
     case msg : Message =>
+      val requestor = sender()
       Option(msg.getStringProperty(cfg.fileHeader)) match {
         case None =>
           log.error(s"Message [${msg.getJMSMessageID()}] is missing the filename property [${cfg.fileHeader}]")
@@ -67,21 +73,8 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
               None
           }).foreach{ content =>
             val cmd = dropCmd(msg).copy(content = content)
-            cfg.system.actorOf(Props[FileDropActor]).tell(cmd, self)
-            context.become(executing(msg, cmd))
+            cfg.system.actorOf(Props[FileDropActor]).tell(cmd, requestor)
           }
-      }
-  }
-
-  def executing(msg: Message, cmd: FileDropCommand) : Receive = {
-    case result : FileDropResult =>
-
-      result.success match {
-        case true =>
-          context.stop(self)
-        case false =>
-          log.error(s"Error dropping msg [${msg.getJMSMessageID()}] to file.")
-          handleError(msg, false)
       }
   }
 }
@@ -91,7 +84,15 @@ class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorH
   private[this] val log = LoggerFactory.getLogger(classOf[JMSFileDropHandler])
 
   override def handleMessage(msg: Message): Option[Throwable] = {
-    cfg.system.actorOf(JMSFileDropActor.props(cfg, errorHandler)) ! msg
-    None
+
+    implicit val timeOut : Timeout= Timeout(3.seconds)
+
+    try {
+      val fResult = (cfg.system.actorOf(JMSFileDropActor.props(cfg, errorHandler)) ? msg).mapTo[FileDropResult]
+      val result = Await.result(fResult, timeOut.duration)
+      if (result.success) None else Some(new Exception(s"Filedrop Command [${result.cmd}] failed."))
+    } catch {
+      case NonFatal(t) => Some(t)
+    }
   }
 }
