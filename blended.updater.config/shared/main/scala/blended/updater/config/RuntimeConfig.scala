@@ -59,8 +59,6 @@ object RuntimeConfig
     val OVERLAYS = "blended.updater.profile.overlays"
     val PROFILE_LOOKUP_FILE = "blended.updater.profile.lookup.file"
     val MVN_REPO = "blended.updater.mvn.url"
-    /** A properties file relative to the profile dir */
-    val PROFILE_PROPERTY_FILE = "blended.updater.profile.properties.file"
     /** Comma separated list of properties required to be in the properties file */
     val PROFILE_PROPERTY_KEYS = "blended.updater.profile.properties.keys"
   }

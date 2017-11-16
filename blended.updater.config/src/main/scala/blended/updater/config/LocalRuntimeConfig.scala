@@ -7,8 +7,9 @@ import scala.io.Source
 import scala.util.Try
 
 case class LocalRuntimeConfig(
-    resolvedRuntimeConfig: ResolvedRuntimeConfig,
-    baseDir: File) {
+  resolvedRuntimeConfig: ResolvedRuntimeConfig,
+  baseDir: File
+) {
 
   def runtimeConfig = resolvedRuntimeConfig.runtimeConfig
 
@@ -23,9 +24,6 @@ case class LocalRuntimeConfig(
 
   def resourceArchiveTouchFileLocation(resourceArchive: Artifact): File =
     RuntimeConfigCompanion.resourceArchiveTouchFileLocation(resourceArchive, baseDir, runtimeConfig.mvnBaseUrl)
-
-  val propertiesFileLocation: Option[File] =
-    runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_FILE).map(f => new File(baseDir, f))
 
   def createResourceArchiveTouchFile(resourceArchive: Artifact, resourceArchiveChecksum: Option[String]): Try[File] = Try {
     val file = resourceArchiveTouchFileLocation(resourceArchive)
@@ -43,8 +41,7 @@ case class LocalRuntimeConfig(
 
   def validate(
     includeResourceArchives: Boolean,
-    explodedResourceArchives: Boolean,
-    checkPropertiesFile: Boolean
+    explodedResourceArchives: Boolean
   ): Seq[String] = {
 
     val artifacts = resolvedRuntimeConfig.allBundles.map(b => bundleLocation(b) -> b.artifact) ++
@@ -85,24 +82,6 @@ case class LocalRuntimeConfig(
       }
     } else Nil
 
-    // TODO: check for mandatory properties
-    val propertyIssues = if (checkPropertiesFile) {
-      propertiesFileLocation match {
-        case None => Nil
-        case Some(file) =>
-          val mandatoryProps = runtimeConfig.properties.get(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS).
-            toList.flatMap(_.split("[,]"))
-          lazy val props = {
-            val p = new Properties()
-            Try { p.load(new FileReader(file)) }
-            p
-          }
-          val missing = mandatoryProps.filter(prop => Option(props.get(prop)).isEmpty)
-          missing.map(p => s"Missing mandatory property [$p] in properties file: [$file]")
-      }
-    } else Nil
-
-    val issues = artifactIssues ++ resourceIssues ++ propertyIssues
-    issues
+    artifactIssues ++ resourceIssues
   }
 }

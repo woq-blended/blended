@@ -5,7 +5,11 @@ import domino.DominoActivator
 import org.slf4j.LoggerFactory
 import org.slf4j.bridge.SLF4JBridgeHandler
 
+import scala.util.control.NonFatal
+
 class ContainerContextActivator extends DominoActivator {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[ContainerContextActivator])
 
   whenBundleActive {
     SLF4JBridgeHandler.removeHandlersForRootLogger()
@@ -22,6 +26,8 @@ class ContainerContextActivator extends DominoActivator {
       log.info(s"Container Context properties are : ${idSvc.properties.mkString("[", ",", "]")}")
 
       idSvc.providesService[ContainerIdentifierService]
+    } catch {
+      case NonFatal(e) => log.error(e.getMessage())
     }
   }
 }

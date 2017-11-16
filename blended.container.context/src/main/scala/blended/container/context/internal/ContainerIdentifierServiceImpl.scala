@@ -4,9 +4,12 @@ import java.io.File
 import java.nio.file.Files
 
 import blended.container.context.{ContainerContext, ContainerIdentifierService}
+import blended.launcher.Launcher
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
 
@@ -26,13 +29,32 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
   }
 
   override val properties : Map[String,String] = {
+
+    val mandatoryPropNames : Seq[String] = System.getProperty(Launcher.BLENDED_MANDATORY_PROPS, "").split(",").toSeq
+
     val cfgFile = new File(containerContext.getContainerConfigDirectory(), s"$bundleName.conf")
     val ctxtConfig = ConfigFactory.parseFile(cfgFile)
     val cfg = containerContext.getContainerConfig().withValue(bundleName, ctxtConfig.root().get()).getConfig(bundleName)
 
-    val unresolved = cfg.entrySet().asScala.map { case entry =>
+    val unresolved : Map[String, String] = cfg.entrySet().asScala.map { entry =>
       (entry.getKey, cfg.getString(entry.getKey)) }.toMap
 
-    unresolved.map{ case (k,v) => (k, resolvePropertyString(v)) }
+    val missingPropNames = mandatoryPropNames.filter(p => unresolved.get(p).isEmpty)
+
+    if (!missingPropNames.isEmpty) {
+      val msg = s"The configuration file [$bundleName.conf] is missing entries for the properties ${missingPropNames.mkString("[", ",", "]")}"
+      throw new RuntimeException(msg)
+    }
+
+    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, Try(resolvePropertyString(v))) }
+
+    val resolveErrors = resolve.filter(_._2.isFailure)
+
+    if (!resolveErrors.isEmpty) {
+      val msg = "Error resolving container properties : " + resolveErrors.mkString("[", ",", "]")
+      throw new RuntimeException(msg)
+    }
+
+    resolve.map{ case (k: String, v: Try[String]) => k -> v.get }
   }
 }

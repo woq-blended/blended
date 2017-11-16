@@ -22,6 +22,8 @@ import scala.util.control.NonFatal
 
 object Launcher {
 
+  val BLENDED_MANDATORY_PROPS = "blended.container.properties.mandatory"
+
   private lazy val log = Logger[Launcher.type]
 
   private lazy val containerConfigDirectory = System.getProperty("blended.home") + "/etc"
@@ -167,12 +169,16 @@ object Launcher {
 
     val errors = configs.profileConfig match {
       case Some(localConfig) =>
-        // if present, validate local RuntimeConfig
+        // Expose the List of mandatory container properties as a System Property
+        // This will be evaluated by the Container Identifier Service
+        val propNames = localConfig.resolvedRuntimeConfig.runtimeConfig.properties.getOrElse(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "")
+        System.setProperty(BLENDED_MANDATORY_PROPS, propNames)
+
         localConfig.validate(
           includeResourceArchives = false,
-          explodedResourceArchives = true,
-          checkPropertiesFile = true
+          explodedResourceArchives = true
         )
+
       case None =>
         // if no RuntimeConfig, just check existence of bundles
         launcher.validate()

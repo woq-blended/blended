@@ -96,8 +96,8 @@ class ProfileFsHelper {
     val runtimeConfigsWithIssues = rcs.flatMap { localConfig =>
       val issues = localConfig.validate(
         includeResourceArchives = false,
-        explodedResourceArchives = true,
-        checkPropertiesFile = true).toList
+        explodedResourceArchives = true
+      ).toList
       log.debug(s"Runtime config ${localConfig.runtimeConfig.name}-${localConfig.runtimeConfig.version} issues: {}", issues)
       List(localConfig -> issues)
 
