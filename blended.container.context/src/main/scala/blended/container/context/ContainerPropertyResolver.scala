@@ -70,11 +70,13 @@ object ContainerPropertyResolver {
       (modifiers(modName), param)
     }
 
-    var result : String = idSvc.properties.get(ruleName) match {
+    val props = Option(idSvc.properties).getOrElse(Map.empty)
+
+    var result : String = props.get(ruleName) match {
       case Some(s) => s
       case None =>
-        log.debug(s"Resolving [$ruleName] from System properties.")
-        Option(System.getProperties.getProperty(ruleName)) match {
+        log.debug(s"Resolving [$ruleName] from Environment / System Properties.")
+        Option(System.getenv().getOrDefault(ruleName, System.getProperty(ruleName))) match {
           case Some(s) => s
           case None =>
             log.debug(s"Resolving [$ruleName] from special Resolvers")

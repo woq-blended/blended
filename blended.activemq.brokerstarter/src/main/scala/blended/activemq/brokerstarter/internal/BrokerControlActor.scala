@@ -60,7 +60,11 @@ class BrokerControlActor extends Actor
 
         val url = s"vm://$brokerName?create=false"
 
-        val jmsCfg = BlendedJMSConnectionConfig("activemq", Some("activemq"), cfg.config)
+        val jmsCfg = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
+          "activemq",
+          Some("activemq"),
+          cfg.config
+        )
 
         val props = jmsCfg.properties + ("brokerURL" -> url)
 

@@ -1,5 +1,7 @@
 package blended.container.context.internal
 
+import java.io.{PrintWriter, StringWriter}
+
 import blended.container.context.ContainerIdentifierService
 import domino.DominoActivator
 import org.slf4j.LoggerFactory
@@ -22,12 +24,21 @@ class ContainerContextActivator extends DominoActivator {
       val idSvc = new ContainerIdentifierServiceImpl(containerContext)
 
       log.info("Container identifier is [{}]", idSvc.uuid)
-      log.info("Profile home directory is [{}]", containerContext.getContainerDirectory())
+      log.info("Profile home directory is [{}]", containerContext.getProfileDirectory())
       log.info(s"Container Context properties are : ${idSvc.properties.mkString("[", ",", "]")}")
 
       idSvc.providesService[ContainerIdentifierService]
     } catch {
-      case NonFatal(e) => log.error(e.getMessage())
+      case NonFatal(e) =>
+        if (log.isDebugEnabled()) {
+          val sw = new StringWriter()
+          e.printStackTrace(new PrintWriter(sw))
+          log.error(e.getMessage + "\n" + sw.toString)
+        } else {
+          log.error(e.getMessage())
+        }
+        log.error("The container context has failed to initialize...shutting down container")
+        bundleContext.getBundle(0).stop()
     }
   }
 }

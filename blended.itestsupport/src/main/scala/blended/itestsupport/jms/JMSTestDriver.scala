@@ -17,9 +17,11 @@ abstract class JMSTestDriver {
   private[this] val log = LoggerFactory.getLogger(classOf[JMSTestDriver])
   private[this] val system = ActorSystem("JMSTestDriver")
 
+  private[this] val dummyResolver : String => String = { s => s }
+
   def run() : Unit = {
 
-    val jmsConfig = BlendedJMSConnectionConfig("unknown", ConfigFactory.parseMap(
+    val jmsConfig = BlendedJMSConnectionConfig.fromConfig(dummyResolver)("unknown", None, ConfigFactory.parseMap(
       Map(
         "provider" -> "unknown",
         "clientId" -> "client"
@@ -28,7 +30,6 @@ abstract class JMSTestDriver {
       cfClassName = Some(cf.getClass.getName)
     )
 
-    val config = ConfigFactory.load().getConfig(classOf[ScheduledJMSProducer].getName())
     system.actorOf(ProducerControlActor.props(new BlendedSingleConnectionFactory(
       config = jmsConfig,
       system = system,

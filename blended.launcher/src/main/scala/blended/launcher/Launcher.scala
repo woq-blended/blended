@@ -22,8 +22,6 @@ import scala.util.control.NonFatal
 
 object Launcher {
 
-  val BLENDED_MANDATORY_PROPS = "blended.container.properties.mandatory"
-
   private lazy val log = Logger[Launcher.type]
 
   private lazy val containerConfigDirectory = System.getProperty("blended.home") + "/etc"
@@ -132,7 +130,7 @@ object Launcher {
     cmdline
   }
 
-  private[this] def containerId(f : File, overwrite: Boolean) : Option[String] = {
+  private[this] def containerId(f : File, createContainerID : Boolean, onlyIfMissing: Boolean) : Option[String] = {
 
     val idFile = new File(containerConfigDirectory, containerIdFile)
 
@@ -143,7 +141,7 @@ object Launcher {
       sys.error(msg)
     }
 
-    val generateId = !idFile.exists || overwrite
+    val generateId = createContainerID && (!onlyIfMissing || !idFile.exists())
 
     if (generateId && idFile.exists() && !idFile.canWrite()) {
       reportError(s"Container Id File [${idFile.getAbsolutePath}] is not writable")
@@ -172,7 +170,7 @@ object Launcher {
         // Expose the List of mandatory container properties as a System Property
         // This will be evaluated by the Container Identifier Service
         val propNames = localConfig.resolvedRuntimeConfig.runtimeConfig.properties.getOrElse(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "")
-        System.setProperty(BLENDED_MANDATORY_PROPS, propNames)
+        System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, propNames)
 
         localConfig.validate(
           includeResourceArchives = false,
@@ -186,7 +184,7 @@ object Launcher {
 
     if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
 
-    containerId(new File(containerConfigDirectory + "/etc", containerIdFile), !onlyIfMissing) match {
+    containerId(new File(containerConfigDirectory + "/etc", containerIdFile), createContainerId, onlyIfMissing) match {
       case None =>
         val msg = "Launcher is unable to determine the container id."
         log.error(msg)

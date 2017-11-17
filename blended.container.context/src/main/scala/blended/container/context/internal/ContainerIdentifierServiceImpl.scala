@@ -4,8 +4,8 @@ import java.io.File
 import java.nio.file.Files
 
 import blended.container.context.{ContainerContext, ContainerIdentifierService}
-import blended.launcher.Launcher
-import com.typesafe.config.ConfigFactory
+import blended.updater.config.RuntimeConfig
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
@@ -30,11 +30,10 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
 
   override val properties : Map[String,String] = {
 
-    val mandatoryPropNames : Seq[String] = System.getProperty(Launcher.BLENDED_MANDATORY_PROPS, "").split(",").toSeq
+    val mandatoryPropNames : Seq[String] = System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "").split(",").toSeq
 
-    val cfgFile = new File(containerContext.getContainerConfigDirectory(), s"$bundleName.conf")
-    val ctxtConfig = ConfigFactory.parseFile(cfgFile)
-    val cfg = containerContext.getContainerConfig().withValue(bundleName, ctxtConfig.root().get()).getConfig(bundleName)
+    val cfgFile = new File(containerContext.getProfileConfigDirectory(), s"$bundleName.conf")
+    val cfg = ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
 
     val unresolved : Map[String, String] = cfg.entrySet().asScala.map { entry =>
       (entry.getKey, cfg.getString(entry.getKey)) }.toMap

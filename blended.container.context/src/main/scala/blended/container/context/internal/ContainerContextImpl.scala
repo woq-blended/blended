@@ -126,7 +126,7 @@ class ContainerContextImpl() extends ContainerContext {
       case _ => ConfigFactory.empty()
     }
     config.withFallback(ConfigFactory.parseFile(
-      new File(getContainerConfigDirectory, "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
+      new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
     )).
       withFallback(sysProps).
       withFallback(envProps).
