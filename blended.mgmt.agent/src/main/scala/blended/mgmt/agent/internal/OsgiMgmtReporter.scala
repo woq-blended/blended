@@ -56,7 +56,7 @@ class OsgiMgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with MgmtRep
   private[this] val idSvc = cfg.idSvc
 
   protected def createContainerInfo: ContainerInfo =
-    ContainerInfo(idSvc.getUUID(), idSvc.getProperties().asScala.toMap, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis())
+    ContainerInfo(idSvc.uuid, idSvc.properties, serviceInfos.values.toList, profileInfo.profiles, System.currentTimeMillis())
 
 }
 

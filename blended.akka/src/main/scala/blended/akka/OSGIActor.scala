@@ -35,12 +35,5 @@ abstract class OSGIActor(actorConfig: OSGIActorConfig)
   protected def bundleActorConfig : Config =
     context.system.settings.config.withValue(bundleSymbolicName, actorConfig.config.root())
 
-
   val bundleSymbolicName: String = actorConfig.bundleContext.getBundle().getSymbolicName()
-
-  protected def containerProperties : Map[String, String] = JPropertiesWrapper(actorConfig.idSvc.getProperties()).toMap
-
-  protected def containerUUID : String = actorConfig.idSvc.getUUID()
-
-  protected def containerContext : ContainerContext = actorConfig.idSvc.getContainerContext()
 }

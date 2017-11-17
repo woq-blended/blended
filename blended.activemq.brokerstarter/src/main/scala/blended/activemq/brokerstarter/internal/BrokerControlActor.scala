@@ -28,7 +28,7 @@ class BrokerControlActor extends Actor
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
     val brokerName = cfg.config.getString("brokerName")
-    val cfgDir = cfg.idSvc.getContainerContext().getContainerConfigDirectory()
+    val cfgDir = cfg.idSvc.containerContext.getProfileConfigDirectory()
     val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
 
     try {
@@ -60,7 +60,11 @@ class BrokerControlActor extends Actor
 
         val url = s"vm://$brokerName?create=false"
 
-        val jmsCfg = BlendedJMSConnectionConfig("activemq", Some("activemq"), cfg.config)
+        val jmsCfg = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
+          "activemq",
+          Some("activemq"),
+          cfg.config
+        )
 
         val props = jmsCfg.properties + ("brokerURL" -> url)
 

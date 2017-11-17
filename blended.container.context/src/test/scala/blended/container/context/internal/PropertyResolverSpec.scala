@@ -1,27 +1,45 @@
 package blended.container.context.internal
 
-import java.util.Properties
-
-import blended.container.context.{ContainerIdentifierService, ContainerPropertyResolver, PropertyResolverException}
+import blended.container.context.{ContainerContext, ContainerIdentifierService, ContainerPropertyResolver, PropertyResolverException}
 import org.mockito.Mockito._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.control.NonFatal
 
+
 class PropertyResolverSpec extends FreeSpec
-  with Matchers
-  with MockitoSugar {
+  with Matchers {
 
-  val props : Properties = new Properties()
-  props.put("foo", "bar")
-  props.put("bar", "test")
-  props.put("FOO", "BAR")
-  props.put("num", "12345")
-  props.put("version", "2.2.0")
+  val ctCtxt = new ContainerContext() {
 
-  val idSvc = mock[ContainerIdentifierService]
-  when(idSvc.getProperties()) thenReturn (props)
+    override def getProfileDirectory() = ???
+
+    override def getProfileConfigDirectory() = ???
+
+    override def getContainerLogDirectory() = ???
+
+    override def getContainerDirectory() = ???
+
+    override def getContainerConfigDirectory() = ???
+
+    override def getContainerHostname() = ???
+
+    override def getContainerConfig() = ???
+  }
+
+  val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
+
+    override val uuid: String = "id"
+    override val containerContext: ContainerContext = ctCtxt
+    override val properties: Map[String, String] = Map(
+      "foo" -> "bar",
+      "bar" -> "test",
+      "FOO" -> "BAR",
+      "num" -> "12345",
+      "version" -> "2.2.0"
+    )
+  }
 
   System.getProperties().setProperty("sysProp", "test")
 

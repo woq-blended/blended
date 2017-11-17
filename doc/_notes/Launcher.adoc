@@ -19,6 +19,28 @@ jvmlauncher start|stop
 ----
 
 
+== Populating the Blended Container Context
+
+=== The Container UUID
+
+Each Container has a unique identifier, which is used to idetnify the container within the blended management
+infrastructure, Once assigned this identifier should never change. A container that does not find a configured
+identifier, will generate one and store it in `${BLENDED_HOME}/etc/blended.container.context.id`.
+
+This file, once generated should never be changed manually. Otherwise the management server might contain records
+for orphaned containers over time.
+
+The Launcher will determine the identifier and - if required - write the container's id to the specified file.
+The ContainerIdentifierService should evaluate the content of the file and expose the identifier in its API via
+the `getUUID()` method.
+
+=== Container Context Properties
+
+The ContainerIdentifierService also offers a set of confirgurable Properties exposed via its `getProperties()`
+method. These properties will be configured with the standard configuration mechanism for bundles based on
+Typesafe's config format. The values of those properties can be resolved via environment variables or system
+properties at runtime by using the `ContainerPropertyResolver`. This resolver also supports basic String operations.
+
 == OLD CONTENT
 
 FeatureConfig::

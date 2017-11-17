@@ -43,7 +43,7 @@ object BlendedCamelContext {
 
     val cfg = idSvc match {
       case None => ConfigFactory.empty()
-      case Some(svc) => svc.getContainerContext().getContainerConfig()
+      case Some(svc) => svc.containerContext.getContainerConfig()
     }
 
     if (cfg.hasPath(propKey)) {

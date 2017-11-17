@@ -28,7 +28,7 @@ class SecurityActivator extends DominoActivator {
           loginModuleClassName = classOf[ShiroLoginModule].getName()
         ))
 
-      val factory = new IniSecurityManagerFactory(s"file:${idSvc.getContainerContext().getContainerConfigDirectory()}/shiro.ini")
+      val factory = new IniSecurityManagerFactory(s"file:${idSvc.containerContext.getProfileConfigDirectory()}/shiro.ini")
       val secMgr = factory.getInstance()
       ShiroLoginModule.setSecurityManager(secMgr)
 
