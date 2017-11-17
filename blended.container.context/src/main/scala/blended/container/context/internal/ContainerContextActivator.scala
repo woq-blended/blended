@@ -37,8 +37,6 @@ class ContainerContextActivator extends DominoActivator {
         } else {
           log.error(e.getMessage())
         }
-        log.error("The container context has failed to initialize...shutting down container")
-        bundleContext.getBundle(0).stop()
     }
   }
 }
