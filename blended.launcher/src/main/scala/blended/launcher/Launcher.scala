@@ -81,6 +81,11 @@ object Launcher {
     def setWriteSystemProperties(file: String): Unit = writeSystemProperties = Option(new File(file).getAbsoluteFile())
 
     var writeSystemProperties: Option[File] = None
+
+    @CmdOption(names = Array("--strict"),
+      description = "Start the container in strict mode (unresolved bundles or bundles failing to start terminate the container)"
+    )
+    var strict : Boolean = false
   }
 
   /**
@@ -237,7 +242,7 @@ object Launcher {
         case None =>
           val createContainerId = firstStart && (cmdline.resetContainerId || cmdline.initContainerId)
           val launcher = createAndPrepareLaunch(configs, createContainerId, cmdline.initContainerId)
-          retVal = launcher.run()
+          retVal = launcher.run(cmdline)
           firstStart = false
       }
     } while (handleFrameworkRestart && retVal == 2)
@@ -405,7 +410,7 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def start(): Framework = {
+  def start(cmdLine : Launcher.Cmdline): Framework = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
@@ -457,6 +462,7 @@ class Launcher private(config: LauncherConfig) {
     def isFragment(b: InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
 
     1.to(config.startLevel).map { startLevel =>
+      log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
         override def frameworkEvent(event: FrameworkEvent): Unit = {
           log.debug(s"Active start level ${startLevel} reached")
@@ -483,17 +489,31 @@ class Launcher private(config: LauncherConfig) {
         log.warn(s"Could not start some bundles:\n${
           failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
         }")
+
+        if (cmdLine.strict) {
+          log.warn("Shutting down container due to bundle start failures.")
+          framework.stop()
+        }
       }
     }
 
-    val bundlesInInstalledState = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
-    if (!bundlesInInstalledState.isEmpty) {
+    val bundlesInInstalledState = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+
+    if (bundlesInInstalledState.nonEmpty) {
       log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
       log.info("Resolving installed bundles")
       val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
       frameworkWiring.resolveBundles(null /* all bundles */)
-      val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
-      log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
+      val secondAttemptInstalled = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+      log.debug(s"The following bundles could not be resolved : ${secondAttemptInstalled.map(
+        b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
+      ).mkString("\n", "\n", "")
+      }")
+
+      if (secondAttemptInstalled.nonEmpty && cmdLine.strict) {
+        log.error("Shutting down container due to unresolved bundles.")
+        framework.stop()
+      }
     }
 
     log.info("Laucher finished starting of framework and bundles. Awaiting framework termination now.")
@@ -505,8 +525,8 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(): Int = {
-    val framework = start()
+  def run(cmdLine: Launcher.Cmdline): Int = {
+    val framework = start(cmdLine)
     val handle = new RunningFramework(framework)
     handle.waitForStop()
   }
