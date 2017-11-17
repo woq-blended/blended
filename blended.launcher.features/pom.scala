@@ -185,9 +185,6 @@ BlendedModel(
   blendedLauncherFeatures,
   packaging = "jar",
   description = "The prepackaged features for blended.",
-  prerequisites = Prerequisites(
-    maven = "3.3.3"
-  ),
   dependencies = featureDependencies(features),
   plugins = featuresMavenPlugins(features)
 )

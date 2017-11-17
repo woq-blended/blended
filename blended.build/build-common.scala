@@ -492,9 +492,6 @@ object BlendedContainer {
       gav = gav,
       description = description,
       packaging = "jar",
-      prerequisites = Prerequisites(
-        maven = "3.3.3"
-      ),
       properties = Map(
         "profile.name" -> gav.artifactId,
         "profile.version" -> gav.version.get
