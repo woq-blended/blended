@@ -3,7 +3,7 @@ package blended.samples.jms.internal
 import java.util.concurrent.atomic.AtomicLong
 import javax.jms.ConnectionFactory
 
-import blended.camel.utils.BlendedCamelContext
+import blended.camel.utils.BlendedCamelContextFactory
 import blended.container.context.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
@@ -27,7 +27,7 @@ class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
 
       whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)"){ cf =>
         whenServicePresent[ContainerIdentifierService] { idSvc =>
-          val ctxt = BlendedCamelContext(name = "JmsSampleContext", withJmx = true, idSvc = Some(idSvc))
+          val ctxt = BlendedCamelContextFactory.createContext(name = "JmsSampleContext", withJmx = true, idSvc = idSvc)
           ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
           ctxt.addRoutes(new RouteBuilder() {

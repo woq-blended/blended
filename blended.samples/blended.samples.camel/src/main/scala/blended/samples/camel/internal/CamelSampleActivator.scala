@@ -2,7 +2,7 @@ package blended.samples.camel.internal
 
 import javax.jms.ConnectionFactory
 
-import blended.camel.utils.BlendedCamelContext
+import blended.camel.utils.BlendedCamelContextFactory
 import domino.DominoActivator
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
@@ -15,7 +15,7 @@ class CamelSampleActivator extends DominoActivator {
     val log = LoggerFactory.getLogger(classOf[CamelSampleActivator])
     whenAdvancedServicePresent[ConnectionFactory]("(provider=activemq)") { cf =>
 
-      val ctxt = BlendedCamelContext(name = "BlendedSampleContext", withJmx = true, idSvc = None)
+      val ctxt = BlendedCamelContextFactory.createContext(name = "BlendedSampleContext", withJmx = true)
       ctxt.addComponent("activemq", JmsComponent.jmsComponent(cf))
 
       ctxt.addRoutes(new RouteBuilder() {
