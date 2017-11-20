@@ -1,5 +1,7 @@
 package blended.container.context
 
+import scala.util.Try
+
 class PropertyResolverException(msg : String) extends Exception(msg)
 
 /**
@@ -14,7 +16,8 @@ trait ContainerIdentifierService {
   val properties : Map[String,String]
   val containerContext: ContainerContext
 
-  def resolvePropertyString(value: String) : String = ContainerPropertyResolver.resolve(this, value)
+  def resolvePropertyString(value: String) : Try[String] =
+    Try(ContainerPropertyResolver.resolve(this, value))
 }
 
 object ContainerIdentifierService {

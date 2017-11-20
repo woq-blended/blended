@@ -9,6 +9,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 abstract class JMSTestDriver {
 
@@ -17,7 +18,7 @@ abstract class JMSTestDriver {
   private[this] val log = LoggerFactory.getLogger(classOf[JMSTestDriver])
   private[this] val system = ActorSystem("JMSTestDriver")
 
-  private[this] val dummyResolver : String => String = { s => s }
+  private[this] val dummyResolver : String => Try[String] = { s => Success(s) }
 
   def run() : Unit = {
 

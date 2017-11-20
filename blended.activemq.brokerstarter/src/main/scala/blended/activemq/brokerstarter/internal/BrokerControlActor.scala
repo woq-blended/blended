@@ -14,6 +14,7 @@ import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
 import scala.language.reflectiveCalls
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 class BrokerControlActor extends Actor
@@ -68,11 +69,16 @@ class BrokerControlActor extends Actor
 
         val props = jmsCfg.properties + ("brokerURL" -> url)
 
+        val clientId = cfg.idSvc.resolvePropertyString(jmsCfg.clientId) match {
+          case Failure(t) => throw t
+          case Success(s) => s
+        }
+
         val cf = new BlendedSingleConnectionFactory(
           jmsCfg.copy(
             properties = props,
             cfClassName = Some(classOf[ActiveMQConnectionFactory].getName),
-            clientId = cfg.idSvc.resolvePropertyString(jmsCfg.clientId)
+            clientId = clientId
           ),
           cfg.system,
           Some(cfg.bundleContext)

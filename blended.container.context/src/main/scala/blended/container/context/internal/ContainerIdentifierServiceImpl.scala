@@ -45,7 +45,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
       throw new RuntimeException(msg)
     }
 
-    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, Try(resolvePropertyString(v))) }
+    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, resolvePropertyString(v)) }
 
     val resolveErrors = resolve.filter(_._2.isFailure)
 

@@ -14,6 +14,7 @@ import org.scalatest.{BeforeAndAfterAll, FreeSpecLike, Matchers}
 
 import scala.concurrent.duration._
 import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
   with FreeSpecLike
@@ -26,7 +27,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
   def testId() : String = "testId-" + idCnt.incrementAndGet()
 
-  def dummyResolver : String => String = { s => s }
+  def dummyResolver : String => Try[String] = { s => Success(s) }
 
   override protected def beforeAll() : Unit = {
     super.beforeAll()

@@ -5,6 +5,7 @@ import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, 
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 object BlendedJMSConnectionConfig {
 
@@ -32,7 +33,7 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  def fromConfig(stringResolver : String => String)(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
+  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
     val prov = if (cfg.hasPath("provider")) cfg.getString("provider") else provider.getOrElse(defaultConfig.provider)
     val enabled = !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
     val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
@@ -42,14 +43,24 @@ object BlendedJMSConnectionConfig {
     val retryInterval = if (cfg.hasPath("retryInterval")) cfg.getInt("retryInterval") else defaultConfig.retryInterval
     val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
-    val clientId = if (cfg.hasPath("clientId")) stringResolver(cfg.getString("clientId")) else defaultConfig.clientId
+    val clientId = if (cfg.hasPath("clientId"))
+      stringResolver(cfg.getString("clientId")) match {
+        case Failure(t) => throw t
+        case Success(id) => id
+      }
+    else
+      defaultConfig.clientId
     val defaultUser = if (cfg.hasPath(DEFAULT_USER)) Some(cfg.getString(DEFAULT_USER)) else defaultConfig.defaultUser
     val defaultPasswd = if (cfg.hasPath(DEFAULT_PWD)) Some(cfg.getString(DEFAULT_PWD)) else defaultConfig.defaultPassword
     val destination = if (cfg.hasPath("destination")) cfg.getString("destination") else defaultConfig.pingDestination
     val properties : Map[String, String] = if (cfg.hasPath("properties")) {
-      cfg.getConfig("properties").entrySet().asScala.map{ e =>
+      val resolved = cfg.getConfig("properties").entrySet().asScala.map{ e =>
         (e.getKey(), stringResolver(cfg.getConfig("properties").getString(e.getKey())))
       }.toMap
+
+      resolved.find(_._2.isFailure).map(_._2.failed.get).map(throw _)
+
+      resolved.map( p => p._1 -> p._2.get)
     } else defaultConfig.properties
     val jndiName = if (cfg.hasPath(CF_JNDI_NAME)) Some(cfg.getString(CF_JNDI_NAME)) else defaultConfig.jndiName
     val useJndi = if (cfg.hasPath(USE_JNDI)) cfg.getBoolean(USE_JNDI) else defaultConfig.useJndi
