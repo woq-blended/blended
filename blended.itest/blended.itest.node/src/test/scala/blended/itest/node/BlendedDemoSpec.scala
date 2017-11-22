@@ -7,8 +7,7 @@ import akka.camel.CamelExtension
 import akka.testkit.TestKit
 import akka.util.Timeout
 import blended.itestsupport.{BlendedIntegrationTestSupport, ContainerSpecSupport}
-import blended.testsupport.camel.CamelTestSupport
-import blended.testsupport.camel.protocol._
+import blended.testsupport.camel._
 import blended.util.FileHelper
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 

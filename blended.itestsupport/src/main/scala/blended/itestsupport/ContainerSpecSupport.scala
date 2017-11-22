@@ -4,7 +4,7 @@ import akka.actor.{ActorSystem, PoisonPill, Props}
 import akka.camel.CamelMessage
 import akka.testkit.TestProbe
 import akka.util.Timeout
-import blended.testsupport.camel.{CamelMockActor, CamelTestSupport, MockAssertions}
+import blended.testsupport.camel._
 import blended.testsupport.camel.protocol._
 import org.apache.camel.CamelContext
 import org.slf4j.LoggerFactory
@@ -56,7 +56,7 @@ trait ContainerSpecSupport { this: CamelTestSupport =>
       sendTestMessage(testMessage(), entry).get
       mockProbe.receiveN(totalExpected)
       // This will result in the entire List of assertion failures
-      mockUris.map{ case (uri, assertions) => MockAssertions.checkAssertions(mockActors(uri), assertions:_*) }.flatten.toList
+      mockUris.map{ case (uri, assertions) => MockAssertion.checkAssertions(mockActors(uri), assertions:_*) }.flatten.toList
     } catch {
       case NonFatal(t) => List(t)
     } finally {

@@ -7,9 +7,8 @@ import akka.actor.{ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
-import blended.testsupport.camel.MockAssertions._
 import blended.testsupport.camel.protocol._
-import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
+import blended.testsupport.camel._
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
@@ -62,7 +61,7 @@ class JMSSupportSpec extends FreeSpec
     probe.receiveOne(timeout.duration)
     mock ! StopReceive
 
-    val errors = checkAssertions(mock, assertions:_*)
+    val errors = MockAssertion.checkAssertions(mock, assertions:_*)
     errors should be (empty)
 
   }
