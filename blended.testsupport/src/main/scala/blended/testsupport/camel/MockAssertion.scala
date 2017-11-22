@@ -19,7 +19,7 @@ object MockAssertion {
   }
 }
 
-sealed trait MockAssertion {
+trait MockAssertion {
   def f : List[CamelMessage] => Try[String]
 }
 
