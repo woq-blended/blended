@@ -75,11 +75,9 @@ object ContainerPropertyResolver {
     var result : String = props.get(ruleName) match {
       case Some(s) => s
       case None =>
-        log.debug(s"Resolving [$ruleName] from Environment / System Properties.")
         Option(System.getenv().getOrDefault(ruleName, System.getProperty(ruleName))) match {
           case Some(s) => s
           case None =>
-            log.debug(s"Resolving [$ruleName] from special Resolvers")
             resolvers.get(ruleName) match {
               case Some(r) => (r(ruleName))
               case None => throw new PropertyResolverException(s"Unable to resolve property [$rule]")

@@ -138,7 +138,9 @@ trait JMSSupport {
           producer.close()
           None
         } catch {
-          case NonFatal(t) => Some(t)
+          case NonFatal(t) =>
+            log.error(s"Error sending message to [$destName] : [${t.getMessage}]")
+            Some(t)
         }
       } (conn)
     } (cf)

@@ -72,7 +72,7 @@ class JMSSupportSpec extends FreeSpec
     "send messages correctly to JMS" in {
 
       sendMessage("test")
-      checkMessage("test", expectedMessageCount(1))
+      checkMessage("test", ExpectedMessageCount(1))
     }
 
     "should receive messages from JMS correctly" in {
@@ -95,7 +95,7 @@ class JMSSupportSpec extends FreeSpec
 
       count.get() should be (1)
 
-      checkMessage("test", expectedMessageCount(0))
+      checkMessage("test", ExpectedMessageCount(0))
     }
 
     "should not consume messages if the message handler yields an exception" in {
@@ -113,7 +113,7 @@ class JMSSupportSpec extends FreeSpec
         subscriptionName = None
       )
 
-      checkMessage("test", expectedMessageCount(1))
+      checkMessage("test", ExpectedMessageCount(1))
     }
 
     "forward messages correctly" in {
@@ -135,8 +135,8 @@ class JMSSupportSpec extends FreeSpec
       receiver.start()
 
       checkMessage("test2",
-        expectedMessageCount(1),
-        expectedHeaders(Map("foo" -> "bar"))
+        ExpectedMessageCount(1),
+        ExpectedHeaders(Map("foo" -> "bar"))
       )
 
       receiver.stop()

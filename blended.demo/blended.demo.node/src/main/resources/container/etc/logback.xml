@@ -17,6 +17,7 @@
   </appender>
 
   <logger name="blended" level="debug" />
+  <logger name="domino" level="debug" />
 
   <root level="info">
     <appender-ref ref="ASYNC_FILE" />

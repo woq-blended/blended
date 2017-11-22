@@ -2,14 +2,13 @@ package blended.itest.node
 
 import java.io.File
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.ActorRef
 import akka.camel.CamelExtension
-import akka.testkit.{TestActorRef, TestKit, TestProbe}
+import akka.testkit.TestKit
 import akka.util.Timeout
-import blended.itestsupport.BlendedIntegrationTestSupport
-import blended.testsupport.camel.MockAssertions._
+import blended.itestsupport.{BlendedIntegrationTestSupport, ContainerSpecSupport}
+import blended.testsupport.camel.CamelTestSupport
 import blended.testsupport.camel.protocol._
-import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
 import blended.util.FileHelper
 import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
 
@@ -19,7 +18,8 @@ import scala.util.{Failure, Success}
 @DoNotDiscover
 class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends WordSpec
   with Matchers
-  with BlendedIntegrationTestSupport 
+  with BlendedIntegrationTestSupport
+  with ContainerSpecSupport
   with CamelTestSupport {
 
   implicit val system = testKit.system
@@ -29,35 +29,25 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
 
   private[this] val log = testKit.system.log
 
+  override def testMessage() = createMessage(
+    message = "Hello Blended!",
+    properties = Map("foo" -> "bar"),
+    evaluateXML = false,
+    binary = false
+  )
+
+  override def outcome() = Map(
+    "jms:queue:SampleOut" -> Seq(
+      ExpectedMessageCount(1),
+      ExpectedBodies("Hello Blended!"),
+      ExpectedHeaders(Map("foo" -> "bar"))
+    )
+  )
+
   "The demo container" should {
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
-
-      val mock = TestActorRef(Props(CamelMockActor("jms:queue:SampleOut")))
-      val mockProbe = new TestProbe(system)
-      testKit.system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
-      testKit.system.eventStream.subscribe(mockProbe.ref, classOf[ReceiveStopped])
-
-      sendTestMessage("Hello Blended!", Map("foo" -> "bar"), "jms:queue:SampleIn", binary = false) match {
-        // We have successfully sent the message 
-        case Right(msg) =>
-          // make sure the message reaches the mock actors before we start assertions
-          mockProbe.receiveN(1)
-
-          checkAssertions(mock,
-            expectedMessageCount(1),
-            expectedBodies("Hello Blended!"),
-            expectedHeaders(Map("foo" -> "bar"))
-          ) should be(List.empty)
-
-          mock.tell(StopReceive, mockProbe.ref)
-          mockProbe.receiveN(1)
-        // The message has not been sent
-        case Left(e) =>
-          log.error(e.getMessage, e)
-          fail(e.getMessage)
-      }
-
+      test("jms:queue:SampleIn") should be (empty)
     }
 
     "Allow to read and write directories via the docker API" in {

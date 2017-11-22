@@ -93,7 +93,7 @@ class CamelMockActorSpec extends WordSpec
       p ! "Hello Andreas"
       probe.expectMsgType[MockMessageReceived]
 
-      checkAssertions(mock, expectedMessageCount(2)) should have size 1
+      checkAssertions(mock, ExpectedMessageCount(2)) should have size 1
     }  
 
     "Allow execute a list of assertions" in TestActorSys { testkit =>
@@ -110,7 +110,7 @@ class CamelMockActorSpec extends WordSpec
       p ! "Hello Andreas"
       probe.expectMsgType[MockMessageReceived]
 
-      checkAssertions(mock, expectedMessageCount(1)) should have size 0
+      checkAssertions(mock, ExpectedMessageCount(1)) should have size 0
     }  
   }
 }

@@ -1,0 +1,16 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %-20.20t | %8.8r | %-30.30c{1} | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="blended" level="DEBUG" />
+
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+
+</configuration>

@@ -31,10 +31,11 @@ BlendedModel(
     geronimoJms11Spec,
     commonsCompress,
     akkaSlf4j % "test",
-    slf4jLog4j12 % "test",
     mockitoAll % "test",
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
+    logbackCore % "test",
+    logbackClassic % "test",
     jolokiaJvmAgent % "runtime"
   ),
   plugins = Seq(
