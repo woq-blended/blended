@@ -69,6 +69,23 @@ case class ExpectedBodies(bodies: Any*) extends MockAssertion {
   }
 }
 
+case class MandatoryHeaders(header: List[String]) extends MockAssertion {
+  override def f = l => Try {
+
+    l.filter { m =>
+      val missing = header.filter { h => m.headers.get(h).isEmpty }
+
+      if (!missing.isEmpty) {
+        throw new Exception(s"Missing headers ${missing.mkString("[", ",", "]")}")
+      }
+
+      true
+    }
+
+    "Mandatory header present"
+  }
+}
+
 case class ExpectedHeaders(headers : Map[String, Any]*) extends MockAssertion {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ExpectedHeaders])

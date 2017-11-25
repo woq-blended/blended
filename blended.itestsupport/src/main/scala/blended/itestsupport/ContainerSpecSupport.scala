@@ -56,7 +56,7 @@ trait ContainerSpecSupport { this: CamelTestSupport =>
     }.toMap
 
     // We need to wait until all MockActors have been initialized
-    readyProbe.receiveN(mockActors.size)
+    readyProbe.receiveN(mockActors.size, testCooldown)
 
     val totalExpected = outcome.values.flatten.foldLeft(0){ (sum, a) =>
       sum + (a match {
