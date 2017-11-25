@@ -16,35 +16,52 @@ trait ContainerSpecSupport { this: CamelTestSupport =>
 
   private[this] val log = LoggerFactory.getLogger(classOf[ContainerSpecSupport])
 
-  def testMessage() : CamelMessage
+  def blackboxTest(
+    message : CamelMessage,
+    entry : String,
+    outcome : Map[String, Seq[MockAssertion]],
+    testCooldown : FiniteDuration
+  )(implicit
+    system: ActorSystem,
+    camelContext: CamelContext,
+    timeout: Timeout
+  ) : List[Throwable] = blackboxTest(
+    input = Map(entry -> message),
+    outcome = outcome,
+    testCooldown = testCooldown
+  )
 
-  def outcome() : Map[String, Seq[MockAssertion]]
-
-  // The standard black box test is to send a message to a given endpoint and check
-  // the desired outcomes.
-  def test(entry: String, testCooldown : FiniteDuration = 5.seconds)(implicit
+  // The standard black box test is to send an arbitrary number of  messages to
+  // the container and inspect the desired outcomes.
+  def blackboxTest(
+    input : Map[String, CamelMessage],
+    outcome: Map[String, Seq[MockAssertion]],
+    testCooldown : FiniteDuration
+  )(implicit
     system: ActorSystem,
     camelContext: CamelContext,
     timeout: Timeout
   ) : List[Throwable] = {
 
-    val mockUris = outcome()
+    val readyProbe = TestProbe()
+    val receiveProbe = TestProbe()
+    val stopProbe = TestProbe()
 
-    val mockProbe = new TestProbe(system)
-    system.eventStream.subscribe(mockProbe.ref, classOf[MockActorReady])
-    system.eventStream.subscribe(mockProbe.ref, classOf[MockMessageReceived])
-    system.eventStream.subscribe(mockProbe.ref, classOf[ReceiveStopped])
+    system.eventStream.subscribe(readyProbe.ref, classOf[MockActorReady])
+    system.eventStream.subscribe(receiveProbe.ref, classOf[MockMessageReceived])
+    system.eventStream.subscribe(stopProbe.ref, classOf[ReceiveStopped])
 
-    val mockActors = mockUris.keys.map{ uri =>
+    val mockActors = outcome.keys.map{ uri =>
       uri -> system.actorOf(Props(CamelMockActor(uri)))
     }.toMap
 
     // We need to wait until all MockActors have been initialized
-    mockProbe.receiveN(mockUris.size)
+    readyProbe.receiveN(mockActors.size)
 
-    val totalExpected = mockUris.values.flatten.foldLeft(0){ (sum, a) =>
+    val totalExpected = outcome.values.flatten.foldLeft(0){ (sum, a) =>
       sum + (a match {
         case ExpectedMessageCount(c) => c
+        case MinMessageCount(c) => c
         case _ => 0
        })
     }
@@ -53,28 +70,45 @@ trait ContainerSpecSupport { this: CamelTestSupport =>
 
     try {
       log.info(">" * 80)
-      sendTestMessage(testMessage(), entry).get
-      mockProbe.receiveN(totalExpected)
+      input.foreach{ case (entry, message) => sendTestMessage(message, entry).get }
+      receiveProbe.receiveN(totalExpected)
       // This will result in the entire List of assertion failures
-      mockUris.map{ case (uri, assertions) => MockAssertion.checkAssertions(mockActors(uri), assertions:_*) }.flatten.toList
+      val ctResults = outcome.flatMap{ case (uri, assertions) => MockAssertion.checkAssertions(mockActors(uri), assertions:_*) }.toList
+
+      val unexpected = {
+        val msgs = receiveProbe.receiveWhile(testCooldown){
+          case m => m.asInstanceOf[MockMessageReceived]
+        }
+
+        log.debug(s"Raw unexpected messages : [${msgs.mkString(",")}]")
+
+        val urisWithMinimum = outcome.filter { case (uri, asserts) =>
+          asserts.find(_.isInstanceOf[MinMessageCount]).isDefined
+        }.keys.toSeq
+
+        msgs.filter { msg => !urisWithMinimum.contains(msg.uri) } match {
+          case Nil => Nil
+          case l => List(new Exception("Received unexpected messages " + l.map(_.msg).mkString("[", ",", "]") ))
+        }
+      }
+
+      ctResults ::: unexpected
     } catch {
       case NonFatal(t) => List(t)
     } finally {
       log.info("-" * 80)
       log.info("Cleaning up after test")
       log.info("-" * 80)
-      // We don't expect to receive any more messages within this test
-      mockProbe.expectNoMsg(testCooldown)
 
       // Then we stop all mocks
-      mockActors.values.foreach{ m => m.tell(StopReceive, mockProbe.ref) }
-      mockProbe.receiveN(mockActors.size, timeout.duration)
+      mockActors.values.foreach{ m => m.tell(StopReceive, stopProbe.ref) }
+      stopProbe.receiveN(mockActors.size, timeout.duration)
       mockActors.values.foreach(m => m ! PoisonPill)
 
-      system.eventStream.unsubscribe(mockProbe.ref)
-      system.stop(mockProbe.ref)
+      system.stop(receiveProbe.ref)
+      system.stop(stopProbe.ref)
+      system.stop(readyProbe.ref)
       log.info("<" * 80)
     }
   }
-
 }

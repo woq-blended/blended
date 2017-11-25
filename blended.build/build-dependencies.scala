@@ -90,7 +90,7 @@ object Deps {
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
-  val domino = "com.github.domino-osgi" %% "domino" % "1.1.3-SNAPSHOT"
+  val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
   val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
 
   val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"

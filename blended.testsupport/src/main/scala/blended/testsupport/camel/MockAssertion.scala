@@ -88,7 +88,7 @@ case class ExpectedHeaders(headers : Map[String, Any]*) extends MockAssertion {
     def compareHeaders(matchList: Map[CamelMessage, Map[String, Any]]) : Try[String] = Try {
 
       matchList.filter { case (m, headers) => !misMatchedHeaders(m, headers).isEmpty } match {
-        case e if e.isEmpty => "MockActor has received the correct headers"
+        case e if e.isEmpty => s"MockActor has received the correct headers"
         case l =>
           val msg = l.map { case (m, h) =>
             val headerMsg = misMatchedHeaders(m, h).mkString(",")

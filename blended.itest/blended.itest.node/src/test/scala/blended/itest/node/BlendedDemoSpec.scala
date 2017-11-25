@@ -9,13 +9,13 @@ import akka.util.Timeout
 import blended.itestsupport.{BlendedIntegrationTestSupport, ContainerSpecSupport}
 import blended.testsupport.camel._
 import blended.util.FileHelper
-import org.scalatest.{DoNotDiscover, Matchers, WordSpec}
+import org.scalatest.{DoNotDiscover, FreeSpec, Matchers, WordSpec}
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
 
 @DoNotDiscover
-class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends WordSpec
+class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends FreeSpec
   with Matchers
   with BlendedIntegrationTestSupport
   with ContainerSpecSupport
@@ -28,25 +28,31 @@ class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends Wor
 
   private[this] val log = testKit.system.log
 
-  override def testMessage() = createMessage(
-    message = "Hello Blended!",
-    properties = Map("foo" -> "bar"),
-    evaluateXML = false,
-    binary = false
-  )
-
-  override def outcome() = Map(
-    "jms:queue:SampleOut" -> Seq(
-      ExpectedMessageCount(1),
-      ExpectedBodies("Hello Blended!"),
-      ExpectedHeaders(Map("foo" -> "bar"))
-    )
-  )
-
-  "The demo container" should {
+  "The demo container should" - {
 
     "Define the sample Camel Route from SampleIn to SampleOut" in {
-      test("jms:queue:SampleIn") should be (empty)
+
+      val testMessage = createMessage(
+        message = "Hello Blended!",
+        properties = Map("foo" -> "bar"),
+        evaluateXML = false,
+        binary = false
+      )
+
+      val outcome = Map(
+        "jms:queue:SampleOut" -> Seq(
+          ExpectedMessageCount(1),
+          ExpectedBodies("Hello Blended!"),
+          ExpectedHeaders(Map("foo" -> "bar"))
+        )
+      )
+
+      blackboxTest(
+        message = testMessage,
+        entry = "jms:queue:SampleIn",
+        outcome = outcome,
+        testCooldown = 5.seconds
+      ) should be (empty)
     }
 
     "Allow to read and write directories via the docker API" in {
