@@ -1,20 +1,20 @@
 package blended.jms.utils
 
 import javax.jms.{BytesMessage, Message, Session, TextMessage}
-import scala.collection.JavaConverters._
 
 import org.slf4j.LoggerFactory
 
-class CloningMessageFactory extends JMSMessageFactory[Message] {
+import scala.collection.JavaConverters._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[CloningMessageFactory])
+object CloningMessageFactory extends JMSMessageFactory[Message] {
+
+  private[this] val log = LoggerFactory.getLogger("blended.jms.utils.CloningMessageFactory")
 
   override def createMessage(session: Session, content: Message): Message = {
 
     val result = content match {
       case tMsg : TextMessage =>
-        val body = tMsg.getText()
-        session.createTextMessage(tMsg.getText())
+        session.createTextMessage(tMsg.getText)
       case bMsg : BytesMessage =>
         bMsg.reset()
         val bytes = new Array[Byte](1024)
@@ -29,17 +29,17 @@ class CloningMessageFactory extends JMSMessageFactory[Message] {
         r
 
       case pMsg =>
-        log.warn(s"Message [${pMsg.getJMSMessageID()}] is of type [${pMsg.getClass().getName()}], forwarding as plain message")
+        log.warn(s"Message [${pMsg.getJMSMessageID}] is of type [${pMsg.getClass.getName}], forwarding as plain message")
         session.createMessage()
     }
 
-    content.getPropertyNames().asScala.filter{ name =>
-      !(name.toString().startsWith("JMS"))
+    content.getPropertyNames.asScala.filter{ name =>
+      name == "JMSCorrelationID" || !name.toString.startsWith("JMS")
     }.foreach { name =>
-      result.setObjectProperty(name.toString(), content.getObjectProperty(name.toString()))
+      result.setObjectProperty(name.toString, content.getObjectProperty(name.toString))
     }
 
-    result.setJMSCorrelationID(content.getJMSCorrelationID())
+    result.setJMSCorrelationID(content.getJMSCorrelationID)
     result
 
   }
