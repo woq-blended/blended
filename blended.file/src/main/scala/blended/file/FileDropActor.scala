@@ -1,7 +1,6 @@
 package blended.file
 
 import java.io._
-import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
@@ -24,8 +23,8 @@ case class FileDropCommand(
   override def toString: String = {
 
     val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
-    s"FileDropCommand(dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.size})"
-
+    s"FileDropCommand(dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.length}), " +
+    s"properties=${properties.mkString("[", ",", "]")}"
   }
 }
 
@@ -36,11 +35,11 @@ class FileDropActor extends Actor with ActorLogging {
   def checkDirectory(dir: File) : Boolean = {
 
     if (!dir.exists()) {
-      log.debug(s"Creating directory [${dir.getAbsolutePath()}]")
+      log.debug(s"Creating directory [${dir.getAbsolutePath}]")
       dir.mkdirs()
     }
 
-    (dir.exists() && dir.isDirectory() && dir.canWrite())
+    dir.exists() && dir.isDirectory && dir.canWrite
   }
 
   def finalFile(cmd: FileDropCommand) : File = {
@@ -71,7 +70,7 @@ class FileDropActor extends Actor with ActorLogging {
       if (file.exists()) {
         val tmpName = s"${cmd.fileName}.${cmd.timestamp}.tmp"
         val tmpFile = new File(cmd.directory, tmpName)
-        log.debug(s"Creating temporary file [${tmpFile.getAbsolutePath()}]")
+        log.debug(s"Creating temporary file [${tmpFile.getAbsolutePath}]")
         file.renameTo(tmpFile)
         Some(tmpFile)
       } else {
@@ -94,7 +93,7 @@ class FileDropActor extends Actor with ActorLogging {
       tmpFile match {
         case None =>
         case Some(f) =>
-          log.debug(s"Copying original content before appending into file ${f.getAbsolutePath()}")
+          log.debug(s"Copying original content before appending into file ${f.getAbsolutePath}")
           val tmpIn = new FileInputStream(f)
           StreamCopySupport.copyStream(tmpIn, os)
           tmpIn.close()
@@ -133,7 +132,7 @@ class FileDropActor extends Actor with ActorLogging {
               case NonFatal(e) =>
                 log.debug("Trying to use ZIP compression")
                 val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
-                zis.getNextEntry()
+                zis.getNextEntry
                 zis
             }
             zippedIs
@@ -155,23 +154,23 @@ class FileDropActor extends Actor with ActorLogging {
           outFile(cmd).renameTo(ff)
           tf.foreach{ f => f.delete() }
 
-          log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath()}]")
-          respond(requestor, FileDropResult(cmd, true))
+          log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath}]")
+          respond(requestor, FileDropResult(cmd, success = true))
 
         } catch {
           case NonFatal(t) =>
-            log.warning(s"Error executing ${cmd}: ${t.getMessage()}")
+            log.warning(s"Error executing $cmd: ${t.getMessage}")
 
             tf.foreach { f => f.renameTo(new File(cmd.directory, cmd.fileName)) }
             outFile(cmd).delete()
 
-            respond(requestor, FileDropResult(cmd, false))
+            respond(requestor, FileDropResult(cmd, success = false))
         } finally {
           is.close()
         }
       } else {
-        log.warning(s"The directory [${outdir.getAbsolutePath()}] does not exist or is not writable.")
-        respond(requestor, FileDropResult(cmd, false))
+        log.warning(s"The directory [${outdir.getAbsolutePath}] does not exist or is not writable.")
+        respond(requestor, FileDropResult(cmd, success = false))
       }
   }
 }

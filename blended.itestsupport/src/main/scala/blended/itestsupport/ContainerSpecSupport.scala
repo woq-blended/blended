@@ -71,7 +71,7 @@ trait ContainerSpecSupport { this: CamelTestSupport =>
     try {
       log.info(">" * 80)
       input.foreach{ case (entry, message) => sendTestMessage(message, entry).get }
-      receiveProbe.receiveN(totalExpected)
+      receiveProbe.receiveN(totalExpected, timeout.duration)
       // This will result in the entire List of assertion failures
       val ctResults = outcome.flatMap{ case (uri, assertions) => MockAssertion.checkAssertions(mockActors(uri), assertions:_*) }.toList
 
