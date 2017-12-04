@@ -1,15 +1,16 @@
 package blended.samples.spray.helloworld.internal
 
-import blended.spray.BlendedHttpRoute
 import blended.security.spray.BlendedSecuredRoute
+import blended.spray.BlendedHttpRoute
 import spray.http.MediaTypes.`text/html`
 import spray.routing.Route
 
 trait HelloService
-    extends BlendedHttpRoute
-    with BlendedSecuredRoute {
+  extends BlendedHttpRoute
+  with BlendedSecuredRoute {
 
   override val httpRoute: Route =
+
     get {
       respondWithMediaType(`text/html`) {
         path("hello") {

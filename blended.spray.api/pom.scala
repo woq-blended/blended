@@ -32,7 +32,7 @@ BlendedModel(
           "_exportcontents" -> Option("spray.*;version="+ BlendedVersions.sprayVersion + ";-split-package:=merge-first," +
             "akka.spray.*;version="+ BlendedVersions.sprayVersion + ";-split-package:=merge-first," +
             "org.parboiled.*;version=" + BlendedVersions.parboiledVersion + ";-split-package:=merge-first," +
-            "shapeless.*;version=" + BlendedVersions.parboiledVersion + ";-split-package:=merge-first"),
+            "shapeless.*;version=" + BlendedVersions.shapelessVersion + ";-split-package:=merge-first"),
           "Embed-Transitive" -> Option("true")
         ))
       )

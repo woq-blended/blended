@@ -23,8 +23,9 @@ object BlendedVersions {
 
   val parboiledVersion = "1.1.6"
 
+  val shapelessVersion = "1.2.4"
   val slf4jVersion = "1.7.25"
-  val sprayVersion = "1.3.3"
+  val sprayVersion = "1.3.4"
   // from apache servicemix
   val springVersion = "3.2.18.RELEASE_1"
 
