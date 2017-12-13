@@ -286,7 +286,13 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
 
 def execExecution_compileJs(execId: String, phase: String, args: List[String]): Execution = {
   val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
-  execExecution("sbt", execId, phase, defArgs ::: args)
+  val os = System.getProperty("os.name").toLowerCase()
+
+  if (os.startsWith("windows")) {
+    execExecution("sbt.bat", execId, phase, args)
+  } else {
+    execExecution("sbt", execId, phase, defArgs ::: args)
+  }
 }
 
 val dockerMavenPlugin = Plugin(
