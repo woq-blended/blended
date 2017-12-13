@@ -38,6 +38,10 @@ class FileProcessActor extends Actor with ActorLogging {
             case None =>
               DeleteFile(tempFile)
             case Some(d) =>
+              val backupDir = new File(d)
+              if (!backupDir.exists()) {
+                backupDir.mkdirs()
+              }
               RenameFile(tempFile, new File(d, cmd.f.getName()))
           }
 
