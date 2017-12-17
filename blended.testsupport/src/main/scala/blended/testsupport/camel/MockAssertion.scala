@@ -25,7 +25,7 @@ trait MockAssertion {
 
 case class ExpectedMessageCount(count : Int) extends MockAssertion {
   override def f = l => Try {
-    if (l.size == count)
+    if (l.lengthCompare(count) == 0)
       s"MockActor has [${l.size}] messages."
     else
       throw new Exception(s"MockActor has [${l.size}] messages, but expected [$count] messages")
@@ -46,7 +46,7 @@ case class ExpectedBodies(bodies: Any*) extends MockAssertion {
 
     def compareBodies(matchList: Map[Any, Any]) : Try[String] = Try {
       matchList.filter { case (expected, actual) =>
-        if (expected.isInstanceOf[Array[Byte]] && (actual.isInstanceOf[Array[Byte]]))
+        if (expected.isInstanceOf[Array[Byte]] && actual.isInstanceOf[Array[Byte]])
           !expected.asInstanceOf[Array[Byte]].toList.equals(actual.asInstanceOf[Array[Byte]].toList)
         else
           !expected.equals(actual)
@@ -75,7 +75,7 @@ case class MandatoryHeaders(header: List[String]) extends MockAssertion {
     l.filter { m =>
       val missing = header.filter { h => m.headers.get(h).isEmpty }
 
-      if (!missing.isEmpty) {
+      if (missing.nonEmpty) {
         throw new Exception(s"Missing headers ${missing.mkString("[", ",", "]")}")
       }
 
@@ -104,7 +104,7 @@ case class ExpectedHeaders(headers : Map[String, Any]*) extends MockAssertion {
 
     def compareHeaders(matchList: Map[CamelMessage, Map[String, Any]]) : Try[String] = Try {
 
-      matchList.filter { case (m, headers) => !misMatchedHeaders(m, headers).isEmpty } match {
+      matchList.filter { case (m, headers) => misMatchedHeaders(m, headers).nonEmpty } match {
         case e if e.isEmpty => s"MockActor has received the correct headers"
         case l =>
           val msg = l.map { case (m, h) =>
