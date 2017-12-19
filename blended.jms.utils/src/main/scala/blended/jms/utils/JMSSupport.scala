@@ -100,9 +100,9 @@ trait JMSSupport {
               log.trace(s"No more messages to receive from [$destName]")
             case Some(m) =>
               msgCount += 1
-              val id = m.getJMSMessageID()
+              val id = m.getJMSMessageID
               log.trace(s"Handling received message [$id] from [$destName]")
-              msgHandler.handleMessage(m) match {
+              msgHandler.handleMessage(m)  match {
                 case Some(t) =>
                   log.warn(s"Error handling message [$id] from [$destName]")
                   throw t

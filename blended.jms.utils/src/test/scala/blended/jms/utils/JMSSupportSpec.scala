@@ -15,7 +15,8 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
-
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class JMSSupportSpec extends FreeSpec

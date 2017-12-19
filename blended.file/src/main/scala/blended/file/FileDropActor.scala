@@ -1,11 +1,12 @@
 package blended.file
 
 import java.io._
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
 import blended.util.StreamCopySupport
 
 import scala.util.control.NonFatal
@@ -20,6 +21,21 @@ case class FileDropCommand(
   properties: Map[String, Object],
   dropNotification : Boolean
 ) {
+
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case cmd : FileDropCommand =>
+      content.sameElements(cmd.content) &&
+      directory.equals(cmd.directory) &&
+      fileName.equals(cmd.fileName) &&
+      compressed == cmd.compressed &&
+      append == cmd.append &&
+      timestamp == cmd.timestamp &&
+      properties.equals(cmd.properties) &&
+      dropNotification == cmd.dropNotification
+    case _ => false
+  }
+
   override def toString: String = {
 
     val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
@@ -28,7 +44,13 @@ case class FileDropCommand(
   }
 }
 
-case class FileDropResult(cmd: FileDropCommand, success: Boolean)
+object FileDropResult {
+  def result(cmd: FileDropCommand, error: Option[Throwable]): FileDropResult = new FileDropResult(
+    cmd.copy(content = Array.empty), error
+  )
+}
+
+case class FileDropResult(cmd: FileDropCommand, error: Option[Throwable])
 
 class FileDropActor extends Actor with ActorLogging {
 
@@ -87,26 +109,24 @@ class FileDropActor extends Actor with ActorLogging {
 
   def prepareOutputStream(cmd: FileDropCommand, tmpFile: Option[File]) : OutputStream = {
 
-    val os = new FileOutputStream(outFile(cmd))
+    val of = outFile(cmd)
 
-    if (cmd.append) {
+    if (!cmd.append) {
+      new FileOutputStream(of)
+    } else {
       tmpFile match {
-        case None =>
-        case Some(f) =>
-          log.debug(s"Copying original content before appending into file ${f.getAbsolutePath}")
-          val tmpIn = new FileInputStream(f)
-          StreamCopySupport.copyStream(tmpIn, os)
-          tmpIn.close()
+        case None => new FileOutputStream(of)
+        case Some(tf) =>
+          Files.copy(tf.toPath, of.toPath)
+          new FileOutputStream(of, true)
       }
     }
-
-    os
   }
 
   private[this] def respond(requestor: ActorRef, response: FileDropResult) : Unit = {
     if (response.cmd.dropNotification) context.system.eventStream.publish(response)
     requestor ! response
-    context.stop(self)
+    self ! PoisonPill
   }
 
   override def receive: Receive = {
@@ -155,7 +175,7 @@ class FileDropActor extends Actor with ActorLogging {
           tf.foreach{ f => f.delete() }
 
           log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath}]")
-          respond(requestor, FileDropResult(cmd, success = true))
+          respond(requestor, FileDropResult.result(cmd, None))
 
         } catch {
           case NonFatal(t) =>
@@ -164,13 +184,14 @@ class FileDropActor extends Actor with ActorLogging {
             tf.foreach { f => f.renameTo(new File(cmd.directory, cmd.fileName)) }
             outFile(cmd).delete()
 
-            respond(requestor, FileDropResult(cmd, success = false))
+            respond(requestor, FileDropResult.result(cmd, Some(t)))
         } finally {
           is.close()
         }
       } else {
-        log.warning(s"The directory [${outdir.getAbsolutePath}] does not exist or is not writable.")
-        respond(requestor, FileDropResult(cmd, success = false))
+        val msg = s"The directory [${outdir.getAbsolutePath}] does not exist or is not writable."
+        log.warning(msg)
+        respond(requestor, FileDropResult.result(cmd, Some(new Exception(msg))))
       }
   }
 }
