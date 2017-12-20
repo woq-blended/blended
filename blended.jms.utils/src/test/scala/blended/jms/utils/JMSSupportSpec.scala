@@ -90,6 +90,7 @@ class JMSSupportSpec extends FreeSpec
             None
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
@@ -110,6 +111,7 @@ class JMSSupportSpec extends FreeSpec
             Some(new Exception("test failure"))
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
@@ -129,7 +131,8 @@ class JMSSupportSpec extends FreeSpec
           cf = cf,
           destName = "test2",
           additionalHeader = Map("foo" -> "bar")
-        )
+        ),
+        errorHandler = new RedeliveryErrorHandler()
       )
 
       receiver.start()

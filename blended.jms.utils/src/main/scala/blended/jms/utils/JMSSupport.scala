@@ -62,6 +62,7 @@ trait JMSSupport {
     cf : ConnectionFactory,
     destName: String,
     msgHandler: JMSMessageHandler,
+    errorHandler: JMSErrorHandler,
     maxMessages : Int = 0,
     receiveTimeout : Long = 50,
     subscriptionName : Option[String] = None
@@ -105,7 +106,7 @@ trait JMSSupport {
               msgHandler.handleMessage(m)  match {
                 case Some(t) =>
                   log.warn(s"Error handling message [$id] from [$destName]")
-                  throw t
+                  if (errorHandler.handleError(m, t)) m.acknowledge()
                 case None =>
                   log.trace(s"Successfully handled message [$id] from [$destName]")
                   m.acknowledge()
