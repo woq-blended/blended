@@ -10,11 +10,17 @@ class FelixFrameworkTest extends FreeSpec with TestFile {
 
   "Launch with Apache Felix" - {
 
-    "minimal: just the framework" in {
+    val versions = Seq(
+      "5.0.0",
+      "5.6.10"
+    )
 
-      val launcherConfig = (
-        "repo = \"" + new File("target/test-felix").getAbsolutePath() + """"
-        |frameworkBundle = ${repo}"/org.apache.felix.framework-5.0.0.jar"
+    versions.foreach { v =>
+      s"minimal: just the framework version ${v}" in {
+
+        val launcherConfig = (
+          "repo = \"" + new File("target/test-felix").getAbsolutePath() + """"
+        |frameworkBundle = ${repo}"/org.apache.felix.framework-""" + v + """.jar"
         |startLevel = 10
         |defaultStartLevel = 4
         |frameworkProperties = {
@@ -23,14 +29,14 @@ class FelixFrameworkTest extends FreeSpec with TestFile {
         |bundles = []
         |""").stripMargin
 
-      withTestFile(launcherConfig) { configFile =>
-        Launcher.run(Array(
-          "--config", configFile.getAbsolutePath(),
-          "--test"
-        ))
+        withTestFile(launcherConfig) { configFile =>
+          Launcher.run(Array(
+            "--config", configFile.getAbsolutePath(),
+            "--test"
+          ))
+        }
       }
     }
-
   }
 }
 

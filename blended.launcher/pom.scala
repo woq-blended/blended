@@ -118,8 +118,16 @@ BlendedModel(
           goals = Seq("copy"),
           configuration = Config(
             artifactItems = Config(
-              artifactItem = artifactItem(Deps.felixFramework, "${project.build.directory}/test-felix"),
-              artifactItem = artifactItem(Deps.eclipseOsgi, "${project.build.directory}/test-eclipse")
+              artifactItem = artifactItem("org.apache.felix" % "org.apache.felix.framework" % "5.0.0", "${project.build.directory}/test-felix"),
+              artifactItem = artifactItem("org.apache.felix" % "org.apache.felix.framework" % "5.6.10", "${project.build.directory}/test-felix"),
+
+              artifactItem = artifactItem("org.eclipse" % "org.eclipse.osgi" % "3.8.0.v20120529-1548", "${project.build.directory}/test-equinox"),
+              artifactItem = artifactItem("org.osgi" % "org.eclipse.osgi" % "3.10.100.v20150529-1857", "${project.build.directory}/test-equinox"),
+              artifactItem = artifactItem("org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50", "${project.build.directory}/test-equinox"),
+              artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.9.1.v20130814-1242", "${project.build.directory}/test-equinox"),
+              artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.10.0.v20140606-1445", "${project.build.directory}/test-equinox")
+              
+            
             )
           )
         )

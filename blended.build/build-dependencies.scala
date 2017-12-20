@@ -93,9 +93,13 @@ object Deps {
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
   val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
 
+  // provides Equinox console commands to gogo shell
+  val eclipseEquinoxConsole = "org.eclipse.platform" % "org.eclipse.equinox.console" % "1.1.300"
+  val eclipseOsgi = "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50"
+
   val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
   val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
@@ -154,7 +158,7 @@ object Deps {
   val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 
   val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
-  val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+  val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
   val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % BlendedVersions.paxWeb
