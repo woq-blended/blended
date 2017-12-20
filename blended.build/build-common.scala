@@ -447,7 +447,7 @@ object BlendedProfileResourcesContainer {
   def apply(
     gav: Gav,
     properties: Map[String, String] = Map.empty) = {
-    
+
     BlendedModel(
       gav = gav,
       packaging = "jar",
@@ -519,6 +519,7 @@ object BlendedContainer {
         Plugin(
           gav = blendedUpdaterMavenPlugin,
           executions = Seq(
+            // Materialize a complete profile based on profile.conf and maven dependencies
             Execution(
               id = "materialize-profile",
               phase = "compile",
@@ -557,8 +558,30 @@ object BlendedContainer {
           )
         ),
         Plugin(
+          gav = Plugins.antrun,
+          executions = Seq(
+            Execution(
+              id = "unpack-full-nojre",
+              phase = "integration-test",
+              goals = Seq("run"),
+              configuration = Config(
+                target = Config(
+                  unzip = Config(
+                    `@src` = "${project.build.directory}/${project.artifactId}-${project.version}-full-nojre.zip",
+                    `@dest` = "${project.build.directory}"
+                    
+                  )
+                )
+              )
+            )
+          )
+        ),
+        Plugin(
           gav = Plugins.scala,
           executions = Seq(
+            // Generate the following resources
+            // - container/launch.conf
+            // - profile/overlays/base.conf
             Execution(
               id = "build-product",
               phase = "generate-resources",
@@ -592,20 +615,21 @@ object BlendedContainer {
         Plugin(
           gav = Plugins.assembly,
           executions = Seq(
+            // Build the various assemblies
             Execution(
               id = "assemble",
               phase = "package",
               goals = Seq(
                 "single"
+              ),
+              configuration = Config(
+                tarLongFileMode = "gnu",
+                descriptors = Config(
+                  descriptor = "src/main/assembly/full-nojre.xml",
+                  descriptor = "src/main/assembly/product.xml",
+                  descirptor = "src/main/assembly/deploymentpack.xml"
+                )
               )
-            )
-          ),
-          configuration = Config(
-            tarLongFileMode = "gnu",
-            descriptors = Config(
-              descriptor = "src/main/assembly/full-nojre.xml",
-              descriptor = "src/main/assembly/product.xml",
-              descirptor = "src/main/assembly/deploymentpack.xml"
             )
           )
         ),

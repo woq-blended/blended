@@ -28,8 +28,9 @@ object ScriptHelper {
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
-  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
+  val antrun = mavenPluginGroup % "maven-antrun-plugin" % "1.8"
   val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
+  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
   val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.5.1"
   val dependency = mavenPluginGroup % "maven-dependency-plugin" % "2.10"
   val deploy = mavenPluginGroup % "maven-deploy-plugin" % "2.8.2"
