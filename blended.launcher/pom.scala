@@ -6,6 +6,16 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
+def artifactItem(dep: Dependency, targetDir: String): Config = {
+  Config(
+    groupId = dep.gav.groupId.get,
+    artifactId = dep.gav.artifactId,
+    version = dep.gav.version.get,
+    outputDirectory = targetDir
+  )
+
+}
+
 BlendedModel(
   gav = blendedLauncher,
   packaging = "bundle",
@@ -21,12 +31,13 @@ BlendedModel(
     blendedUpdaterConfig,
     cmdOption,
     scalaTest % "test",
-    felixFramework % "test",
-    felixGogoRuntime % "test",
-    felixGogoShell % "test",
-    felixGogoCommand % "test",
-    felixFileinstall % "test",
-    felixMetatype % "test"
+    (blendedTestSupport % "test").pure
+  //    felixFramework % "test",
+  //    felixGogoRuntime % "test",
+  //    felixGogoShell % "test",
+  //    felixGogoCommand % "test",
+  //    felixFileinstall % "test",
+  //    felixMetatype % "test"
   ),
   properties = Map(
     "blended.launcher.version" -> blendedLauncher.version.get,
@@ -41,7 +52,21 @@ BlendedModel(
   plugins = Seq(
     mavenBundlePlugin,
     sbtCompilerPlugin,
-    scalatestMavenPlugin,
+    // Scalatest, we need to fork the tests, as Laucher depends on sys properties, which we mutate in tests
+    Plugin(
+      gav = Plugins.scalaTest,
+      executions = Seq(
+        scalatestExecution
+      ),
+      configuration = new Config(scalatestConfiguration.elements ++ Config(
+        // What we want!
+        // forkMode = "always"
+        // What we can get
+        forkMode = "once",
+        parallel = "false",
+        logForkedProcessCommand = "true"
+      ).elements)
+    ),
     Plugin(
       gav = Plugins.resources,
       executions = Seq(
@@ -50,7 +75,7 @@ BlendedModel(
           phase = "process-resources",
           goals = Seq("copy-resources"),
           configuration = Config(
-            outputDirectory = "${basedir}/target/runner-resources",
+            outputDirectory = "${project.build.directory}/runner-resources",
             resources = Config(
               resource = Config(
                 directory = "src/runner/resources",
@@ -82,6 +107,21 @@ BlendedModel(
       configuration = Config(
         descriptors = Config(
           descriptor = "src/main/assembly/bin.xml"
+        )
+      )
+    ),
+    Plugin(
+      Plugins.dependency,
+      executions = Seq(
+        Execution(
+          phase = "generate-test-resources",
+          goals = Seq("copy"),
+          configuration = Config(
+            artifactItems = Config(
+              artifactItem = artifactItem(Deps.felixFramework, "${project.build.directory}/test-felix"),
+              artifactItem = artifactItem(Deps.eclipseOsgi, "${project.build.directory}/test-eclipse")
+            )
+          )
         )
       )
     )
