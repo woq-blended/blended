@@ -21,8 +21,7 @@ implicit class RichDependency(d: Dependency) {
     scope: Option[String] = d.scope,
     systemPath: Option[String] = d.systemPath,
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional
-  ): Dependency =
+    optional: Boolean = d.optional): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
 
   def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
@@ -116,10 +115,10 @@ object Deps {
   val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.4.65", `type` = "war")
 
   val javaxMail = "javax.mail" % "mail" % "1.4.5"
-  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
   val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1"
   val jacksonBind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
+  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
   //  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
 //  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
