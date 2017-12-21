@@ -6,9 +6,16 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
-val features : Map[String, Seq[FeatureBundle]] = Map(
+val features: Map[String, Seq[FeatureBundle]] = Map(
+   "blended-base-felix" -> Seq(
+     FeatureBundle(dependency = felixFramework, startLevel = 0, start = true)
+   ),
+   "blended-base-equinox" -> Seq(
+     FeatureBundle(dependency = eclipseOsgi, startLevel = 0, start = true),
+     FeatureBundle(dependency = eclipseEquinoxConsole, start = true)
+   ),
   "blended-base" -> Seq(
-    FeatureBundle(dependency = felixFramework, startLevel = 0, start = true),
+    // FeatureBundle(dependency = felixFramework, startLevel = 0, start = true),
     FeatureBundle(dependency = blendedSecurityBoot),
     FeatureBundle(dependency = asmAll, start = true),
     FeatureBundle(dependency = blendedUpdater, start = true),
@@ -18,21 +25,21 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = scalaXml),
     FeatureBundle(dependency = scalaCompatJava8),
     FeatureBundle(dependency = scalaParser),
-    FeatureBundle(dependency = blendedAkka, start=true),
-    FeatureBundle(dependency = blendedUtil, start=true),
-    FeatureBundle(dependency = blendedContainerContext, start=true),
-    FeatureBundle(dependency = felixConfigAdmin, start=true),
-    FeatureBundle(dependency = felixEventAdmin, start=true),
-    FeatureBundle(dependency = felixFileinstall, start=true),
+    FeatureBundle(dependency = blendedAkka, start = true),
+    FeatureBundle(dependency = blendedUtil, start = true),
+    FeatureBundle(dependency = blendedContainerContext, start = true),
+    FeatureBundle(dependency = felixConfigAdmin, start = true),
+    FeatureBundle(dependency = felixEventAdmin, start = true),
+    FeatureBundle(dependency = felixFileinstall, start = true),
     FeatureBundle(dependency = slf4jJcl),
     FeatureBundle(dependency = slf4jJul),
     FeatureBundle(dependency = slf4j),
     FeatureBundle(dependency = logbackCore),
     FeatureBundle(dependency = logbackClassic),
-    FeatureBundle(dependency = felixGogoRuntime, start=true),
-    FeatureBundle(dependency = felixGogoShell, start=true),
-    FeatureBundle(dependency = felixGogoCommand, start=true),
-    FeatureBundle(dependency = felixMetatype, start=true),
+    FeatureBundle(dependency = felixGogoRuntime, start = true),
+    FeatureBundle(dependency = felixGogoShell, start = true),
+    FeatureBundle(dependency = felixGogoCommand, start = true),
+    FeatureBundle(dependency = felixMetatype, start = true),
     FeatureBundle(dependency = typesafeConfig),
     FeatureBundle(dependency = typesafeConfigSSL),
     FeatureBundle(dependency = reactiveStreams),
@@ -98,7 +105,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedMgmtAgent, start = true)
   ),
   "blended-mgmt-server" -> Seq(
-    FeatureBundle(dependency = Dependency(gav =blendedMgmtRest, `type` = "war"), start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedMgmtRepo, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedUpdaterRemote, start = true),
@@ -108,7 +115,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = orientDbCore),
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true),
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
     FeatureBundle(dependency = jacksonCore),
     FeatureBundle(dependency = jacksonBind),
     FeatureBundle(dependency = jjwt),
