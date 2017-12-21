@@ -173,7 +173,15 @@ class FileDropActor extends Actor with ActorLogging {
 
           is match {
             case Some(input) =>
-              StreamCopySupport.copyStream(input, os.get)
+              try {
+                StreamCopySupport.copyStream(input, os.get)
+              } finally {
+                try {
+                  is.foreach(_.close())
+                } finally {
+                  os.foreach(_.close())
+                }
+              }
 
               val ff = finalFile(cmd)
               outFile(cmd).renameTo(ff)
@@ -195,12 +203,6 @@ class FileDropActor extends Actor with ActorLogging {
             outFile(cmd).delete()
 
             respond(requestor, cmd, Some(t))
-        } finally {
-          try {
-            is.foreach(_.close())
-          } finally {
-            os.foreach(_.close())
-          }
         }
       } else {
         val msg = s"The directory [${outdir.getAbsolutePath}] does not exist or is not writable."
