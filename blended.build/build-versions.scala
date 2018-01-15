@@ -29,10 +29,10 @@ object BlendedVersions {
   // from apache servicemix
   val springVersion = "3.2.18.RELEASE_1"
 
-  val paxWeb = "3.1.6"
+  val paxWeb = "6.1.0"
   val prickle = "1.1.14"
 
-  val xbean = "3.16"
+  val xbean = "4.6"
 
 }
 

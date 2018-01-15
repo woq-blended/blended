@@ -116,6 +116,7 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
     FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
+    FeatureBundle(dependency = jacksonAnnotations),
     FeatureBundle(dependency = jacksonCore),
     FeatureBundle(dependency = jacksonBind),
     FeatureBundle(dependency = jjwt),
@@ -136,28 +137,44 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = paxwebJetty, start = true),
     FeatureBundle(dependency = paxwebJsp),
     FeatureBundle(dependency = paxwebExtWhiteboard, start = true),
-    FeatureBundle(dependency = paxwebExtWar, start = true)
+    FeatureBundle(dependency = paxwebExtWar, start = true),
+    FeatureBundle(dependency = paxwebDescriptor),
+    // dep of paxwebJsp
+    FeatureBundle(dependency = javaxEl),
+    // dep of paxwebJsp
+    FeatureBundle(dependency = juliOverSlf4j)
   ),
   "blended-jetty" -> Seq(
     FeatureBundle(dependency = activationApi),
-    FeatureBundle(dependency = geronimoServlet30Spec),
+    FeatureBundle(dependency = javaxServlet31),
     FeatureBundle(dependency = javaxMail),
     FeatureBundle(dependency = geronimoAnnotation),
     FeatureBundle(dependency = geronimoJaspic),
-    FeatureBundle(dependency = jettyServer)
+    //    FeatureBundle(dependency = jettyServer)
+    FeatureBundle(dependency = jettyUtil),
+    FeatureBundle(dependency = jettyHttp),
+    FeatureBundle(dependency = jettyIo),
+    FeatureBundle(dependency = jettyJmx),
+    FeatureBundle(dependency = jettySecurity),
+    FeatureBundle(dependency = jettyServlet),
+    FeatureBundle(dependency = jettyServer),
+    FeatureBundle(dependency = jettyWebapp),
+    FeatureBundle(dependency = jettyDeploy),
+    FeatureBundle(dependency = jettyXml)
+//    FeatureBundle(dependency = jettyOsgiServletApi)
   ),
-//  "blended-jaxrs" -> Seq(
-//    FeatureBundle(dependency = jettison),
-//    FeatureBundle(dependency = jacksonCoreAsl),
-//    FeatureBundle(dependency = jacksonMapperAsl),
-//    FeatureBundle(dependency = jacksonJaxrs),
-//    FeatureBundle(dependency = jerseyCore),
-//    FeatureBundle(dependency = jerseyJson),
-//    FeatureBundle(dependency = jerseyServer),
-//    FeatureBundle(dependency = jerseyServlet),
-//    FeatureBundle(dependency = jerseyClient),
-//    FeatureBundle(dependency = geronimoServlet30Spec)
-//  ),
+  //  "blended-jaxrs" -> Seq(
+  //    FeatureBundle(dependency = jettison),
+  //    FeatureBundle(dependency = jacksonCoreAsl),
+  //    FeatureBundle(dependency = jacksonMapperAsl),
+  //    FeatureBundle(dependency = jacksonJaxrs),
+  //    FeatureBundle(dependency = jerseyCore),
+  //    FeatureBundle(dependency = jerseyJson),
+  //    FeatureBundle(dependency = jerseyServer),
+  //    FeatureBundle(dependency = jerseyServlet),
+  //    FeatureBundle(dependency = jerseyClient),
+  //    FeatureBundle(dependency = geronimoServlet30Spec)
+  //  ),
   "blended-security" -> Seq(
     FeatureBundle(dependency = shiroCore),
     FeatureBundle(dependency = shiroWeb),

@@ -9,37 +9,37 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
   <Call id="jettyMBeanServer" class="java.lang.management.ManagementFactory" name="getPlatformMBeanServer"/>
 
   <!-- Create the MBean Container -->
-  <New id="MBeanContainer" class="org.eclipse.jetty.jmx.MBeanContainer">
-    <Arg>
-      <Ref id="jettyMBeanServer"/>
-    </Arg>
-    <Call name="start"/>
-  </New>
+<!--   <New id="MBeanContainer" class="org.eclipse.jetty.jmx.MBeanContainer"> -->
+<!--     <Arg> -->
+<!--       <Ref id="jettyMBeanServer"/> -->
+<!--     </Arg> -->
+<!--     <Call name="start"/> -->
+<!--   </New> -->
 
   <!-- Add the Container to the Jetty Server -->
-  <Call name="addBean">
-    <Arg>
-      <Ref id="MBeanContainer"/>
-    </Arg>
-    <Arg type="boolean">true</Arg>
-  </Call>
+<!--   <Call name="addBean"> -->
+<!--     <Arg> -->
+<!--       <Ref id="MBeanContainer"/> -->
+<!--     </Arg> -->
+<!--     <Arg type="boolean">true</Arg> -->
+<!--   </Call> -->
 
-  <Get id="Container" name="container">
-    <Call name="addEventListener">
-      <Arg>
-        <Ref id="MBeanContainer"/>
-      </Arg>
-    </Call>
-  </Get>
+<!--   <Get id="Container" name="container"> -->
+<!--     <Call name="addEventListener"> -->
+<!--       <Arg> -->
+<!--         <Ref id="MBeanContainer"/> -->
+<!--       </Arg> -->
+<!--     </Call> -->
+<!--   </Get> -->
 
   <!-- Add the static log -->
-  <Ref id="MBeanContainer">
-    <Call name="addBean">
-      <Arg>
-        <New class="org.eclipse.jetty.util.log.Log"/>
-      </Arg>
-    </Call>
-  </Ref>
+<!--   <Ref id="MBeanContainer"> -->
+<!--     <Call name="addBean"> -->
+<!--       <Arg> -->
+<!--         <New class="org.eclipse.jetty.util.log.Log"/> -->
+<!--       </Arg> -->
+<!--     </Call> -->
+<!--   </Ref> -->
 
   <!-- =========================================================== -->
   <!-- Set connectors                                              -->
@@ -54,43 +54,43 @@ DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
        to change that back but please make sure that you've read the Jetty
        bug and make sure that it does not affect you first! !! WARNING!!
   -->
-  <Call name="addConnector">
-    <Arg>
-      <New class="org.eclipse.jetty.server.nio.SelectChannelConnector">
-        <Set name="host">
-          <Property name="jetty.host" />
-        </Set>
-        <Set name="port">
-          <SystemProperty name="org.osgi.service.http.port" default="9191"/>
-        </Set>
-        <Set name="maxIdleTime">300000</Set>
-        <Set name="Acceptors">5</Set>
-        <Set name="statsOn">false</Set>
-        <Set name="confidentialPort"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set>
-      </New>
-    </Arg>
-  </Call>
-  <Call name="addConnector">
-    <Arg>
-      <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
-        <Arg>
-          <New class="org.eclipse.jetty.util.ssl.SslContextFactory">
-            <Set name="keyStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore"/></Set>
-            <Set name="keyStorePassword">export</Set>
-            <Set name="keyManagerPassword">export</Set>
-            <Set name="trustStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore" /></Set>
-            <Set name="trustStorePassword">export</Set>
-          </New>
-        </Arg>
-        <Set name="host">
-          <Property name="jetty.host" />
-        </Set>
-        <Set name="port"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set>
-        <Set name="maxIdleTime">300000</Set>
-        <Set name="Acceptors">5</Set>
-        <Set name="statsOn">false</Set>
-      </New>
-    </Arg>
-  </Call>
+<!--   <Call name="addConnector"> -->
+<!--     <Arg> -->
+<!--       <New class="org.eclipse.jetty.server.nio.SelectChannelConnector"> -->
+<!--         <Set name="host"> -->
+<!--           <Property name="jetty.host" /> -->
+<!--         </Set> -->
+<!--         <Set name="port"> -->
+<!--           <SystemProperty name="org.osgi.service.http.port" default="9191"/> -->
+<!--         </Set> -->
+<!--         <Set name="maxIdleTime">300000</Set> -->
+<!--         <Set name="Acceptors">5</Set> -->
+<!--         <Set name="statsOn">false</Set> -->
+<!--         <Set name="confidentialPort"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set> -->
+<!--       </New> -->
+<!--     </Arg> -->
+<!--   </Call> -->
+<!--   <Call name="addConnector"> -->
+<!--     <Arg> -->
+<!--       <New class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector"> -->
+<!--         <Arg> -->
+<!--           <New class="org.eclipse.jetty.util.ssl.SslContextFactory"> -->
+<!--             <Set name="keyStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore"/></Set> -->
+<!--             <Set name="keyStorePassword">export</Set> -->
+<!--             <Set name="keyManagerPassword">export</Set> -->
+<!--             <Set name="trustStore"><SystemProperty name="org.ops4j.pax.web.ssl.keystore" /></Set> -->
+<!--             <Set name="trustStorePassword">export</Set> -->
+<!--           </New> -->
+<!--         </Arg> -->
+<!--         <Set name="host"> -->
+<!--           <Property name="jetty.host" /> -->
+<!--         </Set> -->
+<!--         <Set name="port"><SystemProperty name="org.osgi.service.http.port.secure" default="9443" /></Set> -->
+<!--         <Set name="maxIdleTime">300000</Set> -->
+<!--         <Set name="Acceptors">5</Set> -->
+<!--         <Set name="statsOn">false</Set> -->
+<!--       </New> -->
+<!--     </Arg> -->
+<!--   </Call> -->
 
 </Configure>
