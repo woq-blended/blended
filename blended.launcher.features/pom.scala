@@ -123,27 +123,6 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedSecurityLogin, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
   ),
-  "blended-http" -> Seq(
-//    FeatureBundle(dependency = ops4jBaseLang),
-//    FeatureBundle(dependency = paxSwissboxCore),
-//    FeatureBundle(dependency = paxSwissboxOptJcl),
-//    FeatureBundle(dependency = xbeanBundleUtils),
-//    FeatureBundle(dependency = xbeanAsmShaded),
-//    FeatureBundle(dependency = xbeanReflect),
-//    FeatureBundle(dependency = xbeanFinder),
-//    FeatureBundle(dependency = paxwebApi),
-//    FeatureBundle(dependency = paxwebRuntime, start = true),
-//    FeatureBundle(dependency = paxwebSpi),
-//    FeatureBundle(dependency = paxwebJetty, start = true),
-//    FeatureBundle(dependency = paxwebJsp),
-//    FeatureBundle(dependency = paxwebExtWhiteboard, start = true),
-//    FeatureBundle(dependency = paxwebExtWar, start = true),
-//    FeatureBundle(dependency = paxwebDescriptor),
-//    // dep of paxwebJsp
-//    FeatureBundle(dependency = javaxEl),
-//    // dep of paxwebJsp
-//    FeatureBundle(dependency = juliOverSlf4j)
-  ),
   "blended-jetty" -> Seq(
     FeatureBundle(dependency = activationApi),
     FeatureBundle(dependency = javaxServlet31),
@@ -162,18 +141,6 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = jettyXml),
     FeatureBundle(dependency = jettyOsgiBoot, start = true)
   ),
-  //  "blended-jaxrs" -> Seq(
-  //    FeatureBundle(dependency = jettison),
-  //    FeatureBundle(dependency = jacksonCoreAsl),
-  //    FeatureBundle(dependency = jacksonMapperAsl),
-  //    FeatureBundle(dependency = jacksonJaxrs),
-  //    FeatureBundle(dependency = jerseyCore),
-  //    FeatureBundle(dependency = jerseyJson),
-  //    FeatureBundle(dependency = jerseyServer),
-  //    FeatureBundle(dependency = jerseyServlet),
-  //    FeatureBundle(dependency = jerseyClient),
-  //    FeatureBundle(dependency = geronimoServlet30Spec)
-  //  ),
   "blended-security" -> Seq(
     FeatureBundle(dependency = shiroCore),
     FeatureBundle(dependency = shiroWeb),
