@@ -53,7 +53,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
 
           val fnEnabled = connectionFactoryEnabled.map(f => f(osgiCfg))
 
-          val cfCfg = BlendedJMSConnectionConfig(
+          val cfCfg = BlendedJMSConnectionConfig.fromConfig(osgiCfg.idSvc.resolvePropertyString)(
             vendor = cfVendor,
             provider = Some(cfProvider),
             cfg = osgiCfg.config.getConfig("factories").getConfig(cfProvider)
@@ -67,9 +67,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
                 cfEnabled = fnEnabled,
                 cfClassName = cfClass,
                 ctxtClassName = ctxtClass,
-                jmsClassloader = factoryClassLoader,
-                clientId = osgiCfg.idSvc.resolvePropertyString(cfCfg.clientId),
-                properties = cfCfg.properties.map{ case (k,v) => (k -> osgiCfg.idSvc.resolvePropertyString(v)) }
+                jmsClassloader = factoryClassLoader
               ),
               system = osgiCfg.system,
               bundleContext = Some(osgiCfg.bundleContext)
@@ -80,7 +78,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
               "provider" -> cfProvider
             )
           } else {
-            log.info(s"onnection factory [$cfVendor:$cfProvider] is disabled.")
+            log.info(s"Connection factory [$cfVendor:$cfProvider] is disabled.")
           }
         }
       } catch {

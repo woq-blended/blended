@@ -1,42 +1,31 @@
 package blended.launcher
 
-import java.io.File
-import java.io.FileOutputStream
+import java.io.{File, FileOutputStream}
 import java.net.URLClassLoader
-import java.util.Hashtable
-import java.util.Properties
-import java.util.ServiceLoader
+import java.nio.file.{Files, Paths}
+import java.util.{Hashtable, Properties, ServiceLoader, UUID}
 
 import blended.launcher.config.LauncherConfig
-import blended.launcher.internal.ARM
-import blended.launcher.internal.Logger
+import blended.launcher.internal.{ARM, Logger}
 import blended.updater.config._
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-import de.tototec.cmdoption.CmdOption
-import de.tototec.cmdoption.CmdlineParser
-import de.tototec.cmdoption.CmdlineParserException
-import org.osgi.framework.Bundle
-import org.osgi.framework.Constants
-import org.osgi.framework.FrameworkEvent
-import org.osgi.framework.FrameworkListener
-import org.osgi.framework.launch.Framework
-import org.osgi.framework.launch.FrameworkFactory
-import org.osgi.framework.startlevel.BundleStartLevel
-import org.osgi.framework.startlevel.FrameworkStartLevel
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser, CmdlineParserException}
+import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
+import org.osgi.framework.launch.{Framework, FrameworkFactory}
+import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.immutable.Map
-import scala.collection.immutable.Seq
-import scala.util.Failure
-import scala.util.Success
+import scala.collection.JavaConverters._
+import scala.collection.immutable.{Map, Seq}
 import scala.util.Try
 import scala.util.control.NonFatal
 
 object Launcher {
 
   private lazy val log = Logger[Launcher.type]
+
+  private lazy val containerConfigDirectory = System.getProperty("blended.home") + "/etc"
+  private lazy val containerIdFile = "blended.container.context.id"
 
   case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
@@ -66,7 +55,7 @@ object Launcher {
         " If disabled and the framework was updated, the exit code is 2.")
     var handleFrameworkRestart: Boolean = true
 
-    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("configfile"),
+    @CmdOption(names = Array("--profile-lookup", "-P"), args = Array("config file"),
       description = "Lookup to profile file or directory from the config file {0}",
       conflictsWith = Array("--profile", "--config")
     )
@@ -74,17 +63,17 @@ object Launcher {
 
     var profileLookup: Option[String] = None
 
-    @CmdOption(names = Array("--reset-profile-props"),
-      description = "Try to recreate the profile properties file before starting a profile",
-      conflictsWith = Array("--config", "--init-profile-props")
+    @CmdOption(names = Array("--reset-container-id"),
+      description = "This will generate a new UUID identifying the container regardless one whether it already exists",
+      conflictsWith = Array("--config", "--init-container-id")
     )
-    var resetProfileProps: Boolean = false
+    var resetContainerId: Boolean = false
 
-    @CmdOption(names = Array("--init-profile-props"),
-      description = "Try to initially create the profile properties file (if missing) before starting a profile",
-      conflictsWith = Array("--config", "--reset-profile-props")
+    @CmdOption(names = Array("--init-container-id"),
+      description = "This will generate a new UUID identifying the container in case it does not yet exist",
+      conflictsWith = Array("--config", "--reset-container-id")
     )
-    var initProfileProps: Boolean = false
+    var initContainerId: Boolean = false
 
     @CmdOption(names = Array("--write-system-properties"),
       args = Array("FILE"),
@@ -92,6 +81,11 @@ object Launcher {
     def setWriteSystemProperties(file: String): Unit = writeSystemProperties = Option(new File(file).getAbsoluteFile())
 
     var writeSystemProperties: Option[File] = None
+
+    @CmdOption(names = Array("--strict"),
+      description = "Start the container in strict mode (unresolved bundles or bundles failing to start terminate the container)"
+    )
+    var strict : Boolean = false
   }
 
   /**
@@ -109,21 +103,27 @@ object Launcher {
           Console.err.println(s"${t.getMessage()}")
         sys.exit(t.errorCode)
       case t: Throwable =>
-        log.error("Caugth an exception. Exiting with error code: 1", t)
+        log.error("Caught an exception. Exiting with error code: 1", t)
         Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(1)
     }
     sys.exit(0)
   }
 
-  def parseArgs(args: Array[String]): Try[Cmdline] = Try {
+  private[this] def reportError(msg : String) : Unit = {
+    log.error(msg)
+    Console.err.println(msg)
+    sys.error(msg)
+  }
+
+  private[this] def parseArgs(args: Array[String]): Try[Cmdline] = Try {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
     try {
       cp.parse(args: _*)
     } catch {
       case e: CmdlineParserException =>
-        sys.error(s"${e.getMessage()}\nRun launcher --help for help.")
+        reportError(s"${e.getMessage()}\nRun launcher --help for help.")
     }
 
     if (cmdline.help) {
@@ -135,17 +135,53 @@ object Launcher {
     cmdline
   }
 
-  def createAndPrepareLaunch(configs: Configs, createProperties: Boolean, onlyIfMissing: Boolean): Launcher = {
+  private[this] def containerId(f : File, createContainerID : Boolean, onlyIfMissing: Boolean) : Option[String] = {
+
+    val idFile = new File(containerConfigDirectory, containerIdFile)
+
+    if (idFile.exists() && idFile.isDirectory) {
+      val msg = s"The file [${idFile.getAbsoluteFile}] exists and is a directory"
+      log.error(msg)
+      Console.err.println(msg)
+      sys.error(msg)
+    }
+
+    val generateId = createContainerID && (!onlyIfMissing || !idFile.exists())
+
+    if (generateId && idFile.exists() && !idFile.canWrite()) {
+      reportError(s"Container Id File [${idFile.getAbsolutePath}] is not writable")
+    }
+
+    if (generateId && idFile.exists()) idFile.delete()
+
+    if (generateId) {
+      try {
+        log.info("Creating new container id")
+        val uuid : CharSequence= UUID.randomUUID().toString.toCharArray
+        Files.write(idFile.toPath, Seq(uuid).asJava)
+      }
+    }
+
+    val lines = Files.readAllLines(Paths.get(idFile.getAbsolutePath))
+    if (!lines.isEmpty) Some(lines.get(0)) else None
+  }
+
+  private[this] def createAndPrepareLaunch(configs: Configs, createContainerId: Boolean, onlyIfMissing: Boolean): Launcher = {
+
     val launcher = new Launcher(configs.launcherConfig)
 
     val errors = configs.profileConfig match {
       case Some(localConfig) =>
-        // if present, validate local RuntimeConfig
+        // Expose the List of mandatory container properties as a System Property
+        // This will be evaluated by the Container Identifier Service
+        val propNames = localConfig.resolvedRuntimeConfig.runtimeConfig.properties.getOrElse(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "")
+        System.setProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, propNames)
+
         localConfig.validate(
           includeResourceArchives = false,
-          explodedResourceArchives = true,
-          checkPropertiesFile = !createProperties
+          explodedResourceArchives = true
         )
+
       case None =>
         // if no RuntimeConfig, just check existence of bundles
         launcher.validate()
@@ -153,15 +189,15 @@ object Launcher {
 
     if (!errors.isEmpty) sys.error("Could not start the OSGi Framework. Details:\n" + errors.mkString("\n"))
 
-    if (createProperties) {
-      val localConfig = configs.profileConfig.getOrElse(sys.error("Cannot reset profile properties file. Profile unknown!"))
-      RuntimeConfigCompanion.createPropertyFile(localConfig, None, onlyIfMissing) match {
-        case None => // nothing to generate, ok
-        case Some(Success(f)) => // generated successfully, ok
-          Console.err.println(s"Created properties file for profile: ${f}")
-        case Some(Failure(e)) => sys.error(s"Could not reset properties file. ${e.getMessage()}")
-      }
+    containerId(new File(containerConfigDirectory + "/etc", containerIdFile), createContainerId, onlyIfMissing) match {
+      case None =>
+        val msg = "Launcher is unable to determine the container id."
+        log.error(msg)
+        Console.err.println(msg)
+        sys.error(msg)
+      case Some(id) => log.info(s"ContainerId is [$id] ")
     }
+
     launcher
   }
 
@@ -195,7 +231,7 @@ object Launcher {
           try {
             ARM.using(new FileOutputStream(propFile)) { stream =>
               fileProps.store(stream, "Generated by Launcher")
-              log.debug(s"Wrote system properties file: ${propFile}")
+              log.info(s"Wrote system properties file: ${propFile}")
             }
             retVal = 0
           } catch {
@@ -204,9 +240,9 @@ object Launcher {
               retVal = 1
           }
         case None =>
-          val createProperties = firstStart && (cmdline.resetProfileProps || cmdline.initProfileProps)
-          val launcher = createAndPrepareLaunch(configs, createProperties, cmdline.initProfileProps)
-          retVal = launcher.run()
+          val createContainerId = firstStart && (cmdline.resetContainerId || cmdline.initContainerId)
+          val launcher = createAndPrepareLaunch(configs, createContainerId, cmdline.initContainerId)
+          retVal = launcher.run(cmdline)
           firstStart = false
       }
     } while (handleFrameworkRestart && retVal == 2)
@@ -222,19 +258,19 @@ object Launcher {
   def readConfigs(cmdline: Cmdline): Configs = {
     cmdline.configFile match {
       case Some(configFile) =>
-        log.debug(s"About to read configFile: ${configFile}")
+        log.info(s"About to read configFile: [${configFile}]")
         val config = ConfigFactory.parseFile(new File(configFile), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
         Configs(LauncherConfig.read(config))
       case None =>
-        val profileLookup = cmdline.profileLookup.map { pl =>
-          log.debug("About to read profile lookup file: " + pl)
+        val profileLookup : Option[ProfileLookup] = cmdline.profileLookup.map { pl =>
+          log.info(s"About to read profile lookup file: [$pl]")
           val c = ConfigFactory.parseFile(new File(pl), ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
           ProfileLookup.read(c).map { pl =>
             pl.copy(profileBaseDir = pl.profileBaseDir.getAbsoluteFile())
           }.get
         }
 
-        val profile = profileLookup match {
+        val profile : String = profileLookup match {
           case Some(pl) =>
             pl.materializedDir.getPath()
           case None =>
@@ -250,6 +286,9 @@ object Launcher {
         } else {
           Option(new File(profile).getParent()).getOrElse(".") -> new File(profile)
         }
+
+        log.info(s"Using profile directory : [$profileDir]")
+        log.info(s"Using profile file      : [${profileFile.getAbsolutePath}]")
 
         val config = ConfigFactory.parseFile(profileFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
 
@@ -353,9 +392,10 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Validate this Launcher's configuration and return the issues if any found.
    */
-  def validate(): Seq[String] = {
+  def validate() : Seq[String] = {
     val files = ("Framework JAR", config.frameworkJar) ::
       config.bundles.toList.map(b => "Bundle JAR" -> b.location)
+
     files.flatMap {
       case (kind, file) =>
         val f = new File(file).getAbsoluteFile()
@@ -370,7 +410,7 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def start(): Framework = {
+  def start(cmdLine : Launcher.Cmdline): Framework = {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
@@ -422,6 +462,7 @@ class Launcher private(config: LauncherConfig) {
     def isFragment(b: InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
 
     1.to(config.startLevel).map { startLevel =>
+      log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
         override def frameworkEvent(event: FrameworkEvent): Unit = {
           log.debug(s"Active start level ${startLevel} reached")
@@ -448,17 +489,31 @@ class Launcher private(config: LauncherConfig) {
         log.warn(s"Could not start some bundles:\n${
           failedBundles.map(failed => s"\n - ${failed._1}\n ---> ${failed._2}")
         }")
+
+        if (cmdLine.strict) {
+          log.warn("Shutting down container due to bundle start failures.")
+          framework.stop()
+        }
       }
     }
 
-    val bundlesInInstalledState = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
-    if (!bundlesInInstalledState.isEmpty) {
+    val bundlesInInstalledState = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+
+    if (bundlesInInstalledState.nonEmpty) {
       log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
       log.info("Resolving installed bundles")
       val frameworkWiring = framework.adapt(classOf[FrameworkWiring])
       frameworkWiring.resolveBundles(null /* all bundles */)
-      val secondAttemptInstalled = osgiBundles.filter(_.bundle.getState() == Bundle.INSTALLED)
-      log.debug(s"The following bundles are in installed state: ${secondAttemptInstalled.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
+      val secondAttemptInstalled = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
+      log.debug(s"The following bundles could not be resolved : ${secondAttemptInstalled.map(
+        b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}"
+      ).mkString("\n", "\n", "")
+      }")
+
+      if (secondAttemptInstalled.nonEmpty && cmdLine.strict) {
+        log.error("Shutting down container due to unresolved bundles.")
+        framework.stop()
+      }
     }
 
     log.info("Laucher finished starting of framework and bundles. Awaiting framework termination now.")
@@ -470,8 +525,8 @@ class Launcher private(config: LauncherConfig) {
   /**
    * Run an (embedded) OSGiFramework based of this Launcher's configuration.
    */
-  def run(): Int = {
-    val framework = start()
+  def run(cmdLine: Launcher.Cmdline): Int = {
+    val framework = start(cmdLine)
     val handle = new RunningFramework(framework)
     handle.waitForStop()
   }

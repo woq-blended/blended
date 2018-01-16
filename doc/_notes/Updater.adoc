@@ -8,7 +8,7 @@ The blended container comes with a bundled update mechanism. With the updater, i
 ** `bin/`
 *** `blended.sh`
 ** `etc/`
-*** `logback.conf`
+*** `logback.xml`
 ** `profiles/`
 *** `<name>/`
 **** `<version>`/

@@ -47,6 +47,8 @@ case class ConnectionHolder(
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
+    var context : Option[Context] = None
+
     try {
 
       val (name, contextFactoryClass) = (config.jndiName, config.ctxtClassName) match {
@@ -57,10 +59,9 @@ case class ConnectionHolder(
 
       config.jmsClassloader.foreach(Thread.currentThread().setContextClassLoader)
 
-      val context = new InitialContext(initialContextEnv)
+      context = Some(new InitialContext(initialContextEnv))
       log.info(s"Looking up JNDI name [$name]")
-
-      context.lookup(name).asInstanceOf[ConnectionFactory]
+      context.get.lookup(name).asInstanceOf[ConnectionFactory]
     } catch {
       case NonFatal(t) =>
         val sw = new StringWriter()
@@ -70,6 +71,10 @@ case class ConnectionHolder(
         val ex : JMSException = new JMSException("Could not lookup ConnectionFactory")
         throw ex
     } finally {
+      context.foreach{ c =>
+        log.info(s"Closing Initial Context Factory [${config.ctxtClassName}] : [${config.jndiName}]")
+        c.close()
+      }
       Thread.currentThread().setContextClassLoader(oldLoader)
     }
   }
@@ -112,8 +117,6 @@ case class ConnectionHolder(
     case None =>
 
       if (!connecting.getAndSet(true)) {
-
-
         try {
           log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
 
@@ -124,14 +127,21 @@ case class ConnectionHolder(
             case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
           }
 
-          c.setClientID(config.clientId)
+          try {
+            c.setClientID(config.clientId)
 
-          c.setExceptionListener(new ExceptionListener {
-            override def onException(e: JMSException): Unit = {
-              log.warn(s"Exception encountered in connection for provider [$provider] : ${e.getMessage()}")
-              system.eventStream.publish(ConnectionException(provider, e))
-            }
-          })
+            c.setExceptionListener(new ExceptionListener {
+              override def onException(e: JMSException): Unit = {
+                log.warn(s"Exception encountered in connection for provider [$provider] : ${e.getMessage()}")
+                system.eventStream.publish(ConnectionException(provider, e))
+              }
+            })
+          } catch {
+            case NonFatal(e) =>
+              log.error(s"Error setting client Id [${config.clientId}]...Closing Connection...")
+              c.close()
+              throw e
+          }
 
           c.start()
 

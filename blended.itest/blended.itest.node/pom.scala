@@ -17,11 +17,12 @@ BlendedModel(
     blendedItestSupport % "test",
     scalaTest % "test",
     slf4j % "test",
-    slf4jLog4j12 % "test",
-    akkaSlf4j % "test"
+    akkaSlf4j % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     scalatestMavenPlugin
   )
 )

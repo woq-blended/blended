@@ -3,7 +3,7 @@
 Blended is build with Apache Maven and the polyglot-scala Extension.
 Some projects need additional tools, but we try to orchestrate those tools by Maven.
 
-Unfortunatelly, most IDEs don't support polyglot-scala yet, so it is required to generate and update `pom.xml` files from the `pom.scala` buildfiles.
+Unfortunately, most IDEs don't support polyglot-scala yet, so it is required to generate and update `pom.xml` files from the `pom.scala` buildfiles.
 
 == Requirements
 
@@ -23,9 +23,9 @@ With polyglot-scala extension and it's support for include files, we try to aban
 
 == Generating `pom.xml` files
 
- To generate `pom.xml` from the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which works recursively.
+To generate `pom.xml` from the `pom.scala` files, you can use the `blended-build/gen-pom-xml.sh` script, which works recursively.
 
- Please note, that you can use the `blended-build/del-pom-xml.sh` script to remove these poms.
+Please note, that you can use the `blended-build/del-pom-xml.sh` script to remove these poms.
 
 == Working with IntelliJ IDEA
 

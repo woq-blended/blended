@@ -8,60 +8,68 @@ import org.apache.camel.{CamelContext, Exchange, ExchangePattern, Message}
 import org.slf4j.LoggerFactory
 
 import scala.collection.convert.Wrappers.JMapWrapper
+import scala.util.Try
 
 trait CamelTestSupport {
 
   val camelContext : CamelContext
   
-  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit context: CamelContext): Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, uri: String, binary: Boolean)(implicit context: CamelContext): Try[CamelMessage] = {
     sendTestMessage(message, Map.empty, uri, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Try[CamelMessage] = {
     sendTestMessage(message, properties, uri, true, binary)
   }
 
-  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {
+  def sendTestMessage(message: String, properties: Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Try[CamelMessage] ={
+    sendTestMessage(createMessage(message, properties, evaluateXML, binary), uri)
+  }
 
+  def sendTestMessage(message: CamelMessage, uri: String)(implicit context: CamelContext) : Try[CamelMessage] = {
     val log = LoggerFactory.getLogger(classOf[CamelTestSupport])
-    
-    val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
-    exchange.setPattern(ExchangePattern.InOnly)
 
-    log.info(s"sending test message to [$uri]")
-    val producer = context.createProducerTemplate()
-    val response : Exchange = producer.send(uri, exchange)
+    Try {
+      val exchange = camelExchange(message)
+      exchange.setPattern(ExchangePattern.InOnly)
 
-    if (response.getException != null) {
-      log.warn(s"Message not sent to [$uri]")
-      Left(response.getException())
-    }
-    else {
-      log.info(s"Sent test message to [$uri]")
-      Right(camelMessage(exchange.getIn))
+      log.info(s"sending test message to [$uri]")
+      val producer = context.createProducerTemplate()
+      val response : Exchange = producer.send(uri, exchange)
+
+      if (response.getException != null) {
+        log.warn(s"Message not sent to [$uri]")
+        throw response.getException
+      }
+      else {
+        log.info(s"Sent test message to [$uri]")
+        camelMessage(exchange.getIn)
+      }
     }
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {
+  def executeRequest(message: String, properties : Map[String, String], uri: String, binary: Boolean)(implicit context: CamelContext) : Try[CamelMessage] = {
     executeRequest(message, properties, uri, true, binary)
   }
 
-  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Either[Exception, CamelMessage] = {
+  def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Try[CamelMessage] = {
 
     val log = LoggerFactory.getLogger(classOf[CamelTestSupport])
 
     val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOut)
 
-    val producer = context.createProducerTemplate()
-    val response = producer.send(uri, exchange)
+    Try {
+      val producer = context.createProducerTemplate()
+      val response = producer.send(uri, exchange)
 
-    Option(response.getException()) match {
-      case Some(e) =>
-        log.warn(s"Executing request on [$uri] failed")
-        Left(e)
-      case None =>
-        Right(camelMessage(response.getOut()))
+      Option(response.getException()) match {
+        case Some(e) =>
+          log.warn(s"Executing request on [$uri] failed")
+          throw e
+        case None =>
+          camelMessage(response.getOut())
+      }
     }
   }
 
@@ -73,7 +81,7 @@ trait CamelTestSupport {
   def camelMessage(msg: Message)(implicit context: CamelContext) : CamelMessage =
     CamelMessage(msg.getBody, JMapWrapper(msg.getHeaders).mapValues { _.asInstanceOf[Any] }.toMap)
 
-  private [CamelTestSupport] def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : CamelMessage =
+  def createMessage(message: String, properties: Map[String, String], evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : CamelMessage =
     (evaluateXML match {
       case true => createMessageFromXML(message, binary)
       case false => createMessageFromFile(message, binary, properties)

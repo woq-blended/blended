@@ -5,6 +5,7 @@ import java.io.File
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
 import com.typesafe.config.ConfigFactory
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 sealed abstract class FileCommand()
@@ -26,27 +27,25 @@ class FileManipulationActor extends Actor with ActorLogging {
   case object Tick
   case object Timeout
 
-  val config = context.system.settings.config
-  implicit val eCtxt = context.system.dispatcher
+  implicit val eCtxt : ExecutionContext  = context.system.dispatcher
 
   private[this] def executeCmd(cmd: FileCommand) : Boolean = {
     cmd match {
       case DeleteFile(f) =>
         f.delete()
         if (f.exists()) {
-          log.warning(s"Attempt to delete file [${f.getAbsolutePath()}] failed.")
+          log.warning(s"Attempt to delete file [${f.getAbsolutePath}] failed.")
           false
         } else {
           true
         }
       case RenameFile(src, dest) =>
         if (dest.exists()) {
-          log.warning(s"Rename target file [${dest.getAbsolutePath()}] already exists.")
           false
         } else {
           src.renameTo(dest)
           if (!dest.exists() || src.exists()) {
-            log.warning(s"Attempt to rename file [${src.getAbsolutePath()}] to [${dest.getAbsolutePath()}] failed.")
+            log.warning(s"Attempt to rename file [${src.getAbsolutePath}] to [${dest.getAbsolutePath}] failed.")
             false
           } else {
             true
@@ -61,25 +60,24 @@ class FileManipulationActor extends Actor with ActorLogging {
       self ! Tick
   }
 
-  def stop(t: List[Cancellable]) = {
+  def stop(t: List[Cancellable]) : Unit = {
     t.foreach(_.cancel())
     context.stop(self)
   }
 
   def executing(requestor: ActorRef, cmd: FileCommand, t: List[Cancellable]): Receive = {
     case Tick =>
-      executeCmd(cmd) match {
-        case true =>
-          log.info(s"File command [$cmd] succeeded.")
-          requestor ! FileCmdResult(cmd, true)
-          stop(t)
-        case false =>
-          context.become(executing(requestor, cmd, context.system.scheduler.scheduleOnce(10.millis, self, Tick) :: t.tail))
+      if (executeCmd(cmd)) {
+        log.info(s"File command [$cmd] succeeded.")
+        requestor ! FileCmdResult(cmd, success = true)
+        stop(t)
+      } else {
+        context.become(executing(requestor, cmd, context.system.scheduler.scheduleOnce(10.millis, self, Tick) :: t.tail))
       }
 
     case Timeout =>
       log.warning(s"Command [$cmd] timed out")
-      requestor ! FileCmdResult(cmd, false)
+      requestor ! FileCmdResult(cmd, success = false)
       stop(t)
   }
 }

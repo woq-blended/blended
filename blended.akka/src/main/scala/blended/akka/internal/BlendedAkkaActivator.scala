@@ -51,7 +51,7 @@ class BlendedAkkaActivator extends DominoActivator {
 
   whenBundleActive {
     whenServicePresent[ContainerIdentifierService] { svc =>
-      addCapsule(new AkkaCapsule(bundleContext, svc.getContainerContext()))
+      addCapsule(new AkkaCapsule(bundleContext, svc.containerContext))
     }
   }
 }

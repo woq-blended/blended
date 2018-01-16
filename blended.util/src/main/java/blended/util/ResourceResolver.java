@@ -27,7 +27,15 @@ public class ResourceResolver implements URIResolver {
 
     InputStream is = null;
 
-    LOG.debug("Resolving resource {}", location);
+    String loc = "" ;
+
+    if (location.length() > 20) {
+      loc = location.substring(0, 20) + "...";
+    } else {
+      loc = location;
+    }
+
+    LOG.debug("Resolving resource {}", loc);
 
     try {
       is = new BufferedInputStream(new FileInputStream(location));
@@ -37,7 +45,7 @@ public class ResourceResolver implements URIResolver {
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} as URL", location);
+        LOG.debug("Resolving resource {} as URL", loc);
         URL url = new URL(location);
         is = url.openStream();
       } catch (Exception e) {
@@ -47,7 +55,7 @@ public class ResourceResolver implements URIResolver {
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} as File", location);
+        LOG.debug("Resolving resource {} as File", loc);
         final String path = ResourceResolver.class.getResource(location).getPath();
         LOG.debug("Resolved path is {}", path);
         is = new FileInputStream(path);
@@ -58,7 +66,7 @@ public class ResourceResolver implements URIResolver {
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} from Classpath", location);
+        LOG.debug("Resolving resource {} from Classpath", loc);
         is = loader.getResourceAsStream(location);
       } catch (Exception e) {
         LOG.debug(e.getMessage());
@@ -74,7 +82,7 @@ public class ResourceResolver implements URIResolver {
     }
 
     if (is == null) {
-      LOG.debug("Resolving resource {} as ByteStream", location);
+      LOG.debug("Resolving resource {} as ByteStream", loc);
       is = new ByteArrayInputStream(location.getBytes());
     }
 

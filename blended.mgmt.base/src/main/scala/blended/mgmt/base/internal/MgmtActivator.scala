@@ -15,7 +15,7 @@ class MgmtActivator extends DominoActivator {
 
       log.info("Creating Framework Service instance...")
 
-      val fwSvc = new FrameworkService(bundleContext, idSvc.getContainerContext())
+      val fwSvc = new FrameworkService(bundleContext, idSvc.containerContext)
       fwSvc.providesService[blended.mgmt.base.FrameworkService]
 
       whenServicePresent[MBeanServer] { server =>

@@ -1,13 +1,14 @@
-<configuration scan="true" scanPeriod="15 seconds">
+<configuration scan="true" scanPeriod="30 seconds">
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</Pattern>
-    </layout>
+    <encoder>
+      <pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</pattern>
+    </encoder>
   </appender>
 
-  <root level="info">
+  <logger name="blended" level="DEBUG" />
+
+  <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
-
 </configuration>

@@ -2,7 +2,7 @@ package blended.file
 
 import java.io.File
 
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import blended.util.FileHelper
@@ -14,11 +14,11 @@ class FileDropSpec extends FreeSpec with Matchers {
 
     "drop an uncompressed file into a given directory" in TestActorSys { testkit =>
 
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
 
       val cmd = FileDropCommand(
         content = "Hallo Andreas".getBytes(),
-        directory = System.getProperty("projectTestOutput") + "/drop",
+        directory = System.getProperty("projectTestOutput", "/tmp") + "/drop",
         fileName = "test.txt",
         compressed = false,
         append = false,
@@ -31,13 +31,13 @@ class FileDropSpec extends FreeSpec with Matchers {
 
       system.actorOf(Props[FileDropActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileDropResult(cmd, true))
+      probe.expectMsg(FileDropResult.result(cmd, None))
 
       val f : File = new File(cmd.directory, cmd.fileName)
 
       f.exists() should be (true)
 
-      val content = FileHelper.readFile(f.getAbsolutePath())
+      val content = FileHelper.readFile(f.getAbsolutePath)
 
       content should be (cmd.content)
     }

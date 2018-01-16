@@ -129,8 +129,7 @@ object RuntimeConfigBuilder {
     if (options.check) {
       val issues = localRuntimeConfig.validate(
         includeResourceArchives = true,
-        explodedResourceArchives = false,
-        checkPropertiesFile = false
+        explodedResourceArchives = false
       )
       if (!issues.isEmpty) {
         sys.error(issues.mkString("\n"))

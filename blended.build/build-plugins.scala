@@ -1,6 +1,9 @@
 val ivy2Repo = System.getProperty("ivy2.repo.local", System.getProperty("user.home") + "/.ivy2")
 val m2Repo = System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
+/**
+ * Useful helper methods that can be used inside scala scripts (scala-maven-plugin:script).
+ */
 val scriptHelper =
   """
 object ScriptHelper {
@@ -19,8 +22,9 @@ object ScriptHelper {
 }
 """
 
-// Plugins
-
+/**
+ * Used Maven plugins
+ */
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
@@ -46,8 +50,8 @@ object Plugins {
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
+  val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
-  val scalaSbt = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
@@ -166,41 +170,50 @@ val scalaCompilerConfig = Config(
   )
 )
 
-val scalaMavenPlugin = Plugin(
-  gav = Plugins.scalaSbt,
-  executions = Seq(
-    Execution(
-      id="scala-source",
-      goals=Seq("addScalaSources"),
-      phase="initialize"
-    ),
-    Execution(
-      id = "compile",
-      goals = Seq("compile", "testCompile"),
-      configuration = Config(
-        scalacOptions = "-deprecation -feature -Xlint -Ywarn-nullary-override",
-        scalaVersion = BlendedVersions.scalaVersion
-      )
-    )
+val sbtCompilerExecution_addSource = Execution(
+  id = "add-source",
+  goals = Seq("addScalaSources"),
+  phase = "initialize"
+)
+
+val sbtCompilerExecution_compile = Execution(
+  id = "compile",
+  goals = Seq("compile", "testCompile"),
+  configuration = Config(
+    scalacOptions = "-deprecation -feature -Xlint -Ywarn-nullary-override",
+    scalaVersion = BlendedVersions.scalaVersion
   )
 )
+
+val sbtCompilerPlugin = Plugin(
+  gav = Plugins.sbtCompiler,
+  executions = Seq(
+    sbtCompilerExecution_addSource,
+    sbtCompilerExecution_compile
+  )
+)
+
+val scalatestConfiguration = Config(
+  reportsDirectory = "${project.build.directory}/surefire-reports",
+  junitxml = ".",
+  stdout = "FT",
+  systemProperties = Config(
+    projectTestOutput = "${project.build.testOutputDirectory}"
+  )
+)
+
+val scalatestExecution =
+  Execution(
+    id = "test",
+    goals = Seq("test")
+  )
 
 val scalatestMavenPlugin = Plugin(
   gav = Plugins.scalaTest,
   executions = Seq(
-    Execution(
-      id = "test",
-      goals = Seq("test")
-    )
+    scalatestExecution
   ),
-  configuration = Config(
-    reportsDirectory = "${project.build.directory}/surefire-reports",
-    junitxml = ".",
-    stdout = "FT",
-    systemProperties = Config(
-      projectTestOutput = "${project.build.testOutputDirectory}"
-    )
-  )
+  configuration = scalatestConfiguration
 )
 
 val polyglotTranslatePlugin = Plugin(
@@ -226,18 +239,15 @@ val polyglotTranslatePlugin = Plugin(
  * Some helper plugins to compile ScalaJS code with SBT.
  */
 
-val prepareSbtPlugin = Plugin(
-  gav = Plugins.scala,
-  executions = Seq(
-    Execution(
-      id = "prepareSBT",
-      phase = "generate-resources",
-      goals = Seq(
-        "script"
-      ),
-      configuration = Config(
-        script = scriptHelper +
-          """
+val scalaExecution_prepareSbt: Execution = Execution(
+  id = "prepareSBT",
+  phase = "generate-resources",
+  goals = Seq(
+    "script"
+  ),
+  configuration = Config(
+    script = scriptHelper +
+      """
 import java.io.File
 
 ScriptHelper.writeFile(
@@ -252,38 +262,37 @@ ScriptHelper.writeFile(
   "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n"
  )
 """
-      )
-    )
   )
 )
 
-def execPlugin(executable: String, execId: String, phase: String, args: List[String]) : Plugin = {
+def execExecution(executable: String, execId: String, phase: String, args: List[String]): Execution = {
 
   val cfg = new Config(args.map(a => ("argument", Some(a))))
 
-  Plugin(
-    gav = Plugins.exec,
-    executions = Seq(
-      Execution(
-        id = execId,
-        phase = phase,
-        goals = Seq(
-          "exec"
-        ),
-        configuration = Config(
-          executable = executable,
-          workingDirectory = "${project.basedir}",
-          arguments = cfg
-        )
-      )
+  Execution(
+    id = execId,
+    phase = phase,
+    goals = Seq(
+      "exec"
+    ),
+    configuration = Config(
+      executable = executable,
+      workingDirectory = "${project.basedir}",
+      arguments = cfg
     )
   )
 
 }
 
-def compileJsPlugin(execId: String, phase: String, args: List[String]): Plugin = {
-  val defArgs : List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
-  execPlugin("sbt", execId, phase, defArgs ::: args)
+def execExecution_compileJs(execId: String, phase: String, args: List[String]): Execution = {
+  val defArgs: List[String] = List("-ivy", ivy2Repo, s"-Dmaven.repo.local=${m2Repo}")
+  val os = System.getProperty("os.name").toLowerCase()
+
+  if (os.startsWith("windows")) {
+    execExecution("sbt.bat", execId, phase, args)
+  } else {
+    execExecution("sbt", execId, phase, defArgs ::: args)
+  }
 }
 
 val dockerMavenPlugin = Plugin(

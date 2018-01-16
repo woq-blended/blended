@@ -20,7 +20,6 @@ BlendedModel(
     commonsDaemon,
     blendedUpdaterConfig,
     cmdOption,
-    // logbackClassic % "provided",
     scalaTest % "test",
     felixFramework % "test",
     felixGogoRuntime % "test",
@@ -41,7 +40,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     scalatestMavenPlugin,
     Plugin(
       gav = Plugins.resources,

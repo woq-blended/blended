@@ -10,6 +10,7 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.{Exchange, Processor}
 
 import scala.collection.convert.Wrappers.JMapWrapper
+import scala.util.Try
 
 object CamelMockActor {
 
@@ -43,6 +44,9 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
             mockActor ! msg
           }
         })
+
+        log.debug(s"Configured mock route for [$toString]")
+        context.system.eventStream.publish(MockActorReady(uri))
       }
     })
 
@@ -58,7 +62,7 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
       val requestor = sender()
       val mockMessages = messages.reverse
       log.info(s"Checking assertions for [$id, $uri] on [${mockMessages.size}] messages.")
-      val results = CheckResults(ca.assertions.toList.map { a => a(mockMessages) })
+      val results = CheckResults(ca.assertions.toList.map { a => a.f(mockMessages) })
       errors(results) match {
         case e if e.isEmpty =>
         case l => log.error(prettyPrint(l))
@@ -85,16 +89,13 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
       context.become(handleRquests(messages))
   }
 
-  private[this] def prettyPrint(errors : List[String]) : String =
+  private[this] def prettyPrint(errors : List[Throwable]) : String =
     errors match {
       case e if e.isEmpty => s"All assertions were satisfied for mock actor [$uri]"
-      case l => l.map(msg => s"  $msg").mkString(s"\n----------\nGot Assertion errors for mock actor [$uri]:\n", "\n", "\n----------")
+      case l => l.map(t => s"  ${t.getMessage}").mkString(s"\n${"-" * 80}\nGot Assertion errors for mock actor [$uri]:\n", "\n", s"\n${"-" * 80}")
     }
-  
-    
-  private[this] def errors(r : CheckResults) : List[String] = r.results.collect {
-    case Left(t) => t.getMessage 
-  }
+
+  private[this] def errors(r : CheckResults) : List[Throwable] = r.results.filter(_.isFailure).map(_.failed.get)
 
   override def toString: String = s"CamelMockActor[$id, $uri]"
 }

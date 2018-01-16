@@ -42,7 +42,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val actor = system.actorOf(Props[FileManipulationActor])
 
       actor.tell(RenameFile(s, d), probe.ref)
-      probe.expectMsg(FileCmdResult(RenameFile(s, d), true))
+      probe.expectMsg(FileCmdResult(RenameFile(s, d), success = true))
 
       s.exists() should be (false)
       d.exists() should be (true)
@@ -61,7 +61,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
 
       actor.tell(RenameFile(s, d), probe.ref)
 
-      probe.expectMsg(FileCmdResult(RenameFile(s, d), false))
+      probe.expectMsg(FileCmdResult(RenameFile(s, d), success = false))
 
       s.exists() should be (true)
       d.exists() should be (true)

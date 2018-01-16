@@ -1,11 +1,12 @@
 package blended.file
 
 import java.io._
+import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
 import blended.util.StreamCopySupport
 
 import scala.util.control.NonFatal
@@ -20,26 +21,47 @@ case class FileDropCommand(
   properties: Map[String, Object],
   dropNotification : Boolean
 ) {
+
+
+  override def equals(obj: scala.Any): Boolean = obj match {
+    case cmd : FileDropCommand =>
+      content.sameElements(cmd.content) &&
+      directory.equals(cmd.directory) &&
+      fileName.equals(cmd.fileName) &&
+      compressed == cmd.compressed &&
+      append == cmd.append &&
+      timestamp == cmd.timestamp &&
+      properties.equals(cmd.properties) &&
+      dropNotification == cmd.dropNotification
+    case _ => false
+  }
+
   override def toString: String = {
 
     val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
-    s"FileDropCommand(dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.size})"
-
+    s"FileDropCommand(dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.length}), " +
+    s"properties=${properties.mkString("[", ",", "]")}"
   }
 }
 
-case class FileDropResult(cmd: FileDropCommand, success: Boolean)
+object FileDropResult {
+  def result(cmd: FileDropCommand, error: Option[Throwable]): FileDropResult = new FileDropResult(
+    cmd.copy(content = Array.empty), error
+  )
+}
+
+case class FileDropResult(cmd: FileDropCommand, error: Option[Throwable])
 
 class FileDropActor extends Actor with ActorLogging {
 
   def checkDirectory(dir: File) : Boolean = {
 
     if (!dir.exists()) {
-      log.debug(s"Creating directory [${dir.getAbsolutePath()}]")
+      log.debug(s"Creating directory [${dir.getAbsolutePath}]")
       dir.mkdirs()
     }
 
-    (dir.exists() && dir.isDirectory() && dir.canWrite())
+    dir.exists() && dir.isDirectory && dir.canWrite
   }
 
   def finalFile(cmd: FileDropCommand) : File = {
@@ -70,7 +92,7 @@ class FileDropActor extends Actor with ActorLogging {
       if (file.exists()) {
         val tmpName = s"${cmd.fileName}.${cmd.timestamp}.tmp"
         val tmpFile = new File(cmd.directory, tmpName)
-        log.debug(s"Creating temporary file [${tmpFile.getAbsolutePath()}]")
+        log.debug(s"Creating temporary file [${tmpFile.getAbsolutePath}]")
         file.renameTo(tmpFile)
         Some(tmpFile)
       } else {
@@ -87,26 +109,46 @@ class FileDropActor extends Actor with ActorLogging {
 
   def prepareOutputStream(cmd: FileDropCommand, tmpFile: Option[File]) : OutputStream = {
 
-    val os = new FileOutputStream(outFile(cmd))
+    val of = outFile(cmd)
 
-    if (cmd.append) {
+    if (!cmd.append) {
+      new FileOutputStream(of)
+    } else {
       tmpFile match {
-        case None =>
-        case Some(f) =>
-          log.debug(s"Copying original content before appending into file ${f.getAbsolutePath()}")
-          val tmpIn = new FileInputStream(f)
-          StreamCopySupport.copyStream(tmpIn, os)
-          tmpIn.close()
+        case None => new FileOutputStream(of)
+        case Some(tf) =>
+          Files.copy(tf.toPath, of.toPath)
+          new FileOutputStream(of, true)
       }
     }
-
-    os
   }
 
-  private[this] def respond(requestor: ActorRef, response: FileDropResult) : Unit = {
-    if (response.cmd.dropNotification) context.system.eventStream.publish(response)
-    requestor ! response
-    context.stop(self)
+  def inputStream(cmd : FileDropCommand) : Option[InputStream] = {
+    if (cmd.compressed) {
+
+      try {
+        log.debug("Trying to use GZIP compression")
+        Some(new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content))))
+      } catch {
+        case NonFatal(_) =>
+          log.debug("Trying to use ZIP compression")
+          val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
+          val next = Option(zis.getNextEntry)
+          if (next.isEmpty) None else Some(zis)
+      }
+    } else {
+      log.debug(s"Writing content without compression to ${outFile(cmd)}")
+      Some(new ByteArrayInputStream(cmd.content))
+    }
+  }
+
+  private[this] def respond(requestor: ActorRef, cmd: FileDropCommand, t : Option[Throwable] = None) : Unit = {
+
+    val fdr = FileDropResult.result(cmd, t)
+
+    if (cmd.dropNotification) context.system.eventStream.publish(fdr)
+    requestor ! fdr
+    self ! PoisonPill
   }
 
   override def receive: Receive = {
@@ -116,61 +158,56 @@ class FileDropActor extends Actor with ActorLogging {
       val requestor = sender()
       val outdir = new File(cmd.directory)
 
-      var os : Option[OutputStream] = None
       var tf : Option[File] = None
+
+      var is : Option[InputStream] = None
+      var os : Option[OutputStream] = None
 
       if (checkDirectory(outdir)) {
 
-        val is : InputStream = cmd.compressed match {
-          case true =>
-            log.debug(s"Writing content with compression to ${outFile(cmd)}")
-
-            val zippedIs = try {
-              log.debug("Trying to use GZIP compression")
-              new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
-            } catch {
-              case NonFatal(e) =>
-                log.debug("Trying to use ZIP compression")
-                val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
-                zis.getNextEntry()
-                zis
-            }
-            zippedIs
-          case false =>
-            log.debug(s"Writing content without compression to ${outFile(cmd)}")
-            new ByteArrayInputStream(cmd.content)
-        }
-
         try {
           tf = tmpFile(cmd)
-          os = Some(prepareOutputStream(cmd, tf))
 
-          os.foreach{ s =>
-            StreamCopySupport.copyStream(is, s)
-            s.close()
+          os = Some(prepareOutputStream(cmd, tf))
+          is = inputStream(cmd)
+
+          is match {
+            case Some(input) =>
+              try {
+                StreamCopySupport.copyStream(input, os.get)
+              } finally {
+                try {
+                  is.foreach(_.close())
+                } finally {
+                  os.foreach(_.close())
+                }
+              }
+
+              val ff = finalFile(cmd)
+              outFile(cmd).renameTo(ff)
+              tf.foreach{ f => f.delete() }
+
+              log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath}]")
+              respond(requestor, cmd)
+
+            case None =>
+              throw new Exception(s"InputStream for command [$cmd] not resolved.")
           }
 
-          val ff = finalFile(cmd)
-          outFile(cmd).renameTo(ff)
-          tf.foreach{ f => f.delete() }
-
-          log.info(s"Successfully executed [$cmd] and created file [${ff.getAbsolutePath()}]")
-          respond(requestor, FileDropResult(cmd, true))
 
         } catch {
           case NonFatal(t) =>
-            log.warning(s"Error executing ${cmd}: ${t.getMessage()}")
+            log.warning(s"Error executing $cmd: ${t.getMessage}")
 
             tf.foreach { f => f.renameTo(new File(cmd.directory, cmd.fileName)) }
             outFile(cmd).delete()
 
-            respond(requestor, FileDropResult(cmd, false))
-        } finally {
-          is.close()
+            respond(requestor, cmd, Some(t))
         }
       } else {
-        log.warning(s"The directory [${outdir.getAbsolutePath()}] does not exist or is not writable.")
-        respond(requestor, FileDropResult(cmd, false))
+        val msg = s"The directory [${outdir.getAbsolutePath}] does not exist or is not writable."
+        log.warning(msg)
+        respond(requestor, cmd, Some(new Exception(msg)))
       }
   }
 }

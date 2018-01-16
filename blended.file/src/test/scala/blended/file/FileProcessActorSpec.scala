@@ -1,8 +1,8 @@
 package blended.file
 
-import java.io.File
+import java.io.{File, FileFilter}
 
-import akka.actor.Props
+import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
@@ -13,7 +13,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
     "process a single file and delete it on success if no archive dir is set" in TestActorSys { testkit =>
 
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
 
       val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor"
@@ -30,21 +30,21 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, true))
-      evtProbe.expectMsg(FileProcessed(cmd, true))
+      probe.expectMsg(FileProcessed(cmd, success = true))
+      evtProbe.expectMsg(FileProcessed(cmd, success = true))
 
       srcFile.exists() should be (false)
     }
 
     "process a single file and move it to the archive dir if an archive dir is set" in TestActorSys { testkit =>
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
 
       val archiveDir = new File(System.getProperty("projectTestOutput") + "/archive")
       archiveDir.mkdirs()
 
       val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor",
-        backup = Some(archiveDir.getAbsolutePath())
+        backup = Some(archiveDir.getAbsolutePath)
       )
 
       val srcFile = new File(cfg.sourceDir, "test.xml")
@@ -58,16 +58,21 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, true))
-      evtProbe.expectMsg(FileProcessed(cmd, true))
+      probe.expectMsg(FileProcessed(cmd, success = true))
+      evtProbe.expectMsg(FileProcessed(cmd, success = true))
 
-      new File(archiveDir, "test.xml").exists() should be (true)
+      archiveDir.listFiles(new FileFilter {
+        override def accept(fileName : File): Boolean = {
+          fileName.getName.startsWith("test.xml")
+        }
+      }) should have size 1
+
       srcFile.exists() should be (false)
     }
 
     "Restore the original file if the FilePollHandler throws an Exception" in TestActorSys { testkit =>
 
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
 
       val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/poll",
@@ -85,8 +90,8 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, false))
-      evtProbe.expectMsg(FileProcessed(cmd, false))
+      probe.expectMsg(FileProcessed(cmd, success = false))
+      evtProbe.expectMsg(FileProcessed(cmd, success = false))
 
       srcFile.exists() should be (true)
     }

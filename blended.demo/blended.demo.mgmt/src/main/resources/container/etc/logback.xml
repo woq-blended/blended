@@ -1,9 +1,9 @@
 <configuration scan="true" scanPeriod="30 seconds">
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
     <file>log/blended.log</file>
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</Pattern>
-    </layout>
+    <encoder>
+      <pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</pattern>
+    </encoder>
   </appender>
 
   <appender name="ASYNC_FILE" class="ch.qos.logback.classic.AsyncAppender">
@@ -11,14 +11,14 @@
   </appender>
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-    <layout class="ch.qos.logback.classic.PatternLayout">
-      <Pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</Pattern>
-    </layout>
+    <encoder>
+      <pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</pattern>
+    </encoder>
   </appender>
 
-  <logger name="blended.mgmt.repo" level="DEBUG" />
+  <logger name="blended" level="DEBUG" />
 
-  <root level="DEBUG">
+  <root level="INFO">
     <appender-ref ref="ASYNC_FILE" />
   </root>
 </configuration>

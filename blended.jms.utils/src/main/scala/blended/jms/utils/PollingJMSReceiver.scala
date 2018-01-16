@@ -10,6 +10,7 @@ class PollingJMSReceiver(
   interval: Int,
   receiveTimeout : Long,
   msgHandler: JMSMessageHandler,
+  errorHandler: JMSErrorHandler,
   subscriptionName : Option[String] = None
 ) extends JMSSupport {
 
@@ -33,6 +34,7 @@ class PollingJMSReceiver(
         cf = cf,
         destName = destName,
         msgHandler = msgHandler,
+        errorHandler = errorHandler,
         maxMessages = 0,
         receiveTimeout = receiveTimeout,
         subscriptionName = subscriptionName

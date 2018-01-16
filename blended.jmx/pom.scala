@@ -15,6 +15,6 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    scalaMavenPlugin
+    sbtCompilerPlugin
   )
 )

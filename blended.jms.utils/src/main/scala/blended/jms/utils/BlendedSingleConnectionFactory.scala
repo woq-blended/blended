@@ -44,7 +44,7 @@ class BlendedSingleConnectionFactory(
     if (cfEnabled) {
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
-        val jmxServer = ManagementFactory.getPlatformMBeanServer()
+        val jmxServer = ManagementFactory.getPlatformMBeanServer
         val jmxBean = new ConnectionMonitor(provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
