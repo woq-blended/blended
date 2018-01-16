@@ -4,11 +4,10 @@ import akka.actor.{ActorSystem, Props}
 import akka.camel.{Oneway, Producer}
 import akka.testkit.{TestActorRef, TestProbe}
 import akka.util.Timeout
-import blended.testsupport.camel.MockAssertions._
 import blended.testsupport.camel.protocol._
 import blended.itestsupport.docker.DockerTestSetup
 import blended.testsupport.TestActorSys
-import blended.testsupport.camel.CamelMockActor
+import blended.testsupport.camel._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpec}
 
@@ -93,7 +92,7 @@ class CamelMockActorSpec extends WordSpec
       p ! "Hello Andreas"
       probe.expectMsgType[MockMessageReceived]
 
-      checkAssertions(mock, expectedMessageCount(2)) should have size 1
+      MockAssertion.checkAssertions(mock, ExpectedMessageCount(2)) should have size 1
     }  
 
     "Allow execute a list of assertions" in TestActorSys { testkit =>
@@ -110,7 +109,7 @@ class CamelMockActorSpec extends WordSpec
       p ! "Hello Andreas"
       probe.expectMsgType[MockMessageReceived]
 
-      checkAssertions(mock, expectedMessageCount(1)) should have size 0
+      MockAssertion.checkAssertions(mock, ExpectedMessageCount(1)) should have size 0
     }  
   }
 }

@@ -207,7 +207,7 @@ object Deps {
   val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % BlendedVersions.springVersion
   val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % BlendedVersions.springVersion
 
-  val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
+  val shapeless = "com.chuusai" %% "shapeless" % BlendedVersions.shapelessVersion
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"

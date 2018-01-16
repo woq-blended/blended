@@ -31,14 +31,14 @@ BlendedModel(
     geronimoJms11Spec,
     commonsCompress,
     akkaSlf4j % "test",
-    slf4jLog4j12 % "test",
     mockitoAll % "test",
     activeMqBroker % "test",
     activeMqKahadbStore % "test",
+    logbackCore % "test",
+    logbackClassic % "test",
     jolokiaJvmAgent % "runtime"
   ),
   plugins = Seq(
-    scalatestMavenPlugin,
     Plugin(
       gav = Plugins.dependency,
       executions = Seq(
@@ -55,11 +55,17 @@ BlendedModel(
         )
       )
     ),
-    scalaMavenPlugin,
+    sbtCompilerPlugin,
     Plugin(
       scalatestMavenPlugin.gav,
-      configuration = Config(
-        argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
+      executions = Seq(
+        scalatestExecution    
+      ),
+      configuration = new Config(
+          scalatestConfiguration.elements ++ 
+          Seq(
+            "argLine" -> Some("-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost")
+          )
       )
     )
   )

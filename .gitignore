@@ -5,10 +5,12 @@ felix-cache
 *.backup
 *~
 *.pdf
+*.swp
 libs/
 mvn.out
 nohup.out
 3rdparty
+package-lock.json
 
 # Macosx
 .DS_Store

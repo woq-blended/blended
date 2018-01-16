@@ -18,8 +18,8 @@ class ContainerRegistrySpec extends WordSpec with MockitoSugar with Matchers {
   val ctContext = mock[ContainerContext]
   val bundle = mock[Bundle]
 
-  when(idSvc.getContainerContext()) thenReturn(ctContext)
-  when(ctContext.getContainerConfigDirectory) thenReturn ("./target/test-classes")
+  when(idSvc.containerContext) thenReturn(ctContext)
+  when(ctContext.getProfileConfigDirectory()) thenReturn ("./target/test-classes")
   when(osgiContext.getBundle()) thenReturn(bundle)
   when(bundle.getBundleContext) thenReturn(osgiContext)
   when(bundle.getSymbolicName) thenReturn("foo")

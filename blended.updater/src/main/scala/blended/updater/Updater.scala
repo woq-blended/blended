@@ -4,30 +4,17 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.Cancellable
-import akka.actor.Props
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
-import blended.updater.config.UpdateAction
-import blended.updater.config.{ AddRuntimeConfig => UAAddRuntimeConfig }
-import blended.updater.config.{ AddOverlayConfig => UAAddOverlayConfig }
-import blended.updater.config.{ ActivateProfile => UAActivateProfile }
-import blended.updater.config.{ StageProfile => UAStageProfile }
-import blended.updater.config._
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.{UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _}
 import org.slf4j.LoggerFactory
 
 import scala.collection.immutable._
 import scala.concurrent.duration.Duration
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class Updater(
   installBaseDir: File,
@@ -82,29 +69,15 @@ class Updater(
       ))
     } else if (state.artifactsToDownload.isEmpty && state.artifactsToUnpack.isEmpty) {
 
-      val finalIssues = if (state.issues.isEmpty) {
-        val previousRuntimeConfig = findActiveConfig()
-        val result = RuntimeConfigCompanion.createPropertyFile(state.config, previousRuntimeConfig)
-        result match {
-          case None =>
-            // nothing to do, is ok
-            List.empty
-          case Some(Success(_)) =>
-            // ok
-            List.empty
-          case Some(Failure(e)) =>
-            // could not create properties file
-            List(s"Could not create properties file: ${e.getMessage()}")
-        }
-      } else state.issues
-
       stagingInProgress = stagingInProgress.filterKeys(id != _)
-      val (profileState, msg) = finalIssues match {
+      val (profileState, msg) = state.issues match {
         case Seq() => LocalProfile.Staged -> OperationSucceeded(id)
         case issues => LocalProfile.Invalid(issues) -> OperationFailed(id, issues.mkString("; "))
       }
+
       profiles += state.profileId -> LocalProfile(state.config, state.overlays, profileState)
       state.requestActor ! msg
+
     } else {
       stagingInProgress += id -> state
     }
@@ -524,9 +497,7 @@ class Updater(
               ))
           }
       }
-
   }
-
 }
 
 object Updater {

@@ -5,6 +5,7 @@ import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, 
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 object BlendedJMSConnectionConfig {
 
@@ -23,12 +24,16 @@ object BlendedJMSConnectionConfig {
     defaultUser = None,
     defaultPassword  = None,
     pingDestination = "blended.ping",
-    properties = Map.empty
+    properties = Map.empty,
+    useJndi = false,
+    jndiName = None,
+    cfEnabled = None,
+    cfClassName = None,
+    ctxtClassName = None,
+    jmsClassloader  = None
   )
 
-  def apply(vendor: String, cfg: Config): BlendedJMSConnectionConfig = apply(vendor = vendor, provider = None, cfg = cfg)
-
-  def apply(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
+  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
     val prov = if (cfg.hasPath("provider")) cfg.getString("provider") else provider.getOrElse(defaultConfig.provider)
     val enabled = !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
     val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
@@ -38,17 +43,27 @@ object BlendedJMSConnectionConfig {
     val retryInterval = if (cfg.hasPath("retryInterval")) cfg.getInt("retryInterval") else defaultConfig.retryInterval
     val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
     val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
-    val clientId = if (cfg.hasPath("clientId")) cfg.getString("clientId") else defaultConfig.clientId
+    val clientId = if (cfg.hasPath("clientId"))
+      stringResolver(cfg.getString("clientId")) match {
+        case Failure(t) => throw t
+        case Success(id) => id
+      }
+    else
+      defaultConfig.clientId
     val defaultUser = if (cfg.hasPath(DEFAULT_USER)) Some(cfg.getString(DEFAULT_USER)) else defaultConfig.defaultUser
     val defaultPasswd = if (cfg.hasPath(DEFAULT_PWD)) Some(cfg.getString(DEFAULT_PWD)) else defaultConfig.defaultPassword
     val destination = if (cfg.hasPath("destination")) cfg.getString("destination") else defaultConfig.pingDestination
     val properties : Map[String, String] = if (cfg.hasPath("properties")) {
-      cfg.getConfig("properties").entrySet().asScala.map{ e =>
-        (e.getKey(), cfg.getConfig("properties").getString(e.getKey()))
+      val resolved = cfg.getConfig("properties").entrySet().asScala.map{ e =>
+        (e.getKey(), stringResolver(cfg.getConfig("properties").getString(e.getKey())))
       }.toMap
-    } else Map.empty
-    val jndiName = if (cfg.hasPath(CF_JNDI_NAME)) Some(cfg.getString(CF_JNDI_NAME)) else None
-    val useJndi = if (cfg.hasPath(USE_JNDI)) cfg.getBoolean(USE_JNDI) else false
+
+      resolved.find(_._2.isFailure).map(_._2.failed.get).map(throw _)
+
+      resolved.map( p => p._1 -> p._2.get)
+    } else defaultConfig.properties
+    val jndiName = if (cfg.hasPath(CF_JNDI_NAME)) Some(cfg.getString(CF_JNDI_NAME)) else defaultConfig.jndiName
+    val useJndi = if (cfg.hasPath(USE_JNDI)) cfg.getBoolean(USE_JNDI) else defaultConfig.useJndi
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
@@ -67,7 +82,11 @@ object BlendedJMSConnectionConfig {
       pingDestination = destination,
       properties = properties,
       jndiName = jndiName,
-      useJndi = useJndi
+      useJndi = useJndi,
+      cfEnabled = None,
+      jmsClassloader = defaultConfig.jmsClassloader,
+      ctxtClassName = defaultConfig.ctxtClassName,
+      cfClassName = defaultConfig.cfClassName
     )
   }
 }
@@ -88,10 +107,10 @@ case class BlendedJMSConnectionConfig(
   defaultPassword : Option[String],
   pingDestination : String,
   properties : Map[String, String],
-  useJndi : Boolean = false,
+  useJndi : Boolean,
   jndiName : Option[String] = None,
-  cfEnabled : Option[BlendedJMSConnectionConfig => Boolean] = None,
-  cfClassName: Option[String] = None,
-  ctxtClassName : Option[String] = None,
-  jmsClassloader : Option[ClassLoader] = None
+  cfEnabled : Option[BlendedJMSConnectionConfig => Boolean],
+  cfClassName: Option[String],
+  ctxtClassName : Option[String],
+  jmsClassloader : Option[ClassLoader]
 )

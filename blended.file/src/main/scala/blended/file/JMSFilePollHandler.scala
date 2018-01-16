@@ -35,7 +35,7 @@ class JMSFilePollHandler(
     }
 
     result.setStringProperty("BlendedFileName", content._1.f.getName())
-    result.setStringProperty("BledendFilePath", content._1.f.getAbsolutePath())
+    result.setStringProperty("BlendedFilePath", content._1.f.getAbsolutePath())
 
     result
   }

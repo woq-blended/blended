@@ -23,7 +23,12 @@ case class LauncherConfig(
 
 object LauncherConfig {
 
-  case class BundleConfig(location: String, start: Boolean = false, startLevel: Int)
+  case class BundleConfig(location: String, start: Boolean = false, startLevel: Int) {
+
+    private[this] lazy val prettyPrint = s"${getClass.getSimpleName}(location=$location, autoStart=$start, startLevel=$startLevel)"
+
+    override def toString: String = prettyPrint
+  }
 
   private[this] val ConfigPrefix = "blended.launcher.Launcher"
 

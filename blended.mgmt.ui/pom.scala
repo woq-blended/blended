@@ -11,17 +11,6 @@ BlendedModel(
   gav = blendedMgmtUi,
   packaging = "war",
   description = "The blended management UI.",
-  dependencies = Seq(
-    scalaLib % "provided",
-      "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact % "provided",
-      "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom % "provided",
-      blendedUpdaterConfig,
-      "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle % "provided",
-      "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "provided",
-      "com.olvind" %%% "scalajs-react-components" % "0.8.1" % "provided",
-      "com.github.japgolly.scalacss" %%% "ext-react" % Versions.scalaCss % "provided",
-      scalaTest % "test"
-  ),
   plugins = Seq(
     Plugin(
       gav = Plugins.clean,
@@ -33,13 +22,33 @@ BlendedModel(
         )
       )
     ),
-    execPlugin("npm", "npm-install", "process-classes", List("install")),
-    execPlugin("node", "webpack", "prepare-package", List("node_modules/webpack/bin/webpack.js")),
-    prepareSbtPlugin,
-    compileJsPlugin(
-      execId = "compileJS",
-      phase = "compile",
-      args = List("-batch", "fullOptJS")
+    Plugin(
+      gav = Plugins.exec,
+      executions = Seq(
+        execExecution(
+            executable = "npm", 
+            execId = "npm-install", 
+            phase = "process-classes", 
+            args = List("install")
+        ),
+        execExecution(
+            executable = "node", 
+            execId = "webpack", 
+            phase = "prepare-package", 
+            args = List("node_modules/webpack/bin/webpack.js")
+        ),
+        execExecution_compileJs(
+        		execId = "compileJS",
+        		phase = "compile",
+        		args = List("-batch", "fullOptJS")
+        )
+      )
+    ),
+    Plugin(
+      gav = Plugins.scala,
+      executions = Seq(
+        scalaExecution_prepareSbt
+      )
     ),
     bundleWarPlugin,
     Plugin(

@@ -7,16 +7,16 @@ import akka.actor.{ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
-import blended.testsupport.camel.MockAssertions._
 import blended.testsupport.camel.protocol._
-import blended.testsupport.camel.{CamelMockActor, CamelTestSupport}
+import blended.testsupport.camel._
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
-
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class JMSSupportSpec extends FreeSpec
@@ -62,7 +62,7 @@ class JMSSupportSpec extends FreeSpec
     probe.receiveOne(timeout.duration)
     mock ! StopReceive
 
-    val errors = checkAssertions(mock, assertions:_*)
+    val errors = MockAssertion.checkAssertions(mock, assertions:_*)
     errors should be (empty)
 
   }
@@ -72,7 +72,7 @@ class JMSSupportSpec extends FreeSpec
     "send messages correctly to JMS" in {
 
       sendMessage("test")
-      checkMessage("test", expectedMessageCount(1))
+      checkMessage("test", ExpectedMessageCount(1))
     }
 
     "should receive messages from JMS correctly" in {
@@ -90,12 +90,13 @@ class JMSSupportSpec extends FreeSpec
             None
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
       count.get() should be (1)
 
-      checkMessage("test", expectedMessageCount(0))
+      checkMessage("test", ExpectedMessageCount(0))
     }
 
     "should not consume messages if the message handler yields an exception" in {
@@ -110,10 +111,11 @@ class JMSSupportSpec extends FreeSpec
             Some(new Exception("test failure"))
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
-      checkMessage("test", expectedMessageCount(1))
+      checkMessage("test", ExpectedMessageCount(1))
     }
 
     "forward messages correctly" in {
@@ -129,14 +131,15 @@ class JMSSupportSpec extends FreeSpec
           cf = cf,
           destName = "test2",
           additionalHeader = Map("foo" -> "bar")
-        )
+        ),
+        errorHandler = new RedeliveryErrorHandler()
       )
 
       receiver.start()
 
       checkMessage("test2",
-        expectedMessageCount(1),
-        expectedHeaders(Map("foo" -> "bar"))
+        ExpectedMessageCount(1),
+        ExpectedHeaders(Map("foo" -> "bar"))
       )
 
       receiver.stop()

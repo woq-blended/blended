@@ -1,6 +1,6 @@
 package blended.launcher.jvmrunner
 
-import java.io.{File, FileInputStream, IOException, InputStream, OutputStream}
+import java.io.{File, FileInputStream}
 import java.util.Properties
 
 import blended.launcher.internal.{ARM, Logger}
@@ -26,15 +26,18 @@ object JvmLauncher {
   }
 }
 
+/**
+  * A small Java wrapper rresponsiblefor controlling the actual Container JVM.
+  */
 class JvmLauncher() {
 
   private[this] lazy val log = Logger[JvmLauncher]
 
   private[this] var runningProcess: Option[RunningProcess] = None
 
-  val shutdownHook = new Thread("jvm-launcher-shutdown-hook") {
+  private[this] val shutdownHook = new Thread("jvm-launcher-shutdown-hook") {
     override def run(): Unit = {
-      log.info("Catched shutdown. Stopping process")
+      log.info("Caught shutdown. Stopping process")
       runningProcess foreach { p =>
         p.stop()
       }
@@ -44,8 +47,10 @@ class JvmLauncher() {
 
   def run(args: Array[String]): Int = {
     val config = checkConfig(parse(args)).get
-    log.debug("config: " + config)
+    log.debug("JvmLauncherConfig = " + config)
     config.action match {
+
+      // Try to start the inner JVM
       case Some("start") =>
         log.debug("Request: start process")
         runningProcess match {
@@ -55,11 +60,14 @@ class JvmLauncher() {
           case None =>
             var retVal = 1
             do {
+              // If the container JVM terminated with exit code 2, we will restart
+              // the container JVM.
               if (retVal == 2) {
-                log.debug("About to restart process")
                 config.restartDelaySec match {
+                  // In some cases we need a cool down period before we restart the container
+                  // JVM. In that case we will wait for the specified number of seconds.
                   case Some(delay) =>
-                    log.debug("Waiting " + delay + " seconds before start of process")
+                    log.debug("Waiting " + delay + " seconds before restarting the container.")
                     try {
                       Thread.sleep(delay * 1000)
                     } catch {
@@ -68,10 +76,25 @@ class JvmLauncher() {
                     }
                   case _ =>
                 }
+                log.debug("About to restart the container process.")
               } else {
                 log.debug("About to start process")
               }
 
+              // Starting the container requires 2 steps:
+              // First, we will start the container with the parameter --write-system-properties.
+              // This will cause that the container runtime evaluates the current profile and it's
+              // overlays. In this mode the container will dump the determined System Properties
+              // into a file and terminate.
+              //
+              // We will then start the container with the calculated system properties.
+              //
+              // This gives us the opportunity to handle properties configuring the JVM itself with
+              // the blended overlay mechanism.
+
+              log.info("-" * 80)
+              log.info("Starting container in write properties mode")
+              log.info("-" * 80)
               val sysProps: Map[String, String] = {
                 val sysPropsFile = File.createTempFile("jvmlauncher", ".properties")
                 val p = startJava(
@@ -98,12 +121,17 @@ class JvmLauncher() {
                 props.asScala.toList.toMap
               }
 
+              // Now we can extract the JVM memory settings if given
               val xmsOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_USE_MEM, x) => s"-Xms${x}" }
               val xmxOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_MAX_MEM, x) => s"-Xmx${x}" }
+              val ssOpt = sysProps.collect { case (OverlayConfigCompanion.Properties.JVM_STACK_SIZE, x) => s"-Xss${x}" }
 
+              log.info("-" * 80)
+              log.info("Starting blended container instance")
+              log.info("-" * 80)
               val p = startJava(
                 classpath = config.classpath,
-                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
+                jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ ssOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
                 arguments = config.otherArgs.toArray,
                 interactive = true,
                 errorsIntoOutput = false,
@@ -112,11 +140,15 @@ class JvmLauncher() {
               log.debug("Process started: " + p)
               runningProcess = Option(p)
               retVal = p.waitFor
-              log.debug("Process finished with return code: " + retVal)
+              log.info("-" * 80)
+              log.info(s"Blended container instance terminated with exit code [$retVal]")
+              log.info("-" * 80)
               runningProcess = None
             } while (retVal == 2)
             retVal
         }
+
+      // try to stop the inner JVM
       case Some("stop") =>
         log.debug("Request: stop process")
         runningProcess match {
@@ -126,8 +158,10 @@ class JvmLauncher() {
           case Some(p) =>
             p.stop()
         }
-      case _ =>
-        sys.error("No action defined")
+
+      // All other commands are considered to be errors
+      case a @ _ =>
+        sys.error(s"Not a valid action : [$a]")
     }
   }
 
@@ -138,7 +172,17 @@ class JvmLauncher() {
       jvmOpts: Seq[String] = Seq(),
       restartDelaySec: Option[Int] = None) {
 
-    override def toString(): String = s"${getClass().getSimpleName()}(classpath=${classpath},action=${action},otherArgs=${otherArgs})"
+    private[this] lazy val prettyPrint : String =
+      s"""${getClass().getSimpleName()}(
+         |classpath=
+         |${classpath.mkString("  ", "\n  ", "")},
+         |action=${action},
+         |otherArgs=
+         |${otherArgs.mkString("  ", "\n  ", "")}
+         |)""".stripMargin
+
+
+    override def toString(): String = prettyPrint
   }
 
   def parse(args: Seq[String], initialConfig: Config = Config()): Config = {
@@ -177,7 +221,8 @@ class JvmLauncher() {
     arguments: Array[String],
     interactive: Boolean = false,
     errorsIntoOutput: Boolean = true,
-    directory: File = new File(".")): RunningProcess = {
+    directory: File = new File(".")
+  ): RunningProcess = {
 
     log.debug("About to run Java process")
 
@@ -188,6 +233,7 @@ class JvmLauncher() {
         javaHome
       }/bin/java"
       else "java"
+
     log.debug("Using java executable: " + java)
 
     val cpArgs = classpath match {
@@ -205,8 +251,6 @@ class JvmLauncher() {
 
     val command = Array(java) ++ cpArgs ++ jvmOpts ++ propArgs ++ arguments
 
-    // val env: Map[String, String] = Map()
-
     val pb = new ProcessBuilder(command: _*)
     log.debug("Run command: " + command.mkString(" "))
     pb.environment().putAll(sys.env.asJava)
@@ -215,120 +259,6 @@ class JvmLauncher() {
     val p = pb.start
 
     new RunningProcess(p, errorsIntoOutput, interactive)
-  }
-
-  class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: Boolean) {
-
-    val errThread = asyncCopy(process.getErrorStream, if (errorsIntoOutput) Console.out else Console.err)
-    val inThread = asyncCopy(process.getInputStream, Console.out, interactive)
-
-    val in = System.in
-    val out = process.getOutputStream
-
-    val outThread = new Thread("StreamCopyThread") {
-      setDaemon(true)
-
-      override def run {
-        try {
-          while (true) {
-            if (in.available > 0) {
-              in.read match {
-                case -1 =>
-                case read =>
-                  out.write(read)
-                  out.flush
-              }
-            } else {
-              Thread.sleep(50)
-            }
-          }
-        } catch {
-          case e: IOException => // ignore
-          case e: InterruptedException => // this is ok
-        }
-      }
-    }
-    outThread.start()
-
-    def waitFor(): Int = {
-      try {
-        process.waitFor
-      } finally {
-        process.getOutputStream().close()
-        outThread.interrupt()
-        process.getErrorStream().close()
-        //        try {
-        //          errThread.join()
-        //        } finally {
-        //        }
-        process.getInputStream().close()
-        //        try {
-        //          inThread.join()
-        //        } finally {
-        //        }
-      }
-    }
-
-    def stop(): Int = {
-      out.close()
-      outThread.interrupt()
-      waitFor()
-    }
-  }
-
-  /**
-   * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
-   */
-  def copyInThread(in: InputStream, out: OutputStream): Thread = asyncCopy(in, out, false)
-
-  /**
-   * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
-   */
-
-  def asyncCopy(in: InputStream, out: OutputStream, immediately: Boolean = false): Thread =
-    new Thread("StreamCopyThread") {
-      setDaemon(true)
-
-      override def run {
-        try {
-          copy(in, out, immediately)
-        } catch {
-          case e: IOException => // ignore
-          case e: InterruptedException => // ok
-        }
-        out.flush()
-      }
-
-      start
-    }
-
-  /**
-   * Copies an InputStream into an OutputStream. Does not close the streams.
-   */
-  def copy(in: InputStream, out: OutputStream, immediately: Boolean = false): Unit = {
-    if (immediately) {
-      while (true) {
-        if (in.available > 0) {
-          in.read match {
-            case -1 =>
-            case read =>
-              out.write(read)
-              out.flush
-          }
-        } else {
-          Thread.sleep(50)
-        }
-      }
-    } else {
-      val buf = new Array[Byte](1024)
-      var len = 0
-      while ({
-        len = in.read(buf)
-        len > 0
-      }) {
-        out.write(buf, 0, len)
-      }
-    }
   }
 
   /**

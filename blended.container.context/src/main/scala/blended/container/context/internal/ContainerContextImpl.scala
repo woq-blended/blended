@@ -1,17 +1,14 @@
 package blended.container.context.internal
 
-import java.io.{BufferedInputStream, File, FileInputStream, FileNotFoundException, FileOutputStream, IOException}
+import java.io.File
 import java.util.Properties
+
 import blended.container.context.ContainerContext
-import blended.launcher.BrandingProperties
-import blended.updater.config.LocalOverlays
-import blended.updater.config.OverlayRef
-import blended.updater.config.RuntimeConfig
-import com.typesafe.config.ConfigParseOptions
+import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import org.slf4j.LoggerFactory
+
 import scala.collection.JavaConverters._
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -24,6 +21,8 @@ class ContainerContextImpl() extends ContainerContext {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ContainerContextImpl])
 
+  override def getContainerDirectory() = new File(System.getProperty("blended.home")).getAbsolutePath
+
   override def getContainerHostname(): String = {
     try {
       val localMachine = java.net.InetAddress.getLocalHost()
@@ -33,10 +32,9 @@ class ContainerContextImpl() extends ContainerContext {
     }
   }
 
-
   override def getContainerLogDirectory(): String = containerLogDir
 
-  override def getContainerDirectory(): String = containerDir
+  override def getProfileDirectory(): String = profileDir
 
   val brandingProperties: Map[String, String] = {
     val props = (try {
@@ -54,7 +52,7 @@ class ContainerContextImpl() extends ContainerContext {
     props.entrySet().asScala.map(e => e.getKey().toString() -> e.getValue().toString()).toMap
   }
 
-  private[this] lazy val containerDir: String = {
+  private[this] lazy val profileDir: String = {
 
     val profileHome =
       brandingProperties.get(RuntimeConfig.Properties.PROFILE_DIR) orElse {
@@ -83,13 +81,16 @@ class ContainerContextImpl() extends ContainerContext {
   }
 
   private[this] lazy val containerLogDir: String = {
-    val f = new File(s"${containerDir}/../../../log")
+    val f = new File(getContainerDirectory() + "/log")
     f.getAbsolutePath()
   }
 
-  override def getContainerConfigDirectory(): String = new File(getContainerDirectory(), CONFIG_DIR).getPath
 
-  override def getContainerConfig(): Config = {
+  override def getContainerConfigDirectory() = new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
+
+  override def getProfileConfigDirectory(): String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
+
+  private[this] lazy val ctConfig : Config = {
     val sysProps = ConfigFactory.systemProperties()
     val envProps = ConfigFactory.systemEnvironment()
 
@@ -125,66 +126,12 @@ class ContainerContextImpl() extends ContainerContext {
       case _ => ConfigFactory.empty()
     }
     config.withFallback(ConfigFactory.parseFile(
-      new File(getContainerConfigDirectory, "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
+      new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
     )).
       withFallback(sysProps).
       withFallback(envProps).
       resolve()
   }
 
-  @deprecated
-  override def readConfig(configId: String): Properties = {
-
-    def resolveSystemProps(in: Properties): Properties = {
-
-      val result = new Properties()
-
-      in.propertyNames().asScala.foreach { k =>
-        val key = k.toString()
-        var value = in.getProperty(key)
-
-        val regex = "[^\\$]*\\$\\{([^}]*)}".r
-
-        regex.findAllIn(value).matchData.map(_.group(1)).foreach { m =>
-          Option(System.getProperty(m)) match {
-            case Some(sysProp) => value = value.replaceFirst("\\$\\{" + m + "}", sysProp)
-            case None =>
-          }
-        }
-        result.setProperty(key, value)
-      }
-
-      result
-
-    }
-
-    val props = new Properties()
-    val f = new File(getConfigFile(configId))
-
-    if (!f.exists() || f.isDirectory() || !f.canRead()) {
-      log.warn("Cannot open [{}]", f.getAbsolutePath())
-      return props
-    }
-
-    try {
-      val is = new BufferedInputStream(new FileInputStream(f))
-      try {
-        props.load(is)
-      } catch {
-        case e: IOException =>
-          log.warn("Error reading config file: {}", Array(f, e): _*)
-      } finally {
-        is.close()
-      }
-    } catch {
-      case e: FileNotFoundException =>
-        log.warn("Could not find config file: {}", Array(f, e): _*)
-
-    }
-
-    log.info("Read [{}] properties from [{}]", props.size(), f.getAbsolutePath())
-    resolveSystemProps(props)
-  }
-
-  private def getConfigFile(configId: String): String = new File(getContainerConfigDirectory(), s"$configId.cfg").getPath()
+  override def getContainerConfig() = ctConfig
 }

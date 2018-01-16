@@ -13,10 +13,9 @@ class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, addition
 
   override def createMessage(session: Session, content: Message): Message = {
 
-    val result = new CloningMessageFactory().createMessage(session, content)
+    val result = CloningMessageFactory.createMessage(session, content)
     additionalHeader.foreach { case (k,v) => result.setObjectProperty(k,v) }
     result
-
   }
 
   override def handleMessage(msg: Message): Option[Throwable] = {

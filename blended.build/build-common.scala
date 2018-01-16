@@ -62,14 +62,6 @@ val releaseProfile = Profile(
   )
 )
 
-val coverageProfile = Profile(
-  id = "coverage",
-  activation = Activation(),
-  build = BuildBase(
-    plugins = Seq(scoverageMavenPlugin)
-  )
-)
-
 val genPomXmlProfile = Profile(
   id = "gen-pom-xml",
   activation = Activation(),
@@ -121,7 +113,7 @@ object BlendedModel {
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, coverageProfile, genPomXmlProfile, checkDepsProfile)
+  val defaultProfiles = Seq(releaseProfile, genPomXmlProfile, checkDepsProfile)
 
   val defaultDevelopers = Seq(
     Developer(
@@ -210,35 +202,6 @@ object BlendedModel {
 
   val defaultPlugins = Seq(
     Plugin(
-      gav = Plugins.buildHelper,
-      executions = Seq(
-        Execution(
-          id = "add-scala-sources",
-          phase = "generate-sources",
-          goals = Seq(
-            "add-source"
-          ),
-          configuration = Config(
-            sources = Config(
-              source = "src/main/scala"
-            )
-          )
-        ),
-        Execution(
-          id = "add-scala-test-sources",
-          phase = "generate-sources",
-          goals = Seq(
-            "add-test-source"
-          ),
-          configuration = Config(
-            sources = Config(
-              source = "src/test/scala"
-            )
-          )
-        )
-      )
-    ),
-    Plugin(
       gav = Plugins.enforcer,
       executions = Seq(
         Execution(
@@ -259,10 +222,15 @@ object BlendedModel {
     Plugin(
       gav = Plugins.compiler,
       configuration = Config(
-        source = "${java.version}",
-        target = "${java.version}",
-        encoding = "${project.build.sourceEncoding}",
-        fork = "true"
+        skipMain = "true",
+        skip = "true"
+      )
+    ),
+    Plugin(
+      gav = Plugins.scoverage,
+      configuration = Config(
+        aggregate = "true",
+        highlighting = "true"
       )
     )
   )
@@ -492,8 +460,11 @@ object BlendedProfileResourcesContainer {
             ),
             appendAssemblyId = false
           )
-        )
-      ))
+        ),
+        skipDeployPlugin,
+        skipNexusStagingPlugin
+      )
+    )
   }
 }
 
@@ -632,6 +603,7 @@ object BlendedContainer {
           )
         ),
         skipDefaultJarPlugin,
+        skipDeployPlugin,
         skipNexusStagingPlugin
       )
     )

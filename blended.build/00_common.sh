@@ -13,6 +13,12 @@ function ivyRepo {
   echo "$1/ivyRepo"
 }
 
+function dockerClean {
+  for c in $(docker ps -q) ; do  docker rm -f $c; done
+  CLEAN=$(which docker_clean.sh)
+  $CLEAN
+}
+
 function execMaven {
 
   local m2Repo=$1

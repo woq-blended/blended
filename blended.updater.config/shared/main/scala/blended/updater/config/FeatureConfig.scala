@@ -1,5 +1,8 @@
 package blended.updater.config
 
+/**
+ * A Feature configuration, holds a collection of [[BundleConfig]]s to build up a [[RuntimeConfig]].
+ */
 case class FeatureConfig(
   name: String,
   version: String,
@@ -13,6 +16,9 @@ case class FeatureConfig(
 }
 
 object FeatureConfig extends ((String, String, Option[String], List[BundleConfig], List[FeatureRef]) => FeatureConfig) {
+   /**
+    * Conveniently create a [[FeatureConfig]].
+    */
   def apply(name: String,
     version: String,
     url: String = null,

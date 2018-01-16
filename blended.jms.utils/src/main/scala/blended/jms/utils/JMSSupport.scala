@@ -62,6 +62,7 @@ trait JMSSupport {
     cf : ConnectionFactory,
     destName: String,
     msgHandler: JMSMessageHandler,
+    errorHandler: JMSErrorHandler,
     maxMessages : Int = 0,
     receiveTimeout : Long = 50,
     subscriptionName : Option[String] = None
@@ -100,12 +101,12 @@ trait JMSSupport {
               log.trace(s"No more messages to receive from [$destName]")
             case Some(m) =>
               msgCount += 1
-              val id = m.getJMSMessageID()
+              val id = m.getJMSMessageID
               log.trace(s"Handling received message [$id] from [$destName]")
-              msgHandler.handleMessage(m) match {
+              msgHandler.handleMessage(m)  match {
                 case Some(t) =>
                   log.warn(s"Error handling message [$id] from [$destName]")
-                  throw t
+                  if (errorHandler.handleError(m, t)) m.acknowledge()
                 case None =>
                   log.trace(s"Successfully handled message [$id] from [$destName]")
                   m.acknowledge()
@@ -138,7 +139,9 @@ trait JMSSupport {
           producer.close()
           None
         } catch {
-          case NonFatal(t) => Some(t)
+          case NonFatal(t) =>
+            log.error(s"Error sending message to [$destName] : [${t.getMessage}]")
+            Some(t)
         }
       } (conn)
     } (cf)
