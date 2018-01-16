@@ -1,5 +1,7 @@
 package blended.scep.internal
 
+import javax.security.auth.x500.X500Principal
+
 import org.slf4j.LoggerFactory
 
 object ScepTestClient {
@@ -10,7 +12,14 @@ object ScepTestClient {
 
     log.info("Starting Scep Test Client ...")
 
-    new ScepEnroller().enroll()
+    val cfg = ScepConfig(
+      url = "http://localhost:8080/scep",
+      profile = None,
+      requester = new X500Principal("CN=andreas, O=WOQ, C=DE"),
+      subject = new X500Principal("CN=myserver, O=WOQ, C=DE")
+    )
+
+    new ScepEnroller(cfg).enroll()
 
     log.info("Scep Test Client finished ...")
 

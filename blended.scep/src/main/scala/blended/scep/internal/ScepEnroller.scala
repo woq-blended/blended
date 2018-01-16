@@ -1,30 +1,99 @@
 package blended.scep.internal
 
+import java.math.BigInteger
 import java.net.URL
+import java.security.cert.X509Certificate
+import java.security.{KeyPair, KeyPairGenerator}
+import java.util.Calendar
 import javax.security.auth.callback.CallbackHandler
+import javax.security.auth.x500.X500Principal
 
+import org.bouncycastle.asn1.DERPrintableString
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
+import org.bouncycastle.asn1.x509.{KeyUsage, X509Extension}
+import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
+import org.jscep.client.verification.{CertificateVerifier, ConsoleCertificateVerifier, OptimisticCertificateVerifier}
 import org.jscep.client.{Client, DefaultCallbackHandler}
-import org.jscep.client.verification.{CertificateVerifier, ConsoleCertificateVerifier}
 import org.jscep.transport.response.Capabilities
 import org.slf4j.LoggerFactory
 
-class ScepEnroller {
+case class ScepConfig(
+  url : String,
+  profile: Option[String],
+  requester : X500Principal,
+  subject : X500Principal
+)
+
+class ScepEnroller(cfg: ScepConfig) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[ScepEnroller])
 
-  def enroll(): Unit = {
-
-    val url = new URL("http://localhost:8080/scep")
-
-    val verifier : CertificateVerifier = new ConsoleCertificateVerifier()
+  lazy val client : Client = {
+    val verifier : CertificateVerifier = new OptimisticCertificateVerifier()
     val handler : CallbackHandler = new DefaultCallbackHandler(verifier)
 
-    val client : Client = new Client(url, handler)
+    new Client(new URL(cfg.url), handler)
+  }
 
-    // TODO: insert optional profile String (ask SCEP admin)
-    val caps : Capabilities = client.getCaCapabilities()
+  lazy val caps : Capabilities = cfg.profile match {
+    case None => client.getCaCapabilities()
+    case Some(p) => client.getCaCapabilities(p)
+  }
 
-    log.info(caps.getStrongestCipher())
+  lazy val (requesterKeys, requesterCert) : (KeyPair, X509Certificate) = {
+    val requesterKeypair = generateKeyPair()
+
+    val requesterIssuer = cfg.requester
+    val serial = BigInteger.ONE
+    val calendar = Calendar.getInstance()
+    calendar.add(Calendar.DATE, -1) // yesterday
+    val notBefore = calendar.getTime()
+    calendar.add(Calendar.DATE, 2) // tomorrow
+    val notAfter = calendar.getTime()
+    val requesterSubject = cfg.subject
+
+    val certBuilder = new JcaX509v3CertificateBuilder(
+      requesterIssuer, serial, notBefore, notAfter, requesterSubject, requesterKeypair.getPublic()
+    )
+
+    certBuilder.addExtension(X509Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
+
+    val certSignerBuilder = new JcaContentSignerBuilder(caps.getStrongestSignatureAlgorithm())
+    val certSigner = certSignerBuilder.build(requesterKeypair.getPrivate())
+
+    val certHolder = certBuilder.build(certSigner)
+
+    val converter = new JcaX509CertificateConverter()
+    (requesterKeypair, converter.getCertificate(certHolder))
+  }
+
+  private def generateKeyPair(strength: Int = 1024) : KeyPair = {
+    val kpg = KeyPairGenerator.getInstance("RSA")
+    kpg.initialize(strength)
+    kpg.genKeyPair()
+  }
+
+  def enroll(): Unit = {
+
+    log.info("Enrolling entity")
+
+    val entityKeyPair = generateKeyPair(1024)
+    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(cfg.subject, entityKeyPair.getPublic())
+
+    csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString("password"))
+
+    // TODO addextensions ?
+
+    val csrSignerBuilder = new JcaContentSignerBuilder("SHA1withRSA")
+    val csrSigner = csrSignerBuilder.build(entityKeyPair.getPrivate())
+    val csr = csrBuilder.build(csrSigner)
+
+    val response = client.enrol(requesterCert, requesterKeys.getPrivate(), csr)
+
+    val failed = response.isFailure()
+    log.info(s"$failed")
   }
 
 }
