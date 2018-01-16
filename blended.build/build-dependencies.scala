@@ -136,19 +136,19 @@ object Deps {
   // "9.4.8.v20171121" 
   // "9.4.7.v20170914"
   // "9.3.15.v20161220" 
-  private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % "9.3.21.v20170918"
+  private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % BlendedVersions.jettyVersion
+  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-osgi-${n}" % BlendedVersions.jettyVersion
   val jettyDeploy = jetty("deploy")
   val jettyHttp = jetty("http")
   val jettyIo = jetty("io")
   val jettyJmx = jetty("jmx")
-  //  val jettyOsgiServletApi = jetty("toolchain")
+  val jettyOsgiBoot = jettyOsgi("boot")
   val jettySecurity = jetty("security")
   val jettyServlet = jetty("servlet")
   val jettyServer = jetty("server")
   val jettyUtil = jetty("util")
   val jettyWebapp = jetty("webapp")
   val jettyXml = jetty("xml")
-  //  val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
@@ -179,15 +179,15 @@ object Deps {
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-  private def paxweb(a: String) = "org.ops4j.pax.web" % s"pax-web-${a}" % BlendedVersions.paxWeb
-  val paxwebApi = paxweb("api")
-  val paxwebDescriptor = paxweb("descriptor")
-  val paxwebExtWhiteboard = paxweb("extender-whiteboard")
-  val paxwebExtWar = paxweb("extender-war")
-  val paxwebJetty = paxweb("jetty")
-  val paxwebJsp = paxweb("jsp")
-  val paxwebRuntime = paxweb("runtime")
-  val paxwebSpi = paxweb("spi")
+  //  private def paxweb(a: String) = "org.ops4j.pax.web" % s"pax-web-${a}" % BlendedVersions.paxWeb
+  //  val paxwebApi = paxweb("api")
+  //  val paxwebDescriptor = paxweb("descriptor")
+  //  val paxwebExtWhiteboard = paxweb("extender-whiteboard")
+  //  val paxwebExtWar = paxweb("extender-war")
+  //  val paxwebJetty = paxweb("jetty")
+  //  val paxwebJsp = paxweb("jsp")
+  //  val paxwebRuntime = paxweb("runtime")
+  //  val paxwebSpi = paxweb("spi")
 
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 

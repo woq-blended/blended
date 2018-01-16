@@ -124,25 +124,25 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
   ),
   "blended-http" -> Seq(
-    FeatureBundle(dependency = ops4jBaseLang),
-    FeatureBundle(dependency = paxSwissboxCore),
-    FeatureBundle(dependency = paxSwissboxOptJcl),
-    FeatureBundle(dependency = xbeanBundleUtils),
-    FeatureBundle(dependency = xbeanAsmShaded),
-    FeatureBundle(dependency = xbeanReflect),
-    FeatureBundle(dependency = xbeanFinder),
-    FeatureBundle(dependency = paxwebApi),
-    FeatureBundle(dependency = paxwebSpi),
-    FeatureBundle(dependency = paxwebRuntime, start = true),
-    FeatureBundle(dependency = paxwebJetty, start = true),
-    FeatureBundle(dependency = paxwebJsp),
-    FeatureBundle(dependency = paxwebExtWhiteboard, start = true),
-    FeatureBundle(dependency = paxwebExtWar, start = true),
-    FeatureBundle(dependency = paxwebDescriptor),
-    // dep of paxwebJsp
-    FeatureBundle(dependency = javaxEl),
-    // dep of paxwebJsp
-    FeatureBundle(dependency = juliOverSlf4j)
+//    FeatureBundle(dependency = ops4jBaseLang),
+//    FeatureBundle(dependency = paxSwissboxCore),
+//    FeatureBundle(dependency = paxSwissboxOptJcl),
+//    FeatureBundle(dependency = xbeanBundleUtils),
+//    FeatureBundle(dependency = xbeanAsmShaded),
+//    FeatureBundle(dependency = xbeanReflect),
+//    FeatureBundle(dependency = xbeanFinder),
+//    FeatureBundle(dependency = paxwebApi),
+//    FeatureBundle(dependency = paxwebRuntime, start = true),
+//    FeatureBundle(dependency = paxwebSpi),
+//    FeatureBundle(dependency = paxwebJetty, start = true),
+//    FeatureBundle(dependency = paxwebJsp),
+//    FeatureBundle(dependency = paxwebExtWhiteboard, start = true),
+//    FeatureBundle(dependency = paxwebExtWar, start = true),
+//    FeatureBundle(dependency = paxwebDescriptor),
+//    // dep of paxwebJsp
+//    FeatureBundle(dependency = javaxEl),
+//    // dep of paxwebJsp
+//    FeatureBundle(dependency = juliOverSlf4j)
   ),
   "blended-jetty" -> Seq(
     FeatureBundle(dependency = activationApi),
@@ -150,7 +150,6 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = javaxMail),
     FeatureBundle(dependency = geronimoAnnotation),
     FeatureBundle(dependency = geronimoJaspic),
-    //    FeatureBundle(dependency = jettyServer)
     FeatureBundle(dependency = jettyUtil),
     FeatureBundle(dependency = jettyHttp),
     FeatureBundle(dependency = jettyIo),
@@ -160,8 +159,8 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = jettyServer),
     FeatureBundle(dependency = jettyWebapp),
     FeatureBundle(dependency = jettyDeploy),
-    FeatureBundle(dependency = jettyXml)
-//    FeatureBundle(dependency = jettyOsgiServletApi)
+    FeatureBundle(dependency = jettyXml),
+    FeatureBundle(dependency = jettyOsgiBoot, start = true)
   ),
   //  "blended-jaxrs" -> Seq(
   //    FeatureBundle(dependency = jettison),
