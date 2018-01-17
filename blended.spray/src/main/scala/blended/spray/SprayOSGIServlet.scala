@@ -2,33 +2,37 @@ package blended.spray
 
 import javax.servlet.ServletConfig
 
-import akka.actor.{ActorRef, ActorRefFactory, Props}
+import akka.actor.{ ActorRef, ActorRefFactory, Props }
 import akka.event.Logging
 import akka.spray.RefUtils
 import akka.util.Timeout
-import blended.akka.{ActorSystemWatching, OSGIActorConfig}
-import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
+import blended.akka.{ ActorSystemWatching, OSGIActorConfig }
+import domino.capsule.{ CapsuleContext, SimpleDynamicCapsuleContext }
 import domino.service_watching.ServiceWatching
 import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 import spray.http.Uri.Path
-import spray.servlet.{ConnectorSettings, Servlet30ConnectorServlet}
+import spray.servlet.{ ConnectorSettings, Servlet30ConnectorServlet }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import spray.http.HttpResponse
+import spray.servlet.ModelConverter
 
 abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSystemWatching with ServiceWatching { this: BlendedHttpRoute =>
 
   private[this] val sLog = LoggerFactory.getLogger(classOf[SprayOSGIServlet])
-  private[this] var refFactory : Option[ActorRefFactory] = None
-  private[this] var osgiActorCfg : Option[OSGIActorConfig] = None
+  private[this] var refFactory: Option[ActorRefFactory] = None
+  private[this] var osgiActorCfg: Option[OSGIActorConfig] = None
 
-  def actorConfig : OSGIActorConfig = osgiActorCfg match {
+  def actorConfig: OSGIActorConfig = osgiActorCfg match {
     case None => throw new Exception(s"OSGI Actor Config for [$bundleSymbolicName] accessed in wrong context ")
     case Some(cfg) => cfg
   }
 
-  def servletConfig : ServletConfig = getServletConfig()
+  def servletConfig: ServletConfig = getServletConfig()
 
   def bundleSymbolicName = bundleContext.getBundle().getSymbolicName()
 
@@ -53,16 +57,16 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     case Some(f) => f
   }
 
-  def contextPath : String =
+  def contextPath: String =
     Option(bundleContext.getBundle().getHeaders().get("Web-ContextPath")).getOrElse(bundleContext.getBundle().getSymbolicName())
 
-  def props(route: BlendedHttpRoute) : Props =
+  def props(route: BlendedHttpRoute): Props =
     BlendedHttpActor.props(actorConfig, this, contextPath)
 
-  def createServletActor() : Unit =
+  def createServletActor(): Unit =
     createServletActor(props(this))
 
-  def createServletActor(props : Props): ActorRef = {
+  def createServletActor(props: Props): ActorRef = {
     sLog.debug("About to create servlet actor with props: {}", props)
     implicit val timeout = Timeout(1.second)
 
@@ -98,6 +102,9 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
     createServletActor()
   }
 
+  // We override and thus replace the init-logic of sprays Servlet30Connector.
+  // The reason is, we want to wait for the actor system (vie OSGi service registry)
+  // As a consequence, we also have to defer the request processing until we are initialized
   override def init(): Unit = {
     sLog.info(s"About to initialise SprayOsgiServlet [${servletConfig.getServletName()}]")
 
@@ -106,6 +113,17 @@ abstract class SprayOSGIServlet extends Servlet30ConnectorServlet with ActorSyst
       refFactory = Some(cfg.system)
       startSpray()
 
+    }
+  }
+
+  // we have to respond with 503 when service is not ready yet
+  override def service(hsRequest: HttpServletRequest, hsResponse: HttpServletResponse): Unit = {
+    serviceActor match {
+      case null =>
+        // we are not initialized yet
+        sLog.warn("Got a request before initialization. Returning with an error")
+        hsResponse.sendError(503, "The service is not initialized.")
+      case _ => super.service(hsRequest, hsResponse)
     }
   }
 }
