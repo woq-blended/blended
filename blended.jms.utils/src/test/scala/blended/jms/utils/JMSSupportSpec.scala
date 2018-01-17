@@ -15,7 +15,8 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
-
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class JMSSupportSpec extends FreeSpec
@@ -89,6 +90,7 @@ class JMSSupportSpec extends FreeSpec
             None
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
@@ -109,6 +111,7 @@ class JMSSupportSpec extends FreeSpec
             Some(new Exception("test failure"))
           }
         },
+        new RedeliveryErrorHandler(),
         subscriptionName = None
       )
 
@@ -128,7 +131,8 @@ class JMSSupportSpec extends FreeSpec
           cf = cf,
           destName = "test2",
           additionalHeader = Map("foo" -> "bar")
-        )
+        ),
+        errorHandler = new RedeliveryErrorHandler()
       )
 
       receiver.start()

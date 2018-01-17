@@ -14,5 +14,6 @@ case class JMSFileDropConfig(
   appendHeader: String,
   charsetHeader: String,
   defaultDir : String,
+  dropTimeout : Int,
   dropNotification: Boolean
 )

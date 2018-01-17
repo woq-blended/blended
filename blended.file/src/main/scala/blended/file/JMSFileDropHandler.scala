@@ -14,10 +14,10 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 object JMSFileDropActor {
-  def props(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) : Props = Props(new JMSFileDropActor(cfg, errorHandler))
+  def props(cfg: JMSFileDropConfig) : Props = Props(new JMSFileDropActor(cfg))
 }
 
-class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends Actor with ActorLogging {
+class JMSFileDropActor(cfg: JMSFileDropConfig) extends Actor with ActorLogging {
 
   private[this] def dropCmd(msg: Message) : FileDropCommand = FileDropCommand(
     content = Array.empty,
@@ -34,10 +34,9 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
     dropNotification =  cfg.dropNotification
   )
 
-  private[this] def handleError(msg : Message, notify: Boolean = true) : Unit = {
-    errorHandler.handleError(msg, cfg)
+  private[this] def handleError(msg : Message, error: Throwable, notify: Boolean = true) : Unit = {
     val cmd = dropCmd(msg)
-    if (cfg.dropNotification && notify) context.system.eventStream.publish(FileDropResult(cmd, success = false))
+    if (cfg.dropNotification && notify) context.system.eventStream.publish(FileDropResult.result(cmd, Some(error)))
     context.stop(self)
   }
 
@@ -48,8 +47,9 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
 
       Option(msg.getStringProperty(cfg.fileHeader)) match {
         case None =>
-          log.error(s"Message [${msg.getJMSMessageID}] is missing the filename property [${cfg.fileHeader}]")
-          handleError(msg)
+          val eTxt = s"Message [${msg.getJMSMessageID}] is missing the filename property [${cfg.fileHeader}]"
+          log.error(eTxt)
+          handleError(msg, new Exception(eTxt))
 
         case Some(_) =>
 
@@ -70,8 +70,9 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
               Some(os.toByteArray)
 
             case m =>
-              log.error(s"Dropping files unsupported for msg [${m.getJMSMessageID}] of type [${m.getClass.getName}]")
-              handleError(m)
+              val eTxt = s"Dropping files unsupported for msg [${m.getJMSMessageID}] of type [${m.getClass.getName}]"
+              log.error(eTxt)
+              handleError(m, new Exception(eTxt))
               None
           }).foreach{ content =>
             val cmd = dropCmd(msg).copy(content = content)
@@ -81,16 +82,16 @@ class JMSFileDropActor(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHan
   }
 }
 
-class JMSFileDropHandler(cfg: JMSFileDropConfig, errorHandler: JMSFileDropErrorHandler) extends JMSMessageHandler with JMSSupport {
+class JMSFileDropHandler(cfg: JMSFileDropConfig) extends JMSMessageHandler with JMSSupport {
 
   override def handleMessage(msg: Message): Option[Throwable] = {
 
-    implicit val timeOut : Timeout= Timeout(3.seconds)
+    implicit val timeOut : Timeout= Timeout(cfg.dropTimeout.seconds)
 
     try {
-      val fResult = (cfg.system.actorOf(JMSFileDropActor.props(cfg, errorHandler)) ? msg).mapTo[FileDropResult]
+      val fResult = (cfg.system.actorOf(JMSFileDropActor.props(cfg)) ? msg).mapTo[FileDropResult]
       val result = Await.result(fResult, timeOut.duration)
-      if (result.success) None else Some(new Exception(s"Filedrop Command [${result.cmd}] failed."))
+      result.error
     } catch {
       case NonFatal(t) => Some(t)
     }
