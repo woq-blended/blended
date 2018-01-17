@@ -15,7 +15,6 @@ BlendedContainer(
     Feature("blended-base-equinox"),
     Feature("blended-base"),
     Feature("blended-commons"),
-    Feature("blended-http"),
     Feature("blended-jetty"),
     Feature("blended-security"),
     Feature("blended-spray"),

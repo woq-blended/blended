@@ -19,7 +19,8 @@ object BlendedVersions {
 
   val dockerJavaVersion = "3.0.13"
 
-  val jettyVersion = "9.3.21.v20170918"
+//  val jettyVersion = "9.3.21.v20170918"
+  val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.3.3"
 
   val parboiledVersion = "1.1.6"
