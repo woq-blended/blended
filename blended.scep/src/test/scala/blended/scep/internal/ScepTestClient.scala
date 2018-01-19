@@ -13,10 +13,21 @@ object ScepTestClient {
     log.info("Starting Scep Test Client ...")
 
     val cfg = ScepConfig(
-      url = "http://localhost:8080/scep",
+      url = "http://iqscep01:8080/pgwy/scep/sib",
       profile = None,
-      requester = new X500Principal("CN=andreas, O=WOQ, C=DE"),
-      subject = new X500Principal("CN=myserver, O=WOQ, C=DE")
+
+      /* for KL:
+        - CN = phys. HostName
+        - 1. SAN = phys. HostName
+        - 2. SAN = log. HostName
+        - O = Schwarz IT GmbH & Co. KG
+        - C aus hostname
+
+        CN=de4711.lnxprx01.4711.de.kaufland,SAN=
+        cachea.4711.de.kaufland
+      */
+      requester = new X500Principal("CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE"),
+      subject = new X500Principal("CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE")
     )
 
     new ScepEnroller(cfg).enroll()

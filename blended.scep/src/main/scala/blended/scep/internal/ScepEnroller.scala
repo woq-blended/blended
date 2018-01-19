@@ -43,7 +43,7 @@ class ScepEnroller(cfg: ScepConfig) {
   }
 
   lazy val (requesterKeys, requesterCert) : (KeyPair, X509Certificate) = {
-    val requesterKeypair = generateKeyPair()
+    val requesterKeypair = generateKeyPair(2048)
 
     val requesterIssuer = cfg.requester
     val serial = BigInteger.ONE
@@ -69,7 +69,7 @@ class ScepEnroller(cfg: ScepConfig) {
     (requesterKeypair, converter.getCertificate(certHolder))
   }
 
-  private def generateKeyPair(strength: Int = 1024) : KeyPair = {
+  private def generateKeyPair(strength: Int = 2048) : KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")
     kpg.initialize(strength)
     kpg.genKeyPair()
@@ -79,19 +79,36 @@ class ScepEnroller(cfg: ScepConfig) {
 
     log.info("Enrolling entity")
 
-    val entityKeyPair = generateKeyPair(1024)
-    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(cfg.subject, entityKeyPair.getPublic())
+    //val entityKeyPair = generateKeyPair(2048)
+    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(cfg.subject, requesterKeys.getPublic())
 
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString("password"))
 
     // TODO addextensions ?
 
     val csrSignerBuilder = new JcaContentSignerBuilder("SHA1withRSA")
-    val csrSigner = csrSignerBuilder.build(entityKeyPair.getPrivate())
+    val csrSigner = csrSignerBuilder.build(requesterKeys.getPrivate())
     val csr = csrBuilder.build(csrSigner)
 
     val response = client.enrol(requesterCert, requesterKeys.getPrivate(), csr)
 
+    var pending = response.isPending()
+
+    while(response.isPending()) {
+      log.info("Waiting for PKI response")
+      Thread.sleep(1000)
+    }
+
+    if (response.isFailure()) {
+      val info = response.getFailInfo()
+      log.info(s"Certificate provisioning failed: [$info]")
+    } else {
+      val store = response.getCertStore()
+      val certs = store.getCertificates(null)
+
+      log.info(s"Retrieved [${certs.size()}] certificates.")
+
+    }
     val failed = response.isFailure()
     log.info(s"$failed")
   }
