@@ -29,8 +29,10 @@ class ManagementCollectorServlet extends SprayOSGIServlet
   private[this] var cfg: Option[OSGIActorConfig] = None
 
   override def startSpray(): Unit = {
+    mylog.debug("startSpray() called, now waiting for required services: RemoteUpdater, PersistenceService")
 
     whenServicesPresent[RemoteUpdater, PersistenceService] { (updater, persistenceService) =>
+      mylog.debug("Required Services present. Now creating management collector spray servlet")
       this.remoteUpdater = Option(updater)
       this.remoteContainerStatePersistor = Option(new RemoteContainerStatePersistor(persistenceService))
       val actor = createServletActor()

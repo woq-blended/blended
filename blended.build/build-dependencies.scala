@@ -21,8 +21,7 @@ implicit class RichDependency(d: Dependency) {
     scope: Option[String] = d.scope,
     systemPath: Option[String] = d.systemPath,
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional
-  ): Dependency =
+    optional: Boolean = d.optional): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
 
   def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
@@ -93,13 +92,19 @@ object Deps {
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
   val dockerJava = "com.github.docker-java" % "docker-java" % BlendedVersions.dockerJavaVersion
 
+  // provides Equinox console commands to gogo shell
+  val eclipseEquinoxConsole = "org.eclipse.platform" % "org.eclipse.equinox.console" % "1.1.300"
+  val eclipseOsgi = "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50"
+
   val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
   val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.0.0"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
   val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
+  val felixHttpApi = "org.apache.felix" % "org.apache.felix.http.api" % "3.0.0"
+  val felixHttpJetty = "org.apache.felix" % "org.apache.felix.http.jetty" % "3.0.0"
   val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
   val geronimoAnnotation = "org.apache.geronimo.specs" % "geronimo-annotation_1.1_spec" % "1.0.1"
@@ -111,23 +116,43 @@ object Deps {
 
   val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.4.65", `type` = "war")
 
+  val javaxEl = "javax.el" % "javax.el-api" % "3.0.1-b04"
   val javaxMail = "javax.mail" % "mail" % "1.4.5"
+  val javaxServlet31 = "org.everit.osgi.bundles" % "org.everit.osgi.bundles.javax.servlet.api" % "3.1.0"
+
+  val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.3"
+  val jacksonBind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.3"
+  val jacksonAnnotations = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.3"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
-  val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1"
-  val jacksonBind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
-
   //  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
-//  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
-//  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
-//
-//  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
-//  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
-//  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
-//  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
-//  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
+  //  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
+  //  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
+  //
+  //  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
+  //  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
+  //  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
+  //  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
+  //  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
 
-  val jettyServer = "org.eclipse.jetty.aggregate" % "jetty-all-server" % "8.1.19.v20160209"
+
+  private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % BlendedVersions.jettyVersion
+  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-${n}" % BlendedVersions.jettyVersion
+  val jettyDeploy = jetty("deploy")
+  val jettyHttp = jetty("http")
+  val jettyIo = jetty("io")
+  val jettyJmx = jetty("jmx")
+  val jettySecurity = jetty("security")
+  val jettyServlet = jetty("servlet")
+  val jettyServer = jetty("server")
+  val jettyUtil = jetty("util")
+  val jettyWebapp = jetty("webapp")
+  val jettyXml = jetty("xml")
+
+  val jettyOsgiBoot = jettyOsgi("osgi-boot")
+  val jettyHttpService = jettyOsgi("httpservice")
+  val equinoxServlet = "org.eclipse.platform" % "org.eclipse.equinox.http.servlet" % "1.4.0"
+
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
@@ -136,9 +161,10 @@ object Deps {
     jolokiaJvm,
     classifier = "agent"
   )
-  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
+  val juliOverSlf4j = "com.github.akiraly.reusable-poms" % "tomcat-juli-over-slf4j" % "4"
   val junit = "junit" % "junit" % "4.11"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
@@ -154,16 +180,18 @@ object Deps {
   val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 
   val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
-  val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+  val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
-  val paxwebApi = "org.ops4j.pax.web" % "pax-web-api" % BlendedVersions.paxWeb
-  val paxwebExtWhiteboard = "org.ops4j.pax.web" % "pax-web-extender-whiteboard" % BlendedVersions.paxWeb
-  val paxwebExtWar = "org.ops4j.pax.web" % "pax-web-extender-war" % BlendedVersions.paxWeb
-  val paxwebJetty = "org.ops4j.pax.web" % "pax-web-jetty" % BlendedVersions.paxWeb
-  val paxwebJsp = "org.ops4j.pax.web" % "pax-web-jsp" % BlendedVersions.paxWeb
-  val paxwebRuntime = "org.ops4j.pax.web" % "pax-web-runtime" % BlendedVersions.paxWeb
-  val paxwebSpi = "org.ops4j.pax.web" % "pax-web-spi" % BlendedVersions.paxWeb
+  //  private def paxweb(a: String) = "org.ops4j.pax.web" % s"pax-web-${a}" % BlendedVersions.paxWeb
+  //  val paxwebApi = paxweb("api")
+  //  val paxwebDescriptor = paxweb("descriptor")
+  //  val paxwebExtWhiteboard = paxweb("extender-whiteboard")
+  //  val paxwebExtWar = paxweb("extender-war")
+  //  val paxwebJetty = paxweb("jetty")
+  //  val paxwebJsp = paxweb("jsp")
+  //  val paxwebRuntime = paxweb("runtime")
+  //  val paxwebSpi = paxweb("spi")
 
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 
@@ -187,25 +215,27 @@ object Deps {
   val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
 
-  val sprayClient = "io.spray" %% "spray-client" % BlendedVersions.sprayVersion
-  val sprayCaching = "io.spray" %% "spray-caching" % BlendedVersions.sprayVersion
-  val sprayHttp = "io.spray" %% "spray-http" % BlendedVersions.sprayVersion
-  val sprayHttpx = "io.spray" %% "spray-httpx" % BlendedVersions.sprayVersion
-  val sprayIo = "io.spray" %% "spray-io" % BlendedVersions.sprayVersion
-  val sprayJson = "io.spray" %% "spray-json" % BlendedVersions.sprayVersion
-  val sprayRouting = "io.spray" %% "spray-routing" % BlendedVersions.sprayVersion
-  val sprayServlet = "io.spray" %% "spray-servlet" % BlendedVersions.sprayVersion
-  val sprayTestkit = "io.spray" %% "spray-testkit" % BlendedVersions.sprayVersion
-  val sprayUtil = "io.spray" %% "spray-util" % BlendedVersions.sprayVersion
+  private def spray(n: String) = "io.spray" %% s"spray-${n}" % BlendedVersions.sprayVersion
+  val sprayClient = spray("client")
+  val sprayCaching = spray("caching")
+  val sprayHttp = spray("http")
+  val sprayHttpx = spray("httpx")
+  val sprayIo = spray("io")
+  val sprayJson = spray("json")
+  val sprayRouting = spray("routing")
+  val sprayServlet = spray("servlet")
+  val sprayTestkit = spray("testkit")
+  val sprayUtil = spray("util")
 
-  val springBeans = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-beans" % BlendedVersions.springVersion
-  val springAop = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-aop" % BlendedVersions.springVersion
-  val springContext = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context" % BlendedVersions.springVersion
-  val springContextSupport = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-context-support" % BlendedVersions.springVersion
-  val springExpression = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-expression" % BlendedVersions.springVersion
-  val springCore = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-core" % BlendedVersions.springVersion
-  val springJms = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-jms" % BlendedVersions.springVersion
-  val springTx = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.spring-tx" % BlendedVersions.springVersion
+  private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % BlendedVersions.springVersion
+  val springBeans = spring("beans")
+  val springAop = spring("aop")
+  val springContext = spring("context")
+  val springContextSupport = spring("context-support")
+  val springExpression = spring("expression")
+  val springCore = spring("core")
+  val springJms = spring("jms")
+  val springTx = spring("tx")
 
   val shapeless = "com.chuusai" %% "shapeless" % BlendedVersions.shapelessVersion
 
@@ -215,11 +245,12 @@ object Deps {
   val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
   val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
 
-  val xbeanAsmShaded = "org.apache.xbean" % "xbean-asm4-shaded" % BlendedVersions.xbean
-  val xbeanBundleUtils = "org.apache.xbean" % "xbean-bundleutils" % BlendedVersions.xbean
-  val xbeanFinder = "org.apache.xbean" % "xbean-finder-shaded" % BlendedVersions.xbean
-  val xbeanReflect = "org.apache.xbean" % "xbean-reflect" % BlendedVersions.xbean
-  val xbeanSpring = "org.apache.xbean" % "xbean-spring" % BlendedVersions.xbean
+  private def xbean(n: String) = "org.apache.xbean" % s"xbean-${n}" % BlendedVersions.xbean
+  val xbeanAsmShaded = xbean("asm6-shaded")
+  val xbeanBundleUtils = xbean("bundleutils")
+  val xbeanFinder = xbean("finder-shaded")
+  val xbeanReflect = xbean("reflect")
+  val xbeanSpring = xbean("spring")
 }
 
 // convenience and backward compatibility

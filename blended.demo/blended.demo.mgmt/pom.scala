@@ -11,9 +11,10 @@ BlendedContainer(
   description = "A sample management container for the blended launcher.",
   blendedProfileResouces = blendedDemoMgmtResources,
   features = Seq(
+    Feature("blended-base-felix"),
+    Feature("blended-base-equinox"),
     Feature("blended-base"),
     Feature("blended-commons"),
-    Feature("blended-http"),
     Feature("blended-jetty"),
     Feature("blended-security"),
     Feature("blended-spray"),

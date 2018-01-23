@@ -6,9 +6,16 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
-val features : Map[String, Seq[FeatureBundle]] = Map(
+val features: Map[String, Seq[FeatureBundle]] = Map(
+   "blended-base-felix" -> Seq(
+     FeatureBundle(dependency = felixFramework, startLevel = 0, start = true)
+   ),
+   "blended-base-equinox" -> Seq(
+     FeatureBundle(dependency = eclipseOsgi, startLevel = 0, start = true),
+     FeatureBundle(dependency = eclipseEquinoxConsole, start = true)
+   ),
   "blended-base" -> Seq(
-    FeatureBundle(dependency = felixFramework, startLevel = 0, start = true),
+    // FeatureBundle(dependency = felixFramework, startLevel = 0, start = true),
     FeatureBundle(dependency = blendedSecurityBoot),
     FeatureBundle(dependency = asmAll, start = true),
     FeatureBundle(dependency = blendedUpdater, start = true),
@@ -18,21 +25,21 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = scalaXml),
     FeatureBundle(dependency = scalaCompatJava8),
     FeatureBundle(dependency = scalaParser),
-    FeatureBundle(dependency = blendedAkka, start=true),
-    FeatureBundle(dependency = blendedUtil, start=true),
-    FeatureBundle(dependency = blendedContainerContext, start=true),
-    FeatureBundle(dependency = felixConfigAdmin, start=true),
-    FeatureBundle(dependency = felixEventAdmin, start=true),
-    FeatureBundle(dependency = felixFileinstall, start=true),
+    FeatureBundle(dependency = blendedAkka, start = true),
+    FeatureBundle(dependency = blendedUtil, start = true),
+    FeatureBundle(dependency = blendedContainerContext, start = true),
+    FeatureBundle(dependency = felixConfigAdmin, start = true),
+    FeatureBundle(dependency = felixEventAdmin, start = true),
+    FeatureBundle(dependency = felixFileinstall, start = true),
     FeatureBundle(dependency = slf4jJcl),
     FeatureBundle(dependency = slf4jJul),
     FeatureBundle(dependency = slf4j),
     FeatureBundle(dependency = logbackCore),
     FeatureBundle(dependency = logbackClassic),
-    FeatureBundle(dependency = felixGogoRuntime, start=true),
-    FeatureBundle(dependency = felixGogoShell, start=true),
-    FeatureBundle(dependency = felixGogoCommand, start=true),
-    FeatureBundle(dependency = felixMetatype, start=true),
+    FeatureBundle(dependency = felixGogoRuntime, start = true),
+    FeatureBundle(dependency = felixGogoShell, start = true),
+    FeatureBundle(dependency = felixGogoCommand, start = true),
+    FeatureBundle(dependency = felixMetatype, start = true),
     FeatureBundle(dependency = typesafeConfig),
     FeatureBundle(dependency = typesafeConfigSSL),
     FeatureBundle(dependency = reactiveStreams),
@@ -98,7 +105,7 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedMgmtAgent, start = true)
   ),
   "blended-mgmt-server" -> Seq(
-    FeatureBundle(dependency = Dependency(gav =blendedMgmtRest, `type` = "war"), start = true),
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedMgmtRepo, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedUpdaterRemote, start = true),
@@ -108,49 +115,35 @@ val features : Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = orientDbCore),
     FeatureBundle(dependency = concurrentLinkedHashMapLru),
     FeatureBundle(dependency = jsr305),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start=true),
+    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
+    FeatureBundle(dependency = jacksonAnnotations),
     FeatureBundle(dependency = jacksonCore),
     FeatureBundle(dependency = jacksonBind),
     FeatureBundle(dependency = jjwt),
     FeatureBundle(dependency = blendedSecurityLogin, start = true),
     FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
   ),
-  "blended-http" -> Seq(
-    FeatureBundle(dependency = ops4jBaseLang),
-    FeatureBundle(dependency = paxSwissboxCore),
-    FeatureBundle(dependency = paxSwissboxOptJcl),
-    FeatureBundle(dependency = xbeanBundleUtils),
-    FeatureBundle(dependency = xbeanAsmShaded),
-    FeatureBundle(dependency = xbeanReflect),
-    FeatureBundle(dependency = xbeanFinder),
-    FeatureBundle(dependency = paxwebApi),
-    FeatureBundle(dependency = paxwebSpi),
-    FeatureBundle(dependency = paxwebRuntime, start = true),
-    FeatureBundle(dependency = paxwebJetty, start = true),
-    FeatureBundle(dependency = paxwebJsp),
-    FeatureBundle(dependency = paxwebExtWhiteboard, start = true),
-    FeatureBundle(dependency = paxwebExtWar, start = true)
-  ),
   "blended-jetty" -> Seq(
     FeatureBundle(dependency = activationApi),
-    FeatureBundle(dependency = geronimoServlet30Spec),
+    FeatureBundle(dependency = javaxServlet31),
     FeatureBundle(dependency = javaxMail),
     FeatureBundle(dependency = geronimoAnnotation),
     FeatureBundle(dependency = geronimoJaspic),
-    FeatureBundle(dependency = jettyServer)
+    FeatureBundle(dependency = jettyUtil),
+    FeatureBundle(dependency = jettyHttp),
+    FeatureBundle(dependency = jettyIo),
+    FeatureBundle(dependency = jettyJmx),
+    FeatureBundle(dependency = jettySecurity),
+    FeatureBundle(dependency = jettyServlet),
+    FeatureBundle(dependency = jettyServer),
+    FeatureBundle(dependency = jettyWebapp),
+    FeatureBundle(dependency = jettyDeploy),
+    FeatureBundle(dependency = jettyXml),
+    FeatureBundle(dependency = equinoxServlet),
+    FeatureBundle(dependency = felixHttpApi),
+    FeatureBundle(dependency = jettyOsgiBoot, start = true),
+    FeatureBundle(dependency = jettyHttpService, start = true)
   ),
-//  "blended-jaxrs" -> Seq(
-//    FeatureBundle(dependency = jettison),
-//    FeatureBundle(dependency = jacksonCoreAsl),
-//    FeatureBundle(dependency = jacksonMapperAsl),
-//    FeatureBundle(dependency = jacksonJaxrs),
-//    FeatureBundle(dependency = jerseyCore),
-//    FeatureBundle(dependency = jerseyJson),
-//    FeatureBundle(dependency = jerseyServer),
-//    FeatureBundle(dependency = jerseyServlet),
-//    FeatureBundle(dependency = jerseyClient),
-//    FeatureBundle(dependency = geronimoServlet30Spec)
-//  ),
   "blended-security" -> Seq(
     FeatureBundle(dependency = shiroCore),
     FeatureBundle(dependency = shiroWeb),
@@ -185,9 +178,6 @@ BlendedModel(
   blendedLauncherFeatures,
   packaging = "jar",
   description = "The prepackaged features for blended.",
-  prerequisites = Prerequisites(
-    maven = "3.3.3"
-  ),
   dependencies = featureDependencies(features),
   plugins = featuresMavenPlugins(features)
 )
