@@ -139,7 +139,10 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = jettyWebapp),
     FeatureBundle(dependency = jettyDeploy),
     FeatureBundle(dependency = jettyXml),
-    FeatureBundle(dependency = jettyOsgiBoot, start = true)
+    FeatureBundle(dependency = equinoxServlet),
+    FeatureBundle(dependency = felixHttpApi),
+    FeatureBundle(dependency = jettyOsgiBoot, start = true),
+    FeatureBundle(dependency = jettyHttpService, start = true)
   ),
   "blended-security" -> Seq(
     FeatureBundle(dependency = shiroCore),

@@ -103,6 +103,8 @@ object Deps {
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
   val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
+  val felixHttpApi = "org.apache.felix" % "org.apache.felix.http.api" % "3.0.0"
+  val felixHttpJetty = "org.apache.felix" % "org.apache.felix.http.jetty" % "3.0.0"
   val felixMetatype = "org.apache.felix" % "org.apache.felix.metatype" % "1.0.12"
 
   val geronimoAnnotation = "org.apache.geronimo.specs" % "geronimo-annotation_1.1_spec" % "1.0.1"
@@ -133,22 +135,24 @@ object Deps {
   //  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
   //  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
 
-  // "9.4.8.v20171121" 
-  // "9.4.7.v20170914"
-  // "9.3.15.v20161220" 
+
   private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % BlendedVersions.jettyVersion
-  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-osgi-${n}" % BlendedVersions.jettyVersion
+  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-${n}" % BlendedVersions.jettyVersion
   val jettyDeploy = jetty("deploy")
   val jettyHttp = jetty("http")
   val jettyIo = jetty("io")
   val jettyJmx = jetty("jmx")
-  val jettyOsgiBoot = jettyOsgi("boot")
   val jettySecurity = jetty("security")
   val jettyServlet = jetty("servlet")
   val jettyServer = jetty("server")
   val jettyUtil = jetty("util")
   val jettyWebapp = jetty("webapp")
   val jettyXml = jetty("xml")
+
+  val jettyOsgiBoot = jettyOsgi("osgi-boot")
+  val jettyHttpService = jettyOsgi("httpservice")
+  val equinoxServlet = "org.eclipse.platform" % "org.eclipse.equinox.http.servlet" % "1.4.0"
+
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
