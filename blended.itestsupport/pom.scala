@@ -26,7 +26,6 @@ BlendedModel(
     commonsExec,
     camelCore,
     camelJms,
-    camelHttp,
     slf4j,
     geronimoJms11Spec,
     commonsCompress,

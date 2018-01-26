@@ -67,10 +67,6 @@ object Deps {
 
   val camelCore = "org.apache.camel" % "camel-core" % BlendedVersions.camelVersion
   val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
-  val camelHttp = "org.apache.camel" % "camel-http" % BlendedVersions.camelVersion
-  val camelHttpCommon = "org.apache.camel" % "camel-http-common" % BlendedVersions.camelVersion
-  val camelServlet = "org.apache.camel" % "camel-servlet" % BlendedVersions.camelVersion
-  val camelServletListener = "org.apache.camel" % "camel-servletlistener" % BlendedVersions.camelVersion
   val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
 
   val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"

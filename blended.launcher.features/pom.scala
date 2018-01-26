@@ -73,10 +73,6 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = camelCore),
     FeatureBundle(dependency = camelSpring),
     FeatureBundle(dependency = camelJms),
-    FeatureBundle(dependency = camelHttp),
-    FeatureBundle(dependency = camelHttpCommon),
-    FeatureBundle(dependency = camelServlet),
-    FeatureBundle(dependency = camelServletListener),
     FeatureBundle(dependency = blendedCamelUtils),
     FeatureBundle(dependency = blendedJmsSampler, start = true)
   ),

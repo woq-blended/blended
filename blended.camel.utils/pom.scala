@@ -9,14 +9,11 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = blendedCamelUtils,
   packaging = "bundle",
-  description = """A bundle to create a more OSGI-like solution when using the Camel Servlet Component on top 
-    of an HTTP OSGI Service. Also see http://www.wayofquality.de/open%20source/camel/using-camel-servlets-within-osgi/""",
+  description = """Useful helpers for Camel""",
   dependencies = Seq(
     scalaLib % "provided",
-    geronimoServlet25Spec,
     orgOsgi,
     orgOsgiCompendium,
-    camelServlet,
     camelJms,
     slf4j,
     blendedAkka
