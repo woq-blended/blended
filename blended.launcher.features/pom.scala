@@ -30,7 +30,6 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedContainerContext, start = true),
     FeatureBundle(dependency = felixConfigAdmin, start = true),
     FeatureBundle(dependency = felixEventAdmin, start = true),
-    FeatureBundle(dependency = felixFileinstall, start = true),
     FeatureBundle(dependency = slf4jJcl),
     FeatureBundle(dependency = slf4jJul),
     FeatureBundle(dependency = slf4j),

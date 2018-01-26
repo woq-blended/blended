@@ -18,7 +18,7 @@
 
   <logger name="blended" level="DEBUG" />
 
-  <root level="DEBUG">
+  <root level="info">
     <appender-ref ref="ASYNC_FILE" />
   </root>
 </configuration>

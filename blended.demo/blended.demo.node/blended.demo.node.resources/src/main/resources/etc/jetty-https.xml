@@ -28,7 +28,7 @@
 				<Arg name="compliance">
 					<Call class="org.eclipse.jetty.http.HttpCompliance" name="valueOf">
 						<Arg>
-							<Property name="jetty.http.compliance" default="RFC7230" />
+							<SystemProperty name="jetty.http.compliance" default="RFC7230" />
 						</Arg>
 					</Call>
 				</Arg>
