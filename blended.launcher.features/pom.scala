@@ -30,6 +30,7 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedContainerContext, start = true),
     FeatureBundle(dependency = felixConfigAdmin, start = true),
     FeatureBundle(dependency = felixEventAdmin, start = true),
+    FeatureBundle(dependency = felixFileinstall, start = true),
     FeatureBundle(dependency = slf4jJcl),
     FeatureBundle(dependency = slf4jJul),
     FeatureBundle(dependency = slf4j),
@@ -59,10 +60,7 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = geronimoAnnotation),
     FeatureBundle(dependency = geronimoJms11Spec),
     FeatureBundle(dependency = geronimoJ2eeMgmtSpec),
-    FeatureBundle(dependency = servicemixJaxbApi),
     FeatureBundle(dependency = servicemixStaxApi),
-    FeatureBundle(dependency = servicemixJaxbRuntime),
-    FeatureBundle(dependency = servicemixJaxbImpl),
     FeatureBundle(dependency = xbeanSpring),
     FeatureBundle(dependency = activeMqOsgi),
     FeatureBundle(dependency = blendedActivemqBrokerstarter),
@@ -145,6 +143,7 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedSecurity, start = true)
   ),
   "blended-spray" -> Seq(
+    FeatureBundle(dependency = javaxServlet31),
     FeatureBundle(dependency = blendedSprayApi),
     FeatureBundle(dependency = blendedSpray),
     FeatureBundle(dependency = blendedSecuritySpray)
