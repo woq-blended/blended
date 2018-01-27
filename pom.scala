@@ -58,6 +58,7 @@ BlendedModel(
         "blended.prickle",
         "blended.spray.api",
         "blended.spray",
+        "blended.scep",
         "blended.security",
         "blended.security.boot",
         "blended.security.login",

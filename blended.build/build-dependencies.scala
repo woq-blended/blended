@@ -198,6 +198,8 @@ object Deps {
   val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
+  val scep = "com.google.code.jscep" % "jscep" % "2.5.0"
+
   val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
   val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
   val servicemixJaxbRuntime = "org.jvnet.jaxb2_commons" % "jaxb2-basics-runtime" % "0.6.4"
@@ -300,6 +302,7 @@ val blendedSamplesReactor = BlendedModule("blended.samples.reactor")
 val blendedSamplesCamel = BlendedModule("blended.samples.camel")
 val blendedSamplesJms = BlendedModule("blended.samples.jms")
 val blendedSamplesSprayHelloworld = BlendedModule("blended.samples.spray.helloworld")
+val blendedScep = BlendedModule("blended.scep")
 val blendedSecurity = BlendedModule("blended.security")
 val blendedSecurityBoot = BlendedModule("blended.security.boot")
 val blendedSecurityLogin = BlendedModule("blended.security.login")
