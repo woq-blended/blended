@@ -12,6 +12,8 @@ nohup.out
 3rdparty
 package-lock.json
 
+blended.sslcontext/notes.txt
+
 # Macosx
 .DS_Store
 
