@@ -65,6 +65,9 @@ object Deps {
   val asmAll = "org.ow2.asm" % "asm-all" % "4.1"
   val bndLib = "biz.aQute.bnd" % "biz.aQute.bndlib" % "3.2.0"
 
+  val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.59"
+  val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.59"
+
   val camelCore = "org.apache.camel" % "camel-core" % BlendedVersions.camelVersion
   val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
   val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
@@ -121,17 +124,6 @@ object Deps {
   val jacksonAnnotations = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.3"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
-  //  val jacksonMapperAsl = "org.codehaus.jackson" % "jackson-mapper-asl" % "1.9.12"
-  //  val jacksonJaxrs = "org.codehaus.jackson" % "jackson-jaxrs" % "1.9.12"
-  //  val jettison = "org.codehaus.jettison" % "jettison" % "1.3.4"
-  //
-  //  val jerseyClient = "com.sun.jersey" % "jersey-client" % "1.18.1"
-  //  val jerseyCore = "com.sun.jersey" % "jersey-core" % "1.18.1"
-  //  val jerseyJson = "com.sun.jersey" % "jersey-json" % "1.18.1"
-  //  val jerseyServer = "com.sun.jersey" % "jersey-server" % "1.18.1"
-  //  val jerseyServlet = "com.sun.jersey" % "jersey-servlet" % "1.18.1"
-
-
   private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % BlendedVersions.jettyVersion
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-${n}" % BlendedVersions.jettyVersion
   val jettyDeploy = jetty("deploy")
@@ -165,6 +157,7 @@ object Deps {
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
+  val log4s = "org.log4s" %% "log4s" % "1.4.0"
 
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
@@ -310,6 +303,7 @@ val blendedSecurityLoginRest = BlendedModule("blended.security.login.rest")
 val blendedSecuritySpray = BlendedModule("blended.security.spray")
 val blendedSpray = BlendedModule("blended.spray")
 val blendedSprayApi = BlendedModule("blended.spray.api")
+val blendedSslContext = BlendedModule("blended.sslcontext")
 val blendedTestSupport = BlendedModule("blended.testsupport")
 val blendedUpdater = BlendedModule("blended.updater")
 val blendedUpdaterConfig = BlendedModule("blended.updater.config")

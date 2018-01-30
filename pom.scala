@@ -64,6 +64,7 @@ BlendedModel(
         "blended.security.login",
         "blended.security.login.rest",
         "blended.security.spray",
+        "blended.sslcontext",
         "blended.hawtio.login",
         "blended.persistence",
         "blended.persistence.orient",

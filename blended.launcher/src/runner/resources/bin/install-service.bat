@@ -34,6 +34,7 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --DisplayName="%SERVICE_NAME%" ^
   --Environment=%SERVICE_ENV% ^
   --Jvm=%JVM% ^
+  --Startup=auto ^
   --StartMode=jvm ^
   --StopMode=jvm ^
   --StartClass=%CLASS% ^

@@ -79,9 +79,7 @@ class ScepEnroller(cfg: ScepConfig) {
 
     log.info("Enrolling entity")
 
-    //val entityKeyPair = generateKeyPair(2048)
     val csrBuilder = new JcaPKCS10CertificationRequestBuilder(cfg.subject, requesterKeys.getPublic())
-
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString("password"))
 
     // TODO addextensions ?
@@ -91,8 +89,6 @@ class ScepEnroller(cfg: ScepConfig) {
     val csr = csrBuilder.build(csrSigner)
 
     val response = client.enrol(requesterCert, requesterKeys.getPrivate(), csr)
-
-    var pending = response.isPending()
 
     while(response.isPending()) {
       log.info("Waiting for PKI response")
@@ -112,5 +108,4 @@ class ScepEnroller(cfg: ScepConfig) {
     val failed = response.isFailure()
     log.info(s"$failed")
   }
-
 }

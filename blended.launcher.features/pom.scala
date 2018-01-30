@@ -142,6 +142,11 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = shiroWeb),
     FeatureBundle(dependency = blendedSecurity, start = true)
   ),
+  "blended-ssl" -> Seq(
+    FeatureBundle(dependency = bouncyCastlePkix),
+    FeatureBundle(dependency = bouncyCastleBcprov),
+    FeatureBundle(dependency = blendedSslContext, start = true)
+  ),
   "blended-spray" -> Seq(
     FeatureBundle(dependency = javaxServlet31),
     FeatureBundle(dependency = blendedSprayApi),

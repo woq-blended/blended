@@ -23,8 +23,8 @@ object ScepTestClient {
         - O = Schwarz IT GmbH & Co. KG
         - C aus hostname
 
-        CN=de4711.lnxprx01.4711.de.kaufland,SAN=
-        cachea.4711.de.kaufland
+        CN=de4711.lnxprx01.4711.de.kaufland,
+        SAN=cachea.4711.de.kaufland
       */
       requester = new X500Principal("CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE"),
       subject = new X500Principal("CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE")
