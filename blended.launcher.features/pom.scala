@@ -175,7 +175,8 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedSamplesCamel, start = true),
     FeatureBundle(dependency = blendedSamplesJms, start = true),
-    FeatureBundle(dependency = blendedFile)
+    FeatureBundle(dependency = blendedFile),
+    FeatureBundle(dependency = blendedAkkaHttpSampleHelloworld, start = true)
   )
 )
 
