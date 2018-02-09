@@ -54,4 +54,6 @@ class ActorSystemCapsule(
 
   log.debug("Constructed: {}", this)
 
+  override def toString(): String = getClass().getSimpleName() + "(cCtx=" + cCtxt + ",bCtxt=" + bCtxt + ")"
+
 }
