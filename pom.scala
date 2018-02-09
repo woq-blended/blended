@@ -48,6 +48,7 @@ BlendedModel(
         "blended.testsupport",
         "blended.domino",
         "blended.akka",
+        "blended.akka.http",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",
