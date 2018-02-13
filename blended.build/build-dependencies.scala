@@ -49,6 +49,7 @@ object Deps {
   val akkaCamel = akka("camel")
   val akkaHttp = akka_Http("http")
   val akkaHttpCore = akka_Http("http-core")
+  val akkaHttpTestkit = akka_Http("http-testkit")
   val akkaParsing = akka_Http("parsing")
   val akkaOsgi = akka("osgi")
   val akkaStream = akka("stream")
@@ -101,6 +102,7 @@ object Deps {
   val eclipseOsgi = "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50"
 
   val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
+  val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
   val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
