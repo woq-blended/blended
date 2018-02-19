@@ -60,6 +60,7 @@ BlendedModel(
         "blended.spray",
         "blended.scep",
         "blended.security",
+        "blended.security.cert",
         "blended.security.boot",
         "blended.security.login",
         "blended.security.login.rest",

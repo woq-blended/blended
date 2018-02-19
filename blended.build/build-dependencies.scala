@@ -298,6 +298,7 @@ val blendedSamplesSprayHelloworld = BlendedModule("blended.samples.spray.hellowo
 val blendedScep = BlendedModule("blended.scep")
 val blendedSecurity = BlendedModule("blended.security")
 val blendedSecurityBoot = BlendedModule("blended.security.boot")
+val blendedSecurityCert = BlendedModule("blended.security.cert")
 val blendedSecurityLogin = BlendedModule("blended.security.login")
 val blendedSecurityLoginRest = BlendedModule("blended.security.login.rest")
 val blendedSecuritySpray = BlendedModule("blended.security.spray")
