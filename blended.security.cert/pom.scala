@@ -19,7 +19,8 @@ BlendedModel(
     log4s,
     logbackCore % "test",
     logbackClassic % "test",
-    scalaTest % "test"
+    scalaTest % "test",
+    blendedTestSupport % "test"
   ),
   plugins = Seq(
     Plugin(

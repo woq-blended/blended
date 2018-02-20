@@ -1,11 +1,12 @@
 package blended.security.cert.internal
 
 import java.math.BigInteger
+import java.security.cert.X509Certificate
 import java.security.{KeyPair, KeyPairGenerator}
 import java.util.Calendar
 import javax.security.auth.x500.X500Principal
 
-import blended.security.cert.{CertificateProvider, SelfSignedConfig, ServerCertificate}
+import blended.security.cert.{CertificateProvider, ServerCertificate}
 import org.bouncycastle.asn1.x509.{KeyUsage, X509Extension}
 import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
@@ -20,7 +21,7 @@ class SelfSignedCertificateProvider(
     kpg.genKeyPair()
   }
 
-  override def serverCertificate(): ServerCertificate = {
+  override def refreshCertificate(existing: X509Certificate): ServerCertificate = {
 
     val requesterKeypair = generateKeyPair()
 
@@ -46,6 +47,6 @@ class SelfSignedCertificateProvider(
     val certHolder = certBuilder.build(certSigner)
 
     val converter = new JcaX509CertificateConverter()
-    ServerCertificate(requesterKeypair, converter.getCertificate(certHolder))
+    ServerCertificate(requesterKeypair, Array(converter.getCertificate(certHolder)))
   }
 }

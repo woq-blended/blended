@@ -1,15 +1,14 @@
 package blended.security.cert
 
 import java.security.KeyPair
-import java.security.cert.X509Certificate
+import java.security.cert.{Certificate, X509Certificate}
 
 case class ServerCertificate(
   keyPair : KeyPair,
-  certificate : X509Certificate
+  chain : Array[Certificate]
 )
 
 trait CertificateProvider {
 
-  def serverCertificate() : ServerCertificate
-
+  def refreshCertificate(existing: X509Certificate) : ServerCertificate
 }
