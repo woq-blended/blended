@@ -34,6 +34,8 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
             log.info("Successfully obtained server certificate for SSLContexts.")
             val sslCtxtProvider = new SslContextProvider(ks, ctrlCfg.keyPass)
 
+            SSLContext.setDefault(sslCtxtProvider.serverContext)
+
             sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
             sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
           case Failure(e) =>
