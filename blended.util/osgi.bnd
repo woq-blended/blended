@@ -6,7 +6,8 @@ Bundle-SymbolicName:\
 
 Export-Package: \
   ${bundle.namespace}, \
-  ${bundle.namespace}.protocol
+  ${bundle.namespace}.protocol, \
+  ${bundle.namespace}.config
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
