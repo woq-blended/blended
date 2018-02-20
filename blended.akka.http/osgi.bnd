@@ -14,5 +14,8 @@ Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
   *
 
+Conditional-Package: \
+  blended.util.config
+
 Private-Package: \
   ${bundle.namespace}.internal
