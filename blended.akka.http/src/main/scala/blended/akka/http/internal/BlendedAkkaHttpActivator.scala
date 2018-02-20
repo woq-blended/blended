@@ -1,12 +1,9 @@
 package blended.akka.http.internal
 
+import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
-import akka.http.scaladsl.Http
-import blended.akka.http.HttpContext
-import blended.akka.http.SimpleHttpContext
-import domino.service_watching.ServiceWatcherContext
 
 class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching {
 
