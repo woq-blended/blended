@@ -45,7 +45,9 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
 
       log.debug("Listening for SSLContext registrations of type=server...")
       whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
+        
         log.info(s"Detected an server SSLContext. Starting HTTPS server at ${httpsHost}:${httpsPort}")
+        
         val https = ConnectionContext.https(sslContext)
         val httpsBindingFuture = Http().bindAndHandle(
           handler = dynamicRoutes.dynamicRoute,

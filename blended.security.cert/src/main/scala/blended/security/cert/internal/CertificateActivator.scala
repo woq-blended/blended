@@ -7,6 +7,7 @@ import blended.security.cert.CertificateProvider
 import domino.DominoActivator
 
 import scala.util.{Failure, Success}
+import blended.util.config.Implicits._
 
 class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
@@ -23,7 +24,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
         "provider" -> "default"
       ))
 
-      val certProviderName = if (cfg.hasPath("provider")) Some(cfg.getString("provider")) else "default"
+      val certProviderName = cfg.getString("provider", "default")
 
       whenAdvancedServicePresent[CertificateProvider](s"(provider=$certProviderName)"){ p =>
         val ctrlCfg = CertControllerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid))
