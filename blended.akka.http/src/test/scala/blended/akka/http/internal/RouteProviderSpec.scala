@@ -7,6 +7,7 @@ import org.scalatest.FreeSpec
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.akka.http.HttpContext
 import blended.akka.http.SimpleHttpContext
+import blended.testsupport.pojosr.PojoSrTestHelper
 import domino.DominoActivator
 
 class RouteProviderSpec
