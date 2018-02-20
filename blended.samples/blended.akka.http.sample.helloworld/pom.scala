@@ -19,9 +19,8 @@ BlendedModel(
     Deps.orgOsgiCompendium,
     Deps.slf4j,
     scalaTest % "test",
-    sprayTestkit % "test",
-    mockitoAll % "test",
-    slf4jLog4j12 % "test"
+    slf4jLog4j12 % "test",
+    Deps.akkaHttpTestkit % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
