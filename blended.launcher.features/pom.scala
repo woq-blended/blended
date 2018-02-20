@@ -151,6 +151,12 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedSpray),
     FeatureBundle(dependency = blendedSecuritySpray)
   ),
+  "blended-akka-http" -> Seq(
+    FeatureBundle(dependency = blendedAkkaHttp, start = true),
+    FeatureBundle(dependency = Deps.akkaHttp),
+    FeatureBundle(dependency = Deps.akkaHttpCore),
+    FeatureBundle(dependency = Deps.akkaParsing)
+  ),
   "blended-spring" -> Seq(
     FeatureBundle(dependency = aopAlliance),
     FeatureBundle(dependency = springCore),
@@ -167,7 +173,8 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
     FeatureBundle(dependency = blendedSamplesCamel, start = true),
     FeatureBundle(dependency = blendedSamplesJms, start = true),
-    FeatureBundle(dependency = blendedFile)
+    FeatureBundle(dependency = blendedFile),
+    FeatureBundle(dependency = blendedAkkaHttpSampleHelloworld, start = true)
   )
 )
 

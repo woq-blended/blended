@@ -11,15 +11,16 @@ BlendedModel(
   packaging = "jar",
   description = "Some test helper classes.",
   dependencies = Seq(
-    scalaLib % "provided",
+    Deps.scalaLib % "provided",
+    Deps.felixConnect,
     blendedUtil,
-    junit,
-    camelCore,
+    Deps.junit,
+    Deps.camelCore,
     slf4j,
-    slf4jLog4j12 % "test",
     akkaTestkit,
     scalaTest,
-    akkaCamel
+    akkaCamel,
+    slf4jLog4j12 % "test"
   ),
   plugins = Seq(
     sbtCompilerPlugin,

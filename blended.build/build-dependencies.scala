@@ -43,12 +43,18 @@ object Deps {
   val activeMqOsgi = "org.apache.activemq" % "activemq-osgi" % BlendedVersions.activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
 
-  val akkaActor = "com.typesafe.akka" %% "akka-actor" % BlendedVersions.akkaVersion
-  val akkaCamel = "com.typesafe.akka" %% "akka-camel" % BlendedVersions.akkaVersion
-  val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % BlendedVersions.akkaVersion
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % BlendedVersions.akkaVersion
-  val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % BlendedVersions.akkaVersion
-  val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % BlendedVersions.akkaVersion
+  def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaVersion
+  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % "10.0.11"
+  val akkaActor = akka("actor")
+  val akkaCamel = akka("camel")
+  val akkaHttp = akka_Http("http")
+  val akkaHttpCore = akka_Http("http-core")
+  val akkaHttpTestkit = akka_Http("http-testkit")
+  val akkaParsing = akka_Http("parsing")
+  val akkaOsgi = akka("osgi")
+  val akkaStream = akka("stream")
+  val akkaTestkit = akka("testkit")
+  val akkaSlf4j = akka("slf4j")
 
   val aopAlliance = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.aopalliance" % "1.0_6"
 
@@ -96,6 +102,7 @@ object Deps {
   val eclipseOsgi = "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50"
 
   val felixConfigAdmin = "org.apache.felix" % "org.apache.felix.configadmin" % "1.8.6"
+  val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
   val felixEventAdmin = "org.apache.felix" % "org.apache.felix.eventadmin" % "1.3.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
@@ -257,6 +264,8 @@ val blendedActivemqBrokerstarter = BlendedModule("blended.activemq.brokerstarter
 val blendedActivemqClient = BlendedModule("blended.activemq.client")
 val blendedActivemqDefaultbroker = BlendedModule("blended.activemq.defaultbroker")
 val blendedAkka = BlendedModule("blended.akka")
+val blendedAkkaHttp = BlendedModule("blended.akka.http")
+val blendedAkkaHttpSampleHelloworld = BlendedModule("blended.akka.http.sample.helloworld")
 val blendedCamelUtils = BlendedModule("blended.camel.utils")
 val blendedContainerContext = BlendedModule("blended.container.context")
 val blendedContainerRegistry = BlendedModule("blended.container.registry")
@@ -312,4 +321,3 @@ val blendedUpdaterMavenPlugin = BlendedModule("blended-updater-maven-plugin")
 val blendedUpdaterRemote = BlendedModule("blended.updater.remote")
 val blendedUpdaterTools = BlendedModule("blended.updater.tools")
 val blendedUtil = BlendedModule("blended.util")
-
