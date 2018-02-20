@@ -7,22 +7,32 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSslContext,
+  gav = blendedJettyBoot,
   packaging = "bundle",
-  description = "Bundle to provide simple Server Certificate Management.",
+  description = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services.",
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
-    bouncyCastleBcprov,
-    bouncyCastlePkix,
     blendedDomino,
     log4s,
+    jettyOsgiBoot,
     logbackCore % "test",
     logbackClassic % "test",
-    scalaTest % "test"
+    scalaTest % "test",
+    blendedTestSupport % "test"
   ),
   plugins = Seq(
-    mavenBundlePlugin,
+    Plugin(
+      mavenBundlePlugin.gav,
+      extensions = true,
+      inherited = true,
+      configuration = Config(
+        instructions = new Config(Seq(
+          "_include" -> Option("osgi.bnd"),
+          "Embed-Dependency" -> Option(s"*;artifactId=${jettyOsgiBoot.artifactId}")
+        ))
+      )
+    ),
     sbtCompilerPlugin,
     scalatestMavenPlugin
   )
