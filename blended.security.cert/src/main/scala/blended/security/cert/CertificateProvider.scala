@@ -2,6 +2,7 @@ package blended.security.cert
 
 import java.security.KeyPair
 import java.security.cert.{Certificate, X509Certificate}
+import scala.util.Try
 
 case class ServerCertificate(
   keyPair : KeyPair,
@@ -10,5 +11,5 @@ case class ServerCertificate(
 
 trait CertificateProvider {
 
-  def refreshCertificate(existing: Option[X509Certificate]) : ServerCertificate
+  def refreshCertificate(existing: Option[X509Certificate]) : Try[ServerCertificate]
 }

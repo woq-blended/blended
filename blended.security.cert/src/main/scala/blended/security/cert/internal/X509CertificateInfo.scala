@@ -4,12 +4,32 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.security.cert.X509Certificate
 
+/**
+ * Information about a X509 certificate.
+ */
+case class X509CertificateInfo(
+    cn: String,
+    issuer: String,
+    notBefore: Date,
+    notAfter: Date,
+    serial: BigInt,
+    sigAlg: String) {
+
+  override def toString: String = getClass().getSimpleName() +
+    "(cn=" + cn +
+    ",issuer=" + issuer +
+    ",notBefore=" + X509CertificateInfo.simpleDateFormat.format(notBefore) +
+    ",notAfter=" + X509CertificateInfo.simpleDateFormat.format(notAfter) +
+    ",serial=" + serial +
+    ",sigAlg=" + sigAlg +
+    ")"
+}
+
 case object X509CertificateInfo {
 
-  protected val sdf = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS")
+  val simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS")
 
-  def apply(cert: X509Certificate) : X509CertificateInfo = {
-
+  def apply(cert: X509Certificate): X509CertificateInfo = {
     X509CertificateInfo(
       cn = cert.getSubjectDN().toString(),
       issuer = cert.getIssuerDN().toString(),
@@ -21,19 +41,3 @@ case object X509CertificateInfo {
   }
 }
 
-case class X509CertificateInfo(
-  cn: String,
-  issuer: String,
-  notBefore : Date,
-  notAfter: Date,
-  serial: BigInt,
-  sigAlg : String
-) {
-
-  import X509CertificateInfo.sdf
-
-  override def toString: String = {
-    s"${getClass().getSimpleName()}(cn=$cn, issuer=$issuer, notBefore=${sdf.format(notBefore)}, " +
-    s"notAfter=${sdf.format(notAfter)}, serial=$serial, sigAlg=$sigAlg)"
-  }
-}
