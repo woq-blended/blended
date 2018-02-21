@@ -1,34 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
 
-<Configure id="sslContextFactory" class="org.eclipse.jetty.util.ssl.SslContextFactory">
-  <Set name="KeyStorePath">
-    <SystemProperty name="jetty.sslContext.keyStorePath" default="etc/keystore"/>
-  </Set>
-  <Set name="KeyStorePassword">
-    <SystemProperty name="jetty.sslContext.keyStorePassword" default="changeit"/>
-  </Set>
-  <Set name="KeyStoreType">
-    <SystemProperty name="jetty.sslContext.keyStoreType" default="JKS"/>
-  </Set>
-  <Set name="KeyStoreProvider">
-    <SystemProperty name="jetty.sslContext.keyStoreProvider"/>
-  </Set>
-  <Set name="KeyManagerPassword">
-    <SystemProperty name="jetty.sslContext.keyManagerPassword" default="changeit"/>
-  </Set>
-  <Set name="TrustStorePath">
-    <SystemProperty name="jetty.sslContext.trustStorePath" default="etc/keystore"/>
-  </Set>
-  <Set name="TrustStorePassword">
-    <SystemProperty name="jetty.sslContext.trustStorePassword" default="changeit"/>
-  </Set>
-  <Set name="TrustStoreType">
-    <SystemProperty name="jetty.sslContext.trustStoreType"/>
-  </Set>
-  <Set name="TrustStoreProvider">
-    <SystemProperty name="jetty.sslContext.trustStoreProvider"/>
-  </Set>
+<Configure id="sslContextFactory" class="blended.jetty.boot.DelegatingSslContextFactory">
   <Set name="EndpointIdentificationAlgorithm"></Set>
   <Set name="NeedClientAuth">
     <SystemProperty name="jetty.sslContext.needClientAuth" default="false"/>
