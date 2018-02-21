@@ -7,7 +7,7 @@ import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 
 object JettyActivator {
 
-  var sslContext : Option[SSLContext] = None
+  var sslContext: Option[SSLContext] = None
 
 }
 
@@ -19,6 +19,9 @@ class JettyActivator extends DominoActivator {
     whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
 
       JettyActivator.sslContext = Some(sslCtxt)
+      onStop {
+        JettyActivator.sslContext = None
+      }
 
       val jettyActivator = new JettyBootstrapActivator()
 
@@ -26,7 +29,6 @@ class JettyActivator extends DominoActivator {
 
       onStop {
         jettyActivator.stop(bundleContext)
-        JettyActivator.sslContext = None
       }
     }
   }
