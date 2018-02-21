@@ -26,6 +26,7 @@ class JettyActivator extends DominoActivator {
 
       onStop {
         jettyActivator.stop(bundleContext)
+        JettyActivator.sslContext = None
       }
     }
   }
