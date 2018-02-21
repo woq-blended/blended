@@ -1,0 +1,13 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}
+
+Export-Package: \
+  ${bundle.namespace};version="${project.version}"
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
+
