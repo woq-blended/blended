@@ -1,4 +1,4 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
 import java.math.BigInteger
 import java.security.cert.X509Certificate
@@ -6,7 +6,7 @@ import java.security.{ KeyPair, KeyPairGenerator }
 import java.util.Calendar
 import javax.security.auth.x500.X500Principal
 
-import blended.security.cert.{ CertificateProvider, ServerCertificate }
+import blended.security.ssl.{ CertificateProvider, ServerCertificate }
 import org.bouncycastle.asn1.x509.{ KeyUsage, X509Extension }
 import org.bouncycastle.cert.jcajce.{ JcaX509CertificateConverter, JcaX509v3CertificateBuilder }
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder

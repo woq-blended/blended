@@ -1,10 +1,10 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
 import java.io.{ File, FileInputStream, FileOutputStream }
 import java.security.KeyStore
 import java.security.cert.X509Certificate
 
-import blended.security.cert.CertificateProvider
+import blended.security.ssl.CertificateProvider
 import org.log4s._
 
 import scala.util.{ Success, Try }

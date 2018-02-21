@@ -1,4 +1,4 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
 import com.typesafe.config.Config
 import blended.util.config.Implicits._

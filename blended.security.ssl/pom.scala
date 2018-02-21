@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityCert,
+  gav = blendedSecuritySsl,
   packaging = "bundle",
   description = "Bundle to provide simple Server Certificate Management.",
   dependencies = Seq(

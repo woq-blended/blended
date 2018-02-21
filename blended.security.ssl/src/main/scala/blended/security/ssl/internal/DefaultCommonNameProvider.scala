@@ -1,6 +1,6 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
-import blended.security.cert.CommonNameProvider
+import blended.security.ssl.CommonNameProvider
 
 /**
  * Implementation of a [[CommonNameProvider]] that provides a fixed common name.

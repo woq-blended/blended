@@ -1,7 +1,9 @@
-package blended.security.cert
+package blended.security.ssl
 
 import java.security.KeyPair
-import java.security.cert.{Certificate, X509Certificate}
+import java.security.cert.Certificate
+import java.security.cert.X509Certificate
+
 import scala.util.Try
 
 case class ServerCertificate(

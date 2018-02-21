@@ -1,8 +1,8 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
+import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.security.cert.X509Certificate
 
 /**
  * Information about a X509 certificate.

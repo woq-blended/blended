@@ -1,4 +1,4 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
 import java.io.FileInputStream
 import java.security.KeyStore

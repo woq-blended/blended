@@ -1,4 +1,4 @@
-package blended.security.cert
+package blended.security.ssl
 
 trait CommonNameProvider {
   

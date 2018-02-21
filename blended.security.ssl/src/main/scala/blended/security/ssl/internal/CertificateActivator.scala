@@ -1,14 +1,14 @@
-package blended.security.cert.internal
+package blended.security.ssl.internal
 
 import javax.net.ssl.SSLContext
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.cert.CertificateProvider
+import blended.security.ssl.CertificateProvider
 import domino.DominoActivator
 
 import scala.util.{ Failure, Success }
 import blended.util.config.Implicits._
-import blended.security.cert.CommonNameProvider
+import blended.security.ssl.CommonNameProvider
 
 class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
