@@ -5,16 +5,22 @@ import javax.net.ssl.SSLContext
 import domino.DominoActivator
 import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 
+object JettyActivator {
+
+  var sslContext : Option[SSLContext] = None
+
+}
+
 class JettyActivator extends DominoActivator {
 
   private[this] val log = org.log4s.getLogger
 
   whenBundleActive {
     whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
-      val jettyActivator = new JettyBootstrapActivator()
 
-      log.debug("mine :" + this.getClass().getClassLoader())
-      log.debug("jetty:" + classOf[JettyBootstrapActivator].getClassLoader)
+      JettyActivator.sslContext = Some(sslCtxt)
+
+      val jettyActivator = new JettyBootstrapActivator()
 
       jettyActivator.start(bundleContext)
 
