@@ -21,15 +21,18 @@ class SelfSignedCertificateProvider(
     kpg.genKeyPair()
   }
 
-  override def refreshCertificate(existing: X509Certificate): ServerCertificate = {
+  override def refreshCertificate(existing: Option[X509Certificate]): ServerCertificate = {
 
     val requesterKeypair = generateKeyPair()
 
     val principal = new X500Principal(cfg.subject)
     val requesterIssuer = principal
-    val serial = BigInteger.ONE
+    val serial = existing match {
+      case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
+      case None => BigInteger.ONE
+    }
     val calendar = Calendar.getInstance()
-    calendar.add(Calendar.DATE, -1) // yesterday
+    calendar.add(Calendar.DATE, -1)
     val notBefore = calendar.getTime()
     calendar.add(Calendar.DATE, 1 + cfg.validDays)
     val notAfter = calendar.getTime()

@@ -1,12 +1,20 @@
 package blended.security.cert.internal
 
 import java.io.File
+import java.math.BigInteger
+import java.security.cert.X509Certificate
+import java.util.Calendar
 
 import blended.testsupport.BlendedTestSupport.projectTestOutput
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.FreeSpec
 
-class CertificateControllerSpec extends FreeSpec
-  with Matchers {
+import scala.util.{Failure, Success}
+
+class CertificateControllerSpec extends FreeSpec {
+
+  private[this] val log = org.log4s.getLogger
+  private[this] val subject = "CN=test, O=blended, C=Germany"
+  private[this] val validDays : Int = 10
 
   def ctrlConfig(keyStore: String) : CertControllerConfig = CertControllerConfig(
     alias = "default",
@@ -17,7 +25,7 @@ class CertificateControllerSpec extends FreeSpec
   )
 
   def selfSignedConfig = SelfSignedConfig(
-    "CN=test,O=blended,C=Germany", 2048, "SHA256withRSA", 10
+    subject, 2048, "SHA256withRSA", validDays
   )
 
   def defaultProvider = new SelfSignedCertificateProvider(selfSignedConfig)
@@ -32,8 +40,22 @@ class CertificateControllerSpec extends FreeSpec
 
       val ctrl = new CertificateController(cfg, defaultProvider)
 
-      ctrl.checkCertificate().isSuccess should be (true)
+      ctrl.checkCertificate() match {
+        case Success(ks) =>
+          val cert = ks.getCertificate("default").asInstanceOf[X509Certificate]
+          val info = X509CertificateInfo(cert)
 
+          log.info(s"$info")
+
+          assert(info.serial.bigInteger === BigInteger.ONE)
+          assert(info.cn.equals(subject))
+          assert(info.issuer.equals(subject))
+
+          assert(info.notBefore.getTime() < System.currentTimeMillis())
+          assert(info.notAfter.getTime() >= info.notBefore.getTime() + validDays * 24l * 60 * 60 * 1000)
+
+        case Failure(e) => fail(e.getMessage())
+      }
     }
 
     "provide the current certificate if it is still vaild" in {

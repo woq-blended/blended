@@ -10,5 +10,5 @@ case class ServerCertificate(
 
 trait CertificateProvider {
 
-  def refreshCertificate(existing: X509Certificate) : ServerCertificate
+  def refreshCertificate(existing: Option[X509Certificate]) : ServerCertificate
 }

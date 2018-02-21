@@ -35,7 +35,7 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
   private[this] def updateKeystore(ks: KeyStore) : Try[KeyStore] = {
     log.info("Aquiring new certificate from certificate provider ...")
-    val existing = ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate]
+    val existing = Option(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate])
     val cert = provider.refreshCertificate(existing)
     log.info("Successfully obtained certificate from certificate provider.")
     ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain)
