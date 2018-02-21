@@ -13,8 +13,6 @@ object JettyActivator {
 
 class JettyActivator extends DominoActivator {
 
-  private[this] val log = org.log4s.getLogger
-
   whenBundleActive {
     whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
 

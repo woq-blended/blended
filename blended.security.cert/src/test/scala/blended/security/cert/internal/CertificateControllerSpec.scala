@@ -3,7 +3,7 @@ package blended.security.cert.internal
 import java.io.File
 import java.math.BigInteger
 import java.security.cert.X509Certificate
-import java.util.Calendar
+import scala.concurrent.duration._
 
 import blended.testsupport.BlendedTestSupport.projectTestOutput
 import org.scalatest.FreeSpec
@@ -16,11 +16,14 @@ class CertificateControllerSpec extends FreeSpec {
   private[this] val subject = "CN=test, O=blended, C=Germany"
   private[this] val validDays : Int = 10
 
+  private[this] val millisPerDay = 1.day.toMillis
+
   def ctrlConfig(keyStore: String) : CertControllerConfig = CertControllerConfig(
     alias = "default",
     keyStore = new File(projectTestOutput, keyStore).getAbsolutePath,
     storePass = "andreas".toCharArray,
     keyPass = "123456".toCharArray,
+    minValidDays = 5,
     overwriteForFailure = false
   )
 
@@ -52,14 +55,37 @@ class CertificateControllerSpec extends FreeSpec {
           assert(info.issuer.equals(subject))
 
           assert(info.notBefore.getTime() < System.currentTimeMillis())
-          assert(info.notAfter.getTime() >= info.notBefore.getTime() + validDays * 24l * 60 * 60 * 1000)
+          assert(info.notAfter.getTime() >= info.notBefore.getTime() + validDays * millisPerDay)
 
         case Failure(e) => fail(e.getMessage())
       }
     }
 
     "provide the current certificate if it is still vaild" in {
-      pending
+
+      val cfg = ctrlConfig("validKeystore")
+      val keystore = new File(cfg.keyStore)
+      if (keystore.exists()) keystore.delete()
+
+      val ctrl = new CertificateController(cfg, defaultProvider)
+      ctrl.checkCertificate()
+
+      ctrl.checkCertificate() match {
+        case Success(ks) =>
+          val cert = ks.getCertificate("default").asInstanceOf[X509Certificate]
+          val info = X509CertificateInfo(cert)
+
+          log.info(s"$info")
+
+          assert(info.serial.bigInteger === BigInteger.ONE)
+          assert(info.cn.equals(subject))
+          assert(info.issuer.equals(subject))
+
+          assert(info.notBefore.getTime() < System.currentTimeMillis())
+          assert(info.notAfter.getTime() >= info.notBefore.getTime() + validDays * millisPerDay)
+
+        case Failure(e) => fail(e.getMessage())
+      }
     }
 
     "refresh the current certificate if it is valid for less than x" in {

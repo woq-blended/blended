@@ -8,12 +8,14 @@ import blended.security.cert.CertificateProvider
 import org.log4s._
 
 import scala.util.{Success, Try}
+import scala.concurrent.duration._
 
 class CertificateController(cfg: CertControllerConfig, provider: CertificateProvider) {
 
   private[this] val log = getLogger
-
   private[this] lazy val keyStore = initKeyStore().get
+
+  private[this] val millisPerDay : Long = 1.day.toMillis
 
   def checkCertificate() : Try[KeyStore] = {
     log.info(s"Checking Server Certificate for key store [${cfg.keyStore}]")
@@ -26,7 +28,17 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
     if (ks.containsAlias(cfg.alias)) {
       log.info(s"Checking existing certificate with alias [${cfg.alias}]")
-      throw new Exception("not implemented")
+      val certInfo = X509CertificateInfo(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate])
+
+      val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
+
+      if (remaining <= cfg.minValidDays * millisPerDay) {
+        log.info(s"Certificate [${cfg.alias}] is about to expire in [${remaining % millisPerDay}] days...refreshing certificate.")
+        throw new Exception("not implemented")
+      } else {
+        log.info(s"Server certificate [${cfg.alias}] is still vaild.")
+        Success(ks)
+      }
     } else {
       log.info(s"Certificate with alias [${cfg.alias}] does not yet exist")
       updateKeystore(ks)
