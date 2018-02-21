@@ -1,6 +1,6 @@
 <configuration scan="true" scanPeriod="15 seconds">
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>log/blended.log</file>
+    <file>${blended.home}/log/blended.log</file>
     <encoder>
       <pattern>%-5level | %d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-30.30c{30} | %msg%n</pattern>
     </encoder>
