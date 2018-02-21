@@ -63,7 +63,7 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
         log.error(e)("Could not update keystore")
         Failure(e)
       case Success(cert) =>
-        log.info("Successfully obtained certificate from certificate provider.")
+        log.info(s"Successfully obtained certificate from certificate provider [${provider}]")
         ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain)
 
         val fos = new FileOutputStream(cfg.keyStore)
