@@ -34,6 +34,9 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
       if (remaining <= cfg.minValidDays * millisPerDay) {
         log.info(s"Certificate [${cfg.alias}] is about to expire in [${remaining % millisPerDay}] days...refreshing certificate.")
+        // try to obtain new certificate
+        // if unable to refresh continue using old certicate if remaining is still positive
+        // if negative fail
         throw new Exception("not implemented")
       } else {
         log.info(s"Server certificate [${cfg.alias}] is still vaild.")
