@@ -1,13 +1,13 @@
 package blended.security.ssl.internal
 
-import java.io.{File, FileInputStream, FileOutputStream}
-import java.security.{KeyPair, KeyStore, PrivateKey}
+import java.io.{ File, FileInputStream, FileOutputStream }
+import java.security.{ KeyPair, KeyStore, PrivateKey }
 import java.security.cert.X509Certificate
 
 import blended.security.ssl.{CertificateProvider, ServerCertificate, X509CertificateInfo}
 import org.log4s._
 
-import scala.util.{Success, Try}
+import scala.util.{ Success, Try }
 import scala.concurrent.duration._
 import scala.util.Failure
 
@@ -18,58 +18,77 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
   private[this] val millisPerDay: Long = 1.day.toMillis
 
-  def checkCertificate(): Try[KeyStore] = {
+  def checkCertificate(): Try[ServerKeyStore] = {
     log.info(s"Checking Server Certificate for key store [${cfg.keyStore}]")
     checkAndUpdateCertificate(keyStore)
   }
 
   def serverKeyStore(): KeyStore = keyStore
 
-  private[this] def checkAndUpdateCertificate(ks: KeyStore): Try[KeyStore] = {
+  //  def extractCertInfo(ks: KeyStore): Try[X509CertificateInfo] = Try {
+  //    Option(ks.getCertificate(cfg.alias)) match {
+  //      case Some(cert: X509Certificate) => X509CertificateInfo(cert)
+  //      case Some(cert) => sys.error(s"The certificate with alias [${cfg.alias}] is not a X509Certificate")
+  //      case None => sys.error(s"No certificate found with alias [${cfg.alias}] in key store [${ks}]")
+  //    }
+  //  }
 
-    if (ks.containsAlias(cfg.alias)) {
-      log.info(s"Checking existing certificate with alias [${cfg.alias}]")
-      val certInfo = X509CertificateInfo(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate])
-
-      val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
-
-      if (remaining <= cfg.minValidDays * millisPerDay) {
-        log.info(s"Certificate [${cfg.alias}] is about to expire in [${remaining.toDouble / millisPerDay}] days...refreshing certificate.")
-        // try to obtain new certificate
-        // if unable to refresh continue using old certicate if remaining is still positive
-        // if negative fail
-        //        throw new Exception("not implemented")
-        updateKeystore(ks).recoverWith {
-          case e: Throwable =>
-            log.debug(e)("Could not refresh the keystore, returning the old one")
-            Success(ks)
-        }
-      } else {
-        log.info(s"Server certificate [${cfg.alias}] is still vaild.")
-        Success(ks)
-      }
-    } else {
-      log.info(s"Certificate with alias [${cfg.alias}] does not yet exist")
-      updateKeystore(ks)
+  private[this] def extractServerCertificate(ks: KeyStore): Try[Option[ServerCertificate]] = Try {
+    Option(ks.getCertificateChain(cfg.alias)).map { chain =>
+      val e = ks.getCertificate(cfg.alias)
+      val key = ks.getKey(cfg.alias, cfg.keyPass).asInstanceOf[PrivateKey]
+      val keypair = new KeyPair(e.getPublicKey(), key)
+      ServerCertificate.create(keyPair = keypair, chain = chain.toList).get
     }
   }
 
-  private[this] def updateKeystore(ks: KeyStore): Try[KeyStore] = {
-    log.info("Aquiring new certificate from certificate provider ...")
+  private[this] def checkAndUpdateCertificate(ks: KeyStore): Try[ServerKeyStore] = {
 
-    val existing = Option(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate]).map{ e =>
+    val existingCert = extractServerCertificate(ks).recoverWith {
+      case e if cfg.overwriteForFailure => Success(None)
+    }.get
 
-      val key = ks.getKey(cfg.alias, cfg.keyPass).asInstanceOf[PrivateKey]
-      val keypair = new KeyPair(e.getPublicKey(), key)
-      ServerCertificate(keyPair = keypair, chain = List(e))
+    existingCert match {
+      case Some(serverCertificate) =>
+        val certInfo = X509CertificateInfo(serverCertificate.chain.head)
+
+        val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
+
+        if (remaining <= cfg.minValidDays * millisPerDay) {
+          log.info(s"Certificate [${cfg.alias}] is about to expire in [${remaining.toDouble / millisPerDay}] days...refreshing certificate.")
+          // try to obtain new certificate
+          // if unable to refresh continue using old certicate if remaining is still positive
+          // if negative fail
+          //        throw new Exception("not implemented")
+          updateKeystore(ks, existingCert).recoverWith {
+            case e: Throwable =>
+              log.debug(e)("Could not refresh the keystore, returning the old one")
+              Success(ServerKeyStore(ks, serverCertificate))
+          }
+        } else {
+          log.info(s"Server certificate [${cfg.alias}] is still vaild.")
+          Success(ServerKeyStore(ks, serverCertificate))
+        }
+      case None =>
+        log.info(s"Certificate with alias [${cfg.alias}] does not yet exist")
+        updateKeystore(ks, existingCert)
     }
 
-    val newCert = provider.refreshCertificate(existing)
+  }
+
+  private[this] def updateKeystore(ks: KeyStore, existingCert: Option[ServerCertificate]): Try[ServerKeyStore] = Try {
+    log.info("Aquiring new certificate from certificate provider ...")
+
+    //    val existing = extractServerCertificate(ks).recoverWith {
+    //      case e if cfg.overwriteForFailure => Success(None)
+    //    }.get
+
+    val newCert = provider.refreshCertificate(existingCert)
 
     newCert match {
       case Failure(e) =>
         log.error(e)("Could not update keystore")
-        Failure(e)
+        throw e
       case Success(cert) =>
         log.info(s"Successfully obtained certificate from certificate provider [${provider}]")
         ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain.toArray)
@@ -81,7 +100,7 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
         } finally {
           fos.close()
         }
-        Success(ks)
+        ServerKeyStore(ks, cert)
     }
   }
 

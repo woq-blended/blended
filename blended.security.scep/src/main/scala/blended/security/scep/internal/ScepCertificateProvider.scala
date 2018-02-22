@@ -101,7 +101,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
 
       log.info(s"Retrieved [${certs.length}] certificates from [${cfg.url}].")
 
-      ServerCertificate(
+      ServerCertificate.create(
         keyPair = inCert.keyPair,
         chain = certs
       )

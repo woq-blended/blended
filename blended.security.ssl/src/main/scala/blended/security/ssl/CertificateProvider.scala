@@ -1,22 +1,21 @@
 package blended.security.ssl
 
-import java.security.cert.{Certificate, X509Certificate}
-import java.security.{KeyPair, Principal}
+import java.security.cert.{ Certificate, X509Certificate }
+import java.security.{ KeyPair, Principal }
 
 import scala.util.Try
 
-case class ServerCertificate(
-  keyPair : KeyPair,
-  chain : List[X509Certificate]
-)
+case class ServerCertificate private (
+  keyPair: KeyPair,
+  chain: List[X509Certificate])
 
 case object ServerCertificate {
 
   private[this] val log = org.log4s.getLogger
 
-  def apply(keyPair: KeyPair, chain: List[Certificate]) : Try[ServerCertificate] =  Try {
+  def create(keyPair: KeyPair, chain: List[Certificate]): Try[ServerCertificate] = Try {
 
-    val sortedChain : List[X509Certificate] = {
+    val sortedChain: List[X509Certificate] = {
 
       val x509Certs = chain.map(_.asInstanceOf[X509Certificate])
 
@@ -24,10 +23,10 @@ case object ServerCertificate {
         x509Certs
       } else {
 
-        def signedBy(issuer: Principal) : (X509Certificate => Boolean) = c =>
+        def signedBy(issuer: Principal): (X509Certificate => Boolean) = c =>
           !c.getIssuerDN().equals(c.getSubjectDN()) && c.getIssuerDN().equals(issuer)
 
-        def sort(remaining: List[X509Certificate])(sorted: List[X509Certificate]) : List[X509Certificate] = {
+        def sort(remaining: List[X509Certificate])(sorted: List[X509Certificate]): List[X509Certificate] = {
           remaining match {
             case Nil => sorted
             case rest =>
@@ -43,7 +42,7 @@ case object ServerCertificate {
           }
         }
 
-        x509Certs.find{ c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
+        x509Certs.find { c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
           case None => sys.error("Certificate chain must have a self signed certificate.")
           case Some(root) => {
             log.debug(s"Root Certificate is [${X509CertificateInfo(root)}]")
@@ -59,5 +58,5 @@ case object ServerCertificate {
 
 trait CertificateProvider {
 
-  def refreshCertificate(existing: Option[ServerCertificate]) : Try[ServerCertificate]
+  def refreshCertificate(existing: Option[ServerCertificate]): Try[ServerCertificate]
 }

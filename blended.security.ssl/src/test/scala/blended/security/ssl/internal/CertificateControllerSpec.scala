@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import blended.testsupport.BlendedTestSupport.projectTestOutput
 import org.scalatest.FreeSpec
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 class CertificateControllerSpec extends FreeSpec {
 
@@ -46,9 +46,8 @@ class CertificateControllerSpec extends FreeSpec {
       val ctrl = new CertificateController(cfg, defaultProvider)
 
       ctrl.checkCertificate() match {
-        case Success(ks) =>
-          val cert = ks.getCertificate("default").asInstanceOf[X509Certificate]
-          val info = X509CertificateInfo(cert)
+        case Success(ServerKeyStore(ks, cert)) =>
+          val info = X509CertificateInfo(cert.chain.head)
 
           log.info(s"$info")
 
@@ -75,9 +74,8 @@ class CertificateControllerSpec extends FreeSpec {
 
       // check and update cert
       ctrl.checkCertificate() match {
-        case Success(ks) =>
-          val cert = ks.getCertificate("default").asInstanceOf[X509Certificate]
-          val info = X509CertificateInfo(cert)
+        case Success(ServerKeyStore(ks, cert)) =>
+          val info = X509CertificateInfo(cert.chain.head)
 
           log.info(s"$info")
 
@@ -105,7 +103,7 @@ class CertificateControllerSpec extends FreeSpec {
         val tempController = new CertificateController(cfg, tempSelfProvider)
         val initKs = tempController.checkCertificate()
         assert(initKs.isSuccess)
-        X509CertificateInfo(initKs.get.getCertificate("default").asInstanceOf[X509Certificate])
+        X509CertificateInfo(initKs.get.serverCertificate.chain.head)
       }
       assert(firstCertInfo.notAfter.getTime() > System.currentTimeMillis())
       assert(firstCertInfo.notAfter.getTime() <= System.currentTimeMillis() + (validDays * millisPerDay))
@@ -114,7 +112,7 @@ class CertificateControllerSpec extends FreeSpec {
       val ctrl = new CertificateController(cfg, defaultProvider)
       val secondKs = ctrl.checkCertificate()
       assert(secondKs.isSuccess)
-      val secondCertInfo = X509CertificateInfo(secondKs.get.getCertificate("default").asInstanceOf[X509Certificate])
+      val secondCertInfo = X509CertificateInfo(secondKs.get.serverCertificate.chain.head)
 
       log.info(s"$secondCertInfo")
 
