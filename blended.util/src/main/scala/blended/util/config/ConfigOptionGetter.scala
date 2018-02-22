@@ -31,6 +31,10 @@ trait ConfigOptionGetter {
     def getStringListOption(key: String): Option[List[String]] =
       if (config.hasPath(key)) Option(config.getStringList(key).asScala.toList)
       else None
+
+    def getConfigOption(key: String): Option[Config] =
+      if (config.hasPath(key)) Option(config.getConfig(key))
+      else None
   }
 
 }
