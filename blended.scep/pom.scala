@@ -13,6 +13,9 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
+    blendedDomino,
+    blendedSecuritySsl,
+    blendedUtil,
     slf4j,
     scep,
     logbackCore % "test",

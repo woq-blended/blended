@@ -3,11 +3,14 @@ package blended.security.ssl.internal
 import java.io.File
 import java.math.BigInteger
 import java.security.cert.X509Certificate
+
+import blended.security.ssl.{SelfSignedCertificateProvider, SelfSignedConfig}
+
 import scala.concurrent.duration._
 import blended.testsupport.BlendedTestSupport.projectTestOutput
 import org.scalatest.FreeSpec
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 class CertificateControllerSpec extends FreeSpec {
 

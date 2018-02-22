@@ -1,13 +1,13 @@
 package blended.security.ssl.internal
 
-import java.io.{ File, FileInputStream, FileOutputStream }
-import java.security.KeyStore
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.security.{KeyPair, KeyStore, PrivateKey}
 import java.security.cert.X509Certificate
 
-import blended.security.ssl.CertificateProvider
+import blended.security.ssl.{CertificateProvider, ServerCertificate}
 import org.log4s._
 
-import scala.util.{ Success, Try }
+import scala.util.{Success, Try}
 import scala.concurrent.duration._
 import scala.util.Failure
 
@@ -56,15 +56,23 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
   private[this] def updateKeystore(ks: KeyStore): Try[KeyStore] = {
     log.info("Aquiring new certificate from certificate provider ...")
-    val existing = Option(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate])
+
+    val existing = Option(ks.getCertificate(cfg.alias).asInstanceOf[X509Certificate]).map{ e =>
+
+      val key = ks.getKey(cfg.alias, cfg.keyPass).asInstanceOf[PrivateKey]
+      val keypair = new KeyPair(e.getPublicKey(), key)
+      ServerCertificate(keyPair = keypair, chain = List(e))
+    }
+
     val newCert = provider.refreshCertificate(existing)
+
     newCert match {
       case Failure(e) =>
         log.error(e)("Could not update keystore")
         Failure(e)
       case Success(cert) =>
         log.info(s"Successfully obtained certificate from certificate provider [${provider}]")
-        ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain)
+        ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain.toArray)
 
         val fos = new FileOutputStream(cfg.keyStore)
         try {

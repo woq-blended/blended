@@ -1,19 +1,18 @@
-package blended.security.ssl.internal
+package blended.security.ssl
 
 import java.math.BigInteger
 import java.security.cert.X509Certificate
-import java.security.{ KeyPair, KeyPairGenerator }
+import java.security.{KeyPair, KeyPairGenerator}
 import java.util.Calendar
-import javax.security.auth.x500.X500Principal
 
-import blended.security.ssl.{ CertificateProvider, ServerCertificate }
-import org.bouncycastle.asn1.x509.{ KeyUsage, X509Extension }
-import org.bouncycastle.cert.jcajce.{ JcaX509CertificateConverter, JcaX509v3CertificateBuilder }
+import javax.security.auth.x500.X500Principal
+import org.bouncycastle.asn1.x509.{KeyUsage, X509Extension}
+import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+
 import scala.util.Try
 
-class SelfSignedCertificateProvider(
-    cfg: SelfSignedConfig) extends CertificateProvider {
+class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificateProvider {
 
   private def generateKeyPair(): KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")
@@ -21,13 +20,15 @@ class SelfSignedCertificateProvider(
     kpg.genKeyPair()
   }
 
-  override def refreshCertificate(existing: Option[X509Certificate]): Try[ServerCertificate] = Try {
+  override def refreshCertificate(existing: Option[ServerCertificate]): Try[ServerCertificate] = Try {
+
+    val oldCert = existing.map(_.chain.head)
 
     val requesterKeypair = generateKeyPair()
 
     val principal = new X500Principal(cfg.subject)
     val requesterIssuer = principal
-    val serial = existing match {
+    val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
       case None => BigInteger.ONE
     }
@@ -50,6 +51,6 @@ class SelfSignedCertificateProvider(
     val certHolder = certBuilder.build(certSigner)
 
     val converter = new JcaX509CertificateConverter()
-    ServerCertificate(requesterKeypair, Array(converter.getCertificate(certHolder)))
+    ServerCertificate(requesterKeypair, List(converter.getCertificate(certHolder)))
   }
 }

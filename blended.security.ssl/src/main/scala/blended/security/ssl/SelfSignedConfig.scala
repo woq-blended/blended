@@ -1,7 +1,7 @@
-package blended.security.ssl.internal
+package blended.security.ssl
 
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 case class SelfSignedConfig(
   subject: String,
