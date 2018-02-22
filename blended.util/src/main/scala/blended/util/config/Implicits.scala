@@ -1,3 +1,3 @@
 package blended.util.config
 
-object Implicits extends ConfigDefaultGetter 
+object Implicits extends ConfigDefaultGetter with ConfigOptionGetter

@@ -6,10 +6,14 @@ import com.typesafe.config.Config
 
 trait ConfigDefaultGetter {
 
-  implicit class RichConfig(config: Config) {
+  implicit class RichDefaultConfig(config: Config) {
 
     def getLong(key: String, default: Long): Long =
       if (config.hasPath(key)) config.getLong(key)
+      else default
+
+    def getAnyRef(key: String, default: AnyRef): AnyRef =
+      if (config.hasPath(key)) config.getAnyRef(key)
       else default
 
     def getString(key: String, default: String): String =
