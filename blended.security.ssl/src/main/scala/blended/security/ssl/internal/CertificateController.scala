@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import java.security.{KeyPair, KeyStore, PrivateKey}
 import java.security.cert.X509Certificate
 
-import blended.security.ssl.{CertificateProvider, ServerCertificate}
+import blended.security.ssl.{CertificateProvider, ServerCertificate, X509CertificateInfo}
 import org.log4s._
 
 import scala.util.{Success, Try}

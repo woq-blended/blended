@@ -2,9 +2,10 @@ package blended.jms.utils.internal
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import javax.jms._
 
+import javax.jms._
 import akka.actor.ActorRef
+import akka.util.Timeout
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
@@ -22,7 +23,7 @@ abstract class PingPerformer(pingActor: ActorRef, id: String) {
   def close() : Unit = {}
 }
 
-class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, destName : String)
+class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, destName : String, timeout: Timeout)
   extends PingPerformer(pingActor, provider) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[JmsPingPerformer])
@@ -44,9 +45,9 @@ class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, d
 
         try {
           log.debug(s"sending ping message [$pingId] to topic [$provider:$destName]")
-          producer.send(s.createTextMessage(pingId))
+          producer.send(s.createTextMessage(pingId), DeliveryMode.NON_PERSISTENT, 4, timeout.duration.toMillis + 1000)
 
-          Option(consumer.receive(100l)) match {
+          Option(consumer.receive(timeout.duration.toMillis)) match {
             case None =>
             case Some(msg) =>
               val text = if (msg.isInstanceOf[TextMessage]) msg.asInstanceOf[TextMessage].getText() else "UNKNOWN"

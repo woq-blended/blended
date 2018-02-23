@@ -3,8 +3,6 @@ package blended.security.ssl
 import java.security.cert.{Certificate, X509Certificate}
 import java.security.{KeyPair, Principal}
 
-import blended.security.ssl.internal.X509CertificateInfo
-
 import scala.util.Try
 
 case class ServerCertificate(

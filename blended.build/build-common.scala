@@ -155,16 +155,6 @@ object BlendedModel {
       snapshots = RepositoryPolicy(
         enabled = false
       ),
-      id = "FUSEStaging",
-      url = "http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x"
-    ),
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
       id = "SpringBundles",
       url = "http://repository.springsource.com/maven/bundles/release"
     ),

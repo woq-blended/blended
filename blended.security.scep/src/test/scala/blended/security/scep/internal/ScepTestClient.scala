@@ -1,10 +1,8 @@
-package blended.scep.internal
+package blended.security.scep.internal
 
 import java.security.cert.X509Certificate
 
-import blended.security.ssl.CommonNameProvider
-import blended.security.ssl.internal.X509CertificateInfo
-import javax.security.auth.x500.X500Principal
+import blended.security.ssl.{CommonNameProvider, X509CertificateInfo}
 import org.slf4j.LoggerFactory
 
 object ScepTestClient {

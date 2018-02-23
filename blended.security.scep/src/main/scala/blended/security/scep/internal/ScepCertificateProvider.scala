@@ -1,11 +1,9 @@
-package blended.scep.internal
+package blended.security.scep.internal
 
 import java.net.URL
-import java.security.KeyPair
-import java.security.cert.{Certificate, X509Certificate}
+import java.security.cert.Certificate
 
 import blended.security.ssl._
-import blended.security.ssl.internal.X509CertificateInfo
 import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.x500.X500Principal
 import org.bouncycastle.asn1.DERPrintableString

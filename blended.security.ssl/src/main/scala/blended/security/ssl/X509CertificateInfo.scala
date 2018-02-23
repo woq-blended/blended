@@ -1,4 +1,4 @@
-package blended.security.ssl.internal
+package blended.security.ssl
 
 import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat

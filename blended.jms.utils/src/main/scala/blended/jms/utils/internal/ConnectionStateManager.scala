@@ -357,7 +357,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
         pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
 
         pinger.foreach { p =>
-          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, config.pingDestination)
+          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, config.pingDestination, config.pingTimeout.seconds)
           p ! jmsPingPerformer
         }
       case Some(a) =>

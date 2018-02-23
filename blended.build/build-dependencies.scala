@@ -79,7 +79,7 @@ object Deps {
   val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
 
   val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"
-  val commonsCodec = "org.apache.commons" % "com.springsource.org.apache.commons.codec" % "1.6.0"
+  val commonsCodec = "commons-codec" % "commons-codec" % "1.11"
   val commonsCompress = "org.apache.commons" % "commons-compress" % "1.13"
   val commonsCollections = "org.apache.commons" % "com.springsource.org.apache.commons.collections" % "3.2.1"
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
@@ -129,6 +129,8 @@ object Deps {
   val jacksonCore = "com.fasterxml.jackson.core" % "jackson-core" % "2.9.3"
   val jacksonBind = "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.3"
   val jacksonAnnotations = "com.fasterxml.jackson.core" % "jackson-annotations" % "2.9.3"
+
+  val jcip = "net.jcip" % "jcip-annotations" % "1.0"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
 
   private def jetty(n: String) = "org.eclipse.jetty" % s"jetty-${n}" % BlendedVersions.jettyVersion
@@ -178,16 +180,6 @@ object Deps {
   val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
-
-  //  private def paxweb(a: String) = "org.ops4j.pax.web" % s"pax-web-${a}" % BlendedVersions.paxWeb
-  //  val paxwebApi = paxweb("api")
-  //  val paxwebDescriptor = paxweb("descriptor")
-  //  val paxwebExtWhiteboard = paxweb("extender-whiteboard")
-  //  val paxwebExtWar = paxweb("extender-war")
-  //  val paxwebJetty = paxweb("jetty")
-  //  val paxwebJsp = paxweb("jsp")
-  //  val paxwebRuntime = paxweb("runtime")
-  //  val paxwebSpi = paxweb("spi")
 
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 
@@ -305,10 +297,10 @@ val blendedSamplesReactor = BlendedModule("blended.samples.reactor")
 val blendedSamplesCamel = BlendedModule("blended.samples.camel")
 val blendedSamplesJms = BlendedModule("blended.samples.jms")
 val blendedSamplesSprayHelloworld = BlendedModule("blended.samples.spray.helloworld")
-val blendedScep = BlendedModule("blended.scep")
 val blendedSecurity = BlendedModule("blended.security")
 val blendedSecurityAkkaHttp = BlendedModule("blended.security.akka.http")
 val blendedSecurityBoot = BlendedModule("blended.security.boot")
+val blendedSecurityScep = BlendedModule("blended.security.scep")
 val blendedSecuritySsl = BlendedModule("blended.security.ssl")
 val blendedSecurityLogin = BlendedModule("blended.security.login")
 val blendedSecurityLoginRest = BlendedModule("blended.security.login.rest")

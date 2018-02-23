@@ -168,6 +168,7 @@ val features = Seq(
       "blended-base"
     ),
     bundles = Seq(
+      FeatureBundle(dependency = blendedSecurityScep, start = true),
       FeatureBundle(dependency = blendedSecuritySsl, start = true)
     )),
   FeatureDef("blended-spray",

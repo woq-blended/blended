@@ -4,7 +4,7 @@ import java.io.File
 import java.math.BigInteger
 import java.security.cert.X509Certificate
 
-import blended.security.ssl.{SelfSignedCertificateProvider, SelfSignedConfig}
+import blended.security.ssl.{SelfSignedCertificateProvider, SelfSignedConfig, X509CertificateInfo}
 
 import scala.concurrent.duration._
 import blended.testsupport.BlendedTestSupport.projectTestOutput
