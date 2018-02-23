@@ -30,17 +30,11 @@ class ConnectionPingActor(timeout: FiniteDuration)
 
   override def receive: Receive = LoggingReceive {
     case p : PingPerformer =>
+
+      val timer = context.system.scheduler.scheduleOnce(timeout, self, Timeout)
       val caller = sender()
-      try {
-        p.start()
-        p.ping()
-        context.become(pinging(caller, p, context.system.scheduler.scheduleOnce(timeout, self, Timeout)))
-      } catch {
-        case NonFatal(e) =>
-          log.debug(s"Ping for provider [${p.provider}] failed : [${e.getMessage()}]")
-          caller ! PingResult(Left(e))
-          stopPinger(p)
-      }
+      context.become(pinging(caller, p, timer))
+      p.ping()
   }
 
   def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = LoggingReceive {
@@ -68,7 +62,6 @@ class ConnectionPingActor(timeout: FiniteDuration)
   }
 
   private def stopPinger(performer: PingPerformer) : Unit = {
-    performer.close()
     context.stop(self)
   }
 }

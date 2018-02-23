@@ -1,74 +1,97 @@
 package blended.jms.utils.internal
 
-import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.concurrent.atomic.AtomicLong
 
 import javax.jms._
 import akka.actor.ActorRef
-import akka.util.Timeout
-import org.slf4j.LoggerFactory
+import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
 
+import scala.concurrent.duration._
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
-abstract class PingPerformer(pingActor: ActorRef, id: String) {
+abstract class PingPerformer(pingActor: ActorRef, config: BlendedJMSConnectionConfig) {
 
-  val provider = id
+  private[this] val log = org.log4s.getLogger
 
-  val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
+  val cfId = s"${config.vendor}:${config.provider}"
 
-  def start() : Unit = {}
-
-  def ping() : Unit
-
-  def close() : Unit = {}
-}
-
-class JmsPingPerformer(pingActor: ActorRef, provider: String, con: Connection, destName : String, timeout: Timeout)
-  extends PingPerformer(pingActor, provider) {
-
-  private[this] val log = LoggerFactory.getLogger(classOf[JmsPingPerformer])
-  private[this] val pingId = df.format(new Date())
-
-  var session : Option[Session] = None
-
-  override def start(): Unit = {
-    session = Some(con.createSession(false, Session.AUTO_ACKNOWLEDGE))
+  final def ping() : Unit = {
+    log.info(s"Performing ping for connection factory [$cfId]")
+    new Thread(new Runnable {
+      override def run(): Unit = doPing() match {
+        case Success(s) =>
+          log.info(s"Ping for connection factory [$cfId] succeeded with [$s]")
+          pingActor ! PingReceived(s)
+        case Failure(e) =>
+          log.warn(s"Ping for connection factory [$cfId] failed [${e.getMessage()}]")
+          pingActor ! PingResult(Left(e))
+      }
+    }).start()
   }
 
-  override def ping(): Unit = {
-    session match {
-      case None => pingActor ! PingResult(Left(new Exception(s"No session established for JMS checker [$provider, $pingId]")))
-      case Some(s) =>
-        val dest = s.createTopic(destName)
-        val consumer = s.createConsumer(dest)
-        val producer = s.createProducer(dest)
+  protected def doPing() : Try[String]
+}
 
-        try {
-          log.debug(s"sending ping message [$pingId] to topic [$provider:$destName]")
-          producer.send(s.createTextMessage(pingId), DeliveryMode.NON_PERSISTENT, 4, timeout.duration.toMillis + 1000)
+object PingPerformer {
+  val counter : AtomicLong = new AtomicLong(0)
+}
 
-          Option(consumer.receive(timeout.duration.toMillis)) match {
-            case None =>
-            case Some(msg) =>
-              val text = if (msg.isInstanceOf[TextMessage]) msg.asInstanceOf[TextMessage].getText() else "UNKNOWN"
-              log.debug(s"received ping message [$text] for provider [$provider]")
-              pingActor ! PingReceived(text)
-          }
-        } finally {
-          consumer.close()
-          producer.close()
+class JmsPingPerformer(pingActor: ActorRef, config: BlendedJMSConnectionConfig, con: Connection)
+  extends PingPerformer(pingActor, config) with JMSSupport {
+
+  private[this] val log = org.log4s.getLogger
+
+  override def doPing(): Try[String] = Try {
+
+    val timeout = config.pingTimeout.seconds.toMillis
+    val pingId = s"${config.clientId}--${PingPerformer.counter.getAndIncrement()}"
+
+    def receive(consumer: MessageConsumer, tryUntil: Long) : Try[Option[Message]] = {
+      try {
+        Option(consumer.receiveNoWait()) match {
+          case None =>
+            Thread.sleep(500l)
+            if (System.currentTimeMillis() < tryUntil)
+              receive(consumer, tryUntil)
+            else
+              Success(None)
+          case m @ Some(_) =>
+            Success(m)
         }
+      } catch {
+        case NonFatal(e) => Failure(e)
+      }
+    }
+
+    withSession { session =>
+      val dest = destination(session, config.pingDestination)
+      val consumer = session.createConsumer(dest, s"""JMSCorrelationID='$pingId'""")
+      val producer = session.createProducer(dest)
+
+      try {
+        val msg = session.createMessage()
+        msg.setJMSCorrelationID(config.clientId)
+
+        producer.send(msg, DeliveryMode.NON_PERSISTENT, 4, timeout * 2)
+        receive(consumer, System.currentTimeMillis() + timeout).get match {
+          case None =>
+            Some(new Exception(s"Ping receive [$pingId] timed out"))
+          case Some(m) =>
+            val id = m.getJMSCorrelationID()
+            if (!pingId.equals(id))
+              Some(new Exception(s"Received ping id [$id] did not match expected is [$pingId]"))
+            else
+              None
+        }
+      } finally {
+        consumer.close()
+        producer.close()
+      }
+    } (con) match {
+      case Some(t) => throw t
+      case None => pingId
     }
   }
-
-  override def close(): Unit = {
-    session.foreach{ s => {
-      try {
-        s.close()
-        session = None
-      } catch {
-        case NonFatal(e) => log.warn(s"Error closing session for JMS checker [$provider, $pingId]")
-      }
-    }}
-  }
 }
+

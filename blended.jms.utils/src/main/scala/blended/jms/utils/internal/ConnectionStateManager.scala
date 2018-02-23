@@ -351,17 +351,21 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
 
   private[this] def ping(c: Connection) : Unit = {
 
-    pinger match {
-      case None =>
-        log.info(s"Checking JMS connection for provider [$vendor:$provider]")
-        pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
+    if (config.pingEnabled) {
+      pinger match {
+        case None =>
+          log.info(s"Checking JMS connection for provider [$vendor:$provider]")
+          pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
 
-        pinger.foreach { p =>
-          val jmsPingPerformer = new JmsPingPerformer(p, provider, c, config.pingDestination, config.pingTimeout.seconds)
-          p ! jmsPingPerformer
-        }
-      case Some(a) =>
-        log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
+          pinger.foreach { p =>
+            val jmsPingPerformer = new JmsPingPerformer(p, config, c)
+            p ! jmsPingPerformer
+          }
+        case Some(a) =>
+          log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
+      }
+    } else {
+      log.info(s"Ping is disabled for connection factory [${config.vendor}:${config.provider}]")
     }
   }
 }
