@@ -1,13 +1,12 @@
 package blended.jms.utils
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils.internal._
 import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FreeSpecLike, Matchers}
 
 import scala.concurrent.duration._
-import scala.util.Try
 
 class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
   with FreeSpecLike
@@ -15,22 +14,35 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
   with MockitoSugar
   with ImplicitSender {
 
+  class HealthyPerformer extends Actor {
+    override def receive: Receive = {
+      case ExecutePing(pingActor) => pingActor ! PingResult(Right("Hooray"))
+    }
+  }
+
+  object ExceptionPerformer{
+    def props(e: Exception) : Props = Props(new ExceptionPerformer(e))
+  }
+
+  class ExceptionPerformer(e: Exception) extends Actor {
+    override def receive: Receive = {
+      case ExecutePing(pingActor) => pingActor ! PingResult(Left(e))
+    }
+  }
+
+  class IrresponsivePerformer extends Actor {
+    override def receive: Receive = {
+      case ExecutePing(pingActor) =>
+    }
+  }
+
   "The ConnectionPingActor" - {
 
     "should respond with a ConnectionHealthy message if the connection is fine" in {
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val healthyPerformer = new PingPerformer(pingActor = testActor, BlendedJMSConnectionConfig.defaultConfig.copy(
-        vendor = "amq", provider = "amq"
-      )) {
-        override def doPing() = Try {
-          testActor ! PingReceived("Hooray")
-          "Hooray"
-        }
-      }
-
-      testActor ! healthyPerformer
+      testActor ! Props(new HealthyPerformer())
 
       expectMsg(PingResult(Right("Hooray")))
     }
@@ -39,16 +51,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val dirtyPerformer = new PingPerformer(pingActor = testActor, BlendedJMSConnectionConfig.defaultConfig.copy(
-        vendor = "amq", provider = "amq", pingTimeout = 1
-      )) {
-        override def doPing() = Try {
-          Thread.sleep(2000)
-          "finally"
-        }
-      }
-
-      testActor ! dirtyPerformer
+      testActor ! Props(new IrresponsivePerformer())
 
       expectMsg(PingTimeout)
     }
@@ -58,13 +61,7 @@ class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
 
       val testActor = system.actorOf(ConnectionPingActor.props(1.second))
 
-      val dirtyPerformer = new PingPerformer(pingActor = testActor, BlendedJMSConnectionConfig.defaultConfig.copy(
-        vendor = "amq", provider = "amq"
-      )) {
-        override def doPing() = Try { throw e }
-      }
-
-      testActor ! dirtyPerformer
+      testActor ! ExceptionPerformer.props(e)
 
       expectMsg(PingResult(Left(e)))
     }

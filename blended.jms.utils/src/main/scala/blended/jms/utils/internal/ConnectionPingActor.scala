@@ -29,27 +29,28 @@ class ConnectionPingActor(timeout: FiniteDuration)
   var hasPinged = false
 
   override def receive: Receive = LoggingReceive {
-    case p : PingPerformer =>
+    case p : Props =>
 
+      val pingPerformer = context.actorOf(p)
       val timer = context.system.scheduler.scheduleOnce(timeout, self, Timeout)
       val caller = sender()
-      context.become(pinging(caller, p, timer))
-      p.ping()
+      context.become(pinging(caller, timer))
+      pingPerformer ! ExecutePing(self)
   }
 
-  def pinging(caller : ActorRef, performer: PingPerformer, timer: Cancellable): Receive = LoggingReceive {
+  def pinging(caller : ActorRef, timer: Cancellable): Receive = LoggingReceive {
 
     case Timeout =>
       if (!hasPinged) {
         isTimeout = true
         caller ! PingTimeout
       }
-      stopPinger(performer)
+      context.stop(self)
 
     case r : PingResult =>
       timer.cancel()
       caller ! r
-      stopPinger(performer)
+      context.stop(self)
 
     case PingReceived(m) =>
       if (!isTimeout) {
@@ -57,11 +58,7 @@ class ConnectionPingActor(timeout: FiniteDuration)
         caller ! PingResult(Right(m))
         hasPinged = true
       }
-      stopPinger(performer)
+      context.stop(self)
 
-  }
-
-  private def stopPinger(performer: PingPerformer) : Unit = {
-    context.stop(self)
   }
 }
