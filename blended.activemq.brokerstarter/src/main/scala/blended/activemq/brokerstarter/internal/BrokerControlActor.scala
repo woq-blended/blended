@@ -17,6 +17,7 @@ import org.osgi.framework.{BundleContext, ServiceRegistration}
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.Try
 
 class BrokerControlActor extends Actor
   with ActorLogging {
@@ -113,7 +114,10 @@ class BrokerControlActor extends Actor
 
   private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
     log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
-    svcReg.unregister()
+    try { svcReg.unregister() }
+    catch {
+      case e: IllegalStateException => // was already unregistered
+    }
 
     broker.stop()
     broker.waitUntilStopped()
