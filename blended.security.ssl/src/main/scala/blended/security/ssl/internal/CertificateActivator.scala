@@ -67,7 +67,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
             log.info("Successfully obtained server certificate (and updated KeyStore) for SSLContexts")
 
             def registerSslContextProvider(ks: KeyStore): CapsuleScope = executeWithinNewCapsuleScope {
-              log.debug("Registering SslContextProvider")
+              log.debug("Registering SslContextProvider type=client and type=server")
               val sslCtxtProvider = new SslContextProvider(ks, ctrlCfg.keyPass)
               // TODO: what should we do with this side-effect, if we unregister the context provider?
               // FIXME: should this side-effect be configurable?
@@ -76,6 +76,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
               val clientReg = sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
 
               onStop {
+                log.debug("Unregistering SslContextProvider type=client and type=server")
                 Try { serverReg.unregister() }
                 Try { clientReg.unregister() }
               }
@@ -136,14 +137,14 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
                               scheduleRefresh(certCtrl, certInfo, refresherConfig)
                             } else {
                               // cert update
-                              log.info("Automatic certificate refresh returned a new certificate")
+                              log.info(s"Automatic certificate refresh returned a new certificate [${newInfo}]")
                               refresherConfig.onRefreshAction match {
                                 case RefresherConfig.Refresh =>
 
                                   log.info("About to remove old SslContextProvider from registry")
                                   regScope.stop()
 
-                                  log.debug("Registering new SslContextProvider for new KeyStore")
+                                  log.info("Registering new SslContextProvider for new KeyStore")
                                   regScope = registerSslContextProvider(newKs)
                                   scheduleRefresh(certCtrl, newInfo, refresherConfig)
 
