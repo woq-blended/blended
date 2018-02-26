@@ -1,5 +1,6 @@
 package blended.jms.utils.internal
 
+import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
 import javax.jms._
@@ -26,16 +27,20 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection)
 
   override def receive: Receive = {
     case ExecutePing(pingActor) =>
-      val pingId = s"${config.clientId}--${JmsPingPerformer.counter.getAndIncrement()}"
+      log.info(s"Executing ping for connection factory [${config.vendor}:${config.provider}]")
+      val pingId = UUID.randomUUID().toString()
 
       try {
+
+        val selector = s"""JMSCorrelationID='$pingId'"""
         val session = con.createSession(false, Session.AUTO_ACKNOWLEDGE)
         val dest = destination(session, config.pingDestination)
-        val consumer = session.createConsumer(dest, s"""JMSCorrelationID='$pingId'""")
+
+        val consumer = session.createConsumer(dest, selector)
         val producer = session.createProducer(dest)
 
         val msg = session.createMessage()
-        msg.setJMSCorrelationID(config.clientId)
+        msg.setJMSCorrelationID(pingId)
 
         producer.send(msg, DeliveryMode.NON_PERSISTENT, 4, timeOutMillis * 2)
         producer.close()

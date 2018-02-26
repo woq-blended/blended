@@ -3,15 +3,12 @@ package blended.jms.utils
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.testkit.{ImplicitSender, TestKit}
 import blended.jms.utils.internal._
-import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{FreeSpecLike, Matchers}
+import org.scalatest.FreeSpecLike
 
 import scala.concurrent.duration._
 
 class ConnectionPingActorSpec extends TestKit(ActorSystem("ConnectionPingSpec"))
   with FreeSpecLike
-  with Matchers
-  with MockitoSugar
   with ImplicitSender {
 
   class HealthyPerformer extends Actor {
