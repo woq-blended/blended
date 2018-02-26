@@ -155,16 +155,6 @@ object BlendedModel {
       snapshots = RepositoryPolicy(
         enabled = false
       ),
-      id = "FUSEStaging",
-      url = "http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x"
-    ),
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
       id = "SpringBundles",
       url = "http://repository.springsource.com/maven/bundles/release"
     ),
@@ -318,6 +308,8 @@ object BlendedModel {
 
 // Support for building features and containers
 
+case class FeatureDef(name: String, features: Seq[String] = Seq(), bundles: Seq[FeatureBundle])
+
 case class FeatureBundle(
     dependency: Dependency,
     startLevel: Integer = -1,
@@ -364,8 +356,8 @@ case class FeatureBundle(
 
 // Create the String content of a feature file from a sequence of FeatureBundles
 
-def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {
-  features.values.flatten.map(_.dependency)
+def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] = {
+  features.flatMap(_.bundles.map(_.dependency))
     .foldLeft(List[Dependency]()) { (ds, n) =>
       if (ds.exists(d =>
         d.gav.groupId == n.gav.groupId &&
@@ -379,22 +371,26 @@ def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependen
 }
 
 // This is the content of the feature file
-def featureFile(name: String, features: Seq[FeatureBundle]): String = {
+def featureFile(feature: FeatureDef): String = {
 
-  val prefix = "\"\"\"name=\"" + name + "\"\nversion=\"${project.version}\"\n"
+  val prefix = "name=\"" + feature.name + "\"\nversion=\"${project.version}\"\n"
 
-  val bundles = features.map(_.toString).mkString(
-    "bundles = [\n", ",\n", "\n]\n\"\"\"")
+  val bundles = feature.bundles.map(_.toString).mkString(
+    "bundles = [\n", ",\n", "\n]\n")
 
-  prefix + bundles
+  val featureRefs = 
+    if(feature.features.isEmpty) ""
+    else feature.features.map(f => s"""{ name="${f}", version="$${project.version}" }""").mkString(
+     "features = [\n", ",\n", "\n]\n")
+      
+  "\"\"\"" + prefix + featureRefs + bundles + "\"\"\""
 }
 
-def generateFeatures(features: Map[String, Seq[FeatureBundle]]) = {
+def generateFeatures(features: Seq[FeatureDef]) = {
 
-  val writeFiles = features.map {
-    case (key, bundles) =>
+  val writeFiles = features.map { feature =>
       """
-ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key + """.conf"), """ + featureFile(key, bundles) + """)
+ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + feature.name + """.conf"), """ + featureFile(feature) + """)
 """
   }.mkString("import java.io.File\n", "\n", "")
 
@@ -409,7 +405,7 @@ object Feature {
   )
 }
 
-def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
+def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
   Plugin(
     gav = Plugins.scala,
     executions = Seq(
@@ -569,7 +565,7 @@ object BlendedContainer {
                   unzip = Config(
                     `@src` = "${project.build.directory}/${project.artifactId}-${project.version}-full-nojre.zip",
                     `@dest` = "${project.build.directory}"
-                    
+
                   )
                 )
               )

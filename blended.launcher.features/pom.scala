@@ -6,16 +6,15 @@ import scala.collection.immutable.Seq
 #include ../blended.build/build-plugins.scala
 #include ../blended.build/build-common.scala
 
-val features: Map[String, Seq[FeatureBundle]] = Map(
-   "blended-base-felix" -> Seq(
-     FeatureBundle(dependency = felixFramework, startLevel = 0, start = true)
-   ),
-   "blended-base-equinox" -> Seq(
-     FeatureBundle(dependency = eclipseOsgi, startLevel = 0, start = true),
-     FeatureBundle(dependency = eclipseEquinoxConsole, start = true)
-   ),
-  "blended-base" -> Seq(
-    // FeatureBundle(dependency = felixFramework, startLevel = 0, start = true),
+val features = Seq(
+  FeatureDef("blended-base-felix", bundles = Seq(
+    FeatureBundle(dependency = felixFramework, startLevel = 0, start = true)
+  )),
+  FeatureDef("blended-base-equinox", bundles = Seq(
+    FeatureBundle(dependency = eclipseOsgi, startLevel = 0, start = true),
+    FeatureBundle(dependency = eclipseEquinoxConsole, start = true)
+  )),
+  FeatureDef("blended-base", bundles = Seq(
     FeatureBundle(dependency = blendedSecurityBoot),
     FeatureBundle(dependency = asmAll, start = true),
     FeatureBundle(dependency = blendedUpdater, start = true),
@@ -52,29 +51,34 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = blendedMgmtBase, start = true),
     FeatureBundle(dependency = blendedPrickle),
     FeatureBundle(dependency = blendedMgmtServiceJmx, start = true)
-  ),
-  "blended-activemq" -> Seq(
-    FeatureBundle(dependency = ariesProxyApi),
-    FeatureBundle(dependency = ariesBlueprintApi),
-    FeatureBundle(dependency = ariesBlueprintCore),
-    FeatureBundle(dependency = geronimoAnnotation),
-    FeatureBundle(dependency = geronimoJms11Spec),
-    FeatureBundle(dependency = geronimoJ2eeMgmtSpec),
-    FeatureBundle(dependency = servicemixStaxApi),
-    FeatureBundle(dependency = xbeanSpring),
-    FeatureBundle(dependency = activeMqOsgi),
-    FeatureBundle(dependency = blendedActivemqBrokerstarter),
-    FeatureBundle(dependency = blendedJmsUtils, start = true),
-    FeatureBundle(dependency = springJms)
-  ),
-  "blended-camel" -> Seq(
-    FeatureBundle(dependency = camelCore),
-    FeatureBundle(dependency = camelSpring),
-    FeatureBundle(dependency = camelJms),
-    FeatureBundle(dependency = blendedCamelUtils),
-    FeatureBundle(dependency = blendedJmsSampler, start = true)
-  ),
-  "blended-commons" -> Seq(
+  )),
+  FeatureDef("blended-activemq",
+    bundles = Seq(
+      FeatureBundle(dependency = ariesProxyApi),
+      FeatureBundle(dependency = ariesBlueprintApi),
+      FeatureBundle(dependency = ariesBlueprintCore),
+      FeatureBundle(dependency = geronimoAnnotation),
+      FeatureBundle(dependency = geronimoJms11Spec),
+      FeatureBundle(dependency = geronimoJ2eeMgmtSpec),
+      FeatureBundle(dependency = servicemixStaxApi),
+      FeatureBundle(dependency = xbeanSpring),
+      FeatureBundle(dependency = activeMqOsgi),
+      FeatureBundle(dependency = blendedActivemqBrokerstarter),
+      FeatureBundle(dependency = blendedJmsUtils, start = true),
+      FeatureBundle(dependency = springJms)
+    )),
+  FeatureDef("blended-camel",
+    features = Seq(
+      "blended-spring"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = camelCore),
+      FeatureBundle(dependency = camelSpring),
+      FeatureBundle(dependency = camelJms),
+      FeatureBundle(dependency = blendedCamelUtils),
+      FeatureBundle(dependency = blendedJmsSampler, start = true)
+    )),
+  FeatureDef("blended-commons", bundles = Seq(
     FeatureBundle(dependency = ariesUtil),
     FeatureBundle(dependency = ariesJmxApi),
     FeatureBundle(dependency = ariesJmxCore, start = true),
@@ -89,77 +93,105 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = commonsCodec),
     FeatureBundle(dependency = commonsHttpclient),
     FeatureBundle(dependency = commonsBeanUtils)
-  ),
-  "blended-hawtio" -> Seq(
-    FeatureBundle(dependency = hawtioWeb, start = true),
-    FeatureBundle(dependency = blendedHawtioLogin)
-  ),
-  "blended-mgmt-client" -> Seq(
+  )),
+  FeatureDef("blended-hawtio",
+    features = Seq(
+      "blended-jetty"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = hawtioWeb, start = true),
+      FeatureBundle(dependency = blendedHawtioLogin)
+    )),
+  FeatureDef("blended-mgmt-client", bundles = Seq(
     FeatureBundle(dependency = blendedMgmtAgent, start = true)
-  ),
-  "blended-mgmt-server" -> Seq(
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtRest, `type` = "war"), start = true),
-    FeatureBundle(dependency = blendedMgmtRepo, start = true),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
-    FeatureBundle(dependency = blendedUpdaterRemote, start = true),
-    FeatureBundle(dependency = blendedContainerRegistry),
-    FeatureBundle(dependency = blendedPersistence),
-    FeatureBundle(dependency = blendedPersistenceOrient, start = true),
-    FeatureBundle(dependency = orientDbCore),
-    FeatureBundle(dependency = concurrentLinkedHashMapLru),
-    FeatureBundle(dependency = jsr305),
-    FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
-    FeatureBundle(dependency = jacksonAnnotations),
-    FeatureBundle(dependency = jacksonCore),
-    FeatureBundle(dependency = jacksonBind),
-    FeatureBundle(dependency = jjwt),
-    FeatureBundle(dependency = blendedSecurityLogin, start = true),
-    FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
-  ),
-  "blended-jetty" -> Seq(
-    FeatureBundle(dependency = activationApi),
-    FeatureBundle(dependency = javaxServlet31),
-    FeatureBundle(dependency = javaxMail),
-    FeatureBundle(dependency = geronimoAnnotation),
-    FeatureBundle(dependency = geronimoJaspic),
-    FeatureBundle(dependency = jettyUtil),
-    FeatureBundle(dependency = jettyHttp),
-    FeatureBundle(dependency = jettyIo),
-    FeatureBundle(dependency = jettyJmx),
-    FeatureBundle(dependency = jettySecurity),
-    FeatureBundle(dependency = jettyServlet),
-    FeatureBundle(dependency = jettyServer),
-    FeatureBundle(dependency = jettyWebapp),
-    FeatureBundle(dependency = jettyDeploy),
-    FeatureBundle(dependency = jettyXml),
-    FeatureBundle(dependency = equinoxServlet),
-    FeatureBundle(dependency = felixHttpApi),
-    FeatureBundle(dependency = jettyOsgiBoot, start = true),
-    FeatureBundle(dependency = jettyHttpService, start = true)
-  ),
-  "blended-security" -> Seq(
-    FeatureBundle(dependency = shiroCore),
-    FeatureBundle(dependency = shiroWeb),
-    FeatureBundle(dependency = blendedSecurity, start = true)
-  ),
-  "blended-ssl" -> Seq(
-    FeatureBundle(dependency = bouncyCastlePkix),
-    FeatureBundle(dependency = bouncyCastleBcprov),
-    FeatureBundle(dependency = blendedSslContext, start = true)
-  ),
-  "blended-spray" -> Seq(
-    FeatureBundle(dependency = javaxServlet31),
-    FeatureBundle(dependency = blendedSprayApi),
-    FeatureBundle(dependency = blendedSpray),
-    FeatureBundle(dependency = blendedSecuritySpray)
-  ),
-  "blended-akka-http" -> Seq(
-    FeatureBundle(dependency = blendedAkkaHttp, start = true),
-    FeatureBundle(dependency = Deps.akkaHttp),
-    FeatureBundle(dependency = Deps.akkaHttpCore),
-    FeatureBundle(dependency = Deps.akkaParsing)
-  ),
-  "blended-spring" -> Seq(
+  )),
+  FeatureDef("blended-mgmt-server",
+    features = Seq(
+      "blended-base",
+      "blended-spray",
+      "blended-security",
+      "blended-ssl"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = Dependency(gav = blendedMgmtRest, `type` = "war"), start = true),
+      FeatureBundle(dependency = blendedMgmtRepo, start = true),
+      FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
+      FeatureBundle(dependency = blendedUpdaterRemote, start = true),
+      FeatureBundle(dependency = blendedContainerRegistry),
+      FeatureBundle(dependency = blendedPersistence),
+      FeatureBundle(dependency = blendedPersistenceOrient, start = true),
+      FeatureBundle(dependency = orientDbCore),
+      FeatureBundle(dependency = concurrentLinkedHashMapLru),
+      FeatureBundle(dependency = jsr305),
+      FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
+      FeatureBundle(dependency = jacksonAnnotations),
+      FeatureBundle(dependency = jacksonCore),
+      FeatureBundle(dependency = jacksonBind),
+      FeatureBundle(dependency = jjwt),
+      FeatureBundle(dependency = blendedSecurityLogin, start = true),
+      FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
+    )),
+  FeatureDef("blended-jetty",
+    features = Seq("blended-base"),
+    bundles = Seq(
+      FeatureBundle(dependency = activationApi),
+      FeatureBundle(dependency = javaxServlet31),
+      FeatureBundle(dependency = javaxMail),
+      FeatureBundle(dependency = geronimoAnnotation),
+      FeatureBundle(dependency = geronimoJaspic),
+      FeatureBundle(dependency = jettyUtil),
+      FeatureBundle(dependency = jettyHttp),
+      FeatureBundle(dependency = jettyIo),
+      FeatureBundle(dependency = jettyJmx),
+      FeatureBundle(dependency = jettySecurity),
+      FeatureBundle(dependency = jettyServlet),
+      FeatureBundle(dependency = jettyServer),
+      FeatureBundle(dependency = jettyWebapp),
+      FeatureBundle(dependency = jettyDeploy),
+      FeatureBundle(dependency = jettyXml),
+      FeatureBundle(dependency = equinoxServlet),
+      FeatureBundle(dependency = felixHttpApi),
+      FeatureBundle(dependency = blendedJettyBoot, start = true),
+      FeatureBundle(dependency = jettyHttpService, start = true)
+    )),
+  FeatureDef("blended-security",
+    features = Seq(
+      "blended-base"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = shiroCore),
+      FeatureBundle(dependency = shiroWeb),
+      FeatureBundle(dependency = blendedSecurity, start = true)
+    )),
+  FeatureDef("blended-ssl",
+    features = Seq(
+      "blended-base"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = blendedSecurityScep, start = true),
+      FeatureBundle(dependency = blendedSecuritySsl, start = true)
+    )),
+  FeatureDef("blended-spray",
+    features = Seq(
+      "blended-jetty"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = javaxServlet31),
+      FeatureBundle(dependency = blendedSprayApi),
+      FeatureBundle(dependency = blendedSpray),
+      FeatureBundle(dependency = blendedSecuritySpray)
+    )),
+  FeatureDef("blended-akka-http",
+    features = Seq(
+      "blended-base"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = blendedAkkaHttp, start = true),
+      FeatureBundle(dependency = Deps.akkaHttp),
+      FeatureBundle(dependency = Deps.akkaHttpCore),
+      FeatureBundle(dependency = Deps.akkaParsing)
+    )),
+  FeatureDef("blended-spring", bundles = Seq(
     FeatureBundle(dependency = aopAlliance),
     FeatureBundle(dependency = springCore),
     FeatureBundle(dependency = springExpression),
@@ -168,16 +200,23 @@ val features: Map[String, Seq[FeatureBundle]] = Map(
     FeatureBundle(dependency = springContext),
     FeatureBundle(dependency = springContextSupport),
     FeatureBundle(dependency = springTx)
-  ),
-  "blended-samples" -> Seq(
-    FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
-    FeatureBundle(dependency = blendedActivemqClient, start = true),
-    FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
-    FeatureBundle(dependency = blendedSamplesCamel, start = true),
-    FeatureBundle(dependency = blendedSamplesJms, start = true),
-    FeatureBundle(dependency = blendedFile),
-    FeatureBundle(dependency = blendedAkkaHttpSampleHelloworld, start = true)
-  )
+  )),
+  FeatureDef("blended-samples",
+    features = Seq(
+      "blended-akka-http",
+      "blended-spray",
+      "blended-activemq",
+      "blended-camel"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = blendedActivemqDefaultbroker, start = true),
+      FeatureBundle(dependency = blendedActivemqClient, start = true),
+      FeatureBundle(dependency = Dependency(gav = blendedSamplesSprayHelloworld, `type` = "war"), start = true),
+      FeatureBundle(dependency = blendedSamplesCamel, start = true),
+      FeatureBundle(dependency = blendedSamplesJms, start = true),
+      FeatureBundle(dependency = blendedFile),
+      FeatureBundle(dependency = blendedAkkaHttpSampleHelloworld, start = true)
+    ))
 )
 
 BlendedModel(

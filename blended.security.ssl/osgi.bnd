@@ -1,0 +1,22 @@
+Bundle-Version: \
+  ${project.version}
+
+Bundle-SymbolicName: \
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator: \
+  ${bundle.namespace}.internal.CertificateActivator
+
+Export-Package: \
+  ${bundle.namespace}
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  *
+
+Conditional-Package: \
+  blended.util.config
+
+Private-Package:\
+  ${bundle.namespace}.internal.*
+

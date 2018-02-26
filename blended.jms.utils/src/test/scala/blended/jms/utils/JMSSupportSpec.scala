@@ -1,32 +1,26 @@
 package blended.jms.utils
 
 import java.util.concurrent.atomic.AtomicInteger
-import javax.jms.{DeliveryMode, Message, Session}
 
 import akka.actor.{ActorSystem, Props}
 import akka.camel.CamelExtension
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
-import blended.testsupport.camel.protocol._
 import blended.testsupport.camel._
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.BrokerService
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter
+import blended.testsupport.camel.protocol._
+import javax.jms.{DeliveryMode, Message, Session}
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+
 import scala.concurrent.duration._
 
 class JMSSupportSpec extends FreeSpec
   with JMSSupport
   with CamelTestSupport
   with Matchers
-  with BeforeAndAfterAll {
-
-  private[this] var broker : Option[BrokerService] = None
-  private[this] val cf = new ActiveMQConnectionFactory("vm://blended?create=false")
+  with BeforeAndAfterAll
+  with AmqBrokerSupport {
 
   implicit val testkit = new TestKit(ActorSystem("JMSSupportSpec"))
   implicit val system = testkit.system
@@ -35,13 +29,13 @@ class JMSSupportSpec extends FreeSpec
 
   override val camelContext: CamelContext = {
     val ctxt = CamelExtension(system).context
-    ctxt.addComponent("jms", JmsComponent.jmsComponent(cf))
+    ctxt.addComponent("jms", JmsComponent.jmsComponent(amqCf))
     ctxt
   }
 
   private def sendMessage(destName: String) : Unit = {
     sendMessage(
-      cf = cf,
+      cf = amqCf,
       destName = destName,
       content = (),
       msgFactory = new JMSMessageFactory[Unit] {
@@ -82,7 +76,7 @@ class JMSSupportSpec extends FreeSpec
       sendMessage("test")
 
       receiveMessage(
-        cf = cf,
+        cf = amqCf,
         destName = "test",
         msgHandler = new JMSMessageHandler {
           override def handleMessage(msg: Message): Option[Throwable] = {
@@ -104,7 +98,7 @@ class JMSSupportSpec extends FreeSpec
       sendMessage("test")
 
       receiveMessage(
-        cf = cf,
+        cf = amqCf,
         destName = "test",
         msgHandler = new JMSMessageHandler {
           override def handleMessage(msg: Message): Option[Throwable] = {
@@ -123,12 +117,12 @@ class JMSSupportSpec extends FreeSpec
       sendMessage("test1")
 
       val receiver = new PollingJMSReceiver(
-        cf = cf,
+        cf = amqCf,
         destName = "test1",
         interval = 5,
         receiveTimeout = 50l,
         msgHandler = new ForwardingMessageHandler(
-          cf = cf,
+          cf = amqCf,
           destName = "test2",
           additionalHeader = Map("foo" -> "bar")
         ),
@@ -148,25 +142,10 @@ class JMSSupportSpec extends FreeSpec
 
   override protected def beforeAll() : Unit = {
     super.beforeAll()
-
-    broker = {
-      val b = new BrokerService()
-      b.setBrokerName("blended")
-      b.setPersistent(false)
-      b.setUseJmx(false)
-      b.setPersistenceAdapter(new MemoryPersistenceAdapter)
-
-      b.start()
-      b.waitUntilStarted()
-
-      Some(b)
-    }
+    startBroker()
   }
 
   override protected def afterAll(): Unit = {
-    broker.foreach { b =>
-      b.stop()
-      b.waitUntilStopped()
-    }
+    stopBroker()
   }
 }

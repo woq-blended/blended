@@ -22,6 +22,7 @@ BlendedModel(
     camelJms,
     blendedAkka,
     jms11Spec,
+    log4s,
     scalaTest % "test",
     akkaSlf4j % "test",
     mockitoAll % "test",

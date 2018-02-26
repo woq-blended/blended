@@ -4,6 +4,9 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
+import blended.util.config.Implicits._
+import javax.net.ssl.SSLContext
+import akka.http.scaladsl.ConnectionContext
 
 class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching {
 
@@ -14,20 +17,13 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
     // reuse the blended akka system
     whenActorSystemAvailable { cfg =>
 
-      // Read the bundle config value for the given `key` or return the default, when the key is not present
-      def getOrDefault[T](key: String, default: T): T = if (cfg.config.hasPath(key)) {
-        default match {
-          case x: String => cfg.config.getString(key).asInstanceOf[T]
-          case x: Int => cfg.config.getInt(key).asInstanceOf[T]
-          case x: Long => cfg.config.getLong(key).asInstanceOf[T]
-        }
-      } else default
+      val config = cfg.config
 
-      val httpHost = getOrDefault("host", "0.0.0.0")
-      val httpPort = getOrDefault("port", 8080)
+      val httpHost = config.getString("host", "0.0.0.0")
+      val httpPort = config.getInt("port", 8080)
 
-      //      val httpsHost = getOrDefault("ssl.host", "0.0.0.0")
-      //      val httpsPort = getOrDefault("ssl.port", 8443)
+      val httpsHost = config.getString("ssl.host", "0.0.0.0")
+      val httpsPort = config.getInt("ssl.port", 8443)
 
       implicit val actorSysten = cfg.system
       implicit val actorMaterializer = ActorMaterializer()
@@ -40,7 +36,6 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
       val bindingFuture = Http().bindAndHandle(dynamicRoutes.dynamicRoute, httpHost, httpPort);
       bindingFuture.foreach { b =>
         log.info(s"Started HTTP server at ${b.localAddress}")
-        // do we want to register the server into OSGi registry?
       }
 
       onStop {
@@ -48,7 +43,29 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
         bindingFuture.map(serverBinding => serverBinding.unbind())
       }
 
-      // 
+      log.debug("Listening for SSLContext registrations of type=server...")
+      whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
+        
+        log.info(s"Detected an server SSLContext. Starting HTTPS server at ${httpsHost}:${httpsPort}")
+        
+        val https = ConnectionContext.https(sslContext)
+        val httpsBindingFuture = Http().bindAndHandle(
+          handler = dynamicRoutes.dynamicRoute,
+          interface = httpsHost,
+          port = httpsPort,
+          connectionContext = https)
+        httpsBindingFuture.foreach { b =>
+          log.info(s"Started HTTPS server at ${b.localAddress}")
+        }
+
+        onStop {
+          log.info(s"Stopping HTTPS server at ${httpsHost}:${httpsPort}")
+          httpsBindingFuture.map(serverBinding => serverBinding.unbind())
+        }
+
+      }
+
+      // Consume routes from OSGi Service Registry (white-board pattern)
       dynamicRoutes.dynamicAdapt(capsuleContext, bundleContext)
 
     }
