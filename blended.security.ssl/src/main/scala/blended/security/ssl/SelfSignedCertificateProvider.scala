@@ -5,14 +5,17 @@ import java.security.{KeyPair, KeyPairGenerator}
 import java.util.Calendar
 
 import javax.security.auth.x500.X500Principal
-import org.bouncycastle.asn1.x509.{GeneralName, KeyUsage, X509Extension}
-import org.bouncycastle.asn1.{ASN1Encodable, DERSequence}
+import org.bouncycastle.asn1.ASN1ObjectIdentifier
+import org.bouncycastle.asn1.x509._
 import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificateProvider {
+
+  private[this] val log = org.log4s.getLogger
 
   private def generateKeyPair(): KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")
@@ -22,6 +25,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
 
   override def refreshCertificate(existing: Option[ServerCertificate]): Try[ServerCertificate] = Try {
 
+    log.info(s"Using ${cfg.commonNameProvider}")
     val oldCert = existing.map(_.chain.head)
 
     val requesterKeypair = generateKeyPair()
@@ -44,13 +48,15 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
     )
 
     if (cfg.commonNameProvider.alternativeNames().nonEmpty) {
-      val altNames : Array[ASN1Encodable] = cfg.commonNameProvider.alternativeNames().map { n=>
-        new GeneralName(GeneralName.dNSName, n).asInstanceOf[ASN1Encodable]
+      val altNames : Array[GeneralName] = cfg.commonNameProvider.alternativeNames().map { n=>
+        log.debug(s"Adding alternative dns name [$n] to certificate.")
+        new GeneralName(GeneralName.dNSName, n)
       }.toArray
 
-      val altNamesExt = new DERSequence(altNames)
+      val names = new GeneralNames(altNames)
+      log.debug(s"General Names : $names")
 
-      certBuilder.addExtension(X509Extension.subjectAlternativeName, false, altNamesExt)
+      certBuilder.addExtension(X509Extension.subjectAlternativeName, false, names)
     }
 
     certBuilder.addExtension(X509Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
@@ -61,6 +67,9 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
     val certHolder = certBuilder.build(certSigner)
 
     val converter = new JcaX509CertificateConverter()
-    ServerCertificate(requesterKeypair, List(converter.getCertificate(certHolder)))
+
+    val cert = converter.getCertificate(certHolder)
+    log.debug(s"Generated certificate ${X509CertificateInfo(cert)}")
+    ServerCertificate(requesterKeypair, List(cert))
   }
 }

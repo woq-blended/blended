@@ -19,6 +19,7 @@ BlendedModel(
     orgOsgi,
     domino,
     slf4j,
+    log4s,
     julToSlf4j,
     scalaTest % "test",
     mockitoAll % "test",

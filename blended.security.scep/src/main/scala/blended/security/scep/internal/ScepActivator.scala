@@ -22,8 +22,8 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
         val csrSignAlgorithm = cfg.getString("csrSignAlgorithm", "SHA1withRSA")
         val scepChallenge = cfg.getString("scepChallenge")
         log.debug(s"Waiting for CommonNameProvider of type [$cnProviderName]")
-        whenAdvancedServicePresent[CommonNameProvider](s"(type=$cnProviderName)") { cnProvider =>
 
+        whenAdvancedServicePresent[CommonNameProvider](s"(type=$cnProviderName)") { cnProvider =>
           val cfg = ScepConfig(
             url = url,
             cnProvider = cnProvider,
@@ -32,7 +32,7 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
             csrSignAlgorithm = csrSignAlgorithm,
             scepChallenge = scepChallenge
           )
-          new ScepCertificateProvider(cfg).providesService[CertificateProvider](Map("type" -> "scep"))
+          new ScepCertificateProvider(cfg).providesService[CertificateProvider](Map("provider" -> "scep"))
         }
       }
     }

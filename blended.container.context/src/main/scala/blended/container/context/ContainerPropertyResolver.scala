@@ -1,10 +1,8 @@
 package blended.container.context
 
-import org.slf4j.LoggerFactory
-
 object ContainerPropertyResolver {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ContainerPropertyResolver])
+  private[this] val log = org.log4s.getLogger
 
   private[this] val startDelim = "$[["
   private[this] val endDelim = "]]"
@@ -21,9 +19,11 @@ object ContainerPropertyResolver {
 
   def processRule(idSvc: ContainerIdentifierService, rule: String) : String = {
 
+    log.trace(s"Processing rule [$rule]")
     type Resolver = String => String
     type Modifier = (String, String) => String
 
+    // these are the valid modifiers in a resolver expression
     val modifiers : Map[String, Modifier] = Map(
       "upper" -> { case (s : String, param : String) => s.toUpperCase() },
 
@@ -62,6 +62,8 @@ object ContainerPropertyResolver {
         rule.substring(s+1, rule.indexOf(")", s)).split(",").toList
       )
     }
+
+    log.trace(s"rule [$ruleName], [${modifier.mkString(",")}]")
 
     val mods : List[(Modifier, String)] = modifier.map { m =>
       val pos = m.indexOf(":")

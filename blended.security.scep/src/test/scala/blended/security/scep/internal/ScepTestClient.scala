@@ -2,6 +2,7 @@ package blended.security.scep.internal
 
 import java.security.cert.X509Certificate
 
+import blended.security.ssl.internal.DefaultCommonNameProvider
 import blended.security.ssl.{CommonNameProvider, X509CertificateInfo}
 import org.slf4j.LoggerFactory
 
@@ -31,9 +32,10 @@ object ScepTestClient {
 //      subject = new X500Principal("CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE")
 //    )
 
-    val cnProvider = new CommonNameProvider {
-      override def commonName(): String = "CN=myserver, O=Kaufland Stiftung & Co. KG, C=DE"
-    }
+    val cnProvider = new DefaultCommonNameProvider(
+      commonName = "CN=cc9999lnxprx01.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC",
+      logicalHostnames = List("cc9999lnxprx01.9999.cc.kaufland", "cachea.9999.cc.kaufland")
+    )
 
     val scepConfig = new ScepConfig(
       url = "http://iqscep01:8080/pgwy/scep/sib",

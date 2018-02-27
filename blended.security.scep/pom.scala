@@ -22,6 +22,8 @@ BlendedModel(
     slf4j,
     jcip,
     scep,
+    "commons-io" % "commons-io" % "2.4",
+    "commons-lang" % "commons-lang" % "2.6",
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test"
@@ -34,7 +36,7 @@ BlendedModel(
       configuration = Config(
         instructions = new Config(Seq(
           "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option(s"*;artifactId=${commonsCodec.artifactId},artifactId=${jcip.artifactId},${scep.artifactId},${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}")
+          "Embed-Dependency" -> Option(s"*;artifactId=commons-io,commons-lang,${commonsCodec.artifactId},artifactId=${jcip.artifactId},${scep.artifactId},${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}")
         ))
       )
     ),

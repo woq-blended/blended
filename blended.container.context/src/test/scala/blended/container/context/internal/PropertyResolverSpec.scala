@@ -37,7 +37,9 @@ class PropertyResolverSpec extends FreeSpec
       "bar" -> "test",
       "FOO" -> "BAR",
       "num" -> "12345",
-      "version" -> "2.2.0"
+      "version" -> "2.2.0",
+      "typeA" -> "A",
+      "typeB" -> "B"
     )
   }
 
@@ -95,6 +97,8 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[num(right:4)]]") should be ("2345")
       ContainerPropertyResolver.resolve(idSvc, "$[[num(right:6)]]") should be ("12345")
       ContainerPropertyResolver.resolve(idSvc, "$[[version(replace:\\.:_)]]") should be ("2_2_0")
+      ContainerPropertyResolver.resolve(idSvc, "$[[typeA(replace:A:1)(replace:B:2))]]") should be ("1")
+      ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
     }
   }
 

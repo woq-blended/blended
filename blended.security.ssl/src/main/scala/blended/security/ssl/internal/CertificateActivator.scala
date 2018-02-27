@@ -31,22 +31,29 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
   whenBundleActive {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
 
-      // Should we provide a common name provider?
-      val commonName = cfg.getString("commonName")
-      val logicalNames = cfg.getStringListOption("logicalHostnames").getOrElse(List.empty)
-      val cnProvider = new DefaultCommonNameProvider(commonName, logicalNames)
+      val commonName = idSvc.resolvePropertyString(cfg.getString("commonName"))
+      val logicalNames = cfg.getStringListOption("logicalHostnames").getOrElse(List.empty).map{ s =>
+        idSvc.resolvePropertyString(s)
+      }
 
-      cnProvider.providesService[CommonNameProvider](Map("type" -> "default"))
+      val resolved = commonName.isSuccess && logicalNames.forall(_.isSuccess)
 
-      // Sould we provide a CertifacteProvider with a selftsigned certificate?
-      cfg.getConfigOption("selfsigned") match {
-        case Some(selfCfg) =>
-          val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(cnProvider, selfCfg))
-          selfSignedProvider.providesService[CertificateProvider](Map(
-            "provider" -> "default"
-          ))
-        case None =>
-          log.warn("No config entry 'selfsigned' found. Skipping provision of SelfSignedCertificatProvider")
+      if (resolved) {
+        val cnProvider = new DefaultCommonNameProvider(commonName.get, logicalNames.map(_.get))
+        cnProvider.providesService[CommonNameProvider](Map("type" -> "default"))
+
+        // Sould we provide a CertifacteProvider with a selftsigned certificate?
+        cfg.getConfigOption("selfsigned") match {
+          case Some(selfCfg) =>
+            val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(cnProvider, selfCfg))
+            selfSignedProvider.providesService[CertificateProvider](Map(
+              "provider" -> "default"
+            ))
+          case None =>
+            log.warn("No config entry 'selfsigned' found. Skipping provision of SelfSignedCertificatProvider")
+        }
+      } else {
+        log.error("Failed to resolve common name or logical names for certificate common name.\nSkipping common name provisioning and self signed certificate provisioning.")
       }
 
       val certProviderName = cfg.getString("provider", "default")

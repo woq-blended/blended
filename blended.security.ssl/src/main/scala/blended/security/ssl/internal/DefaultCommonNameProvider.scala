@@ -11,10 +11,6 @@ class DefaultCommonNameProvider(
 ) extends CommonNameProvider {
 
   override def alternativeNames(): List[String] = {
-    logicalHostnames.map(n => s"DNS: $n")
+    logicalHostnames
   }
-
-  override def toString(): String =
-    getClass().getSimpleName + "(physicalHostname=" + commonName + ", logicalHostnames = " + alternativeNames() + ")"
-
 }
