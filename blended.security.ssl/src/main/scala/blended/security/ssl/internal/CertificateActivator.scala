@@ -32,17 +32,16 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
 
       // Should we provide a common name provider?
-      cfg.getStringOption("commonName") match {
-        case Some(commonName) =>
-          new DefaultCommonNameProvider(commonName).providesService[CommonNameProvider](Map("type" -> "default"))
-        case None =>
-          log.warn("No config entry 'commonName' found. Skipping provision of default CommonNameProvider.")
-      }
+      val commonName = cfg.getString("commonName")
+      val logicalNames = cfg.getStringListOption("logicalHostnames").getOrElse(List.empty)
+      val cnProvider = new DefaultCommonNameProvider(commonName, logicalNames)
+
+      cnProvider.providesService[CommonNameProvider](Map("type" -> "default"))
 
       // Sould we provide a CertifacteProvider with a selftsigned certificate?
       cfg.getConfigOption("selfsigned") match {
         case Some(selfCfg) =>
-          val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(selfCfg))
+          val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(cnProvider, selfCfg))
           selfSignedProvider.providesService[CertificateProvider](Map(
             "provider" -> "default"
           ))

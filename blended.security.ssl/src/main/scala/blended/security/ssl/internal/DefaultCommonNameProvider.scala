@@ -6,9 +6,15 @@ import blended.security.ssl.CommonNameProvider
  * Implementation of a [[CommonNameProvider]] that provides a fixed common name.
  */
 class DefaultCommonNameProvider(
-  override val commonName: String)
-    extends CommonNameProvider {
+  override val commonName: String,
+  logicalHostnames: List[String]
+) extends CommonNameProvider {
 
-  override def toString(): String = getClass().getSimpleName + "(commonName=" + commonName + ")"
+  override def alternativeNames(): List[String] = {
+    logicalHostnames.map(n => s"DNS: $n")
+  }
+
+  override def toString(): String =
+    getClass().getSimpleName + "(physicalHostname=" + commonName + ", logicalHostnames = " + alternativeNames() + ")"
 
 }

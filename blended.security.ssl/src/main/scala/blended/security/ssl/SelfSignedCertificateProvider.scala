@@ -1,12 +1,12 @@
 package blended.security.ssl
 
 import java.math.BigInteger
-import java.security.cert.X509Certificate
 import java.security.{KeyPair, KeyPairGenerator}
 import java.util.Calendar
 
 import javax.security.auth.x500.X500Principal
-import org.bouncycastle.asn1.x509.{KeyUsage, X509Extension}
+import org.bouncycastle.asn1.x509.{GeneralName, KeyUsage, X509Extension}
+import org.bouncycastle.asn1.{ASN1Encodable, DERSequence}
 import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 
@@ -26,7 +26,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
 
     val requesterKeypair = generateKeyPair()
 
-    val principal = new X500Principal(cfg.subject)
+    val principal = new X500Principal(cfg.commonNameProvider.commonName())
     val requesterIssuer = principal
     val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
@@ -42,6 +42,16 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
     val certBuilder = new JcaX509v3CertificateBuilder(
       requesterIssuer, serial, notBefore, notAfter, requesterSubject, requesterKeypair.getPublic()
     )
+
+    if (cfg.commonNameProvider.alternativeNames().nonEmpty) {
+      val altNames : Array[ASN1Encodable] = cfg.commonNameProvider.alternativeNames().map { n=>
+        new GeneralName(GeneralName.dNSName, n).asInstanceOf[ASN1Encodable]
+      }.toArray
+
+      val altNamesExt = new DERSequence(altNames)
+
+      certBuilder.addExtension(X509Extension.subjectAlternativeName, false, altNamesExt)
+    }
 
     certBuilder.addExtension(X509Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
 

@@ -30,7 +30,7 @@ class CertificateControllerSpec extends FreeSpec {
   )
 
   def selfSignedConfig = SelfSignedConfig(
-    subject, 2048, "SHA256withRSA", validDays
+    new DefaultCommonNameProvider(subject, List("server1", "server2")), 2048, "SHA256withRSA", validDays
   )
 
   def defaultProvider = new SelfSignedCertificateProvider(selfSignedConfig)

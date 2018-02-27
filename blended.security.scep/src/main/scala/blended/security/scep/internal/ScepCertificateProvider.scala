@@ -30,8 +30,6 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
 
   private[this] lazy val log = org.log4s.getLogger
 
-  private[this] val subject = cfg.cnProvider.commonName()
-
   private[this] lazy val scepClient : Client = {
     val verifier : CertificateVerifier = new OptimisticCertificateVerifier()
     val handler : CallbackHandler = new DefaultCallbackHandler(verifier)
@@ -59,7 +57,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
   private[this] def selfSignedCertificate() : Try[ServerCertificate] = {
 
     val selfSignedConfig = SelfSignedConfig(
-      subject = subject,
+      commonNameProvider = cfg.cnProvider,
       keyStrength = cfg.keyLength,
       sigAlg = caps.getStrongestSignatureAlgorithm(),
       validDays = 1
@@ -74,7 +72,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
 
     log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
 
-    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(subject), inCert.keyPair.getPublic())
+    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cfg.cnProvider.commonName()), inCert.keyPair.getPublic())
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
     // TODO addextensions ?

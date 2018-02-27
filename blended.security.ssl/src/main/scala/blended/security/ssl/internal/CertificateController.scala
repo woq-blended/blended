@@ -1,15 +1,13 @@
 package blended.security.ssl.internal
 
-import java.io.{ File, FileInputStream, FileOutputStream }
-import java.security.{ KeyPair, KeyStore, PrivateKey }
-import java.security.cert.X509Certificate
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.security.{KeyPair, KeyStore, PrivateKey}
 
 import blended.security.ssl.{CertificateProvider, ServerCertificate, X509CertificateInfo}
 import org.log4s._
 
-import scala.util.{ Success, Try }
 import scala.concurrent.duration._
-import scala.util.Failure
+import scala.util.{Failure, Success, Try}
 
 class CertificateController(cfg: CertControllerConfig, provider: CertificateProvider) {
 
@@ -25,14 +23,6 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
   def serverKeyStore(): KeyStore = keyStore
 
-  //  def extractCertInfo(ks: KeyStore): Try[X509CertificateInfo] = Try {
-  //    Option(ks.getCertificate(cfg.alias)) match {
-  //      case Some(cert: X509Certificate) => X509CertificateInfo(cert)
-  //      case Some(cert) => sys.error(s"The certificate with alias [${cfg.alias}] is not a X509Certificate")
-  //      case None => sys.error(s"No certificate found with alias [${cfg.alias}] in key store [${ks}]")
-  //    }
-  //  }
-
   private[this] def extractServerCertificate(ks: KeyStore): Try[Option[ServerCertificate]] = Try {
     Option(ks.getCertificateChain(cfg.alias)).map { chain =>
       val e = ks.getCertificate(cfg.alias)
@@ -45,7 +35,7 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
   private[this] def checkAndUpdateCertificate(ks: KeyStore): Try[ServerKeyStore] = {
 
     val existingCert = extractServerCertificate(ks).recoverWith {
-      case e if cfg.overwriteForFailure => Success(None)
+      case _ if cfg.overwriteForFailure => Success(None)
     }.get
 
     existingCert match {
@@ -56,10 +46,6 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
 
         if (remaining <= cfg.minValidDays * millisPerDay) {
           log.info(s"Certificate [${cfg.alias}] is about to expire in [${remaining.toDouble / millisPerDay}] days...refreshing certificate.")
-          // try to obtain new certificate
-          // if unable to refresh continue using old certicate if remaining is still positive
-          // if negative fail
-          //        throw new Exception("not implemented")
           updateKeystore(ks, existingCert).recoverWith {
             case e: Throwable =>
               log.debug(e)("Could not refresh the keystore, returning the old one")
@@ -90,7 +76,8 @@ class CertificateController(cfg: CertControllerConfig, provider: CertificateProv
         log.error(e)("Could not update keystore")
         throw e
       case Success(cert) =>
-        log.info(s"Successfully obtained certificate from certificate provider [${provider}]")
+        val info = X509CertificateInfo(cert.chain.head)
+        log.info(s"Successfully obtained certificate from certificate provider [$provider] : $info")
         ks.setKeyEntry(cfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain.toArray)
 
         val fos = new FileOutputStream(cfg.keyStore)
