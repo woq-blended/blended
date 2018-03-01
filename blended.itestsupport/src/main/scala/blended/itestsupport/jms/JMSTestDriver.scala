@@ -22,7 +22,7 @@ abstract class JMSTestDriver {
 
   def run() : Unit = {
 
-    val jmsConfig = BlendedJMSConnectionConfig.fromConfig(dummyResolver)("unknown", None, ConfigFactory.parseMap(
+    val jmsConfig = BlendedJMSConnectionConfig.fromConfig(dummyResolver)("unknown", "unknown", ConfigFactory.parseMap(
       Map(
         "provider" -> "unknown",
         "clientId" -> "client"

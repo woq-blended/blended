@@ -71,7 +71,7 @@ class BrokerControlActor extends Actor
 
         val jmsCfg = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
           "activemq",
-          Some("activemq"),
+          "activemq",
           cfg.config
         )
 

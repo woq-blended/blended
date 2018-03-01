@@ -25,7 +25,7 @@ object BlendedJMSConnectionConfig {
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
     defaultUser = None,
     defaultPassword  = None,
-    pingDestination = "blended.ping",
+    pingDestination = "topic:blended.ping",
     properties = Map.empty,
     useJndi = false,
     jndiName = None,
@@ -35,9 +35,9 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
+  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
 
-    val prov = cfg.getString("provider", defaultConfig.provider)
+    val prov = cfg.getString("provider", provider)
     val enabled = cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled = cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
     val pingEnabled = cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)

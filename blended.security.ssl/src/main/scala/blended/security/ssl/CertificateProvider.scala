@@ -7,7 +7,12 @@ import scala.util.Try
 
 case class ServerCertificate private (
   keyPair: KeyPair,
-  chain: List[X509Certificate])
+  chain: List[X509Certificate]) {
+
+  override def toString: String = chain.map { c=>
+    X509CertificateInfo(c).toString
+  }.mkString("\n", "\n", "")
+}
 
 case object ServerCertificate {
 

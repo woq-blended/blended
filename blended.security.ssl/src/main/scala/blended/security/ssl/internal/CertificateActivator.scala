@@ -70,7 +70,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
           case Failure(e) => log.error(s"Could not obtain Server certificate for container : ${e.getMessage()}")
 
           case Success(ServerKeyStore(ks, serverCert)) =>
-            log.info("Successfully obtained server certificate (and updated KeyStore) for SSLContexts")
+            log.info(s"Successfully obtained server certificate (and updated KeyStore) for SSLContexts : $serverCert")
 
             def registerSslContextProvider(ks: KeyStore): CapsuleScope = executeWithinNewCapsuleScope {
               log.debug("Registering SslContextProvider type=client and type=server")
