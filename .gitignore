@@ -35,7 +35,5 @@ target/
 .cache
 .cache-main
 .cache-tests
-target-eclipse/
 target-ide/
-eclipse-target/
 
