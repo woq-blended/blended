@@ -55,6 +55,7 @@ object Plugins {
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
+  val lifecycle = "org.eclipse.m2e" % "lifecycle-mapping" % "1.0.0"
 
   val site = mavenPluginGroup % "maven-site-plugin" % "3.3"
   val projectReports = mavenPluginGroup % "maven-project-info-reports-plugin" % "2.9"

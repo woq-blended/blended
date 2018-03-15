@@ -22,6 +22,26 @@ BlendedModel(
     blendedUpdaterTools,
     scalaLib
   ),
+  pluginManagement = Seq(
+      // ignore maven-plugin-plugin in Eclipse
+    Plugin(
+        Plugins.lifecycle,
+      configuration = Config(
+        pluginExection = Config(
+          pluginExecutionFilter = Config(
+            groupId = Plugins.plugin.groupId.get,
+            artifactId = Plugins.plugin.artifactId,
+            versionRange = "[0,)",
+            goals = Config(
+              goal = "descriptor",
+              goal = "help-goal"
+            )
+          ),
+          action = new Config(Seq("ignore" -> None))
+        )
+      )
+    )
+  ),
   plugins = Seq(
     sbtCompilerPlugin,
     Plugin(
