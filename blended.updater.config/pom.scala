@@ -45,8 +45,8 @@ BlendedModel(
       gav = Plugins.buildHelper,
       executions = Seq(
         Execution(
-          id = "addSources",
-          phase = "generate-sources",
+          id = "addSources-shared",
+          phase = "initialize",
           goals = Seq("add-source"),
           configuration = Config(
             sources = Config(
@@ -55,8 +55,8 @@ BlendedModel(
           )
         ),
         Execution(
-          id = "addTestSources",
-          phase = "generate-sources",
+          id = "addTestSources-shared",
+          phase = "initialize",
           goals = Seq("add-test-source"),
           configuration = Config(
             sources = Config(
