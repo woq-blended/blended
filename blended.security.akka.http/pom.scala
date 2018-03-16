@@ -17,10 +17,15 @@ BlendedModel(
     Deps.orgOsgi,
     Deps.orgOsgiCompendium,
     Deps.slf4j,
-    Deps.apacheShiroCore
+    Deps.apacheShiroCore,
+    Deps.scalaTest % "test",
+    Deps.akkaHttpTestkit % "test",
+    Deps.jclOverSlf4j % "test",
+    Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin
+    sbtCompilerPlugin,
+    scalatestMavenPlugin
   )
 )
