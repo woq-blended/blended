@@ -11,6 +11,20 @@ BlendedModel(
   gav = blendedMgmtUi,
   packaging = "war",
   description = "The blended management UI.",
+  // We don't need those dependencies, but we use them for editing in Eclipse
+  dependencies = Seq(
+    "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,
+    "com.github.japgolly.scalajs-react" %%% "extra" % Versions.scalajsReact,
+    "com.github.japgolly.scalacss" %%% "ext-react" % Versions.scalaCss,
+
+    "org.scala-js" %%% "scalajs-dom" % Versions.scalajsDom,
+    BlendedVersions.blendedGroupId %%% "blended.updater.config" % BlendedVersions.blendedVersion,
+    "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
+    "com.olvind" %%% "scalajs-react-components" % "0.8.1",
+
+    "com.github.japgolly.scalajs-react" %%% "test" % Versions.scalajsReact % "test",
+    "org.scalatest" %%% "scalatest" % BlendedVersions.scalaTestVersion % "test"
+  ),
   plugins = Seq(
     Plugin(
       gav = Plugins.clean,
