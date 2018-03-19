@@ -20,8 +20,8 @@ case class ConnectionHolder(
   bundleContext: Option[BundleContext] = None
 ) {
 
-  lazy val vendor = config.vendor
-  lazy val provider = config.provider
+  lazy val vendor : String = config.vendor
+  lazy val provider : String = config.provider
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
   private[this] var conn : Option[BlendedJMSConnection] = None

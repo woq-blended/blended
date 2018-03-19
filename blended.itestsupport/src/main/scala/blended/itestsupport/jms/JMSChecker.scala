@@ -35,13 +35,14 @@ private[jms]class JMSChecker(cf: ConnectionFactory) extends AsyncChecker with JM
 
     log.debug(s"Checking JMS connection...[$cf]")
 
-
     if ( (!connected.get()) && (!connecting.get()) ) {
       connecting.set(true)
 
-      withConnection { conn =>
+      withConnection { _ =>
         connected.set(true)
-      } (cf)
+      } (cf) foreach { t =>
+        log.debug(s"Error checking JMS connection : ${t.getMessage})")
+      }
 
       connecting.set(false)
     }
