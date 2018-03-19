@@ -6,9 +6,9 @@
     </encoder>
   </appender>
 
-  <logger name="blended" level="DEBUG" />
+  <!-- logger name="blended" level="DEBUG" /-->
 
-  <root level="DEBUG">
+  <root level="info">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

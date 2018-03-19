@@ -16,12 +16,17 @@ class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
        |  key3 = val3
        |  key4 = [ val4-1, val4-2 ]
        |}
+       |map {
+       |  prop1 = val1
+       |  prop2 = val2
+       |}
        |""".stripMargin
 
   val config2 = ""
 
   val present = ConfigFactory.parseString(config1)
   val missing = ConfigFactory.parseString(config2)
+
   var count = 0
   def nextCount = { count += 1; count }
 
@@ -43,5 +48,6 @@ class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
   checkGetter[Boolean]("Boolean", true, false, (c, d) => c.getBoolean("boolean1", d))
   checkGetter[Boolean]("Boolean", false, true, (c, d) => c.getBoolean("boolean2", d))
   checkGetter[List[String]]("StringList", List("val4-1", "val4-2"), List("default"), (c, d) => c.getStringList("key2.key4", d))
+  checkGetter[Map[String, String]]("StringMap", Map("prop1" -> "val1", "prop2" -> "val2"), Map("foo" -> "bar"),  (c, d) => c.getStringMap("map", d))
   
 }

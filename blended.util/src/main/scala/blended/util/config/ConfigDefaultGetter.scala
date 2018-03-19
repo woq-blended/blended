@@ -1,10 +1,10 @@
 package blended.util.config
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters._
 
 import com.typesafe.config.Config
 
-trait ConfigDefaultGetter {
+trait ConfigDefaultGetter extends ConfigAccessor {
 
   implicit class RichDefaultConfig(config: Config) {
 
@@ -32,6 +32,11 @@ trait ConfigDefaultGetter {
       if (config.hasPath(key)) config.getStringList(key).asScala.toList
       else default
 
+    def getStringMap(key: String, default: Map[String, String]) : Map[String, String] =
+      configStringMap(config, key).getOrElse(default)
+
+    def getConfigMap(key: String, default: Map[String, Config]) : Map[String, Config] =
+      configConfigMap(config, key).getOrElse(default)
   }
 
 }

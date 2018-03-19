@@ -4,7 +4,7 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import com.typesafe.config.Config
 
-trait ConfigOptionGetter {
+trait ConfigOptionGetter extends ConfigAccessor {
 
   implicit class RichOptionConfig(config: Config) {
 
@@ -31,6 +31,10 @@ trait ConfigOptionGetter {
     def getStringListOption(key: String): Option[List[String]] =
       if (config.hasPath(key)) Option(config.getStringList(key).asScala.toList)
       else None
+
+    def getStringMapOption(key: String) : Option[Map[String, String]] = configStringMap(config, key)
+
+    def getConfigMapOption(key: String): Option[Map[String, Config]] = configConfigMap(config, key)
 
     def getConfigOption(key: String): Option[Config] =
       if (config.hasPath(key)) Option(config.getConfig(key))

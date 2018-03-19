@@ -2,18 +2,19 @@ package blended.security.ssl.internal
 
 import java.io.FileInputStream
 import java.security.KeyStore
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManager, TrustManagerFactory}
+
+import javax.net.ssl._
 
 class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
 
   private[this] val log = org.log4s.getLogger
 
   private[this] val propTrustStore = "javax.net.ssl.trustStore"
-  private[this] val propTrusStorePwd = "javax.net.ssl.trustStorePassword"
+  private[this] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
 
   private[this] lazy val trustManager : Array[TrustManager] = (
     Option(System.getProperty(propTrustStore)),
-    Option(System.getProperty(propTrusStorePwd))
+    Option(System.getProperty(propTrustStorePwd))
   ) match {
     case (Some(trustStore), Some(trustStorePassword)) =>
       log.debug("Configuring trust store from System Properties")
@@ -30,7 +31,7 @@ class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
       null
   }
 
-  private[this] lazy val keyManager = {
+  private[this] lazy val keyManager : Array[KeyManager] = {
     val kmf = KeyManagerFactory.getInstance("SunX509")
     kmf.init(keystore, keyPass)
     kmf.getKeyManagers
