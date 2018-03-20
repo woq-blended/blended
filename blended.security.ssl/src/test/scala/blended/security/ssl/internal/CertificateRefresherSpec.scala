@@ -3,7 +3,6 @@ package blended.security.ssl.internal
 import org.scalatest.FreeSpec
 
 import blended.testsupport.pojosr.PojoSrTestHelper
-import java.util.GregorianCalendar
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
