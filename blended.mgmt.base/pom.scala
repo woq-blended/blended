@@ -11,13 +11,11 @@ BlendedModel(
   packaging = "bundle",
   description = "Shared classes for management and reporting facility.",
   dependencies = Seq(
-    scalaLib % "provided",
+    Deps.scalaLib % "provided",
     blendedDomino,
-    blendedUpdaterConfig,
-    sprayJson,
-    prickle,
-    scalaTest % "test"
-  ), 
+    Deps.log4s,
+    Deps.scalaTest % "test"
+  ),
   plugins = Seq(
     mavenBundlePlugin,
     sbtCompilerPlugin,

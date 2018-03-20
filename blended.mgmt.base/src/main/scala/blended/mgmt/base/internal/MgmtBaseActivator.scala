@@ -6,9 +6,9 @@ import blended.container.context.ContainerIdentifierService
 import domino.DominoActivator
 import org.slf4j.LoggerFactory
 
-class MgmtActivator extends DominoActivator {
+class MgmtBaseActivator extends DominoActivator {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[MgmtActivator])
+  private[this] val log = org.log4s.getLogger
 
   whenBundleActive {
     whenServicePresent[ContainerIdentifierService] { idSvc =>
