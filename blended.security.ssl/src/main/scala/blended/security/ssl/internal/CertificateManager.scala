@@ -93,34 +93,41 @@ class CertificateManager(
     serverKeystore(ks)
   }
 
-  def checkCertificates() : Try[(ServerKeyStore, List[String])] = Try { (keyStore.get, List.empty) }
+  def checkCertificates() : Try[(ServerKeyStore, List[String])] = Try {
 
-  private[this] def checkAndUpdateCertificate(ks: KeyStore, certCfg: CertificateConfig): Try[ServerKeyStore] = Try {
+    val ks = keyStore.get
 
-    serverKeystore(ks).get
-//    val existingCert = extractServerCertificate(ks, certCfg).get
-//
-//    existingCert match {
-//      case Some(serverCertificate) =>
-//        val certInfo = X509CertificateInfo(serverCertificate.chain.head)
-//
-//        val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
-//
-//        if (remaining <= certCfg.minValidDays * millisPerDay) {
-//          log.info(s"Certificate [${certCfg.alias}] is about to expire in [${remaining.toDouble / millisPerDay}] days...refreshing certificate.")
-//          updateKeystore(ks, existingCert).recoverWith {
-//            case e: Throwable =>
-//              log.debug(e)("Could not refresh the keystore, returning the old one")
-//              Success(ServerKeyStore(ks, serverCertificate))
-//          }
-//        } else {
-//          log.info(s"Server certificate [${cfg.alias}] is still vaild.")
-//          Success(ServerKeyStore(ks, serverCertificate))
-//        }
-//      case None =>
-//        log.info(s"Certificate with alias [${certCfg.alias}] does not yet exist")
-//        updateKeystore(ks, existingCert)
-//    }
+    def changedAliases(certConfigs: List[CertificateConfig], changed: List[String]) : Try[List[String]] = Try {
+      certConfigs match {
+        case Nil => changed
+        case head :: tail =>
+          val existingCert = extractServerCertificate(ks.keyStore, head).get
+          existingCert match {
+            case Some(serverCertificate) =>
+              val certInfo = X509CertificateInfo(serverCertificate.chain.head)
+              val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
+
+              if (remaining <= head.minValidDays * millisPerDay) {
+                log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
+                updateKeystore(ks.keyStore, existingCert, head).recoverWith {
+                  case t : Throwable =>
+                    log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
+                    changedAliases(tail, changed)
+                }
+                changedAliases(tail, head.alias :: changed).get
+              } else {
+                log.info(s"Server certificate [${head.alias}] is still valid.")
+                changedAliases(tail, changed).get
+              }
+            case None =>
+              log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
+              updateKeystore(ks.keyStore, None, head)
+              changedAliases(tail, head.alias :: changed).get
+          }
+      }
+    }
+
+    (ks, changedAliases(cfg.certConfigs, List.empty).get)
   }
 
   private[this] def updateKeystore(ks: KeyStore, existingCert: Option[ServerCertificate], certCfg: CertificateConfig): Try[ServerKeyStore] = Try {

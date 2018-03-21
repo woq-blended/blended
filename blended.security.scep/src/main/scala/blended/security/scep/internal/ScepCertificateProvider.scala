@@ -66,13 +66,13 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     new SelfSignedCertificateProvider(selfSignedConfig).refreshCertificate(None)
   }
 
-  private[this] def enroll(inCert : ServerCertificate): Try[ServerCertificate] = {
+  private[this] def enroll(inCert : ServerCertificate): Try[ServerCertificate] = Try {
 
     val reqCert = inCert.chain.head
 
     log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
 
-    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cfg.cnProvider.commonName()), inCert.keyPair.getPublic())
+    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cfg.cnProvider.commonName().get), inCert.keyPair.getPublic())
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
     // TODO addextensions ?
@@ -102,7 +102,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
       ServerCertificate.create(
         keyPair = inCert.keyPair,
         chain = certs
-      )
+      ).get
 
     }
   }

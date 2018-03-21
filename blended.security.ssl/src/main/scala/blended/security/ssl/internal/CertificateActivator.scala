@@ -27,9 +27,23 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
   private[this] def setupCertificateManager(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
 
     val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid))
-    val mgr = new CertificateManager(bundleContext, capsuleContext, mgrConfig, Map.empty)
 
-    addCapsule(mgr)
+    def waitForProvider(providerNames: List[String], provider: Map[String, CertificateProvider]) : Unit = {
+      providerNames match {
+        case Nil =>
+          val mgr = new CertificateManager(bundleContext, capsuleContext, mgrConfig, provider)
+          addCapsule(mgr)
+        case head :: tail =>
+          log.info(s"Waiting for certificate provider [$head]")
+          whenAdvancedServicePresent[CertificateProvider](s"(provider=$head)") { p =>
+            log.info(s"Certificate provider [$head] available.")
+            waitForProvider(tail, provider + (head ->  p))
+          }
+      }
+    }
+
+    val distinctProviderNames = mgrConfig.certConfigs.map(_.provider).distinct.toList
+    waitForProvider(distinctProviderNames, Map.empty)
   }
 
   whenBundleActive {

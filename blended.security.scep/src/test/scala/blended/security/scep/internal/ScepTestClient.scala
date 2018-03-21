@@ -1,8 +1,9 @@
 package blended.security.scep.internal
 
-import blended.security.ssl.X509CertificateInfo
-import blended.security.ssl.internal.DefaultCommonNameProvider
+import blended.security.ssl.{CommonNameProvider, X509CertificateInfo}
 import org.slf4j.LoggerFactory
+
+import scala.util.Try
 
 object ScepTestClient {
 
@@ -12,10 +13,10 @@ object ScepTestClient {
 
     log.info("Starting Scep Test Client ...")
 
-    val cnProvider = new DefaultCommonNameProvider(
-      commonName = "CN=cc9999lnxprx01.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC",
-      logicalHostnames = List("cc9999lnxprx01.9999.cc.kaufland", "cachea.9999.cc.kaufland")
-    )
+    val cnProvider = new CommonNameProvider {
+      override def commonName(): Try[String] = Try { "CN=cc9999lnxprx01.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC" }
+      override def alternativeNames(): Try[List[String]] = Try { List("cc9999lnxprx01.9999.cc.kaufland", "cachea.9999.cc.kaufland") }
+    }
 
     val scepConfig = new ScepConfig(
       url = "http://iqscep01:8080/pgwy/scep/sib",

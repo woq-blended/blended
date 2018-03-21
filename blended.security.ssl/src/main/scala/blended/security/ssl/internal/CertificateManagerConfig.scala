@@ -18,7 +18,7 @@ case class CertificateManagerConfig(
   keyStore: String,
   storePass: Array[Char],
   keyPass: Array[Char],
-  certConfigs: Array[CertificateConfig],
+  certConfigs: List[CertificateConfig],
   refresherConfig: Option[RefresherConfig]
 )
 
@@ -35,7 +35,7 @@ object CertificateManagerConfig {
 
     val certConfigs = cfg.getConfigMap("certificates", Map.empty).map { case (k, v) =>
       CertificateConfig.fromConfig(k, v)
-    }.toArray
+    }.toList
 
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
 
