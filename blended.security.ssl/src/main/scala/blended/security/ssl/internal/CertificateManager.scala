@@ -110,7 +110,7 @@ class CertificateManager(
               if (remaining <= head.minValidDays * millisPerDay) {
                 log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
                 updateKeystore(ks.keyStore, existingCert, head).recoverWith {
-                  case t : Throwable =>
+                  case _ : Throwable =>
                     log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
                     changedAliases(tail, changed)
                 }

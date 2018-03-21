@@ -1,12 +1,10 @@
-package blended.container.context.internal
+package blended.container.context.impl.internal
 
 import java.io.File
 import java.nio.file.Files
 
-import blended.container.context.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
-import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -15,7 +13,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
 
   private[this] val bundleName = classOf[ContainerIdentifierService].getPackage.getName
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ContainerIdentifierServiceImpl])
+  private[this] val log = org.log4s.getLogger
 
   override val uuid : String = {
     val idFile = new File(System.getProperty("blended.home") + "/etc", s"$bundleName.id")

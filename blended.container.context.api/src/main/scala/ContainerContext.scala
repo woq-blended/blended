@@ -1,7 +1,5 @@
 package blended.container.context
 
-import com.typesafe.config.Config
-
 trait ContainerContext {
 
   def getContainerDirectory() : String

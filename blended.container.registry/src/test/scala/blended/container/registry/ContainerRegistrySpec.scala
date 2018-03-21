@@ -1,6 +1,5 @@
 package blended.container.registry.internal
 
-import akka.testkit.{TestActorRef, TestProbe}
 import blended.akka.OSGIActorConfig
 import blended.container.context.{ContainerContext, ContainerIdentifierService}
 import blended.testsupport.TestActorSys

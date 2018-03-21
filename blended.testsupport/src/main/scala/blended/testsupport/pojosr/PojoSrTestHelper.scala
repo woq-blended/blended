@@ -9,9 +9,7 @@ import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
 
 object PojoSrTestHelper {
-
   val OnlyOnePojoSrAtATime = new Object()
-
 }
 
 trait PojoSrTestHelper {
@@ -32,7 +30,7 @@ trait PojoSrTestHelper {
     }
   }
 
-  def deleteRecursive(files: File*): Unit = files.map { file =>
+  private[this] def deleteRecursive(files: File*): Unit = files.map { file =>
     if (file.isDirectory) deleteRecursive(file.listFiles: _*)
     file.delete match {
       case false if file.exists =>
@@ -41,14 +39,18 @@ trait PojoSrTestHelper {
     }
   }
 
-  def withStartedBundle(activator: BundleActivator): Unit =
+  def withStartedBundle[T](activator: BundleActivator)(f: PojoServiceRegistry => T): T =
     withPojoServiceRegistry { sr =>
-      withStartedBundle(sr)(activator)
+      withStartedBundle(sr)(activator)(f)
     }
 
-  def withStartedBundle(sr: PojoServiceRegistry)(activator: BundleActivator): Unit = {
-    activator.start(sr.getBundleContext())
-    activator.stop(sr.getBundleContext())
+  private[this] def withStartedBundle[T](sr: PojoServiceRegistry)(activator: BundleActivator)(f: PojoServiceRegistry => T): T = {
+    try {
+      activator.start(sr.getBundleContext())
+      f(sr)
+    } finally {
+      activator.stop(sr.getBundleContext())
+    }
   }
 
 }

@@ -1,0 +1,18 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator: ${bundle.namespace}.internal.ContainerContextActivator
+
+Import-Package: \
+  scala.*;version="[${scala.version},${scala.version}.50)", \
+  blended.launcher.runtime;resolution:=optional, \
+  *
+
+Export-Package: \
+  ${bundle.namespace}
+
+Private-Package: \
+  ${bundle.namespace}.internal

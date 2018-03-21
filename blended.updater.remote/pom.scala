@@ -21,7 +21,7 @@ BlendedModel(
     blendedUpdaterConfig,
     blendedMgmtBase,
     blendedLauncher,
-    blendedContainerContext,
+    blendedContainerContextApi,
     blendedAkka,
     blendedSprayApi,
     akkaTestkit % "test",

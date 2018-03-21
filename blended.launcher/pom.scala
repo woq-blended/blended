@@ -30,14 +30,7 @@ BlendedModel(
     commonsDaemon,
     blendedUpdaterConfig,
     cmdOption,
-    scalaTest % "test",
-    (blendedTestSupport % "test").pure
-  //    felixFramework % "test",
-  //    felixGogoRuntime % "test",
-  //    felixGogoShell % "test",
-  //    felixGogoCommand % "test",
-  //    felixFileinstall % "test",
-  //    felixMetatype % "test"
+    scalaTest % "test"
   ),
   properties = Map(
     "blended.launcher.version" -> blendedLauncher.version.get,
