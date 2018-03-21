@@ -1,26 +1,26 @@
 package blended.mgmt.rest.internal
 
+import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestLatch
 
-import blended.akka.OSGIActorConfig
-import blended.spray.SprayPrickleSupport
-import blended.updater.config._
-import org.scalatest.{FreeSpec, Matchers}
-import spray.testkit.ScalatestRouteTest
-import blended.updater.config.json.PrickleProtocol._
-import blended.security.spray.DummyBlendedSecuredRoute
+import org.scalatest.{ FreeSpec, Matchers }
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class ManagementCollectorSpec
-    extends FreeSpec
-    with Matchers
-    with ScalatestRouteTest
-    with CollectorService
-    with SprayPrickleSupport 
-    with DummyBlendedSecuredRoute {
+import blended.updater.config._
+import blended.updater.config.json.PrickleProtocol._
+import blended.security.akka.http.DummyBlendedSecurityDirectives
+import blended.prickle.akka.http.PrickleSupport
+
+class CollectorServiceSpec
+  extends FreeSpec
+  with Matchers
+  with ScalatestRouteTest
+  with CollectorService
+  with DummyBlendedSecurityDirectives
+  with PrickleSupport {
 
   val processContainerInfoLatch = TestLatch(1)
   val getCurrentStateLatch = TestLatch(1)
@@ -46,16 +46,12 @@ class ManagementCollectorSpec
         responseAs[String] should be("TEST")
       }
     }
-    
+
   }
 
   override def cleanUp(): Unit = {
     Await.result(system.terminate(), 10.seconds)
   }
-
-  override def actorConfig: OSGIActorConfig = ???
-
-  override implicit def actorRefFactory = system
 
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
     processContainerInfoLatch.countDown()

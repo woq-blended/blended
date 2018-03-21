@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.directives.AuthenticationDirective
 import akka.http.scaladsl.server.directives.BasicDirectives.pass
 import akka.http.scaladsl.server.directives.BasicDirectives.provide
 
-class DummyBlendedSecurityDirectives extends BlendedSecurityDirectives {
+trait DummyBlendedSecurityDirectives extends BlendedSecurityDirectives {
 
   override def authenticated: AuthenticationDirective[Subject] = provide[Subject](null)
 

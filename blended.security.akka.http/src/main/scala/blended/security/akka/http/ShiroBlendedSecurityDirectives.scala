@@ -19,25 +19,17 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Directive0
 
 /**
- * Apache Shiro-bases BlendedSecurityDirectives.
+ * Apache Shiro SecurityManager-bases BlendedSecurityDirectives.
  *
- * @constructor
- * Creates this class with the given SecurityManager provider function.
  */
-class ShiroBlendedSecurityDirectives(securityManager: () => Option[SecurityManager]) extends BlendedSecurityDirectives {
-
-  private[this] lazy val log = org.log4s.getLogger
+trait ShiroBlendedSecurityDirectives extends BlendedSecurityDirectives {
 
   /**
-   * Creates this class but retrieves the SecurityManager from the given BundleContext on demand.
+   * External dependency to a security manager.
    */
-  def this(bundleContext: BundleContext) {
-    this(() => {
-      Option(bundleContext.getServiceReference(classOf[SecurityManager].getName())).
-        flatMap(ref => Option(bundleContext.getService(ref))).
-        collect { case s: SecurityManager => s }
-    })
-  }
+  protected def securityManager(): Option[SecurityManager]
+
+  private[this] lazy val log = org.log4s.getLogger
 
   val challenge = HttpChallenges.basic("blended")
 

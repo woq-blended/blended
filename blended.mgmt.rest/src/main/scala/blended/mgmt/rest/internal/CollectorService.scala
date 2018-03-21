@@ -1,28 +1,25 @@
 package blended.mgmt.rest.internal
 
 import akka.util.Timeout
-import blended.spray.{ BlendedHttpRoute, SprayPrickleSupport }
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.slf4j.LoggerFactory
-import spray.http.MediaTypes
-import spray.routing.Route
-import blended.security.spray.BlendedSecuredRoute
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model._
 
 import scala.collection.immutable
 import scala.concurrent.duration._
-import spray.routing.ValidationRejection
-import spray.http.HttpHeader
-import spray.http.HttpHeaders
-import spray.http.AllOrigins
+import blended.security.akka.http.BlendedSecurityDirectives
+import blended.prickle.akka.http.PrickleSupport
+import akka.http.scaladsl.server.ValidationRejection
 
-trait CollectorService
-    extends BlendedHttpRoute
-    with BlendedSecuredRoute {
-  this: SprayPrickleSupport =>
+trait CollectorService {
+  // dependencies
+  deps: BlendedSecurityDirectives with PrickleSupport =>
 
-  override val httpRoute: Route =
-    respondWithSingletonHeader(HttpHeaders.`Access-Control-Allow-Origin`(AllOrigins)) {
+  val httpRoute: Route =
+    respondWithDefaultHeader(headers.`Access-Control-Allow-Origin`(headers.HttpOriginRange.*)) {
       collectorRoute ~
         infoRoute ~
         versionRoute ~
@@ -72,7 +69,7 @@ trait CollectorService
     }
   }
 
-  def jsonReponse = respondWithMediaType(MediaTypes.`application/json`)
+  def jsonReponse = pass // no longer supported
 
   def collectorRoute: Route = {
 
@@ -170,7 +167,7 @@ trait CollectorService
               case _ =>
                 // check existence of overlays
                 findMissingOverlayRef(rolloutProfile.overlays) match {
-                  case Some(r) => 
+                  case Some(r) =>
                     reject(ValidationRejection(s"Unknown overlay ${r.name} ${r.version}"))
                   case None =>
                     // all ok, complete
@@ -182,7 +179,9 @@ trait CollectorService
                           updateAction = StageProfile(
                             profileName = rolloutProfile.profileName,
                             profileVersion = rolloutProfile.profileVersion,
-                            overlays = rolloutProfile.overlays))
+                            overlays = rolloutProfile.overlays
+                          )
+                        )
                       }
                       s"Recorded ${rolloutProfile.containerIds.size} rollout actions"
                     }

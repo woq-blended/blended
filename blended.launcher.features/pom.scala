@@ -113,7 +113,7 @@ val features = Seq(
       "blended-ssl"
     ),
     bundles = Seq(
-      FeatureBundle(dependency = Dependency(gav = blendedMgmtRest, `type` = "war"), start = true),
+      FeatureBundle(dependency = Dependency(gav = blendedMgmtRest), start = true),
       FeatureBundle(dependency = blendedMgmtRepo, start = true),
       FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
       FeatureBundle(dependency = blendedUpdaterRemote, start = true),
@@ -189,7 +189,9 @@ val features = Seq(
       FeatureBundle(dependency = blendedAkkaHttp, start = true),
       FeatureBundle(dependency = Deps.akkaHttp),
       FeatureBundle(dependency = Deps.akkaHttpCore),
-      FeatureBundle(dependency = Deps.akkaParsing)
+      FeatureBundle(dependency = Deps.akkaParsing),
+      FeatureBundle(dependency = blendedPrickleAkkaHttp),
+      FeatureBundle(dependency = blendedSecurityAkkaHttp)
     )),
   FeatureDef("blended-spring", bundles = Seq(
     FeatureBundle(dependency = aopAlliance),

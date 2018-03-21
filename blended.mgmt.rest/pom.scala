@@ -8,41 +8,35 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   blendedMgmtRest,
-  packaging = "war",
+  packaging = "bundle",
   description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry.",
-  dependencies = Seq(
-    scalaLib % "provided",
-    slf4j % "provided",
-    blendedMgmtBase,
-    blendedSpray,
-    blendedSprayApi,
-    blendedSecuritySpray,
-    blendedContainerRegistry,
-    blendedAkka,
-    blendedUpdaterRemote,
-    orgOsgi,
-    orgOsgiCompendium,
-    scalaTest % "test",
-    sprayTestkit % "test",
-    mockitoAll,
-    slf4jLog4j12
-  ),
   properties = Map(
     "bundle.symbolicName" -> "${project.artifactId}",
     "bundle.namespace" -> "${project.artifactId}"
   ),
+  dependencies = Seq(
+    scalaLib % "provided",
+    slf4j % "provided",
+    blendedMgmtBase,
+    blendedContainerRegistry,
+    blendedAkka,
+    Deps.akkaHttp,
+    Deps.akkaHttpCore,
+    Deps.akkaStream,
+    blendedAkkaHttp,
+    blendedPrickleAkkaHttp,
+    blendedSecurityAkkaHttp,
+    blendedUpdaterRemote,
+    orgOsgi,
+    orgOsgiCompendium,
+    scalaTest % "test",
+    Deps.akkaHttpTestkit % "test",
+    mockitoAll % "test",
+    Deps.logbackClassic % "test"
+  ),
   plugins = Seq(
-    bundleWarPlugin,
+    mavenBundlePlugin,
     sbtCompilerPlugin,
-    scalatestMavenPlugin,
-    Plugin(
-      gav = Plugins.war,
-      configuration = Config (
-        packagingExcludes = "WEB-INF/lib/*.jar",
-        archive = Config(
-          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
-        )
-      )
-    )
+    scalatestMavenPlugin
   )
 )

@@ -17,7 +17,10 @@ class ShiroBlendedSecurityDirectivesSpec
   "An authenticated route" - {
 
     "without an security manager" - {
-      val secDirectives = new ShiroBlendedSecurityDirectives(() => None)
+      val secDirectives = new ShiroBlendedSecurityDirectives {
+        override def securityManager(): Option[SecurityManager] = None
+      }
+
       import secDirectives._
 
       val route = Route.seal {
@@ -48,7 +51,10 @@ class ShiroBlendedSecurityDirectivesSpec
       val secMgr = new IniSecurityManagerFactory("classpath:test-shiro.ini").getInstance();
       assert(secMgr != null)
 
-      val secDirectives = new ShiroBlendedSecurityDirectives(() => Some(secMgr))
+      val secDirectives = new ShiroBlendedSecurityDirectives {
+        override def securityManager(): Option[SecurityManager] = Some(secMgr)
+      }
+
       import secDirectives._
 
       val route = Route.seal {
