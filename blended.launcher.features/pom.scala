@@ -113,9 +113,9 @@ val features = Seq(
       "blended-ssl"
     ),
     bundles = Seq(
-      FeatureBundle(dependency = Dependency(gav = blendedMgmtRest), start = true),
+      FeatureBundle(dependency = blendedMgmtRest, start = true),
       FeatureBundle(dependency = blendedMgmtRepo, start = true),
-      FeatureBundle(dependency = Dependency(gav = blendedMgmtRepoRest, `type` = "war"), start = true),
+      FeatureBundle(dependency = blendedMgmtRepoRest, start = true),
       FeatureBundle(dependency = blendedUpdaterRemote, start = true),
       FeatureBundle(dependency = blendedContainerRegistry),
       FeatureBundle(dependency = blendedPersistence),

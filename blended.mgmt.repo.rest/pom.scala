@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   gav = blendedMgmtRepoRest,
-  packaging = "war",
+  packaging = "bundle",
   description = "File Artifact Repository REST Service",
   dependencies = Seq(
     scalaLib % "provided",
@@ -16,23 +16,17 @@ BlendedModel(
     blendedUpdaterConfig,
     blendedMgmtBase,
     blendedMgmtRepo,
-    blendedSpray,
-    blendedSecuritySpray,
+    blendedSecurityAkkaHttp,
+    blendedAkkaHttp,
+    Deps.akkaHttp,
+    blendedUtil,
+    Deps.log4s,
     sprayJson,
     scalaTest % "test"
-  ), 
+  ),
   plugins = Seq(
-    bundleWarPlugin,
+    mavenBundlePlugin,
     sbtCompilerPlugin,
-    scalatestMavenPlugin,
-    Plugin(
-      gav = Plugins.war,
-      configuration = Config (
-        packagingExcludes = "WEB-INF/lib/*.jar",
-        archive = Config(
-          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
-        )
-      )
-    )
+    scalatestMavenPlugin
   )
 )
