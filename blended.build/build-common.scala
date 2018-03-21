@@ -81,7 +81,7 @@ val genPomXmlProfile = Profile(
           )
         )
       ),
-      // initialize: generate pom.xml 
+      // initialize: generate pom.xml
       polyglotTranslatePlugin
     )
   )
@@ -275,7 +275,8 @@ object BlendedModel {
     resources: Seq[Resource] = Seq.empty,
     testResources: Seq[Resource] = Seq.empty,
     plugins: Seq[Plugin] = Seq.empty,
-    pluginManagement: Seq[Plugin] = null) = {
+    pluginManagement: Seq[Plugin] = null
+  ) = {
     if (parent != null) println(s"Project with parent: ${gav}")
     val theBuild = {
       val usedPlugins = plugins ++ defaultPlugins
@@ -325,9 +326,10 @@ object BlendedModel {
 case class FeatureDef(name: String, features: Seq[String] = Seq(), bundles: Seq[FeatureBundle])
 
 case class FeatureBundle(
-    dependency: Dependency,
-    startLevel: Integer = -1,
-    start: Boolean = false) {
+  dependency: Dependency,
+  startLevel: Integer = -1,
+  start: Boolean = false
+) {
   override def toString: String = {
 
     val gav = dependency.gav
@@ -378,8 +380,7 @@ def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] = {
           d.gav.artifactId == n.gav.artifactId &&
           d.gav.version == n.gav.version &&
           d.classifier == n.classifier &&
-          d.scope == n.scope
-      )) ds
+          d.scope == n.scope)) ds
       else n :: ds
     }
 }
@@ -390,20 +391,22 @@ def featureFile(feature: FeatureDef): String = {
   val prefix = "name=\"" + feature.name + "\"\nversion=\"${project.version}\"\n"
 
   val bundles = feature.bundles.map(_.toString).mkString(
-    "bundles = [\n", ",\n", "\n]\n")
+    "bundles = [\n", ",\n", "\n]\n"
+  )
 
-  val featureRefs = 
-    if(feature.features.isEmpty) ""
+  val featureRefs =
+    if (feature.features.isEmpty) ""
     else feature.features.map(f => s"""{ name="${f}", version="$${project.version}" }""").mkString(
-     "features = [\n", ",\n", "\n]\n")
-      
+      "features = [\n", ",\n", "\n]\n"
+    )
+
   "\"\"\"" + prefix + featureRefs + bundles + "\"\"\""
 }
 
 def generateFeatures(features: Seq[FeatureDef]) = {
 
   val writeFiles = features.map { feature =>
-      """
+    """
 ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + feature.name + """.conf"), """ + featureFile(feature) + """)
 """
   }.mkString("import java.io.File\n", "\n", "")
@@ -456,7 +459,8 @@ def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
 object BlendedProfileResourcesContainer {
   def apply(
     gav: Gav,
-    properties: Map[String, String] = Map.empty) = {
+    properties: Map[String, String] = Map.empty
+  ) = {
 
     BlendedModel(
       gav = gav,
@@ -506,7 +510,8 @@ object BlendedContainer {
     description: String,
     properties: Map[String, String] = Map.empty,
     features: immutable.Seq[Dependency] = Seq.empty,
-    blendedProfileResouces: Gav = null) = {
+    blendedProfileResouces: Gav = null
+  ) = {
 
     BlendedModel(
       gav = gav,
@@ -661,7 +666,8 @@ object BlendedDockerContainer {
     gav: Gav,
     image: Dependency,
     folder: String,
-    ports: List[Int] = List.empty) = BlendedModel(
+    ports: List[Int] = List.empty
+  ) = BlendedModel(
     gav = gav,
     packaging = "jar",
     description = "Packaging the launcher sample container into a docker image.",

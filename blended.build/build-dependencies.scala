@@ -21,7 +21,8 @@ implicit class RichDependency(d: Dependency) {
     scope: Option[String] = d.scope,
     systemPath: Option[String] = d.systemPath,
     exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional): Dependency =
+    optional: Boolean = d.optional
+  ): Dependency =
     new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
 
   def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
@@ -180,7 +181,7 @@ object Deps {
   val paxSwissboxCore = "org.ops4j.pax.swissbox" % "pax-swissbox-core" % "1.7.0"
   val paxSwissboxOptJcl = "org.ops4j.pax.swissbox" % "pax-swissbox-optional-jcl" % "1.7.0"
   val prickle = "com.github.benhutchison" %% "prickle" % BlendedVersions.prickle
-  
+
   val reactiveStreams = "org.reactivestreams" % "reactive-streams" % "1.0.0.final"
 
   val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
