@@ -96,6 +96,20 @@ val checkDepsProfile = Profile(
   )
 )
 
+val eclipseProfile = Profile(
+  id = "eclipse",
+  build = BuildBase(
+    plugins = Seq(
+      Plugin(
+        Plugins.trEclipse,
+        configuration = Config(
+          alternativeOutput = "target-ide"
+        )
+      )
+    )
+  )
+)
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -113,7 +127,7 @@ object BlendedModel {
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, genPomXmlProfile, checkDepsProfile)
+  val defaultProfiles = Seq(releaseProfile, genPomXmlProfile, checkDepsProfile, eclipseProfile)
 
   val defaultDevelopers = Seq(
     Developer(
