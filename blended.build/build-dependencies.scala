@@ -166,7 +166,7 @@ object Deps {
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
-  val log4s = "org.log4s" %% "log4s" % "1.6.0"
+  val log4s = "org.log4s" %% "log4s" % "1.6.1"
 
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
