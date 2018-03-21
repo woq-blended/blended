@@ -11,6 +11,7 @@ import domino.service_watching.ServiceWatcherEvent
 import domino.service_watching.ServiceWatcherContext
 import domino.service_consuming.ServiceConsuming
 import blended.akka.http.SimpleHttpContext
+import org.osgi.framework.ServiceReference
 
 class RouteProvider {
 
@@ -43,6 +44,7 @@ class RouteProvider {
   def dynamicAdapt(capsuleContext: CapsuleContext, bundleContext: BundleContext): Unit = {
 
     def addContext(httpContext: HttpContext): Unit = {
+      log.info(s"Adding http context: ${httpContext}")
       // we currently allow only one route for each prefix
       contexts = contexts.filter(c => c.prefix != httpContext.prefix)
       contexts :+= httpContext
@@ -59,35 +61,46 @@ class RouteProvider {
 
     class WatchCapsule(
       override protected val capsuleContext: CapsuleContext,
-      override protected val bundleContext: BundleContext)
-        extends Capsule
-        with ServiceWatching
-        with ServiceConsuming {
+      override protected val bundleContext: BundleContext
+    )
+      extends Capsule
+      with ServiceWatching
+      with ServiceConsuming {
 
       override def start(): Unit = {
         // We listen for supported services and add them to the route
         // wait for context registrations, and add them to the main route
+        log.info("Listening for HttpContext registrations...")
         watchServices[HttpContext] {
           case ServiceWatcherEvent.AddingService(httpContext, watchContext) => addContext(httpContext)
           case ServiceWatcherEvent.ModifiedService(httpContext, watchContext) => modifyContext(httpContext)
           case ServiceWatcherEvent.RemovedService(httpContext, watchContext) => removeContext(httpContext)
         }
 
-        def toContext[S <: AnyRef](route: Route, ctx: ServiceWatcherContext[S]): Option[HttpContext] = {
-          Option(ctx.ref.getProperty("context")).collect {
-            case prefix: String if !prefix.trim().isEmpty() => SimpleHttpContext(prefix, route)
+        def toContext[S <: AnyRef](route: Route, ref: ServiceReference[S]): Option[HttpContext] = {
+          Option(ref.getProperty("context")) match {
+            case Some(prefix: String) if !prefix.trim().isEmpty() =>
+              val ctx = SimpleHttpContext(prefix, route)
+              log.debug(s"Wrapped Route with prefix-property to HttpContext: ${ctx}")
+              Some(ctx)
+            case _ =>
+              log.warn(s"Missing or unsupported property 'prefix' defined for service reference: ${ref}. Skipping registration.")
+              None
+
           }
         }
 
+        log.info("Listening for Route registrations...")
         watchServices[Route] {
-          case ServiceWatcherEvent.AddingService(route, watchContext) => toContext(route, watchContext).foreach(addContext)
-          case ServiceWatcherEvent.ModifiedService(route, watchContext) => toContext(route, watchContext).foreach(modifyContext)
-          case ServiceWatcherEvent.RemovedService(route, watchContext) => toContext(route, watchContext).foreach(removeContext)
+          case ServiceWatcherEvent.AddingService(route, watchContext) => toContext(route, watchContext.ref).foreach(addContext)
+          case ServiceWatcherEvent.ModifiedService(route, watchContext) => toContext(route, watchContext.ref).foreach(modifyContext)
+          case ServiceWatcherEvent.RemovedService(route, watchContext) => toContext(route, watchContext.ref).foreach(removeContext)
         }
 
         // Use all contexts that were registered before we came, too
-        contexts ++= services[HttpContext]
-        updateRoutes()
+        log.debug("Registering already present HttpContext's and Route's")
+        services[HttpContext].foreach(addContext)
+        serviceRefs[Route].flatMap(r => toContext(bundleContext.getService(r), r)).foreach(addContext)
 
       }
       override def stop(): Unit = {
