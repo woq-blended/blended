@@ -5,10 +5,10 @@ import java.nio.file.Files
 
 import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
-import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 import scala.collection.JavaConverters._
-import scala.util.Try
+import scala.util.{Success, Try}
 
 class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
 
@@ -16,8 +16,8 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
 
   private[this] val log = org.log4s.getLogger
 
-  override val uuid : String = {
-    val idFile = new File(System.getProperty("blended.home") + "/etc", s"$bundleName.id")
+  override lazy val uuid : String = {
+    val idFile = new File(System.getProperty("blended.home") + "/etc", s"blended.container.context.id")
     val lines = Files.readAllLines(idFile.toPath)
     if (!lines.isEmpty) {
       log.info(s"Using Container ID [${lines.get(0)}]")
@@ -29,10 +29,17 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
 
   override val properties : Map[String,String] = {
 
-    val mandatoryPropNames : Seq[String] = System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS, "").split(",").toSeq
+    val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
+      case Some(s) => if (s.trim().isEmpty) Seq.empty else s.trim().split(",").toSeq
+      case None => Seq.empty
+    }
 
-    val cfgFile = new File(containerContext.getProfileConfigDirectory(), s"$bundleName.conf")
-    val cfg = ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
+    val cfgFile = new File(containerContext.getProfileConfigDirectory(), "blended.container.context.conf")
+    val cfg : Config = Try {
+      ConfigFactory.parseFile(cfgFile, ConfigParseOptions.defaults().setAllowMissing(false))
+    }.recoverWith {
+      case _ : Throwable => Success(ConfigFactory.empty())
+    }.get
 
     val unresolved : Map[String, String] = cfg.entrySet().asScala.map { entry =>
       (entry.getKey, cfg.getString(entry.getKey)) }.toMap
@@ -40,7 +47,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
     val missingPropNames = mandatoryPropNames.filter(p => unresolved.get(p).isEmpty)
 
     if (!missingPropNames.isEmpty) {
-      val msg = s"The configuration file [$bundleName.conf] is missing entries for the properties ${missingPropNames.mkString("[", ",", "]")}"
+      val msg = s"The configuration file [blended.container.context.conf] is missing entries for the properties ${missingPropNames.mkString("[", ",", "]")}"
       throw new RuntimeException(msg)
     }
 

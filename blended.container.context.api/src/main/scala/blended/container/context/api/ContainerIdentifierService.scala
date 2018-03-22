@@ -1,5 +1,7 @@
 package blended.container.context.api
 
+import java.util.UUID
+
 import scala.util.Try
 
 class PropertyResolverException(msg : String) extends Exception(msg)
@@ -12,7 +14,7 @@ class PropertyResolverException(msg : String) extends Exception(msg)
  * container meta data.
  */
 trait ContainerIdentifierService {
-  val uuid: String
+  lazy val uuid: String = UUID.randomUUID().toString()
   val properties : Map[String,String]
   val containerContext: ContainerContext
 

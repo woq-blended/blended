@@ -27,7 +27,7 @@ class PropertyResolverSpec extends FreeSpec
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
 
-    override val uuid: String = "id"
+    override lazy val uuid: String = "id"
     override val containerContext: ContainerContext = ctCtxt
     override val properties: Map[String, String] = Map(
       "foo" -> "bar",
