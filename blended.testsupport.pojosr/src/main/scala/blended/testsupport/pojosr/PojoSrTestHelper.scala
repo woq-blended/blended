@@ -2,11 +2,8 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import org.apache.felix.connect.PojoSR
 import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
-
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()
@@ -16,13 +13,13 @@ trait PojoSrTestHelper {
 
   import PojoSrTestHelper._
 
-  def withPojoServiceRegistry[T](f: PojoServiceRegistry => T) = OnlyOnePojoSrAtATime.synchronized {
+  def withPojoServiceRegistry[T](f: BlendedPojoRegistry => T) = OnlyOnePojoSrAtATime.synchronized {
     val dir = File.createTempFile("pojosr-", "")
     dir.delete()
     dir.mkdirs()
     try {
       System.setProperty("org.osgi.framework.storage", dir.getAbsolutePath())
-      val registry = new PojoSR(Map("felix.cm.dir" -> dir.getAbsolutePath()).asJava)
+      val registry = new BlendedPojoRegistry(Map("felix.cm.dir" -> dir.getAbsolutePath()))
       f(registry)
     } finally {
       System.clearProperty("org.osgi.framework.storage")
@@ -39,17 +36,21 @@ trait PojoSrTestHelper {
     }
   }
 
-  def withStartedBundle[T](activator: BundleActivator)(f: PojoServiceRegistry => T): T =
-    withPojoServiceRegistry { sr =>
-      withStartedBundle(sr)(activator)(f)
-    }
+  def withStartedBundle[T](sr: BlendedPojoRegistry)(
+    symbolicName : String, activator: Option[() => BundleActivator] = None
+  )(f: BlendedPojoRegistry => T): T = {
 
-  private[this] def withStartedBundle[T](sr: PojoServiceRegistry)(activator: BundleActivator)(f: PojoServiceRegistry => T): T = {
+    var bundleId : Long = 0
+
     try {
-      activator.start(sr.getBundleContext())
+      bundleId = sr.startBundle(symbolicName, activator)
       f(sr)
+    } catch {
+      case t : Throwable =>
+        println(t.getStackTrace())
+        throw t
     } finally {
-      activator.stop(sr.getBundleContext())
+      sr.getBundleContext().getBundle(bundleId).stop()
     }
   }
 

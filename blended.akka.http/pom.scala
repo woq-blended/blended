@@ -27,10 +27,10 @@ BlendedModel(
     Deps.akkaTestkit % "test",
     Deps.akkaSlf4j % "test",
     Deps.mockitoAll % "test",
-    Deps.slf4jLog4j12 % "test",
     Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",
-    Deps.felixConnect % "test"
+    Deps.logbackCore % "test",
+    Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

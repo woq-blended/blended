@@ -8,7 +8,7 @@ import domino.DominoActivator
 import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
 
-trait SimplePojosrContainer { this : PojoSrTestHelper =>
+trait SimplePojosrBlendedContainer { this : PojoSrTestHelper =>
 
   private[this] def idSvcActivator(baseDir : String, mandatoryProperties : Option[String] = None) : BundleActivator = new DominoActivator {
 
@@ -17,15 +17,22 @@ trait SimplePojosrContainer { this : PojoSrTestHelper =>
     whenBundleActive {
       val ctCtxt = new MockContainerContext(baseDir)
       new ContainerIdentifierServiceImpl(ctCtxt) {
-        override val uuid: String = UUID.randomUUID().toString()
+        override lazy val uuid: String = UUID.randomUUID().toString()
       }.providesService[ContainerIdentifierService]
     }
   }
 
-  def withSimpleBlendedContainer[T](baseDir: String)(f: PojoServiceRegistry => T) = withPojoServiceRegistry[T] { sr =>
-    withStartedBundle[T](idSvcActivator(baseDir)){ sr =>
-      f(sr)
+  def withSimpleBlendedContainer[T](
+    baseDir: String, mandatoryProperties : List[String] = List.empty
+  )(f: BlendedPojoRegistry => T) = {
+
+    System.setProperty("blended.home", baseDir)
+
+    withPojoServiceRegistry[T] { sr =>
+      withStartedBundle[T](sr)(
+        classOf[ContainerIdentifierServiceImpl].getPackage().getName(),
+        Some(() => idSvcActivator(baseDir, Some(mandatoryProperties.mkString(","))))
+      )(f)
     }
   }
-
 }

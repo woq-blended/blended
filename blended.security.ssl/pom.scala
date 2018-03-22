@@ -16,11 +16,13 @@ BlendedModel(
     Deps.bouncyCastleBcprov % "provided",
     Deps.bouncyCastlePkix,
     blendedDomino,
+    Dependency(Deps.domino).pure,
     blendedMgmtBase,
     Deps.log4s,
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test",
+    blendedTestSupport % "test",
     blendedTestSupportPojosr % "test"
   ),
   plugins = Seq(

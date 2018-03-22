@@ -11,7 +11,8 @@ import org.osgi.framework.BundleContext
 class TypesafeConfigCapsule(
   cCtxt: CapsuleContext,
   f : (Config, ContainerIdentifierService) => Unit,
-  bCtxt : BundleContext) extends Capsule
+  bCtxt : BundleContext
+) extends Capsule
   with ServiceWatching
   with DominoImplicits {
 
