@@ -255,6 +255,7 @@ object BlendedModel {
     ciManagement: CiManagement = null,
     contributors: immutable.Seq[Contributor] = Nil,
     dependencyManagement: DependencyManagement = null,
+    pureDependencies: immutable.Seq[Dependency] = Nil,
     dependencies: immutable.Seq[Dependency] = Nil,
     description: String = null,
     developers: immutable.Seq[Developer] = Nil,
@@ -288,13 +289,15 @@ object BlendedModel {
       ))
     }
 
+    val allDeps = pureDependencies.map(_.pure) ++ dependencies
+    
     new Model(
       gav = gav,
       build = theBuild,
       ciManagement = Option(ciManagement),
       contributors = contributors,
-      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(dependencies))),
-      dependencies = dependencies,
+      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(allDeps))),
+      dependencies = allDeps,
       description = Option(description),
       developers = defaultDevelopers ++ developers,
       distributionManagement = Option(distMgmt),
