@@ -21,7 +21,7 @@ BlendedModel(
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test",
-    blendedTestSupport % "test"
+    blendedTestSupportPojosr % "test"
   ),
   plugins = Seq(
     Plugin(

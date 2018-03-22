@@ -2,11 +2,11 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-
 import org.apache.felix.connect.PojoSR
 import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
+
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()

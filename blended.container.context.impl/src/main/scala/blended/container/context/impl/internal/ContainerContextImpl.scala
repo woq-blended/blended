@@ -3,6 +3,7 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
+import blended.container.context.api.ContainerContext
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 import org.slf4j.LoggerFactory

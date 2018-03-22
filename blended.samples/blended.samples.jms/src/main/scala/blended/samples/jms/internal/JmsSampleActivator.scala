@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.jms.ConnectionFactory
 
 import blended.camel.utils.BlendedCamelContextFactory
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
 import domino.DominoActivator
 import org.apache.camel.builder.RouteBuilder

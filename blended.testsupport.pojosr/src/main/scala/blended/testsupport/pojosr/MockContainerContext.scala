@@ -2,7 +2,7 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import blended.container.context.ContainerContext
+import blended.container.context.api.ContainerContext
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 class MockContainerContext(baseDir: String) extends ContainerContext {

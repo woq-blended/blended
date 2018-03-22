@@ -1,6 +1,6 @@
 package blended.security.ssl
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.security.ssl.internal.ConfigCommonNameProvider
 import blended.util.config.Implicits._
 import com.typesafe.config.Config

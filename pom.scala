@@ -48,6 +48,7 @@ BlendedModel(
         "blended.jms.sampler",
         "blended.jms.utils",
         "blended.testsupport",
+        "blended.testsupport.pojosr",
         "blended.domino",
         "blended.akka",
         "blended.akka.http",

@@ -1,6 +1,6 @@
 package blended.domino.internal
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.domino.ConfigLocator
 import com.typesafe.config.Config
 import domino.DominoImplicits

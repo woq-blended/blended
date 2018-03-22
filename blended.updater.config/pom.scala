@@ -21,6 +21,7 @@ BlendedModel(
     typesafeConfig,
     slf4j,
     prickle,
+    blendedTestSupport % "test",
     scalaTest % "test"
   ),
   plugins = Seq(

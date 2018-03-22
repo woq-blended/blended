@@ -12,9 +12,15 @@ BlendedModel(
   description = "The API for the Container Context and Identifier Services",
   dependencies = Seq(
     scalaLib % "provided",
-    log4s
+    typesafeConfig,
+    log4s,
+    scalaTest % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
-    mavenBundlePlugin
+    mavenBundlePlugin,
+    sbtCompilerPlugin,
+    scalatestMavenPlugin
   )
 )

@@ -2,21 +2,11 @@ package blended.container.context.impl.internal
 
 import java.io.{PrintWriter, StringWriter}
 
+import blended.container.context.api.ContainerIdentifierService
+import domino.DominoActivator
+import org.slf4j.bridge.SLF4JBridgeHandler
+
 import scala.util.control.NonFatal
-
-object IdServiceFactory {
-
-  private[this] val log = org.log4s.getLogger
-
-  def idSvc(ctCtxt : ContainerContext) : ContainerIdentifierService = {
-    val result = new ContainerIdentifierServiceImpl(ctCtxt)
-    log.info(s"Container identifier is [${result.uuid}]")
-    log.info(s"Profile home directory is [${ctCtxt.getProfileDirectory()}]")
-    log.info(s"Container Context properties are : ${result.properties.mkString("[", ",", "]")}")
-
-    result
-  }
-}
 
 class ContainerContextActivator extends DominoActivator {
 
@@ -28,7 +18,10 @@ class ContainerContextActivator extends DominoActivator {
 
     try {
       val containerContext = new ContainerContextImpl()
-      val idSvc = IdServiceFactory.idSvc(containerContext)
+      val idSvc = new ContainerIdentifierServiceImpl(containerContext)
+      log.info(s"Container identifier is [${idSvc.uuid}]")
+      log.info(s"Profile home directory is [${containerContext.getProfileDirectory()}]")
+      log.info(s"Container Context properties are : ${idSvc.properties.mkString("[", ",", "]")}")
 
       idSvc.providesService[ContainerIdentifierService]
     } catch {

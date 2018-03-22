@@ -1,4 +1,6 @@
-package blended.container.context
+package blended.container.context.api
+
+import com.typesafe.config.Config
 
 trait ContainerContext {
 

@@ -1,6 +1,6 @@
 package blended.jms.utils
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import com.typesafe.config.Config
 import blended.util.config.Implicits._

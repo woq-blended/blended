@@ -1,4 +1,4 @@
-package blended.container.context
+package blended.container.context.api
 
 object ContainerPropertyResolver {
 

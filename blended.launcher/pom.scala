@@ -30,6 +30,7 @@ BlendedModel(
     commonsDaemon,
     blendedUpdaterConfig,
     cmdOption,
+    blendedTestSupport % "test",
     scalaTest % "test"
   ),
   properties = Map(
@@ -119,8 +120,7 @@ BlendedModel(
               artifactItem = artifactItem("org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50", "${project.build.directory}/test-equinox"),
               artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.9.1.v20130814-1242", "${project.build.directory}/test-equinox"),
               artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.10.0.v20140606-1445", "${project.build.directory}/test-equinox")
-              
-            
+
             )
           )
         )

@@ -13,7 +13,7 @@ BlendedModel(
   dependencies = Seq(
     domino,
     typesafeConfig,
-    blendedContainerContext,
+    blendedContainerContextApi,
     scalaLib
   ),
   plugins = Seq(

@@ -1,4 +1,4 @@
-package blended.container.context
+package blended.container.context.api
 
 import scala.util.Try
 

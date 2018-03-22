@@ -3,6 +3,7 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.nio.file.Files
 
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 

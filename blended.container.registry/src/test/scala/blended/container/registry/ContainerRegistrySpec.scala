@@ -1,7 +1,9 @@
 package blended.container.registry.internal
 
+import akka.testkit.{TestActorRef, TestProbe}
 import blended.akka.OSGIActorConfig
-import blended.container.context.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.ContainerContext
+import blended.container.context.api.ContainerIdentifierService
 import blended.testsupport.TestActorSys
 import blended.updater.config.{ContainerInfo, ContainerRegistryResponseOK, UpdateContainerInfo}
 import com.typesafe.config.ConfigFactory

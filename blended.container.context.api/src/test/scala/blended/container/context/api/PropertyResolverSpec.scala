@@ -1,8 +1,5 @@
-package blended.container.context.internal
+package blended.container.context.api
 
-import blended.container.context.{ContainerContext, ContainerIdentifierService, ContainerPropertyResolver, PropertyResolverException}
-import org.mockito.Mockito._
-import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.control.NonFatal

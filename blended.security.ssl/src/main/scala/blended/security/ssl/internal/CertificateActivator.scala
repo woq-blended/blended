@@ -1,6 +1,6 @@
 package blended.security.ssl.internal
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
 import blended.security.ssl.{CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
 import blended.util.config.Implicits._

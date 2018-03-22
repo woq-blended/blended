@@ -1,7 +1,12 @@
 package blended.akka.internal
 
-import blended.container.context.{ContainerContext, ContainerIdentifierService}
+import akka.actor.ActorSystem
+import akka.event.LogSource
+import akka.osgi.ActorSystemActivator
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import com.typesafe.config.Config
+import domino.DominoActivator
+import domino.capsule.Capsule
 import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 

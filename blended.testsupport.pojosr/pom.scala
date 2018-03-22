@@ -7,20 +7,16 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedMgmtBase,
-  packaging = "bundle",
-  description = "Shared classes for management and reporting facility.",
+  gav = blendedTestSupportPojosr,
+  packaging = "jar",
+  description = "A simple Pojo based test container that can be used in unit testing",
   dependencies = Seq(
     Deps.scalaLib % "provided",
-    blendedDomino,
-    blendedContainerContextApi,
-    blendedUtil,
-    Deps.log4s,
-    Deps.scalaTest % "test"
+    Deps.felixConnect,
+    blendedContainerContextImpl,
+    blendedDomino
   ),
   plugins = Seq(
-    mavenBundlePlugin,
-    sbtCompilerPlugin,
-    scalatestMavenPlugin
+    sbtCompilerPlugin
   )
 )
