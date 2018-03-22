@@ -12,7 +12,6 @@ BlendedModel(
   description = "Some test helper classes.",
   dependencies = Seq(
     Deps.scalaLib % "provided",
-    Deps.felixConnect,
     blendedContainerContextApi,
     blendedUtil,
     Deps.junit,

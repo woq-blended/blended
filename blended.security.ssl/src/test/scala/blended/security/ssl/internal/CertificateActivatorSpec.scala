@@ -9,10 +9,7 @@ class CertificateActivatorSpec extends FreeSpec
   "The Certificate Activator should" - {
 
     "start up and provide and SSL Context" in {
-
-      withPojoServiceRegistry { pojoSr =>
-        
-      }
+      pending
     }
   }
 
