@@ -20,7 +20,6 @@ object ScepTestClient {
 
     val scepConfig = new ScepConfig(
       url = "http://iqscep01:8080/pgwy/scep/sib",
-      cnProvider = cnProvider,
       profile = None,
       keyLength = 2048,
       csrSignAlgorithm = "SHA1withRSA",
@@ -29,7 +28,7 @@ object ScepTestClient {
 
     val provider = new ScepCertificateProvider(scepConfig)
 
-    val cert1 = provider.refreshCertificate(None).get
+    val cert1 = provider.refreshCertificate(None, cnProvider).get
 
     cert1.chain.foreach { c =>
       log.info(X509CertificateInfo(c).toString)
@@ -37,7 +36,7 @@ object ScepTestClient {
 
     log.info("=" * 100)
 
-    val cert2 = provider.refreshCertificate(Some(cert1)).get
+    val cert2 = provider.refreshCertificate(Some(cert1), cnProvider).get
 
     cert2.chain.foreach { c =>
       log.info(X509CertificateInfo(c).toString)

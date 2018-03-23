@@ -48,6 +48,7 @@ class RemoteUpdaterActivator
 
           val containerStatePersistor = new PersistentContainerStatePersistor(persistenceService)
           log.debug("Created persistent container state peristor: {}", containerStatePersistor)
+          // TODO: Be aware when switching to log4s, isDebugEnabled causes additional required import
           if (log.isDebugEnabled()) {
             log.debug("Already persisted ContainerStates: {}", Try(containerStatePersistor.findAllContainerStates()))
           }

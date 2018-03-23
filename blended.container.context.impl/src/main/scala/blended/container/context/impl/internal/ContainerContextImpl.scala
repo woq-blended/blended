@@ -6,7 +6,6 @@ import java.util.Properties
 import blended.container.context.api.ContainerContext
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
-import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 
@@ -19,7 +18,7 @@ class ContainerContextImpl() extends ContainerContext {
 
   import ContainerContextImpl._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ContainerContextImpl])
+  private[this] val log = org.log4s.getLogger
 
   override def getContainerDirectory() = new File(System.getProperty("blended.home")).getAbsolutePath
 
@@ -70,9 +69,9 @@ class ContainerContextImpl() extends ContainerContext {
     val configDir = new File(dir)
 
     if (!configDir.exists()) {
-      log.error("Container directory [{}] does not exist.", dir)
+      log.error(s"Container directory [${dir}] does not exist.")
     } else if (!configDir.isDirectory() || !configDir.canRead()) {
-      log.error("Container directory [{}] is not readable.", dir)
+      log.error(s"Container directory [${dir}] is not readable.")
     }
 
     val absDir = configDir.getAbsolutePath
@@ -119,7 +118,7 @@ class ContainerContextImpl() extends ContainerContext {
       case _ => None
     }
 
-    log.debug("Overlay config: {}", overlayConfig)
+    log.debug(s"Overlay config: ${overlayConfig}")
 
     val config = overlayConfig match {
       case Some(oc) => ConfigFactory.parseFile(oc, ConfigParseOptions.defaults().setAllowMissing(false))

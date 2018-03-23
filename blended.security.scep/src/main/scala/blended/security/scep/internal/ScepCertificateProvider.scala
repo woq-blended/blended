@@ -19,7 +19,6 @@ import scala.util.Try
 
 case class ScepConfig(
   url : String,
-  cnProvider : CommonNameProvider,
   profile: Option[String],
   keyLength : Int,
   csrSignAlgorithm : String,
@@ -42,37 +41,37 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     case Some(p) => scepClient.getCaCapabilities(p)
   }
 
-  override def refreshCertificate(existing: Option[ServerCertificate]): Try[ServerCertificate] = {
+  override def refreshCertificate(existing: Option[ServerCertificate], cnProvider: CommonNameProvider): Try[ServerCertificate] = {
     log.info(s"Trying to refresh the server certificate via SCEP from [${cfg.url}]")
     existing match {
       case None =>
         log.info("Obtaining initial server certificate from SCEP server.")
-        enroll(selfSignedCertificate().get)
+        enroll(selfSignedCertificate(cnProvider).get, cnProvider)
       case Some(c) =>
         log.info("Refreshing certificate previously obtained from SCEP server.")
-        enroll(c)
+        enroll(c, cnProvider)
     }
   }
 
-  private[this] def selfSignedCertificate() : Try[ServerCertificate] = {
+  private[this] def selfSignedCertificate(cnProvider: CommonNameProvider) : Try[ServerCertificate] = {
 
     val selfSignedConfig = SelfSignedConfig(
-      commonNameProvider = cfg.cnProvider,
+      commonNameProvider = cnProvider,
       keyStrength = cfg.keyLength,
       sigAlg = caps.getStrongestSignatureAlgorithm(),
       validDays = 1
     )
 
-    new SelfSignedCertificateProvider(selfSignedConfig).refreshCertificate(None)
+    new SelfSignedCertificateProvider(selfSignedConfig).refreshCertificate(None, cnProvider)
   }
 
-  private[this] def enroll(inCert : ServerCertificate): Try[ServerCertificate] = Try {
+  private[this] def enroll(inCert : ServerCertificate, cnProvider: CommonNameProvider): Try[ServerCertificate] = Try {
 
     val reqCert = inCert.chain.head
 
     log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
 
-    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cfg.cnProvider.commonName().get), inCert.keyPair.getPublic())
+    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), inCert.keyPair.getPublic())
     csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
     // TODO addextensions ?

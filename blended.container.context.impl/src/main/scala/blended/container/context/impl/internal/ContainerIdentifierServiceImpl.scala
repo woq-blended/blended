@@ -12,8 +12,6 @@ import scala.util.{Success, Try}
 
 class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
 
-  private[this] val bundleName = classOf[ContainerIdentifierService].getPackage.getName
-
   private[this] val log = org.log4s.getLogger
 
   override lazy val uuid : String = {
