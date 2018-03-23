@@ -13,6 +13,8 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib % "provided",
     blendedDomino,
+    blendedContainerContextApi,
+    blendedUtil,
     Deps.log4s,
     Deps.scalaTest % "test"
   ),

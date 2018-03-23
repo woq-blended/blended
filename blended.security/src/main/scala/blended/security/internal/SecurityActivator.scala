@@ -2,7 +2,7 @@ package blended.security.internal
 
 import javax.security.auth.login.Configuration
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.security.ShiroLoginModule
 import blended.security.boot.BlendedLoginModule
 import domino.DominoActivator

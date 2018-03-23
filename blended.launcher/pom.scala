@@ -30,14 +30,8 @@ BlendedModel(
     commonsDaemon,
     blendedUpdaterConfig,
     cmdOption,
-    scalaTest % "test",
-    (blendedTestSupport % "test").pure
-  //    felixFramework % "test",
-  //    felixGogoRuntime % "test",
-  //    felixGogoShell % "test",
-  //    felixGogoCommand % "test",
-  //    felixFileinstall % "test",
-  //    felixMetatype % "test"
+    blendedTestSupport % "test",
+    scalaTest % "test"
   ),
   properties = Map(
     "blended.launcher.version" -> blendedLauncher.version.get,
@@ -126,8 +120,7 @@ BlendedModel(
               artifactItem = artifactItem("org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50", "${project.build.directory}/test-equinox"),
               artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.9.1.v20130814-1242", "${project.build.directory}/test-equinox"),
               artifactItem = artifactItem("org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.10.0.v20140606-1445", "${project.build.directory}/test-equinox")
-              
-            
+
             )
           )
         )

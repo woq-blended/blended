@@ -21,8 +21,8 @@ BlendedModel(
     typesafeConfig,
     slf4j,
     prickle,
-    scalaTest % "test",
-    blendedTestSupport % "test"
+    blendedTestSupport % "test",
+    scalaTest % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

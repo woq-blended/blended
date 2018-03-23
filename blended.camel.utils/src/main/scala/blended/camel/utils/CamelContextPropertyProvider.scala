@@ -1,7 +1,7 @@
 package blended.camel.utils
 
 import scala.collection.JavaConverters._
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 
 trait CamelContextPropertyProvider {
   def contextProperties : Map[String, String] = Map.empty

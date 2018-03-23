@@ -21,14 +21,13 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
     kpg.genKeyPair()
   }
 
-  override def refreshCertificate(existing: Option[ServerCertificate]): Try[ServerCertificate] = Try {
+  override def refreshCertificate(existing: Option[ServerCertificate], cnProvider : CommonNameProvider): Try[ServerCertificate] = Try {
 
-    log.info(s"Using ${cfg.commonNameProvider}")
     val oldCert = existing.map(_.chain.head)
 
     val requesterKeypair = generateKeyPair()
 
-    val principal = new X500Principal(cfg.commonNameProvider.commonName().get)
+    val principal = new X500Principal(cnProvider.commonName().get)
     val requesterIssuer = principal
     val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
@@ -46,7 +45,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
     )
 
     if (cfg.commonNameProvider.alternativeNames().get.nonEmpty) {
-      val altNames : Array[GeneralName] = cfg.commonNameProvider.alternativeNames().get.map { n=>
+      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>
         log.debug(s"Adding alternative dns name [$n] to certificate.")
         new GeneralName(GeneralName.dNSName, n)
       }.toArray

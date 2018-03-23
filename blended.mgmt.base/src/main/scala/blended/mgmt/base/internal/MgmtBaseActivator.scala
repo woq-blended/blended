@@ -2,7 +2,7 @@ package blended.mgmt.base.internal
 
 import javax.management.{MBeanServer, ObjectName}
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import domino.DominoActivator
 import org.slf4j.LoggerFactory
 

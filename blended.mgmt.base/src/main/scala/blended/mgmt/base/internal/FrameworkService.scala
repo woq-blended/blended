@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import blended.container.context.ContainerContext
+import blended.container.context.api.ContainerContext
 import blended.util.StreamCopySupport
 import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory

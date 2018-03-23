@@ -4,7 +4,7 @@ import java.security.MessageDigest
 
 class PasswordHasher(salt: String) {
 
-  def password(raw: String) : Array[Char] = {
+  def password(raw: String) : String = {
 
     val md = MessageDigest.getInstance("MD5")
     md.reset()
@@ -13,6 +13,6 @@ class PasswordHasher(salt: String) {
       Integer.toHexString((b & 0xFF) | 0x100).substring(1)
     }
 
-    digest.mkString("").toCharArray()
+    digest.mkString("")
   }
 }

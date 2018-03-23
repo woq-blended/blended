@@ -1,6 +1,6 @@
 package blended.security.ssl.internal
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
 import blended.security.ssl.{CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
 import blended.util.config.Implicits._
@@ -26,7 +26,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
   private[this] def setupCertificateManager(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
 
-    val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid))
+    val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid), idSvc)
 
     def waitForProvider(providerNames: List[String], provider: Map[String, CertificateProvider]) : Unit = {
       providerNames match {

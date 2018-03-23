@@ -13,7 +13,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
-    blendedContainerContext,
+    blendedContainerContextApi,
     blendedDomino,
     domino,
     orgOsgi,

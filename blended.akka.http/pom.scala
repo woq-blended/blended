@@ -13,8 +13,9 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib % "provided",
     Deps.scalaReflect % "provided",
-    blendedContainerContext,
+    blendedContainerContextApi,
     blendedDomino,
+    blendedUtil,
     Deps.domino,
     Deps.orgOsgi,
     Deps.akkaStream,
@@ -22,14 +23,14 @@ BlendedModel(
     blendedAkka,
     Deps.akkaHttp,
     Deps.log4s,
-    blendedTestSupport % "test",
+    blendedTestSupportPojosr % "test",
     Deps.akkaTestkit % "test",
     Deps.akkaSlf4j % "test",
     Deps.mockitoAll % "test",
-    Deps.slf4jLog4j12 % "test",
     Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",
-    Deps.felixConnect % "test"
+    Deps.logbackCore % "test",
+    Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
