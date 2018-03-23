@@ -236,6 +236,12 @@ object BlendedModel {
         aggregate = "true",
         highlighting = "true"
       )
+    ),
+    Plugin(
+      gav = Plugins.scala,
+      executions = Seq(
+        scalaExecution_logbackXml
+      )
     )
   )
 

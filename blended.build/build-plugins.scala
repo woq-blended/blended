@@ -238,6 +238,48 @@ val polyglotTranslatePlugin = Plugin(
   )
 )
 
+/**
+  * Scala execution to generate logback-test.xml on the fly.
+  */
+
+val scalaExecution_logbackXml: Execution = Execution(
+  id = "generateLogbackConfig",
+  phase = "generate-test-resources",
+  goals = Seq(
+    "script"
+  ),
+  configuration = Config(
+    script = scriptHelper +
+      """
+import java.io.File
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "target/test-classes/logback-test.xml"),
+ "<configuration scan=\"true\" scanPeriod=\"30 seconds\">\n" +
+ "\n" +
+ "  <appender name=\"FILE\" class=\"ch.qos.logback.core.FileAppender\">\n" +
+ "    <file>target/test.log</file>\n" +
+ "    <encoder>\n" +
+ "      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%thread] %logger{36} : %msg%n</pattern>\n" +
+ "    </encoder>\n" +
+ "  </appender>\n" +
+ "\n" +
+ "  <appender name=\"ASYNC_FILE\" class=\"ch.qos.logback.classic.AsyncAppender\">\n" +
+ "    <appender-ref ref=\"FILE\" />\n" +
+ "  </appender>\n" +
+ "\n" +
+ "  <logger name=\"blended\" level=\"DEBUG\" />\n" +
+ "\n" +
+ "  <root level=\"DEBUG\">\n" +
+ "    <appender-ref ref=\"FILE\" />\n" +
+ "  </root>\n" +
+ "</configuration>\n" +
+ "\n"
+ )
+"""
+  )
+)
+
 /*
  * Some helper plugins to compile ScalaJS code with SBT.
  */
@@ -284,7 +326,6 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
       arguments = cfg
     )
   )
-
 }
 
 def execExecution_compileJs(execId: String, phase: String, args: List[String]): Execution = {

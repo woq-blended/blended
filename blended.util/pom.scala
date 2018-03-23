@@ -15,10 +15,12 @@ BlendedModel(
     orgOsgi,
     orgOsgiCompendium,
     slf4j,
-    junit % "test",
-    slf4jLog4j12 % "test",
-    scalaTest % "test",
     scalaXml,
+    junit % "test",
+    akkaSlf4j % "test",
+    logbackCore % "test",
+    logbackClassic % "test",
+    scalaTest % "test",
     akkaTestkit % "test"
   ),
   dependencyManagement = DependencyManagement(
