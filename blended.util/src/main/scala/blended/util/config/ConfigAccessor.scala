@@ -7,18 +7,18 @@ trait ConfigAccessor {
 
   protected def configStringMap(config : Config, key: String) : Option[Map[String, String]] =
     if (config.hasPath(key)) {
-      val cfg = config.getConfig(key)
-      Option(cfg.entrySet().asScala.map { entry  =>
-        entry.getKey -> cfg.getString(entry.getKey)
+      val cfg = config.getObject(key)
+      Option(cfg.keySet().asScala.map { k  =>
+        k -> config.getString(s"$key.$k")
       }.toMap)
     }
     else None
 
   protected def configConfigMap(config : Config, key: String) : Option[Map[String, Config]] =
     if (config.hasPath(key)) {
-      val cfg = config.getConfig(key)
-      Option(cfg.entrySet().asScala.map { entry  =>
-        entry.getKey -> cfg.getConfig(entry.getKey)
+      val cfg = config.getObject(key)
+      Option(cfg.keySet().asScala.map { k  =>
+        k -> config.getConfig(s"$key.$k")
       }.toMap)
     }
     else None

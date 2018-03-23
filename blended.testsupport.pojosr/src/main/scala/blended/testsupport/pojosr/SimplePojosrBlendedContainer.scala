@@ -5,7 +5,6 @@ import java.util.UUID
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import domino.DominoActivator
-import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
 
 trait SimplePojosrBlendedContainer { this : PojoSrTestHelper =>
@@ -16,8 +15,9 @@ trait SimplePojosrBlendedContainer { this : PojoSrTestHelper =>
 
     whenBundleActive {
       val ctCtxt = new MockContainerContext(baseDir)
+      // This needs to be a fixed uuid as some tests might be for restarts and require the same id
       new ContainerIdentifierServiceImpl(ctCtxt) {
-        override lazy val uuid: String = UUID.randomUUID().toString()
+        override lazy val uuid: String = "simple"
       }.providesService[ContainerIdentifierService]
     }
   }
@@ -27,6 +27,7 @@ trait SimplePojosrBlendedContainer { this : PojoSrTestHelper =>
   )(f: BlendedPojoRegistry => T) = {
 
     System.setProperty("blended.home", baseDir)
+    System.setProperty("blended.container.home", baseDir)
 
     withPojoServiceRegistry[T] { sr =>
       withStartedBundle[T](sr)(

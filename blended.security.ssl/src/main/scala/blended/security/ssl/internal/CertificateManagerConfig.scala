@@ -1,5 +1,6 @@
 package blended.security.ssl.internal
 
+import blended.container.context.api.ContainerIdentifierService
 import com.typesafe.config.Config
 import blended.util.config.Implicits._
 
@@ -16,8 +17,8 @@ import scala.util.Try
  */
 case class CertificateManagerConfig(
   keyStore: String,
-  storePass: Array[Char],
-  keyPass: Array[Char],
+  storePass: String,
+  keyPass: String,
   certConfigs: List[CertificateConfig],
   refresherConfig: Option[RefresherConfig]
 )
@@ -28,13 +29,13 @@ object CertificateManagerConfig {
    * Read a [[CertificateManagerConfig]] from a typesafe [[Config]],
    * using the given [[PasswordHasher]] to hash the passwords (`keyPass` and `storePass`).
    */
-  def fromConfig(cfg: Config, hasher: PasswordHasher) = {
+  def fromConfig(cfg: Config, hasher: PasswordHasher, idSvc: ContainerIdentifierService) = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
     val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
     val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
 
     val certConfigs = cfg.getConfigMap("certificates", Map.empty).map { case (k, v) =>
-      CertificateConfig.fromConfig(k, v)
+      CertificateConfig.fromConfig(k, v, idSvc)
     }.toList
 
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
@@ -52,22 +53,19 @@ object CertificateManagerConfig {
 case class CertificateConfig(
   provider: String,
   alias: String,
-  commonName: String,
-  logicalNames: List[String],
-  minValidDays: Int
+  minValidDays: Int,
+  cnProvider : ConfigCommonNameProvider
 )
 
 object CertificateConfig {
 
   val defaultMinValidDays = 10
 
-  def fromConfig(alias: String, cfg: Config) : CertificateConfig = {
+  def fromConfig(alias: String, cfg: Config, idSvc: ContainerIdentifierService) : CertificateConfig = {
     val provider = cfg.getString("provider", "default")
-    val commonName = cfg.getString("commonName")
-    val logicalNames = cfg.getStringList("logicalHostnames", List.empty)
     val minValidDays = cfg.getInt("minValidDays", defaultMinValidDays)
 
-    CertificateConfig(provider, alias, commonName, logicalNames, minValidDays)
+    CertificateConfig(provider, alias, minValidDays, new ConfigCommonNameProvider(cfg, idSvc))
   }
 }
 

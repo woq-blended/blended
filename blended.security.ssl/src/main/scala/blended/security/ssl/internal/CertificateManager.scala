@@ -33,7 +33,7 @@ class CertificateManager(
 
   private[internal] def registerSslContextProvider(ks: KeyStore): CapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
     log.debug("Registering SslContextProvider type=client and type=server")
-    val sslCtxtProvider = new SslContextProvider(ks, cfg.keyPass)
+    val sslCtxtProvider = new SslContextProvider(ks, cfg.keyPass.toCharArray)
     // TODO: what should we do with this side-effect, if we unregister the context provider?
     // FIXME: should this side-effect be configurable?
     SSLContext.setDefault(sslCtxtProvider.serverContext)
@@ -68,7 +68,10 @@ class CertificateManager(
 
   override def stop(): Unit = {}
 
-  def nextCertificateTimeout() : Date = getKeystore().serverCertificates.values.map(_.chain.head.getNotAfter).min
+  def nextCertificateTimeout() : Date = if (getKeystore().serverCertificates.values.isEmpty)
+    new Date()
+  else
+    getKeystore().serverCertificates.values.map(_.chain.head.getNotAfter).min
 
   private[this] def loadKeyStore(): Try[ServerKeyStore] = {
 
@@ -80,13 +83,13 @@ class CertificateManager(
     if (f.exists()) {
       val fis = new FileInputStream(f)
       try {
-        ks.load(fis, cfg.storePass)
+        ks.load(fis, cfg.storePass.toCharArray)
       } finally {
         fis.close()
       }
     } else {
       log.info(s"Creating empty key store  ...")
-      ks.load(null, cfg.storePass)
+      ks.load(null, cfg.storePass.toCharArray)
       saveKeyStore(ks)
     }
 
@@ -134,7 +137,7 @@ class CertificateManager(
     log.info(s"Aquiring new certificate from certificate provider [${certCfg.provider}]")
 
     val provider = providerMap.get(certCfg.provider).get
-    val newCert = provider.refreshCertificate(existingCert)
+    val newCert = provider.refreshCertificate(existingCert, certCfg.cnProvider)
 
     newCert match {
       case Failure(e) =>
@@ -143,7 +146,7 @@ class CertificateManager(
       case Success(cert) =>
         val info = X509CertificateInfo(cert.chain.head)
         log.info(s"Successfully obtained certificate from certificate provider [$provider] : $info")
-        ks.setKeyEntry(certCfg.alias, cert.keyPair.getPrivate(), cfg.keyPass, cert.chain.toArray)
+        ks.setKeyEntry(certCfg.alias, cert.keyPair.getPrivate(), cfg.keyPass.toCharArray, cert.chain.toArray)
         saveKeyStore(ks).get
         serverKeystore(ks).get
     }
@@ -152,8 +155,8 @@ class CertificateManager(
   private[this] def saveKeyStore(ks: KeyStore) : Try[KeyStore] = Try {
     val fos = new FileOutputStream(cfg.keyStore)
     try {
-      ks.store(fos, cfg.storePass)
-      log.info(s"Successfully written modified key store to [${cfg.keyStore}]")
+      ks.store(fos, cfg.storePass.toCharArray)
+      log.info(s"Successfully written modified key store to [${cfg.keyStore}] with storePass [${cfg.storePass}]")
     } finally {
       fos.close()
     }
@@ -165,7 +168,7 @@ class CertificateManager(
   private[this] def extractServerCertificate(ks: KeyStore, certCfg: CertificateConfig): Try[Option[ServerCertificate]] = Try {
     Option(ks.getCertificateChain(certCfg.alias)).map { chain =>
       val e = ks.getCertificate(certCfg.alias)
-      val key = ks.getKey(certCfg.alias, cfg.keyPass).asInstanceOf[PrivateKey]
+      val key = ks.getKey(certCfg.alias, cfg.keyPass.toCharArray).asInstanceOf[PrivateKey]
       val keypair = new KeyPair(e.getPublicKey(), key)
       ServerCertificate.create(keyPair = keypair, chain = chain.toList).get
     }
