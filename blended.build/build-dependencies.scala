@@ -79,16 +79,17 @@ object Deps {
   val camelJms = "org.apache.camel" % "camel-jms" % BlendedVersions.camelVersion
   val camelSpring = "org.apache.camel" % "camel-spring" % BlendedVersions.camelVersion
 
-  val commonsBeanUtils = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.commons-beanutils" % "1.8.3_2"
+  val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
   val commonsCodec = "commons-codec" % "commons-codec" % "1.11"
   val commonsCompress = "org.apache.commons" % "commons-compress" % "1.13"
+  val commonsConfiguration2 = "org.apache.commons" % "commons-configuration2" % "2.2"
   val commonsCollections = "org.apache.commons" % "com.springsource.org.apache.commons.collections" % "3.2.1"
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
   val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
   val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
   val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
   val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
-  val commonsLang = "commons-lang" % "commons-lang" % "2.6"
+  val commonsLang = "org.apache.commons" % "commons-lang3" % "3.7"
   val commonsNet = "commons-net" % "commons-net" % "3.3"
   val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
@@ -121,7 +122,7 @@ object Deps {
   val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
   val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
 
-  val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.4.65", `type` = "war")
+  val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.5.8", `type` = "war")
 
   val javaxEl = "javax.el" % "javax.el-api" % "3.0.1-b04"
   val javaxMail = "javax.mail" % "mail" % "1.4.5"

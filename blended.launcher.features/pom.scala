@@ -93,7 +93,8 @@ val features = Seq(
     FeatureBundle(dependency = commonsIo),
     FeatureBundle(dependency = commonsCodec),
     FeatureBundle(dependency = commonsHttpclient),
-    FeatureBundle(dependency = commonsBeanUtils)
+    FeatureBundle(dependency = commonsBeanUtils),
+    FeatureBundle(dependency = commonsConfiguration2)
   )),
   FeatureDef("blended-hawtio",
     features = Seq(

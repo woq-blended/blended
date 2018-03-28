@@ -8,11 +8,10 @@ import blended.security.boot.BlendedLoginModule
 import domino.DominoActivator
 import org.apache.shiro.config.IniSecurityManagerFactory
 import org.apache.shiro.util.ThreadContext
-import org.slf4j.LoggerFactory
 
 class SecurityActivator extends DominoActivator {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[SecurityActivator])
+  private[this] val log = org.log4s.getLogger
 
   whenBundleActive {
 
@@ -28,14 +27,22 @@ class SecurityActivator extends DominoActivator {
           loginModuleClassName = classOf[ShiroLoginModule].getName()
         ))
 
-      val factory = new IniSecurityManagerFactory(s"file:${idSvc.containerContext.getProfileConfigDirectory()}/shiro.ini")
-      val secMgr = factory.getInstance()
-      ShiroLoginModule.setSecurityManager(secMgr)
+      try {
+        val factory = new IniSecurityManagerFactory(s"file:${idSvc.containerContext.getProfileConfigDirectory()}/shiro.ini")
+        val secMgr = factory.getInstance()
+        ShiroLoginModule.setSecurityManager(secMgr)
 
-      ThreadContext.bind(secMgr)
+        ThreadContext.bind(secMgr)
 
-      log.info(s"Instance of [${secMgr.getClass().getName()}] started.")
-      secMgr.providesService[org.apache.shiro.mgt.SecurityManager]
+        log.info(s"Instance of [${secMgr.getClass().getName()}] started.")
+        secMgr.providesService[org.apache.shiro.mgt.SecurityManager]
+      } catch {
+        case t : Throwable =>
+          log.error(t.getMessage())
+          log.debug(t)(t.getMessage())
+
+          throw t
+      }
     }
   }
 }

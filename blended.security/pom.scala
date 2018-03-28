@@ -15,6 +15,7 @@ BlendedModel(
     apacheShiroCore,
     apacheShiroWeb,
     blendedAkka,
+    log4s,
     scalaLib % "provided"
   ),
   plugins = Seq(

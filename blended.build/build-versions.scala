@@ -13,14 +13,14 @@ object BlendedVersions {
 
   val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.9"
-  val apacheShiroVersion = "1.2.4"
+  val apacheShiroVersion = "1.4.0"
 
   val camelVersion = "2.17.3"
 
   val dockerJavaVersion = "3.0.13"
 
   val jettyVersion = "9.4.8.v20171121"
-  val jolokiaVersion = "1.3.3"
+  val jolokiaVersion = "1.5.0"
 
   val parboiledVersion = "1.1.6"
 
