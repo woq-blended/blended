@@ -1,12 +1,9 @@
 package blended.security.internal
 
+import blended.security.boot.BlendedLoginModule
+import blended.security.boot.BlendedLoginModule.{propBundle, propModule}
 import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
 import javax.security.auth.login.{AppConfigurationEntry, Configuration}
-
-import blended.security.ShiroLoginModule
-import blended.security.boot.BlendedLoginModule
-import BlendedLoginModule.{propBundle, propModule}
-import org.osgi.framework.BundleContext
 
 import scala.collection.JavaConverters._
 

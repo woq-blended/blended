@@ -16,10 +16,14 @@ BlendedModel(
     apacheShiroWeb,
     blendedAkka,
     log4s,
-    scalaLib % "provided"
+    scalaLib % "provided",
+    scalaTest % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin
+    sbtCompilerPlugin,
+    scalatestMavenPlugin
   )
 )
