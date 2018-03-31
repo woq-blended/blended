@@ -1,22 +1,15 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.server.directives.Credentials
-import domino.service_consuming.ServiceConsuming
-import scala.concurrent.Future
-import org.apache.shiro.subject.Subject
-import org.apache.shiro.authc.UsernamePasswordToken
-import org.apache.shiro.authc.AuthenticationException
-import scala.concurrent.ExecutionContext.Implicits.global
-import org.apache.shiro.mgt.SecurityManager
-import org.osgi.framework.BundleContext
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.server.directives.AuthenticationDirective
-import akka.http.scaladsl.model.headers.HttpCredentials
-import akka.http.scaladsl.server.directives.AuthenticationResult
-import akka.http.scaladsl.model.headers.HttpChallenge
-import akka.http.scaladsl.model.headers.HttpChallenges
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials}
 import akka.http.scaladsl.server.Directive0
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.directives.AuthenticationDirective
+import org.apache.shiro.authc.{AuthenticationException, UsernamePasswordToken}
+import org.apache.shiro.mgt.SecurityManager
+import org.apache.shiro.subject.Subject
+
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 /**
  * Apache Shiro SecurityManager-bases BlendedSecurityDirectives.

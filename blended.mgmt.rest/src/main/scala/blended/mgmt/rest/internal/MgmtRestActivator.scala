@@ -1,16 +1,10 @@
 package blended.mgmt.rest.internal
 
-import domino.DominoActivator
-import akka.actor.ActorSystem
 import blended.akka.ActorSystemWatching
-import blended.updater.remote.RemoteUpdater
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.persistence.PersistenceService
-import blended.security.akka.http.BlendedSecurityDirectives
-import blended.security.akka.http.ShiroBlendedSecurityDirectives
-import blended.prickle.akka.http.PrickleSupport
-import sun.security.tools.policytool.AuthPerm
-import blended.akka.http.SimpleHttpContext
-import blended.akka.http.HttpContext
+import blended.updater.remote.RemoteUpdater
+import domino.DominoActivator
 import org.apache.shiro.mgt.SecurityManager
 
 class MgmtRestActivator extends DominoActivator with ActorSystemWatching {

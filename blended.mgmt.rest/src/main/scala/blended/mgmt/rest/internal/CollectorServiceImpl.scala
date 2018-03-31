@@ -1,23 +1,13 @@
 package blended.mgmt.rest.internal
 
-import akka.util.Timeout
+import akka.event.EventStream
+import blended.prickle.akka.http.PrickleSupport
+import blended.security.akka.http.ShiroBlendedSecurityDirectives
 import blended.updater.config._
-import blended.updater.config.json.PrickleProtocol._
-import org.slf4j.LoggerFactory
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model._
+import blended.updater.remote.RemoteUpdater
+import org.apache.shiro.mgt.SecurityManager
 
 import scala.collection.immutable
-import scala.concurrent.duration._
-import blended.security.akka.http.BlendedSecurityDirectives
-import blended.prickle.akka.http.PrickleSupport
-import akka.http.scaladsl.server.ValidationRejection
-import blended.security.akka.http.ShiroBlendedSecurityDirectives
-import blended.updater.remote.RemoteUpdater
-import blended.updater.remote.ContainerStatePersistor
-import akka.event.EventStream
-import org.apache.shiro.mgt.SecurityManager
 
 class CollectorServiceImpl(
   securityManager: SecurityManager,

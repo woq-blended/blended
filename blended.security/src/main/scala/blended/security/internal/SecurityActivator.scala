@@ -1,9 +1,8 @@
 package blended.security.internal
 
 import javax.security.auth.login.Configuration
-
 import blended.container.context.api.ContainerIdentifierService
-import blended.security.ShiroLoginModule
+import blended.security.{LDAPLoginModule, ShiroLoginModule}
 import blended.security.boot.BlendedLoginModule
 import domino.DominoActivator
 import org.apache.shiro.config.IniSecurityManagerFactory
@@ -24,7 +23,7 @@ class SecurityActivator extends DominoActivator {
       Configuration.setConfiguration(
         new BlendedConfiguration(
           bundleName = bundleContext.getBundle().getSymbolicName(),
-          loginModuleClassName = classOf[ShiroLoginModule].getName()
+          loginModuleClassName = classOf[LDAPLoginModule].getName()
         ))
 
       try {
