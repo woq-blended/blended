@@ -97,6 +97,7 @@ class LDAPLoginModule extends LoginModule {
               s.getPrincipals().add(new GroupPrincipal(g))
             }
           }
+          dirContext.get.close()
           true
       }
     }
@@ -105,12 +106,14 @@ class LDAPLoginModule extends LoginModule {
   @throws[LoginException]
   override def abort(): Boolean = {
     loggedInUser = None
+    dirContext.get.close()
     true
   }
 
   @throws[LoginException]
   override def logout(): Boolean = {
     loggedInUser = None
+    dirContext.get.close()
     true
   }
 
@@ -120,15 +123,21 @@ class LDAPLoginModule extends LoginModule {
     ldapCfg match {
       case None => throw new LoginException("LDAP config not available")
       case Some(cfg) =>
-        var env : mutable.Map[String, String] = mutable.Map(
-          Context.INITIAL_CONTEXT_FACTORY -> classOf[LdapCtxFactory].getName(),
-          Context.PROVIDER_URL -> cfg.url
-        )
+        try {
+          var env : mutable.Map[String, String] = mutable.Map(
+            Context.INITIAL_CONTEXT_FACTORY -> classOf[LdapCtxFactory].getName(),
+            Context.PROVIDER_URL -> cfg.url
+          )
 
-        env ++= cfg.systemUser.map(u => (Context.SECURITY_PRINCIPAL -> u))
-        env ++= cfg.systemPassword.map(u => (Context.SECURITY_PRINCIPAL -> u))
+          env ++= cfg.systemUser.map(u => (Context.SECURITY_PRINCIPAL -> u))
+          env ++= cfg.systemPassword.map(u => (Context.SECURITY_PRINCIPAL -> u))
 
-        new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
+          new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
+        } catch {
+          case t : Throwable =>
+            log.error(t)(t.getMessage())
+            throw new LoginException(t.getMessage())
+        }
     }
   }
 
