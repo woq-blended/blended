@@ -1,7 +1,6 @@
 package blended.mgmt.repo.rest.internal
 
 import blended.mgmt.repo.ArtifactRepo
-import org.slf4j.LoggerFactory
 import blended.security.akka.http.BlendedSecurityDirectives
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes

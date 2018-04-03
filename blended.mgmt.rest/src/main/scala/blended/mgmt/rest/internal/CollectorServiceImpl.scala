@@ -2,28 +2,24 @@ package blended.mgmt.rest.internal
 
 import akka.event.EventStream
 import blended.prickle.akka.http.PrickleSupport
-import blended.security.akka.http.ShiroBlendedSecurityDirectives
+import blended.security.akka.http.JAASSecurityDirectives
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
-import org.apache.shiro.mgt.SecurityManager
 
 import scala.collection.immutable
 
 class CollectorServiceImpl(
-  securityManager: SecurityManager,
   updater: RemoteUpdater,
   remoteContainerStatePersistor: RemoteContainerStatePersistor,
   override val version: String
 )
   extends CollectorService
-  with ShiroBlendedSecurityDirectives
+  with JAASSecurityDirectives
   with PrickleSupport {
 
   private[this] lazy val log = org.log4s.getLogger
 
   private[this] var eventStream: Option[EventStream] = None
-
-  override protected def securityManager(): Option[SecurityManager] = Option(securityManager)
 
   def setEventStream(eventStream: Option[EventStream]): Unit = this.eventStream = eventStream
 

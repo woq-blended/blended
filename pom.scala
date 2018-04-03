@@ -69,7 +69,6 @@ BlendedModel(
         "blended.security.boot",
         "blended.security.login",
         "blended.security.login.rest",
-        "blended.security.spray",
         "blended.security.akka.http",
         "blended.hawtio.login",
         "blended.persistence",

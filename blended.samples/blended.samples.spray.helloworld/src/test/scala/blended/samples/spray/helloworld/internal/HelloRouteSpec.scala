@@ -8,15 +8,13 @@ import org.scalatest.WordSpec
 import org.slf4j.LoggerFactory
 
 import blended.akka.OSGIActorConfig
-import blended.security.spray.DummyBlendedSecuredRoute
 import spray.testkit.ScalatestRouteTest
 
 class HelloRouteSpec
     extends WordSpec
     with Matchers
     with ScalatestRouteTest
-    with HelloService
-    with DummyBlendedSecuredRoute {
+    with HelloService {
 
   val log = LoggerFactory.getLogger(classOf[HelloRouteSpec])
 

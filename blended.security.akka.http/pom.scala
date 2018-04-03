@@ -13,11 +13,11 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib,
     blendedAkka,
+    blendedSecurity,
     Deps.akkaHttp,
     Deps.orgOsgi,
     Deps.orgOsgiCompendium,
     Deps.slf4j,
-    Deps.apacheShiroCore,
     Deps.commonsBeanUtils % "test",
     Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",

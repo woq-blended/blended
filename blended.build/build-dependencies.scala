@@ -59,9 +59,6 @@ object Deps {
 
   val aopAlliance = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.aopalliance" % "1.0_6"
 
-  val apacheShiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
-  val apacheShiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
-
   val ariesBlueprintApi = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.api" % "1.0.1"
   val ariesBlueprintCore = "org.apache.aries.blueprint" % "org.apache.aries.blueprint.core" % "1.4.3"
   val ariesJmxApi = "org.apache.aries.jmx" % "org.apache.aries.jmx.api" % "1.1.1"
@@ -199,9 +196,6 @@ object Deps {
   val servicemixJaxbRuntime = "org.jvnet.jaxb2_commons" % "jaxb2-basics-runtime" % "0.6.4"
   val servicemixStaxApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.stax-api-1.0" % "2.4.0"
 
-  val shiroCore = "org.apache.shiro" % "shiro-core" % BlendedVersions.apacheShiroVersion
-  val shiroWeb = "org.apache.shiro" % "shiro-web" % BlendedVersions.apacheShiroVersion
-
   val slf4j = "org.slf4j" % "slf4j-api" % BlendedVersions.slf4jVersion
   val slf4jJcl = "org.slf4j" % "jcl-over-slf4j" % BlendedVersions.slf4jVersion
   val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
@@ -308,7 +302,6 @@ val blendedSecurityScep = BlendedModule("blended.security.scep")
 val blendedSecuritySsl = BlendedModule("blended.security.ssl")
 val blendedSecurityLogin = BlendedModule("blended.security.login")
 val blendedSecurityLoginRest = BlendedModule("blended.security.login.rest")
-val blendedSecuritySpray = BlendedModule("blended.security.spray")
 val blendedSpray = BlendedModule("blended.spray")
 val blendedSprayApi = BlendedModule("blended.spray.api")
 val blendedSslContext = BlendedModule("blended.sslcontext")

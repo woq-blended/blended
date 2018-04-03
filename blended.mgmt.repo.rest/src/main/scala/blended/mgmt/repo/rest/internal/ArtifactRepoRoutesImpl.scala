@@ -1,14 +1,11 @@
 package blended.mgmt.repo.rest.internal
 
-import blended.security.akka.http.ShiroBlendedSecurityDirectives
-import org.apache.shiro.mgt.SecurityManager
 import blended.mgmt.repo.ArtifactRepo
+import blended.security.akka.http.JAASSecurityDirectives
 
-class ArtifactRepoRoutesImpl(
-  override val securityManager: Option[SecurityManager]
-)
+class ArtifactRepoRoutesImpl
   extends ArtifactRepoRoutes
-  with ShiroBlendedSecurityDirectives {
+  with JAASSecurityDirectives {
 
   private[this] val log = org.log4s.getLogger
 

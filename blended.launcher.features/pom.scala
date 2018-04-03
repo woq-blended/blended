@@ -161,8 +161,6 @@ val features = Seq(
       "blended-base"
     ),
     bundles = Seq(
-      FeatureBundle(dependency = shiroCore),
-      FeatureBundle(dependency = shiroWeb),
       FeatureBundle(dependency = blendedSecurity, start = true)
     )),
   FeatureDef("blended-ssl",
@@ -180,8 +178,7 @@ val features = Seq(
     bundles = Seq(
       FeatureBundle(dependency = javaxServlet31),
       FeatureBundle(dependency = blendedSprayApi),
-      FeatureBundle(dependency = blendedSpray),
-      FeatureBundle(dependency = blendedSecuritySpray)
+      FeatureBundle(dependency = blendedSpray)
     )),
   FeatureDef("blended-akka-http",
     features = Seq(

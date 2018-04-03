@@ -1,59 +1,26 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import org.scalatest.FreeSpec
-import akka.http.scaladsl.server._
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.StatusCodes
-import org.apache.shiro.mgt.SecurityManager
-import org.apache.shiro.subject.Subject
-import org.apache.shiro.config.IniSecurityManagerFactory
+import akka.http.scaladsl.model.headers.BasicHttpCredentials
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
+import javax.security.auth.login.{AppConfigurationEntry, Configuration}
+import org.scalatest.{BeforeAndAfterAll, FreeSpec}
+import scala.collection.JavaConverters._
+import blended.security.SubjectImplicits._
 
-class ShiroBlendedSecurityDirectivesSpec
+class JAASSecurityDirectivesSpec
   extends FreeSpec
-  with ScalatestRouteTest {
+  with ScalatestRouteTest
+  with BeforeAndAfterAll {
 
   "An authenticated route" - {
 
-    "without an security manager" - {
-      val secDirectives = new ShiroBlendedSecurityDirectives {
-        override def securityManager(): Option[SecurityManager] = None
-      }
-
-      import secDirectives._
-
-      val route = Route.seal {
-        get {
-          path("hello") {
-            authenticated { user =>
-              complete("User " + user)
-            }
-          }
-        }
-      }
-
-      "should have unauthorized status when no credentials are given" in {
-        Get("/hello") ~> route ~> check {
-          assert(status === StatusCodes.Unauthorized)
-        }
-      }
-
-      "should have unauthorized status when no securitymanager service is found" in {
-        Get("/hello") ~> route ~> check {
-          assert(status === StatusCodes.Unauthorized)
-        }
-      }
-
-    }
-
     "with an security manager" - {
-      val secMgr = new IniSecurityManagerFactory("classpath:test-shiro.ini").getInstance();
-      assert(secMgr != null)
 
-      val secDirectives = new ShiroBlendedSecurityDirectives {
-        override def securityManager(): Option[SecurityManager] = Some(secMgr)
-      }
+      val secDirectives = new JAASSecurityDirectives {}
 
       import secDirectives._
 
@@ -101,4 +68,20 @@ class ShiroBlendedSecurityDirectivesSpec
 
   }
 
+  override protected def beforeAll(): Unit = {
+    super.beforeAll()
+    Configuration.setConfiguration(new SimpleAppConfiguration())
+  }
+
+  class SimpleAppConfiguration extends Configuration {
+
+    private[this] val options : Map[String, String] = Map.empty
+
+    override def getAppConfigurationEntry(name: String): Array[AppConfigurationEntry] = {
+
+      val entry = new AppConfigurationEntry(classOf[DummyLoginModule].getName(), LoginModuleControlFlag.SUFFICIENT, options.asJava)
+
+      Array(entry)
+    }
+  }
 }
