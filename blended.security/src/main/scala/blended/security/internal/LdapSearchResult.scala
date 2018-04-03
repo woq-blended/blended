@@ -1,4 +1,4 @@
-package blended.security
+package blended.security.internal
 
 import javax.naming.NamingEnumeration
 import javax.naming.directory.SearchResult

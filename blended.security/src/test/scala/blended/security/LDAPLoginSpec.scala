@@ -1,30 +1,45 @@
 package blended.security
 
+import java.io.File
+
+import blended.security.internal.SecurityActivator
+import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import javax.security.auth.callback._
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
-import javax.security.auth.login.{AppConfigurationEntry, Configuration, LoginContext}
-import org.scalatest.{BeforeAndAfterAll, FreeSpec}
+import javax.security.auth.login.LoginContext
+import org.scalatest.{DoNotDiscover, FreeSpec}
 
-import scala.collection.JavaConverters._
-
+@DoNotDiscover
 class LDAPLoginSpec extends FreeSpec
-  with BeforeAndAfterAll {
+  with SimplePojosrBlendedContainer
+  with PojoSrTestHelper {
+
+  private[this] val user = "mdes0309"
+  private[this] val pwd = "Sitios17"
 
   private[this] val log = org.log4s.getLogger
 
-  class SimpleAppConfiguration extends Configuration {
+  "the security activator should" - {
 
-    private[this] val options : Map[String, String] = Map.empty
+    "initialise the Login Module correctly" in {
 
-    override def getAppConfigurationEntry(name: String): Array[AppConfigurationEntry] = {
+      val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-      val entry = new AppConfigurationEntry(classOf[LDAPLoginModule].getName(), LoginModuleControlFlag.SUFFICIENT, options.asJava)
+      withSimpleBlendedContainer(baseDir) { sr =>
 
-      Array(entry)
+        withStartedBundle(sr)(symbolicName = "blended.security", activator = Some(() => new SecurityActivator())) { sr =>
+
+          val lc : LoginContext = new LoginContext("Test", new TestCallbackHandler(user, pwd))
+          lc.login()
+
+          val sub = lc.getSubject()
+          log.info(s"Logged in [$sub]")
+        }
+      }
     }
   }
 
-  class TestCallbackHandler(name: String, password: String) extends CallbackHandler {
+  private class TestCallbackHandler(name: String, password: String) extends CallbackHandler {
 
     override def handle(callbacks: Array[Callback]): Unit = {
       callbacks.foreach { cb: Callback =>
@@ -36,21 +51,4 @@ class LDAPLoginSpec extends FreeSpec
       }
     }
   }
-
-  override protected def beforeAll(): Unit = {
-    Configuration.setConfiguration(new SimpleAppConfiguration())
-  }
-
-  "The LDAP login module should" - {
-
-    "allow a login" in {
-      val lc : LoginContext = new LoginContext("Test", new TestCallbackHandler("andreas", "test"))
-      lc.login()
-
-      val sub = lc.getSubject()
-
-      log.info(s"Logged in [$sub]")
-    }
-  }
-
 }
