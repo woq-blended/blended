@@ -1,0 +1,4 @@
+dn: o=${DOMAIN_NAME}
+objectClass: organization
+objectClass: top
+o: ${DOMAIN_NAME}
