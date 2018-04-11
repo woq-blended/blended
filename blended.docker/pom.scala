@@ -14,6 +14,7 @@ BlendedModel(
     Profile(
       id = "docker",
       modules = Seq(
+        "blended.docker.demo.apacheds",
         "blended.docker.demo.mgmt",
         "blended.docker.demo.node"
       )

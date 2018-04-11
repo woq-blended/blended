@@ -5,8 +5,6 @@ export DOMAIN_NAME=blended
 
 APACHE_DS_VERSION=2.0.0_M24
 
-set -x
-
 function stopADS {
   /etc/init.d/apacheds-${APACHE_DS_VERSION}-default stop
 }
