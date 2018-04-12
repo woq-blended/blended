@@ -7,10 +7,3 @@ dn: ou=users,o=${DOMAIN_NAME}
 objectClass: organizationalUnit
 objectClass: top
 ou: users
-
-dn: cn=admins,ou=groups,o=${DOMAIN_NAME}
-objectClass: top
-objectClass: groupOfNames
-cn: admins
-member: uid=andreas,ou=users,o=blended
-member: uid=tobias,ou=users,o=blended

@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedDockerApacheDS,
+  gav = blendedDockerDemoApacheDS,
   packaging = "jar",
   description = """A simple docker container with providing an Apache Directory Service LDAP service.""",
   plugins = Seq(

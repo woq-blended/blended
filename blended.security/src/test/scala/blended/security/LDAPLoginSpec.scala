@@ -14,8 +14,8 @@ class LDAPLoginSpec extends FreeSpec
   with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  private[this] val user = "mdes0309"
-  private[this] val pwd = "Sitios17"
+  private[this] val user = "root"
+  private[this] val pwd = "mysecret"
 
   private[this] val log = org.log4s.getLogger
 

@@ -42,6 +42,18 @@ function loadLdif() {
   ldapmodify -c -a -f /tmp/$2.ldif -h localhost -p 10389 -D "uid=admin,ou=system" -w $1
 }
 
+function addGroup {
+  export GROUP_NAME=$1
+  export MEMBER=$2
+  loadLdif $SYSTEM_PWD group
+}
+
+function addToGroup {
+  export GROUP_NAME=$1
+  export MEMBER=$2
+  loadLdif $SYSTEM_PWD groupAdd
+}
+
 function addUser {
   export USER=$1
   shift
@@ -84,6 +96,9 @@ loadLdif $SYSTEM_PWD top_objects
 addUser root "Main Admin" Administrator mysecret
 addUser andreas "Andreas Gies" Gies mysecret
 addUser tobias "Tobias Roeser" Roeser mysecret
+
+addGroup admins "uid=root,ou=users,o=blended"
+addToGroup admins "uid=andreas,ou=users,o=blended"
 
 restartADS console
 

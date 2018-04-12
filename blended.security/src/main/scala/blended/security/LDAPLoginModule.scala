@@ -126,11 +126,12 @@ class LDAPLoginModule extends LoginModule {
         try {
           var env : mutable.Map[String, String] = mutable.Map(
             Context.INITIAL_CONTEXT_FACTORY -> classOf[LdapCtxFactory].getName(),
-            Context.PROVIDER_URL -> cfg.url
+            Context.PROVIDER_URL -> cfg.url,
+            Context.SECURITY_AUTHENTICATION -> "simple"
           )
 
           env ++= cfg.systemUser.map(u => (Context.SECURITY_PRINCIPAL -> u))
-          env ++= cfg.systemPassword.map(u => (Context.SECURITY_PRINCIPAL -> u))
+          env ++= cfg.systemPassword.map(u => (Context.SECURITY_CREDENTIALS -> u))
 
           new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
         } catch {
