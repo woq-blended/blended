@@ -9,7 +9,8 @@ export SYSTEM_PWD=blended
 APACHE_DS_VERSION=2.0.0_M24
 
 function shaPassword() {
-  export HASHED_PWD=`echo $1 | sha1sum - | awk '{print "{SSHA}"$1}'`
+  pwd=`echo -n $1 | md5sum | awk '{print $1}' | xxd -r -p | base64`
+  export HASHED_PWD=`echo -n "{MD5}${pwd}" | base64`
 }
 
 function stopADS() {
@@ -41,12 +42,29 @@ function loadLdif() {
   ldapmodify -c -a -f /tmp/$2.ldif -h localhost -p 10389 -D "uid=admin,ou=system" -w $1
 }
 
+function addUser {
+  export USER=$1
+  shift
+
+  export USER_CN=$1
+  shift
+
+  export USER_SN=$1
+  shift
+
+  shaPassword $1
+  export USER_PWD=$HASHED_PWD
+  shift
+
+  loadLdif $SYSTEM_PWD user
+}
+
 # Initially start the LDAP server
 startADS start 5
 
 # then we change the admin password
-# shaPassword $SYSTEM_PWD
-export HASHED_PWD=$SYSTEM_PWD
+#export HASHED_PWD=$SYSTEM_PWD
+shaPassword $SYSTEM_PWD
 loadLdif secret admin_pwd
 
 # Restart to apply changes
@@ -62,6 +80,10 @@ restartADS start 5
 # create the top level entries
 loadLdif $SYSTEM_PWD top_domain
 loadLdif $SYSTEM_PWD top_objects
+
+addUser root "Main Admin" Administrator mysecret
+addUser andreas "Andreas Gies" Gies mysecret
+addUser tobias "Tobias Roeser" Roeser mysecret
 
 restartADS console
 

@@ -8,28 +8,6 @@ objectClass: organizationalUnit
 objectClass: top
 ou: users
 
-dn: uid=andreas,ou=users,o=${DOMAIN_NAME}
-objectClass: top
-objectClass: person
-objectClass: organizationalPerson
-objectClass: inetOrgPerson
-cn: Andreas Gies
-sn: Gies
-displayName: Andreas Gies
-uid: andreas
-userPassword:: mysecret
-
-dn: uid=tobias,ou=users,o=${DOMAIN_NAME}
-objectClass: top
-objectClass: person
-objectClass: organizationalPerson
-objectClass: inetOrgPerson
-cn: Tobias Roeser
-sn: Roeser
-displayName: Tobias Roeser
-uid: tobias
-userPassword:: mysecret
-
 dn: cn=admins,ou=groups,o=${DOMAIN_NAME}
 objectClass: top
 objectClass: groupOfNames
