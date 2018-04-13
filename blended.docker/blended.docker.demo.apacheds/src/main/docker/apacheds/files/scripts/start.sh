@@ -6,6 +6,8 @@ set -x
 export DOMAIN_NAME=blended
 export SYSTEM_PWD=blended
 
+START_DELAY=10
+
 APACHE_DS_VERSION=2.0.0_M24
 
 function shaPassword() {
@@ -72,7 +74,7 @@ function addUser {
 }
 
 # Initially start the LDAP server
-startADS start 5
+startADS start $START_DELAY
 
 # then we change the admin password
 #export HASHED_PWD=$SYSTEM_PWD
@@ -80,14 +82,14 @@ shaPassword $SYSTEM_PWD
 loadLdif secret admin_pwd
 
 # Restart to apply changes
-restartADS start 5
+restartADS start $START_DELAY
 
 # create a new partition
 loadLdif $SYSTEM_PWD partition
 ldapdelete "ads-partitionId=example,ou=partitions,ads-directoryServiceId=default,ou=config" -r -p 10389 -h localhost -D "uid=admin,ou=system" -w $SYSTEM_PWD
 ldapdelete "dc=example,dc=com" -p 10389 -h localhost -D "uid=admin,ou=system" -r -w $SYSTEM_PWD
 
-restartADS start 5
+restartADS start $START_DELAY
 
 # create the top level entries
 loadLdif $SYSTEM_PWD top_domain
