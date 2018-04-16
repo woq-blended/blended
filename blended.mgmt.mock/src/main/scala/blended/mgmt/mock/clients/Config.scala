@@ -3,8 +3,8 @@ package blended.mgmt.mock.clients
 import de.tototec.cmdoption.CmdOption
 
 case class Config(
-    clientCount: Int = 1000,
-    url: String = "http://mgmt:9191/mgmt/container",
+    clientCount: Int = 20,
+    url: String = "http://localhost:9995/mgmt/container",
     updateIntervalMsec: Long = 20000,
     initialUpdateDelayMsec: Long = 2000) {
 
@@ -28,7 +28,7 @@ object Config {
     def clientCount(count: Int): Unit =
       config = config.copy(clientCount = count)
 
-    @CmdOption(names = Array("--url", "-u"), args = Array("url"), description = "The URL of the managment server")
+    @CmdOption(names = Array("--url", "-u"), args = Array("url"), description = "The URL of the management server")
     def url(url: String): Unit =
       config = config.copy(url = url)
 
@@ -40,7 +40,7 @@ object Config {
     def updateIntervalMsec(i: Int): Unit = config = config.copy(updateIntervalMsec = i)
 
     @CmdOption(names = Array("--inital-delay", "-d"), args = Array("msec"),
-      description = "The delay in milliseconds, the mock containers should wait before thei start reporting to the managment server")
+      description = "The delay in milliseconds, the mock containers should wait before thei start reporting to the management server")
     def initialUpdateDelayMsec(i: Int): Unit = config = config.copy(initialUpdateDelayMsec = i)
   }
 
