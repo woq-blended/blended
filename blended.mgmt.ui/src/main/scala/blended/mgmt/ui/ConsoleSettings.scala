@@ -10,8 +10,8 @@ object ConsoleSettings {
     prot == "https:"
   }
   def mgmtUrl =
-    if (isSsl) "https://root:mysecret@mgmt:9996/mgmt"
-    else "http://root:mysecret@mgmt:9995/mgmt"
+    if (isSsl) "https://root:mysecret@localhost:9996/mgmt"
+    else "http://root:mysecret@localhost:9995/mgmt"
   def containerDataUrl = mgmtUrl + "/container"
   def profilesUrl = mgmtUrl + "/profiles"
   def runtimeConfigsUrl = mgmtUrl + "/runtimeConfig"
