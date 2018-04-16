@@ -1,6 +1,5 @@
-package blended.security.internal
+package blended.security
 
-import blended.security.{GroupPrincipal, UserPrincipal}
 import javax.security.auth.Subject
 
 import scala.collection.JavaConverters._
