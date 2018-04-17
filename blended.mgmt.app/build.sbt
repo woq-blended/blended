@@ -26,24 +26,21 @@ lazy val commonSettings = Seq(
   webpackConfigFile in (Compile, fullOptJS) := Some(
     baseDirectory.value / "webpack.config.prod.js"),
 
-
-
   jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv,
 
   webpackBundlingMode := LibraryOnly(),
   emitSourceMaps := false,
 
   libraryDependencies ++= Seq(
-    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    "com.github.japgolly.scalajs-react" %%% "core" % "1.2.0",
-    "com.github.japgolly.scalajs-react" %%% "extra" % "1.2.0"
+    "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+    "com.github.ahnfelt" %%% "react4s" % "0.9.8-SNAPSHOT",
+    "com.github.werk" %%% "router4s" % "0.1.1-SNAPSHOT"
   ),
 
   // Important: Also add the basedirectory here, otherwise the index.html won't be visible in the webpack dev server
   unmanagedSourceDirectories.in(Compile) := Seq(scalaSource.in(Compile).value, baseDirectory.value),
   unmanagedSourceDirectories.in(Test) := Seq(scalaSource.in(Test).value, baseDirectory.value)
 )
-
 
 lazy val npmSettings = Seq(
   useYarn := true,

@@ -1,15 +1,28 @@
 package blended.mgmt.app
 
-import japgolly.scalajs.react._
-import japgolly.scalajs.react.vdom.html_<^._
+import com.github.ahnfelt.react4s._
 
-object SampleComponent {
+import scala.scalajs.js
+import scala.scalajs.js.timers.SetIntervalHandle
 
-  case class Props(name : String)
+case class SampleComponent() extends Component[NoEmit] {
 
-  def apply(name : String) = myComponent(Props(name))
+  val elapsed = State(0)
 
-  private[this] lazy val myComponent = ScalaComponent.builder[Props]("MyComponent")
-    .render_P(p => <.div(p.name))
-    .build
+  var interval : Option[SetIntervalHandle] = None
+
+  override def componentWillRender(get: Get): Unit = {
+    if (interval.isEmpty) interval = Some(js.timers.setInterval(1000) {
+      elapsed.modify(_ + 1)
+    })
+  }
+
+
+  override def componentWillUnmount(get: Get): Unit = {
+    interval.foreach(js.timers.clearInterval)
+  }
+
+  override def render(get: Get): Element = {
+    E.div(Text(s"${get(elapsed)} seconds elapsed"))
+  }
 }

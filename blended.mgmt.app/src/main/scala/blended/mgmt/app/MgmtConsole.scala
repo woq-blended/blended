@@ -1,15 +1,15 @@
 package blended.mgmt.app
 
+import com.github.ahnfelt.react4s.{Component, ReactBridge}
 import org.scalajs.dom
 
 object MgmtConsole {
 
   def main(args: Array[String]) : Unit = {
 
-    val content = dom.document.getElementById("content")
-    val comp = SampleComponent("Blended rocks !")
-
-    comp.renderIntoDOM(content)
-
+    dom.window.onload = _ => {
+      val comp = Component(SampleComponent)
+      ReactBridge.renderToDomById(comp, "content")
+    }
   }
 }
