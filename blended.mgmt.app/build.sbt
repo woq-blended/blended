@@ -1,5 +1,8 @@
 import scalajsbundler.BundlingMode.LibraryOnly
 
+lazy val akkajsVersion = "1.2.5.11"
+lazy val reactVersion = "16.2.0"
+
 lazy val root = project
   .in(file("."))
   .settings(commonSettings, npmSettings)
@@ -33,8 +36,11 @@ lazy val commonSettings = Seq(
 
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
+    "org.akka-js" %%% "akkajsactor" % akkajsVersion,
     "com.github.ahnfelt" %%% "react4s" % "0.9.8-SNAPSHOT",
-    "com.github.werk" %%% "router4s" % "0.1.1-SNAPSHOT"
+    "com.github.werk" %%% "router4s" % "0.1.1-SNAPSHOT",
+
+    "org.akka-js" %%% "akkajstestkit" % akkajsVersion % "test"
   ),
 
   // Important: Also add the basedirectory here, otherwise the index.html won't be visible in the webpack dev server
