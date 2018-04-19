@@ -17,6 +17,12 @@ class SampleSpec extends FreeSpec
       WS("/echo", wsClient.flow) ~> server.route ~>
       check {
         assert(isWebSocketUpgrade)
+
+        wsClient.sendMessage("Andreas")
+        wsClient.expectMessage("Andreas")
+
+        wsClient.sendCompletion()
+        wsClient.expectCompletion()
       }
     }
   }
