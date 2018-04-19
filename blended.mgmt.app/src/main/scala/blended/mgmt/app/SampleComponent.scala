@@ -11,7 +11,7 @@ case class Tick()
 
 case class SampleComponent(system: P[ActorSystem]) extends Component[NoEmit] {
 
-  val elapsed = State(0)
+  private[this] val elapsed = State(0)
 
   private[this] var listener : Option[ActorRef] = None
 

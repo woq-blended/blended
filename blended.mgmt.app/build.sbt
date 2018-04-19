@@ -34,24 +34,28 @@ lazy val commonSettings = Seq(
   webpackBundlingMode := LibraryOnly(),
   emitSourceMaps := false,
 
+  parallelExecution in ThisBuild := false,
+
   libraryDependencies ++= Seq(
     "org.scala-js" %%% "scalajs-dom" % "0.9.5",
     "org.akka-js" %%% "akkajsactor" % akkajsVersion,
     "com.github.ahnfelt" %%% "react4s" % "0.9.8-SNAPSHOT",
     "com.github.werk" %%% "router4s" % "0.1.1-SNAPSHOT",
 
+    "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
     "org.akka-js" %%% "akkajstestkit" % akkajsVersion % "test"
   ),
 
   // Important: Also add the basedirectory here, otherwise the index.html won't be visible in the webpack dev server
-  unmanagedSourceDirectories.in(Compile) := Seq(scalaSource.in(Compile).value, baseDirectory.value),
-  unmanagedSourceDirectories.in(Test) := Seq(scalaSource.in(Test).value, baseDirectory.value)
+  unmanagedSourceDirectories.in(Compile) := Seq(scalaSource.in(Compile).value),
+  unmanagedSourceDirectories.in(Test) := Seq(scalaSource.in(Test).value)
 )
 
 lazy val npmSettings = Seq(
   useYarn := true,
   npmDependencies.in(Compile) := Seq(
     "react" -> "16.2.0",
-    "react-dom" -> "16.2.0"
+    "react-dom" -> "16.2.0",
+    "jsdom" -> "11.8.0"
   )
 )
