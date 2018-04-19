@@ -297,7 +297,7 @@ import java.io.File
 
 ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/build.properties"),
-  "sbtVersion=""" + BlendedVersions.sbtVersion + """"
+  "sbt.version=""" + BlendedVersions.sbtVersion + """"
 )
 
 ScriptHelper.writeFile(

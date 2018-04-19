@@ -15,6 +15,7 @@ BlendedModel(
     blendedAkka,
     blendedSecurity,
     Deps.akkaHttp,
+    Deps.akkaStream,
     Deps.orgOsgi,
     Deps.orgOsgiCompendium,
     Deps.slf4j,
