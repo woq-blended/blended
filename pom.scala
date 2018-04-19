@@ -59,6 +59,7 @@ BlendedModel(
         "blended.mgmt.rest",
         "blended.mgmt.mock",
         "blended.mgmt.service.jmx",
+        "blended.mgmt.ws",
         "blended.prickle",
         "blended.prickle.akka.http",
         "blended.spray.api",

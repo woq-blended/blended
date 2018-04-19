@@ -1,0 +1,9 @@
+Bundle-Version: ${project.version}
+
+Bundle-SymbolicName: ${bundle.symbolicName}
+
+Import-Package: \
+  *
+
+Private-Package: \
+  ${bundle.namespace}.internal

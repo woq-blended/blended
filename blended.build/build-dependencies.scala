@@ -45,7 +45,7 @@ object Deps {
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
 
   def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaVersion
-  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % "10.0.11"
+  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % "10.1.1"
   val akkaActor = akka("actor")
   val akkaCamel = akka("camel")
   val akkaHttp = akka_Http("http")
@@ -288,6 +288,7 @@ val blendedMgmtMock = BlendedModule("blended.mgmt.mock")
 val blendedMgmtRest = BlendedModule("blended.mgmt.rest")
 val blendedMgmtServiceJmx = BlendedModule("blended.mgmt.service.jmx")
 val blendedMgmtUi = BlendedModule("blended.mgmt.ui")
+val blendedMgmtWs = BlendedModule("blended.mgmt.ws")
 val blendedPersistence = BlendedModule("blended.persistence")
 val blendedPersistenceOrient = BlendedModule("blended.persistence.orient")
 val blendedPrickle = BlendedModule("blended.prickle")
