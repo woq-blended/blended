@@ -7,11 +7,11 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedActivemqDefaultbroker,
+  gav = Blended.activemqDefaultbroker,
   packaging = "bundle",
   description = "An Active MQ broker instance.",
   dependencies = Seq(
-    blendedActivemqBrokerstarter
+    Blended.activemqBrokerstarter
   ),
   plugins = Seq(
     mavenBundlePlugin,

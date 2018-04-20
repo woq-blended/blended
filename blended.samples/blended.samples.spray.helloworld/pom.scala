@@ -7,13 +7,13 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSamplesSprayHelloworld,
+  gav = Blended.samplesSprayHelloworld,
   packaging = "war",
   description = "A sample Spray based HTTP endpoint for the blended container.",
   dependencies = Seq(
-    blendedSprayApi,
-    blendedSpray,
-    blendedAkka,
+    Blended.sprayApi,
+    Blended.spray,
+    Blended.akka,
     scalaLib,
     orgOsgi,
     orgOsgiCompendium,

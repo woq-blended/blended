@@ -425,7 +425,7 @@ ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + feat
 
 object Feature {
   def apply(name: String) = Dependency(
-    blendedLauncherFeatures,
+    Blended.launcherFeatures,
     `type` = "conf",
     classifier = name
   )
@@ -448,7 +448,7 @@ def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
     )
   ),
   Plugin(
-    blendedUpdaterMavenPlugin,
+    Blended.updaterMavenPlugin,
     executions = Seq(
       Execution(
         id = "make-features",
@@ -532,7 +532,7 @@ object BlendedContainer {
       ) ++ properties,
       dependencies = features ++ Seq(
         Dependency(
-          blendedLauncher,
+          Blended.launcher,
           `type` = "zip",
           classifier = "bin"
         )
@@ -541,7 +541,7 @@ object BlendedContainer {
         Option(blendedProfileResouces).map(g => Dependency(gav = g, `type` = "zip")).toList,
       plugins = Seq(
         Plugin(
-          gav = blendedUpdaterMavenPlugin,
+          gav = Blended.updaterMavenPlugin,
           executions = Seq(
             // Materialize a complete profile based on profile.conf and maven dependencies
             Execution(

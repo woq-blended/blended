@@ -8,7 +8,7 @@ import scala.collection.immutable.Seq
 //#include project/Versions.scala
 
 BlendedModel(
-  gav = blendedMgmtUi,
+  gav = Blended.mgmtUi,
   packaging = "war",
   description = "The blended management UI.",
   // We don't need those dependencies, but we use them for editing in Eclipse

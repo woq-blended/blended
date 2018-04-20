@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedCamelUtils,
+  gav = Blended.camelUtils,
   packaging = "bundle",
   description = """Useful helpers for Camel""",
   dependencies = Seq(
@@ -16,7 +16,7 @@ BlendedModel(
     orgOsgiCompendium,
     camelJms,
     slf4j,
-    blendedAkka
+    Blended.akka
   ),
   plugins = Seq(
     sbtCompilerPlugin,

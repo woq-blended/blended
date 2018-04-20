@@ -7,13 +7,13 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedTestSupport,
+  gav = Blended.testSupport,
   packaging = "jar",
   description = "Some test helper classes.",
   dependencies = Seq(
     Deps.scalaLib % "provided",
-    blendedContainerContextApi,
-    blendedUtil,
+    Blended.containerContextApi,
+    Blended.util,
     Deps.junit,
     Deps.camelCore,
     slf4j,

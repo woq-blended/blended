@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedPrickle,
+  Blended.prickle,
   packaging = "bundle",
   description = "Wrapper for Prickle and mircojson",
   dependencies = Seq(
@@ -20,8 +20,8 @@ BlendedModel(
       extensions = true,
       configuration = Config(
         instructions = new Config(Seq(
-          "Bundle-Version" -> blendedPrickle.version,
-          "Bundle-SymbolicName" -> Option(blendedPrickle.artifactId),
+          "Bundle-Version" -> Blended.prickle.version,
+          "Bundle-SymbolicName" -> Option(Blended.prickle.artifactId),
           "Import-Package" -> Option("scala.*;version=\"[" + scalaVersion.binaryVersion + "," + scalaVersion.binaryVersion + ".50)\",prickle,microjson,*"),
           "Embed-Dependency" -> Option(prickle.artifactId + ";inline=true," + microjson.artifactId + ";inline=true"),
           "Export-Package" -> Option("prickle;version=\"" + prickle.version.get + "\",microjson;version=\"" + microjson.version.get + "\"")

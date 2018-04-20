@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityBoot,
+  gav = Blended.securityBoot,
   packaging = "bundle",
   description = "A Shiro Login Module for the blended Container.",
   dependencies = Seq(

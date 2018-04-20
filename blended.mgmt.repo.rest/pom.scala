@@ -7,19 +7,19 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedMgmtRepoRest,
+  gav = Blended.mgmtRepoRest,
   packaging = "bundle",
   description = "File Artifact Repository REST Service",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
-    blendedUpdaterConfig,
-    blendedMgmtBase,
-    blendedMgmtRepo,
-    blendedSecurityAkkaHttp,
-    blendedAkkaHttp,
+    Blended.domino,
+    Blended.updaterConfig,
+    Blended.mgmtBase,
+    Blended.mgmtRepo,
+    Blended.securityAkkaHttp,
+    Blended.akkaHttp,
     Deps.akkaHttp,
-    blendedUtil,
+    Blended.util,
     Deps.log4s,
     sprayJson,
     scalaTest % "test"

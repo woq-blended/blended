@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedContainerContextApi,
+  gav = Blended.containerContextApi,
   packaging = "bundle",
   description = "The API for the Container Context and Identifier Services",
   dependencies = Seq(

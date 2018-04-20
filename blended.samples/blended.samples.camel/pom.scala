@@ -7,11 +7,11 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSamplesCamel,
+  gav = Blended.samplesCamel,
   packaging = "bundle",
   description = "A sample camel route.",
   dependencies = Seq(
-    blendedCamelUtils,
+    Blended.camelUtils,
     domino,
     camelCore,
     camelJms,

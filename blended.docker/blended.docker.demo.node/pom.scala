@@ -7,9 +7,9 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedDockerContainer(
-  gav = blendedDockerDemoNode,
+  gav = Blended.dockerDemoNode,
   image = Dependency(
-    gav = blendedDemoNode,
+    gav = Blended.demoNode,
     `type` = "tar.gz",
     classifier = "full-nojre",
     scope = "provided"

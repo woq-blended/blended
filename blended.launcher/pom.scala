@@ -17,25 +17,25 @@ def artifactItem(dep: Dependency, targetDir: String): Config = {
 }
 
 BlendedModel(
-  gav = blendedLauncher,
+  gav = Blended.launcher,
   packaging = "bundle",
   description = "Provide an OSGi Launcher",
   dependencies = Seq(
-    scalaLib,
-    orgOsgi,
-    slf4j,
-    logbackCore,
-    logbackClassic,
-    typesafeConfig,
-    commonsDaemon,
-    blendedUpdaterConfig,
-    cmdOption,
-    blendedTestSupport % "test",
-    scalaTest % "test"
+    Deps.scalaLib,
+    Deps.orgOsgi,
+    Deps.slf4j,
+    Deps.logbackCore,
+    Deps.logbackClassic,
+    Deps.typesafeConfig,
+    Deps.commonsDaemon,
+    Blended.updaterConfig,
+    Deps.cmdOption,
+    Blended.testSupport % "test",
+    Deps.scalaTest % "test"
   ),
   properties = Map(
-    "blended.launcher.version" -> blendedLauncher.version.get,
-    "blended.updater.config.version" -> blendedUpdaterConfig.version.get,
+    "blended.launcher.version" -> Blended.launcher.version.get,
+    "blended.updater.config.version" -> Blended.updaterConfig.version.get,
     "cmdoption.version" -> cmdOption.version.get,
     "org.osgi.core.version" -> orgOsgi.version.get,
     "scala.library.version" -> scalaLib.version.get,

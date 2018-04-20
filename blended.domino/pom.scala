@@ -7,13 +7,13 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedDomino,
+  Blended.domino,
   packaging = "bundle",
   description = "Blended Domino extension for new Capsule scopes.",
   dependencies = Seq(
     domino,
     typesafeConfig,
-    blendedContainerContextApi,
+    Blended.containerContextApi,
     scalaLib
   ),
   plugins = Seq(

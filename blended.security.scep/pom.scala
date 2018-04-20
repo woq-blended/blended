@@ -7,18 +7,18 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityScep,
+  gav = Blended.securityScep,
   packaging = "bundle",
   description = "Bundle to manage the container certificate via SCEP.",
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
-    blendedDomino,
+    Blended.domino,
     commonsCodec,
-    blendedSecuritySsl,
+    Blended.securitySsl,
     bouncyCastleBcprov,
     bouncyCastlePkix,
-    blendedUtil,
+    Blended.util,
     slf4j,
     jcip,
     scep,

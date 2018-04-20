@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedUpdater,
+  gav = Blended.updater,
   packaging = "bundle",
   description = "OSGi Updater",
   dependencies = Seq(
@@ -17,12 +17,12 @@ BlendedModel(
     akkaOsgi,
     slf4j,
     typesafeConfig,
-    blendedUpdaterConfig,
-    blendedLauncher,
-    blendedMgmtBase,
-    blendedContainerContextApi,
-    blendedAkka,
-    blendedSprayApi,
+    Blended.updaterConfig,
+    Blended.launcher,
+    Blended.mgmtBase,
+    Blended.containerContextApi,
+    Blended.akka,
+    Blended.sprayApi,
     akkaTestkit % "test",
     scalaTest % "test",
     felixFramework % "test",
@@ -33,7 +33,7 @@ BlendedModel(
     felixGogoCommand % "test",
     felixFileinstall % "test",
     mockitoAll % "test",
-    blendedTestSupport % "test"
+    Blended.testSupport % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

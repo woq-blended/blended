@@ -7,15 +7,15 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedItestNode,
+  gav = Blended.itestNode,
   packaging = "jar",
   description = "A sample integration test using docker to fire up the container(s) under test, execute the test suite and shutdown the container(s) afterwards.",
   dependencies = Seq(
     scalaLib,
-    blendedDockerDemoApacheDS % "provided",
-    blendedDockerDemoNode % "provided",
+    Blended.dockerDemoApacheDS % "provided",
+    Blended.dockerDemoNode % "provided",
     activeMqClient % "test",
-    blendedItestSupport % "test",
+    Blended.itestSupport % "test",
     scalaTest % "test",
     slf4j % "test",
     akkaSlf4j % "test",

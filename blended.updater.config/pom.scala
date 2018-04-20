@@ -6,14 +6,14 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-plugins.scala
 //#include ../blended.build/build-common.scala
 
-val jsArtifact = blendedUpdaterConfig.groupId.get %%% blendedUpdaterConfig.artifactId % blendedUpdaterConfig.version.get
+val jsArtifact = Blended.updaterConfig.groupId.get %%% Blended.updaterConfig.artifactId % Blended.updaterConfig.version.get
 
 /**
  * Sources under "shared" dir are for scala-jvm and scala-js 
  * Sources under "src" dir are only for scala-jvm
  */
 BlendedModel(
-  gav = blendedUpdaterConfig,
+  gav = Blended.updaterConfig,
   packaging = "bundle",
   description = "Configurations for Updater and Launcher",
   dependencies = Seq(
@@ -21,7 +21,7 @@ BlendedModel(
     typesafeConfig,
     slf4j,
     prickle,
-    blendedTestSupport % "test",
+    Blended.testSupport % "test",
     scalaTest % "test"
   ),
   plugins = Seq(

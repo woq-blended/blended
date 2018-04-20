@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include blended.build/build-common.scala
 
 BlendedModel(
-  gav = BlendedModule("blended.reactor"),
+  gav = Blended.blended("blended.reactor"),
   packaging = "pom",
   description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
   plugins = Seq(

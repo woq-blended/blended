@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = BlendedModule("blended.itest.reactor"),
+  gav = Blended.blended("blended.itest.reactor"),
   packaging = "pom",
   description = "The integration tests for the demo blended containers.",
   plugins = Seq(

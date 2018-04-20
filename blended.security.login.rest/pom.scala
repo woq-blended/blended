@@ -7,13 +7,13 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityLoginRest,
+  gav = Blended.securityLoginRest,
   packaging = "war",
   description = "A REST service providing login services and web token management",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
-    blendedSpray,
+    Blended.domino,
+    Blended.spray,
     sprayJson,
     scalaTest % "test",
     sprayTestkit % "test"

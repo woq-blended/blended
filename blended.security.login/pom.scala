@@ -7,12 +7,12 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityLogin,
+  gav = Blended.securityLogin,
   packaging = "bundle",
   description = "OSGI Services to support a token based authentication and authorization.",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
+    Blended.domino,
     jjwt,
     slf4jLog4j12 % "test",
     scalaTest % "test"

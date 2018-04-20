@@ -7,13 +7,13 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityAkkaHttp,
+  gav = Blended.securityAkkaHttp,
   packaging = "bundle",
   description = "Some security aware Akka HTTP routes for the blended container.",
   dependencies = Seq(
     Deps.scalaLib,
-    blendedAkka,
-    blendedSecurity,
+    Blended.akka,
+    Blended.security,
     Deps.akkaHttp,
     Deps.orgOsgi,
     Deps.orgOsgiCompendium,

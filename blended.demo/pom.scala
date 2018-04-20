@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedDemoReactor,
+  gav = Blended.demoReactor,
   packaging = "pom",
   description = "A collection of container definitions to demonstrate the functionality of blended.",
   modules = Seq(

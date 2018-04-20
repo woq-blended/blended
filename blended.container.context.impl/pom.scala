@@ -7,15 +7,15 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedContainerContextImpl,
+  gav = Blended.containerContextImpl,
   packaging = "bundle",
   description = "A simple OSGI service to provide access to the container's config directory.",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedContainerContextApi,
-    blendedUtil,
-    blendedUpdaterConfig,
-    blendedLauncher,
+    Blended.containerContextApi,
+    Blended.util,
+    Blended.updaterConfig,
+    Blended.launcher,
     orgOsgiCompendium,
     orgOsgi,
     domino,

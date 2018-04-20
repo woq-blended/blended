@@ -7,9 +7,9 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedContainer(
-  gav = blendedDemoNode,
+  gav = Blended.demoNode,
   description = "A sample container with some routes and Mgmt client functions,",
-  blendedProfileResouces = blendedDemoNodeResources,
+  blendedProfileResouces = Blended.demoNodeResources,
   features = Seq(
     Feature("blended-base-felix"),
     Feature("blended-base-equinox"),

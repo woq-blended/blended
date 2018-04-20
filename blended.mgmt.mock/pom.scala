@@ -7,12 +7,12 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedMgmtMock,
+  Blended.mgmtMock,
   packaging = "jar",
   description = "Mock server to simulate a larger network of blended containers for UI testing.",
   dependencies = Seq(
-    blendedMgmtBase,
-    blendedMgmtAgent,
+    Blended.mgmtBase,
+    Blended.mgmtAgent,
     scalaLib,
     slf4j,
     slf4jLog4j12,

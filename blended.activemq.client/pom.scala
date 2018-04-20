@@ -7,14 +7,14 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedActivemqClient,
+  gav = Blended.activemqClient,
   packaging = "bundle",
   description =
     """
       |An Active MQ Connection factory as a service.
     """.stripMargin,
   dependencies = Seq(
-    blendedDomino,
+    Blended.domino,
     activeMqClient
   ),
   plugins = Seq(

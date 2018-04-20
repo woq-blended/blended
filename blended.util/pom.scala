@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedUtil,
+  gav = Blended.util,
   packaging = "bundle",
   description = "Utility classes to use in other bundles.",
   dependencies = Seq(

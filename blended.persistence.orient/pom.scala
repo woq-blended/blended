@@ -7,19 +7,19 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedPersistenceOrient,
+  Blended.persistenceOrient,
   packaging = "bundle",
   description = "Implement a persistence backend with OrientDB.",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedPersistence,
-    blendedAkka,
+    Blended.persistence,
+    Blended.akka,
     slf4j,
     domino,
     orientDbCore,
     scalaTest % "test",
     Dependency(
-      blendedTestSupport,
+      Blended.testSupport,
       scope = "test",
       exclusions = Seq("*" % "*")
     ),

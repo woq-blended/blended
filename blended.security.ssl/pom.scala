@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecuritySsl,
+  gav = Blended.securitySsl,
   packaging = "bundle",
   description = "Bundle to provide simple Server Certificate Management.",
   dependencies = Seq(
@@ -15,15 +15,15 @@ BlendedModel(
     Deps.scalaReflect % "provided",
     Deps.bouncyCastleBcprov % "provided",
     Deps.bouncyCastlePkix,
-    blendedDomino,
+    Blended.domino,
     Dependency(Deps.domino).pure,
-    blendedMgmtBase,
+    Blended.mgmtBase,
     Deps.log4s,
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test",
-    blendedTestSupport % "test",
-    blendedTestSupportPojosr % "test"
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test"
   ),
   plugins = Seq(
     Plugin(

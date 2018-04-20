@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedItestSupport,
+  gav = Blended.itestSupport,
   packaging = "jar",
   description = """Define an integration test API for collaborating blended container(s) using docker as a runtime 
     for the container(s) under test and an Akka based Camel framework to perform the integration tests 
@@ -15,10 +15,10 @@ BlendedModel(
     started by the integration test (for reproducability).""",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedAkka,
-    blendedJolokia,
-    blendedTestSupport,
-    blendedJmsUtils,
+    Blended.akka,
+    Blended.jolokia,
+    Blended.testSupport,
+    Blended.jmsUtils,
     dockerJava,
     akkaCamel,
     typesafeConfig,

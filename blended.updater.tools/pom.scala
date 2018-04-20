@@ -7,12 +7,12 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedUpdaterTools,
+  Blended.updaterTools,
   packaging = "bundle",
   description = "Configurations for Updater and Launcher",
   dependencies = Seq(
     typesafeConfig,
-    blendedUpdaterConfig,
+    Blended.updaterConfig,
     cmdOption,
     scalaTest % "test"
   ),

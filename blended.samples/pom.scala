@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSamplesReactor,
+  gav = Blended.samplesReactor,
   packaging = "pom",
   description = "A collection of sample projects.",
   profiles = Seq(

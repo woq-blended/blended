@@ -7,12 +7,12 @@ import scala.collection.immutable.Seq
 //#include ../../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedAkkaHttpSampleHelloworld,
+  gav = Blended.akkaHttpSampleHelloworld,
   packaging = "bundle",
   description = "A sample Akka HTTP bases HTTP endpoint for the blended container.",
   dependencies = Seq(
-    blendedAkka,
-    blendedAkkaHttp,
+    Blended.akka,
+    Blended.akkaHttp,
     Deps.domino,
     Deps.scalaLib,
     Deps.orgOsgi,

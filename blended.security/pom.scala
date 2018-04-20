@@ -7,17 +7,17 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurity,
+  gav = Blended.security,
   packaging = "bundle",
   description = "Configuration bundle for the Apache Shiro security framework.",
   dependencies = Seq(
-    blendedSecurityBoot,
-    blendedAkka,
-    blendedUtil,
-    blendedDomino,
+    Blended.securityBoot,
+    Blended.akka,
+    Blended.util,
+    Blended.domino,
     log4s,
-    blendedTestSupport % "test",
-    blendedTestSupportPojosr % "test",
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
     scalaLib % "provided",
     scalaTest % "test",
     logbackCore % "test",

@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 val mavenVersion = "3.0.5"
 
 BlendedModel(
-  blendedUpdaterMavenPlugin,
+  gav = Blended.updaterMavenPlugin,
   packaging = "maven-plugin",
   description = "Integration of Blended Updater feature / product builds into Maven",
   prerequisites = Prerequisites(
@@ -19,7 +19,7 @@ BlendedModel(
     "org.apache.maven" % "maven-plugin-api" % mavenVersion,
     "org.apache.maven.plugin-tools" % "maven-plugin-annotations" % "3.4" % "provided",
     "org.apache.maven" % "maven-core" % mavenVersion,
-    blendedUpdaterTools,
+    Blended.updaterTools,
     scalaLib
   ),
   pluginManagement = Seq(

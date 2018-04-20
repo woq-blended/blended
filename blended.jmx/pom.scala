@@ -7,11 +7,11 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedJmx,
+  gav = Blended.jmx,
   packaging = "bundle",
   description = "Helper bundle to expose the platform's MBeanServer as OSGI Service.",
   dependencies = Seq(
-    domino
+    Deps.domino
   ),
   plugins = Seq(
     mavenBundlePlugin,

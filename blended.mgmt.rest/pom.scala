@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedMgmtRest,
+  Blended.mgmtRest,
   packaging = "bundle",
   description = "REST interface to accept POST's from distributed containers. These will be delegated to the container registry.",
   properties = Map(
@@ -17,16 +17,16 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     slf4j % "provided",
-    blendedMgmtBase,
-    blendedContainerRegistry,
-    blendedAkka,
+    Blended.mgmtBase,
+    Blended.containerRegistry,
+    Blended.akka,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
-    blendedAkkaHttp,
-    blendedPrickleAkkaHttp,
-    blendedSecurityAkkaHttp,
-    blendedUpdaterRemote,
+    Blended.akkaHttp,
+    Blended.prickleAkkaHttp,
+    Blended.securityAkkaHttp,
+    Blended.updaterRemote,
     orgOsgi,
     orgOsgiCompendium,
     scalaTest % "test",

@@ -7,14 +7,14 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedMgmtServiceJmx,
+  gav = Blended.mgmtServiceJmx,
   packaging = "bundle",
   description = "A JMX based Service Info Collector.",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
-    blendedAkka,
-    blendedUpdaterConfig,
+    Blended.domino,
+    Blended.akka,
+    Blended.updaterConfig,
     akkaTestkit % "test",
     scalaTest % "test",
     slf4jLog4j12 % "test"

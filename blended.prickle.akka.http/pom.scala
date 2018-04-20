@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedPrickleAkkaHttp,
+  Blended.prickleAkkaHttp,
   packaging = "bundle",
   description = "Define some convenience to use Prickle with Akka HTTP",
   dependencies = Seq(

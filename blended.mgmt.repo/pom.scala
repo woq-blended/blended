@@ -7,17 +7,17 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedMgmtRepo,
+  gav = Blended.mgmtRepo,
   packaging = "bundle",
   description = "File Artifact Repository",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
-    blendedUpdaterConfig,
-    blendedMgmtBase,
+    Blended.domino,
+    Blended.updaterConfig,
+    Blended.mgmtBase,
     sprayJson,
     scalaTest % "test",
-    blendedTestSupport % "test",
+    Blended.testSupport % "test",
     lambdaTest % "test"
   ), 
   plugins = Seq(

@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedHawtioLogin,
+  Blended.hawtioLogin,
   packaging = "bundle",
   description = "Adding required imports to the hawtio war bundle.",
   plugins = Seq(

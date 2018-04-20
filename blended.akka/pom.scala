@@ -7,18 +7,18 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedAkka,
+  gav = Blended.akka,
   packaging = "bundle",
   description = "The main bundle to provide an Actor based interface to the main OSGI services.",
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
-    blendedContainerContextApi,
-    blendedDomino,
+    Blended.containerContextApi,
+    Blended.domino,
     domino,
     orgOsgi,
     akkaOsgi,
-    blendedTestSupport % "test",
+    Blended.testSupport % "test",
     akkaTestkit % "test",
     akkaSlf4j % "test",
     mockitoAll % "test",

@@ -7,26 +7,26 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedJolokia,
+  Blended.jolokia,
   packaging = "bundle",
   description = "Provide an Actor based Jolokia Client to access JMX resources of a container via REST.",
   dependencies = Seq(
-    blendedAkka,
-    scalaLib,
-    sprayHttp,
-    sprayHttpx,
-    sprayUtil,
-    sprayIo,
-    sprayClient,
-    sprayJson,
-    jsonLenses,
-    slf4j,
-    akkaSlf4j % "test",
-    jolokiaJvmAgent % "runtime",
-    scalaTest % "test",
-    blendedTestSupport % "test",
-    mockitoAll % "test",
-    slf4jLog4j12 % "test"
+    Blended.akka,
+    Deps.scalaLib,
+    Deps.sprayHttp,
+    Deps.sprayHttpx,
+    Deps.sprayUtil,
+    Deps.sprayIo,
+    Deps.sprayClient,
+    Deps.sprayJson,
+    Deps.jsonLenses,
+    Deps.slf4j,
+    Deps.akkaSlf4j % "test",
+    Deps.jolokiaJvmAgent % "runtime",
+    Deps.scalaTest % "test",
+    Blended.testSupport % "test",
+    Deps.mockitoAll % "test",
+    Deps.slf4jLog4j12 % "test"
   ),
   plugins = Seq(
     Plugin(
