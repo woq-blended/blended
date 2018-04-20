@@ -5,13 +5,10 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag
-import javax.security.auth.login.{AppConfigurationEntry, Configuration}
-import org.scalatest.{BeforeAndAfterAll, FreeSpec}
-
-import scala.collection.JavaConverters._
 import blended.security.SubjectImplicits._
 import blended.testsupport.security.DummyLoginConfiguration
+import javax.security.auth.login.Configuration
+import org.scalatest.{BeforeAndAfterAll, FreeSpec}
 
 class JAASSecurityDirectivesSpec
   extends FreeSpec

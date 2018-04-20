@@ -8,7 +8,18 @@ import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCall
 import javax.security.auth.login.{FailedLoginException, LoginException}
 import javax.security.auth.spi.LoginModule
 
-class DummyLoginModule extends LoginModule {
+trait UsersAndGropus {
+
+  val users : Map[String, String] = Map(
+    "root" -> "mysecret"
+  )
+
+  val groups : Map[String, List[String]] = Map (
+    "root" -> List("hawtio")
+  )
+}
+
+class DummyLoginModule extends LoginModule with UsersAndGropus {
   private[this] val log = org.log4s.getLogger
 
   private[this] var subject : Option[Subject] = None
@@ -33,30 +44,34 @@ class DummyLoginModule extends LoginModule {
     cbHandler match {
       case None => throw new LoginException("No Callback Handler defined")
       case Some(cbh) => try {
+        val realizedSubject = subject.get
+
         cbh.handle(Array(nameCallback, passwordCallback))
 
         val name = nameCallback.getName()
         val pwd = new String(passwordCallback.getPassword())
         log.info(s"Logging in user [$name]")
 
-        if (name == "root" && pwd == "mysecret") {
-          succeeded = true
+        succeeded = users.get(name) match {
+          case Some(storedPwd) => pwd == storedPwd
+          case None => false
+        }
 
-          subject.foreach{ s =>
-            s.getPrincipals().add(new UserPrincipal(name))
-            s.getPrincipals().add(new GroupPrincipal("hawtio"))
+        if (succeeded) {
+          groups.getOrElse(name, List.empty).foreach{ s =>
+            realizedSubject.getPrincipals().add(new UserPrincipal(name))
+            realizedSubject.getPrincipals().add(new GroupPrincipal(s))
           }
-          succeeded
         } else {
           throw new FailedLoginException("Boom")
         }
+        succeeded
       } catch {
         case t : Throwable =>
           log.error(t)(t.getMessage())
           throw new LoginException(t.getMessage())
       }
     }
-
   }
 
   override def commit(): Boolean = succeeded
