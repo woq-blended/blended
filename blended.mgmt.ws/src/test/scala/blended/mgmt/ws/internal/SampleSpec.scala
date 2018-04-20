@@ -1,7 +1,10 @@
 package blended.mgmt.ws.internal
 
+import akka.http.scaladsl.model.ws.TextMessage
 import akka.http.scaladsl.testkit.{ScalatestRouteTest, WSProbe}
 import org.scalatest.FreeSpec
+
+import scala.concurrent.duration._
 
 class SampleSpec extends FreeSpec
   with ScalatestRouteTest {
@@ -12,17 +15,29 @@ class SampleSpec extends FreeSpec
 
     "simply work" in {
 
-      val wsClient = WSProbe()
+      val wsClient : WSProbe = WSProbe()
 
-      WS("/echo", wsClient.flow) ~> server.route ~>
+      def expectTimerMessage(client : WSProbe) : Unit = {
+        client .expectMessage() match {
+          case tm : TextMessage.Strict =>
+            assert(tm.text.startsWith("TimerEvent"))
+          case _ => fail("Unexpected Message")
+        }
+      }
+
+      WS("/timer?name=test", wsClient.flow) ~> server.route ~>
       check {
         assert(isWebSocketUpgrade)
 
-        wsClient.sendMessage("Andreas")
-        wsClient.expectMessage("Andreas")
+        wsClient.expectMessage(ReceivedMessage("Accepted").toString)
+
+        expectTimerMessage(wsClient)
+        expectTimerMessage(wsClient)
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()
+
+        wsClient.expectNoMessage(3.seconds)
       }
     }
   }

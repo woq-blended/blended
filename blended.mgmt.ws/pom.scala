@@ -17,6 +17,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     slf4j % "provided",
+    Deps.log4s,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
