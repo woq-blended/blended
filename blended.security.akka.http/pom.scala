@@ -19,6 +19,7 @@ BlendedModel(
     Deps.orgOsgi,
     Deps.orgOsgiCompendium,
     Deps.slf4j,
+    blendedTestSupport % "test",
     Deps.commonsBeanUtils % "test",
     Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",

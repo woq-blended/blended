@@ -18,7 +18,6 @@ BlendedModel(
     scalaLib % "provided",
     slf4j % "provided",
     blendedMgmtBase,
-    blendedContainerRegistry,
     blendedAkka,
     Deps.akkaHttp,
     Deps.akkaHttpCore,

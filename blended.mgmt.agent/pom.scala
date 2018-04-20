@@ -13,7 +13,6 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     blendedAkka,
-    blendedContainerRegistry,
     blendedUpdaterConfig,
     blendedSprayApi,
     blendedSpray,

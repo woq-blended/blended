@@ -257,7 +257,6 @@ val blendedAkkaHttpSampleHelloworld = BlendedModule("blended.akka.http.sample.he
 val blendedCamelUtils = BlendedModule("blended.camel.utils")
 val blendedContainerContextApi = BlendedModule("blended.container.context.api")
 val blendedContainerContextImpl = BlendedModule("blended.container.context.impl")
-val blendedContainerRegistry = BlendedModule("blended.container.registry")
 val blendedDemoReactor = BlendedModule("blended.demo.reactor")
 val blendedDemoMgmt = BlendedModule("blended.demo.mgmt")
 val blendedDemoMgmtResources = BlendedModule("blended.demo.mgmt.resources")

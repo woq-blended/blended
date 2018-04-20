@@ -119,7 +119,6 @@ val features = Seq(
       FeatureBundle(dependency = blendedMgmtRepo, start = true),
       FeatureBundle(dependency = blendedMgmtRepoRest, start = true),
       FeatureBundle(dependency = blendedUpdaterRemote, start = true),
-      FeatureBundle(dependency = blendedContainerRegistry),
       FeatureBundle(dependency = blendedPersistence),
       FeatureBundle(dependency = blendedPersistenceOrient, start = true),
       FeatureBundle(dependency = orientDbCore),

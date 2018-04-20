@@ -3,6 +3,7 @@ package blended.security
 import java.text.MessageFormat
 import java.util
 
+import blended.security.boot.{GroupPrincipal, UserPrincipal}
 import blended.security.internal.{LDAPLoginConfig, LdapSearchResult}
 import com.sun.jndi.ldap.LdapCtxFactory
 import com.typesafe.config.Config

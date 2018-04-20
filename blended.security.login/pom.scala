@@ -14,8 +14,10 @@ BlendedModel(
     scalaLib % "provided",
     blendedDomino,
     jjwt,
-    slf4jLog4j12 % "test",
-    scalaTest % "test"
+    log4s,
+    scalaTest % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ), 
   plugins = Seq(
     mavenBundlePlugin,

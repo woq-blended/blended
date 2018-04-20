@@ -1,4 +1,4 @@
-package blended.security
+package blended.security.boot
 
 import java.security.Principal
 

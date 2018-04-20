@@ -1,8 +1,8 @@
-package blended.security.akka.http
+package blended.testsupport.security
 
 import java.util
 
-import blended.security.{GroupPrincipal, UserPrincipal}
+import blended.security.boot.{GroupPrincipal, UserPrincipal}
 import javax.security.auth.Subject
 import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
 import javax.security.auth.login.{FailedLoginException, LoginException}

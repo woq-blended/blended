@@ -40,7 +40,6 @@ BlendedModel(
         "blended.activemq.brokerstarter",
         "blended.container.context.api",
         "blended.container.context.impl",
-        "blended.container.registry",
         "blended.util",
         "blended.jmx",
         "blended.camel.utils",

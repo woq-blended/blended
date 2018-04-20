@@ -57,7 +57,6 @@ object Dispatcher {
         log.info(s"New client connected [$id]")
         context.watch(client)
         clients += (id -> client)
-        client ! ReceivedMessage("Accepted")
 
       case ClientClosed(c) =>
         log.info(s"Client closed : $c")
@@ -69,6 +68,4 @@ object Dispatcher {
         clients = clients.filter { case (k, v) => v != client }
     }
   }
-
-
 }
