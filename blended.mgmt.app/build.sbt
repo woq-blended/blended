@@ -17,6 +17,8 @@ lazy val commonSettings = Seq(
 
   scalaJSUseMainModuleInitializer := true,
 
+  sourcesInBase := false,
+
   artifactPath.in(Compile, fastOptJS) := ((crossTarget in (Compile, fastOptJS)).value /
     ((moduleName in fastOptJS).value + "-opt.js")),
 
