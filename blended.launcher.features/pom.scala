@@ -124,7 +124,7 @@ val features = Seq(
       FeatureBundle(dependency = orientDbCore),
       FeatureBundle(dependency = concurrentLinkedHashMapLru),
       FeatureBundle(dependency = jsr305),
-      FeatureBundle(dependency = Dependency(gav = blendedMgmtUi, `type` = "war"), start = true),
+      FeatureBundle(dependency = Dependency(gav = blendedMgmtApp, `type` = "war"), start = true),
       FeatureBundle(dependency = jacksonAnnotations),
       FeatureBundle(dependency = jacksonCore),
       FeatureBundle(dependency = jacksonBind),

@@ -51,6 +51,7 @@ BlendedModel(
         "blended.domino",
         "blended.akka",
         "blended.akka.http",
+        "blended.mgmt.app",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",
@@ -79,7 +80,6 @@ BlendedModel(
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
         "blended.launcher.features",
-        "blended.mgmt.ui",
         "blended.file",
         "blended.demo"
       )
