@@ -8,6 +8,8 @@ import blended.util.config.Implicits._
 import javax.net.ssl.SSLContext
 import akka.http.scaladsl.ConnectionContext
 
+import scala.util.{Failure, Success}
+
 class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] val log = org.log4s.getLogger
@@ -33,9 +35,14 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
       val dynamicRoutes = new RouteProvider()
 
       log.info(s"Starting HTTP server at ${httpHost}:${httpPort}")
-      val bindingFuture = Http().bindAndHandle(dynamicRoutes.dynamicRoute, httpHost, httpPort);
-      bindingFuture.foreach { b =>
-        log.info(s"Started HTTP server at ${b.localAddress}")
+      val bindingFuture = Http().bindAndHandle(dynamicRoutes.dynamicRoute, httpHost, httpPort)
+
+      bindingFuture.onComplete {
+        case Success(b) =>
+          log.info(s"Started HTTP server at ${b.localAddress}")
+        case Failure(t) =>
+          log.error(t)("Failed to start Akka Http Server")
+          throw t
       }
 
       onStop {

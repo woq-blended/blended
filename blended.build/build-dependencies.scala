@@ -45,7 +45,7 @@ object Deps {
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
 
   def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaVersion
-  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % "10.1.1"
+  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaHttpVersion
   val akkaActor = akka("actor")
   val akkaCamel = akka("camel")
   val akkaHttp = akka_Http("http")
@@ -253,6 +253,7 @@ val blendedActivemqClient = BlendedModule("blended.activemq.client")
 val blendedActivemqDefaultbroker = BlendedModule("blended.activemq.defaultbroker")
 val blendedAkka = BlendedModule("blended.akka")
 val blendedAkkaHttp = BlendedModule("blended.akka.http")
+val blendedAkkaHttpApi = BlendedModule("blended.akka.http.api")
 val blendedAkkaHttpSampleHelloworld = BlendedModule("blended.akka.http.sample.helloworld")
 val blendedCamelUtils = BlendedModule("blended.camel.utils")
 val blendedContainerContextApi = BlendedModule("blended.container.context.api")

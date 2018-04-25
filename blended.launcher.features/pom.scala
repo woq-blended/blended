@@ -128,7 +128,6 @@ val features = Seq(
       FeatureBundle(dependency = jacksonAnnotations),
       FeatureBundle(dependency = jacksonCore),
       FeatureBundle(dependency = jacksonBind),
-      FeatureBundle(dependency = jjwt),
       FeatureBundle(dependency = blendedSecurityLogin, start = true),
       FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
     )),
@@ -184,10 +183,8 @@ val features = Seq(
       "blended-base"
     ),
     bundles = Seq(
+      FeatureBundle(dependency = blendedAkkaHttpApi),
       FeatureBundle(dependency = blendedAkkaHttp, start = true),
-      FeatureBundle(dependency = Deps.akkaHttp),
-      FeatureBundle(dependency = Deps.akkaHttpCore),
-      FeatureBundle(dependency = Deps.akkaParsing),
       FeatureBundle(dependency = blendedPrickleAkkaHttp),
       FeatureBundle(dependency = blendedSecurityAkkaHttp)
     )),

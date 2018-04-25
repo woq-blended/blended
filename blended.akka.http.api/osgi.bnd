@@ -1,0 +1,14 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package:\
+  com.sun.*;resolution:=optional,\
+  sun.*;resolution:=optional,\
+  net.liftweb.*;resolution:=optional,\
+  play.*;resolution:=optional,\
+  twirl.*;resolution:=optional,\
+  org.json4s.*;resolution:=optional,\
+  *

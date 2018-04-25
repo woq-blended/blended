@@ -7,19 +7,15 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedSecurityLogin,
+  gav = blendedAkkaHttpApi,
   packaging = "bundle",
-  description = "OSGI Services to support a token based authentication and authorization.",
+  description = "Package the complete Spray API into a bundle.",
   dependencies = Seq(
     scalaLib % "provided",
-    blendedDomino,
-    jjwt,
-    log4s,
-    bouncyCastleBcprov,
-    scalaTest % "test",
-    logbackCore % "test",
-    logbackClassic % "test"
-  ), 
+    akkaHttp,
+    akkaHttpCore,
+    akkaParsing
+  ),
   plugins = Seq(
     Plugin(
       mavenBundlePlugin.gav,
@@ -28,11 +24,13 @@ BlendedModel(
       configuration = Config(
         instructions = new Config(Seq(
           "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option(s"*;artifactId=${jjwt.artifactId},artifactId=${bouncyCastleBcprov.artifactId}")
+          "Embed-Dependency" -> Option("*;scope=compile"),
+          "_exportcontents" -> Option(
+            "akka.http.*;version="+ BlendedVersions.akkaHttpVersion + ";-split-package:=merge-first,"
+          ),
+          "Embed-Transitive" -> Option("true")
         ))
       )
-    ),
-    sbtCompilerPlugin,
-    scalatestMavenPlugin
+    )
   )
 )

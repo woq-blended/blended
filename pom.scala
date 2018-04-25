@@ -50,6 +50,7 @@ BlendedModel(
         "blended.testsupport.pojosr",
         "blended.domino",
         "blended.akka",
+        "blended.akka.http.api",
         "blended.akka.http",
         "blended.mgmt.app",
         "blended.mgmt.base",
