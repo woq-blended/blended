@@ -41,7 +41,7 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
         case Success(b) =>
           log.info(s"Started HTTP server at ${b.localAddress}")
         case Failure(t) =>
-          log.error(t)("Failed to start Akka Http Server")
+          log.error(t)(t.getMessage())
           throw t
       }
 
@@ -61,15 +61,19 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
           interface = httpsHost,
           port = httpsPort,
           connectionContext = https)
-        httpsBindingFuture.foreach { b =>
-          log.info(s"Started HTTPS server at ${b.localAddress}")
+
+        httpsBindingFuture.onComplete {
+          case Success(b) =>
+            log.info(s"Started HTTPS server at ${b.localAddress}")
+          case Failure(t) =>
+            log.error(t)(t.getMessage())
+            throw t
         }
 
         onStop {
           log.info(s"Stopping HTTPS server at ${httpsHost}:${httpsPort}")
           httpsBindingFuture.map(serverBinding => serverBinding.unbind())
         }
-
       }
 
       // Consume routes from OSGi Service Registry (white-board pattern)
