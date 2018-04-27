@@ -80,26 +80,27 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
   }
 
-  //  "live test against dns.google.com" in {
-  //
-  //    implicit val timeout: Timeout = Timeout(30.seconds)
-  //
-  //    val proxyRoute = new ProxyRoute {
-  //      override val actorSystem = system
-  //      override val proxyConfig = ProxyTarget(path = "path", uri = "https://dns.google.com/resolve", timeout = 30)
-  //      override val sslContext = None
-  //    }
-  //
-  //    val prefixRoute = pathPrefix("test") {
-  //      proxyRoute.proxyRoute
-  //    }
-  //
-  //    Get("/test/?name=tototec.de") ~> Route.seal(prefixRoute) ~> check {
-  //      log.info("status: " + status)
-  //      log.info("response: " + response)
-  //      assert(handled === true)
-  //    }
-  //
-  //  }
+  "live test against sbuild.org" in {
+
+    implicit val timeout: Timeout = Timeout(30.seconds)
+
+    val proxyRoute = new ProxyRoute {
+      override val actorSystem = system
+      override val proxyConfig = ProxyTarget(path = "path", uri = "http://sbuild.org/", timeout = 30)
+      override val sslContext = None
+    }
+
+    val prefixRoute = pathPrefix("test") {
+      proxyRoute.proxyRoute
+    }
+
+    Get("/test/") ~> Route.seal(prefixRoute) ~> check {
+      log.info("status: " + status)
+      log.info("response: " + response)
+      log.info("entity: " + entityAs[String])
+      assert(handled === true)
+    }
+
+  }
 
 }

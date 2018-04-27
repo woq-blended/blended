@@ -31,8 +31,8 @@ trait ProxyRoute {
 
   def handle(requestPath: String): Route = {
     // use the timeout of the config
-    implicit val timeoutDuration: Duration = proxyConfig.timeout.seconds
-    implicit val timeout: Timeout = Timeout(proxyConfig.timeout.seconds)
+    implicit val timeoutDuration: FiniteDuration = proxyConfig.timeout.seconds
+    implicit val timeout: Timeout = Timeout(timeoutDuration)
 
     implicit val _actorSystem = actorSystem
     implicit val materializer = ActorMaterializer()
@@ -47,9 +47,22 @@ trait ProxyRoute {
         else s"${proxyConfig.uri}/${requestPath}"
       ).copy(rawQueryString = request.uri.rawQueryString)
 
+      val host = uri.authority.host.address()
+      val port = uri.authority.port
+
+      // keep headers, but not the host header
+      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName)) // ++ Seq(Host(host))
+      //      log.debug(s"headers for request [${headers}]")
+
       log.info(s"Received HttpRequest [${request}] at endpoint [${proxyConfig.path}] and path [${requestPath}] with query [${request.uri.queryString()}]")
       // outgoing connection uses ip and port from the configured uri
-      log.info(s"About to request [$uri] with method [${request.method}] with entity [${request.entity}] and headers [${request.headers}]")
+      log.info(s"About to request [$uri] with method [${request.method}] with entity [${request.entity}] and headers [${headers}]")
+
+      // the final request to the target host
+      val proxyReq = HttpRequest(method = request.method, uri = uri, entity = request.entity).withHeaders(headers)
+      log.debug(s"Final http request [${proxyReq}]")
+      //      log.debug(s"Flow is [${flow}]")
+
       val flow =
         if (proxyConfig.isHttps) {
           sslContext match {
@@ -57,35 +70,27 @@ trait ProxyRoute {
               // Use explicit SSL config
               val httpsConCtx: HttpsConnectionContext = ConnectionContext.https(sslContext = sslCtx)
               Http().outgoingConnectionHttps(
-                host = uri.authority.host.address(),
-                port = uri.authority.port,
+                host = host,
+                port = if(port > 0) port else 443,
                 connectionContext = httpsConCtx,
-                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(proxyConfig.timeout.seconds)
+                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
               )
             case None =>
               // go with default HTTPS config
               Http().outgoingConnectionHttps(
-                host = uri.authority.host.address(),
-                port = uri.authority.port,
+                host = host,
+                port = if(port > 0) port else 443,
                 connectionContext = Http().defaultClientHttpsContext,
-                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(proxyConfig.timeout.seconds)
+                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
               )
           }
         } else {
           Http().outgoingConnection(
-            host = uri.authority.host.address(),
-            port = uri.authority.port,
-            settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(proxyConfig.timeout.seconds)
+            host = host,
+            port = if(port > 0) port else 80,
+            settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
           )
         }
-
-      // keep headers, but not the host header
-      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName))
-
-      // the final request to the target host
-      val proxyReq = HttpRequest(method = request.method, uri = uri, entity = request.entity).withHeaders(headers)
-      log.debug(s"Final http request [${proxyReq}]")
-      log.debug(s"Flow is [${flow}]")
 
       val handler = Source.single(proxyReq).
         via(flow).

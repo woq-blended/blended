@@ -51,10 +51,12 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
           log.debug(s"Watching for cliene SSLContext to create proxy: ${proxyConfig}")
           whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
             val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system, Some(sslContext))
+            log.debug(s"Registering customized HTTPS-enabled proxy route: ${proxyConfig}")
             SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
           }
         } else {
           val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system)
+          log.debug(s"Registering proxy route: ${proxyConfig}")
           SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
         }
 
