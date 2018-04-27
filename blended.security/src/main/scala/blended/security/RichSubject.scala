@@ -1,9 +1,7 @@
-package blended.security.internal
+package blended.security
 
-import blended.security.{GroupPrincipal, UserPrincipal}
+import scala.collection.JavaConverters.asScalaSetConverter
 import javax.security.auth.Subject
-
-import scala.collection.JavaConverters._
 
 trait RichSubject {
 
