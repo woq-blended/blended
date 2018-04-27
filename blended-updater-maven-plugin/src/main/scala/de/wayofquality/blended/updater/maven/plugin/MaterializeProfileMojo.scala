@@ -37,6 +37,9 @@ class MaterializeProfileMojo extends AbstractMojo {
   @Parameter(defaultValue = "false", property = "explodeResources")
   var explodeResources: Boolean = false
   
+  @Parameter(defaultValue = "false", property = "blended-updater.debug")
+  var debug: Boolean = false
+  
   // TODO add filter for conf dependencies
 
   /**
@@ -76,13 +79,14 @@ class MaterializeProfileMojo extends AbstractMojo {
 
     val explodeResourcesArgs = if(explodeResources) Array("--explode-resources") else Array[String]()
     
+    val debugArgs = if(debug) Array("--debug") else Array[String]()
+    
     val profileArgs = Array(
-      "--debug",
       "-f", srcProfile.getAbsolutePath,
       "-o", targetProfile.getAbsolutePath,
       "--download-missing",
       "--update-checksums"
-    ) ++ featureArgs ++ repoArgs ++ explodeResourcesArgs
+    ) ++ debugArgs ++ featureArgs ++ repoArgs ++ explodeResourcesArgs
     RuntimeConfigBuilder.run(profileArgs)
   }
 
