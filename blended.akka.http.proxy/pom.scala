@@ -23,6 +23,7 @@ BlendedModel(
     //    Deps.orgOsgi,
     //    Deps.akkaOsgi,
     Blended.akka,
+    Blended.akkaHttp,
     Blended.util,
     Deps.akkaStream,
     Deps.akkaHttp,

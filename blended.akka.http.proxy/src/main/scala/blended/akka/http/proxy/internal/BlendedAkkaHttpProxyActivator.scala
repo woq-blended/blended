@@ -15,6 +15,8 @@ import akka.stream.scaladsl.Source
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.model.headers.Host
 import javax.net.ssl.SSLContext
+import blended.akka.http.SimpleHttpContext
+import blended.akka.http.HttpContext
 
 class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatching {
 
@@ -49,11 +51,11 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
           log.debug(s"Watching for cliene SSLContext to create proxy: ${proxyConfig}")
           whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
             val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system, Some(sslContext))
-            proxyRoute.proxyRoute.providesService[Route]
+            SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
           }
         } else {
           val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system)
-          proxyRoute.proxyRoute.providesService[Route]
+          SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
         }
 
         //
