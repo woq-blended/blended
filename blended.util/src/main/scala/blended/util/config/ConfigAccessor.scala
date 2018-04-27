@@ -17,8 +17,9 @@ trait ConfigAccessor {
   protected def configConfigMap(config : Config, key: String) : Option[Map[String, Config]] =
     if (config.hasPath(key)) {
       val cfg = config.getObject(key)
+      val cfgC = cfg.toConfig()
       Option(cfg.keySet().asScala.map { k  =>
-        k -> config.getConfig(s"$key.$k")
+        k -> cfgC.getConfig(k)
       }.toMap)
     }
     else None

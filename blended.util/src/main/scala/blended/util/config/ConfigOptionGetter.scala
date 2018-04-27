@@ -32,13 +32,14 @@ trait ConfigOptionGetter extends ConfigAccessor {
       if (config.hasPath(key)) Option(config.getStringList(key).asScala.toList)
       else None
 
-    def getStringMapOption(key: String) : Option[Map[String, String]] = configStringMap(config, key)
+    def getStringMapOption(key: String): Option[Map[String, String]] = configStringMap(config, key)
 
     def getConfigMapOption(key: String): Option[Map[String, Config]] = configConfigMap(config, key)
 
     def getConfigOption(key: String): Option[Config] =
       if (config.hasPath(key)) Option(config.getConfig(key))
       else None
+
   }
 
 }
