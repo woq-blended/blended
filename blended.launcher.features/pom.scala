@@ -53,7 +53,8 @@ val features = Seq(
     FeatureBundle(dependency = Blended.prickle),
     FeatureBundle(dependency = Blended.mgmtServiceJmx, start = true)
   )),
-  FeatureDef("blended-activemq",
+  FeatureDef(
+    "blended-activemq",
     bundles = Seq(
       FeatureBundle(dependency = ariesProxyApi),
       FeatureBundle(dependency = ariesBlueprintApi),
@@ -67,8 +68,10 @@ val features = Seq(
       FeatureBundle(dependency = Blended.activemqBrokerstarter),
       FeatureBundle(dependency = Blended.jmsUtils, start = true),
       FeatureBundle(dependency = springJms)
-    )),
-  FeatureDef("blended-camel",
+    )
+  ),
+  FeatureDef(
+    "blended-camel",
     features = Seq(
       "blended-spring"
     ),
@@ -78,7 +81,8 @@ val features = Seq(
       FeatureBundle(dependency = camelJms),
       FeatureBundle(dependency = Blended.camelUtils),
       FeatureBundle(dependency = Blended.jmsSampler, start = true)
-    )),
+    )
+  ),
   FeatureDef("blended-commons", bundles = Seq(
     FeatureBundle(dependency = ariesUtil),
     FeatureBundle(dependency = ariesJmxApi),
@@ -96,18 +100,21 @@ val features = Seq(
     FeatureBundle(dependency = commonsBeanUtils),
     FeatureBundle(dependency = commonsConfiguration2)
   )),
-  FeatureDef("blended-hawtio",
+  FeatureDef(
+    "blended-hawtio",
     features = Seq(
       "blended-jetty"
     ),
     bundles = Seq(
       FeatureBundle(dependency = hawtioWeb, start = true),
       FeatureBundle(dependency = Blended.hawtioLogin)
-    )),
+    )
+  ),
   FeatureDef("blended-mgmt-client", bundles = Seq(
     FeatureBundle(dependency = Blended.mgmtAgent, start = true)
   )),
-  FeatureDef("blended-mgmt-server",
+  FeatureDef(
+    "blended-mgmt-server",
     features = Seq(
       "blended-base",
       "blended-spray",
@@ -132,8 +139,10 @@ val features = Seq(
       FeatureBundle(dependency = jjwt),
       FeatureBundle(dependency = Blended.securityLogin, start = true),
       FeatureBundle(dependency = Dependency(gav = Blended.securityLoginRest, `type` = "war"), start = true)
-    )),
-  FeatureDef("blended-jetty",
+    )
+  ),
+  FeatureDef(
+    "blended-jetty",
     features = Seq("blended-base"),
     bundles = Seq(
       FeatureBundle(dependency = activationApi),
@@ -155,23 +164,29 @@ val features = Seq(
       FeatureBundle(dependency = felixHttpApi),
       FeatureBundle(dependency = Blended.jettyBoot, start = true),
       FeatureBundle(dependency = jettyHttpService, start = true)
-    )),
-  FeatureDef("blended-security",
+    )
+  ),
+  FeatureDef(
+    "blended-security",
     features = Seq(
       "blended-base"
     ),
     bundles = Seq(
       FeatureBundle(dependency = Blended.security, start = true)
-    )),
-  FeatureDef("blended-ssl",
+    )
+  ),
+  FeatureDef(
+    "blended-ssl",
     features = Seq(
       "blended-base"
     ),
     bundles = Seq(
       FeatureBundle(dependency = Blended.securityScep, start = true),
       FeatureBundle(dependency = Blended.securitySsl, start = true)
-    )),
-  FeatureDef("blended-spray",
+    )
+  ),
+  FeatureDef(
+    "blended-spray",
     features = Seq(
       "blended-jetty"
     ),
@@ -179,8 +194,10 @@ val features = Seq(
       FeatureBundle(dependency = javaxServlet31),
       FeatureBundle(dependency = Blended.sprayApi),
       FeatureBundle(dependency = Blended.spray)
-    )),
-  FeatureDef("blended-akka-http",
+    )
+  ),
+  FeatureDef(
+    "blended-akka-http",
     features = Seq(
       "blended-base"
     ),
@@ -191,7 +208,17 @@ val features = Seq(
       FeatureBundle(dependency = Deps.akkaParsing),
       FeatureBundle(dependency = Blended.prickleAkkaHttp),
       FeatureBundle(dependency = Blended.securityAkkaHttp)
-    )),
+    )
+  ),
+  FeatureDef(
+    "blended-akka-http-proxy",
+    features = Seq(
+      "blended-akka-http"
+    ),
+    bundles = Seq(
+      FeatureBundle(dependency = Blended.akkaHttpProxy, start = true)
+    )
+  ),
   FeatureDef("blended-spring", bundles = Seq(
     FeatureBundle(dependency = aopAlliance),
     FeatureBundle(dependency = springCore),
@@ -202,7 +229,8 @@ val features = Seq(
     FeatureBundle(dependency = springContextSupport),
     FeatureBundle(dependency = springTx)
   )),
-  FeatureDef("blended-samples",
+  FeatureDef(
+    "blended-samples",
     features = Seq(
       "blended-akka-http",
       "blended-spray",
@@ -217,7 +245,8 @@ val features = Seq(
       FeatureBundle(dependency = Blended.samplesJms, start = true),
       FeatureBundle(dependency = Blended.file),
       FeatureBundle(dependency = Blended.akkaHttpSampleHelloworld, start = true)
-    ))
+    )
+  )
 )
 
 BlendedModel(
