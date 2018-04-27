@@ -52,6 +52,7 @@ BlendedModel(
         "blended.domino",
         "blended.akka",
         "blended.akka.http",
+        "blended.akka.http.proxy",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",

@@ -252,6 +252,7 @@ object Blended {
   val activemqDefaultbroker = blended("blended.activemq.defaultbroker")
   val akka = blended("blended.akka")
   val akkaHttp = blended("blended.akka.http")
+  val akkaHttpProxy = blended("blended.akka.http.proxy")
   val akkaHttpSampleHelloworld = blended("blended.akka.http.sample.helloworld")
   val camelUtils = blended("blended.camel.utils")
   val containerContextApi = blended("blended.container.context.api")
