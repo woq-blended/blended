@@ -13,8 +13,8 @@ object ProxyConfig {
         case (k, v) =>
           ProxyTarget(
             path = k,
-            uri = cfg.getString("uri"),
-            timeout = cfg.getInt("timeout", 10)
+            uri = v.getString("uri"),
+            timeout = v.getInt("timeout", 10)
           )
       }
     )
