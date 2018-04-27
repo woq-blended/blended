@@ -23,20 +23,24 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
       //    whenTypesafeConfigAvailable { (cfg, idService) =>
-      log.debug("Configuration: " + cfg.config)
+      log.debug("Given configuration: " + cfg.config)
 
       //      implicit val actorSystem = cfg.system
       //      implicit val materializer = ActorMaterializer()
       //      import scala.concurrent.ExecutionContext.Implicits.global
 
       // read config
-      val config = ProxyConfig.parse(cfg.config).get
+      val config = ProxyConfig.parse(cfg.config)
+      log.debug("Parsed configuration: " + config)
+      config.failed.foreach { e =>
+        log.debug(e)("Config parse error")
+      }
 
       // do we need client ssl support?
       //      config.paths.find(p => p.isSsl)
 
       // handle each configured proxy endpoint independently
-      config.paths.foreach { proxyTarget =>
+      config.get.paths.foreach { proxyTarget =>
         // setup proxys route according to config and register it into the service registry
         val proxyConfig = proxyTarget.copy(uri = cfg.idSvc.resolvePropertyString(proxyTarget.uri).get)
         //        val baseUri: String = cfg.idSvc.resolvePropertyString(proxy.uri).get
