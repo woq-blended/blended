@@ -31,14 +31,18 @@ trait ProxyRoute {
 
   def handle(requestPath: String): Route = {
     // use the timeout of the config
-    implicit val timeoutDuration: FiniteDuration = proxyConfig.timeout.seconds
-    implicit val timeout: Timeout = Timeout(timeoutDuration)
+    //    implicit val timeoutDuration: FiniteDuration = proxyConfig.timeout.seconds
+    //    implicit val timeout: Timeout = Timeout(timeoutDuration)
 
     implicit val _actorSystem = actorSystem
     implicit val materializer = ActorMaterializer()
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    { ctx: RequestContext =>
+    val timeoutResponse = HttpResponse(
+      StatusCodes.GatewayTimeout,
+      entity = s"The proxy request did not responded after ${proxyConfig.timeout} seconds"
+    )
+    withRequestTimeout(proxyConfig.timeout.seconds, request => timeoutResponse) { ctx: RequestContext =>
       val request = ctx.request
 
       // Keep the query part of the original request
@@ -51,7 +55,8 @@ trait ProxyRoute {
       val port = uri.authority.port
 
       // keep headers, but not the host header
-      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName)) // ++ Seq(Host(host))
+      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName))
+      // ++ Seq(Host(host))
       //      log.debug(s"headers for request [${headers}]")
 
       log.info(s"Received HttpRequest [${request}] at endpoint [${proxyConfig.path}] and path [${requestPath}] with query [${request.uri.queryString()}]")
@@ -71,24 +76,24 @@ trait ProxyRoute {
               val httpsConCtx: HttpsConnectionContext = ConnectionContext.https(sslContext = sslCtx)
               Http().outgoingConnectionHttps(
                 host = host,
-                port = if(port > 0) port else 443,
+                port = if (port > 0) port else 443,
                 connectionContext = httpsConCtx,
-                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
+                settings = ClientConnectionSettings(actorSystem)
               )
             case None =>
               // go with default HTTPS config
               Http().outgoingConnectionHttps(
                 host = host,
-                port = if(port > 0) port else 443,
+                port = if (port > 0) port else 443,
                 connectionContext = Http().defaultClientHttpsContext,
-                settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
+                settings = ClientConnectionSettings(actorSystem)
               )
           }
         } else {
           Http().outgoingConnection(
             host = host,
-            port = if(port > 0) port else 80,
-            settings = ClientConnectionSettings(actorSystem).withConnectingTimeout(timeoutDuration)
+            port = if (port > 0) port else 80,
+            settings = ClientConnectionSettings(actorSystem)
           )
         }
 
@@ -98,15 +103,16 @@ trait ProxyRoute {
         flatMap { response =>
           response.status match {
             case e: StatusCodes.ServerError =>
-              log.warn(s"The upstream server returned with error: ${e}")
+              log.warn(s"503 Bad Gateway. The upstream (proxied) server returned with error: ${e}.")
               ctx.complete(HttpResponse(StatusCodes.BadGateway))
             case s =>
-              log.debug(s"Reveived upstream response [$response]")
+              log.debug(s"${s}. Received upstream response [$response]")
               ctx.complete(response)
           }
         }
       handler
     }
+
   }
 
   private[this] lazy val _proxyRoute: Route = {

@@ -28,6 +28,8 @@ BlendedModel(
     Deps.akkaStream,
     Deps.akkaHttp,
     Deps.log4s,
+    Deps.akkaActor,
+    Deps.akkaSlf4j % "test",
     Blended.testSupportPojosr % "test",
     Deps.akkaTestkit % "test",
     Deps.akkaSlf4j % "test",

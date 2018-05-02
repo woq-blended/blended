@@ -30,6 +30,11 @@ case class ProxyTarget(
 
   def isHttps: Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
 
+  override def toString(): String = getClass().getSimpleName() +
+    "(path=" + path +
+    ",uri=" + uri +
+    ",timeout=" + timeout +
+    ")"
 }
 
 
