@@ -4,7 +4,7 @@ import java.util.UUID
 
 import scala.util.Try
 
-class PropertyResolverException(msg : String) extends Exception(msg)
+class PropertyResolverException(msg: String) extends Exception(msg)
 
 /**
  * Each container within the infrastructure has a unique ID. Once the unique ID is assigned to
@@ -15,10 +15,13 @@ class PropertyResolverException(msg : String) extends Exception(msg)
  */
 trait ContainerIdentifierService {
   lazy val uuid: String = UUID.randomUUID().toString()
-  val properties : Map[String,String]
+  val properties: Map[String, String]
   val containerContext: ContainerContext
 
-  def resolvePropertyString(value: String) : Try[String] =
+  /**
+   * Try to resolved the properties inside a given String and return a string with the replaced properties values.
+   */
+  def resolvePropertyString(value: String): Try[String] =
     Try(ContainerPropertyResolver.resolve(this, value))
 }
 
