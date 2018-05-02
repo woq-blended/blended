@@ -12,6 +12,7 @@ import domino.service_watching.ServiceWatcherContext
 import domino.service_consuming.ServiceConsuming
 import blended.akka.http.SimpleHttpContext
 import org.osgi.framework.ServiceReference
+import akka.http.scaladsl.server.PathMatchers
 
 class RouteProvider {
 
@@ -35,7 +36,7 @@ class RouteProvider {
   private[this] def updateRoutes(): Unit = {
     log.debug("Current http contexts prefixes: " + contexts.map(_.prefix).mkString(", "))
     currentRoute = contexts.foldLeft(initialRoute) { (route, context) =>
-      route ~ pathPrefix(context.prefix) {
+      route ~ pathPrefix(PathMatchers.separateOnSlashes(context.prefix)) {
         context.route
       }
     }

@@ -11,9 +11,9 @@ import blended.testsupport.pojosr.PojoSrTestHelper
 import domino.DominoActivator
 
 class RouteProviderSpec
-    extends FreeSpec
-    with ScalatestRouteTest
-    with PojoSrTestHelper {
+  extends FreeSpec
+  with ScalatestRouteTest
+  with PojoSrTestHelper {
 
   val routeProvider = new RouteProvider()
   val route = routeProvider.dynamicRoute
@@ -79,6 +79,59 @@ class RouteProviderSpec
 
           // postcondition
           Get("/demo") ~> route ~> check {
+            assert(handled === false)
+          }
+
+        } finally {
+          // cleanup
+          Try { serviceBundle.stop(bundleContext) }
+          Try { routeBundle.stop(bundleContext) }
+        }
+      }
+    }
+
+    "handle HttpContext registrations with prefixes containing slashes" in {
+      withPojoServiceRegistry { sr =>
+
+        val serviceBundle = new DominoActivator() {
+          whenBundleActive {
+            routeProvider.dynamicAdapt(capsuleContext, bundleContext)
+          }
+        }
+
+        val routeBundle = new DominoActivator() {
+          whenBundleActive {
+            import akka.http.scaladsl.server.Directives._
+            val route = pathEnd {
+              get {
+                complete("HELLO")
+              }
+            }
+            SimpleHttpContext("test/demo", route).providesService[HttpContext]
+          }
+        }
+
+        val bundleContext = sr.getBundleContext()
+
+        try {
+
+          serviceBundle.start(bundleContext)
+
+          // precondition
+          Get("/test/demo") ~> route ~> check {
+            assert(handled === false)
+          }
+
+          routeBundle.start(bundleContext)
+
+          Get("/test/demo") ~> route ~> check {
+            assert(responseAs[String] === "HELLO")
+          }
+
+          routeBundle.stop(bundleContext)
+
+          // postcondition
+          Get("/test/demo") ~> route ~> check {
             assert(handled === false)
           }
 
