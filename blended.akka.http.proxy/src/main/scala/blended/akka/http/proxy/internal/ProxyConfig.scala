@@ -14,7 +14,8 @@ object ProxyConfig {
           ProxyTarget(
             path = k,
             uri = v.getString("uri"),
-            timeout = v.getInt("timeout", 10)
+            timeout = v.getInt("timeout", 10),
+            redirectCount = v.getInt("redirectCount", 0)
           )
       }
     )
@@ -25,7 +26,8 @@ object ProxyConfig {
 case class ProxyTarget(
   path: String,
   uri: String,
-  timeout: Int
+  timeout: Int,
+  redirectCount: Int = 0
 ) {
 
   def isHttps: Boolean = uri.substring(0, 5).equalsIgnoreCase("https")
@@ -34,6 +36,7 @@ case class ProxyTarget(
     "(path=" + path +
     ",uri=" + uri +
     ",timeout=" + timeout +
+    ",redirectCount=" + redirectCount +
     ")"
 }
 
