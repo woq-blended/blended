@@ -35,12 +35,7 @@ trait ProxyRoute {
 
   private[this] type HttpClient = HttpRequest ⇒ Future[HttpResponse]
 
-  private[this] lazy val _proxyRoute: Route = {
-
-    //    implicit val _actorSystem = actorSystem
-    //    implicit val materializer = ActorMaterializer()
-    //    import scala.concurrent.ExecutionContext.Implicits.global
-
+  private[this] lazy val _proxyRoute: Route =
     pathEndOrSingleSlash {
       handle("")
     } ~
@@ -48,14 +43,7 @@ trait ProxyRoute {
         handle(requestPath)
       }
 
-    //    path(proxyConfig.path / Remaining) { requestPath => ctx =>
-    //    path(Remaining) { requestPath => handle(requestPath) }
-  }
-
   def handle(requestPath: String): Route = {
-    // use the timeout of the config
-    //    implicit val timeoutDuration: FiniteDuration = proxyConfig.timeout.seconds
-    //    implicit val timeout: Timeout = Timeout(timeoutDuration)
 
     implicit val _actorSystem = actorSystem
     implicit val materializer = ActorMaterializer()
@@ -79,30 +67,17 @@ trait ProxyRoute {
 
       val request = ctx.request
 
-      //      val uri = redirectTrace.headOption match {
-      //        case Some(uri) =>
-      //          // use the redirect uri
-      //          uri
-      //        case None =>
-      //          // use the configured base-uri + the path
-      //      }
-
       val uri = Uri(
         if (requestPath.isEmpty) proxyConfig.uri
         else s"${proxyConfig.uri}/${requestPath}"
       // Keep the query part of the original request
       ).copy(rawQueryString = request.uri.rawQueryString)
 
-      //      val host = uri.authority.host.address()
-      //      val port = uri.authority.port
-
       // keep headers, but not the host header
-      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName)) // ++ Seq(Host(host))
-      //      log.debug(s"headers for request [${headers}]")
+      val headers = request.headers.filter(header => header.isNot(Host.lowercaseName))
 
       log.info(s"Received HttpRequest [${request}] at endpoint [${proxyConfig.path}] and path [${requestPath}] with query [${request.uri.queryString()}]")
 
-      // outgoing connection uses ip and port from the configured uri
       log.info(s"About to request [$uri] with method [${request.method}] with entity [${request.entity}] and headers [${headers}]")
 
       // the final request to the target host
@@ -113,20 +88,20 @@ trait ProxyRoute {
         response.status match {
 
           case e: StatusCodes.ServerError =>
-            // Always make sure you consume the response entity streams
-            response.discardEntityBytes()
-            // TODO: print response to log
-            log.warn(s"503 Bad Gateway. The upstream (proxied) server returned with error: ${e}.")
+            //            response.discardEntityBytes()
+            // consume entity (for log)
+            val re = response.entity
+            log.warn(s"503 Bad Gateway. The upstream (proxied) server returned with error [${e}] and response entity [${re}]")
             Future.successful(HttpResponse(StatusCodes.BadGateway))
 
           case r: StatusCodes.Redirection if redirectCount > 0 && Seq(301, 302, 307, 308).contains(r.intValue) =>
 
             val newUri = response.header[Location].get.uri
             val newRedirectCount = redirectCount - 1
-            
+
             log.debug(s"${r}. Retry request with new URI [${newUri}] and redirectCount [${newRedirectCount}]")
 
-            // Always make sure you consume the response entity streams
+            // Always consume the response entity streams
             response.discardEntityBytes()
 
             // create new request and retry
