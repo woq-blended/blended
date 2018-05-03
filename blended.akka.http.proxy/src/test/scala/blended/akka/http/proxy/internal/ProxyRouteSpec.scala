@@ -54,8 +54,6 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
       }
 
     def localtest(redirectCount: Int = 0)(f: Route => Unit): Unit = {
-      // For test infra
-      //      implicit val timeout: Timeout = Timeout(30.seconds)
       TestServer.withServer(localPort, testRoute) {
         val proxyRoute = new ProxyRoute {
           override val actorSystem = system
@@ -136,9 +134,14 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
   }
 
-  "Live Tests - you need to have internet access - enable with -Dtest.online=true" - {
+  "Live Tests - you need to have internet access - enable with env variabe test.online=true" - {
 
-    "live test against http://sbuild.org" in {
+    def whenOnline(test: => Unit): Unit = System.getenv("TEST_ONLINE") match {
+      case null | "false" | "0" => pending
+      case _ => test
+    }
+
+    "live test against http://sbuild.org" in whenOnline {
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
@@ -164,7 +167,34 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
     }
 
-    "live test against http://heise.de with redirectCount 2" in {
+     "live test against http://heise.de with redirectCount 0" in whenOnline {
+
+      val proxyRoute = new ProxyRoute {
+        override val actorSystem = system
+        override val proxyConfig = ProxyTarget(
+          path = "path",
+          uri = "http://heise.de",
+          timeout = 1,
+          redirectCount = 0
+        )
+        override val sslContext = None
+      }
+
+      val prefixRoute = pathPrefix("test") {
+        proxyRoute.proxyRoute
+      }
+
+      Get("/test/") ~> Route.seal(prefixRoute) ~> check {
+        log.info("status: " + status)
+        log.info("response: " + response)
+        log.info("entity: " + entityAs[String])
+        assert(handled === true)
+        assert(status === StatusCodes.MovedPermanently)
+      }
+
+    }
+    
+    "live test against http://heise.de with redirectCount 1" in whenOnline {
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
@@ -192,7 +222,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
     }
 
-    "live test against https://github.com/woq-blended/blended" in {
+    "live test against https://github.com/woq-blended/blended" in whenOnline {
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
