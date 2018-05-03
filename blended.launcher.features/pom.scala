@@ -129,7 +129,8 @@ val features = Seq(
       FeatureBundle(dependency = jacksonCore),
       FeatureBundle(dependency = jacksonBind),
       FeatureBundle(dependency = blendedSecurityLogin, start = true),
-      FeatureBundle(dependency = Dependency(gav = blendedSecurityLoginRest, `type` = "war"), start = true)
+      FeatureBundle(dependency = blendedMgmtWs, start = true),
+      FeatureBundle(dependency = blendedSecurityLoginRest, start = true)
     )),
   FeatureDef("blended-jetty",
     features = Seq("blended-base"),

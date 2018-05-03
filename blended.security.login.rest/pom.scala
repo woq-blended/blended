@@ -8,28 +8,18 @@ import scala.collection.immutable.Seq
 
 BlendedModel(
   gav = blendedSecurityLoginRest,
-  packaging = "war",
+  packaging = "bundle",
   description = "A REST service providing login services and web token management",
   dependencies = Seq(
     scalaLib % "provided",
     blendedDomino,
-    blendedSpray,
-    sprayJson,
+    blendedAkkaHttp,
     scalaTest % "test",
-    sprayTestkit % "test"
+    akkaHttpTestkit % "test"
   ), 
   plugins = Seq(
-    bundleWarPlugin,
+    mavenBundlePlugin,
     sbtCompilerPlugin,
-    scalatestMavenPlugin,
-    Plugin(
-      gav = Plugins.war,
-      configuration = Config (
-        packagingExcludes = "WEB-INF/lib/*.jar",
-        archive = Config(
-          manifestFile = "${project.build.outputDirectory}/META-INF/MANIFEST.MF"
-        )
-      )
-    )
+    scalatestMavenPlugin
   )
 )

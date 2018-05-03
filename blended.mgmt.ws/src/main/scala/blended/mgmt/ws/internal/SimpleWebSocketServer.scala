@@ -1,31 +1,31 @@
 package blended.mgmt.ws.internal
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
+import akka.stream.scaladsl.Flow
 
 import scala.concurrent.duration._
-import akka.http.scaladsl.server._
-import Directives._
-
 import scala.util.Failure
 
-class SimpleWebSocketServer(implicit system: ActorSystem, materializer: ActorMaterializer) {
+class SimpleWebSocketServer(system: ActorSystem) {
 
   private[this] val log = org.log4s.getLogger
   private[this] implicit val eCtxt = system.dispatcher
+  private[this] val dispatcher = Dispatcher.create(system)
 
-  val dispatcher = Dispatcher.create(system)
+  def route : Route = routeImpl
 
   system.scheduler.schedule(1.second, 1.second) {
     system.eventStream.publish(Timer(System.currentTimeMillis()))
   }
 
-  val route : Route = path("timer") {
+  private[this] lazy val routeImpl : Route = path("timer") {
     parameter('name) {
-      log.info("Starting Web Socket message handler ... name")
-      name => handleWebSocketMessages(dispatcherFlow(name))
+      name =>
+        log.info(s"Starting Web Socket message handler ... [$name]")
+        handleWebSocketMessages(dispatcherFlow(name))
     }
   }
 
@@ -36,7 +36,10 @@ class SimpleWebSocketServer(implicit system: ActorSystem, materializer: ActorMat
       }
       .via(dispatcher.newClient(name))
       .map {
-        case m => TextMessage.Strict(m.toString)
+        case ReceivedMessage(m) =>
+          TextMessage.Strict(m)
+        case o =>
+          TextMessage.Strict(o.toString())
       }
       .via(reportErrorsFlow)
   }

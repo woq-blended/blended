@@ -1,7 +1,5 @@
 package blended.mgmt.ws.internal
 
-import java.util.UUID
-
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
@@ -16,7 +14,6 @@ case class Timer(time: Long)
 
 trait Dispatcher {
   def newClient(name: String) : Flow[String, DispatcherEvent, Any]
-  def injectEvent(event: DispatcherEvent) : Unit
 }
 
 object Dispatcher {
@@ -35,12 +32,15 @@ object Dispatcher {
 
         Flow.fromSinkAndSource(in, out)
       }
-
-      override def injectEvent(event: DispatcherEvent): Unit = dispatcherActor ! event
     }
   }
 
   class DispatcherActor extends Actor with ActorLogging {
+
+    private[this] def dispatch(e: DispatcherEvent) : Unit = {
+      log.info(s"Dispatching event [$e] to [${clients.size}] clients")
+      clients.values.foreach(_ ! e)
+    }
 
     private[this] var clients: Map[String, ActorRef] = Map.empty
 
@@ -49,9 +49,8 @@ object Dispatcher {
     override def postStop(): Unit = context.system.eventStream.unsubscribe(self)
 
     override def receive: Receive = {
-      case t : Timer =>
-        log.info(s"Dispatching timer message to [${clients.size}] clients ")
-        clients.values.foreach(_ ! TimerEvent(t))
+      case m : ReceivedMessage => dispatch(m)
+      case t : Timer => dispatch(TimerEvent(t))
 
       case NewClient(id, client) =>
         log.info(s"New client connected [$id]")

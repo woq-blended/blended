@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 class SampleSpec extends FreeSpec
   with ScalatestRouteTest {
 
-  val server = new SimpleWebSocketServer()
+  val server = new SimpleWebSocketServer(system)
 
   "The stuff should" - {
 
@@ -25,13 +25,16 @@ class SampleSpec extends FreeSpec
         }
       }
 
-      WS("/timer?name=test", wsClient.flow) ~> server.route ~>
+      WS("/timer?name=foo", wsClient.flow) ~> server.route ~>
       check {
         assert(isWebSocketUpgrade)
 
         expectTimerMessage(wsClient)
         expectTimerMessage(wsClient)
         expectTimerMessage(wsClient)
+
+        wsClient.sendMessage("test")
+        wsClient.expectMessage("test")
 
         wsClient.sendCompletion()
         wsClient.expectCompletion()

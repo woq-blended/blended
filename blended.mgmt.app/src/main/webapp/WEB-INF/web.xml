@@ -6,7 +6,7 @@
 http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
-  <description>blended-mgmt-ui</description>
+  <description>blended-mgmt-app</description>
   <display-name>Blended Management</display-name>
 
   <welcome-file-list>

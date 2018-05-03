@@ -1,7 +1,8 @@
 package blended.mgmt.app
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.ActorRef
 import com.github.ahnfelt.react4s._
+import org.scalajs.dom.WebSocket
 
 object Tick {
   def apply() = new Tick()
@@ -9,33 +10,28 @@ object Tick {
 
 case class Tick()
 
-case class SampleComponent(system: P[ActorSystem]) extends Component[NoEmit] {
+case class SampleComponent() extends Component[NoEmit] {
 
-  private[this] val elapsed = State(0)
+  private[this] val webSocket = State[Option[WebSocket]](None)
+  private[this] val log = State[List[String]](List.empty)
 
   private[this] var listener : Option[ActorRef] = None
 
-  override def componentWillRender(get: Get): Unit = if (listener.isEmpty) {
-    listener = Some {
-      val actor = get(system).actorOf(Props(new Actor {
-        override def receive: Receive = {
-          case _ : Tick =>
-            println("Received Tick")
-            elapsed.modify(_ + 1)
-        }
-      }))
+  override def componentWillRender(get: Get): Unit =
+    if (get(webSocket).isEmpty) {
+      val socket = new WebSocket("ws://localhost:9995/mgmtws/timer?name=test")
+      log.modify(_ :+ "Connecting to: " + socket.url)
+      socket.onopen = {e => log.modify(_ :+ "Connected.")}
+      socket.onclose = {e => log.modify(_ :+ "Closed: reason = " + e.reason)}
+      socket.onerror = {e => log.modify(_ :+ "Error: " + e.toString())}
+      socket.onmessage = {e => log.modify(_ :+ "Received: " + e.data)}
 
-      get(system).eventStream.subscribe(actor, classOf[Tick])
-
-      actor
+      webSocket.set(Some(socket))
     }
-  }
-
-  override def componentWillUnmount(get: Get): Unit = {
-    listener.foreach{ l => get(system).eventStream.unsubscribe(l) }
-  }
 
   override def render(get: Get): Element = {
-    E.div(Text(s"${get(elapsed)} seconds already elapsed !"))
+    E.div(Tags(
+      get(log).map(entry => E.div(Text(entry)))
+    ))
   }
 }
