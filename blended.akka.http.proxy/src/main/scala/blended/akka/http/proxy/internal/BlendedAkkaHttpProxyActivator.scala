@@ -24,74 +24,48 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
-      //    whenTypesafeConfigAvailable { (cfg, idService) =>
       log.debug("Given configuration: " + cfg.config)
-
-      //      implicit val actorSystem = cfg.system
-      //      implicit val materializer = ActorMaterializer()
-      //      import scala.concurrent.ExecutionContext.Implicits.global
 
       // read config
       val config = ProxyConfig.parse(cfg.config)
-      log.debug("Parsed configuration: " + config)
+      log.debug(s"Parsed configuration: [${config}]")
       config.failed.foreach { e =>
-        log.debug(e)("Config parse error")
+        log.error(e)("Config parse error")
       }
-
-      // do we need client ssl support?
-      //      config.paths.find(p => p.isSsl)
 
       // handle each configured proxy endpoint independently
       config.get.paths.foreach { proxyTarget =>
         // setup proxys route according to config and register it into the service registry
         val proxyConfig = proxyTarget.copy(uri = cfg.idSvc.resolvePropertyString(proxyTarget.uri).get)
-        //        val baseUri: String = cfg.idSvc.resolvePropertyString(proxy.uri).get
+        log.debug(s"About to setup proxy [${proxyConfig}]")
 
-        if (proxyConfig.isHttps) {
-          log.debug(s"Watching for cliene SSLContext to create proxy: ${proxyConfig}")
-          whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
-            val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system, Some(sslContext))
-            log.debug(s"Registering customized HTTPS-enabled proxy route: ${proxyConfig}")
-            SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
+        val sslContextFilter = "(type=client)"
+
+        def register(route: ProxyRoute): Unit = {
+          log.debug(s"Registering proxy route [${proxyConfig}]")
+          SimpleHttpContext(s"proxy/${proxyConfig.path}", route.proxyRoute).providesService[HttpContext]
+          onStop {
+            log.debug(s"Unregistering proxy route [${proxyConfig}]")
           }
-        } else {
-          val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system)
-          log.debug(s"Registering proxy route: ${proxyConfig}")
-          SimpleHttpContext(s"proxy/${proxyConfig.path}", proxyRoute.proxyRoute).providesService[HttpContext]
         }
 
-        //
-        //        val proxyRoute: Route = {
-        //          path(proxy.path / Remaining) { requestPath => ctx =>
-        //            val request = ctx.request
-        //
-        //            // Keep the query part of the original request
-        //            val uri = Uri(
-        //              if (requestPath.isEmpty) baseUri
-        //              else s"$baseUri/${requestPath}"
-        //            ).copy(rawQueryString = request.uri.rawQueryString)
-        //
-        //            // use the timeout of the config
-        //            implicit val timeout = Timeout(proxy.timeout.seconds)
-        //
-        //            log.info(s"Received HttpRequest [${request}] at endpoint [${proxy.path}] and path [${requestPath}] with query [${request.uri.queryString()}]")
-        //            // outgoing connection uses ip and port from the configured uri
-        //            val flow = Http().outgoingConnection(uri.authority.host.address(), uri.authority.port)
-        //
-        //            // keep headers, but not the host header
-        //            val headers = request.headers.filter(header => header.isNot(Host.lowercaseName))
-        //
-        //            // the final request to the target host
-        //            val proxyReq = HttpRequest(method = request.method, uri = uri, entity = request.entity).withHeaders(headers)
-        //
-        //            val handler = Source.single(proxyReq).
-        //              via(flow).
-        //              runWith(Sink.head).
-        //              flatMap(r => ctx.complete(r))
-        //
-        //            handler
-        //          }
-        //        }
+        if (proxyConfig.isHttps || proxyConfig.redirectCount > 0) {
+          // in case we want to use HTTPS or we follow redirects (which can be HTTPS)
+          // SSLContext isn't optional
+          log.debug(s"Watching for client SSLContext before creating proxy: ${proxyConfig}")
+          whenAdvancedServicePresent[SSLContext](sslContextFilter) { sslContext =>
+            val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system, Some(sslContext))
+            register(proxyRoute)
+            onStop {
+              log.debug(s"Detected SSLContext deregistration.")
+            }
+          }
+        } else {
+          // SSLContext is optional, but we try to consume it nevertheless
+          val proxyRoute = new SimpleProxyRoute(proxyConfig, cfg.system, service[SSLContext](sslContextFilter))
+          register(proxyRoute)
+        }
+
       }
     }
   }
