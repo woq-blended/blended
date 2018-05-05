@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-plugins.scala
 //#include ../blended.build/build-common.scala
 
-val jsArtifact = blendedUpdaterConfig.groupId.get %%% blendedUpdaterConfig.artifactId % blendedUpdaterConfig.version.get
+val jsArtifact = blendedUpdaterConfig.groupId.get % (blendedUpdaterConfig.artifactId + "_sjs0.6_" + BlendedVersions.scalaVersionJSBinary) % blendedUpdaterConfig.version.get
 
 /**
  * Sources under "shared" dir are for scala-jvm and scala-js 
@@ -74,7 +74,7 @@ BlendedModel(
           phase = "install",
           goals = Seq("install-file"),
           configuration = Config(
-            file = "target/scala-" + scalaVersion.binaryVersion + "/" + jsArtifact.artifactId + "-" + BlendedVersions.blendedVersion + ".jar",
+            file = "target/scala-" + BlendedVersions.scalaVersionJSBinary + "/" + jsArtifact.artifactId + "-" + BlendedVersions.blendedVersion + ".jar",
             groupId = jsArtifact.groupId.get,
             artifactId = jsArtifact.artifactId,
             version = jsArtifact.version.get,

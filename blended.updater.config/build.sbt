@@ -9,7 +9,7 @@ lazy val projectSettings = Seq(
   organization := BlendedVersions.blendedGroupId,
   version := BlendedVersions.blendedVersion,
   name := appName,
-  scalaVersion := BlendedVersions.scalaVersion,
+  scalaVersion := BlendedVersions.scalaVersionJS,
   moduleName := appName,
 
   // avoid picking up pom.scala as source file

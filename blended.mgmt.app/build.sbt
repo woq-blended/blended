@@ -2,6 +2,8 @@ import scalajsbundler.BundlingMode.LibraryOnly
 
 lazy val akkajsVersion = "1.2.5.11"
 lazy val reactVersion = "16.2.0"
+lazy val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
+
 
 lazy val root = project
   .in(file("."))
@@ -14,6 +16,8 @@ lazy val commonSettings = Seq(
   version := BlendedVersions.blendedVersion,
   organization := BlendedVersions.blendedGroupId,
   licenses += ("Apache 2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
+
+  resolvers += "Local Maven Repository" at m2Repo,
 
   scalaJSUseMainModuleInitializer := true,
 
@@ -43,6 +47,8 @@ lazy val commonSettings = Seq(
     "org.akka-js" %%% "akkajsactor" % akkajsVersion,
     "com.github.ahnfelt" %%% "react4s" % "0.9.8-SNAPSHOT",
     "com.github.werk" %%% "router4s" % "0.1.1-SNAPSHOT",
+    organization.value %%% "blended.updater.config" % BlendedVersions.blendedVersion,
+    "com.github.benhutchison" %%% "prickle" % BlendedVersions.prickle,
 
     "org.scalatest" %%% "scalatest" % "3.0.5" % "test",
     "org.akka-js" %%% "akkajstestkit" % akkajsVersion % "test"

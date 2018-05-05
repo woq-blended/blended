@@ -3,15 +3,17 @@ package blended.mgmt.mock.clients
 import de.tototec.cmdoption.CmdOption
 
 case class Config(
-    clientCount: Int = 20,
+    clientCount: Int = 200,
     url: String = "http://localhost:9995/mgmt/container",
-    updateIntervalMsec: Long = 20000,
+    updateIntervalMsecMin: Long = 10000,
+    updateIntervalMsecMax: Long = 30000,
     initialUpdateDelayMsec: Long = 2000) {
 
   override def toString(): String = getClass().getSimpleName() +
     "(clientCount=" + clientCount +
     ",url=" + url +
-    ",updateIntervalMsec=" + updateIntervalMsec +
+    ",updateIntervalMsecMin=" + updateIntervalMsecMin +
+    ",updateIntervalMsecMax=" + updateIntervalMsecMax +
     ",initialUpdateDelayMsec" + initialUpdateDelayMsec +
     ")"
 }
@@ -35,9 +37,13 @@ object Config {
     @CmdOption(names = Array("--help", "-h"), description = "Print this help", isHelp = true)
     var showHelp: Boolean = false
 
-    @CmdOption(names = Array("--update-interval", "-i"), args = Array("msec"),
+    @CmdOption(names = Array("--update-interval-min"), args = Array("msec"),
       description = "The interval in milliseconds in which the mock containers should report itself to the management server")
-    def updateIntervalMsec(i: Int): Unit = config = config.copy(updateIntervalMsec = i)
+    def updateIntervalMsecMin(i: Int): Unit = config = config.copy(updateIntervalMsecMin = i)
+
+    @CmdOption(names = Array("--update-interval-max"), args = Array("msec"),
+      description = "The interval in milliseconds in which the mock containers should report itself to the management server")
+    def updateIntervalMsecMax(i: Int): Unit = config = config.copy(updateIntervalMsecMax = i)
 
     @CmdOption(names = Array("--inital-delay", "-d"), args = Array("msec"),
       description = "The delay in milliseconds, the mock containers should wait before thei start reporting to the management server")
