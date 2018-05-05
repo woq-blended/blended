@@ -3,14 +3,13 @@ package blended.mgmt.ws.internal
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import blended.updater.config.{ContainerInfo, UpdateContainerInfo}
 
 sealed trait DispatcherEvent
 case class NewClient(id: String, client: ActorRef) extends DispatcherEvent
 case class ClientClosed(id: String) extends DispatcherEvent
 case class ReceivedMessage(msg: String) extends DispatcherEvent
-case class TimerEvent(e: Timer) extends DispatcherEvent
-
-case class Timer(time: Long)
+case class NewData(data: Any) extends DispatcherEvent
 
 trait Dispatcher {
   def newClient(name: String) : Flow[String, DispatcherEvent, Any]
@@ -44,13 +43,14 @@ object Dispatcher {
 
     private[this] var clients: Map[String, ActorRef] = Map.empty
 
-    override def preStart(): Unit = context.system.eventStream.subscribe(self, classOf[Timer])
+    override def preStart(): Unit = context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
 
     override def postStop(): Unit = context.system.eventStream.unsubscribe(self)
 
     override def receive: Receive = {
       case m : ReceivedMessage => dispatch(m)
-      case t : Timer => dispatch(TimerEvent(t))
+
+      case UpdateContainerInfo(ctInfo) => dispatch(NewData(ctInfo))
 
       case NewClient(id, client) =>
         log.info(s"New client connected [$id]")

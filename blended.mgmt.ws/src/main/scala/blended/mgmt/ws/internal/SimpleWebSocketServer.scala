@@ -5,8 +5,10 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
+import blended.updater.config.ContainerInfo
+import blended.updater.config.json.PrickleProtocol._
+import prickle.Pickle
 
-import scala.concurrent.duration._
 import scala.util.Failure
 
 class SimpleWebSocketServer(system: ActorSystem) {
@@ -16,10 +18,6 @@ class SimpleWebSocketServer(system: ActorSystem) {
   private[this] val dispatcher = Dispatcher.create(system)
 
   def route : Route = routeImpl
-
-  system.scheduler.schedule(1.second, 1.second) {
-    system.eventStream.publish(Timer(System.currentTimeMillis()))
-  }
 
   private[this] lazy val routeImpl : Route = path("timer") {
     parameter('name) {
@@ -36,8 +34,18 @@ class SimpleWebSocketServer(system: ActorSystem) {
       }
       .via(dispatcher.newClient(name))
       .map {
+
         case ReceivedMessage(m) =>
           TextMessage.Strict(m)
+
+        case NewData(data) => data match {
+          case ctInfo : ContainerInfo =>
+            val json : String = Pickle.intoString(ctInfo)
+            TextMessage.Strict(json)
+
+          case _ => TextMessage.Strict("")
+        }
+
         case o =>
           TextMessage.Strict(o.toString())
       }

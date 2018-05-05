@@ -20,6 +20,8 @@ BlendedModel(
     blendedDomino,
     blendedAkka,
     blendedAkkaHttp,
+    blendedUpdaterConfig,
+    blendedPrickle,
     Deps.log4s,
     Deps.akkaHttp,
     Deps.akkaHttpCore,

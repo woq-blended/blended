@@ -29,10 +29,6 @@ class SampleSpec extends FreeSpec
       check {
         assert(isWebSocketUpgrade)
 
-        expectTimerMessage(wsClient)
-        expectTimerMessage(wsClient)
-        expectTimerMessage(wsClient)
-
         wsClient.sendMessage("test")
         wsClient.expectMessage("test")
 

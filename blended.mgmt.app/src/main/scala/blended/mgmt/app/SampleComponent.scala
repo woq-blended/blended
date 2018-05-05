@@ -21,7 +21,7 @@ case class SampleComponent() extends Component[NoEmit] {
     if (get(webSocket).isEmpty) {
       val socket = new WebSocket("ws://localhost:9995/mgmtws/timer?name=test")
       log.modify(_ :+ "Connecting to: " + socket.url)
-      socket.onopen = {e => log.modify(_ :+ "Connected.")}
+      socket.onopen = {_ => log.modify(_ :+ "Connected." )}
       socket.onclose = {e => log.modify(_ :+ "Closed: reason = " + e.reason)}
       socket.onerror = {e => log.modify(_ :+ "Error: " + e.toString())}
       socket.onmessage = {e => log.modify(_ :+ "Received: " + e.data)}
