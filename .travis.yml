@@ -3,8 +3,7 @@ language: scala
 jdk:
   - oraclejdk8
 
-script: 
-  - sh ./blended.build/travis_build.sh
+script: ./blended.build/travis_build.sh
 
 cache:
   directories:

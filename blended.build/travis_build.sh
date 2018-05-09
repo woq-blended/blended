@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -x
-set -e 
+set -ev
 
 SCRIPT_DIR=$(dirname $0)
 BUILD_DIR=$SCRIPT_DIR/..
