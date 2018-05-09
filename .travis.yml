@@ -6,3 +6,8 @@ jdk:
 script:
   mvn clean 
 
+cache:
+  directories:
+  - $HOME/.m2
+  - $HOME/.ivy2
+
