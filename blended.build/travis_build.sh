@@ -13,8 +13,8 @@ mkdir -p $THIRD_PARTY_DIR
 cd $THIRD_PARTY_DIR
 THIRD_PARTY_DIR=$(pwd)
 
-git clone ssh://git@github.com/woq-blended/react4s.git 
-git clone ssh://git@github.com/woq-blended/router4s.git
+git clone https://github.com/woq-blended/react4s.git
+git clone https://github.com/woq-blended/router4s.git
 
 cd $THIRD_PARTY_DIR/react4s
 sbt publishLocal
