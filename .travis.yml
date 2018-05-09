@@ -3,7 +3,7 @@ language: scala
 jdk:
   - oraclejdk8
 
-script: mvn clean install -P build
+script: ./blended.build/travis_build.sh
 
 cache:
   directories:
