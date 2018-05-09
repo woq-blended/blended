@@ -2,11 +2,8 @@ language: java
   
 jdk: oraclejdk8
 
-before-script:
-  - echo 'before'
-  
 script: 
-  - echo 'test'
+  - ./blended.build/travis_build.sh
 
 cache:
   directories:
