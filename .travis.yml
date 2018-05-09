@@ -4,7 +4,7 @@ jdk:
   - oraclejdk8
 
 script:
-  mvn clean 
+  sh ./blended.build/travis_build.sh
 
 cache:
   directories:
