@@ -14,11 +14,24 @@ BlendedModel(
     scalaLib % "provided",
     Blended.domino,
     jjwt,
-    slf4jLog4j12 % "test",
-    scalaTest % "test"
+    log4s,
+    bouncyCastleBcprov,
+    scalaTest % "test",
+    logbackCore % "test",
+    logbackClassic % "test"
   ), 
   plugins = Seq(
-    mavenBundlePlugin,
+    Plugin(
+      mavenBundlePlugin.gav,
+      extensions = true,
+      inherited = true,
+      configuration = Config(
+        instructions = new Config(Seq(
+          "_include" -> Option("osgi.bnd"),
+          "Embed-Dependency" -> Option(s"*;artifactId=${jjwt.artifactId},artifactId=${bouncyCastleBcprov.artifactId}")
+        ))
+      )
+    ),
     sbtCompilerPlugin,
     scalatestMavenPlugin
   )

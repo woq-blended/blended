@@ -6,6 +6,7 @@ Bundle-SymbolicName:\
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
+  android.*;resolution:=optional, \
   *
 
 Private-Package:\

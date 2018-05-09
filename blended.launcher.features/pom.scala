@@ -126,19 +126,18 @@ val features = Seq(
       FeatureBundle(dependency = Blended.mgmtRepo, start = true),
       FeatureBundle(dependency = Blended.mgmtRepoRest, start = true),
       FeatureBundle(dependency = Blended.updaterRemote, start = true),
-      FeatureBundle(dependency = Blended.containerRegistry),
       FeatureBundle(dependency = Blended.persistence),
       FeatureBundle(dependency = Blended.persistenceOrient, start = true),
       FeatureBundle(dependency = orientDbCore),
       FeatureBundle(dependency = concurrentLinkedHashMapLru),
       FeatureBundle(dependency = jsr305),
-      FeatureBundle(dependency = Dependency(gav = Blended.mgmtUi, `type` = "war"), start = true),
       FeatureBundle(dependency = jacksonAnnotations),
       FeatureBundle(dependency = jacksonCore),
       FeatureBundle(dependency = jacksonBind),
       FeatureBundle(dependency = jjwt),
       FeatureBundle(dependency = Blended.securityLogin, start = true),
-      FeatureBundle(dependency = Dependency(gav = Blended.securityLoginRest, `type` = "war"), start = true)
+      FeatureBundle(dependency = Blended.mgmtWs, start = true),
+      FeatureBundle(dependency = Blended.securityLoginRest, start = true)
     )
   ),
   FeatureDef(
@@ -202,10 +201,8 @@ val features = Seq(
       "blended-base"
     ),
     bundles = Seq(
+      FeatureBundle(dependency = Blended.akkaHttpApi),
       FeatureBundle(dependency = Blended.akkaHttp, start = true),
-      FeatureBundle(dependency = Deps.akkaHttp),
-      FeatureBundle(dependency = Deps.akkaHttpCore),
-      FeatureBundle(dependency = Deps.akkaParsing),
       FeatureBundle(dependency = Blended.prickleAkkaHttp),
       FeatureBundle(dependency = Blended.securityAkkaHttp)
     )

@@ -14,6 +14,7 @@ BlendedModel(
     Deps.scalaLib % "provided",
     Blended.containerContextApi,
     Blended.util,
+    Blended.securityBoot,
     Deps.junit,
     Deps.camelCore,
     slf4j,

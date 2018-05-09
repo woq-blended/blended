@@ -1,4 +1,4 @@
-package blended.security
+package blended.security.internal
 
 import scala.collection.JavaConverters.asScalaSetConverter
 import javax.security.auth.Subject

@@ -1,12 +1,14 @@
 package blended.security.login.rest.internal
 
-import blended.spray.BlendedHttpRoute
-import spray.http.{HttpRequest, HttpResponse, StatusCodes}
-import spray.routing.Route
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.Directives._
 
-trait LoginService extends BlendedHttpRoute {
+class LoginService {
 
-  override val httpRoute : Route = loginRoute
+  def route : Route = httpRoute
+
+  private[this] lazy val httpRoute : Route = loginRoute ~ logoutRoute
 
   def loginRoute : Route = {
     path("login") {

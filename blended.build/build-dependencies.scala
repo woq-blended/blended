@@ -45,7 +45,7 @@ object Deps {
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % BlendedVersions.activeMqVersion
 
   def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaVersion
-  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % "10.0.11"
+  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % BlendedVersions.akkaHttpVersion
   val akkaActor = akka("actor")
   val akkaCamel = akka("camel")
   val akkaHttp = akka_Http("http")

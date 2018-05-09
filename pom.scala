@@ -40,7 +40,6 @@ BlendedModel(
         "blended.activemq.brokerstarter",
         "blended.container.context.api",
         "blended.container.context.impl",
-        "blended.container.registry",
         "blended.util",
         "blended.jmx",
         "blended.camel.utils",
@@ -51,7 +50,9 @@ BlendedModel(
         "blended.testsupport.pojosr",
         "blended.domino",
         "blended.akka",
+        "blended.akka.http.api",
         "blended.akka.http",
+        "blended.mgmt.app",
         "blended.akka.http.proxy",
         "blended.mgmt.base",
         "blended.mgmt.repo",
@@ -60,6 +61,7 @@ BlendedModel(
         "blended.mgmt.rest",
         "blended.mgmt.mock",
         "blended.mgmt.service.jmx",
+        "blended.mgmt.ws",
         "blended.prickle",
         "blended.prickle.akka.http",
         "blended.spray.api",
@@ -80,7 +82,6 @@ BlendedModel(
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
         "blended.launcher.features",
-        "blended.mgmt.ui",
         "blended.file",
         "blended.demo"
       )
