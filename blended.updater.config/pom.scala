@@ -6,7 +6,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-plugins.scala
 //#include ../blended.build/build-common.scala
 
-val jsArtifact = blendedUpdaterConfig.groupId.get % (blendedUpdaterConfig.artifactId + "_sjs0.6_" + BlendedVersions.scalaVersionJSBinary) % blendedUpdaterConfig.version.get
+val jsArtifact = Blended.updaterConfig.groupId.get % (Blended.updaterConfig.artifactId + "_sjs0.6_" + BlendedVersions.scalaVersionJSBinary) % Blended.updaterConfig.version.get
 
 /**
  * Sources under "shared" dir are for scala-jvm and scala-js 

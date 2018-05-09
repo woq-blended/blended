@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedMgmtWs,
+  Blended.mgmtWs,
   packaging = "bundle",
   description = "Web sockets interface for Mgmt clients.",
   properties = Map(
@@ -17,11 +17,11 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     slf4j % "provided",
-    blendedDomino,
-    blendedAkka,
-    blendedAkkaHttp,
-    blendedUpdaterConfig,
-    blendedPrickle,
+    Blended.domino,
+    Blended.akka,
+    Blended.akkaHttp,
+    Blended.updaterConfig,
+    Blended.prickle,
     Deps.log4s,
     Deps.akkaHttp,
     Deps.akkaHttpCore,

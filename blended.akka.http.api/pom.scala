@@ -7,7 +7,7 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedAkkaHttpApi,
+  gav = Blended.akkaHttpApi,
   packaging = "bundle",
   description = "Package the complete Spray API into a bundle.",
   dependencies = Seq(
