@@ -1,13 +1,10 @@
 language: scala
 
-scala:
-  - 2.11.11
+scala: 2.11.11
   
-jdk:
-  - oraclejdk8
+jdk: oraclejdk8
 
-script: 
-  - mvn clean install -P build 
+script: echo 'test'
 
 cache:
   directories:
