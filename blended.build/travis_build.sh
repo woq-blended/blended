@@ -4,6 +4,8 @@ set -e
 
 SCRIPT_DIR=$(dirname $0)
 BUILD_DIR=$SCRIPT_DIR/..
+cd $BUILD_DIR
+BUILD_DIR=$(pwd)
 
 THIRD_PARTY_DIR=$BUILD_DIR/target/3rdparty
 
@@ -22,5 +24,6 @@ sbt publishLocal
 cd $THIRD_PARTY_DIR/router4s
 sbt publishLocal
 
+cd $BUILD_DIR
 mvn clean install -P build 
 
