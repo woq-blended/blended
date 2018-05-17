@@ -1,0 +1,4 @@
+dn: uid=admin,ou=system
+changetype: modify
+replace: userPassword
+userPassword:: ${HASHED_PWD}

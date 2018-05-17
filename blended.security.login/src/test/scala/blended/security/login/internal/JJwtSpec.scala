@@ -7,6 +7,8 @@ import scala.concurrent.duration._
 
 class JJwtSpec extends FreeSpec with Matchers{
 
+  private[this] val log = org.log4s.getLogger
+
   "The JJWT library should " - {
 
     "Allow to create an RSA based  JWT" in {
@@ -19,6 +21,7 @@ class JJwtSpec extends FreeSpec with Matchers{
 
       val clientClaims = th.verifyToken(token)
 
+      log.info(clientClaims.getBody().getId())
       clientClaims.getHeader.getAlgorithm() should be ("RS512")
       clientClaims.getBody.getSubject() should be ("Andreas")
       clientClaims.getBody.get("permissions", classOf[String]) should be (permissions.mkString(","))

@@ -1,13 +1,13 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-#include ../blended.build/build-versions.scala
-#include ../blended.build/build-dependencies.scala
-#include ../blended.build/build-plugins.scala
-#include ../blended.build/build-common.scala
+//#include ../blended.build/build-versions.scala
+//#include ../blended.build/build-dependencies.scala
+//#include ../blended.build/build-plugins.scala
+//#include ../blended.build/build-common.scala
 
 BlendedModel(
-  blendedUpdaterRemote,
+  gav = Blended.updaterRemote,
   packaging = "bundle",
   description = "OSGi Updater remote handle support",
   dependencies = Seq(
@@ -16,14 +16,14 @@ BlendedModel(
     domino,
     akkaOsgi,
     slf4j,
-    blendedPersistence,
+    Blended.persistence,
     typesafeConfig,
-    blendedUpdaterConfig,
-    blendedMgmtBase,
-    blendedLauncher,
-    blendedContainerContext,
-    blendedAkka,
-    blendedSprayApi,
+    Blended.updaterConfig,
+    Blended.mgmtBase,
+    Blended.launcher,
+    Blended.containerContextApi,
+    Blended.akka,
+    Blended.sprayApi,
     akkaTestkit % "test",
     scalaTest % "test",
     felixFramework % "test",
@@ -34,7 +34,7 @@ BlendedModel(
     felixGogoCommand % "test",
     felixFileinstall % "test",
     mockitoAll % "test",
-    blendedTestSupport % "test"
+    Blended.testSupport % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

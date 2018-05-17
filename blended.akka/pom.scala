@@ -1,24 +1,24 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-#include ../blended.build/build-versions.scala
-#include ../blended.build/build-dependencies.scala
-#include ../blended.build/build-plugins.scala
-#include ../blended.build/build-common.scala
+//#include ../blended.build/build-versions.scala
+//#include ../blended.build/build-dependencies.scala
+//#include ../blended.build/build-plugins.scala
+//#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedAkka,
+  gav = Blended.akka,
   packaging = "bundle",
   description = "The main bundle to provide an Actor based interface to the main OSGI services.",
   dependencies = Seq(
     scalaLib % "provided",
     scalaReflect % "provided",
-    blendedContainerContext,
-    blendedDomino,
+    Blended.containerContextApi,
+    Blended.domino,
     domino,
     orgOsgi,
     akkaOsgi,
-    blendedTestSupport % "test",
+    Blended.testSupport % "test",
     akkaTestkit % "test",
     akkaSlf4j % "test",
     mockitoAll % "test",

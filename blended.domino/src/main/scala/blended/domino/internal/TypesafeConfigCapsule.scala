@@ -1,6 +1,6 @@
 package blended.domino.internal
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.domino.ConfigLocator
 import com.typesafe.config.Config
 import domino.DominoImplicits
@@ -11,7 +11,8 @@ import org.osgi.framework.BundleContext
 class TypesafeConfigCapsule(
   cCtxt: CapsuleContext,
   f : (Config, ContainerIdentifierService) => Unit,
-  bCtxt : BundleContext) extends Capsule
+  bCtxt : BundleContext
+) extends Capsule
   with ServiceWatching
   with DominoImplicits {
 

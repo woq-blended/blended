@@ -5,7 +5,6 @@ import javax.jms.ConnectionFactory
 import javax.management.ObjectName
 
 import blended.akka.ActorSystemWatching
-import blended.container.context.ContainerIdentifierService
 import domino.DominoActivator
 
 class JmsSamplerActivator extends DominoActivator with ActorSystemWatching {

@@ -34,6 +34,11 @@ if [ -z "${RESTART_DELAY}" ]; then
   RESTART_DELAY=120
 fi
 
+# Whether to start the container in interactive mode
+if [ -z "${INTERACTIVE}" ]; then
+  INTERACTIVE=true
+fi
+
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id"
 
 # Options for the service daemen JVM (outer) with controls the container JVM
@@ -93,6 +98,7 @@ exec ${JAVA_HOME}/bin/java\
  ${CONTAINER_JAVA_OPTS}\
  "-cp=${INNER_CP}"\
  "-restartDelay=${RESTART_DELAY}"\
+ "-interactive=${INTERACTIVE}"\
  -- \
  blended.launcher.Launcher \
  --framework-restart 0\

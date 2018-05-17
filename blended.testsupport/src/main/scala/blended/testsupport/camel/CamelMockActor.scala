@@ -10,7 +10,7 @@ import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.{Exchange, Processor}
 
 import scala.collection.convert.Wrappers.JMapWrapper
-import scala.util.Try
+import scala.concurrent.duration._
 
 object CamelMockActor {
 
@@ -21,6 +21,9 @@ object CamelMockActor {
 class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
 
   private[this] val camelContext = CamelExtension(context.system).context
+  private[this] implicit val eCtxt = context.system.dispatcher
+
+  case object Tick
 
   override def preStart(): Unit = {
     log.debug(s"Starting Camel Mock Actor for [$id, $uri]")
@@ -45,15 +48,25 @@ class CamelMockActor(uri: String, id : Int) extends Actor with ActorLogging {
           }
         })
 
+        self ! Tick
+        context.become(starting(routeId))
+
         log.debug(s"Configured mock route for [$toString]")
-        context.system.eventStream.publish(MockActorReady(uri))
       }
     })
-
-    context.become(receiving(routeId)(List.empty) orElse (handleRquests(List.empty)))
   }
 
   override def receive = Actor.emptyBehavior
+
+  def starting(routeId : String) : Receive = {
+    case Tick =>
+      if (camelContext.getRouteStatus(routeId).isStarted()) {
+        context.system.eventStream.publish(MockActorReady(uri))
+        context.become(receiving(routeId)(List.empty) orElse (handleRquests(List.empty)))
+      } else {
+        context.system.scheduler.scheduleOnce(10.millis, self, Tick)
+      }
+  }
 
   def handleRquests(messages: List[CamelMessage]) : Receive = {
     case GetReceivedMessages => sender ! ReceivedMessages(messages)

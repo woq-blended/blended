@@ -12,6 +12,10 @@ Import-Package: \
   blended.launcher.runtime;resolution:=optional, \
   *
 
+# Those will be embedded, if used
+Conditional-Package: \
+  blended.util.config
+
 Export-Package: \
   ${bundle.namespace}
 

@@ -72,7 +72,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
   ) : BlendedJMSConnectionConfig = {
     BlendedJMSConnectionConfig.fromConfig(dummyResolver)(
       cfg.getString("vendor"),
-      None,
+      cfg.getString("provider"),
       cfg = cfg
     ).copy(
       clientId = "test",
@@ -156,7 +156,11 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val cfg = cfConfig("happy", "happy")
 
       val holder = new ConnectionHolder(
-        config = BlendedJMSConnectionConfig.fromConfig(dummyResolver)(cfg.getString("vendor"), None, cfg).copy(cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)),
+        config = BlendedJMSConnectionConfig.fromConfig(dummyResolver)(
+          cfg.getString("vendor"),
+          cfg.getString("provider"),
+          cfg
+        ).copy(cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)),
         system = system,
         bundleContext = None
       ) {

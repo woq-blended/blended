@@ -153,7 +153,7 @@ final object LocalOverlays {
   def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
     val overlaysDir = new File(profileDir, "overlays")
     val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
-    log.debug(s"About to find local overlays. Candidates: ${candidates}")
+    log.debug(s"About to find local overlays. Candidates: ${candidates.mkString(", ")}")
     val localOverlays = candidates.toList.flatMap { file =>
       val overlay = Try(ConfigFactory.parseFile(file)).flatMap(c => LocalOverlays.read(c, profileDir))
       overlay match {

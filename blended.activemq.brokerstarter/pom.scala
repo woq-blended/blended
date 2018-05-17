@@ -1,13 +1,13 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-#include ../blended.build/build-versions.scala
-#include ../blended.build/build-dependencies.scala
-#include ../blended.build/build-plugins.scala
-#include ../blended.build/build-common.scala
+//#include ../blended.build/build-versions.scala
+//#include ../blended.build/build-dependencies.scala
+//#include ../blended.build/build-plugins.scala
+//#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedActivemqBrokerstarter,
+  gav = Blended.activemqBrokerstarter,
   packaging = "bundle",
   description =
     """
@@ -15,8 +15,8 @@ BlendedModel(
       |is completely started before exposing a connection factory OSGi service.
     """.stripMargin,
   dependencies = Seq(
-    blendedAkka,
-    blendedJmsUtils,
+    Blended.akka,
+    Blended.jmsUtils,
     camelJms,
     activeMqBroker,
     activeMqSpring,

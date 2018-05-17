@@ -30,6 +30,7 @@
 
     <amq:transportConnectors>
       <amq:transportConnector name="openWire" uri="tcp://0.0.0.0:1883"/>
+      <amq:transportConnector name="ssl" uri="ssl://0.0.0.0:1884" />
     </amq:transportConnectors>
 
     <amq:systemUsage>

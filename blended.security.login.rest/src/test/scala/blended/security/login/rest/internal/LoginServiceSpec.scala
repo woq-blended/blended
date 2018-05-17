@@ -1,22 +1,21 @@
 package blended.security.login.rest.internal
 
-import blended.akka.OSGIActorConfig
-import org.scalatest.{FreeSpec, Matchers}
-import spray.http.{HttpEntity, HttpResponse, StatusCodes}
-import spray.testkit.ScalatestRouteTest
-import scala.concurrent.duration._
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.scalatest.FreeSpec
 
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class LoginServiceSpec extends FreeSpec
-  with Matchers
-  with ScalatestRouteTest
-  with LoginService {
+  with ScalatestRouteTest {
+
+  private[this] lazy val svc = new LoginService()
 
   "The login service should" - {
 
     "Respond with a web token for a valid user" in {
-      Post("/login").withEntity(HttpEntity("Hello")) ~> httpRoute ~> check {
+      Post("/login").withEntity(HttpEntity("Hello")) ~> svc.route ~> check {
 
         val entity = responseAs[HttpResponse]
 
@@ -30,8 +29,4 @@ class LoginServiceSpec extends FreeSpec
   override def cleanUp(): Unit = {
     Await.result(system.terminate(), 10.seconds)
   }
-
-  override def actorConfig: OSGIActorConfig = ???
-
-  override implicit def actorRefFactory = system
 }

@@ -1,10 +1,8 @@
-Bundle-Version:\
-  ${project.version}
+Bundle-Version: ${project.version}
 
-Bundle-SymbolicName:\
-  ${bundle.symbolicName}; singleton:=true
+Bundle-SymbolicName: ${bundle.symbolicName}
 
-Bundle-Classpath: WEB-INF/classes,.
+Bundle-Activator: ${bundle.namespace}.internal.ArtifactRepoRestActivator
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
@@ -12,10 +10,3 @@ Import-Package: \
 
 Private-Package: \
   ${bundle.namespace}.internal.*
-  
-
-Export-Package: \
-  ${bundle.namespace}
-
-Webapp-Context: repo
-Web-ContextPath: repo

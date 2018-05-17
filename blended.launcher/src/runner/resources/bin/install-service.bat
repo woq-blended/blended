@@ -5,7 +5,7 @@ set BLENDED_HOME=%SCRIPTPATH%\..
 set JAVA_HOME=%BLENDED_HOME%\jre
 set JVM=%JAVA_HOME%\bin\client\jvm.dll
 
-call %SCRIPTPATH%setenv.bat
+call %SCRIPTPATH%\setenv.bat
 
 if "%SERVICE_NAME%"=="" (set SERVICE_NAME="BlendedDemo")
 
@@ -34,10 +34,11 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --DisplayName="%SERVICE_NAME%" ^
   --Environment=%SERVICE_ENV% ^
   --Jvm=%JVM% ^
+  --Startup=auto ^
   --StartMode=jvm ^
   --StopMode=jvm ^
   --StartClass=%CLASS% ^
-  --StartParams="start;-jvmOpt=-Xmx256m;-cp='%CP%';-restartDelay=%RESTART_DELAY%;--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-container-id;--framework-restart;false" ^
+  --StartParams="start;-interactive=false;-jvmOpt=-Xmx256m;-cp='%CP%';-restartDelay=%RESTART_DELAY%;--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-container-id;--framework-restart;false" ^
   --JvmOptions="-Dlogback.configurationFile=%BLENDED_HOME%/etc/logback.xml" ^
   ++JvmOptions="-Dsun.net.client.defaultConnectTimeout=500" ^
   ++JvmOptions="-Dblended.home=%BLENDED_HOME%" ^

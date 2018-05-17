@@ -2,14 +2,9 @@ package blended.updater
 
 import com.typesafe.config.Config
 import scala.collection.JavaConverters._
+import blended.util.config.Implicits._
 
 object UpdaterConfig {
-
-  implicit class ConfigWithDefaults(val cfg: Config) extends AnyVal {
-    def getInt(key: String, default: Int): Int = if (cfg.hasPath(key)) cfg.getInt(key) else default
-    def getLong(key: String, default: Long): Long = if (cfg.hasPath(key)) cfg.getLong(key) else default
-    def getStringList(key: String, default: List[String]): List[String] = if (cfg.hasPath(key)) cfg.getStringList(key).asScala.toList else default
-  }
 
   val default: UpdaterConfig = {
     UpdaterConfig(

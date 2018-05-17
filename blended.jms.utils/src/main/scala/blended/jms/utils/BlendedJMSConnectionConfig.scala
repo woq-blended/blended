@@ -1,8 +1,9 @@
 package blended.jms.utils
 
-import blended.container.context.ContainerIdentifierService
+import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import com.typesafe.config.Config
+import blended.util.config.Implicits._
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
@@ -14,6 +15,7 @@ object BlendedJMSConnectionConfig {
     provider = "",
     enabled = true,
     jmxEnabled = true,
+    pingEnabled = true,
     pingTolerance = 5,
     pingInterval = 30,
     pingTimeout = 3,
@@ -23,7 +25,7 @@ object BlendedJMSConnectionConfig {
     clientId = "$[[" + ContainerIdentifierService.containerId + "]]",
     defaultUser = None,
     defaultPassword  = None,
-    pingDestination = "blended.ping",
+    pingDestination = "topic:blended.ping",
     properties = Map.empty,
     useJndi = false,
     jndiName = None,
@@ -33,16 +35,19 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: Option[String], cfg: Config) : BlendedJMSConnectionConfig = {
-    val prov = if (cfg.hasPath("provider")) cfg.getString("provider") else provider.getOrElse(defaultConfig.provider)
-    val enabled = !cfg.hasPath("enabled") || cfg.getBoolean("enabled")
-    val jmxEnabled = if (cfg.hasPath("jmxEnabled")) cfg.getBoolean("jmxEnabled") else defaultConfig.jmxEnabled
-    val pingTolerance = if (cfg.hasPath("pingTolerance")) cfg.getInt("pingTolerance") else defaultConfig.pingTolerance
-    val pingInterval = if (cfg.hasPath("pingInterval")) cfg.getInt("pingInterval") else defaultConfig.pingInterval
-    val pingTimeout = if (cfg.hasPath("pingTimeout")) cfg.getInt("pingTimeout") else defaultConfig.pingTimeout
-    val retryInterval = if (cfg.hasPath("retryInterval")) cfg.getInt("retryInterval") else defaultConfig.retryInterval
-    val minReconnect = if (cfg.hasPath("minReconnect")) cfg.getInt("minReconnect") else defaultConfig.minReconnect
-    val maxReconnectTimeout = if (cfg.hasPath("maxReconnectTimeout")) cfg.getInt("maxReconnectTimeout") else defaultConfig.maxReconnectTimeout
+  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
+
+    val prov = cfg.getString("provider", provider)
+    val enabled = cfg.getBoolean("enabled", defaultConfig.enabled)
+    val jmxEnabled = cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
+    val pingEnabled = cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
+    val pingTolerance = cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
+    val pingInterval = cfg.getInt("pingInterval", defaultConfig.pingInterval)
+    val pingTimeout = cfg.getInt("pingTimeout", defaultConfig.pingTimeout)
+    val retryInterval = cfg.getInt("retryInterval", defaultConfig.retryInterval)
+    val minReconnect = cfg.getInt("minReconnect", defaultConfig.minReconnect)
+    val maxReconnectTimeout = cfg.getInt("maxReconnectTimeout", defaultConfig.maxReconnectTimeout)
+
     val clientId = if (cfg.hasPath("clientId"))
       stringResolver(cfg.getString("clientId")) match {
         case Failure(t) => throw t
@@ -50,9 +55,11 @@ object BlendedJMSConnectionConfig {
       }
     else
       defaultConfig.clientId
-    val defaultUser = if (cfg.hasPath(DEFAULT_USER)) Some(cfg.getString(DEFAULT_USER)) else defaultConfig.defaultUser
-    val defaultPasswd = if (cfg.hasPath(DEFAULT_PWD)) Some(cfg.getString(DEFAULT_PWD)) else defaultConfig.defaultPassword
-    val destination = if (cfg.hasPath("destination")) cfg.getString("destination") else defaultConfig.pingDestination
+
+    val defaultUser = cfg.getStringOption(DEFAULT_USER)
+    val defaultPasswd = cfg.getStringOption(DEFAULT_PWD)
+    val destination = cfg.getString("destination", defaultConfig.pingDestination)
+
     val properties : Map[String, String] = if (cfg.hasPath("properties")) {
       val resolved = cfg.getConfig("properties").entrySet().asScala.map{ e =>
         (e.getKey(), stringResolver(cfg.getConfig("properties").getString(e.getKey())))
@@ -62,14 +69,16 @@ object BlendedJMSConnectionConfig {
 
       resolved.map( p => p._1 -> p._2.get)
     } else defaultConfig.properties
-    val jndiName = if (cfg.hasPath(CF_JNDI_NAME)) Some(cfg.getString(CF_JNDI_NAME)) else defaultConfig.jndiName
-    val useJndi = if (cfg.hasPath(USE_JNDI)) cfg.getBoolean(USE_JNDI) else defaultConfig.useJndi
+
+    val jndiName = cfg.getStringOption(CF_JNDI_NAME)
+    val useJndi = cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
       enabled = enabled,
       provider = prov,
       jmxEnabled = jmxEnabled,
+      pingEnabled = pingEnabled,
       pingTolerance = pingTolerance,
       pingInterval = pingInterval,
       pingTimeout = pingTimeout,
@@ -96,6 +105,7 @@ case class BlendedJMSConnectionConfig(
   provider : String,
   enabled : Boolean,
   jmxEnabled : Boolean,
+  pingEnabled : Boolean,
   pingTolerance : Int,
   pingInterval : Int,
   pingTimeout : Int,

@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object FilePollActor {
@@ -19,8 +19,8 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
 
   case object Tick
 
-  implicit val eCtxt = context.system.dispatcher
-  implicit val timeout = Timeout(FileManipulationActor.operationTimeout)
+  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+  private[this ]implicit val timeout : Timeout = Timeout(FileManipulationActor.operationTimeout)
 
   override def preStart(): Unit = {
     context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
@@ -29,7 +29,10 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
   private[this] def locked() : Boolean = cfg.lock match {
     case None => false
     case Some(l) =>
-      val f = new File(cfg.sourceDir, l)
+      val f = if (l.startsWith("./"))
+        new File(cfg.sourceDir, l.substring(2))
+      else
+        new File(l)
 
       if (f.exists()) {
         log.info(s"Directory is locked with file [${f.getAbsolutePath()}]")
