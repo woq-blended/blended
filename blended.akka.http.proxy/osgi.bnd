@@ -4,9 +4,6 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Bundle-Activator:\
-  ${bundle.namespace}.internal.BlendedAkkaHttpProxyActivator
-
 Export-Package: \
   ${bundle.namespace}
   

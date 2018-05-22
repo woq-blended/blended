@@ -1,22 +1,10 @@
-package blended.akka.http.proxy.internal
+package blended.akka.http.proxy
 
-import domino.DominoActivator
-import blended.domino.TypesafeConfigWatching
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.Directives._
-import scala.concurrent.duration._
-import akka.util.Timeout
 import blended.akka.ActorSystemWatching
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpRequest
-import akka.http.scaladsl.model.Uri
-import akka.stream.scaladsl.Sink
-import akka.stream.scaladsl.Source
-import akka.stream.ActorMaterializer
-import akka.http.scaladsl.model.headers.Host
+import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.akka.http.proxy.internal.{ProxyConfig, ProxyRoute, SimpleProxyRoute}
+import domino.DominoActivator
 import javax.net.ssl.SSLContext
-import blended.akka.http.SimpleHttpContext
-import blended.akka.http.HttpContext
 
 class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatching {
 

@@ -214,7 +214,7 @@ val features = Seq(
       "blended-akka-http"
     ),
     bundles = Seq(
-      FeatureBundle(dependency = Blended.akkaHttpProxy, start = true)
+      FeatureBundle(dependency = Blended.akkaHttpProxy)
     )
   ),
   FeatureDef("blended-spring", bundles = Seq(
