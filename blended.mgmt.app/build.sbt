@@ -60,7 +60,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val npmSettings = Seq(
-  useYarn := true,
+  useYarn := false,
   npmDependencies.in(Compile) := Seq(
     "react" -> "16.2.0",
     "react-dom" -> "16.2.0",

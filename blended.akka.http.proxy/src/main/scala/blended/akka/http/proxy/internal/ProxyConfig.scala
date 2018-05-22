@@ -4,11 +4,15 @@ import com.typesafe.config.Config
 import blended.util.config.Implicits._
 import scala.util.Try
 
-case class ProxyConfig(paths: Seq[ProxyTarget])
+case class ProxyConfig(
+  context: String,
+  paths: Seq[ProxyTarget]
+)
 
 object ProxyConfig {
   def parse(cfg: Config): Try[ProxyConfig] = Try {
     ProxyConfig(
+      cfg.getString("context"),
       cfg.getConfigMap("paths", Map()).toList.map {
         case (k, v) =>
           ProxyTarget(
@@ -20,7 +24,6 @@ object ProxyConfig {
       }
     )
   }
-
 }
 
 case class ProxyTarget(

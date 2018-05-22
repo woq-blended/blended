@@ -33,6 +33,8 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
         log.error(e)("Config parse error")
       }
 
+      val context = config.get.context
+
       // handle each configured proxy endpoint independently
       config.get.paths.foreach { proxyTarget =>
         // setup proxys route according to config and register it into the service registry
@@ -42,8 +44,8 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
         val sslContextFilter = "(type=client)"
 
         def register(route: ProxyRoute): Unit = {
-          log.debug(s"Registering proxy route [${proxyConfig}]")
-          SimpleHttpContext(s"proxy/${proxyConfig.path}", route.proxyRoute).providesService[HttpContext]
+          log.debug(s"Registering proxy route [${proxyConfig}] at [$context/${proxyConfig.path}]")
+          SimpleHttpContext(s"$context/${proxyConfig.path}", route.proxyRoute).providesService[HttpContext]
           onStop {
             log.debug(s"Unregistering proxy route [${proxyConfig}]")
           }
