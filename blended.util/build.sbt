@@ -10,6 +10,7 @@ description := "Utility classes to use in other bundles."
 
 libraryDependencies ++= Seq(
   Dependencies.akkaActor,
+  Dependencies.log4s,
   Dependencies.slf4j,
   Dependencies.akkaTestkit % "test",
   Dependencies.akkaSlf4j % "test",

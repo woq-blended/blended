@@ -2,13 +2,12 @@ import sbt._
 
 object Dependencies {
 
-  val akkaVersion = "2.5.6"
+  val akkaVersion = "2.5.9"
   val camelVersion = "2.17.3"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val slf4jVersion = "1.7.25"
-  val scalatestVersion = "3.0.4"
-  val sprayVersion = "1.3.3"
+  val scalatestVersion = "3.0.5"
 
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
@@ -26,6 +25,7 @@ object Dependencies {
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
 
+  val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
@@ -47,21 +47,7 @@ object Dependencies {
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
   val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scala
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
-  val sprayCan = "io.spray" %% "spray-can" % sprayVersion
-  val sprayCaching = "io.spray" %% "spray-caching" % sprayVersion
-  val sprayClient = "io.spray" %% "spray-client" % sprayVersion
-  val sprayHttp = "io.spray" %% "spray-http" % sprayVersion
-  val sprayHttpx = "io.spray" %% "spray-httpx" % sprayVersion
-  val sprayIo = "io.spray" %% "spray-io" % sprayVersion
-  val sprayJson = "io.spray" %% "spray-json" % sprayVersion
-  val sprayRouting = "io.spray" %% "spray-routing" % sprayVersion
-  val sprayServlet = "io.spray" %% "spray-servlet" % sprayVersion
-  val sprayTestkit = "io.spray" %% "spray-testkit" % sprayVersion
-  val sprayUtil = "io.spray" %% "spray-util" % sprayVersion
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
-
-
-
 }

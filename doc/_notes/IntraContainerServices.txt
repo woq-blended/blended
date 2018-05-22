@@ -1,0 +1,7 @@
+Microservices is one of the current industry buzzwords and is kind of the holy grail of current software architectures. But what if your deployment constraints do not give you the flexibility to deploy a large number of specialized containers - each running a very limited set of services collaborating with each other to provide the application ?
+
+This talk will show that you still can - and should - design your application with (micro)services in mind. Based on blended, a Scala based integration framework, we will show the Scala API required to expose and consume services within a single VM. 
+
+We will round up by building a single JVM container and use the frameworks integration test Scala API to provide an insight to our current development process.
+
+The blended integration framework is entirely written in Scala and provides the tooling to define and test service based integration containers. It is the foundation for a real world application providing the data communication for a large retail chain in Europe, which is in production since 2015.

@@ -73,5 +73,4 @@ object BlendedBundle {
         OsgiKeys.additionalHeaders := extraEntries
       })
   }
-
 }

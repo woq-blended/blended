@@ -39,23 +39,27 @@ lazy val root = project
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
     blendedUtil,
+    blendedSecurityBoot,
     blendedTestsupport,
     blendedUpdaterConfigJs,
     blendedUpdaterConfigJvm,
     blendedLauncher,
-    blendedContainerContext,
+    blendedContainerContextApi,
+    blendedContainerContextImpl,
     blendedDomino,
     blendedMgmtBase,
-    blendedAkka,
-    blendedSprayApi
+    blendedAkka
   )
 
 lazy val blendedUtil = project.in(file("blended.util"))
   .settings(commonSettings)
 
+lazy val blendedSecurityBoot =  project.in(file("blended.security.boot"))
+  .settings(commonSettings)
+
 lazy val blendedTestsupport = project.in(file("blended.testsupport"))
   .settings(commonSettings)
-  .dependsOn(blendedUtil)
+  .dependsOn(blendedUtil, blendedSecurityBoot)
 
 lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
   //  .enablePlugins(BlendedPlugin)
@@ -93,16 +97,22 @@ lazy val blendedLauncher = project.in(file("blended.launcher"))
   .settings(commonSettings)
   .dependsOn(blendedUpdaterConfigJvm)
 
-lazy val blendedContainerContext = project.in(file("blended.container.context"))
+lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
   .settings(commonSettings)
   .dependsOn(
     blendedUpdaterConfigJvm,
     blendedLauncher
   )
 
+lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
+  .settings(commonSettings)
+  .dependsOn(
+    blendedContainerContextApi
+  )
+
 lazy val blendedDomino = project.in(file("blended.domino"))
   .settings(commonSettings)
-  .dependsOn(blendedContainerContext)
+  .dependsOn(blendedContainerContextApi)
 
 lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
   .settings(commonSettings)
@@ -115,9 +125,6 @@ lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
 lazy val blendedAkka = project.in(file("blended.akka"))
   .settings(commonSettings)
   .dependsOn(
-    blendedContainerContext,
+    blendedContainerContextApi,
     blendedDomino
   )
-
-lazy val blendedSprayApi = project.in(file("blended.spray.api"))
-  .settings(commonSettings)

@@ -78,7 +78,6 @@ class StatsCounterSpec extends TestKit(ActorSystem("StatsCounter"))
 
     "track the throughput as count / time unit" in {
 
-      implicit val timeout = Timeout(3.seconds)
       implicit val ctxt = system.dispatcher
 
       val counterActor = TestActorRef(Props[StatsCounter])
