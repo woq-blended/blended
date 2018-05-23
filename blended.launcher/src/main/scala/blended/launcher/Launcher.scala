@@ -330,7 +330,7 @@ object Launcher {
               if (!pl.overlays.isEmpty) {
                 sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
               } else {
-                log.error("Cannot find the emply overlay set. To be compatible with older version, we continue here as no real information is missing")
+                log.error("Cannot find the empty overlay set (aka 'base.conf'). To be compatible with older version, we continue here as no real information is missing")
               }
             case Some(localOverlays) =>
               val newOverlayProps = localOverlays.properties
