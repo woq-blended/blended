@@ -10,7 +10,7 @@ package blended.updater.config
  * @param generatedConfigs
  *   The config file generators.
  * @param properties
- *   Additional system propetries.
+ *   Additional system properties.
  */
 final case class OverlayConfig(
     name: String,
