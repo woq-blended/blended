@@ -1,7 +1,5 @@
 package blended.testsupport.pojosr
 
-import java.util.UUID
-
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import domino.DominoActivator

@@ -23,7 +23,7 @@ class TypesafeConfigCapsule(
 
   override def start(): Unit = {
     whenServicePresent[ContainerIdentifierService] { idSvc =>
-      val locator = new ConfigLocator(idSvc.containerContext.getProfileConfigDirectory())
+      val locator = new ConfigLocator(idSvc.containerContext)
       val cfg = locator.getConfig(bundleContext.getBundle().getSymbolicName())
 
       if (optCapsuleScope.isEmpty) {
