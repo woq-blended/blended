@@ -90,7 +90,7 @@ object Deps {
   val commonsNet = "commons-net" % "commons-net" % "3.3"
   val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
-  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
+  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
