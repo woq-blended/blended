@@ -149,14 +149,8 @@ final object LocalOverlays {
       val config = OverlayConfigCompanion.toConfig(o)
       config.root()
     }
-
     val configs2 = ConfigValueFactory.fromIterable(configs.asJava)
-
     ConfigFactory.empty().withValue("overlays", configs2)
-    //    val config = (Map(
-    //      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
-    //    ).asJava)
-    //    ConfigFactory.parseMap(config)
   }
 
   def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
