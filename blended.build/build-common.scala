@@ -519,7 +519,8 @@ object BlendedContainer {
     description: String,
     properties: Map[String, String] = Map.empty,
     features: immutable.Seq[Dependency] = Seq.empty,
-    blendedProfileResouces: Gav = null
+    blendedProfileResouces: Gav = null,
+    overlays: Seq[String] = Seq.empty
   ) = {
 
     BlendedModel(
@@ -553,7 +554,9 @@ object BlendedContainer {
               configuration = Config(
                 srcProfile = "${project.build.directory}/classes/profile/profile.conf",
                 destDir = "${project.build.directory}/classes/profile",
-                explodeResources = true
+                explodeResources = true,
+                createLaunchConfig = "${project.build.directory}/classes/container/launch.conf",
+                overlays = new Config(overlays.map(o => "overlay" -> Some(o)))
               )
             )
           )
@@ -596,42 +599,6 @@ object BlendedContainer {
 
                   )
                 )
-              )
-            )
-          )
-        ),
-        Plugin(
-          gav = Plugins.scala,
-          executions = Seq(
-            // Generate the following resources
-            // - container/launch.conf
-            // - profile/overlays/base.conf
-            Execution(
-              id = "build-product",
-              phase = "generate-resources",
-              goals = Seq(
-                "script"
-              ),
-              configuration = Config(
-                script = scriptHelper + """
-  import java.io.File
-
-  // make launchfile
-
-  val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
-
-  val launchConf =
-    "profile.baseDir=${BLENDED_HOME}/profiles\n" +
-    "profile.name=""" + gav.artifactId + """\n" +
-    "profile.version=""" + gav.version.get + """"
-
-  ScriptHelper.writeFile(tarLaunchFile, launchConf)
-
-  // make overlays base.conf
-
-  val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
-  ScriptHelper.writeFile(baseConfFile, "overlays = []")
-  """
               )
             )
           )

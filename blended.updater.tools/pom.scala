@@ -13,7 +13,7 @@ BlendedModel(
   dependencies = Seq(
     typesafeConfig,
     Blended.updaterConfig,
-    cmdOption,
+    Deps.cmdOption,
     scalaTest % "test"
   ),
   plugins = Seq(
