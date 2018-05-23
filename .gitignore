@@ -30,6 +30,7 @@ blended.sslcontext/notes.txt
 .mvn.polyglot/
 pom.xml
 target/
+.bloop/
 
 # Eclipse settings and caches
 .project
