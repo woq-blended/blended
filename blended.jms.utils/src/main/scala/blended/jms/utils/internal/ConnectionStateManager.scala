@@ -191,8 +191,8 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
   }
 
   def handleConnectionError(state : ConnectionState) : Receive = {
-    case ce : ConnectionException => if (ce.provider == provider) {
-      log.info(s"Initiating reconnect after connection exception [${ce.e.getMessage()}]")
+    case ce : ConnectionException => if (ce.vendor == vendor && ce.provider == provider) {
+      log.info(s"Initiating reconnect for [$vendor:$provider] after connection exception [${ce.e.getMessage()}]")
       reconnect(state)
     }
   }

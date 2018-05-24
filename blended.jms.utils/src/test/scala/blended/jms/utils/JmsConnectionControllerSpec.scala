@@ -86,8 +86,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     ConnectionHolder(
       config = jmsConfig(cfg),
-      system = system,
-      bundleContext = None
+      system = system
     )
   }
 
@@ -161,8 +160,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
           cfg.getString("provider"),
           cfg
         ).copy(cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)),
-        system = system,
-        bundleContext = None
+        system = system
       ) {
         override def close(): Unit = {
           // spend a long time here

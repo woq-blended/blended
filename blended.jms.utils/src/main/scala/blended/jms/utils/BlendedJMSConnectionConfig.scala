@@ -2,6 +2,7 @@ package blended.jms.utils
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
+import blended.updater.config.util.ConfigPropertyMapConverter
 import com.typesafe.config.Config
 import blended.util.config.Implicits._
 
@@ -60,15 +61,9 @@ object BlendedJMSConnectionConfig {
     val defaultPasswd = cfg.getStringOption(DEFAULT_PWD)
     val destination = cfg.getString("destination", defaultConfig.pingDestination)
 
-    val properties : Map[String, String] = if (cfg.hasPath("properties")) {
-      val resolved = cfg.getConfig("properties").entrySet().asScala.map{ e =>
-        (e.getKey(), stringResolver(cfg.getConfig("properties").getString(e.getKey())))
-      }.toMap
-
-      resolved.find(_._2.isFailure).map(_._2.failed.get).map(throw _)
-
-      resolved.map( p => p._1 -> p._2.get)
-    } else defaultConfig.properties
+    // TODO: Use Map Reader !!
+    val properties : Map[String, String] =
+      ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg,"properties", Option(() => defaultConfig.properties))
 
     val jndiName = cfg.getStringOption(CF_JNDI_NAME)
     val useJndi = cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)

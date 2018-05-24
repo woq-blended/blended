@@ -19,6 +19,7 @@ BlendedModel(
     Blended.domino,
     Blended.mgmtBase,
     Blended.containerContextApi,
+    Blended.updaterConfig,
     camelJms,
     Blended.akka,
     jms11Spec,

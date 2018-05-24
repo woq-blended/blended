@@ -62,4 +62,4 @@ case class ConnectionCommand(
   reconnectNow : Boolean = false
 )
 
-case class ConnectionException(provider: String, e: JMSException)
+case class ConnectionException(vendor: String, provider: String, e: JMSException)
