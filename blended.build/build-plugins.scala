@@ -221,10 +221,6 @@ val scalatestMavenPlugin = Plugin(
 
 val polyglotTranslatePlugin = Plugin(
   gav = Plugins.polyglot,
-  // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
-  dependencies = Seq(
-    "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
-  ),
   executions = Seq(
     Execution(
       id = "pom-scala-to-pom-xml",
