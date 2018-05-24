@@ -61,9 +61,14 @@ object BlendedJMSConnectionConfig {
     val defaultPasswd = cfg.getStringOption(DEFAULT_PWD)
     val destination = cfg.getString("destination", defaultConfig.pingDestination)
 
-    // TODO: Use Map Reader !!
     val properties : Map[String, String] =
       ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg,"properties", Option(() => defaultConfig.properties))
+      .mapValues { v =>
+          stringResolver(v) match {
+            case Failure(t) => throw t
+            case Success(s) => s
+          }
+      }
 
     val jndiName = cfg.getStringOption(CF_JNDI_NAME)
     val useJndi = cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
