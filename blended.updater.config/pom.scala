@@ -22,7 +22,9 @@ BlendedModel(
     slf4j,
     prickle,
     Blended.testSupport % "test",
-    scalaTest % "test"
+    scalaTest % "test",
+    Deps.logbackClassic % "test",
+    Deps.log4s % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
@@ -37,8 +39,8 @@ BlendedModel(
     Plugin(
       gav = Plugins.exec,
       executions = Seq(
-        execExecution_compileJs(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
-        execExecution_compileJs(execId = "packageJS", phase = "package", args = List("-batch", "packageBin"))
+        execExecution_compileJs(execId = "sbt-compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
+        execExecution_compileJs(execId = "sbt-packageJS", phase = "package", args = List("-batch", "packageBin"))
       )
     ),
     Plugin(

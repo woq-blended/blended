@@ -265,9 +265,13 @@ object RuntimeConfigBuilder {
 
       // validate configs, e.g. no conflicts
       val localOverlays = LocalOverlays(overlayConfigs, localRuntimeConfig.baseDir)
-      localOverlays.validate() match {
+      debug("About to validate overlays: " + localOverlays)
+      val validationResult = localOverlays.validate()
+      debug("overlay validation result: " + validationResult)
+      validationResult  match {
         case Nil => // ok
-        case errors => sys.error("Inconsistent overlays given:\n- " + errors.mkString("\n- "))
+        case errors => 
+          sys.error("Inconsistent overlays given:\n- " + errors.mkString("\n- "))
       }
 
       // materialize config generators of overlay configs, e.g. <profileDir>/A-1/B-2/etc/application_overlay.conf

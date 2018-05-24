@@ -64,7 +64,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
    */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -72,8 +72,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
           case (fileName, config) =>
             val file = new File(dir, fileName)
             file.getParentFile().mkdirs()
-            val configFileContent = ConfigFactory.parseMap(config.asJava)
-            ConfigWriter.write(configFileContent, file, None)
+            ConfigWriter.write(config, file, None)
             file
         }.toList
     }
@@ -84,7 +83,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
    */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
