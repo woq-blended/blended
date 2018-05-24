@@ -72,7 +72,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
   ) : BlendedJMSConnectionConfig = {
     BlendedJMSConnectionConfig.fromConfig(dummyResolver)(
       cfg.getString("vendor"),
-      None,
+      cfg.getString("provider"),
       cfg = cfg
     ).copy(
       clientId = "test",
@@ -86,8 +86,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
 
     ConnectionHolder(
       config = jmsConfig(cfg),
-      system = system,
-      bundleContext = None
+      system = system
     )
   }
 
@@ -156,9 +155,12 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       val cfg = cfConfig("happy", "happy")
 
       val holder = new ConnectionHolder(
-        config = BlendedJMSConnectionConfig.fromConfig(dummyResolver)(cfg.getString("vendor"), None, cfg).copy(cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)),
-        system = system,
-        bundleContext = None
+        config = BlendedJMSConnectionConfig.fromConfig(dummyResolver)(
+          cfg.getString("vendor"),
+          cfg.getString("provider"),
+          cfg
+        ).copy(cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)),
+        system = system
       ) {
         override def close(): Unit = {
           // spend a long time here

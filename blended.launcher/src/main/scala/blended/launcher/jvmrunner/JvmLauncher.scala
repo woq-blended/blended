@@ -133,7 +133,7 @@ class JvmLauncher() {
                 classpath = config.classpath,
                 jvmOpts = (config.jvmOpts ++ xmsOpt ++ xmxOpt ++ ssOpt ++ sysProps.map { case (k, v) => s"-D${k}=${v}" }).toArray,
                 arguments = config.otherArgs.toArray,
-                interactive = true,
+                interactive = config.interactive,
                 errorsIntoOutput = false,
                 directory = new File(".").getAbsoluteFile()
               )
@@ -170,6 +170,7 @@ class JvmLauncher() {
       otherArgs: Seq[String] = Seq(),
       action: Option[String] = None,
       jvmOpts: Seq[String] = Seq(),
+      interactive: Boolean = true,
       restartDelaySec: Option[Int] = None) {
 
     private[this] lazy val prettyPrint : String =
@@ -205,6 +206,9 @@ class JvmLauncher() {
       case Seq(jvmOpt, rest @ _*) if jvmOpt.startsWith("-jvmOpt=") =>
         val opt = jvmOpt.substring("-jvmOpt=".length).trim()
         parse(rest, initialConfig.copy(jvmOpts = initialConfig.jvmOpts ++ Seq(opt).filter(!_.isEmpty)))
+      case Seq(interactive, rest @_*) if interactive.startsWith("-interactive") =>
+        val iAct = interactive.substring("-interactive=".length).toBoolean
+        parse(rest, initialConfig.copy(interactive = iAct))
       case _ =>
         sys.error("Cannot parse arguments: " + args)
     }
@@ -212,7 +216,7 @@ class JvmLauncher() {
 
   def checkConfig(config: Config): Try[Config] = Try {
     if (config.action.isEmpty) sys.error("Missing arguments for action: start|stop")
-    if (config.classpath.isEmpty) Console.err.println("Waring: No classpath given")
+    if (config.classpath.isEmpty) Console.err.println("Warning: No classpath given")
     config
   }
 

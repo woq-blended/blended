@@ -1,22 +1,11 @@
-Bundle-Version:\
-  ${project.version}
+Bundle-Version: ${project.version}
 
-Bundle-SymbolicName:\
-  ${bundle.symbolicName}; singleton:=true
+Bundle-SymbolicName: ${bundle.symbolicName}
 
-Bundle-Classpath: WEB-INF/classes,.
+Bundle-Activator: ${bundle.symbolicName}.internal.MgmtRestActivator
 
 Import-Package: \
-  spray.routing,\
-  spray.routing.directives,\
-  spray.servlet,\
-  shapeless,\
   *
 
 Private-Package: \
   ${bundle.namespace}.internal
-
-Webapp-Context: mgmt
-Web-ContextPath: mgmt
-
-

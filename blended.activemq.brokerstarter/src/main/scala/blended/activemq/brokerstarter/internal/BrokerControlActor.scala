@@ -2,6 +2,7 @@ package blended.activemq.brokerstarter.internal
 
 import java.net.URI
 import javax.jms.ConnectionFactory
+import javax.net.ssl.SSLContext
 
 import akka.actor.{Actor, ActorLogging}
 import blended.akka.OSGIActorConfig
@@ -16,6 +17,7 @@ import org.osgi.framework.{BundleContext, ServiceRegistration}
 import scala.language.reflectiveCalls
 import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
+import scala.util.Try
 
 class BrokerControlActor extends Actor
   with ActorLogging {
@@ -24,7 +26,8 @@ class BrokerControlActor extends Actor
 
   private[this] var cleanUp : List[() => Unit] = List.empty
 
-  private[this] def startBroker(cfg: OSGIActorConfig) : (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
+  private[this] def startBroker(cfg: OSGIActorConfig, sslCtxt : Option[SSLContext]) :
+    (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -46,6 +49,11 @@ class BrokerControlActor extends Actor
       brokerFactory.setValidate(false)
 
       val broker = brokerFactory.createBroker(new URI(uri))
+      sslCtxt.foreach{ ctxt =>
+        val amqSslContext = new org.apache.activemq.broker.SslContext()
+        amqSslContext.setSSLContext(ctxt)
+        broker.setSslContext(amqSslContext)
+      }
 
       broker.setBrokerName(brokerName)
       broker.start()
@@ -63,7 +71,7 @@ class BrokerControlActor extends Actor
 
         val jmsCfg = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
           "activemq",
-          Some("activemq"),
+          "activemq",
           cfg.config
         )
 
@@ -106,7 +114,10 @@ class BrokerControlActor extends Actor
 
   private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
     log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
-    svcReg.unregister()
+    try { svcReg.unregister() }
+    catch {
+      case e: IllegalStateException => // was already unregistered
+    }
 
     broker.stop()
     broker.waitUntilStopped()
@@ -125,8 +136,8 @@ class BrokerControlActor extends Actor
   override def receive : Receive = withoutBroker
 
   def withoutBroker : Receive = {
-    case StartBroker(cfg : OSGIActorConfig) =>
-      val (broker, reg) = startBroker(cfg)
+    case StartBroker(cfg : OSGIActorConfig, sslCtxt: Option[SSLContext]) =>
+      val (broker, reg) = startBroker(cfg, sslCtxt)
       context.become(withBroker(broker, reg))
     case StopBroker =>
       log.debug("Ignoring stop command for ActiveMQ as Broker is already stopped")

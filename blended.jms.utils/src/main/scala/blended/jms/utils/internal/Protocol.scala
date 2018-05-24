@@ -1,6 +1,8 @@
 package blended.jms.utils.internal
 
 import java.util.Date
+
+import akka.actor.ActorRef
 import javax.jms.{Connection, JMSException}
 
 import scala.concurrent.duration.FiniteDuration
@@ -9,6 +11,8 @@ case class CheckConnection(now : Boolean)
 case object ConnectionClosed
 case object CloseTimeout
 case class ConnectTimeout(t: Long)
+
+case class ExecutePing(pingActor: ActorRef)
 
 case object PingTimeout
 
@@ -58,4 +62,4 @@ case class ConnectionCommand(
   reconnectNow : Boolean = false
 )
 
-case class ConnectionException(provider: String, e: JMSException)
+case class ConnectionException(vendor: String, provider: String, e: JMSException)

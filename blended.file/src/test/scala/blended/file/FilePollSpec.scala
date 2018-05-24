@@ -2,7 +2,7 @@ package blended.file
 
 import java.io.{File, FileOutputStream}
 
-import akka.testkit.TestProbe
+import akka.testkit.{TestKit, TestProbe}
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -15,6 +15,42 @@ class FilePollSpec extends FreeSpec with Matchers {
     os.write("Hallo Andreas".getBytes())
     os.flush()
     os.close()
+  }
+
+  private[this] def withBlocking(lockfile : String, testkit: TestKit) : Unit = {
+
+    implicit val system = testkit.system
+
+    val srcDir = new File(System.getProperty("projectTestOutput") + "/blocking")
+    srcDir.mkdirs()
+
+    val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      sourceDir = srcDir.getAbsolutePath(),
+      lock = Some(lockfile)
+    )
+
+    val lockFile = if (lockfile.startsWith("./"))
+      new File(cfg.sourceDir, lockfile.substring(2))
+    else
+      new File(lockfile)
+
+    genFile(lockFile)
+
+    val srcFile = new File(srcDir, "test.txt")
+    genFile(srcFile)
+
+    val probe = TestProbe()
+    system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
+
+    system.actorOf(FilePollActor.props(cfg, new SucceedingFileHandler()))
+
+    probe.expectNoMessage(3.seconds)
+    srcFile.exists() should be (true)
+
+    lockFile.delete()
+
+    probe.expectMsgType[FileProcessed]
+    srcFile.exists() should be (false)
   }
 
   "The File Poller should" - {
@@ -35,7 +71,7 @@ class FilePollSpec extends FreeSpec with Matchers {
 
       val actor = system.actorOf(FilePollActor.props(cfg, new SucceedingFileHandler()))
 
-      probe.expectNoMsg(3.seconds)
+      probe.expectNoMessage(3.seconds)
 
       val f = new File(srcDir, "test.txt")
       genFile(f)
@@ -58,36 +94,12 @@ class FilePollSpec extends FreeSpec with Matchers {
 
     }
 
-    "block the message processing if a lock file exists in the source directory" in TestActorSys { testkit =>
+    "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>
+      withBlocking("./lock", testkit)
+    }
 
-      implicit val system = testkit.system
-
-      val srcDir = new File(System.getProperty("projectTestOutput") + "/blocking")
-      srcDir.mkdirs()
-
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
-        sourceDir = srcDir.getAbsolutePath(),
-        lock = Some("lock")
-      )
-
-      val lockFile = new File(srcDir, "lock")
-      genFile(lockFile)
-
-      val srcFile = new File(srcDir, "test.txt")
-      genFile(srcFile)
-
-      val probe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
-
-      val actor = system.actorOf(FilePollActor.props(cfg, new SucceedingFileHandler()))
-
-      probe.expectNoMsg(3.seconds)
-      srcFile.exists() should be (true)
-
-      lockFile.delete()
-
-      probe.expectMsgType[FileProcessed]
-      srcFile.exists() should be (false)
+    "block the message processing if specified lock file exists (absolute)" in TestActorSys { testkit =>
+      withBlocking("/tmp/lock", testkit)
     }
   }
 }

@@ -12,6 +12,10 @@ nohup.out
 3rdparty
 package-lock.json
 
+blended.sslcontext/notes.txt
+
+.history
+
 # Macosx
 .DS_Store
 
@@ -23,8 +27,10 @@ package-lock.json
 .mvn/maven.settings
 .mvn/maven.config
 .polyglot.pom.scala
+.mvn.polyglot/
 pom.xml
 target/
+.bloop/
 
 # Eclipse settings and caches
 .project
@@ -33,6 +39,5 @@ target/
 .cache
 .cache-main
 .cache-tests
-target-eclipse/
-eclipse-target/
+target-ide/
 

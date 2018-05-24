@@ -1,0 +1,4 @@
+dn: cn=${GROUP_NAME},ou=groups,o=${DOMAIN_NAME}
+changetype: modify
+add: member
+member: ${MEMBER}

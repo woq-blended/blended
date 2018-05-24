@@ -1,3 +1,5 @@
 package blended.mgmt.base.internal
 
-trait FrameworkServiceMBean extends blended.mgmt.base.FrameworkService
+import blended.mgmt.base.{ FrameworkService => FrameworkServiceTrait }
+
+trait FrameworkServiceMBean extends FrameworkServiceTrait

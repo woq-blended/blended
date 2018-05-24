@@ -32,10 +32,11 @@ class BlendedSingleConnectionFactory(
   private[this] val monitorName = s"Monitor-$vendor-$provider"
   private[this] val stateMgrName = s"JMS-$vendor-$provider"
 
+  override val clientId : String = config.clientId
+
   val holder = new ConnectionHolder(
     config = config,
-    system = system,
-    bundleContext = bundleContext
+    system = system
   )
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
@@ -91,5 +92,4 @@ class BlendedSingleConnectionFactory(
     createConnection()
   }
 
-  override val clientId : String = config.clientId
 }

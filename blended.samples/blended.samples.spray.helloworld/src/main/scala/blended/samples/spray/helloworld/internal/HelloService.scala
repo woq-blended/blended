@@ -1,13 +1,11 @@
 package blended.samples.spray.helloworld.internal
 
-import blended.security.spray.BlendedSecuredRoute
 import blended.spray.BlendedHttpRoute
 import spray.http.MediaTypes.`text/html`
 import spray.routing.Route
 
 trait HelloService
-  extends BlendedHttpRoute
-  with BlendedSecuredRoute {
+  extends BlendedHttpRoute {
 
   override val httpRoute: Route =
 
@@ -22,20 +20,6 @@ trait HelloService
             | within OSGi.</body>
             |</html>
           """.stripMargin
-          }
-        } ~ path("secure" / "hello") {
-          authenticated { subject =>
-            requirePermission("hello:view") {
-              complete {
-                s"""
-            |<html>
-            |<body>Say hello to (secured)
-            | <i>spray routing</i>
-            | within OSGi. You are ${subject.getPrincipal()}</body>
-            |</html>
-          """.stripMargin
-              }
-            }
           }
         }
       }

@@ -9,6 +9,7 @@ import org.apache.maven.project.MavenProject
 import org.apache.maven.plugins.annotations.Parameter
 import blended.updater.tools.configbuilder._
 import scala.collection.JavaConverters._
+import java.{ util => ju }
 
 @Mojo(name = "materialize-profile", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST)
 class MaterializeProfileMojo extends AbstractMojo {
@@ -36,7 +37,22 @@ class MaterializeProfileMojo extends AbstractMojo {
 
   @Parameter(defaultValue = "false", property = "explodeResources")
   var explodeResources: Boolean = false
-  
+
+  @Parameter(defaultValue = "false", property = "blended-updater.debug")
+  var debug: Boolean = false
+
+  /**
+   * Directory where the overlays files will we searched.
+   */
+  @Parameter
+  var overlaysDir: File = _
+
+  /**
+   * The given set of overlays (config files) will be added to the materialized profile.
+   */
+  @Parameter
+  var overlays: ju.List[File] = _
+
   // TODO add filter for conf dependencies
 
   /**
@@ -44,6 +60,12 @@ class MaterializeProfileMojo extends AbstractMojo {
    */
   @Parameter(property = "resolveFromDependencies", defaultValue = "false")
   var resolveFromDependencies: Boolean = _
+
+  /**
+   * Create a launch configuration file
+   */
+  @Parameter
+  var createLaunchConfig: File = _
 
   override def execute() = {
     getLog.debug("Running Mojo materialize-profile")
@@ -65,25 +87,46 @@ class MaterializeProfileMojo extends AbstractMojo {
 
     val repoArgs = if (resolveFromDependencies) {
       project.getArtifacts.asScala.toArray.flatMap { a =>
-        Array("--maven-artifact",
+        Array(
+          "--maven-artifact",
           s"${a.getGroupId}:${a.getArtifactId}:${Option(a.getClassifier).filter(_ != "jar").getOrElse("")}:${a.getVersion}:${Option(a.getType).getOrElse("")}",
-          a.getFile.getAbsolutePath)
+          a.getFile.getAbsolutePath
+        )
       }
     } else {
       Array("--maven-url", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-url", u))
     }
     getLog.debug("repo args: " + repoArgs.mkString("Array(", ", ", ")"))
 
-    val explodeResourcesArgs = if(explodeResources) Array("--explode-resources") else Array[String]()
-    
+    val explodeResourcesArgs = if (explodeResources) Array("--explode-resources") else Array[String]()
+
+    val debugArgs = if (debug) Array("--debug") else Array[String]()
+
+    val overlayArgs =
+      // prepend base dir is set
+      Option(overlays).getOrElse(ju.Collections.emptyList()).asScala.map { o =>
+        Option(overlaysDir) match {
+          case None => o
+          case _ if o.isAbsolute() => o
+          case Some(f) => new File(f, o.getPath())
+        }
+      }.
+        // create args
+        flatMap(o => Seq("--add-overlay-file", o.getAbsolutePath())).toArray
+
+    val launchConfArgs = Option(createLaunchConfig).toList.flatMap(cf => Seq("--create-launch-config", cf.getPath())).toArray
+
     val profileArgs = Array(
-      "--debug",
       "-f", srcProfile.getAbsolutePath,
       "-o", targetProfile.getAbsolutePath,
       "--download-missing",
-      "--update-checksums"
-    ) ++ featureArgs ++ repoArgs ++ explodeResourcesArgs
-    RuntimeConfigBuilder.run(profileArgs)
+      "--update-checksums",
+      "--write-overlays-config"
+    ) ++ debugArgs ++ featureArgs ++ repoArgs ++ explodeResourcesArgs ++ overlayArgs ++ launchConfArgs
+
+    getLog().debug("About to run RuntimeConfigBuilder.run with args: " + profileArgs)
+
+    RuntimeConfigBuilder.run(profileArgs, Some(debugMsg => getLog().debug(debugMsg)))
   }
 
 }

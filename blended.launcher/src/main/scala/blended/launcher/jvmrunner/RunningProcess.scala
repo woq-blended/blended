@@ -34,7 +34,8 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
       }
     }
   }
-  outThread.start()
+
+  if (interactive) outThread.start()
 
   def waitFor(): Int = {
     try {
@@ -48,8 +49,14 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
   }
 
   def stop(): Int = {
+    if (interactive) {
+      outThread.interrupt()
+    } else {
+      out.write("stop 0\n".getBytes())
+    }
+
+    out.flush()
     out.close()
-    outThread.interrupt()
     waitFor()
   }
 

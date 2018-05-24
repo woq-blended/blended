@@ -1,7 +1,5 @@
 package blended.updater.config
 
-import java.io.{File, FileWriter}
-
 import blended.testsupport.TestFile
 import com.typesafe.config.{ConfigException, ConfigFactory}
 import org.scalatest.{FreeSpecLike, Matchers}

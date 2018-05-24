@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  ${bundle.namespace}.internal.MgmtActivator
+  ${bundle.namespace}.internal.MgmtBaseActivator
 
 Import-Package: \
   scala.*;version="[${scala.version},${scala.version}.50)", \
@@ -15,5 +15,4 @@ Private-Package:\
   ${bundle.namespace}.internal.*
 
 Export-Package: \
-  ${bundle.namespace},\
-  ${bundle.namespace}.json
+  ${bundle.namespace}

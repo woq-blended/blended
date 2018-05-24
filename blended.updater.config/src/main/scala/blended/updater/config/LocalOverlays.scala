@@ -2,14 +2,15 @@ package blended.updater.config
 
 import java.io.File
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.slf4j.LoggerFactory
 
 import _root_.scala.collection.immutable
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.util._
-
+import com.typesafe.config.ConfigValue
+import com.typesafe.config.ConfigValueFactory
 
 /**
  * A materialized set of overlays.
@@ -144,16 +145,18 @@ final object LocalOverlays {
   }
 
   def toConfig(localOverlays: LocalOverlays): Config = {
-    val config = (Map(
-      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
-    ).asJava)
-    ConfigFactory.parseMap(config)
+    val configs = localOverlays.overlays.toList.sorted.map { o =>
+      val config = OverlayConfigCompanion.toConfig(o)
+      config.root()
+    }
+    val configs2 = ConfigValueFactory.fromIterable(configs.asJava)
+    ConfigFactory.empty().withValue("overlays", configs2)
   }
 
   def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
     val overlaysDir = new File(profileDir, "overlays")
     val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
-    log.debug(s"About to find local overlays. Candidates: ${candidates}")
+    log.debug(s"About to find local overlays. Candidates: ${candidates.mkString(", ")}")
     val localOverlays = candidates.toList.flatMap { file =>
       val overlay = Try(ConfigFactory.parseFile(file)).flatMap(c => LocalOverlays.read(c, profileDir))
       overlay match {

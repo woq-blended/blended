@@ -28,8 +28,9 @@ object ScriptHelper {
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
-  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
+  val antrun = mavenPluginGroup % "maven-antrun-plugin" % "1.8"
   val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
+  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
   val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.5.1"
   val dependency = mavenPluginGroup % "maven-dependency-plugin" % "2.10"
   val deploy = mavenPluginGroup % "maven-deploy-plugin" % "2.8.2"
@@ -48,8 +49,10 @@ object Plugins {
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
+  val lifecycle = "org.eclipse.m2e" % "lifecycle-mapping" % "1.0.0"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
-  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.2.1"
+  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.0"
+  val trEclipse = "de.tototec" % "de.tobiasroeser.eclipse-maven-plugin" % "0.1.0"
   val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
@@ -235,6 +238,48 @@ val polyglotTranslatePlugin = Plugin(
   )
 )
 
+/**
+  * Scala execution to generate logback-test.xml on the fly.
+  */
+
+val scalaExecution_logbackXml: Execution = Execution(
+  id = "generateLogbackConfig",
+  phase = "generate-test-resources",
+  goals = Seq(
+    "script"
+  ),
+  configuration = Config(
+    script = scriptHelper +
+      """
+import java.io.File
+
+ScriptHelper.writeFile(
+  new File(project.getBasedir(), "target/test-classes/logback-test.xml"),
+ "<configuration scan=\"true\" scanPeriod=\"30 seconds\">\n" +
+ "\n" +
+ "  <appender name=\"FILE\" class=\"ch.qos.logback.core.FileAppender\">\n" +
+ "    <file>target/test.log</file>\n" +
+ "    <encoder>\n" +
+ "      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%thread] %logger{36} : %msg%n</pattern>\n" +
+ "    </encoder>\n" +
+ "  </appender>\n" +
+ "\n" +
+ "  <appender name=\"ASYNC_FILE\" class=\"ch.qos.logback.classic.AsyncAppender\">\n" +
+ "    <appender-ref ref=\"FILE\" />\n" +
+ "  </appender>\n" +
+ "\n" +
+ "  <logger name=\"blended\" level=\"DEBUG\" />\n" +
+ "\n" +
+ "  <root level=\"DEBUG\">\n" +
+ "    <appender-ref ref=\"FILE\" />\n" +
+ "  </root>\n" +
+ "</configuration>\n" +
+ "\n"
+ )
+"""
+  )
+)
+
 /*
  * Some helper plugins to compile ScalaJS code with SBT.
  */
@@ -252,14 +297,16 @@ import java.io.File
 
 ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/build.properties"),
-  "sbtVersion=""" + BlendedVersions.sbtVersion + """"
+  "sbt.version=""" + BlendedVersions.sbtVersion + """"
 )
 
 ScriptHelper.writeFile(
   new File(project.getBasedir(), "project/plugins.sbt"),
   "resolvers += \"Typesafe repository\" at \"http://repo.typesafe.com/typesafe/releases/\"\n" +
   "\n" +
-  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n"
+  "addSbtPlugin(\"org.scala-js\" % \"sbt-scalajs\" % \"""" + BlendedVersions.scalaJsVersion + """\")\n" +
+  "\n" +
+  "addSbtPlugin(\"ch.epfl.scala\" % \"sbt-scalajs-bundler\" % \"""" + BlendedVersions.scalaJsBundlerVersion + """\")\n"
  )
 """
   )
@@ -281,7 +328,6 @@ def execExecution(executable: String, execId: String, phase: String, args: List[
       arguments = cfg
     )
   )
-
 }
 
 def execExecution_compileJs(execId: String, phase: String, args: List[String]): Execution = {

@@ -5,6 +5,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.util.{Left, Right, Try}
+import blended.updater.config.util.ConfigPropertyMapConverter
 
 /**
  * Helper for [[OverlayConfig]] containing common useful operations.
@@ -47,15 +48,6 @@ final object OverlayConfigCompanion {
 
   def read(config: Config): Try[OverlayConfig] = Try {
 
-    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-      if (default.isDefined && !config.hasPath(key)) {
-        default.get.apply()
-      } else {
-        config.getConfig(key).entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap
-      }
-
     OverlayConfig(
       name = config.getString("name"),
       version = config.getString("version"),
@@ -67,7 +59,7 @@ final object OverlayConfigCompanion {
           GeneratedConfigCompanion.create(fileName, genConfig)
         }.toList
       } else Nil,
-      properties = configAsMap("properties", Some(() => Map()))
+      properties = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "properties", Some(() => Map()))
     )
   }
 
@@ -81,7 +73,7 @@ final object OverlayConfigCompanion {
           "config" -> GeneratedConfigCompanion.config(genConfig).root().unwrapped()
         ).asJava
       }.asJava,
-      "properties" -> overlayConfig.properties.asJava
+      "properties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(overlayConfig.properties)
     ).asJava
     ConfigFactory.parseMap(config)
   }

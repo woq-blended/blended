@@ -4,31 +4,36 @@ import java.util.concurrent.TimeUnit
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-
 import org.slf4j.LoggerFactory
-
 import akka.actor.ActorSystem
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.mgmt.mock.MockObjects
 import de.tototec.cmdoption.CmdlineParser
 
+import scala.util.Random
+
 class MgmtMockClients(config: Config) {
 
   private[this] val log = LoggerFactory.getLogger(classOf[MgmtMockClients])
+  private[this] val rnd = new Random()
 
   implicit val system = ActorSystem("MgmtMockClients")
 
   def start(): Unit = {
     log.debug("About to start with config: {}", config)
 
-    val reporterConfig = MgmtReporterConfig(
-      registryUrl = config.url,
-      updateIntervalMsec = config.updateIntervalMsec,
-      initialUpdateDelayMsec = config.initialUpdateDelayMsec
-    )
-
     val containerInfos = MockObjects.createContainer(config.clientCount)
+
     containerInfos.map { ci =>
+
+      val diff = Math.abs(config.updateIntervalMsecMax - config.updateIntervalMsecMin)
+      val interval = (Math.abs(rnd.nextLong()) % diff) + Math.min(config.updateIntervalMsecMax, config.updateIntervalMsecMin)
+
+      val reporterConfig = MgmtReporterConfig(
+        registryUrl = config.url,
+        updateIntervalMsec = interval,
+        initialUpdateDelayMsec = config.initialUpdateDelayMsec
+      )
       system.actorOf(ContainerActor.props(reporterConfig, ci), name = "container-" + ci.containerId)
     }
   }

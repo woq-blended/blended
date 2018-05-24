@@ -1,0 +1,10 @@
+Bundle-Version: ${project.version}
+
+Bundle-SymbolicName: ${bundle.symbolicName}
+
+Bundle-Activator: blended.mgmt.ws.internal.MgmtWSActivator
+
+Import-Package: *
+
+Private-Package: \
+  ${bundle.namespace}.internal

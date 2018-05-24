@@ -3,13 +3,11 @@ package blended.akka
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.Timeout
 import com.typesafe.config.Config
-import blended.container.context.ContainerContext
-import domino.capsule.{SimpleDynamicCapsuleContext, CapsuleContext}
+import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_consuming.ServiceConsuming
 import domino.service_providing.ServiceProviding
 import org.osgi.framework.BundleContext
 
-import scala.collection.convert.Wrappers.JPropertiesWrapper
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

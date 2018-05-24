@@ -6,13 +6,16 @@ import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import blended.container.context.ContainerContext
+import blended.container.context.api.ContainerContext
 import blended.util.StreamCopySupport
 import org.osgi.framework.BundleContext
 import org.slf4j.LoggerFactory
 
 import scala.util.control.NonFatal
 
+/**
+ * Note: The fact that this class has the same name as it's trait is required by the MBean spec. 
+ */
 class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext) extends FrameworkServiceMBean {
 
   private[this] val log = LoggerFactory.getLogger(classOf[FrameworkService])

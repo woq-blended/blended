@@ -1,20 +1,20 @@
 import org.sonatype.maven.polyglot.scala.model._
 import scala.collection.immutable.Seq
 
-#include ../blended.build/build-versions.scala
-#include ../blended.build/build-dependencies.scala
-#include ../blended.build/build-plugins.scala
-#include ../blended.build/build-common.scala
+//#include ../blended.build/build-versions.scala
+//#include ../blended.build/build-dependencies.scala
+//#include ../blended.build/build-plugins.scala
+//#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = blendedJmsSampler,
+  gav = Blended.jmsSampler,
   packaging = "bundle",
   description = "A bundle to sample messages from a given JMS topic.",
   dependencies = Seq(
-    blendedAkka,
+    Blended.akka,
     slf4j,
-    blendedDomino,
-    blendedUtil,
+    Blended.domino,
+    Blended.util,
     geronimoJms11Spec
   ),
   plugins = Seq(

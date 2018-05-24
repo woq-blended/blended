@@ -81,7 +81,7 @@ val genPomXmlProfile = Profile(
           )
         )
       ),
-      // initialize: generate pom.xml 
+      // initialize: generate pom.xml
       polyglotTranslatePlugin
     )
   )
@@ -92,6 +92,20 @@ val checkDepsProfile = Profile(
   build = BuildBase(
     plugins = Seq(
       checkDepsPlugin
+    )
+  )
+)
+
+val eclipseProfile = Profile(
+  id = "eclipse",
+  build = BuildBase(
+    plugins = Seq(
+      Plugin(
+        Plugins.trEclipse,
+        configuration = Config(
+          alternativeOutput = "target-ide"
+        )
+      )
     )
   )
 )
@@ -113,7 +127,7 @@ object BlendedModel {
     )
 
   // Profiles we attach to all BlendedModels
-  val defaultProfiles = Seq(releaseProfile, genPomXmlProfile, checkDepsProfile)
+  val defaultProfiles = Seq(releaseProfile, genPomXmlProfile, checkDepsProfile, eclipseProfile)
 
   val defaultDevelopers = Seq(
     Developer(
@@ -148,16 +162,6 @@ object BlendedModel {
   )
 
   val defaultRepositories = Seq(
-    Repository(
-      releases = RepositoryPolicy(
-        enabled = true
-      ),
-      snapshots = RepositoryPolicy(
-        enabled = false
-      ),
-      id = "FUSEStaging",
-      url = "http://repo.fusesource.com/nexus/content/repositories/jboss-fuse-6.1.x"
-    ),
     Repository(
       releases = RepositoryPolicy(
         enabled = true
@@ -232,6 +236,12 @@ object BlendedModel {
         aggregate = "true",
         highlighting = "true"
       )
+    ),
+    Plugin(
+      gav = Plugins.scala,
+      executions = Seq(
+        scalaExecution_logbackXml
+      )
     )
   )
 
@@ -251,6 +261,7 @@ object BlendedModel {
     ciManagement: CiManagement = null,
     contributors: immutable.Seq[Contributor] = Nil,
     dependencyManagement: DependencyManagement = null,
+    pureDependencies: immutable.Seq[Dependency] = Nil,
     dependencies: immutable.Seq[Dependency] = Nil,
     description: String = null,
     developers: immutable.Seq[Developer] = Nil,
@@ -271,7 +282,8 @@ object BlendedModel {
     resources: Seq[Resource] = Seq.empty,
     testResources: Seq[Resource] = Seq.empty,
     plugins: Seq[Plugin] = Seq.empty,
-    pluginManagement: Seq[Plugin] = null) = {
+    pluginManagement: Seq[Plugin] = null
+  ) = {
     if (parent != null) println(s"Project with parent: ${gav}")
     val theBuild = {
       val usedPlugins = plugins ++ defaultPlugins
@@ -283,13 +295,15 @@ object BlendedModel {
       ))
     }
 
+    val allDeps = pureDependencies.map(_.pure) ++ dependencies
+    
     new Model(
       gav = gav,
       build = theBuild,
       ciManagement = Option(ciManagement),
       contributors = contributors,
-      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(dependencies))),
-      dependencies = dependencies,
+      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(allDeps))),
+      dependencies = allDeps,
       description = Option(description),
       developers = defaultDevelopers ++ developers,
       distributionManagement = Option(distMgmt),
@@ -318,10 +332,13 @@ object BlendedModel {
 
 // Support for building features and containers
 
+case class FeatureDef(name: String, features: Seq[String] = Seq(), bundles: Seq[FeatureBundle])
+
 case class FeatureBundle(
-    dependency: Dependency,
-    startLevel: Integer = -1,
-    start: Boolean = false) {
+  dependency: Dependency,
+  startLevel: Integer = -1,
+  start: Boolean = false
+) {
   override def toString: String = {
 
     val gav = dependency.gav
@@ -364,27 +381,42 @@ case class FeatureBundle(
 
 // Create the String content of a feature file from a sequence of FeatureBundles
 
-def featureDependencies(features: Map[String, Seq[FeatureBundle]]): Seq[Dependency] = {
-  features.values.flatten.map(_.dependency.copy(exclusions = Seq("*" % "*"))).toList
+def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] = {
+  features.flatMap(_.bundles.map(_.dependency))
+    .foldLeft(List[Dependency]()) { (ds, n) =>
+      if (ds.exists(d =>
+        d.gav.groupId == n.gav.groupId &&
+          d.gav.artifactId == n.gav.artifactId &&
+          d.gav.version == n.gav.version &&
+          d.classifier == n.classifier &&
+          d.scope == n.scope)) ds
+      else n :: ds
+    }
 }
 
 // This is the content of the feature file
-def featureFile(name: String, features: Seq[FeatureBundle]): String = {
+def featureFile(feature: FeatureDef): String = {
 
-  val prefix = "\"\"\"name=\"" + name + "\"\nversion=\"${project.version}\"\n"
+  val prefix = "name=\"" + feature.name + "\"\nversion=\"${project.version}\"\n"
 
-  val bundles = features.map(_.toString).mkString(
-    "bundles = [\n", ",\n", "\n]\n\"\"\"")
+  val bundles = feature.bundles.map(_.toString).mkString(
+    "bundles = [\n", ",\n", "\n]\n"
+  )
 
-  prefix + bundles
+  val featureRefs =
+    if (feature.features.isEmpty) ""
+    else feature.features.map(f => s"""{ name="${f}", version="$${project.version}" }""").mkString(
+      "features = [\n", ",\n", "\n]\n"
+    )
+
+  "\"\"\"" + prefix + featureRefs + bundles + "\"\"\""
 }
 
-def generateFeatures(features: Map[String, Seq[FeatureBundle]]) = {
+def generateFeatures(features: Seq[FeatureDef]) = {
 
-  val writeFiles = features.map {
-    case (key, bundles) =>
-      """
-ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key + """.conf"), """ + featureFile(key, bundles) + """)
+  val writeFiles = features.map { feature =>
+    """
+ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + feature.name + """.conf"), """ + featureFile(feature) + """)
 """
   }.mkString("import java.io.File\n", "\n", "")
 
@@ -393,13 +425,13 @@ ScriptHelper.writeFile(new File(project.getBasedir(), "target/classes/""" + key 
 
 object Feature {
   def apply(name: String) = Dependency(
-    blendedLauncherFeatures,
+    Blended.launcherFeatures,
     `type` = "conf",
     classifier = name
   )
 }
 
-def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
+def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
   Plugin(
     gav = Plugins.scala,
     executions = Seq(
@@ -416,7 +448,7 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
     )
   ),
   Plugin(
-    blendedUpdaterMavenPlugin,
+    Blended.updaterMavenPlugin,
     executions = Seq(
       Execution(
         id = "make-features",
@@ -436,8 +468,9 @@ def featuresMavenPlugins(features: Map[String, Seq[FeatureBundle]]) = Seq(
 object BlendedProfileResourcesContainer {
   def apply(
     gav: Gav,
-    properties: Map[String, String] = Map.empty) = {
-    
+    properties: Map[String, String] = Map.empty
+  ) = {
+
     BlendedModel(
       gav = gav,
       packaging = "jar",
@@ -486,22 +519,21 @@ object BlendedContainer {
     description: String,
     properties: Map[String, String] = Map.empty,
     features: immutable.Seq[Dependency] = Seq.empty,
-    blendedProfileResouces: Gav = null) = {
+    blendedProfileResouces: Gav = null,
+    overlays: Seq[String] = Seq.empty
+  ) = {
 
     BlendedModel(
       gav = gav,
       description = description,
       packaging = "jar",
-      prerequisites = Prerequisites(
-        maven = "3.3.3"
-      ),
       properties = Map(
         "profile.name" -> gav.artifactId,
         "profile.version" -> gav.version.get
       ) ++ properties,
       dependencies = features ++ Seq(
         Dependency(
-          blendedLauncher,
+          Blended.launcher,
           `type` = "zip",
           classifier = "bin"
         )
@@ -510,8 +542,9 @@ object BlendedContainer {
         Option(blendedProfileResouces).map(g => Dependency(gav = g, `type` = "zip")).toList,
       plugins = Seq(
         Plugin(
-          gav = blendedUpdaterMavenPlugin,
+          gav = Blended.updaterMavenPlugin,
           executions = Seq(
+            // Materialize a complete profile based on profile.conf and maven dependencies
             Execution(
               id = "materialize-profile",
               phase = "compile",
@@ -521,7 +554,9 @@ object BlendedContainer {
               configuration = Config(
                 srcProfile = "${project.build.directory}/classes/profile/profile.conf",
                 destDir = "${project.build.directory}/classes/profile",
-                explodeResources = true
+                explodeResources = true,
+                createLaunchConfig = "${project.build.directory}/classes/container/launch.conf",
+                overlays = new Config(overlays.map(o => "overlay" -> Some(o)))
               )
             )
           )
@@ -550,34 +585,20 @@ object BlendedContainer {
           )
         ),
         Plugin(
-          gav = Plugins.scala,
+          gav = Plugins.antrun,
           executions = Seq(
             Execution(
-              id = "build-product",
-              phase = "generate-resources",
-              goals = Seq(
-                "script"
-              ),
+              id = "unpack-full-nojre",
+              phase = "integration-test",
+              goals = Seq("run"),
               configuration = Config(
-                script = scriptHelper + """
-  import java.io.File
+                target = Config(
+                  unzip = Config(
+                    `@src` = "${project.build.directory}/${project.artifactId}-${project.version}-full-nojre.zip",
+                    `@dest` = "${project.build.directory}"
 
-  // make launchfile
-
-  val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
-
-  val launchConf =
-    "profile.baseDir=${BLENDED_HOME}/profiles\n" +
-    "profile.name=""" + gav.artifactId + """\n" +
-    "profile.version=""" + gav.version.get + """"
-
-  ScriptHelper.writeFile(tarLaunchFile, launchConf)
-
-  // make overlays base.conf
-
-  val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
-  ScriptHelper.writeFile(baseConfFile, "overlays = []")
-  """
+                  )
+                )
               )
             )
           )
@@ -585,20 +606,21 @@ object BlendedContainer {
         Plugin(
           gav = Plugins.assembly,
           executions = Seq(
+            // Build the various assemblies
             Execution(
               id = "assemble",
               phase = "package",
               goals = Seq(
                 "single"
+              ),
+              configuration = Config(
+                tarLongFileMode = "gnu",
+                descriptors = Config(
+                  descriptor = "src/main/assembly/full-nojre.xml",
+                  descriptor = "src/main/assembly/product.xml",
+                  descirptor = "src/main/assembly/deploymentpack.xml"
+                )
               )
-            )
-          ),
-          configuration = Config(
-            tarLongFileMode = "gnu",
-            descriptors = Config(
-              descriptor = "src/main/assembly/full-nojre.xml",
-              descriptor = "src/main/assembly/product.xml",
-              descirptor = "src/main/assembly/deploymentpack.xml"
             )
           )
         ),
@@ -620,7 +642,8 @@ object BlendedDockerContainer {
     gav: Gav,
     image: Dependency,
     folder: String,
-    ports: List[Int] = List.empty) = BlendedModel(
+    ports: List[Int] = List.empty
+  ) = BlendedModel(
     gav = gav,
     packaging = "jar",
     description = "Packaging the launcher sample container into a docker image.",

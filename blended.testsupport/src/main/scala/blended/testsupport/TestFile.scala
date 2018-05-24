@@ -56,6 +56,7 @@ trait TestFile {
   }
 
   def withTestFile[T](content: String)(f: File => T)(implicit delete: DeletePolicy): T = {
+
     val file = File.createTempFile("test", "")
     if (!file.exists()) {
       throw new AssertionError("Just created file does not exist: " + file)

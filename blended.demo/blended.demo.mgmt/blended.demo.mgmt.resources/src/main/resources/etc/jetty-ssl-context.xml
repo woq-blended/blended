@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure_9_3.dtd">
+
+<Configure id="sslContextFactory" class="blended.jetty.boot.DelegatingSslContextFactory">
+  <Set name="EndpointIdentificationAlgorithm"></Set>
+  <Set name="NeedClientAuth">
+    <SystemProperty name="jetty.sslContext.needClientAuth" default="false"/>
+  </Set>
+  <Set name="WantClientAuth">
+    <SystemProperty name="jetty.sslContext.wantClientAuth" default="false"/>
+  </Set>
+  <Set name="useCipherSuitesOrder">
+    <SystemProperty name="jetty.sslContext.useCipherSuitesOrder" default="true"/>
+  </Set>
+  <Set name="sslSessionCacheSize">
+    <SystemProperty name="jetty.sslContext.sslSessionCacheSize" default="-1"/>
+  </Set>
+  <Set name="sslSessionTimeout">
+    <SystemProperty name="jetty.sslContext.sslSessionTimeout" default="-1"/>
+  </Set>
+  <Set name="RenegotiationAllowed">
+    <SystemProperty name="jetty.sslContext.renegotiationAllowed" default="true"/>
+  </Set>
+  <Set name="RenegotiationLimit">
+    <SystemProperty name="jetty.sslContext.renegotiationLimit" default="5"/>
+  </Set>
+</Configure>

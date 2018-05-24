@@ -6,7 +6,7 @@ import blended.updater.tools.configbuilder._
 import org.apache.maven.BuildFailureException
 import org.apache.maven.artifact.handler.DefaultArtifactHandler
 import org.apache.maven.plugin.AbstractMojo
-import org.apache.maven.plugins.annotations.{Component, Mojo, Parameter, ResolutionScope}
+import org.apache.maven.plugins.annotations.{ Component, Mojo, Parameter, ResolutionScope }
 import org.apache.maven.project.MavenProject
 import org.apache.maven.project.artifact.AttachedArtifact
 
@@ -35,6 +35,9 @@ class BuildFeaturesMojo extends AbstractMojo {
 
   @Parameter(defaultValue = "conf", property = "attachType")
   var attachType: String = _
+
+  @Parameter(defaultValue = "false", property = "blended-updater.debug")
+  var debug: Boolean = false
 
   /**
    * Resolve all artifacts with mvn URLs only from the dependencies of the project.
@@ -68,23 +71,26 @@ class BuildFeaturesMojo extends AbstractMojo {
 
       val repoArgs = if (resolveFromDependencies) {
         project.getArtifacts.asScala.toArray.flatMap { a =>
-          Array("--maven-artifact",
+          Array(
+            "--maven-artifact",
             s"${a.getGroupId}:${a.getArtifactId}:${Option(a.getClassifier).filter(_ != "jar").getOrElse("")}:${a.getVersion}:${Option(a.getType).getOrElse("")}",
-            a.getFile.getAbsolutePath)
+            a.getFile.getAbsolutePath
+          )
         }
       } else {
         Array("--maven-dir", localRepoUrl) ++ remoteRepoUrls.toArray.flatMap(u => Array("--maven-dir", u))
       }
 
+      val debugArgs = if (debug) Array("--debug") else Array[String]()
+
       val args = Array(
-        "--debug",
         "-f", featureFile.getAbsolutePath(),
         "-o", targetFile.getAbsolutePath(),
         "--work-dir", new File("target/downloads").getAbsolutePath(),
         "--discard-invalid",
         "--download-missing",
         "--update-checksums"
-      ) ++ repoArgs
+      ) ++ debugArgs ++ repoArgs
 
       println(s"Invoking FeatureBuilder with args: ${args.mkString(" ")}")
 
