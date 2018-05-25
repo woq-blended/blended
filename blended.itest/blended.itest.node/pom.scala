@@ -23,7 +23,7 @@ BlendedModel(
     logbackClassic % "test"
   ),
   plugins = Seq(
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

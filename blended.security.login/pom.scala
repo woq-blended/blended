@@ -19,7 +19,7 @@ BlendedModel(
     scalaTest % "test",
     logbackCore % "test",
     logbackClassic % "test"
-  ), 
+  ),
   plugins = Seq(
     Plugin(
       mavenBundlePlugin.gav,
@@ -32,7 +32,7 @@ BlendedModel(
         ))
       )
     ),
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

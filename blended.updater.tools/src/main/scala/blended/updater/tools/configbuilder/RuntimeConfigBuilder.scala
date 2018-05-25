@@ -102,7 +102,12 @@ object RuntimeConfigBuilder {
     }
   }
 
-  def run(args: Array[String], debugLog: Option[String => Unit] = None): Unit = {
+  def run(
+    args: Array[String],
+    debugLog: Option[String => Unit] = None,
+    infoLog: String => Unit = Console.out.println,
+    errorLog: String => Unit = Console.err.println
+  ): Unit = {
 
     val options = new CmdOptions()
 
@@ -183,14 +188,14 @@ object RuntimeConfigBuilder {
       val states = files.par.map {
         case (file, urls) =>
           if (!file.exists()) {
-            println(s"Downloading: ${file}")
+            infoLog(s"Fetching: ${file}")
             urls.find { url =>
-              Console.err.println(s"Downloading ${file.getName()} from $url")
+              debug(s"Downloading ${file.getName()} from $url")
               RuntimeConfigCompanion.download(url, file).isSuccess
             }.map { url => file -> Try(file)
             }.getOrElse {
               val msg = s"Could not download ${file.getName()} from: $urls"
-              Console.err.println(msg)
+              errorLog(msg)
               sys.error(msg)
             }
           } else file -> Try(file)
@@ -198,7 +203,7 @@ object RuntimeConfigBuilder {
 
       val issues = states.collect {
         case (file, Failure(e)) =>
-          Console.err.println(s"Could not download: $file (${e.getClass.getSimpleName()}: ${e.getMessage()})")
+          errorLog(s"Could not download: $file (${e.getClass.getSimpleName()}: ${e.getMessage()})")
           e
       }
       if (!issues.isEmpty) {
@@ -212,7 +217,7 @@ object RuntimeConfigBuilder {
         checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
           checkedFiles += file -> checksum
           if (r.sha1Sum != Option(checksum)) {
-            println(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
+            infoLog(s"${if (r.sha1Sum.isDefined) "Updating" else "Creating"} checksum for: ${r.fileName.getOrElse(RuntimeConfig.resolveFileName(r.url).get)}")
             r.copy(sha1Sum = Option(checksum))
           } else r
         }.getOrElse(r)
@@ -268,9 +273,9 @@ object RuntimeConfigBuilder {
       debug("About to validate overlays: " + localOverlays)
       val validationResult = localOverlays.validate()
       debug("overlay validation result: " + validationResult)
-      validationResult  match {
+      validationResult match {
         case Nil => // ok
-        case errors => 
+        case errors =>
           sys.error("Inconsistent overlays given:\n- " + errors.mkString("\n- "))
       }
 

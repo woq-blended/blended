@@ -45,7 +45,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     // Scalatest, we need to fork the tests, as Laucher depends on sys properties, which we mutate in tests
     Plugin(
       gav = Plugins.scalaTest,

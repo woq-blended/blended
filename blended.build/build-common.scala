@@ -110,6 +110,32 @@ val eclipseProfile = Profile(
   )
 )
 
+/**
+ * Removed duplicate plugins by merging their configurations and executions.
+ */
+def sanitizePlugins(plugins: Seq[Plugin]): Seq[Plugin] = plugins.foldLeft(Seq[Plugin]()){(l,r) =>
+  l.find(p => p.gav == r.gav) match {
+    case None => l ++ Seq(r)
+    case Some(existing) => l.map{ p => 
+      if(p == existing) {
+      	Plugin(
+      	  gav = p.gav,
+          dependencies = p.dependencies ++ r.dependencies,
+          extensions = p.extensions || r.extensions,
+          inherited = p.inherited || r.inherited,
+          executions = p.executions ++ r.executions,
+          configuration = (p.configuration, r.configuration) match {
+            case (None, None) => null
+            case (Some(c), None) => c
+            case (None, Some(c)) => c
+            case (Some(a), Some(b)) => new Config(a.elements ++ b.elements)
+          }
+        )
+      } else p
+    }
+  }
+}
+
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
 
@@ -216,7 +242,7 @@ object BlendedModel {
           configuration = Config(
             rules = Config(
               requireMavenVersion = Config(
-                version = "3.0.5"
+                version = "3.3.1"
               )
             )
           )
@@ -286,7 +312,7 @@ object BlendedModel {
   ) = {
     if (parent != null) println(s"Project with parent: ${gav}")
     val theBuild = {
-      val usedPlugins = plugins ++ defaultPlugins
+      val usedPlugins = sanitizePlugins(plugins ++ defaultPlugins)
       Option(Build(
         resources = resources ++ defaultResources,
         testResources = testResources ++ defaultTestResources,
@@ -465,6 +491,9 @@ def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
   )
 )
 
+/**
+ *  A Blended project containing resources for a Blended Container Profile.
+ */
 object BlendedProfileResourcesContainer {
   def apply(
     gav: Gav,

@@ -11,6 +11,7 @@ BlendedModel(
   packaging = "bundle",
   description = "Configurations for Updater and Launcher",
   dependencies = Seq(
+    Deps.scalaLib % "provided",
     typesafeConfig,
     Blended.updaterConfig,
     Deps.cmdOption,
@@ -18,7 +19,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

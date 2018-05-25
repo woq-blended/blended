@@ -11,6 +11,7 @@ BlendedModel(
   packaging = "bundle",
   description = "Utility classes to use in other bundles.",
   dependencies = Seq(
+    Deps.scalaLib % "provided",
     akkaActor,
     orgOsgi,
     orgOsgiCompendium,
@@ -25,12 +26,12 @@ BlendedModel(
   ),
   dependencyManagement = DependencyManagement(
     Seq(
-      scalaLib
+      Deps.scalaLib
     )
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

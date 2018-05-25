@@ -234,6 +234,36 @@ val polyglotTranslatePlugin = Plugin(
   )
 )
 
+val scalaExecution_addSource: Execution = Execution(
+  id = "scala-addSource",
+  goals = Seq("add-source"),
+  phase = "initialize",
+  configuration = scalaCompilerConfig
+)
+
+val scalaExecution_compile: Execution = Execution(
+  id = "scala-compile",
+  goals = Seq("compile"),
+  configuration = scalaCompilerConfig
+)
+val scalaExecution_testCompile: Execution = Execution(
+  id = "scala-testCompile",
+  goals = Seq("testCompile"),
+  configuration = scalaCompilerConfig
+)
+
+val scalaMavenPlugin = Plugin(
+  gav = Plugins.scala,
+  executions = Seq(
+    scalaExecution_addSource,
+    scalaExecution_compile,
+    scalaExecution_testCompile
+  ),
+  configuration = scalaCompilerConfig
+)
+
+val scalaCompilerPlugin = if(System.getenv("USE_SBT") == "0") scalaMavenPlugin else sbtCompilerPlugin
+
 /**
   * Scala execution to generate logback-test.xml on the fly.
   */

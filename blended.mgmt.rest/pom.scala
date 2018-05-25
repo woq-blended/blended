@@ -15,8 +15,8 @@ BlendedModel(
     "bundle.namespace" -> "${project.artifactId}"
   ),
   dependencies = Seq(
-    scalaLib % "provided",
-    slf4j % "provided",
+    Deps.scalaLib % "provided",
+    Deps.slf4j,
     Blended.mgmtBase,
     Blended.akka,
     Deps.akkaHttp,
@@ -26,15 +26,16 @@ BlendedModel(
     Blended.prickleAkkaHttp,
     Blended.securityAkkaHttp,
     Blended.updaterRemote,
-    orgOsgi,
-    orgOsgiCompendium,
-    scalaTest % "test",
+    Deps.orgOsgi,
+    Deps.orgOsgiCompendium,
+    Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",
-    mockitoAll % "test",
+    Deps.mockitoAll % "test",
     Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
+    // FIXME: use scalaCompilerPlugin instead, but it currently has test compile errors when used (TR)
     sbtCompilerPlugin,
     scalatestMavenPlugin
   )

@@ -33,7 +33,7 @@ BlendedModel(
         ))
       )
     ),
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

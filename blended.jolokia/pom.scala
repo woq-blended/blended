@@ -46,7 +46,7 @@ BlendedModel(
         )
       ),
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.scalaTest,
       configuration = Config(

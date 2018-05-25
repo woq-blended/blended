@@ -19,7 +19,7 @@ BlendedModel(
     Blended.akka
   ),
   plugins = Seq(
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     mavenBundlePlugin
   )
 )

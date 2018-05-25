@@ -43,7 +43,7 @@ BlendedModel(
     )
   ),
   plugins = Seq(
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.plugin,
       executions = Seq(

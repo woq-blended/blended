@@ -17,18 +17,18 @@ BlendedModel(
   packaging = "bundle",
   description = "Configurations for Updater and Launcher",
   dependencies = Seq(
-    scalaLib % "provided",
-    typesafeConfig,
-    slf4j,
-    prickle,
+    Deps.scalaLib % "provided",
+    Deps.typesafeConfig,
+    Deps.slf4j,
+    Deps.prickle,
+    Deps.log4s,
     Blended.testSupport % "test",
     scalaTest % "test",
-    Deps.logbackClassic % "test",
-    Deps.log4s % "test"
+    Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.scala,
       executions = Seq(

@@ -16,10 +16,10 @@ BlendedModel(
     Blended.akkaHttp,
     scalaTest % "test",
     akkaHttpTestkit % "test"
-  ), 
+  ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

@@ -54,14 +54,14 @@ BlendedModel(
         )
       )
     ),
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       scalatestMavenPlugin.gav,
       executions = Seq(
-        scalatestExecution    
+        scalatestExecution
       ),
       configuration = new Config(
-          scalatestConfiguration.elements ++ 
+          scalatestConfiguration.elements ++
           Seq(
             "argLine" -> Some("-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost")
           )

@@ -26,7 +26,7 @@ BlendedModel(
   ),
   plugins = Seq(
     bundleWarPlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin,
     Plugin(
       gav = Plugins.war,

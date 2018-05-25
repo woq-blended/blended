@@ -17,6 +17,6 @@ BlendedModel(
     Blended.domino
   ),
   plugins = Seq(
-    sbtCompilerPlugin
+    scalaCompilerPlugin
   )
 )

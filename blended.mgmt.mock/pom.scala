@@ -26,7 +26,7 @@ BlendedModel(
     "bundle.namespace" -> "${project.artifactId}"
   ),
   plugins = Seq(
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.exec,
       executions = Seq(
