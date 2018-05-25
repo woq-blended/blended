@@ -549,6 +549,7 @@ object BlendedContainer {
     properties: Map[String, String] = Map.empty,
     features: immutable.Seq[Dependency] = Seq.empty,
     blendedProfileResouces: Gav = null,
+    overlayDir: String = null,
     overlays: Seq[String] = Seq.empty
   ) = {
 
@@ -585,7 +586,7 @@ object BlendedContainer {
                 destDir = "${project.build.directory}/classes/profile",
                 explodeResources = true,
                 createLaunchConfig = "${project.build.directory}/classes/container/launch.conf",
-                overlays = new Config(overlays.map(o => "overlay" -> Some(o)))
+                overlays = new Config(overlays.map(o => "overlay" -> Some(Option(overlayDir).getOrElse("") + "/" + o)))
               )
             )
           )
@@ -671,77 +672,146 @@ object BlendedDockerContainer {
     gav: Gav,
     image: Dependency,
     folder: String,
-    ports: List[Int] = List.empty
-  ) = BlendedModel(
-    gav = gav,
-    packaging = "jar",
-    description = "Packaging the launcher sample container into a docker image.",
-    dependencies = Seq(image),
-
-    properties = Map(
-      "docker.src.type" -> image.`type`,
-      "docker.target" -> folder,
-      "docker.src.version" -> image.gav.version.get,
-      "docker.src.artifactId" -> image.gav.artifactId,
-      "docker.src.classifier" -> image.classifier.get,
-      "docker.src.groupId" -> image.gav.groupId.get
-    ),
-
-    plugins = Seq(
-      Plugin(
-        Plugins.dependency,
-        executions = Seq(
-          Execution(
-            id = "extract-blended-container",
-            phase = "process-resources",
-            goals = Seq(
-              "copy-dependencies"
-            ),
-            configuration = Config(
-              includeScope = "provided",
-              outputDirectory = "${project.build.directory}/docker/${docker.target}"
+    ports: List[Int] = List.empty,
+    overlayDir: String = null,
+    overlays: Seq[String] = Seq.empty
+  ) = {
+  
+    val containerDir = "${project.build.directory}/docker/${docker.target}/container"
+    val imageDir = image.gav.artifactId + "-" + image.gav.version.get
+    val profileDir = imageDir + "/profiles/" + image.gav.artifactId + "/" + image.gav.version.get
+    val profileConf = profileDir + "/profile.conf"
+  
+    val dockerOverlayCmd = 
+      if(overlays.isEmpty) "# no extra overlays" 
+      else "ADD container/" + imageDir + " /opt/${docker.target}"
+  
+    val addPlugins = 
+      if(overlays.isEmpty) Seq() 
+      else Seq(
+        // unpack 
+        Plugin(
+          Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "dependency-unpack-blended-container",
+              phase = "process-resources",
+              goals = Seq(
+                "unpack"
+              ),
+              configuration = Config(
+                artifactItems = Config(
+                  artifactItem = Config(
+                    groupId = image.gav.groupId.get,
+                    artifactId = image.gav.artifactId,
+                    version = image.gav.version.get,
+                    `type` = image.`type`,
+                    classifier = image.classifier.getOrElse(""),
+                    outputDirectory = containerDir,
+                    includes = profileConf
+                  )
+                )
+              )
+            )
+          )
+        ),
+        // materialize overlays config files into profile
+        Plugin(
+          gav = Blended.updaterMavenPlugin,
+          executions = Seq(
+            // Materialize a complete profile based on profile.conf and maven dependencies
+            Execution(
+              id = "updater-add-overlays-to-container",
+              phase = "compile",
+              goals = Seq(
+                "add-overlays"
+              ),
+              configuration = Config(
+                srcProfile = containerDir + "/" + profileConf,
+                destDir = containerDir + "/" + profileDir,
+                createLaunchConfig = containerDir + "/" + imageDir + "/launch.conf",
+                overlaysDir = overlayDir,
+                overlays = new Config(overlays.map(o => "overlay" -> Some(Option(overlayDir).getOrElse("") + "/" + o)))
+              )
             )
           )
         )
+      )    
+    
+  
+    BlendedModel(
+      gav = gav,
+      packaging = "jar",
+      description = "Packaging the launcher sample container into a docker image.",
+      dependencies = Seq(image),
+  
+      properties = Map(
+        "docker.src.type" -> image.`type`,
+        "docker.target" -> folder,
+        "docker.src.version" -> image.gav.version.get,
+        "docker.src.artifactId" -> image.gav.artifactId,
+        "docker.src.classifier" -> image.classifier.get,
+        "docker.src.groupId" -> image.gav.groupId.get
       ),
-      Plugin(
-        gav = Plugins.scala,
-        executions = Seq(
-          Execution(
-            id = "prepare-docker",
-            phase = "generate-resources",
-            goals = Seq(
-              "script"
-            ),
-            configuration = Config(
-              script = scriptHelper + """
-  import java.io.File
-
-  // make Dockerfile
-
-  val dockerfile = new File(project.getBasedir() + "/src/main/docker/""" + folder + """", "Dockerfile")
-
-  val dockerconf =
-    "FROM atooni/blended-base:latest\n" +
-    "MAINTAINER Blended Team version: """ + gav.version.get + """\n" +
-    "ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt\n" +
-    "RUN ln -s /opt/${docker.src.artifactId}-${docker.src.version} /opt/${docker.target}\n" +
-    "RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}\n" +
-    "RUN chown -R blended.blended /opt/${docker.target}\n" +
-    "USER blended\n" +
-    "ENV JAVA_HOME /opt/java\n" +
-    "ENV PATH ${PATH}:${JAVA_HOME}/bin\n" +
-    "ENTRYPOINT [\"/bin/sh\", \"/opt/${docker.target}/bin/blended.sh\"]\n" +
-    """" + ports.map(p => "EXPOSE " + p + "\\n").mkString + """"
-
-  ScriptHelper.writeFile(dockerfile, dockerconf)
-
-  """
+  
+      plugins = sanitizePlugins(addPlugins ++ Seq(
+        Plugin(
+          Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "extract-blended-container",
+              phase = "process-resources",
+              goals = Seq(
+                "copy-dependencies"
+              ),
+              configuration = Config(
+                includeScope = "provided",
+                outputDirectory = "${project.build.directory}/docker/${docker.target}",
+                excludeTransitive = "true"
+              )
             )
           )
-        )
-      ),
-      dockerMavenPlugin
+        ),
+        Plugin(
+          gav = Plugins.scala,
+          executions = Seq(
+            Execution(
+              id = "prepare-docker",
+              phase = "generate-resources",
+              goals = Seq(
+                "script"
+              ),
+              configuration = Config(
+                script = scriptHelper + """
+    import java.io.File
+  
+    // make Dockerfile
+  
+    val dockerfile = new File(project.getBasedir() + "/src/main/docker/""" + folder + """", "Dockerfile")
+  
+    val dockerconf =
+      "FROM atooni/blended-base:latest\n" +
+      "MAINTAINER Blended Team version: """ + gav.version.get + """\n" +
+      "ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt\n" +
+      "RUN ln -s /opt/${docker.src.artifactId}-${docker.src.version} /opt/${docker.target}\n" +
+      """" + dockerOverlayCmd + """\n" +
+      "RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}\n" +
+      "RUN chown -R blended.blended /opt/${docker.target}\n" +
+      "USER blended\n" +
+      "ENV JAVA_HOME /opt/java\n" +
+      "ENV PATH ${PATH}:${JAVA_HOME}/bin\n" +
+      "ENTRYPOINT [\"/bin/sh\", \"/opt/${docker.target}/bin/blended.sh\"]\n" +
+      """" + ports.map(p => "EXPOSE " + p + "\\n").mkString + """"
+  
+    ScriptHelper.writeFile(dockerfile, dockerconf)
+  
+    """
+              )
+            )
+          )
+        ),
+        dockerMavenPlugin
+      ))
     )
-  )
+  }
 }
