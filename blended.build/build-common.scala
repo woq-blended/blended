@@ -731,7 +731,7 @@ object BlendedDockerContainer {
                 destDir = containerDir + "/" + profileDir,
                 createLaunchConfig = containerDir + "/" + imageDir + "/launch.conf",
                 overlaysDir = overlayDir,
-                overlays = new Config(overlays.map(o => "overlay" -> Some(o)))
+                overlays = new Config(overlays.map(o => "overlay" -> Some(Option(overlayDir).getOrElse("") + "/" + o)))
               )
             )
           )

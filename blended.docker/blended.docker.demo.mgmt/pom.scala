@@ -15,5 +15,7 @@ BlendedDockerContainer(
     scope = "provided"
   ),
   folder = "mgmt",
+  overlayDir = "${project.basedir}/../overlays",
+  overlays = Seq("jvm-medium-1.conf"),
   ports = List(1099,1883,9191,8849)
 )
