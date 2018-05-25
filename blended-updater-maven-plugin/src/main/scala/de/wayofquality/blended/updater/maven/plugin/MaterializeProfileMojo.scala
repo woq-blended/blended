@@ -103,7 +103,7 @@ class MaterializeProfileMojo extends AbstractMojo {
     val debugArgs = if (debug) Array("--debug") else Array[String]()
 
     val overlayArgs =
-      // prepend base dir is set
+      // prepend base dir if set
       Option(overlays).getOrElse(ju.Collections.emptyList()).asScala.map { o =>
         Option(overlaysDir) match {
           case None => o
