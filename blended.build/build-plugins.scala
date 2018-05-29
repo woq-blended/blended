@@ -54,7 +54,7 @@ object Plugins {
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.0"
   val trEclipse = "de.tototec" % "de.tobiasroeser.eclipse-maven-plugin" % "0.1.0"
   val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
-  val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
+  val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.3.2"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
