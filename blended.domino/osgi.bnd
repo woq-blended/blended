@@ -8,7 +8,7 @@ Export-Package: \
   ${bundle.namespace}
 
 Import-Package: \
-  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.*;version="${scalaImportVersion}", \
   *
 
 Private-Package:\

@@ -148,7 +148,9 @@ object BlendedModel {
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
       "java.version" -> BlendedVersions.javaVersion,
-      "scala.version" -> scalaVersion.binaryVersion,
+      "scala.version" -> scalaVersion.version,
+      "scala.binary.version" -> scalaVersion.binaryVersion,
+      "scalaImportVersion" -> "[${scala.binary.version},${scala.binary.version}.50)",
       "blended.version" -> BlendedVersions.blendedVersion
     )
 

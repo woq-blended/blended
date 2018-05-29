@@ -155,6 +155,7 @@ val bundleWarPlugin = Plugin(
 )
 
 val scalaCompilerConfig = Config(
+  scalaVersion = BlendedVersions.scalaVersion,
   fork = "true",
   recompileMode = "incremental",
   useZincServer = "true",
