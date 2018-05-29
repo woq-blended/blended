@@ -1,26 +1,16 @@
 package blended.updater.tools.configbuilder
 
-import java.io.File
+import java.io.{BufferedOutputStream, ByteArrayOutputStream, File, FileOutputStream, PrintStream}
+import java.util.regex.{Matcher, Pattern}
 
 import blended.updater.config._
-import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
-import de.tototec.cmdoption.{ CmdOption, CmdlineParser }
-
-import scala.collection.immutable._
-import scala.util.Failure
-import scala.util.Try
-import java.io.PrintWriter
-
-import com.typesafe.config.ConfigParseOptions
-
-import scala.util.Success
 import blended.updater.config.util.Unzipper
-import java.io.ByteArrayOutputStream
-import java.util.regex.Pattern
-import java.io.PrintStream
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
-import java.util.regex.Matcher
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser}
+
+import scala.collection.JavaConverters._
+import scala.collection.immutable._
+import scala.util.{Failure, Success, Try}
 
 object RuntimeConfigBuilder {
 
@@ -89,6 +79,11 @@ object RuntimeConfigBuilder {
       description = "Set the profile base directory to be written via --update-launcher-conf")
     var profileBaseDir: String = "${BLENDED_HOME}/profiles"
 
+    @CmdOption(names = Array("--env-var"), args = Array("key", "value"), maxCount = -1,
+      description = "Add an additional environment variable as a fallback for resolving the config."
+    )
+    def addEnvVar(key: String, value: String) = this.envVars ++= Seq(key -> value)
+    var envVars : Seq[(String, String)] = Seq()
   }
 
   def main(args: Array[String]): Unit = {
@@ -150,7 +145,11 @@ object RuntimeConfigBuilder {
       .map(new File(_).getAbsoluteFile())
 
     val dir = outFile.flatMap(f => Option(f.getParentFile())).getOrElse(configFile.getParentFile())
-    val config = ConfigFactory.parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false)).resolve()
+    val config = ConfigFactory
+      .parseFile(configFile, ConfigParseOptions.defaults().setAllowMissing(false))
+      .withFallback(ConfigFactory.parseMap(options.envVars.toMap.asJava))
+      .resolve()
+
     val unresolvedRuntimeConfig = RuntimeConfigCompanion.read(config).get
     //    val unresolvedLocalRuntimeConfig = LocalRuntimeConfig(unresolvedRuntimeConfig, dir)
 

@@ -4,12 +4,15 @@ import org.apache.maven.plugin.AbstractMojo
 import org.apache.maven.plugins.annotations.Mojo
 import org.apache.maven.plugins.annotations.ResolutionScope
 import java.io.File
+
 import org.apache.maven.plugins.annotations.Component
 import org.apache.maven.project.MavenProject
 import org.apache.maven.plugins.annotations.Parameter
-import blended.updater.tools.configbuilder._
+
 import scala.collection.JavaConverters._
-import java.{ util => ju }
+import java.{util => ju}
+
+import blended.updater.tools.configbuilder.RuntimeConfigBuilder
 
 @Mojo(name = "add-overlays", threadSafe = true, requiresDependencyResolution = ResolutionScope.TEST)
 class AddOverlaysMojo extends AbstractMojo {
@@ -44,6 +47,9 @@ class AddOverlaysMojo extends AbstractMojo {
   @Parameter
   var createLaunchConfig: File = _
 
+  @Parameter
+  var envVars : ju.Properties = new ju.Properties()
+
   override def execute() = {
     getLog.debug("Running Mojo add-overlays")
 
@@ -65,11 +71,15 @@ class AddOverlaysMojo extends AbstractMojo {
 
     val launchConfArgs = Option(createLaunchConfig).toList.flatMap(cf => Seq("--create-launch-config", cf.getPath())).toArray
 
+    val envArgs : Array[String] = envVars.asScala.flatMap { case (k,v) =>
+      Seq("--env-var" , k, v)
+    }.toArray
+
     val profileArgs = Array(
       "-f", srcProfile.getAbsolutePath,
       "-o", targetProfile.getAbsolutePath,
       "--write-overlays-config"
-    ) ++ debugArgs ++ overlayArgs ++ launchConfArgs
+    ) ++ envArgs ++ debugArgs ++ overlayArgs ++ launchConfArgs
 
     getLog().debug("About to run RuntimeConfigBuilder.run with args: " + profileArgs)
 
