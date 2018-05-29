@@ -266,11 +266,17 @@ object BlendedModel {
       )
     ),
     Plugin(
-      gav = Plugins.scala,
+      gav = Plugins.antrun,
       executions = Seq(
-        scalaExecution_logbackXml
+        antrunExecution_logbackXml
       )
     )
+//    Plugin(
+//      gav = Plugins.scala,
+//      executions = Seq(
+//        scalaExecution_logbackXml
+//      )
+//    )
   )
 
   val distMgmt = DistributionManagement(
