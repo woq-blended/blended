@@ -35,8 +35,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    // FIXME: use scalaCompilerPlugin instead, but it currently has test compile errors when used (TR)
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )
