@@ -11,10 +11,10 @@ BlendedModel(
   packaging = "bundle",
   description = "Package the complete Spray API into a bundle.",
   dependencies = Seq(
-    scalaLib % "provided",
-    akkaHttp,
-    akkaHttpCore,
-    akkaParsing
+    Deps.scalaLib % "provided",
+    Deps.akkaHttp,
+    Deps.akkaHttpCore,
+    Deps.akkaParsing
   ),
   plugins = Seq(
     Plugin(
