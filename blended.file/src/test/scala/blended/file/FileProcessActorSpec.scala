@@ -41,6 +41,11 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       val archiveDir = new File(System.getProperty("projectTestOutput") + "/archive")
       archiveDir.mkdirs()
+      val oldArchiveDirSize = archiveDir.listFiles(new FileFilter {
+        override def accept(fileName : File): Boolean = {
+          fileName.getName.startsWith("test.xml")
+        }
+      }).size 
 
       val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor",
@@ -65,7 +70,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         override def accept(fileName : File): Boolean = {
           fileName.getName.startsWith("test.xml")
         }
-      }) should have size 1
+      }) should have size (1 + oldArchiveDirSize)
 
       srcFile.exists() should be (false)
     }
