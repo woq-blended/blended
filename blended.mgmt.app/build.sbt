@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
   organization := BlendedVersions.blendedGroupId,
   licenses += ("Apache 2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
 
-  ensimeScalaVersion in ThisBuild := "2.12.5",
+//  ensimeScalaVersion in ThisBuild := "2.12.5",
 
   resolvers += "Local Maven Repository" at m2Repo,
 
