@@ -5,7 +5,7 @@ import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException}
 import blended.util.ReflectionHelper
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
 import javax.naming.{Context, InitialContext}
