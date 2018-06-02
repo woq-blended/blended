@@ -3,12 +3,12 @@ package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
-import javax.jms.Connection
 
+import javax.jms.Connection
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException}
 
 import scala.concurrent.duration._
 
@@ -191,8 +191,8 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
   }
 
   def handleConnectionError(state : ConnectionState) : Receive = {
-    case ce : ConnectionException => if (ce.provider == provider) {
-      log.info(s"Initiating reconnect after connection exception [${ce.e.getMessage()}]")
+    case ce : ConnectionException => if (ce.vendor == vendor && ce.provider == provider) {
+      log.info(s"Initiating reconnect for [$vendor:$provider] after connection exception [${ce.e.getMessage()}]")
       reconnect(state)
     }
   }
