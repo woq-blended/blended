@@ -61,5 +61,3 @@ case class ConnectionCommand(
   connectPending: Boolean = false,
   reconnectNow : Boolean = false
 )
-
-case class ConnectionException(vendor: String, provider: String, e: JMSException)

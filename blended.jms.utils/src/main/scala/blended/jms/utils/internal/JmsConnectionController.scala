@@ -33,7 +33,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
       } catch {
         case NonFatal(e) => caller ! ConnectResult(t, Left(e))
       }
-    case Disconnect =>
+    case Disconnect(_) =>
       sender() ! ConnectionClosed
   }
 
