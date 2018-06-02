@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import blended.container.context.api.ContainerIdentifierService
 import org.apache.camel.CamelContext
-import org.apache.camel.impl.{DefaultCamelContext, PropertyPlaceholderDelegateRegistry, SimpleRegistry}
+import org.apache.camel.impl.{DefaultCamelContext, SimpleRegistry}
 
 object BlendedCamelContextFactory {
 
