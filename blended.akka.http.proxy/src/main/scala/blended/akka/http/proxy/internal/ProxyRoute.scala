@@ -1,25 +1,16 @@
 package blended.akka.http.proxy.internal
 
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives._
-import scala.concurrent.duration._
-import akka.stream.scaladsl.Sink
-import akka.http.scaladsl.Http
-import akka.stream.scaladsl.Source
-import akka.util.Timeout
 import akka.actor.ActorSystem
+import akka.http.scaladsl.{ConnectionContext, Http}
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{Host, Location}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.stream.ActorMaterializer
-import akka.http.scaladsl.model.headers.Host
-import akka.http.scaladsl.server.RequestContext
-import akka.http.scaladsl.settings.ClientConnectionSettings
-import akka.http.scaladsl.HttpsConnectionContext
 import javax.net.ssl.SSLContext
-import akka.http.scaladsl.ConnectionContext
+
 import scala.concurrent.Future
-import akka.http.scaladsl.server.RouteResult
-import akka.http.scaladsl.model.headers.Location
-import akka.stream.Materializer
+import scala.concurrent.duration._
 
 trait ProxyRoute {
 
@@ -114,7 +105,6 @@ trait ProxyRoute {
       }
 
       ctx.complete(handleResponse(proxyReq, proxyConfig.redirectCount))
-
     }
 
   }

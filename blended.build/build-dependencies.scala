@@ -254,6 +254,7 @@ object Blended {
   val akkaHttp = blended("blended.akka.http")
   val akkaHttpApi = blended("blended.akka.http.api")
   val akkaHttpProxy = blended("blended.akka.http.proxy")
+  val akkaHttpJmsQueue = blended("blended.akka.http.jmsqueue")
   val akkaHttpSampleHelloworld = blended("blended.akka.http.sample.helloworld")
   val camelUtils = blended("blended.camel.utils")
   val containerContextApi = blended("blended.container.context.api")
