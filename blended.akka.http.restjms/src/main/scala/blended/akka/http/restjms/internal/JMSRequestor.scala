@@ -6,7 +6,6 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import org.apache.camel.{CamelContext, ExchangePattern}
 import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
@@ -65,7 +64,7 @@ trait JMSRequestor {
                     )
                   )
 
-                case foundType :: xs =>
+                case _ =>
 
                   val opNum = opCounter.incrementAndGet()
 
