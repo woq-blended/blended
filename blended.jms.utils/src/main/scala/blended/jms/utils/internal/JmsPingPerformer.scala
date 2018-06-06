@@ -26,15 +26,14 @@ private [internal] trait PingOperations { this : JMSSupport =>
 
   def closeJmsResources(info: PingInfo) : Unit = {
     log.info(s"Closing JMS resources for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-    info.consumer.foreach{ c =>
+    try {
+      info.consumer.foreach(_.close())
+    } finally {
       try {
-        c.close()
+        info.producer.foreach(_.close())
       } finally {
-        try {
-          info.producer.foreach(_.close())
-        } finally {
-          info.session.foreach(_.close())
-        }
+        log.debug(s"closing session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+        info.session.foreach(_.close())
       }
     }
   }
