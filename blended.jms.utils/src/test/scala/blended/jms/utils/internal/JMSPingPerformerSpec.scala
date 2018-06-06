@@ -1,8 +1,8 @@
-package blended.jms.utils
+package blended.jms.utils.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import blended.jms.utils.internal.{ExecutePing, JmsPingPerformer, PingResult}
+import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, JMSSupport}
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
 
 import scala.concurrent.duration._
@@ -21,7 +21,7 @@ class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
 
       val jmsCfg = BlendedJMSConnectionConfig.defaultConfig.copy(vendor = "amq", provider = "amq", clientId = "jmsPing")
 
-      val testActor = system.actorOf(JmsPingPerformer.props(jmsCfg, con))
+      val testActor = system.actorOf(JmsPingPerformer.props(jmsCfg, con, new DefaultPingOperations()))
       val probe = TestProbe()
 
       testActor ! ExecutePing(probe.ref)
@@ -35,7 +35,7 @@ class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
   "The JMSPingPerformer should " - {
 
     "perform a queue based ping" in {
-      assert(pingTest(cfg.copy(clientId = "jmsPing")).isEmpty)
+      assert(pingTest(cfg.copy(clientId = "jmsPing", pingDestination = "queue:blended.ping")).isEmpty)
     }
 
     "perform a topic based ping" in {

@@ -357,7 +357,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
           log.info(s"Checking JMS connection for provider [$vendor:$provider]")
           pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
 
-          pinger.foreach { _ ! JmsPingPerformer.props(config, c) }
+          pinger.foreach { _ ! JmsPingPerformer.props(config, c, new DefaultPingOperations()) }
         case Some(a) =>
           log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
       }

@@ -26,10 +26,11 @@ BlendedModel(
     Deps.log4s,
     Deps.scalaTest % "test",
     Deps.akkaSlf4j % "test",
-    Deps.mockitoAll % "test",
     Deps.activeMqBroker % "test",
     Deps.activeMqKahadbStore % "test",
     Deps.akkaTestkit % "test",
+    Deps.logbackCore % "test",
+    Deps.logbackClassic % "test",
     Blended.camelUtils % "test",
     Blended.testSupport % "test"
   ),

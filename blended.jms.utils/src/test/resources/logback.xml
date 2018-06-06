@@ -10,6 +10,6 @@
         <appender-ref ref="STDOUT" />
     </root>
 
-    <!-- logger name="blended" level="DEBUG" /-->
+    <logger name="blended" level="DEBUG" />
 
 </configuration>
