@@ -8,12 +8,13 @@ import javax.jms._
 import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, blocking}
+import scala.concurrent.{ExecutionContext, Future, blocking}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 trait HttpQueueService {
 
+  implicit val eCtxt : ExecutionContext
   val qConfig : HttpQueueConfig
   def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T) : T
 
@@ -94,14 +95,20 @@ trait HttpQueueService {
         blocking {
           try {
             consumer.foreach(_.close())
+          } catch {
+            case NonFatal(t) => log.warn(s"Error closing consumer [${t.getMessage()}]")
           }
 
           try {
             sess.foreach(_.close())
+          } catch {
+            case NonFatal(t) => log.warn(s"Error closing session [${t.getMessage()}]")
           }
 
           try {
             conn.foreach(_.close())
+          } catch {
+            case NonFatal(t) => log.warn(s"Error closing connection [${t.getMessage()}]")
           }
         }
       }
