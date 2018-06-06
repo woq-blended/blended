@@ -55,6 +55,7 @@ BlendedModel(
         "blended.mgmt.app",
         "blended.akka.http.jmsqueue",
         "blended.akka.http.proxy",
+        "blended.akka.http.restjms",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",
