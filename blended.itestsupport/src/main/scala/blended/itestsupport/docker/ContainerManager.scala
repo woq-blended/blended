@@ -83,12 +83,16 @@ class ContainerManager extends Actor with ActorLogging with Docker { this:  Dock
   }
 
   private[this] def configureDockerContainer(cut : Map[String, ContainerUnderTest]) : Map[String, ContainerUnderTest] = {
-    val cuts = cut.values.map { ct =>
-      search(searchByTag(ct.imgPattern)).zipWithIndex.map { case (img, idx) =>
+    val cuts = cut.values.flatMap { ct =>
+
+      val searchImg = searchByTag(ct.imgPattern)
+      val found = search(searchImg)
+
+      found.zipWithIndex.map { case (img, idx) =>
         val ctName = s"${ct.ctName}_$idx"
         ct.copy(ctName = ctName, dockerName = s"${ctName}_${System.currentTimeMillis}", imgId = img.getId)
       }
-    }.flatten
+    }
     
     cuts.map { ct => (ct.ctName, ct) }.toMap
   }
