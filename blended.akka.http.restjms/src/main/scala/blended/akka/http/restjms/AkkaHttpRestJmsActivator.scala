@@ -40,7 +40,7 @@ class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching 
         val operations = RestJMSConfig.fromConfig(cfg.config).operations
         val svc = new SimpleRestJmsService(operations, cCtxt, materializer, eCtxt)
 
-        SimpleHttpContext(cfg.config.getString("context"), svc.httpRoute).providesService[HttpContext]
+        SimpleHttpContext(cfg.config.getString("webcontext"), svc.httpRoute).providesService[HttpContext]
 
         onStop {
           cCtxt.stop()

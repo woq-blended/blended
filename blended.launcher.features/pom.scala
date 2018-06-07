@@ -209,12 +209,14 @@ val features = Seq(
     )
   ),
   FeatureDef(
-    "blended-akka-http-proxy",
+    "blended-akka-http-modules",
     features = Seq(
       "blended-akka-http"
     ),
     bundles = Seq(
-      FeatureBundle(dependency = Blended.akkaHttpProxy)
+      FeatureBundle(dependency = Blended.akkaHttpProxy),
+      FeatureBundle(dependency = Blended.akkaHttpRestJms),
+      FeatureBundle(dependency = Blended.akkaHttpJmsQueue)
     )
   ),
   FeatureDef("blended-spring", bundles = Seq(
@@ -231,14 +233,12 @@ val features = Seq(
     "blended-samples",
     features = Seq(
       "blended-akka-http",
-      "blended-spray",
       "blended-activemq",
       "blended-camel"
     ),
     bundles = Seq(
       FeatureBundle(dependency = Blended.activemqDefaultbroker, start = true),
       FeatureBundle(dependency = Blended.activemqClient, start = true),
-      FeatureBundle(dependency = Dependency(gav = Blended.samplesSprayHelloworld, `type` = "war"), start = true),
       FeatureBundle(dependency = Blended.samplesCamel, start = true),
       FeatureBundle(dependency = Blended.samplesJms, start = true),
       FeatureBundle(dependency = Blended.file),
