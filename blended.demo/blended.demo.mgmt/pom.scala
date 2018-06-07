@@ -17,7 +17,6 @@ BlendedContainer(
     Feature("blended-commons"),
     Feature("blended-jetty"),
     Feature("blended-security"),
-    Feature("blended-spray"),
     Feature("blended-hawtio"),
     Feature("blended-spring"),
     Feature("blended-activemq"),
@@ -26,7 +25,7 @@ BlendedContainer(
     Feature("blended-mgmt-client"),
     Feature("blended-mgmt-server"),
     Feature("blended-akka-http"),
-    Feature("blended-akka-http-proxy"),
+    Feature("blended-akka-http-modules"),
     Feature("blended-ssl")
   )
 )

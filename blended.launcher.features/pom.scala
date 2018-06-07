@@ -117,7 +117,7 @@ val features = Seq(
     "blended-mgmt-server",
     features = Seq(
       "blended-base",
-      "blended-spray",
+      "blended-akka-http",
       "blended-security",
       "blended-ssl"
     ),

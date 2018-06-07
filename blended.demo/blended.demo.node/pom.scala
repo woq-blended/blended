@@ -12,7 +12,7 @@ BlendedContainer(
   blendedProfileResouces = Blended.demoNodeResources,
   features = Seq(
     Feature("blended-base-felix"),
-    //Feature("blended-base-equinox"),
+    Feature("blended-base-equinox"),
     Feature("blended-base"),
     Feature("blended-commons"),
     Feature("blended-ssl"),
