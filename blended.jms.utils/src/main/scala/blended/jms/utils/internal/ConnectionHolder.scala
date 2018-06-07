@@ -163,7 +163,14 @@ case class ConnectionHolder(
 
   def close() : Unit = {
     log.info(s"Closing underlying connection for provider [$provider]")
-    conn.foreach(_.connection.close())
+    conn.foreach { c =>
+      try {
+        c.connection.close()
+      } catch {
+        case NonFatal(e) =>
+          log.warn(e.getMessage())
+      }
+    }
     conn = None
   }
 }

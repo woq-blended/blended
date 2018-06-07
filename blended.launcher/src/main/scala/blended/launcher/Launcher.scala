@@ -1,27 +1,24 @@
 package blended.launcher
 
-import java.io.{ File, FileOutputStream }
+import java.io.{File, FileOutputStream, PrintWriter, StringWriter}
 import java.net.URLClassLoader
-import java.nio.file.{ Files, Paths }
-import java.util.{ Hashtable, Properties, ServiceLoader, UUID }
+import java.nio.file.{Files, Paths}
+import java.util.{Hashtable, Properties, ServiceLoader, UUID}
 
 import blended.launcher.config.LauncherConfig
-import blended.launcher.internal.{ ARM, Logger }
+import blended.launcher.internal.{ARM, Logger}
 import blended.updater.config._
-import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
-import de.tototec.cmdoption.{ CmdOption, CmdlineParser, CmdlineParserException }
-import org.osgi.framework.{ Bundle, Constants, FrameworkEvent, FrameworkListener }
-import org.osgi.framework.launch.{ Framework, FrameworkFactory }
-import org.osgi.framework.startlevel.{ BundleStartLevel, FrameworkStartLevel }
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+import de.tototec.cmdoption.{CmdOption, CmdlineParser, CmdlineParserException}
+import org.osgi.framework.launch.{Framework, FrameworkFactory}
+import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
+import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
 
 import scala.collection.JavaConverters._
-import scala.collection.immutable.{ Map, Seq }
-import scala.util.Try
+import scala.collection.immutable.{Map, Seq}
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
-import scala.util.Success
-import scala.util.Failure
-import java.nio.file.NoSuchFileException
 
 object Launcher {
 
@@ -503,6 +500,14 @@ class Launcher private (config: LauncherConfig) {
           bundle.bundle.start()
         }
         log.info(s"State of ${bundle.bundle.getSymbolicName}: ${bundle.bundle.getState}")
+
+        result match {
+          case Success(_) =>
+          case Failure(t) =>
+            val sw = new StringWriter()
+            t.printStackTrace(new PrintWriter(sw))
+            log.error("\n" + sw.getBuffer().toString() + "\n")
+        }
         bundle -> result
       }
       log.info(s"${startedBundles.filter(_._2.isSuccess).size} bundles started");

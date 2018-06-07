@@ -12,8 +12,6 @@ class OsgiHttpQueueService(
   override implicit val eCtxt: ExecutionContext
 ) extends HttpQueueService  with ServiceConsuming {
   override def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T): T = {
-    withAdvancedService[ConnectionFactory, T](s"&(vendor=$vendor)(provider=$provider)") { ocf =>
-      f(ocf)
-    }
+    withAdvancedService[ConnectionFactory, T](s"(&(vendor=$vendor)(provider=$provider))") { f(_) }
   }
 }

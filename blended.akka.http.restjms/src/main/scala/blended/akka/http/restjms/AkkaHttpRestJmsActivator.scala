@@ -19,7 +19,7 @@ class AkkaHttpRestJmsActivator extends DominoActivator with ActorSystemWatching 
       val vendor = cfg.config.getString("vendor")
       val provider = cfg.config.getString("provider")
 
-      whenAdvancedServicePresent[ConnectionFactory](s"&(vendor=$vendor)(provider=$provider)") { cf =>
+      whenAdvancedServicePresent[ConnectionFactory](s"(&(vendor=$vendor)(provider=$provider))") { cf =>
         val cCtxt : CamelContext = {
           val answer = BlendedCamelContextFactory.createContext(
             name = cfg.bundleContext.getBundle().getSymbolicName(),

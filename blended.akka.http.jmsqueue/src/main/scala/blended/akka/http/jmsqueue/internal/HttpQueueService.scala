@@ -54,7 +54,7 @@ trait HttpQueueService {
               headers = propsToHeaders(m),
               entity = HttpEntity(ContentTypes.`application/octet-stream`, body)
             )
-          case Some(m) =>
+          case Some(_) =>
             log.debug(s"Message received on queue [${result.queue}] for provider [${result.vendor}:${result.provider}] is not a text or binary message. Message discarded ...")
             HttpResponse(StatusCodes.InternalServerError)
         }
@@ -142,11 +142,12 @@ trait HttpQueueService {
                   log.warn(s"No queues configured for path [$qPath].")
                   complete(StatusCodes.Unauthorized)
                 case Some(((v,p),c)) =>
-                  if (c.queueNames.contains(queue))
+                  if (c.queueNames.contains(queue)) {
                     complete(receive(v, p, queue))
-                  else
+                  } else {
                     log.warn(s"Queue [$queue] is not configured for [$v:$p] at path [$qPath]")
                     complete(StatusCodes.Unauthorized)
+                  }
               }
             case _ =>
               log.warn(s"Request [${path.mkString(("/"))}] does not match the form 'path/queue'")

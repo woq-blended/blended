@@ -5,8 +5,6 @@ import org.scalatest.FreeSpec
 
 class HttpQueueConfigSpec extends FreeSpec {
 
-  private[this] val log = org.log4s.getLogger
-
   "The HttpQueueConfig should" - {
 
     "read the config correctly" in {
