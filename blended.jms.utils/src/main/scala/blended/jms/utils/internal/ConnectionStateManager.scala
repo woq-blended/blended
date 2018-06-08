@@ -27,32 +27,32 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
 
   type StateReceive = ConnectionState => Receive
 
-  private[this] val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
+  val df = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS")
 
-  private[this] implicit val eCtxt = context.system.dispatcher
-  private[this] val provider = config.provider
-  private[this] val vendor = config.vendor
+  implicit val eCtxt = context.system.dispatcher
+  val provider = config.provider
+  val vendor = config.vendor
 
-  private[this] var conn : Option[BlendedJMSConnection] = None
+  var conn : Option[BlendedJMSConnection] = None
 
-  private[this] var currentReceive : StateReceive = disconnected()
-  private[this] var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
+  var currentReceive : StateReceive = disconnected()
+  var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
 
-  private[this] var pinger : Option[ActorRef] = None
+  var pinger : Option[ActorRef] = None
 
   // the retry Schedule is the time interval we retry a connection after a failed connect attempt
   // usually that is only a fraction of the ping interval (i.e. 5 seconds)
-  private[this] val retrySchedule = config.retryInterval.seconds
+  val retrySchedule = config.retryInterval.seconds
 
   // The schedule is the interval for the normal connection ping
-  private[this] val schedule = Duration(config.pingInterval, TimeUnit.SECONDS)
+  val schedule = Duration(config.pingInterval, TimeUnit.SECONDS)
 
   // The ping timer is used to schedule ping messages over the underlying connection to check it's
   // health
-  private[this] var pingTimer : Option[Cancellable] = None
+  var pingTimer : Option[Cancellable] = None
 
   // To this actor we delegate all connect and close operations for the underlying JMS provider
-  private[this] val controller = context.actorOf(JmsConnectionController.props(holder))
+  val controller = context.actorOf(JmsConnectionController.props(holder))
 
   // If something causes an unexpected restart, we want to know
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
@@ -97,6 +97,8 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
     case cc : CheckConnection =>
       pingTimer = None
       conn.foreach( ping )
+
+    case d @ Disconnect(_) => disconnect(state)
 
     // For a successful ping we log the event and schedule the next connectionCheck
     case PingResult(Right(m)) =>
@@ -167,13 +169,14 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
     // All good, happily disconnected
     case ConnectionClosed =>
       conn = None
-      checkConnection(schedule, true)
+      checkConnection(config.minReconnect.seconds, true)
       switchState(
         disconnected(),
         publishEvents(state, s"Connection for provider [$vendor:$provider] successfully closed.")
           .copy(status = DISCONNECTED, lastDisconnect = Some(new Date()))
       )
 
+      val n = 2
     // Once we encounter a timeout for a connection close we initiate a Container Restart via the monitor
     case CloseTimeout =>
       val e = new Exception(s"Unable to close connection for provider [$vendor:$provider] in [${config.minReconnect}]s]. Restarting container ...")
@@ -182,7 +185,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
 
   def jmxOperations(state : ConnectionState) : Receive = {
     case cmd : ConnectionCommand =>
-      if (cmd.provider == provider) {
+      if (cmd.vendor == vendor && cmd.provider == provider) {
         if (cmd.disconnectPending)
           disconnect(state)
         else if (cmd.connectPending)
@@ -242,7 +245,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
 
     val remaining : Double = s.lastDisconnect match {
       case None => 0
-      case Some(l) => config.minReconnect * 1000.0 - (System.currentTimeMillis() - l.getTime())
+      case Some(l) => config.minReconnect.seconds.toMillis - (System.currentTimeMillis() - l.getTime())
     }
 
     // if we were ever disconnected from the JMS provider since the container start we will check
@@ -346,7 +349,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
 
   private[this] def reconnect(s: ConnectionState) : Unit = {
     disconnect(s)
-    checkConnection(retrySchedule)
+    checkConnection((config.minReconnect + 1).seconds)
   }
 
   private[this] def ping(c: Connection) : Unit = {

@@ -1,19 +1,19 @@
 package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 
-class ConnectionMonitor(provider: String, clientId: String) extends ConnectionMonitorMBean {
+class ConnectionMonitor(vendor: String, provider: String, clientId: String) extends ConnectionMonitorMBean {
 
   private[this] val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
   private[this] var state : ConnectionState = ConnectionState(provider = provider).copy(status = ConnectionState.DISCONNECTED)
 
-  private[this] var cmd : ConnectionCommand = ConnectionCommand(provider = provider)
+  private[this] var cmd : ConnectionCommand = ConnectionCommand(vendor = vendor, provider = provider)
 
   override def getProvider(): String = provider
 
   override def getClientId(): String = clientId
 
   def getCommand() : ConnectionCommand = cmd
-  def resetCommand() : Unit = { cmd = ConnectionCommand(provider = provider) }
+  def resetCommand() : Unit = { cmd = ConnectionCommand(vendor = vendor, provider = provider) }
 
   def setState(newState: ConnectionState) : Unit = { state = newState }
   def getState() : ConnectionState = state
