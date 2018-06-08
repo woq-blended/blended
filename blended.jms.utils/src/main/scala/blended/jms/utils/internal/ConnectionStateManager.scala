@@ -252,7 +252,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
         currentReceive,
         publishEvents(s, s"Container is waiting to reconnect for provider [$vendor:$provider], remaining wait time [${remaining / 1000.0}]s")
       )
-      checkConnection(schedule)
+      checkConnection((remaining + 1).seconds)
     } else {
       switchState(connecting(), connect(s))
     }

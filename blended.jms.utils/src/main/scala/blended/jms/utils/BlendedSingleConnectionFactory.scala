@@ -34,7 +34,7 @@ class BlendedSingleConnectionFactory(
 
   override val clientId : String = config.clientId
 
-  val holder = new ConnectionHolder(
+  val holder = new BlendedConnectionHolder(
     config = config,
     system = system
   )

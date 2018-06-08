@@ -11,15 +11,26 @@ import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException
 import javax.naming.{Context, InitialContext}
 import org.slf4j.LoggerFactory
 
+import scala.util.Try
 import scala.util.control.NonFatal
 
-case class ConnectionHolder(
+trait ConnectionHolder {
+  val vendor : String
+  val provider : String
+  def getConnection() : Option[BlendedJMSConnection]
+
+  def connect() : Connection
+
+  def close() : Try[Unit]
+}
+
+case class BlendedConnectionHolder(
   config : BlendedJMSConnectionConfig,
   system : ActorSystem
-) {
+) extends ConnectionHolder {
 
-  lazy val vendor : String = config.vendor
-  lazy val provider : String = config.provider
+  override val vendor : String = config.vendor
+  override val provider : String = config.provider
 
   private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
   private[this] var conn : Option[BlendedJMSConnection] = None
@@ -110,6 +121,7 @@ case class ConnectionHolder(
 
   def getConnection() : Option[BlendedJMSConnection] = conn
 
+  @throws[JMSException]
   def connect() : Connection = conn match {
     case Some(c) => c
     case None =>
@@ -161,15 +173,10 @@ case class ConnectionHolder(
       }
   }
 
-  def close() : Unit = {
+  def close() : Try[Unit] = Try {
     log.info(s"Closing underlying connection for provider [$provider]")
     conn.foreach { c =>
-      try {
-        c.connection.close()
-      } catch {
-        case NonFatal(e) =>
-          log.warn(e.getMessage())
-      }
+      c.connection.close()
     }
     conn = None
   }
