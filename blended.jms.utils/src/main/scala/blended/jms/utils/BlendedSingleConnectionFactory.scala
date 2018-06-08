@@ -91,5 +91,4 @@ class BlendedSingleConnectionFactory(
     log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
-
 }
