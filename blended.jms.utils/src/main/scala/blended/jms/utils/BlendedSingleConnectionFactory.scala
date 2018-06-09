@@ -32,10 +32,11 @@ class BlendedSingleConnectionFactory(
   private[this] val monitorName = s"Monitor-$vendor-$provider"
   private[this] val stateMgrName = s"JMS-$vendor-$provider"
 
-  val holder = new ConnectionHolder(
+  override val clientId : String = config.clientId
+
+  val holder = new BlendedConnectionHolder(
     config = config,
-    system = system,
-    bundleContext = bundleContext
+    system = system
   )
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
@@ -45,7 +46,7 @@ class BlendedSingleConnectionFactory(
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
         val jmxServer = ManagementFactory.getPlatformMBeanServer
-        val jmxBean = new ConnectionMonitor(provider, clientId)
+        val jmxBean = new ConnectionMonitor(vendor, provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
         jmxServer.registerMBean(jmxBean, objName)
@@ -90,6 +91,4 @@ class BlendedSingleConnectionFactory(
     log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
-
-  override val clientId : String = config.clientId
 }

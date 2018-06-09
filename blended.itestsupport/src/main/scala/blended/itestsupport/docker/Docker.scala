@@ -50,8 +50,14 @@ trait Docker {
   implicit val config  : Config
   implicit val client  : DockerClient
 
-  def searchByTag(s: String) = { img: Image =>
-    img.getRepoTags.exists(_ matches s)
+  def searchByTag(s: String): Image => Boolean = { img: Image =>
+    val tags : Array[String] = Option(img.getRepoTags).getOrElse(Array.empty)
+    val matched = tags.exists(_.matches(s))
+
+    if (matched)
+      logger.info(s"Image [$img] matches [$s]")
+
+    matched
   }
 
   def images : List[Image] =
@@ -60,7 +66,9 @@ trait Docker {
   def running : List[Container] =
     JListWrapper(client.listContainersCmd().exec()).toList
 
-  def search(f : Image => Boolean) =
-    images.filter(f)
+  def search(f : Image => Boolean) = {
+    val li = images
+    li.filter(f)
+  }
 
 }

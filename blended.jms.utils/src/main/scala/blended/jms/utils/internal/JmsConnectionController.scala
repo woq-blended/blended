@@ -44,7 +44,7 @@ class JmsConnectionController(holder: ConnectionHolder) extends Actor with Actor
       implicit val timeout = Timeout(t + 1.second)
       val caller = sender()
 
-      val closer = context.actorOf(Props(ConnectionCloseActor(holder)))
+      val closer = context.actorOf(Props(ConnectionCloseActor.props(holder)))
       closer.ask(Disconnect(t)).onComplete {
         case Success(r) =>
           context.become(disconnected)

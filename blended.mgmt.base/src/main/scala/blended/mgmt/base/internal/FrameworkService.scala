@@ -23,6 +23,9 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
 
   override def restartContainer(reason: String, saveLogs: Boolean): Unit = {
 
+    val cfg = ctContext.getContainerConfig()
+    val saveLogsPath = "blended.saveLogsOnRestart"
+
     try {
       val frameworkBundle = bundleContext.getBundle(0)
 
@@ -41,7 +44,9 @@ class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext
 
         log.warn(msg)
 
-        if (saveLogs) createLogArchive(now)
+        val saveLogsConfigured : Boolean = cfg.hasPath(saveLogsPath) && cfg.getBoolean(saveLogsPath)
+
+        if (saveLogs & saveLogsConfigured) createLogArchive(now)
 
         frameworkBundle.update()
       } else {

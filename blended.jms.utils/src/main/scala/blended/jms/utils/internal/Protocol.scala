@@ -55,7 +55,8 @@ case class ConnectResult(ts: Date, r : Either[Throwable, Connection])
 case class ConnectionStateChanged(state: ConnectionState)
 
 case class ConnectionCommand(
-  provider: String = "",
+  vendor: String,
+  provider: String,
   maxEvents: Int = 0,
   disconnectPending : Boolean = false,
   connectPending: Boolean = false,
