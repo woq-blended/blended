@@ -1,11 +1,10 @@
-package blended.jms.utils
+package blended.jms.utils.internal
 
 import java.util.Date
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
-import blended.jms.utils.internal._
 import javax.jms.JMSException
 import org.scalatest.FreeSpecLike
 
