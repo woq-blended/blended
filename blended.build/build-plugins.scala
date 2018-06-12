@@ -47,6 +47,7 @@ object Plugins {
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
   val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.0.1"
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
+  val download = "com.googlecode.maven-download-plugin" % "download-maven-plugin" % "1.3.0"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val lifecycle = "org.eclipse.m2e" % "lifecycle-mapping" % "1.0.0"

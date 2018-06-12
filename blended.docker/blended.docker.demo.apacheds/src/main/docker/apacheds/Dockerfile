@@ -9,7 +9,7 @@ ADD files /opt/apacheds
 
 RUN yum install -y -q openldap-clients gettext vim
 
-ADD http://apache.proserve.nl//directory/apacheds/dist/2.0.0-M24/apacheds-2.0.0-M24-x86_64.rpm /tmp
+ADD apacheds-2.0.0-M24-x86_64.rpm /tmp
 
 RUN yum install -y -q /tmp/apacheds-2.0.0-M24-x86_64.rpm
 
