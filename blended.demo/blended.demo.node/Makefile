@@ -1,0 +1,1 @@
+../blended.demo.mgmt/Makefile
