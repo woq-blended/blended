@@ -192,8 +192,7 @@ val features = Seq(
     ),
     bundles = Seq(
       FeatureBundle(dependency = javaxServlet31),
-      FeatureBundle(dependency = Blended.sprayApi),
-      FeatureBundle(dependency = Blended.spray)
+      FeatureBundle(dependency = Blended.sprayApi)
     )
   ),
   FeatureDef(
