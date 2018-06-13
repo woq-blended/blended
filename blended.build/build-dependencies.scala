@@ -300,7 +300,6 @@ object Blended {
   val samplesReactor = blended("blended.samples.reactor")
   val samplesCamel = blended("blended.samples.camel")
   val samplesJms = blended("blended.samples.jms")
-  val samplesSprayHelloworld = blended("blended.samples.spray.helloworld")
   val security = blended("blended.security")
   val securityAkkaHttp = blended("blended.security.akka.http")
   val securityBoot = blended("blended.security.boot")
