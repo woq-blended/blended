@@ -23,7 +23,6 @@ BlendedModel(
     Blended.launcher,
     Blended.containerContextApi,
     Blended.akka,
-    Blended.sprayApi,
     Deps.akkaTestkit % "test",
     Deps.scalaTest % "test",
     Deps.felixFramework % "test",
