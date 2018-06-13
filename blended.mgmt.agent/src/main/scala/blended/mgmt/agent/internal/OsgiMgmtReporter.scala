@@ -4,12 +4,9 @@ import akka.actor.{ Cancellable, Props }
 import akka.event.LoggingReceive
 import akka.pattern.pipe
 import blended.akka.{ OSGIActor, OSGIActorConfig }
-import blended.spray.SprayPrickleSupport
 import blended.updater.config.{ ContainerInfo, ContainerRegistryResponseOK, ServiceInfo }
 import com.typesafe.config.Config
 import org.slf4j.LoggerFactory
-import spray.client.pipelining._
-import spray.http.HttpRequest
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
