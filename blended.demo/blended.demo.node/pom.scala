@@ -24,6 +24,7 @@ BlendedContainer(
     Feature("blended-security"),
     Feature("blended-mgmt-client"),
     Feature("blended-akka-http"),
-    Feature("blended-samples")
+    Feature("blended-samples"),
+    Feature("blended-spray")
   )
 )
