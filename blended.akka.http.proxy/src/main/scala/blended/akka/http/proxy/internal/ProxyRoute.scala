@@ -75,7 +75,7 @@ trait ProxyRoute {
       val proxyReq = HttpRequest(method = request.method, uri = uri, entity = request.entity).withHeaders(headers)
       log.debug(s"Final http request [${proxyReq}]")
 
-      def handleResponse(request: HttpRequest, redirectCount: Int): Future[HttpResponse] = simpleClient(request).flatMap { response =>
+      def handleResponse(request: HttpRequest, redirectCount: Int, config: ProxyTarget): Future[HttpResponse] = simpleClient(request).flatMap { response =>
         response.status match {
 
           case e: StatusCodes.ServerError =>
@@ -90,21 +90,37 @@ trait ProxyRoute {
             val newUri = response.header[Location].get.uri
             val newRedirectCount = redirectCount - 1
 
-            log.debug(s"${r}. Retry request with new URI [${newUri}] and redirectCount [${newRedirectCount}]")
+            val newRequest : HttpRequest = config.redirectHeaderPolicy match {
+              case RedirectHeaderPolicy.Client_Only =>
+                request
+              case RedirectHeaderPolicy.Redirect_Merge =>
+                log.debug("Merging headers from redirect address into request header.")
+
+                response.headers.foldLeft(request) { (r, h) =>
+                  if (!r.getHeader(h.name()).isPresent) r.withHeaders(h) else r
+                }
+              case RedirectHeaderPolicy.Redirect_Replace =>
+                log.debug("Replacing request headers with headers from redirect address")
+                val oldHeaders = request.headers
+                oldHeaders.foreach{ h => request.removeHeader(h.name())}
+                request.withHeaders(response.headers)
+            }
+
+            log.debug(s"${r}. Retry request with new URI [${newUri}], headers [${newRequest.headers}] and redirectCount [${newRedirectCount}]")
 
             // Always consume the response entity streams
             response.discardEntityBytes()
 
             // create new request and retry
-            handleResponse(request.withUri(newUri), newRedirectCount)
+            handleResponse(newRequest.withUri(newUri), newRedirectCount, config)
 
           case s =>
-            log.debug(s"${s}. Received upstream response [$response]")
+            log.debug(s"${s}. Received upstream response with status [${response.status}] and headers [${response.headers}]")
             Future.successful(response)
         }
       }
 
-      ctx.complete(handleResponse(proxyReq, proxyConfig.redirectCount))
+      ctx.complete(handleResponse(proxyReq, proxyConfig.redirectCount, proxyConfig))
     }
 
   }

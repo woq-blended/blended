@@ -175,7 +175,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           path = "path",
           uri = "http://heise.de",
           timeout = 1,
-          redirectCount = 0
+          redirectCount = 0,
+          redirectHeaderPolicy = RedirectHeaderPolicy.Redirect_Replace
         )
         override val sslContext = None
       }
@@ -202,7 +203,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           path = "path",
           uri = "http://heise.de",
           timeout = 1,
-          redirectCount = 1
+          redirectCount = 1,
+          redirectHeaderPolicy = RedirectHeaderPolicy.Redirect_Replace
         )
         override val sslContext = None
       }
