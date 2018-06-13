@@ -103,7 +103,9 @@ val eclipseProfile = Profile(
       Plugin(
         Plugins.trEclipse,
         configuration = Config(
-          alternativeOutput = "target-ide"
+          // alternativeOutput = "target-ide"
+          outputDirectory = "${basedir}/target-ide/classes",
+          testOutputDirectory = "${basedir}/target-ide/test-classes"
         )
       )
     )
