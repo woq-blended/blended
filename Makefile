@@ -24,8 +24,12 @@ light:
 
 .PHONY: docker-clean # Cleanup old images from docker registry
 docker-clean:
-	for vm in $(docker ps -aq); do docker rm -f $vm; done
-	for image in $(docker images | grep none | awk '{print $3;}'); do docker rmi -f $image; done
+	for vm in $$(docker ps -aq); do \
+		docker rm -f $$vm; \
+	done
+	for image in $$(docker images | grep none | awk '{print $$3;}'); \
+		do docker rmi -f $$image; \
+	done
 
 .PHONY: help # List of targets with descriptions
 help:
