@@ -14,7 +14,6 @@ BlendedModel(
     scalaLib % "provided",
     Blended.akka,
     domino,
-    sprayJson,
     slf4j,
     scalaTest % "test",
     Blended.testSupport % "test",
