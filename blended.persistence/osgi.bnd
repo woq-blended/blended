@@ -2,18 +2,11 @@ Bundle-Version: \
   ${project.version}
 
 Bundle-SymbolicName: \
-  ${bundle.symbolicName}; singleton:=true
+  ${bundle.symbolicName}
 
 Export-Package: \
-  ${bundle.namespace}, \
-  ${bundle.namespace}.protocol
+  ${bundle.namespace}
 
 Import-Package: \
   scala.*;version="${scalaImportVersion}", \
   *
-
-Private-Package:\
-  ${bundle.namespace}.internal.*
-
-Bundle-Activator: \
-  ${bundle.namespace}.internal.PersistenceActivator
