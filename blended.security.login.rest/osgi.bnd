@@ -7,10 +7,6 @@ Bundle-SymbolicName:\
 Bundle-Classpath: WEB-INF/classes,.
 
 Import-Package: \
-  spray.routing,\
-  spray.routing.directives,\
-  spray.servlet,\
-  shapeless,\
   *
 
 Private-Package: \
