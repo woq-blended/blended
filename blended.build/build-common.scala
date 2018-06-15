@@ -115,13 +115,13 @@ val eclipseProfile = Profile(
 /**
  * Removed duplicate plugins by merging their configurations and executions.
  */
-def sanitizePlugins(plugins: Seq[Plugin]): Seq[Plugin] = plugins.foldLeft(Seq[Plugin]()){(l,r) =>
+def sanitizePlugins(plugins: Seq[Plugin]): Seq[Plugin] = plugins.foldLeft(Seq[Plugin]()) { (l, r) =>
   l.find(p => p.gav == r.gav) match {
     case None => l ++ Seq(r)
-    case Some(existing) => l.map{ p => 
-      if(p == existing) {
-      	Plugin(
-      	  gav = p.gav,
+    case Some(existing) => l.map { p =>
+      if (p == existing) {
+        Plugin(
+          gav = p.gav,
           dependencies = p.dependencies ++ r.dependencies,
           extensions = p.extensions || r.extensions,
           inherited = p.inherited || r.inherited,
@@ -273,12 +273,6 @@ object BlendedModel {
         antrunExecution_logbackXml
       )
     )
-//    Plugin(
-//      gav = Plugins.scala,
-//      executions = Seq(
-//        scalaExecution_logbackXml
-//      )
-//    )
   )
 
   val distMgmt = DistributionManagement(
@@ -309,59 +303,55 @@ object BlendedModel {
     modules: immutable.Seq[String] = Nil,
     packaging: String,
     pluginRepositories: immutable.Seq[Repository] = Nil,
-    pomFile: Option[File] = None,
     prerequisites: Prerequisites = null,
     profiles: immutable.Seq[Profile] = Seq.empty,
     properties: Map[String, String] = Map.empty,
     repositories: immutable.Seq[Repository] = Nil,
-    parent: Parent = null,
     resources: Seq[Resource] = Seq.empty,
     testResources: Seq[Resource] = Seq.empty,
     plugins: Seq[Plugin] = Seq.empty,
     pluginManagement: Seq[Plugin] = null
   ) = {
-    if (parent != null) println(s"Project with parent: ${gav}")
+
     val theBuild = {
       val usedPlugins = sanitizePlugins(plugins ++ defaultPlugins)
-      Option(Build(
+      Build(
         resources = resources ++ defaultResources,
         testResources = testResources ++ defaultTestResources,
         plugins = usedPlugins,
         pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
-      ))
+      )
     }
 
-    val allDeps = pureDependencies.map(_.pure) ++ dependencies
-    
-    new Model(
+    val allDeps = distinctDependencies(pureDependencies.map(_.pure) ++ dependencies)
+
+    Model(
       gav = gav,
       build = theBuild,
-      ciManagement = Option(ciManagement),
+      ciManagement = ciManagement,
       contributors = contributors,
-      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(allDeps))),
+      dependencyManagement = Option(dependencyManagement).getOrElse(DependencyManagement(allDeps)),
       dependencies = allDeps,
-      description = Option(description),
+        description = description,
       developers = defaultDevelopers ++ developers,
-      distributionManagement = Option(distMgmt),
-      inceptionYear = Option(inceptionYear),
-      issueManagement = Option(issueManagement),
+      distributionManagement = distMgmt,
+      inceptionYear = inceptionYear,
+      issueManagement = issueManagement,
       licenses = defaultLicenses ++ licenses,
       mailingLists = mailingLists,
       modelEncoding = modelEncoding,
-      modelVersion = Some("4.0.0"),
+      modelVersion = "4.0.0",
       modules = modules,
-      name = Some("${project.artifactId}"),
-      organization = Option(organization),
+      name = "${project.artifactId}",
+      organization = organization,
       packaging = packaging,
-      parent = Option(parent),
       pluginRepositories = pluginRepositories,
-      pomFile = pomFile,
-      prerequisites = Option(prerequisites),
+      prerequisites = prerequisites,
       profiles = defaultProfiles ++ profiles,
       properties = defaultProperties ++ properties,
       repositories = defaultRepositories ++ repositories,
-      scm = Option(scm),
-      url = Some("https://github.com/woq-blended/blended")
+      scm = scm,
+      url = "https://github.com/woq-blended/blended"
     )
   }
 }
@@ -417,18 +407,19 @@ case class FeatureBundle(
 
 // Create the String content of a feature file from a sequence of FeatureBundles
 
-def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] = {
-  features.flatMap(_.bundles.map(_.dependency))
-    .foldLeft(List[Dependency]()) { (ds, n) =>
-      if (ds.exists(d =>
-        d.gav.groupId == n.gav.groupId &&
-          d.gav.artifactId == n.gav.artifactId &&
-          d.gav.version == n.gav.version &&
-          d.classifier == n.classifier &&
-          d.scope == n.scope)) ds
-      else n :: ds
-    }
-}
+def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] =
+  distinctDependencies(features.flatMap(_.bundles.map(_.dependency)))
+
+def distinctDependencies(deps: Seq[Dependency]): Seq[Dependency] =
+  deps.foldLeft(List[Dependency]()) { (ds, n) =>
+    if (ds.exists(d =>
+      d.gav.groupId == n.gav.groupId &&
+        d.gav.artifactId == n.gav.artifactId &&
+        d.gav.version == n.gav.version &&
+        d.classifier == n.classifier &&
+        d.scope == n.scope)) ds
+    else n :: ds
+  }.reverse
 
 // This is the content of the feature file
 def featureFile(feature: FeatureDef): String = {
@@ -686,20 +677,20 @@ object BlendedDockerContainer {
     overlayDir: String = null,
     overlays: Seq[String] = Seq.empty
   ) = {
-  
+
     val containerDir = "${project.build.directory}/docker/${docker.target}/container"
     val imageDir = image.gav.artifactId + "-" + image.gav.version.get
     val profileDir = imageDir + "/profiles/" + image.gav.artifactId + "/" + image.gav.version.get
     val profileConf = profileDir + "/profile.conf"
-  
-    val dockerOverlayCmd = 
-      if(overlays.isEmpty) "# no extra overlays" 
+
+    val dockerOverlayCmd =
+      if (overlays.isEmpty) "# no extra overlays"
       else "ADD container/" + imageDir + " /opt/${docker.target}"
-  
-    val addPlugins = 
-      if(overlays.isEmpty) Seq() 
+
+    val addPlugins =
+      if (overlays.isEmpty) Seq()
       else Seq(
-        // unpack 
+        // unpack
         Plugin(
           Plugins.dependency,
           executions = Seq(
@@ -746,15 +737,14 @@ object BlendedDockerContainer {
             )
           )
         )
-      )    
-    
-  
+      )
+
     BlendedModel(
       gav = gav,
       packaging = "jar",
       description = "Packaging the launcher sample container into a docker image.",
       dependencies = Seq(image),
-  
+
       properties = Map(
         "docker.src.type" -> image.`type`,
         "docker.target" -> folder,
@@ -763,7 +753,7 @@ object BlendedDockerContainer {
         "docker.src.classifier" -> image.classifier.get,
         "docker.src.groupId" -> image.gav.groupId.get
       ),
-  
+
       plugins = sanitizePlugins(addPlugins ++ Seq(
         Plugin(
           Plugins.dependency,
