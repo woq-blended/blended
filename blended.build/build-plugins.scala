@@ -264,7 +264,7 @@ val scalaMavenPlugin = Plugin(
   configuration = scalaCompilerConfig
 )
 
-val scalaCompilerPlugin = if(System.getenv("USE_SBT") == "0") scalaMavenPlugin else sbtCompilerPlugin
+val scalaCompilerPlugin = if(System.getenv("USE_SBT") == "1") sbtCompilerPlugin else scalaMavenPlugin 
 
 def ant_write(file: String, lines: Seq[String]): Seq[(String, Option[Config])] = {
   var line = 0
