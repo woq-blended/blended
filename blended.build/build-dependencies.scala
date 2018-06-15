@@ -201,17 +201,7 @@ object Deps {
   val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
 
-  private def spray(n: String) = "io.spray" %% s"spray-${n}" % BlendedVersions.sprayVersion
-  val sprayClient = spray("client")
-  val sprayCaching = spray("caching")
-  val sprayHttp = spray("http")
-  val sprayHttpx = spray("httpx")
-  val sprayIo = spray("io")
-  val sprayJson = spray("json")
-  val sprayRouting = spray("routing")
-  val sprayServlet = spray("servlet")
-  val sprayTestkit = spray("testkit")
-  val sprayUtil = spray("util")
+  val sprayJson = "io.spray" %% s"spray-json" % BlendedVersions.sprayVersion
 
   private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % BlendedVersions.springVersion
   val springBeans = spring("beans")
