@@ -186,16 +186,6 @@ val features = Seq(
     )
   ),
   FeatureDef(
-    "blended-spray",
-    features = Seq(
-      "blended-jetty"
-    ),
-    bundles = Seq(
-      FeatureBundle(dependency = javaxServlet31),
-      FeatureBundle(dependency = Blended.sprayApi)
-    )
-  ),
-  FeatureDef(
     "blended-akka-http",
     features = Seq(
       "blended-base"
