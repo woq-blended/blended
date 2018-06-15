@@ -12,12 +12,7 @@ BlendedModel(
   description = "Package the complete Spray API into a bundle.",
   dependencies = Seq(
     scalaLib % "provided",
-    sprayServlet,
-    sprayClient,
-    sprayRouting,
     sprayJson,
-    sprayCaching,
-    shapeless,
     concurrentLinkedHashMapLru
   ),
   plugins = Seq(
