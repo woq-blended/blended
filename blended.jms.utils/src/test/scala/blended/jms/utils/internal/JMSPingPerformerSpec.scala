@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit, TestProbe}
 import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, JMSSupport}
 import javax.jms.Connection
+import org.apache.activemq.broker.BrokerService
 import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
 
 import scala.concurrent.duration._
@@ -18,6 +19,7 @@ class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
   with JMSSupport {
 
   private[this] val cfg = BlendedJMSConnectionConfig.defaultConfig.copy(vendor = "amq", provider ="amq", clientId = "jmsPing")
+  private[this] var broker : Option[BrokerService] = None
 
   private[this] def pingTest(
     con: Connection,
@@ -101,14 +103,14 @@ class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
   }
 
   override protected def beforeAll(): Unit = {
-    startBroker()
-    con = Some(amqCf.createConnection())
+    broker = startBroker()
+    con = Some(amqCf().createConnection())
     con.foreach(_.start())
   }
 
   override protected def afterAll(): Unit = {
     con.foreach(_.close())
-    stopBroker()
+    stopBroker(broker)
   }
 
 }
