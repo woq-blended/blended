@@ -23,7 +23,6 @@ BlendedModel(
     Deps.camelJms,
     Blended.akka,
     Deps.jms11Spec,
-    Deps.log4s,
     Deps.scalaTest % "test",
     Deps.akkaSlf4j % "test",
     Deps.activeMqBroker % "test",

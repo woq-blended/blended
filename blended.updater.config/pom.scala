@@ -21,10 +21,10 @@ BlendedModel(
     Deps.typesafeConfig,
     Deps.slf4j,
     Deps.prickle,
-    Deps.log4s,
     Blended.testSupport % "test",
     scalaTest % "test",
-    Deps.logbackClassic % "test"
+    Deps.logbackClassic % "test",
+    Deps.logbackCore % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

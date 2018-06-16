@@ -115,7 +115,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
 
 final object LocalOverlays {
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = LoggerFactory.getLogger(classOf[LocalOverlays])
 
   def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
     if (overlays.isEmpty) {
@@ -166,7 +166,7 @@ final object LocalOverlays {
           log.debug("Found local overlays: " + localOverlays)
           List(localOverlays)
         case Failure(e) =>
-          log.error(e)("Could not read overlay config file: " + file)
+          log.error("Could not read overlay config file: " + file, e)
           List()
       }
     }

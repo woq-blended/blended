@@ -9,6 +9,7 @@ import akka.util.Timeout
 import blended.testsupport.camel._
 import blended.testsupport.camel.protocol._
 import javax.jms.{DeliveryMode, Message, Session}
+import org.apache.activemq.broker.BrokerService
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, Matchers}
@@ -32,6 +33,8 @@ class JMSSupportSpec extends FreeSpec
     ctxt.addComponent("jms", JmsComponent.jmsComponent(amqCf))
     ctxt
   }
+
+  var broker : Option[BrokerService] = None
 
   private def sendMessage(destName: String) : Unit = {
     sendMessage(
@@ -142,10 +145,10 @@ class JMSSupportSpec extends FreeSpec
 
   override protected def beforeAll() : Unit = {
     super.beforeAll()
-    startBroker()
+    broker = startBroker()
   }
 
   override protected def afterAll(): Unit = {
-    stopBroker()
+    stopBroker(broker)
   }
 }

@@ -8,27 +8,23 @@ trait AmqBrokerSupport {
 
   lazy val brokerName : String = "blended"
 
-  var broker : Option[BrokerService] = None
+  def amqCf() = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
 
-  val amqCf = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
+  def startBroker() : Option[BrokerService] = {
 
-  def startBroker() : Unit = {
+    val b = new BrokerService()
+    b.setBrokerName(brokerName)
+    b.setPersistent(false)
+    b.setUseJmx(false)
+    b.setPersistenceAdapter(new MemoryPersistenceAdapter)
 
-    broker = {
-      val b = new BrokerService()
-      b.setBrokerName(brokerName)
-      b.setPersistent(false)
-      b.setUseJmx(false)
-      b.setPersistenceAdapter(new MemoryPersistenceAdapter)
+    b.start()
+    b.waitUntilStarted()
 
-      b.start()
-      b.waitUntilStarted()
-
-      Some(b)
-    }
+    Some(b)
   }
 
-  def stopBroker() : Unit = {
+  def stopBroker(broker: Option[BrokerService]) : Unit = {
     broker.foreach { b =>
       b.stop()
       b.waitUntilStopped()
