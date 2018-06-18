@@ -297,7 +297,6 @@ object Blended {
   val securitySsl = blended("blended.security.ssl")
   val securityLogin = blended("blended.security.login")
   val securityLoginRest = blended("blended.security.login.rest")
-  val sprayApi = blended("blended.spray.api")
   val sslContext = blended("blended.sslcontext")
   val testSupport = blended("blended.testsupport")
   val testSupportPojosr = blended("blended.testsupport.pojosr")

@@ -76,6 +76,7 @@ val features = Seq(
       "blended-spring"
     ),
     bundles = Seq(
+      FeatureBundle(dependency = geronimoJms11Spec),
       FeatureBundle(dependency = camelCore),
       FeatureBundle(dependency = camelSpring),
       FeatureBundle(dependency = camelJms),
@@ -200,6 +201,8 @@ val features = Seq(
   FeatureDef(
     "blended-akka-http-modules",
     features = Seq(
+      "blended-spring",
+      "blended-camel",
       "blended-akka-http"
     ),
     bundles = Seq(
@@ -216,7 +219,8 @@ val features = Seq(
     FeatureBundle(dependency = springAop),
     FeatureBundle(dependency = springContext),
     FeatureBundle(dependency = springContextSupport),
-    FeatureBundle(dependency = springTx)
+    FeatureBundle(dependency = springTx),
+    FeatureBundle(dependency = springJms)
   )),
   FeatureDef(
     "blended-samples",

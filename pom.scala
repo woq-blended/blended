@@ -66,7 +66,6 @@ BlendedModel(
         "blended.mgmt.ws",
         "blended.prickle",
         "blended.prickle.akka.http",
-        "blended.spray.api",
         "blended.security",
         "blended.security.scep",
         "blended.security.ssl",

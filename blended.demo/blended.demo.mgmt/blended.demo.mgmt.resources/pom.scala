@@ -7,8 +7,5 @@ import scala.collection.immutable.Seq
 //#include ../../../blended.build/build-common.scala
 
 BlendedProfileResourcesContainer (
-  gav = Blended.demoMgmtResources,
-  properties = Map(
-    "spray.version" -> BlendedVersions.sprayVersion
-  )
+  gav = Blended.demoMgmtResources
 )

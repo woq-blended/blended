@@ -22,7 +22,6 @@ BlendedModel(
     Blended.mgmtBase,
     Blended.containerContextApi,
     Blended.akka,
-    Blended.sprayApi,
     akkaTestkit % "test",
     scalaTest % "test",
     felixFramework % "test",
