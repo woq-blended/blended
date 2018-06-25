@@ -151,7 +151,7 @@ object Deps {
 
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
   val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
   val jolokiaJvmAgent = Dependency(
     jolokiaJvm,
