@@ -7,7 +7,7 @@ object BlendedVersions {
 
   val sbtVersion = "1.1.2"
 
-  val scalaVersion = "2.11.12"
+  val scalaVersion = "2.12.6"
   val scalaVersionJS = "2.12.6"
   val scalaVersionJSBinary = "2.12"
 
