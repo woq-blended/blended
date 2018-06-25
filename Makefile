@@ -1,5 +1,9 @@
-.PHONY: all # Build all development project (not itest and docker)
-all:
+.PHONY: help # List of targets with descriptions
+help:
+	@grep '^\.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1\t\2/' | expand -t20
+
+.PHONY: build # Build all development project (not itest and docker)
+build:
 	mvn -Pbuild install
 
 .PHONY: clean # Run mvn clean
@@ -31,6 +35,13 @@ docker-clean:
 		do docker rmi -f $$image; \
 	done
 
-.PHONY: help # List of targets with descriptions
-help:
-	@grep '^\.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1\t\2/' | expand -t20
+.PHONY: travis-prepare # Prepare travis env, e.g. pre-fetching maven (somewhat quieter)
+travis-prepare:
+	# Errors in the next command are ignored
+	-mvn --fail-at-end dependency:go-offline | grep -vi download
+
+.PHONY: travis-build # Build the project with travis
+travis-build: build
+
+.PHONY: travis # Run a full travis build
+travis: travis-prepare travis-build
