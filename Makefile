@@ -16,7 +16,7 @@ eclipse: pom-xml
 
 .PHONY: full # A full build including docker tests
 full: docker-clean
-	mvn -Pbuild,itest,docker clean install
+	mvn -Pbuild,itest,docker install
 
 .PHONY: light
 light:
