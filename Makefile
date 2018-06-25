@@ -4,7 +4,7 @@ all:
 
 .PHONY: clean # Run mvn clean
 clean:
-	mvn clean
+	mvn -Pbuild,itest,docker clean
 
 .PHONY: pom-xml # Generate pom.xml files
 pom-xml:
