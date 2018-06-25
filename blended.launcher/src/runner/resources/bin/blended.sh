@@ -2,8 +2,8 @@
 
 function setenv() {
 
-  if [ -f $BLENDED_HOME/bin/setenv ] ; then
-    . $BLENDED_HOME/bin/setenv
+  if [ -f "$BLENDED_HOME/bin/setenv" ] ; then
+    . "$BLENDED_HOME/bin/setenv"
   fi
 }
 
@@ -11,7 +11,7 @@ function blended_home() {
 
   home=$1
 
-  if [ x"$BLENDED_HOME" == "x" ] ; then
+  if [ "x$BLENDED_HOME" == "x" ] ; then
     OLDDIR=$(pwd)
     dir="$(dirname $0)/.."
     cd $dir
@@ -39,7 +39,7 @@ if [ -z "${INTERACTIVE}" ]; then
   INTERACTIVE=true
 fi
 
-LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id"
+LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id --strict"
 
 # Options for the service daemen JVM (outer) with controls the container JVM
 JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
