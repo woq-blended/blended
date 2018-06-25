@@ -38,7 +38,7 @@ docker-clean:
 .PHONY: travis-prepare # Prepare travis env, e.g. pre-fetching maven (somewhat quieter)
 travis-prepare:
 	# Errors in the next command are ignored
-	-mvn --fail-at-end dependency:go-offline | grep -vi download
+	-mvn --fail-at-end dependency:resolve -Dsilent=true | grep -vi download
 
 .PHONY: travis-build # Build the project with travis
 travis-build: build
