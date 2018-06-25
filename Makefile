@@ -33,4 +33,4 @@ docker-clean:
 
 .PHONY: help # List of targets with descriptions
 help:
-	@grep '^.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1\t\2/' | expand -t20
+	@grep '^\.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1\t\2/' | expand -t20
