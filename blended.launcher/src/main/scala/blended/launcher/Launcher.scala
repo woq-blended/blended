@@ -363,6 +363,7 @@ class Launcher private (config: LauncherConfig) {
   def start(cmdLine: Cmdline): Try[Framework] = Try {
     log.info(s"Starting OSGi framework based on config: ${config}");
 
+    // Try to locate and load the OSGi framework factory
     val frameworkURL = new File(config.frameworkJar).getAbsoluteFile.toURI().normalize().toURL()
     log.info("Framework Bundle from: " + frameworkURL)
     if (!new File(frameworkURL.getFile()).exists) throw new RuntimeException("Framework Bundle does not exist")
@@ -371,6 +372,7 @@ class Launcher private (config: LauncherConfig) {
     val frameworkFactory = ServiceLoader.load(classOf[FrameworkFactory], cl).iterator().next()
     log.debug("Loaded framework factory: " + frameworkFactory)
 
+    // Statically export branding properties
     val brandingProps = {
       val brandingProps = new Properties()
       config.branding.foreach { case (k, v) => brandingProps.setProperty(k, v) }
@@ -379,6 +381,7 @@ class Launcher private (config: LauncherConfig) {
       brandingProps
     }
 
+    // Set system properties found in config
     config.systemProperties foreach { p =>
       log.info(s"Setting System property [${p._1}] to [${p._2}]")
       System.setProperty(p._1, p._2)
@@ -418,6 +421,7 @@ class Launcher private (config: LauncherConfig) {
 
     def isFragment(b: InstalledBundle) = b.bundle.getHeaders.get(Constants.FRAGMENT_HOST) != null
 
+    // Iterate over start levels and activate bundles in the correct order
     1.to(config.startLevel).map { startLevel =>
       log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
@@ -456,6 +460,7 @@ class Launcher private (config: LauncherConfig) {
         }")
 
         if (cmdLine.strict) {
+          // in strict mode, bundles that failed to start fail the whole container
           log.warn("Shutting down container due to bundle start failures.")
           framework.stop()
         }
@@ -464,6 +469,7 @@ class Launcher private (config: LauncherConfig) {
 
     val bundlesInInstalledState = osgiBundles.filter(b => b.bundle.getState() == Bundle.INSTALLED && !isFragment(b))
 
+    // now we try to also resolve the remaining bundles
     if (bundlesInInstalledState.nonEmpty) {
       log.debug(s"The following bundles are in installed state: ${bundlesInInstalledState.map(b => s"${b.bundle.getSymbolicName}-${b.bundle.getVersion}")}")
       log.info("Resolving installed bundles")
@@ -477,6 +483,7 @@ class Launcher private (config: LauncherConfig) {
       }")
 
       if (secondAttemptInstalled.nonEmpty && cmdLine.strict) {
+        // in strict mode, nor resolved bundles fail the whole container
         log.error("Shutting down container due to unresolved bundles.")
         framework.stop()
       }
