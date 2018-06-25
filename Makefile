@@ -4,7 +4,7 @@ all:
 
 .PHONY: clean # Run mvn clean
 clean:
-	mvn -Pbuild,itest,docker clean
+	mvn -Pbuild,itest,docker --fail-at-end clean
 
 .PHONY: pom-xml # Generate pom.xml files
 pom-xml:
@@ -18,7 +18,7 @@ eclipse: pom-xml
 full: docker-clean
 	mvn -Pbuild,itest,docker install
 
-.PHONY: light
+.PHONY: light # Build but skip test executions
 light:
 	mvn -Pbuild -DskipTests install
 
