@@ -27,10 +27,10 @@ BlendedModel(
       extensions = true,
       inherited = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option(s"*;artifactId=${jettyOsgiBoot.artifactId}")
-        ))
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = s"*;artifactId=${jettyOsgiBoot.artifactId}"
+        )
       )
     ),
     scalaCompilerPlugin,

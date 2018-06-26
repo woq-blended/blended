@@ -62,10 +62,10 @@ BlendedModel(
         scalatestExecution
       ),
       configuration = new Config(
-          scalatestConfiguration.elements ++
-          Seq(
-            "argLine" -> Some("-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost")
-          )
+        scalatestConfiguration.elements ++
+          Config(
+            argLine = "-javaagent:${project.build.directory}/jolokia/jolokia-jvm-" + BlendedVersions.jolokiaVersion + "-agent.jar=port=7777,host=localhost"
+          ).elements
       )
     )
   )

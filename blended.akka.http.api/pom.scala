@@ -22,14 +22,12 @@ BlendedModel(
       extensions = true,
       inherited = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option("*;scope=compile"),
-          "_exportcontents" -> Option(
-            "akka.http.*;version="+ BlendedVersions.akkaHttpVersion + ";-split-package:=merge-first,"
-          ),
-          "Embed-Transitive" -> Option("true")
-        ))
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = "*;scope=compile",
+          _exportcontents = "akka.http.*;version=" + BlendedVersions.akkaHttpVersion + ";-split-package:=merge-first,",
+          `Embed-Transitive` = "true"
+        )
       )
     )
   )

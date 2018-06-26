@@ -264,21 +264,23 @@ val scalaMavenPlugin = Plugin(
   configuration = scalaCompilerConfig
 )
 
-val scalaCompilerPlugin = if(System.getenv("USE_SBT") == "1") sbtCompilerPlugin else scalaMavenPlugin 
+val scalaCompilerPlugin = if (System.getenv("USE_SBT") == "1") sbtCompilerPlugin else scalaMavenPlugin
 
-def ant_write(file: String, lines: Seq[String]): Seq[(String, Option[Config])] = {
+def ant_write(file: String, lines: Seq[String]): Seq[(String, Option[Any])] = {
   var line = 0
-  val tasks = Seq("echo" -> Some(Config(
+  val tasks = Config(
+    echo = Config(
       `@file` = file,
       `@append` = "false",
       `@message` = ""
-    ))) ++ lines.map(line =>
-    "echo" -> Some(Config(
-      `@file` = file,
-      `@append` = "true",
-      `@message` = line + "${line.separator}"
-    ))
-  )
+    )
+  ).elements ++
+    lines.map(line =>
+      "echo" -> Some(Config(
+        `@file` = file,
+        `@append` = "true",
+        `@message` = line + "${line.separator}"
+      )))
   tasks
 }
 
@@ -288,7 +290,7 @@ val antrunExecution_logbackXml: Execution = Execution(
   goals = Seq("run"),
   configuration = Config(
     target = new Config(ant_write(
-      "${basedir}/target/test-classes/logback-test.xml", 
+      "${basedir}/target/test-classes/logback-test.xml",
       Seq(
         "<configuration scan=\"true\" scanPeriod=\"30 seconds\">",
         "",
@@ -315,11 +317,9 @@ val antrunExecution_logbackXml: Execution = Execution(
   )
 )
 
-
-
 /**
-  * Scala execution to generate logback-test.xml on the fly.
-  */
+ * Scala execution to generate logback-test.xml on the fly.
+ */
 val scalaExecution_logbackXml: Execution = Execution(
   id = "generateLogbackConfig",
   phase = "generate-test-resources",

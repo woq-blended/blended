@@ -34,10 +34,10 @@ BlendedModel(
       extensions = true,
       inherited = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option(s"*;artifactId=commons-io,commons-lang,${commonsCodec.artifactId},artifactId=${jcip.artifactId},${scep.artifactId},${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}")
-        ))
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = s"*;artifactId=commons-io,commons-lang,${commonsCodec.artifactId},artifactId=${jcip.artifactId},${scep.artifactId},${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}"
+        )
       )
     ),
     scalaCompilerPlugin,

@@ -23,9 +23,9 @@ BlendedModel(
     scalaLib
   ),
   pluginManagement = Seq(
-      // ignore maven-plugin-plugin in Eclipse
+    // ignore maven-plugin-plugin in Eclipse
     Plugin(
-        Plugins.lifecycle,
+      Plugins.lifecycle,
       configuration = Config(
         pluginExection = Config(
           pluginExecutionFilter = Config(
@@ -37,7 +37,9 @@ BlendedModel(
               goal = "help-goal"
             )
           ),
-          action = new Config(Seq("ignore" -> None))
+          action = Config(
+            ignore = None
+          )
         )
       )
     )

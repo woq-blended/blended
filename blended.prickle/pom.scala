@@ -19,13 +19,13 @@ BlendedModel(
       gav = mavenBundlePlugin.gav,
       extensions = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "Bundle-Version" -> Blended.prickle.version,
-          "Bundle-SymbolicName" -> Option(Blended.prickle.artifactId),
-          "Import-Package" -> Option("scala.*;version=\"[" + scalaVersion.binaryVersion + "," + scalaVersion.binaryVersion + ".50)\",prickle,microjson,*"),
-          "Embed-Dependency" -> Option(prickle.artifactId + ";inline=true," + microjson.artifactId + ";inline=true"),
-          "Export-Package" -> Option("prickle;version=\"" + prickle.version.get + "\",microjson;version=\"" + microjson.version.get + "\"")
-        ))
+        instructions = Config(
+          `Bundle-Version` = Blended.prickle.version,
+          `Bundle-SymbolicName` = Blended.prickle.artifactId,
+          `Import-Package` = "scala.*;version=\"[" + scalaVersion.binaryVersion + "," + scalaVersion.binaryVersion + ".50)\",prickle,microjson,*",
+          `Embed-Dependency` = prickle.artifactId + ";inline=true," + microjson.artifactId + ";inline=true",
+          `Export-Package` = "prickle;version=\"" + prickle.version.get + "\",microjson;version=\"" + microjson.version.get + "\""
+        )
       )
     )
   )
