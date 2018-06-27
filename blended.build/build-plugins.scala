@@ -53,7 +53,7 @@ object Plugins {
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val lifecycle = "org.eclipse.m2e" % "lifecycle-mapping" % "1.0.0"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
-  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.0"
+  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.1"
   val trEclipse = "de.tototec" % "de.tobiasroeser.eclipse-maven-plugin" % "0.1.0"
   val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.3.2"

@@ -323,7 +323,7 @@ object BlendedModel {
       )
     }
 
-    val allDeps = distinctDependencies(pureDependencies.map(_.pure) ++ dependencies)
+    val allDeps = distinctDependencies(pureDependencies.map(_.intransitive) ++ dependencies)
 
     Model(
       gav = gav,

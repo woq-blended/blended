@@ -244,6 +244,6 @@ BlendedModel(
   gav = Blended.launcherFeatures,
   packaging = "jar",
   description = "The prepackaged features for blended.",
-  dependencies = featureDependencies(features).map(_.pure),
+  dependencies = featureDependencies(features).map(_.intransitive),
   plugins = featuresMavenPlugins(features)
 )

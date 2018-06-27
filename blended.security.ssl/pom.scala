@@ -16,7 +16,7 @@ BlendedModel(
     Deps.bouncyCastleBcprov % "provided",
     Deps.bouncyCastlePkix,
     Blended.domino,
-    Dependency(Deps.domino).pure,
+    Dependency(Deps.domino).intransitive,
     Blended.mgmtBase,
     Deps.log4s,
     logbackCore % "test",

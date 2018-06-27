@@ -12,28 +12,6 @@ implicit class ScalaJsGroupId(groupId: String) {
   }
 }
 
-/** Helper class, to improve writing dependency experience. */
-implicit class RichDependency(d: Dependency) {
-  def copy(
-    gav: Gav = d.gav,
-    `type`: String = d.`type`,
-    classifier: Option[String] = d.classifier,
-    scope: Option[String] = d.scope,
-    systemPath: Option[String] = d.systemPath,
-    exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional
-  ): Dependency =
-    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-
-  def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
-
-  def classifier(classifier: String): Dependency = copy(classifier = Option(classifier))
-
-  def pure: Dependency = copy(exclusions = Seq("*" % "*"))
-
-  def exclude(ga: GroupArtifactId): Dependency = copy(exclusions = d.exclusions ++ Seq(ga))
-}
-
 // Dependencies
 object Deps {
   val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
