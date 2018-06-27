@@ -8,5 +8,5 @@ class SimpleRestJmsService(
   override val operations : Map[String, JmsOperationConfig],
   override val camelContext: CamelContext,
   override implicit val materializer : ActorMaterializer,
-  override implicit val eCtxt: ExecutionContext
+  override implicit val eCtxt : ExecutionContext
 ) extends JMSRequestor

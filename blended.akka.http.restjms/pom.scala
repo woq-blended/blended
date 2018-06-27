@@ -24,6 +24,8 @@ BlendedModel(
     Blended.akkaHttp,
     Blended.util,
     Deps.jms11Spec,
+    sttp % "test",
+    sttpAkka % "test",
     Deps.activeMqBroker % "test",
     Deps.activeMqClient % "test",
     Deps.akkaSlf4j % "test",

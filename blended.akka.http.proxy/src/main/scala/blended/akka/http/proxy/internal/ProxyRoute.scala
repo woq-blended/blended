@@ -106,7 +106,7 @@ trait ProxyRoute {
                 request.withHeaders(response.headers)
             }
 
-            log.debug(s"${r}. Retry request with new URI [${newUri}], headers [${newRequest.headers}] and redirectCount [${newRedirectCount}]")
+            log.info(s"${r}. Retry request with new URI [${newUri}], headers [${newRequest.headers}] and redirectCount [${newRedirectCount}]")
 
             // Always consume the response entity streams
             response.discardEntityBytes()
