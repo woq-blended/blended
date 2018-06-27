@@ -1,15 +1,10 @@
 package blended.akka.http.restjms.internal
 
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import blended.camel.utils.BlendedCamelContextFactory
-import com.typesafe.config.ConfigFactory
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.camel.CamelContext
-import org.apache.camel.builder.RouteBuilder
-import org.apache.camel.component.jms.JmsComponent
 import org.scalatest.{Matchers, WordSpec}
 
 import scala.concurrent.Await
@@ -17,33 +12,14 @@ import scala.concurrent.duration._
 
 class JMSRequestorSpec extends WordSpec
   with Matchers
-  with ScalatestRouteTest {
+  with ScalatestRouteTest
+  with JMSRequestorSetup {
 
-  val amqCF = new ActiveMQConnectionFactory("vm://dispatcher?broker.useJmx=false&broker.persistent=false&create=true")
-  val cfg = ConfigFactory.load("restjms.conf")
-  val restJmsConfig = RestJMSConfig.fromConfig(cfg)
-
-
-  val camelContext: CamelContext = {
-    val result = BlendedCamelContextFactory.createContext(withJmx = false)
-
-    result.addComponent("jms", JmsComponent.jmsComponent(amqCF))
-
-    result.addRoutes(new RouteBuilder() {
-      override def configure(): Unit = {
-        from("jms:queue:redeem")
-          .to("log:redeem?showHeaders=true")
-          .setBody(constant("redeemed"))
-      }
-    })
-
-    result.start()
-
-    result
-  }
-
-  implicit val as = system
+  implicit val executionContext = system.dispatcher
   val svc = new SimpleRestJmsService(restJmsConfig.operations, camelContext, ActorMaterializer(), system.dispatcher)
+
+  def requestEntity(cType: ContentType, body: String) : RequestEntity =
+    HttpEntity.Default(cType, body.length(), Source.single(ByteString(body)))
 
   "The JMSRequestor" should {
 
@@ -52,7 +28,7 @@ class JMSRequestorSpec extends WordSpec
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/leergut.redeem",
-        entity = HttpEntity.Strict(ContentTypes.`application/json`, ByteString("test"))
+        entity = requestEntity(ContentTypes.`application/json`, "test"*1000)
       ) ~> svc.httpRoute ~> check {
         contentType should be (ContentTypes.`application/json`)
         responseAs[String] should be ("redeemed")
@@ -65,7 +41,7 @@ class JMSRequestorSpec extends WordSpec
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/noop",
-        entity = HttpEntity.Strict(ContentTypes.`application/json`, ByteString("test"))
+        entity = requestEntity(ContentTypes.`application/json`, "test")
       ) ~> svc.httpRoute ~> check {
         contentType should be (ContentTypes.`application/json`)
         status should be (StatusCodes.NotFound)
@@ -73,10 +49,13 @@ class JMSRequestorSpec extends WordSpec
     }
 
     "respond with a server error if the JMS request times out" in {
+
+      implicit val timeout : RouteTestTimeout = RouteTestTimeout(3.seconds)
+
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/foo",
-        entity = HttpEntity.Strict(ContentTypes.`application/json`, ByteString("test"))
+        entity = requestEntity(ContentTypes.`application/json`, "test")
       ) ~> svc.httpRoute ~> check {
         contentType should be (ContentTypes.`application/json`)
         status should be (StatusCodes.InternalServerError)
@@ -87,7 +66,7 @@ class JMSRequestorSpec extends WordSpec
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/leergut.redeem",
-        entity = HttpEntity.Strict(ContentTypes.`text/plain(UTF-8)`, ByteString("test"))
+        entity = requestEntity(ContentTypes.`text/plain(UTF-8)`, "test")
       ) ~> svc.httpRoute ~> check {
         status should be (StatusCodes.InternalServerError)
       }
@@ -97,7 +76,7 @@ class JMSRequestorSpec extends WordSpec
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/direct",
-        entity = HttpEntity.Strict(ContentTypes.`application/json`, ByteString("test"))
+        entity = requestEntity(ContentTypes.`application/json`, "test")
       ) ~> svc.httpRoute ~> check {
         responseAs[String] should be ("")
         contentType should be (ContentTypes.`application/json`)
@@ -113,7 +92,7 @@ class JMSRequestorSpec extends WordSpec
       HttpRequest(
         method = HttpMethods.POST,
         uri = "/soap",
-        entity = HttpEntity.Strict(cType, ByteString("test"))
+        entity = requestEntity(cType, "test")
       ) ~> svc.httpRoute ~> check {
         contentType should be (cType)
         responseAs[String] should be ("")
