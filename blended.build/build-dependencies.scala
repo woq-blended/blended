@@ -97,6 +97,8 @@ object Deps {
   val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
   val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
 
+  val h2 = "com.h2database" % "h2" % "1.4.197"
+  val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
   val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.5.8", `type` = "war")
 
   val javaxEl = "javax.el" % "javax.el-api" % "3.0.1-b04"
@@ -141,6 +143,7 @@ object Deps {
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
+  val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
@@ -188,6 +191,7 @@ object Deps {
   val springContextSupport = spring("context-support")
   val springExpression = spring("expression")
   val springCore = spring("core")
+  val springJdbc = spring("jdbc")
   val springJms = spring("jms")
   val springTx = spring("tx")
 
