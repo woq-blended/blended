@@ -62,8 +62,34 @@ class PersistedDataTest extends FreeSpec {
         PersistedField(fieldId = 5, baseFieldId = Some(1), name = "1", typeName = TypeName.Object),
         PersistedField(fieldId = 6, baseFieldId = Some(5), name = "second", valueString = Some("value"), typeName = TypeName.String)
       )
+    ),
+    ("Config object",
+      Map(
+        "key1" -> "value1",
+        "key2" -> List(
+          "kv1",
+          "kv2"
+        ).asJava,
+        "key3" -> Map(
+          "k3a" -> "v3a",
+          "k3b" -> List(
+            "v3b1",
+            "v3b2"
+          ).asJava
+        ).asJava
+      ).asJava,
+        Seq(
+          PersistedField(fieldId = 1, name = "key1", valueString = Some("value1"), typeName = TypeName.String),
+          PersistedField(fieldId = 2, name = "key2", typeName = TypeName.Array),
+          PersistedField(fieldId = 3, name = "0", baseFieldId = Some(2), typeName = TypeName.String, valueString = Some("kv1")),
+          PersistedField(fieldId = 4, name = "1", baseFieldId = Some(2), typeName = TypeName.String, valueString = Some("kv2")),
+          PersistedField(fieldId = 5, name = "key3", typeName = TypeName.Object),
+          PersistedField(fieldId = 6, name = "k3a", baseFieldId = Some(5), typeName = TypeName.String, valueString = Some("v3a")),
+          PersistedField(fieldId = 7, name = "k3b", baseFieldId = Some(5), typeName = TypeName.Array),
+          PersistedField(fieldId = 8, name = "0", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b1")),
+          PersistedField(fieldId = 9, name = "1", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b2"))
+        )
     )
-
   )
 
   testData.foreach { data =>

@@ -11,6 +11,8 @@ import liquibase.resource.ClassLoaderResourceAccessor
 import liquibase.Liquibase
 import scala.util.Try
 import scala.collection.{ immutable => sci }
+import org.springframework.jdbc.core.RowMapper
+import scala.collection.JavaConverters._
 
 class PersistedClassDao(dataSource: DataSource) {
 
@@ -36,6 +38,7 @@ class PersistedClassDao(dataSource: DataSource) {
     val ValueDouble = "valueDouble"
     val ValueString = "valueString"
     val TypeName = "typeName"
+
   }
 
   def persist(persistedClass: PersistedClass): PersistedClass = {
@@ -82,6 +85,7 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   def delete(pClass: String, id: Long): Unit = {
+    // The schema defines a cascade delete, this we only need to delete the aggregate root
     val sql = s"delete from ${PC.Table} where ${PC.Id} = :id and ${PC.Name} = :name"
     val paramSource = new MapSqlParameterSource()
     paramSource.addValue(PC.Id, id)
@@ -109,7 +113,36 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   def findAll(pClass: String): sci.Seq[PersistedClass] = {
-    ???
+    val pfCols = Seq(
+      PF.HolderId, PF.FieldId, PF.BaseFieldId,
+      PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
+      PF.TypeName
+    )
+    val sql = s"select ${pfCols.map("f." + _).mkString(",")} from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
+    val paramMap = new MapSqlParameterSource()
+    paramMap.addValue("className", pClass)
+    val rowMapper: RowMapper[(Long, PersistedField)] = { (rs, nr) =>
+
+      val holderId = rs.getLong(PF.HolderId)
+
+      val fieldId = rs.getLong(PF.FieldId)
+      val baseFieldId = Option(rs.getLong(PF.BaseFieldId)).filter(_ != 0)
+      val name = rs.getString(PF.Name)
+      val valueLong = Option(rs.getLong(PF.ValueLong))
+      val valueDouble = Option(rs.getDouble(PF.ValueDouble))
+      val valueString = Option(rs.getString(PF.ValueString))
+      val typeName = TypeName.fromString(rs.getString(PF.TypeName)).get
+
+      holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
+    }
+    val allFields = jdbcTemplate.query(sql, paramMap, rowMapper)
+    val byId = allFields.asScala.foldLeft(Map[Long, List[PersistedField]]()) { (map, rs) =>
+      val id = rs._1
+      val field = rs._2
+      val tail = map.get(id).getOrElse(Nil)
+      map + (id -> (field :: tail))
+    }
+    byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields) }
   }
 
 }

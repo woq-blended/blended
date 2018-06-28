@@ -1,4 +1,4 @@
-package blended.persistence.h2.internal
+package blended.persistence.jdbc
 
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus

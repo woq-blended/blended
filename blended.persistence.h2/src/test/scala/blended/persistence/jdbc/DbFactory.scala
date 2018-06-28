@@ -1,4 +1,4 @@
-package blended.persistence.h2.internal
+package blended.persistence.jdbc
 
 import com.zaxxer.hikari.HikariDataSource
 import java.io.File

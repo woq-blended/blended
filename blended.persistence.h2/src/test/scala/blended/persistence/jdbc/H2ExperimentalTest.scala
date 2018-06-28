@@ -1,12 +1,11 @@
-package blended.persistence.h2.internal
+package blended.persistence.jdbc
 
 import blended.testsupport.TestFile
 import org.scalatest.FreeSpec
 import org.scalatest.Matchers
 import com.typesafe.config.ConfigFactory
 import scala.collection.JavaConverters._
-import blended.persistence.jdbc.PersistenceServiceJdbc
-import blended.persistence.jdbc.PersistedClassDao
+import org.scalactic.source.Position.apply
 
 class H2ExperimentalTest extends FreeSpec with Matchers with TestFile {
 
@@ -23,7 +22,7 @@ class H2ExperimentalTest extends FreeSpec with Matchers with TestFile {
         exp.persist("Person", testData)
         val actual = exp.findAll("Person")
         assert(actual.size === 1)
-        assert(actual === Seq(testData).asJava)
+        assert(actual.toSet === Set(testData))
       }
 
     }

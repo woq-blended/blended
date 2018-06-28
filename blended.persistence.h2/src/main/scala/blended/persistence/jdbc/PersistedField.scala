@@ -49,7 +49,12 @@ object PersistedField {
         case value: Float =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueDouble = Some(value), typeName = TypeName.Float))
         case value: ju.Map[_, _] =>
-          val newBase = parent.map(p => PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Object))
+          val newBase = if (key == "" && parent.isEmpty) {
+            // Root map
+            None
+          } else {
+            Some(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Object))
+          }
           newBase.toSeq ++ value.entrySet().asScala.toList.flatMap { entry =>
             extractValue(entry.getKey().asInstanceOf[String], entry.getValue(), parent = newBase)
           }
