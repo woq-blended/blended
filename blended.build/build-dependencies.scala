@@ -267,6 +267,7 @@ object Blended {
   val mgmtServiceJmx = blended("blended.mgmt.service.jmx")
   val mgmtWs = blended("blended.mgmt.ws")
   val persistence = blended("blended.persistence")
+  val persistenceH2 = blended("blended.persistence.h2")
   val persistenceOrient = blended("blended.persistence.orient")
   val prickle = blended("blended.prickle")
   val prickleAkkaHttp = blended("blended.prickle.akka.http")
