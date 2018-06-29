@@ -142,7 +142,7 @@ class PersistedClassDao(dataSource: DataSource) {
       val tail = map.get(id).getOrElse(Nil)
       map + (id -> (field :: tail))
     }
-    byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields) }
+    byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields.reverse) }
   }
 
 }

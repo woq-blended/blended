@@ -28,10 +28,7 @@
 				<constraints nullable="false" />
 			</column>
 			<column name="baseFieldId" type="BIGINT">
-				<constraints nullable="true"
-					foreignKeyName="FK_PersistedField_baseFieldId"
-					referencedTableName="PersistedField"
-					referencedColumnNames="fieldId" />
+				<constraints nullable="true" />
 			</column>
 			<column name="name" type="VARCHAR(100)">
 				<constraints nullable="false" />

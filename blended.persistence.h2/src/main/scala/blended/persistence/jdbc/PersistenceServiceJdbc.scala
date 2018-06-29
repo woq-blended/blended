@@ -19,11 +19,6 @@ class PersistenceServiceJdbc(
 )
   extends PersistenceService {
 
-  //  def this(dataSource: DataSource) = this(
-  //    new DataSourceTransactionManager(dataSource),
-  //    new PersistedClassDao(dataSource)
-  //  )
-
   private[this] val log = org.log4s.getLogger
 
   private[this] val txTemplate = new TransactionTemplate(txManager)
@@ -34,7 +29,8 @@ class PersistenceServiceJdbc(
   }
 
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
-    ???
+    log.error("findByExample is currently not implemented")
+    0L
   }
 
   override def findAll(pClass: String): Seq[ju.Map[String, _ <: AnyRef]] = {
@@ -45,7 +41,8 @@ class PersistenceServiceJdbc(
   }
 
   override def findByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Seq[ju.Map[String, _ <: AnyRef]] = {
-    ???
+    log.error("findByExample is currently not implemented")
+    Seq()
   }
 
   override def persist(pClass: String, data: ju.Map[String, _ <: AnyRef]): ju.Map[String, _ <: AnyRef] = {
