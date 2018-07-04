@@ -14,15 +14,15 @@ case class ConnectTimeout(t: Long)
 
 case class ExecutePing(pingActor: ActorRef, id: AnyVal)
 
-case object PingTimeout
-
 /**
-  * Message to indicate the outcome of a Ping. A successful ping will
+  * Message hierarchy to indicate the outcome of a Ping. A successful ping will
   * simply be the id of the ping message, otherwise we will get the uderlying
   * exception
-  * @param result
   */
-case class PingResult(result : Either[Throwable, String])
+sealed trait PingResult
+case object PingTimeout extends PingResult
+case class PingSuccess(msg: String) extends PingResult
+case class PingFailed(t: Throwable) extends PingResult
 
 /**
   * Command message to restart the container in case of an exception that can't be recovered.

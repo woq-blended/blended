@@ -103,7 +103,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
     case d @ Disconnect(_) => disconnect(state)
 
     // For a successful ping we log the event and schedule the next connectionCheck
-    case PingResult(Right(m)) =>
+    case PingSuccess(m) =>
       pinger = None
       switchState(
         connected(),
@@ -111,7 +111,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
       )
       checkConnection(schedule)
 
-    case PingResult(Left(t)) =>
+    case PingFailed(t) =>
       pinger = None
 
       checkReconnect(

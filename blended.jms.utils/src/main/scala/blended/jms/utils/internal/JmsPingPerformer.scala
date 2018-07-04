@@ -108,26 +108,25 @@ private [internal] trait PingOperations { this : JMSSupport =>
     log.debug(s"Probing ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
 
     info.consumer match {
-      case None => Some(PingResult(Left(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]"))))
+      case None => Some(PingFailed(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]")))
       case Some(c) =>
         try {
           Option(c.receive(100l)) match {
-            case None =>
-              None
+            case None => None
             case Some(m) =>
               val id = m.getJMSCorrelationID()
 
               if (!info.pingId.equals(id)) {
                 val msg = s"Received ping id [$id] for [${info.cfg.vendor}:${info.cfg.provider}] did not match expected is [$info.pingId]"
                 log.debug(msg)
-                Some(PingResult(Left(new Exception(msg))))
+                Some(PingFailed(new Exception(msg)))
               }
               else
                 log.debug(s"Ping successful for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-                Some(PingResult(Right(info.pingId)))
+                Some(PingSuccess(info.pingId))
           }
         } catch {
-          case NonFatal(e) => Some(PingResult(Left(e)))
+          case NonFatal(e) => Some(PingFailed(e))
         }
     }
   }
@@ -148,48 +147,66 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
   implicit val eCtxt = context.system.dispatchers.lookup("FixedPool")
 
   private[this] val pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
+  private[this] var responded : Boolean = false
+  private[this] var pingInfo : Option[PingInfo] = None
 
   case object Tick
+  case object Timeout
+
+  private[this] def respond(response: PingResult, pingActor: ActorRef) : Unit = {
+    if (!responded) {
+      responded = true
+      pingActor ! response
+      pingInfo.foreach(operations.closeJmsResources)
+      context.stop(self)
+    }
+  }
 
   override def receive: Receive = {
     case ExecutePing(pingActor, id) =>
       log.info(s"Executing ping [$id] for connection factory [${config.vendor}:${config.provider}]")
-      context.become(initializing(pingActor, id))
+      context.system.scheduler.scheduleOnce(config.pingTimeout.seconds, self, Timeout)
+      context.become(initializing(pingActor, id).orElse(timeoutHandler(pingActor)))
       operations.initialisePing(con, config, id.toString() + "-" + pingId).map(i => self ! i)
   }
 
   def initializing(pingActor: ActorRef, id: AnyVal) : Receive = {
     case info : PingInfo =>
       log.info(s"Received [$info]")
+
+      pingInfo = Some(info)
+
       info.exception match {
         case None =>
-          log.debug(s"Successfully initialised ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-          context.become(pinging(pingActor, id, info))
+          log.debug(s"Successfully initialised ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
+          context.become(pinging(pingActor, id, info).orElse(timeoutHandler(pingActor)))
           self ! Tick
         case Some(t) =>
-          log.debug(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-          pingActor ! PingResult(Left(t))
-          operations.closeJmsResources(info)
-          context.stop(self)
+          log.debug(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
+          respond(PingFailed(t), pingActor)
       }
   }
 
   def pinging(pingActor : ActorRef, id: AnyVal, info: PingInfo) : Receive = {
-    case Tick if (System.currentTimeMillis() >= info.started + info.cfg.pingTimeout.seconds.toMillis) =>
-      operations.closeJmsResources(info)
-      pingActor ! PingTimeout
-      context.stop(self)
-
     case Tick =>
       operations.probePing(info).map {
         case None =>
           context.system.scheduler.scheduleOnce(100.millis, self, Tick)
         case Some(result) =>
-          pingActor ! result
-          operations.closeJmsResources(info)
-          context.stop(self)
+          respond(result, pingActor)
       }
   }
+
+  def timeoutHandler(pingActor: ActorRef) : Receive = {
+    case Timeout =>
+      log.info(s"Ping for [${config.vendor}:${config.provider}] with id [$pingId] timed out.")
+      respond(PingTimeout, pingActor)
+  }
+
+  override def postStop(): Unit = {
+    pingInfo.foreach(operations.closeJmsResources)
+  }
+
 }
 
 
