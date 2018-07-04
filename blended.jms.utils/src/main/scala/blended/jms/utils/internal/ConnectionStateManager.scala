@@ -3,6 +3,7 @@ package blended.jms.utils.internal
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicLong
 
 import javax.jms.Connection
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
@@ -38,6 +39,7 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
   var currentReceive : StateReceive = disconnected()
   var currentState : ConnectionState = ConnectionState(provider = config.provider).copy(status = DISCONNECTED)
 
+  val pingCounter = new AtomicLong(0)
   var pinger : Option[ActorRef] = None
 
   // the retry Schedule is the time interval we retry a connection after a failed connect attempt
@@ -358,9 +360,9 @@ class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorR
       pinger match {
         case None =>
           log.info(s"Checking JMS connection for provider [$vendor:$provider]")
-          pinger = Some(context.actorOf(ConnectionPingActor.props(config.pingTimeout.seconds)))
 
-          pinger.foreach { _ ! JmsPingPerformer.props(config, c, new DefaultPingOperations()) }
+          pinger = Some(context.actorOf(JmsPingPerformer.props(config, c, new DefaultPingOperations())))
+          pinger.foreach(_ ! ExecutePing(self, pingCounter.getAndIncrement()))
         case Some(a) =>
           log.debug(s"Ignoring ping request for provider [$provider] as one pinger is already active.")
       }

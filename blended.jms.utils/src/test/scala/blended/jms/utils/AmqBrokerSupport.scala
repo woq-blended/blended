@@ -7,7 +7,6 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 trait AmqBrokerSupport {
 
   lazy val brokerName : String = "blended"
-
   def amqCf() = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
 
   def startBroker() : Option[BrokerService] = {

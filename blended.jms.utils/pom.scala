@@ -25,6 +25,7 @@ BlendedModel(
     Deps.jms11Spec,
     Deps.scalaTest % "test",
     Deps.akkaSlf4j % "test",
+    Deps.akkaStream % "test",
     Deps.activeMqBroker % "test",
     Deps.activeMqKahadbStore % "test",
     Deps.akkaTestkit % "test",

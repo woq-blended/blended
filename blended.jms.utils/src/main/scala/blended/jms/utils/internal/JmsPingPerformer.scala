@@ -7,7 +7,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
 import javax.jms._
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.util.Try
 import scala.util.control.NonFatal
 
 private [internal] case class PingInfo(
@@ -27,20 +29,25 @@ private [internal] trait PingOperations { this : JMSSupport =>
   def closeJmsResources(info: PingInfo) : Unit = {
     log.info(s"Closing JMS resources for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
     try {
-      info.consumer.foreach(_.close())
-    } finally {
-      try {
-        info.producer.foreach(_.close())
-      } finally {
-        log.debug(s"closing session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-        info.session.foreach(_.close())
-      }
+      info.session.foreach(_.close())
+      log.debug(s"JMS session closed for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+    } catch {
+      case NonFatal(e) =>
+        log.warn(s"Error closing session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
     }
   }
 
-  def initialisePing(con: Connection, config: BlendedJMSConnectionConfig) : PingInfo = {
+  def createSession(con: Connection) : Try[Session] =
+    Try {con.createSession(false, Session.AUTO_ACKNOWLEDGE) }
 
-    val pingId = UUID.randomUUID().toString()
+  def createConsumer(s: Session, dest: String, selector: String) : Try[MessageConsumer] =
+    Try { s.createConsumer(destination(s, dest), selector) }
+
+  def createProducer(s: Session, dest: String) : Try[MessageProducer] =
+    Try { s.createProducer(destination(s, dest)) }
+
+  def initialisePing(con: Connection, config: BlendedJMSConnectionConfig, pingId: String)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
+
     val timeOutMillis = config.pingTimeout.seconds.toMillis
 
     var session : Option[Session] = None
@@ -50,23 +57,27 @@ private [internal] trait PingOperations { this : JMSSupport =>
     try {
       val selector = s"""JMSCorrelationID='$pingId'"""
 
-      session = Some(con.createSession(false, Session.AUTO_ACKNOWLEDGE))
+      session = Some(createSession(con).get)
 
       session.foreach { s =>
-        val dest = destination(s, config.pingDestination)
+        log.debug(s"Session created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
 
-        consumer = Some(s.createConsumer(dest, selector))
-        producer = Some(s.createProducer(dest))
+        consumer = Some(createConsumer(s, config.pingDestination, selector).get)
+        consumer.foreach { _ =>
+          log.debug(s"Consumer created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
+        }
 
-        val msg = s.createMessage()
-        msg.setJMSCorrelationID(pingId)
+        producer = Some(createProducer(s, config.pingDestination).get)
+        producer.foreach { p =>
+          log.debug(s"Producer created for ping of [${config.vendor}:${config.provider}] and id [$pingId]")
 
-        producer.foreach{ p =>
+          val msg = s.createMessage()
+          msg.setJMSCorrelationID(pingId)
+
           p.send(msg, DeliveryMode.NON_PERSISTENT, 4, timeOutMillis * 2)
+          log.debug(s"Sent ping message for [${config.vendor}:${config.provider}] with id [$pingId]")
         }
       }
-
-      log.debug(s"Sent ping message for [${config.vendor}:${config.provider}] with id [$pingId]")
 
       PingInfo(
         cfg = config,
@@ -92,7 +103,7 @@ private [internal] trait PingOperations { this : JMSSupport =>
     }
   }
 
-  def probePing(info : PingInfo) : Option[PingResult] = {
+  def probePing(info : PingInfo)(implicit eCtxt: ExecutionContext) : Future[Option[PingResult]] = Future {
 
     log.debug(s"Probing ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
 
@@ -116,7 +127,7 @@ private [internal] trait PingOperations { this : JMSSupport =>
                 Some(PingResult(Right(info.pingId)))
           }
         } catch {
-          case jmse : JMSException => Some(PingResult(Left(jmse)))
+          case NonFatal(e) => Some(PingResult(Left(e)))
         }
     }
   }
@@ -134,20 +145,26 @@ object JmsPingPerformer {
 class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, operations: PingOperations)
   extends Actor with ActorLogging {
 
-  implicit val eCtxt = context.system.dispatcher
+  implicit val eCtxt = context.system.dispatchers.lookup("FixedPool")
+
+  private[this] val pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
 
   case object Tick
 
   override def receive: Receive = {
-    case ExecutePing(pingActor) =>
-      log.info(s"Executing ping for connection factory [${config.vendor}:${config.provider}]")
+    case ExecutePing(pingActor, id) =>
+      log.info(s"Executing ping [$id] for connection factory [${config.vendor}:${config.provider}]")
+      context.become(initializing(pingActor, id))
+      operations.initialisePing(con, config, id.toString() + "-" + pingId).map(i => self ! i)
+  }
 
-      val info = operations.initialisePing(con, config)
-
+  def initializing(pingActor: ActorRef, id: AnyVal) : Receive = {
+    case info : PingInfo =>
+      log.info(s"Received [$info]")
       info.exception match {
         case None =>
           log.debug(s"Successfully initialised ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
-          context.become(pinging(pingActor, info))
+          context.become(pinging(pingActor, id, info))
           self ! Tick
         case Some(t) =>
           log.debug(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
@@ -157,20 +174,21 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
       }
   }
 
-  def pinging(pingActor : ActorRef, info: PingInfo) : Receive = {
+  def pinging(pingActor : ActorRef, id: AnyVal, info: PingInfo) : Receive = {
     case Tick if (System.currentTimeMillis() >= info.started + info.cfg.pingTimeout.seconds.toMillis) =>
-      context.stop(self)
       operations.closeJmsResources(info)
+      pingActor ! PingTimeout
+      context.stop(self)
 
     case Tick =>
-      operations.probePing(info) match {
+      operations.probePing(info).map {
         case None =>
           context.system.scheduler.scheduleOnce(100.millis, self, Tick)
         case Some(result) =>
           pingActor ! result
           operations.closeJmsResources(info)
+          context.stop(self)
       }
-
   }
 }
 

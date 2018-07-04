@@ -82,7 +82,7 @@ trait JMSRequestor {
     }
   }
 
-  private[this] def executeCamel(operation: String, opCfg: JmsOperationConfig, cType: ContentType, content: Array[Byte]) : Future[Try[Exchange]] = Future {
+  private[this] def executeCamel(operation: String, opCfg: JmsOperationConfig, cType: ContentType, content: Array[Byte]) : Try[Exchange] = {
 
     val producer = camelContext.createProducerTemplate()
     val exchange = new DefaultExchange(camelContext)
@@ -124,14 +124,14 @@ trait JMSRequestor {
     val opNum = opCounter.incrementAndGet()
     val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
 
-    data.flatMap { result =>
+    data.map { result =>
 
       val content : Array[Byte] = result.flatten.toArray
       if (log.isDebugEnabled()) {
         log.debug(s"Received request [$opNum] of length [${content.size}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
       }
 
-      executeCamel(operation, opCfg, cType, content).map {
+      executeCamel(operation, opCfg, cType, content) match {
         case Success(exchange) =>
 
           if (opCfg.jmsReply) {

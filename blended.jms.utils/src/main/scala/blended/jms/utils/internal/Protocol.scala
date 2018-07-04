@@ -12,7 +12,7 @@ case object ConnectionClosed
 case object CloseTimeout
 case class ConnectTimeout(t: Long)
 
-case class ExecutePing(pingActor: ActorRef)
+case class ExecutePing(pingActor: ActorRef, id: AnyVal)
 
 case object PingTimeout
 
@@ -23,12 +23,6 @@ case object PingTimeout
   * @param result
   */
 case class PingResult(result : Either[Throwable, String])
-
-/**
-  * Message to indicate the successful reception of a ping. Used by the #ConnectionPingActor
-  * @param s
-  */
-case class PingReceived(s : String)
 
 /**
   * Command message to restart the container in case of an exception that can't be recovered.
