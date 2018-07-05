@@ -3,7 +3,7 @@ package blended.jms.utils.internal
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
 import javax.jms._
 
@@ -146,9 +146,10 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
 
   implicit val eCtxt = context.system.dispatchers.lookup("FixedPool")
 
-  private[this] val pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
+  private[this] var pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
   private[this] var responded : Boolean = false
   private[this] var pingInfo : Option[PingInfo] = None
+  private[this] var timer : Option[Cancellable] = None
 
   case object Tick
   case object Timeout
@@ -156,6 +157,8 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
   private[this] def respond(response: PingResult, pingActor: ActorRef) : Unit = {
     if (!responded) {
       responded = true
+      log.info(s"Ping for [${config.vendor}:${config.provider}] with id [$pingId] yielded [$response].")
+      timer.foreach(_.cancel())
       pingActor ! response
       pingInfo.foreach(operations.closeJmsResources)
       context.stop(self)
@@ -164,30 +167,31 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
 
   override def receive: Receive = {
     case ExecutePing(pingActor, id) =>
-      log.info(s"Executing ping [$id] for connection factory [${config.vendor}:${config.provider}]")
-      context.system.scheduler.scheduleOnce(config.pingTimeout.seconds, self, Timeout)
-      context.become(initializing(pingActor, id).orElse(timeoutHandler(pingActor)))
-      operations.initialisePing(con, config, id.toString() + "-" + pingId).map(i => self ! i)
+      pingId = s"$id-$pingId"
+      log.info(s"Executing ping [$pingId] for connection factory [${config.vendor}:${config.provider}]")
+      timer = Some(context.system.scheduler.scheduleOnce(config.pingTimeout.seconds, self, Timeout))
+      context.become(initializing(pingActor).orElse(timeoutHandler(pingActor)))
+      operations.initialisePing(con, config, pingId).map(i => self ! i)
   }
 
-  def initializing(pingActor: ActorRef, id: AnyVal) : Receive = {
+  def initializing(pingActor: ActorRef) : Receive = {
     case info : PingInfo =>
-      log.info(s"Received [$info]")
+      log.debug(s"Received [$info]")
 
       pingInfo = Some(info)
 
       info.exception match {
         case None =>
-          log.debug(s"Successfully initialised ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
-          context.become(pinging(pingActor, id, info).orElse(timeoutHandler(pingActor)))
+          log.info(s"Successfully initialised ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
+          context.become(pinging(pingActor, info).orElse(timeoutHandler(pingActor)))
           self ! Tick
         case Some(t) =>
-          log.debug(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
+          log.info(s"Failed to initialise ping for [${info.cfg.vendor}:${info.cfg.provider}] with id [$pingId]")
           respond(PingFailed(t), pingActor)
       }
   }
 
-  def pinging(pingActor : ActorRef, id: AnyVal, info: PingInfo) : Receive = {
+  def pinging(pingActor : ActorRef, info: PingInfo) : Receive = {
     case Tick =>
       operations.probePing(info).map {
         case None =>
@@ -199,7 +203,7 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
 
   def timeoutHandler(pingActor: ActorRef) : Receive = {
     case Timeout =>
-      log.info(s"Ping for [${config.vendor}:${config.provider}] with id [$pingId] timed out.")
+      timer = None
       respond(PingTimeout, pingActor)
   }
 
