@@ -94,7 +94,6 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
   private[this] def threadCount(): Int = ManagementFactory.getThreadMXBean().getThreadCount
 
-
   "The JMSPingPerformer should " - {
 
     "perform a queue based ping" in {
