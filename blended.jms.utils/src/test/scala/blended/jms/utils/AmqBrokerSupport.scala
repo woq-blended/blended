@@ -16,6 +16,7 @@ trait AmqBrokerSupport {
     b.setPersistent(false)
     b.setUseJmx(false)
     b.setPersistenceAdapter(new MemoryPersistenceAdapter)
+    b.setDedicatedTaskRunner(true)
 
     b.start()
     b.waitUntilStarted()

@@ -11,7 +11,11 @@ class AmqPingPerformerSpec extends JMSPingPerformerSpec with BeforeAndAfterAll w
   private[this] var broker : Option[BrokerService] = None
   override val cfg = BlendedJMSConnectionConfig.defaultConfig.copy(vendor = "amq", provider ="amq", clientId = "jmsPing")
 
-  override val bulkCount: Int = 100000
+  override val bulkCount: Int = 10000
+
+
+  override val pingQueue: String = "pingQueue"
+  override val pingTopic: String = "pingTopic"
 
   override protected def beforeAll(): Unit = {
     broker = startBroker()

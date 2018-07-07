@@ -3,7 +3,7 @@ package blended.jms.utils.internal
 import java.lang.management.ManagementFactory
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
@@ -31,14 +31,15 @@ class PingExecutor extends Actor {
         exec.cfg, exec.con, exec.operations
       ))
 
+      context.watch(actor)
+
       actor ! ExecutePing(self, exec.count)
       context.become(executing(sender()))
   }
 
   def executing(requestor: ActorRef) : Receive = {
-    case m =>
-      requestor ! m
-      context.stop(self)
+    case Terminated(_)  => context.stop(self)
+    case m => requestor ! m
   }
 }
 
@@ -50,11 +51,14 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   private[this] val counter = new AtomicLong(0)
   private[this] implicit val materializer = ActorMaterializer()
 
+  val pingQueue : String
+  val pingTopic : String
+
   val cfg : BlendedJMSConnectionConfig
   var con : Option[Connection]
 
-  val bulkCount : Int = 10000
-  val bulkTimeout = Math.max(1, bulkCount / 100000).minutes
+  val bulkCount : Int = 100000
+  val bulkTimeout = Math.max(1, bulkCount / 50000).minutes
 
   private[this] implicit val eCtxt : ExecutionContext = system.dispatchers.lookup("FixedPool")
 
@@ -80,15 +84,15 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
 
   private[this] val timingOut = new DefaultPingOperations() {
     override def createProducer(s: Session, dest: String): Try[MessageProducer] = {
-      Thread.sleep(10.seconds.toMillis)
+      Thread.sleep(100)
       super.createProducer(s, dest)
     }
   }
 
   private[this] val failingProbe = new DefaultPingOperations() {
 
-    override def probePing(info: PingInfo)(implicit eCtxt: ExecutionContext): Future[Option[PingResult]] = Future {
-      Some(PingFailed(new Exception("Failed")))
+    override def probePing(info: PingInfo)(implicit eCtxt: ExecutionContext): Future[PingResult] = Future {
+      PingFailed(new Exception("Failed"))
     }
   }
 
@@ -101,7 +105,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "queue:blendedPing")
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"queue:$pingQueue")
         ))(3.seconds), 3.seconds
       )
 
@@ -113,7 +117,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing")
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic")
         ))(3.seconds), 3.seconds
       )
       assert(result.isInstanceOf[PingSuccess])
@@ -124,7 +128,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing"),
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic"),
           operations = failingInit
         ))(3.seconds), 3.seconds
       )
@@ -136,7 +140,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing", pingTimeout = 1),
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 1),
           operations = timingOut
         ))(3.seconds), 3.seconds
       )
@@ -149,7 +153,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing")
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic")
         ))(3.seconds)
       }
 
@@ -160,13 +164,31 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
       assert(threadCount() <= 100)
     }
 
+    "does not leak threads on failed ping inits" in {
+
+      val src = Source(1.to(bulkCount)).map { i : Int  =>
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50),
+          operations = timingOut
+        ))(10.seconds)
+      }
+
+      val result = src.mapAsync(10)(i => i).runFold(true)( (c,i) => c && i == PingTimeout)
+
+      assert(Await.result(result, bulkTimeout * 2))
+      Thread.sleep(10000)
+      assert(threadCount() <= 100)
+    }
+
     "does not leak threads on failed ping probes" in {
 
       val src = Source(1.to(bulkCount)).map { i : Int  =>
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing"),
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic"),
           operations = failingProbe
         ))(3.seconds)
       }

@@ -20,6 +20,7 @@ case class ExecutePing(pingActor: ActorRef, id: AnyVal)
   * exception
   */
 sealed trait PingResult
+case object PingPending extends PingResult
 case object PingTimeout extends PingResult
 case class PingSuccess(msg: String) extends PingResult
 case class PingFailed(t: Throwable) extends PingResult
