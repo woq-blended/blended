@@ -27,14 +27,18 @@ private [internal] trait PingOperations { this : JMSSupport =>
 
   private val log = org.log4s.getLogger
 
-  def closeJmsResources(info: PingInfo)(implicit eCtxt: ExecutionContext) : Future[Unit] = Future {
-    log.info(s"Closing JMS resources for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+  def closeJmsResources(info: PingInfo)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
     try {
-      info.session.foreach(_.close())
-      log.debug(s"JMS session closed for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+      info.session.foreach{ i =>
+        log.info(s"Closing JMS resources for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+        i.close()
+        log.debug(s"JMS session closed for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+      }
+      info.copy(session = None, consumer = None, producer = None)
     } catch {
       case NonFatal(e) =>
         log.warn(s"Error closing session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+        info
     }
   }
 
@@ -202,8 +206,14 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
 
   def closing : Receive = {
     case info : PingInfo =>
-      operations.closeJmsResources(info)
-      context.stop(self)
+      pingInfo = Some(info)
+
+      info.session match {
+        case None =>
+          context.stop(self)
+        case Some(s) =>
+          operations.closeJmsResources(info).pipeTo(self)
+      }
   }
 
   def timeoutHandler(pingActor: ActorRef) : Receive = {
@@ -215,7 +225,4 @@ class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, oper
   override def postStop(): Unit = {
     pingInfo.foreach(operations.closeJmsResources)
   }
-
 }
-
-
