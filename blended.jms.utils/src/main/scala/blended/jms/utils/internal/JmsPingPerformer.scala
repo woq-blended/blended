@@ -95,7 +95,7 @@ private [internal] trait PingOperations { this : JMSSupport =>
       )
     } catch {
       case NonFatal(e) =>
-        log.warn(s"Error initialising ping [${e.getMessage()}]")
+        log.warn(s"Error initialising ping [${e.getMessage()}] for for [${config.vendor}:${config.provider}] with id [$pingId]")
         PingInfo(
           cfg = config,
           started = System.currentTimeMillis(),

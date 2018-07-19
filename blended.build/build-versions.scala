@@ -11,7 +11,7 @@ object BlendedVersions {
   val scalaVersionJS = "2.12.6"
   val scalaVersionJSBinary = "2.12"
 
-  val scalaJsVersion = "0.6.22"
+  val scalaJsVersion = "0.6.23"
   val scalaJsBundlerVersion = "0.12.0"
 
   val scalaTestVersion = "3.0.5"
