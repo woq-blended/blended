@@ -54,7 +54,7 @@ trait JMSRequestor {
                 case Some(l) => l
               }
 
-              validContentTypes.filter(_ == cType.value.split(";").head) match {
+              validContentTypes.filter(_ == cType.mediaType.value) match {
                 case Nil =>
                   log.warn(s"Content-Type [${cType.value}] not supported.")
 
@@ -66,7 +66,7 @@ trait JMSRequestor {
                     )
                   )
 
-                case _ =>
+                case h :: _ =>
                   complete{
                     val f = requestReply(path.toString(), opCfg, cType, request)
 
@@ -94,7 +94,10 @@ trait JMSRequestor {
     msg.setBody(content)
     opCfg.header.foreach { case (k, v) => msg.setHeader(k, v) }
 
-    msg.setHeader("Content-Type", cType)
+    val requestContentType = cType.mediaType.value
+    log.debug(s"Request Content Type for JMS Request is [$requestContentType]")
+
+    msg.setHeader("Content-Type", cType.mediaType.value)
     exchange.setIn(msg)
 
     val baseUri = s"jms:${opCfg.destination}?jmsKeyFormatStrategy=passthrough&disableTimeToLive=true&requestTimeout=${opCfg.timeout}&replyTo=restJMS.$operation"
@@ -104,7 +107,7 @@ trait JMSRequestor {
       case false => baseUri
     }
 
-    log.info(s"Using request/reply uri [$uri]")
+    log.info(s"Using request/reply uri [$uri] with content type [$requestContentType]")
 
     try {
       val result = producer.send(uri, exchange)
@@ -123,6 +126,11 @@ trait JMSRequestor {
 
     val opNum = opCounter.incrementAndGet()
     val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
+
+    def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
+      val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
+      headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
+    }
 
     data.map { result =>
 
@@ -143,13 +151,13 @@ trait JMSRequestor {
             HttpResponse(
               status = StatusCodes.OK,
               entity = HttpEntity.Strict(cType, ByteString(body)),
-              headers = request.headers
+              headers = filterHeaders(request.headers)
             )
           } else {
             HttpResponse(
               status = if (opCfg.isSoap) StatusCodes.Accepted else StatusCodes.OK,
               entity = HttpEntity.Strict(cType, ByteString("")),
-              headers = request.headers
+              headers = filterHeaders(request.headers)
             )
           }
         case Failure(e) =>
@@ -157,7 +165,7 @@ trait JMSRequestor {
           HttpResponse(
             status = StatusCodes.InternalServerError,
             entity = HttpEntity.Strict(cType, ByteString("")),
-            headers = request.headers
+            headers = filterHeaders(request.headers)
           )
       }
     }
