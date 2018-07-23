@@ -6,6 +6,9 @@ import org.scalatest.Matchers
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigFactory
 import org.scalactic.source.Position.apply
+import java.io.File
+import java.{ lang => jl }
+import org.springframework.transaction.PlatformTransactionManager
 
 class PersistenceServiceJdbcTest
   extends FreeSpec
@@ -13,6 +16,47 @@ class PersistenceServiceJdbcTest
   with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
+
+  /**
+   * Use this to run a test against a pre-initialized Persistence Service. The schema is created, but no data is present.
+   */
+  def withTestPersistenceService(dir: Option[File] = None)(f: (PersistenceServiceJdbc, PlatformTransactionManager) => Unit): Unit = {
+
+    def worker(dir: File): Unit = {
+      DbFactory.withDataSource(dir, "db") { dataSource =>
+        val dao = new PersistedClassDao(dataSource)
+        val txMgr = new DummyPlatformTransactionManager()
+        dao.init()
+        val exp = new PersistenceServiceJdbc(txMgr, dao)
+        f(exp, txMgr)
+      }
+    }
+
+    dir match {
+      case Some(d) => worker(d)
+      case None =>
+        withTestDir(new File("target/tmp")) { dir =>
+          worker(dir)
+        }
+    }
+  }
+
+  "persist and load simple class" in {
+    val pClass = "type1"
+    withTestPersistenceService() { (serv, txMgr) =>
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
+      
+      val all = serv.findAll(pClass)
+      assert(all.size == 2)
+      assert(all.find(m => m.get("id") == jl.Long.valueOf(1L) && m.get("color") == "blau").isDefined)
+      
+      val cand = serv.findByExample(pClass, Map("id" -> jl.Long.valueOf(1L)).asJava)
+      assert(cand.size === 1)
+      assert(cand.head.get("id") === 1L)
+      assert(cand.head.get("color") === "blau")
+    }
+  }
 
   "TEST data survives db close and reopen" in {
 
@@ -33,33 +77,25 @@ class PersistenceServiceJdbcTest
     				|}""".stripMargin)
 
     withTestDir(new java.io.File("target/tmp")) { dir =>
-      config.root().unwrapped()
+      // config.root().unwrapped()
 
-      DbFactory.withDataSource(dir, "db") { dataSource =>
-        val dao = new PersistedClassDao(dataSource)
-        val txMgr = new DummyPlatformTransactionManager()
-        dao.init()
-        val exp = new PersistenceServiceJdbc(txMgr, dao)
-        val empty = exp.findAll("CONFIG")
+      withTestPersistenceService(Some(dir)) { (persistenceService, _) =>
+        val empty = persistenceService.findAll("CONFIG")
         empty should have size (0)
 
-        exp.persist("CONFIG", config.root().unwrapped())
-        val loaded = exp.findAll("CONFIG")
+        persistenceService.persist("CONFIG", config.root().unwrapped())
+        val loaded = persistenceService.findAll("CONFIG")
 
         loaded should have size (1)
         loaded.head should equal(config.root().unwrapped())
       }
 
-      DbFactory.withDataSource(dir, "db") { dataSource =>
-        val dao = new PersistedClassDao(dataSource)
-        val txMgr = new DummyPlatformTransactionManager()
-        dao.init()
-        val exp = new PersistenceServiceJdbc(txMgr, dao)
-        val one = exp.findAll("CONFIG")
+      withTestPersistenceService(Some(dir)) { (persistenceService, _) =>
+        val one = persistenceService.findAll("CONFIG")
         one should have size (1)
 
-        exp.persist("CONFIG", config2.root().unwrapped())
-        val two = exp.findAll("CONFIG")
+        persistenceService.persist("CONFIG", config2.root().unwrapped())
+        val two = persistenceService.findAll("CONFIG")
 
         two should have size (2)
       }

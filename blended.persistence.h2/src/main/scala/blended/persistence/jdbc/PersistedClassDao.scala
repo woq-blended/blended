@@ -106,10 +106,29 @@ class PersistedClassDao(dataSource: DataSource) {
       val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection)
       val liquibase = new Liquibase(changelogName, new ClassLoaderResourceAccessor(), database)
       liquibase.update("")
-      log.debug("Database changelog applied")
+      log.debug(s"Database changelog applied: ${changelogName}")
+    } catch {
+      case e: Exception =>
+        log.error(e)(s"Could not apply DB changelog: ${changelogName}")
+        throw e
     } finally {
       jdbcConnection.close()
     }
+  }
+
+  def fieldRowMapper(prefix: String = ""): RowMapper[(Long, PersistedField)] = { (rs, nr) =>
+
+    val holderId = rs.getLong(prefix + PF.HolderId)
+
+    val fieldId = rs.getLong(prefix + PF.FieldId)
+    val baseFieldId = Option(rs.getLong(prefix + PF.BaseFieldId)).filter(_ != 0)
+    val name = rs.getString(prefix + PF.Name)
+    val valueLong = Option(rs.getLong(prefix + PF.ValueLong))
+    val valueDouble = Option(rs.getDouble(prefix + PF.ValueDouble))
+    val valueString = Option(rs.getString(prefix + PF.ValueString))
+    val typeName = TypeName.fromString(rs.getString(prefix + PF.TypeName)).get
+
+    holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
   }
 
   def findAll(pClass: String): sci.Seq[PersistedClass] = {
@@ -121,28 +140,103 @@ class PersistedClassDao(dataSource: DataSource) {
     val sql = s"select ${pfCols.map("f." + _).mkString(",")} from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
     val paramMap = new MapSqlParameterSource()
     paramMap.addValue("className", pClass)
-    val rowMapper: RowMapper[(Long, PersistedField)] = { (rs, nr) =>
-
-      val holderId = rs.getLong(PF.HolderId)
-
-      val fieldId = rs.getLong(PF.FieldId)
-      val baseFieldId = Option(rs.getLong(PF.BaseFieldId)).filter(_ != 0)
-      val name = rs.getString(PF.Name)
-      val valueLong = Option(rs.getLong(PF.ValueLong))
-      val valueDouble = Option(rs.getDouble(PF.ValueDouble))
-      val valueString = Option(rs.getString(PF.ValueString))
-      val typeName = TypeName.fromString(rs.getString(PF.TypeName)).get
-
-      holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
-    }
+    val rowMapper = fieldRowMapper()
     val allFields = jdbcTemplate.query(sql, paramMap, rowMapper)
-    val byId = allFields.asScala.foldLeft(Map[Long, List[PersistedField]]()) { (map, rs) =>
+    inferPersistedClassesFromFields(pClass, allFields.asScala)
+  }
+
+  def inferPersistedClassesFromFields(pClass: String, fields: Seq[(Long, PersistedField)]): sci.Seq[PersistedClass] = {
+    val byId = fields.foldLeft(Map[Long, List[PersistedField]]()) { (map, rs) =>
       val id = rs._1
       val field = rs._2
       val tail = map.get(id).getOrElse(Nil)
       map + (id -> (field :: tail))
     }
     byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields.reverse) }
+  }
+
+  def findByFields(pClass: String, fields: Seq[PersistedField]): sci.Seq[PersistedClass] = {
+
+    // Idea:
+    // find all fields
+    // also resolve class to them
+
+    val mainField = "field"
+
+    var queryFields: List[String] = mainField :: Nil
+    var queryCriterias: List[String] = Nil
+    val queryParams = new MapSqlParameterSource()
+
+    fields.foreach { field =>
+      val fName = s"f${field.fieldId}"
+      queryFields ::= fName
+
+      // match holder-id
+      queryCriterias ::= s"${fName}.${PF.HolderId} = ${mainField}.${PF.HolderId}"
+
+      // match name
+      queryCriterias ::= s"${fName}.${PF.Name} = :${fName}Name"
+      queryParams.addValue(fName + "Name", field.name)
+
+      // match type name
+      queryCriterias ::= s"${fName}.${PF.TypeName} = :${fName}TypeName"
+      queryParams.addValue(fName + "TypeName", field.typeName.name)
+
+      // match string value
+      field.valueString match {
+        case Some(v) =>
+          queryCriterias ::= s"${fName}.${PF.ValueString} = :${fName}ValueString"
+          queryParams.addValue(fName + "ValueString", v)
+
+        case None =>
+          queryCriterias ::= s"${fName}.${PF.ValueString} is null"
+      }
+
+      // match long value
+      field.valueLong match {
+        case Some(v) =>
+          queryCriterias ::= s"${fName}.${PF.ValueLong} = :${fName}ValueLong"
+          queryParams.addValue(fName + "ValueLong", v)
+
+        case None =>
+          queryCriterias ::= s"${fName}.${PF.ValueLong} is null"
+      }
+
+      // match double value
+      field.valueDouble match {
+        case Some(v) =>
+          queryCriterias ::= s"${fName}.${PF.ValueDouble} = :${fName}ValueDouble"
+          queryParams.addValue(fName + "ValueDouble", v)
+
+        case None =>
+          queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
+      }
+
+    }
+
+    val pfCols = Seq(
+      PF.HolderId, PF.FieldId, PF.BaseFieldId,
+      PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
+      PF.TypeName
+    )
+
+    // Example
+    // Field 1: PeristedField(fieldId = 1, name = k1, valueLong = None, valueDouble = None, valueString = "v1", typeName = "String"
+    // Field 2: PeristedField(fieldId = 2, name = k2, valueLong = "2", valueDouble = None, valueString = None, typeName = "Long"
+    // select field.id, field.typeName, ...
+    // from PersistedField field, PersistedField field1, PersistedField field2
+    // where field.holderId = field1.holderId and field1.typeName = "String" and field1.name = "k1" and field1.valueString = "v1"
+    //   and field.holderId = field2.holderId and field2.typeName = "Long" and field2.name = "k2" and field2.valueDouble = 2
+    val sql = s"select ${pfCols.map(mainField + "." + _).mkString(", ")} " +
+      s"\nfrom ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
+      s"\nwhere ${queryCriterias.reverse.mkString(" and ")}"
+
+    log.debug(s"find request: ${fields}")
+    log.debug(s"Generated query: ${sql}")
+    log.debug(s"parameter map: ${queryParams.getValues}")
+
+    val allFields = jdbcTemplate.query(sql, queryParams, fieldRowMapper())
+    inferPersistedClassesFromFields(pClass, allFields.asScala)
   }
 
 }

@@ -29,7 +29,7 @@ class PersistenceServiceJdbc(
   }
 
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
-    log.error("findByExample is currently not implemented")
+    log.error("deleteByExample is currently not implemented")
     0L
   }
 
@@ -41,8 +41,27 @@ class PersistenceServiceJdbc(
   }
 
   override def findByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Seq[ju.Map[String, _ <: AnyRef]] = {
-    log.error("findByExample is currently not implemented")
-    Seq()
+    val fields = PersistedField.extractFieldsWithoutDataId(data)
+    val queryFields = fields.flatMap { field =>
+      field.baseFieldId match {
+        case Some(baseFieldId) =>
+          log.error(s"findByExample is currently not implemented for hierarchical nested fields. The following field will be ignored: ${field}")
+          Seq()
+        case None =>
+          // we examime a top-level field
+          Seq(field)
+      }
+    }
+
+    val classes = txTemplateRo.execute { ts =>
+      dao.findByFields(pClass, queryFields)
+    }
+
+    // select cId, ...
+    // from pclass
+    // where
+
+    classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 
   override def persist(pClass: String, data: ju.Map[String, _ <: AnyRef]): ju.Map[String, _ <: AnyRef] = {
@@ -63,89 +82,5 @@ class PersistenceServiceJdbc(
 
     PersistedField.toJuMap(persisted.fields)
   }
-  //
-  //  private[this] var createdClasses: Set[String] = Set()
-  //
-  //  def withDb[T](f: ODatabaseDocument => T): T = {
-  //    val dbTx = dbPool.acquire()
-  //    try {
-  //      val t = f(dbTx)
-  //      t
-  //    } catch {
-  //      case e: Throwable =>
-  //        throw e
-  //    } finally {
-  //      dbTx.close();
-  //    }
-  //  }
-  //
-  //  def withDbTx[T](f: ODatabaseDocument => T): T = {
-  //    val dbTx = dbPool.acquire()
-  //    try {
-  //      val db = dbTx.begin()
-  //      val t = f(db)
-  //      dbTx.commit()
-  //      t
-  //    } catch {
-  //      case e: Throwable =>
-  //        dbTx.rollback()
-  //        throw e
-  //    } finally {
-  //      dbTx.close();
-  //    }
-  //  }
-  //
-  //  protected[internal] def ensureClassCreated(pClass: String): Unit = {
-  //    if (createdClasses.find(_ == pClass).isEmpty) {
-  //      withDb { db =>
-  //        val existingClass = Option(db.getMetadata().getSchema().getClass(pClass))
-  //        if (existingClass.isEmpty) {
-  //          log.debug("Creating schema for class: {}", pClass)
-  //          db.getMetadata().getSchema().createClass(pClass)
-  //        }
-  //      }
-  //    }
-  //  }
-  //
-  //  override def findAll(pClass: String): Seq[java.util.Map[String, _ <: AnyRef]] = {
-  //    log.debug("About to findAll for pClass [{}]", pClass)
-  //    withDb { db =>
-  //      ensureClassCreated(pClass)
-  //      val r = db.browseClass(pClass)
-  //      r.iterator().asScala.map(d => d.toMap).toList
-  //    }
-  //  }
-  //
-  //  override def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]] = {
-  //    log.debug("About to findByExample for pClass [{}] and example data [{}]", Array[Object](pClass, data): _*)
-  //    withDb { db =>
-  //      ensureClassCreated(pClass)
-  //      val ordered = data.asScala.toList
-  //      val placeholder = ordered.map { case (k, v) => s" ${k} = ? " }
-  //      val values = ordered.map { case (k, v) => v }
-  //      val sql = s"select * from ${pClass} where ${placeholder.mkString(" and ")}"
-  //      log.debug("About to query: {} with values: {}", Array[Object](sql, values): _*)
-  //      val r: java.util.List[ODocument] = db.query(new OSQLSynchQuery(sql), values.toArray: _*)
-  //      log.debug("Found {} entries", r.size())
-  //      r.iterator().asScala.map(d => d.toMap).toList
-  //    }
-  //  }
-  //
-  //  def deleteByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Long = {
-  //    log.debug("About to deleteByExample for pClass [{}] and example data [{}]", Array[Object](pClass, data): _*)
-  //    withDb { db =>
-  //      ensureClassCreated(pClass)
-  //      val ordered = data.asScala.toList
-  //      val placeholder = ordered.map { case (k, v) => s" ${k} = ? " }
-  //      val values = ordered.map { case (k, v) => v }
-  //      val sql = s"select * from ${pClass} where ${placeholder.mkString(" and ")}"
-  //      log.debug("About to query: {} with values: {}", Array[Object](sql, values): _*)
-  //      val r: java.util.List[ODocument] = db.query(new OSQLSynchQuery(sql), values.toArray: _*)
-  //      val count = r.size()
-  //      log.debug("Found {} entries", count)
-  //      r.iterator().asScala.foreach(d => d.delete())
-  //      count
-  //    }
-  //  }
 
 }

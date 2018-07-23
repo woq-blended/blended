@@ -3,7 +3,7 @@ package blended.persistence.jdbc
 import org.scalatest.FreeSpec
 import scala.collection.JavaConverters._
 
-class PersistedDataTest extends FreeSpec {
+class PersistedFieldTest extends FreeSpec {
 
   val testData = Seq(
     ("String",
