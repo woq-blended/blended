@@ -18,6 +18,7 @@ import blended.persistence.jdbc.PersistedClassDao
 import blended.persistence.jdbc.PersistenceServiceJdbc
 import scala.util.Success
 import scala.util.Failure
+import org.h2.jdbcx.JdbcDataSource
 
 class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
@@ -54,10 +55,17 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
             }
           }
 
+          val ds = new JdbcDataSource();
+          ds.setURL(dbUrl);
+          ds.setUser("admin");
+          ds.setPassword("admin");
+
+          // to avoid OSGi classloading issue with Hikari datasource, we feed a DS from H2 into Hikari
           val dataSource = new HikariDataSource()
-          dataSource.setJdbcUrl(dbUrl)
-          dataSource.setUsername("admin")
-          dataSource.setPassword("admin")
+          dataSource.setDataSource(ds)
+          //          dataSource.setJdbcUrl(dbUrl)
+          //          dataSource.setUsername("admin")
+          //          dataSource.setPassword("admin")
           onStop {
             dataSource.close()
           }

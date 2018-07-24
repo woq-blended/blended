@@ -23,6 +23,7 @@ BlendedModel(
     Deps.springJdbc,
     Deps.springBeans,
     Deps.liquibase,
+    Deps.snakeyaml,
     Deps.springCore % "runtime",
     Deps.jclOverSlf4j % "runtime",
     Deps.scalaTest % "test",

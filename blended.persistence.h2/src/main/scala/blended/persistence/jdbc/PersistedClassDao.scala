@@ -104,7 +104,7 @@ class PersistedClassDao(dataSource: DataSource) {
     val jdbcConnection = new JdbcConnection(dataSource.getConnection())
     try {
       val database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection)
-      val liquibase = new Liquibase(changelogName, new ClassLoaderResourceAccessor(), database)
+      val liquibase = new Liquibase(changelogName, new ClassLoaderResourceAccessor(getClass().getClassLoader()), database)
       liquibase.update("")
       log.debug(s"Database changelog applied: ${changelogName}")
     } catch {
