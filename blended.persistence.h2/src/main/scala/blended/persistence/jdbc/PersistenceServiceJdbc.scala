@@ -29,6 +29,7 @@ class PersistenceServiceJdbc(
   }
 
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
+    log.debug(s"About to delete by example pClass: ${pClass}, data: ${data}")
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     val unsupportedFields = fields.filter { field => field.baseFieldId.isDefined }
     if (unsupportedFields.isEmpty) {

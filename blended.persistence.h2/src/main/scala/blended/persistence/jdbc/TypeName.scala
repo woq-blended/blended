@@ -32,8 +32,11 @@ object TypeName {
   case object Object extends TypeName {
     override def name = "Object"
   }
+  case object Null extends TypeName {
+    override def name = "Null"
+  }
 
   def fromString(name: String): Option[TypeName] =
-    Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object).find(_.name == name)
+    Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null).find(_.name == name)
 
 }

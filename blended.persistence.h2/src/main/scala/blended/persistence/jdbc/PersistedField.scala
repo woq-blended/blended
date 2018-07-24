@@ -39,6 +39,8 @@ object PersistedField {
     def extractValue(key: String, value: Any, parent: Option[PersistedField] = None): Seq[PersistedField] = {
       val baseFieldId = parent.map(_.fieldId)
       value match {
+        case null =>
+          Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Null))
         case value: String =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueString = Some(value), typeName = TypeName.String))
         case value: Long =>
@@ -78,6 +80,7 @@ object PersistedField {
 
     def fieldExtract(field: PersistedField, others: Seq[PersistedField]): AnyRef = {
       field.typeName match {
+        case TypeName.Null => null
         case TypeName.Boolean => jl.Boolean.valueOf(field.valueLong.map(_ != 0).get)
         case TypeName.Byte => jl.Byte.valueOf(field.valueLong.map(_.toByte).get)
         case TypeName.Int => jl.Integer.valueOf(field.valueLong.map(_.toInt).get)

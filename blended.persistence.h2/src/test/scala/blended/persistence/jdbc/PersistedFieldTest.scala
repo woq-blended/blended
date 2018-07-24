@@ -6,6 +6,12 @@ import scala.collection.JavaConverters._
 class PersistedFieldTest extends FreeSpec {
 
   val testData = Seq(
+    ("Null",
+      Map("key" -> null).asJava,
+      Seq(
+        PersistedField(fieldId = 1, name = "key", typeName = TypeName.Null)
+      )
+    ),
     ("String",
       Map("key" -> "value").asJava,
       Seq(
