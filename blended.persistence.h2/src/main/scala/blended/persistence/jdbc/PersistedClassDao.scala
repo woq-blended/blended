@@ -155,18 +155,17 @@ class PersistedClassDao(dataSource: DataSource) {
     byId.toList.map { case (id, fields) => PersistedClass(id = Some(id), name = pClass, fields = fields.reverse) }
   }
 
-  def findByFields(pClass: String, fields: Seq[PersistedField]): sci.Seq[PersistedClass] = {
-
-    // Idea:
-    // find all fields
-    // also resolve class to them
-
+  def createByExampleQuery(pClass: String, selectCols: Seq[String], fields: Seq[PersistedField]): (String, MapSqlParameterSource) = {
     val mainField = "field"
+    val cls = "cls"
 
     var queryFields: List[String] = mainField :: Nil
     var queryCriterias: List[String] = Nil
     val queryParams = new MapSqlParameterSource()
 
+    queryCriterias ::= s"${mainField}.${PF.HolderId} = ${cls}.${PC.Id} and ${cls}.${PC.Name} = :clsName"
+    queryParams.addValue("clsName", pClass)
+    
     fields.foreach { field =>
       val fName = s"f${field.fieldId}"
       queryFields ::= fName
@@ -213,23 +212,29 @@ class PersistedClassDao(dataSource: DataSource) {
       }
 
     }
+    
+    // Example
+    // Field 1: PeristedField(fieldId = 1, name = k1, valueLong = None, valueDouble = None, valueString = "v1", typeName = "String"
+    // Field 2: PeristedField(fieldId = 2, name = k2, valueLong = "2", valueDouble = None, valueString = None, typeName = "Long"
+    // select field.id, field.typeName, ...
+    // from PersistedField field, PersistedField field1, PersistedField field2, PersistedClass pclass
+    // where field.holderId = pclass.id and pclass.name = :pclass
+    //   and field.holderId = field1.holderId and field1.typeName = "String" and field1.name = "k1" and field1.valueString = "v1"
+    //   and field.holderId = field2.holderId and field2.typeName = "Long" and field2.name = "k2" and field2.valueDouble = 2
+    val sql = s"select ${selectCols.map(mainField + "." + _).mkString(", ")} " +
+      s"\nfrom ${PC.Table} ${cls}, ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
+      s"\nwhere ${queryCriterias.reverse.mkString(" and ")}"
+      
+      sql -> queryParams
+  }
 
+  def findByFields(pClass: String, fields: Seq[PersistedField]): sci.Seq[PersistedClass] = {
     val pfCols = Seq(
       PF.HolderId, PF.FieldId, PF.BaseFieldId,
       PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
       PF.TypeName
     )
-
-    // Example
-    // Field 1: PeristedField(fieldId = 1, name = k1, valueLong = None, valueDouble = None, valueString = "v1", typeName = "String"
-    // Field 2: PeristedField(fieldId = 2, name = k2, valueLong = "2", valueDouble = None, valueString = None, typeName = "Long"
-    // select field.id, field.typeName, ...
-    // from PersistedField field, PersistedField field1, PersistedField field2
-    // where field.holderId = field1.holderId and field1.typeName = "String" and field1.name = "k1" and field1.valueString = "v1"
-    //   and field.holderId = field2.holderId and field2.typeName = "Long" and field2.name = "k2" and field2.valueDouble = 2
-    val sql = s"select ${pfCols.map(mainField + "." + _).mkString(", ")} " +
-      s"\nfrom ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
-      s"\nwhere ${queryCriterias.reverse.mkString(" and ")}"
+    val (sql, queryParams) = createByExampleQuery(pClass, pfCols, fields)
 
     log.debug(s"find request: ${fields}")
     log.debug(s"Generated query: ${sql}")

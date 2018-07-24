@@ -46,15 +46,39 @@ class PersistenceServiceJdbcTest
     withTestPersistenceService() { (serv, txMgr) =>
       serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
       serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
-      
+
       val all = serv.findAll(pClass)
       assert(all.size == 2)
       assert(all.find(m => m.get("id") == jl.Long.valueOf(1L) && m.get("color") == "blau").isDefined)
-      
+
       val cand = serv.findByExample(pClass, Map("id" -> jl.Long.valueOf(1L)).asJava)
       assert(cand.size === 1)
       assert(cand.head.get("id") === 1L)
       assert(cand.head.get("color") === "blau")
+    }
+  }
+
+  "do not ignore pClass in findAll" in {
+    val pClass = "type1"
+    val pClass2 = "type2"
+    withTestPersistenceService() { (serv, txMgr) =>
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
+
+      val all = serv.findAll(pClass2)
+      assert(all.size == 0)
+    }
+  }
+
+  "do not ignore pClass in findByExample" in {
+    val pClass = "type1"
+    val pClass2 = "type2"
+    withTestPersistenceService() { (serv, txMgr) =>
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
+
+      val cand = serv.findByExample(pClass2, Map("id" -> jl.Long.valueOf(1L)).asJava)
+      assert(cand.size === 0)
     }
   }
 
