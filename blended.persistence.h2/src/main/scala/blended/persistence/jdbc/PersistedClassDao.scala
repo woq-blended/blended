@@ -165,7 +165,7 @@ class PersistedClassDao(dataSource: DataSource) {
 
     queryCriterias ::= s"${mainField}.${PF.HolderId} = ${cls}.${PC.Id} and ${cls}.${PC.Name} = :clsName"
     queryParams.addValue("clsName", pClass)
-    
+
     fields.foreach { field =>
       val fName = s"f${field.fieldId}"
       queryFields ::= fName
@@ -195,7 +195,7 @@ class PersistedClassDao(dataSource: DataSource) {
       field.valueLong match {
         case Some(v) =>
           queryCriterias ::= s"${fName}.${PF.ValueLong} = :${fName}ValueLong"
-          queryParams.addValue(fName + "ValueLong", v)
+          queryParams.addValue(fName + "ValueLong", v.longValue())
 
         case None =>
           queryCriterias ::= s"${fName}.${PF.ValueLong} is null"
@@ -205,14 +205,14 @@ class PersistedClassDao(dataSource: DataSource) {
       field.valueDouble match {
         case Some(v) =>
           queryCriterias ::= s"${fName}.${PF.ValueDouble} = :${fName}ValueDouble"
-          queryParams.addValue(fName + "ValueDouble", v)
+          queryParams.addValue(fName + "ValueDouble", v.doubleValue())
 
         case None =>
           queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
       }
 
     }
-    
+
     // Example
     // Field 1: PeristedField(fieldId = 1, name = k1, valueLong = None, valueDouble = None, valueString = "v1", typeName = "String"
     // Field 2: PeristedField(fieldId = 2, name = k2, valueLong = "2", valueDouble = None, valueString = None, typeName = "Long"
@@ -224,8 +224,8 @@ class PersistedClassDao(dataSource: DataSource) {
     val sql = s"select ${selectCols.map(mainField + "." + _).mkString(", ")} " +
       s"\nfrom ${PC.Table} ${cls}, ${queryFields.reverse.map(PF.Table + " " + _).mkString(", ")} " +
       s"\nwhere ${queryCriterias.reverse.mkString(" and ")}"
-      
-      sql -> queryParams
+
+    sql -> queryParams
   }
 
   def findByFields(pClass: String, fields: Seq[PersistedField]): sci.Seq[PersistedClass] = {
@@ -242,6 +242,22 @@ class PersistedClassDao(dataSource: DataSource) {
 
     val allFields = jdbcTemplate.query(sql, queryParams, fieldRowMapper())
     inferPersistedClassesFromFields(pClass, allFields.asScala)
+  }
+
+  def deleteByFields(pClass: String, fields: Seq[PersistedField]): Long = {
+    val cols = Seq(PF.HolderId)
+    val (sql, queryParams) = createByExampleQuery(pClass, cols, fields)
+    val classIds = jdbcTemplate.queryForList(sql, queryParams, classOf[java.lang.Long]).asScala.toList.distinct
+    log.debug(s"Found ${classIds.size} class entries to be deleted: ${classIds}")
+
+    if (classIds.size > 0) {
+      val sql = s"delete from ${PC.Table} where ${PC.Id} in (:deleteIds)"
+      val paramMap = new MapSqlParameterSource()
+      paramMap.addValue("deleteIds", classIds.asJava)
+      jdbcTemplate.update(sql, paramMap)
+    } else {
+      0L
+    }
   }
 
 }

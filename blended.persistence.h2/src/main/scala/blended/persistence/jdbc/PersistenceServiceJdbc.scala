@@ -29,8 +29,17 @@ class PersistenceServiceJdbc(
   }
 
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
-    log.error("deleteByExample is currently not implemented")
-    0L
+    val fields = PersistedField.extractFieldsWithoutDataId(data)
+    val unsupportedFields = fields.filter { field => field.baseFieldId.isDefined }
+    if (unsupportedFields.isEmpty) {
+      txTemplate.execute { ts =>
+        dao.deleteByFields(pClass, fields)
+      }
+    } else {
+      log.error(s"deleteByExample is currently not implemented for hierarchical nested fields. Offending fields: ${unsupportedFields}")
+      0L
+    }
+
   }
 
   override def findAll(pClass: String): Seq[ju.Map[String, _ <: AnyRef]] = {

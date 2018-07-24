@@ -82,6 +82,41 @@ class PersistenceServiceJdbcTest
     }
   }
 
+  "persist and delete" in {
+    val pClass = "type1"
+    withTestPersistenceService() { (serv, txMgr) =>
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
+      serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
+
+      val all = serv.findAll(pClass)
+      assert(all.size == 2)
+
+      {
+        // no result
+        val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(3L)).asJava)
+        assert(cnt === 0)
+      }
+
+      {
+        // wrong class
+        val cnt = serv.deleteByExample("type2", Map("id" -> jl.Long.valueOf(1L)).asJava)
+        assert(cnt === 0)
+      }
+
+      {
+        // one deleted
+        val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(1L)).asJava)
+        assert(cnt === 1)
+      }
+
+      {
+        // check rest
+        val rest = serv.findAll(pClass)
+        assert(rest.size === 1)
+      }
+    }
+  }
+
   "TEST data survives db close and reopen" in {
 
     val config = ConfigFactory.parseString("""
