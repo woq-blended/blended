@@ -48,10 +48,10 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
         case (Some(dbUrl), Some(dbUserName), Some(dbPassword)) =>
           dbPath.foreach { dbPath =>
-            val f = new File(dbPath)
-            if (!f.exists()) {
+            val f = new File(dbPath).getParentFile()
+            if (f != null && !f.exists()) {
               log.debug("dbPath is defined but does not exists. About to create it")
-              new File(dbPath).mkdirs()
+              f.mkdirs()
             }
           }
 

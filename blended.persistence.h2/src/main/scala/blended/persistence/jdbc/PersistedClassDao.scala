@@ -42,6 +42,7 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   def persist(persistedClass: PersistedClass): PersistedClass = {
+    log.debug("About to persist class: ${pesistedClass}")
 
     // persist the holder class
     val persistedClassId = {
@@ -53,8 +54,7 @@ class PersistedClassDao(dataSource: DataSource) {
       val keyHolder = new GeneratedKeyHolder()
 
       val rows = jdbcTemplate.update(sql, paramSource, keyHolder)
-      val id = keyHolder.getKeys().get(PC.Id).asInstanceOf[Long]
-      id
+      keyHolder.getKeys().get(PC.Id).asInstanceOf[java.lang.Long]
     }
 
     // persist the fields
@@ -94,7 +94,8 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   /**
-   * Initialize Database
+   * Initialize Database.
+   *
    * @throws SQLException
    * @throws LiquibaseException
    */
@@ -137,7 +138,7 @@ class PersistedClassDao(dataSource: DataSource) {
       PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
       PF.TypeName
     )
-    val sql = s"select ${pfCols.map("f." + _).mkString(",")} from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
+    val sql = s"select ${pfCols.map("f." + _).mkString(", ")} from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
     val paramMap = new MapSqlParameterSource()
     paramMap.addValue("className", pClass)
     val rowMapper = fieldRowMapper()
