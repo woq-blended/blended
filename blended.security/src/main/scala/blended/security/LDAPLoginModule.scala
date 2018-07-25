@@ -30,7 +30,8 @@ class LDAPLoginModule extends LoginModule {
 
   private[this] var loggedInUser : Option[String] = None
 
-  override def initialize(subject: Subject,
+  override def initialize(
+    subject: Subject,
     callbackHandler: CallbackHandler,
     sharedState: util.Map[String, _],
     options: util.Map[String, _])

@@ -102,5 +102,8 @@ addUser tobias "Tobias Roeser" Roeser mysecret
 addGroup admins "uid=root,ou=users,o=blended"
 addToGroup admins "uid=andreas,ou=users,o=blended"
 
+addGroup blended ""uid=blended,ou=users,o=blended""
+addToGroup blended "uid=andreas,ou=users,o=blended"
+
 restartADS console
 

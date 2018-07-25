@@ -16,7 +16,6 @@ class JJwtSpec extends FreeSpec with Matchers{
       val permissions = Array("profile-read", "profile-write")
 
       val th : TokenHandler = RSATokenHandler()
-
       val token = th.createToken("Andreas", Some(1.minute), permissions:_*)
 
       val clientClaims = th.verifyToken(token)

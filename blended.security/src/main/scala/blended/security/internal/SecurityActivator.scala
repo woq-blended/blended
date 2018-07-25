@@ -1,7 +1,7 @@
 package blended.security.internal
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.LDAPLoginModule
+import blended.security.{BlendedPermissionManager, LDAPLoginModule}
 import blended.security.boot.BlendedLoginModule
 import domino.DominoActivator
 import javax.security.auth.login.Configuration
@@ -25,7 +25,10 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
           bundleName = bundleContext.getBundle().getSymbolicName(),
           loginModuleClassName = loginModuleClassName,
           cfg
-        ))
+        )
+      )
+
+      new GroupPermissionManager().providesService[BlendedPermissionManager]
     }
   }
 }

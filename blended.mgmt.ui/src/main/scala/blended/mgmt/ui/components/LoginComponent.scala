@@ -54,7 +54,7 @@ class LoginComponent[T](target : T) {
       ^.width := "400px",
       ^.margin := "auto",
       ContentPanel(Some("Login"))(<.form(
-        FormHelper.input(
+        FormHelper.inut(
           id = "name",
           label = "Name",
           inputType = "text",
