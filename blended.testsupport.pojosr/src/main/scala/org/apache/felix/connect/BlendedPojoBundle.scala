@@ -48,10 +48,8 @@ class BlendedPojoBundle(
       m_context = new PojoSRBundleContext(this, registry, dispatcher, bundles, config)
       dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STARTING, this))
 
-      activator.foreach { f =>
-        f().start(m_context)
-        m_state = Bundle.ACTIVE
-      }
+      activator.foreach { f => f().start(m_context) }
+      m_state = Bundle.ACTIVE
       dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STARTED, this))
     } catch {
       case t : Throwable =>

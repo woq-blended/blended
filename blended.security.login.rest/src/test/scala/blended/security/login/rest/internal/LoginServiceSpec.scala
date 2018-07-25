@@ -1,6 +1,6 @@
 package blended.security.login.rest.internal
 
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.scalatest.FreeSpec
 
@@ -18,10 +18,7 @@ class LoginServiceSpec extends FreeSpec
       Post("/login").withEntity(HttpEntity("Hello")) ~> svc.route ~> check {
 
         val entity = responseAs[HttpResponse]
-
-        //entity.status should be (StatusCodes.Forbidden)
-
-        pending
+        assert(entity.status === StatusCodes.OK)
       }
     }
   }
