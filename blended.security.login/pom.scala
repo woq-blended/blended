@@ -18,6 +18,8 @@ BlendedModel(
     jjwt,
     log4s,
     bouncyCastleBcprov,
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
     scalaTest % "test",
     logbackCore % "test",
     logbackClassic % "test"

@@ -1,5 +1,9 @@
 package blended.security.login
 
+import java.security.PublicKey
+
+import io.jsonwebtoken.{Claims, Jws, Jwts}
+
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
@@ -50,5 +54,13 @@ trait TokenStore {
     * @return Success(token) if the token can be created, Failure(_) otherwise, wrapped in a Future
     */
   def newToken(user : String, password: Array[Char], ttl: Option[FiniteDuration]) : Future[Try[Token]]
+
+  def listTokens() : Future[Seq[Token]]
+
+  def publicKey() : PublicKey
+
+   def verifyToken(token: String) : Jws[Claims] = {
+    Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
+  }
 
 }

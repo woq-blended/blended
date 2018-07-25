@@ -55,7 +55,7 @@ trait PojoSrTestHelper {
   }
 
   def withStartedBundles[T](sr: BlendedPojoRegistry)(
-    bundles: Seq[(String, BundleActivator)]
+    bundles: Seq[(String, Option[() => BundleActivator])]
   )(f: BlendedPojoRegistry => T) : T = {
 
     var bundleId : Long = 0
@@ -64,14 +64,12 @@ trait PojoSrTestHelper {
       case Seq() => f(sr)
       case head :: tail =>
         try {
-          bundleId = sr.startBundle(head._1, Some( () => head._2))
+          bundleId = sr.startBundle(head._1,  head._2)
           withStartedBundles(sr)(tail)(f)
         } catch {
           case t : Throwable =>
             println(t.getStackTrace())
             throw t
-        } finally {
-          sr.getBundleContext().getBundle(bundleId).stop()
         }
     }
   }

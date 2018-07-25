@@ -1,9 +1,9 @@
 package blended.security.login
 
-import blended.security.BlendedPermissionManager
-import com.sun.xml.internal.fastinfoset.util.CharArray
-import javax.security.auth.callback._
-import javax.security.auth.login.LoginContext
+import java.security.PublicKey
+
+import blended.security.{BlendedPermissionManager, PasswordCallbackHandler}
+import javax.security.auth.login.{LoginContext, LoginException}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
@@ -16,9 +16,10 @@ abstract class AbstractTokenStore(
   /**
     * @inheritdoc
     */
+  @throws[LoginException]
   override def newToken(user: String, password: Array[Char], ttl: Option[FiniteDuration] = None): Future[Try[Token]] = {
 
-    val lc = new LoginContext("loginService", new StoreCallbackHandler(user, password))
+    val lc = new LoginContext("loginService", new PasswordCallbackHandler(user, password))
     lc.login()
 
     val permissions = mgr.permissions(lc.getSubject())
@@ -30,16 +31,5 @@ abstract class AbstractTokenStore(
     storeToken(token)
   }
 
-  private class StoreCallbackHandler(name: String, password: Array[Char]) extends CallbackHandler {
-
-    override def handle(callbacks: Array[Callback]): Unit = {
-      callbacks.foreach { cb: Callback =>
-        cb match {
-          case nameCallback: NameCallback => nameCallback.setName(name)
-          case pwdCallback: PasswordCallback => pwdCallback.setPassword(password)
-          case other => throw new UnsupportedCallbackException(other, "The submitted callback is not supported")
-        }
-      }
-    }
-  }
+  override def publicKey(): PublicKey = tokenHandler.publicKey()
 }
