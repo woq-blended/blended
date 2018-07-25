@@ -63,8 +63,10 @@ object Deps {
   val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
   val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
   val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
-  val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
-  val commonsLang = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsIo = "commons-io" % "commons-io" % "2.6"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
+  val commonsLang = commonsLang3
   val commonsNet = "commons-net" % "commons-net" % "3.3"
   val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
@@ -138,6 +140,7 @@ object Deps {
   val juliOverSlf4j = "com.github.akiraly.reusable-poms" % "tomcat-juli-over-slf4j" % "4"
   val junit = "junit" % "junit" % "4.11"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
@@ -166,8 +169,6 @@ object Deps {
   val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
   val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
-
-  val scep = "com.google.code.jscep" % "jscep" % "2.5.0"
 
   val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
   val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"

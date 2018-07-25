@@ -21,9 +21,9 @@ BlendedModel(
     Blended.util,
     Deps.slf4j,
     Deps.jcip,
-    Deps.scep,
+    Deps.jscep,
     Deps.commonsIo,
-    Deps.commonsLang,
+    Deps.commonsLang2,
     Deps.logbackCore % "test",
     Deps.logbackClassic % "test",
     Deps.scalaTest % "test"
@@ -38,10 +38,10 @@ BlendedModel(
           `Embed-Dependency` = s"*;artifactId=${
             Seq(
               Deps.commonsIo,
-              Deps.commonsLang,
+              Deps.commonsLang2,
               Deps.commonsCodec,
               Deps.jcip,
-              Deps.scep,
+              Deps.jscep,
               Deps.bouncyCastleBcprov,
               Deps.bouncyCastlePkix
             ).map(_.artifactId).mkString(",")
