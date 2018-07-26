@@ -33,9 +33,9 @@ BlendedModel(
     Deps.typesafeConfig.intransitive,
     Blended.containerContextApi.intransitive,
     Deps.slf4j.intransitive,
+    Blended.domino.intransitive,
+    Deps.orgOsgi.intransitive,
     Blended.updaterConfig.intransitive % "runtime",
-    Blended.domino.intransitive % "runtime",
-    Deps.orgOsgi.intransitive % "runtime",
     Deps.jcip.intransitive % "runtime",
     Deps.jscep.intransitive % "runtime",
     Deps.bouncyCastlePkix.intransitive % "runtime",
@@ -49,6 +49,35 @@ BlendedModel(
   ),
   plugins = Seq(
     scalaCompilerPlugin,
-    scalatestMavenPlugin
+    scalatestMavenPlugin,
+    Plugin(
+      Plugins.jar,
+      configuration = Config(
+        archive = Config(
+          manifest = Config(
+            addClasspath = "true",
+            classpathPrefix = "libs/",
+            mainClass = "blended.security.scep.standalone.ScepClientApp"
+          )
+        )
+      )
+    ),
+    Plugin(
+      gav = Plugins.assembly,
+      executions = Seq(
+        Execution(
+          id = "assembly-app",
+          phase = "package",
+          goals = Seq(
+            "single"
+          )
+        )
+      ),
+      configuration = Config(
+        descriptors = Config(
+          descriptor = "src/app/assembly/bin.xml"
+        )
+      )
+    )
   )
 )
