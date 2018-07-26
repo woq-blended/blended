@@ -132,7 +132,7 @@ class CertificateManagerImpl(
               }
             case None =>
               log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
-              updateKeystore(ks.keyStore, None, head)
+              updateKeystore(ks.keyStore, None, head).get
               changedAliases(tail, head.alias :: changed).get
           }
       }
