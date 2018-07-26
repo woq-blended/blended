@@ -24,6 +24,7 @@ BlendedModel(
     Deps.slf4j.intransitive,
     Blended.domino.intransitive,
     Deps.orgOsgi.intransitive,
+    Deps.cmdOption.intransitive,    
     Blended.updaterConfig.intransitive % "runtime",
     Deps.jcip.intransitive % "runtime",
     Deps.jscep.intransitive % "runtime",

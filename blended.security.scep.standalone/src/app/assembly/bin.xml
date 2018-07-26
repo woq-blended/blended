@@ -14,14 +14,14 @@
       <scope>runtime</scope>
     </dependencySet>
   </dependencySets>
+  <files>
+    <file>
+      <source>${project.build.directory}/${project.build.finalName}.jar</source>
+      <destName>scep-client.jar</destName>
+      <outputDirectory/>
+    </file>
+  </files>
   <fileSets>
-    <fileSet>
-      <directory>${project.build.directory}</directory>
-      <outputDirectory>/</outputDirectory>
-      <includes>
-        <include>*.jar</include>
-      </includes>
-    </fileSet>
     <fileSet>
       <directory>src/app/resources</directory>
       <outputDirectory />

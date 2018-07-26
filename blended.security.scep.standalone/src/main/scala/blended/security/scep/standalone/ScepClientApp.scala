@@ -15,18 +15,68 @@ import scala.concurrent.Future
 import scala.util.Success
 import scala.util.Failure
 import blended.security.ssl.internal.ServerKeyStore
+import de.tototec.cmdoption.CmdlineParser
 
 object ScepClientApp {
 
   private[this] val log = org.log4s.getLogger
 
   def main(args: Array[String]): Unit = {
-    //    Thread.currentThread().setPriority(Thread.MAX_PRIORITY)
-    //    val scan = new ClasspathScanner().scanForBundles("(Bundle-SymbolicName=*)")
+    val cmdline = new Cmdline()
+    val cp = new CmdlineParser(cmdline)
+    cp.setProgramName("java -jar scep-client.jar")
+    cp.setAboutLine("Standalone SCEP client, which can create and update Java key stores from a remote SCEP server.")
+    cp.parse(args: _*)
 
+    if (cmdline.help || args.isEmpty) {
+      cp.usage()
+      return
+    }
+
+    val salt = cmdline.salt.getOrElse("scep-client")
+
+    cmdline.password.foreach { pass =>
+      println(new PasswordHasher(salt).password(pass))
+    }
+
+    if (cmdline.refreshCerts) {
+      val refresher = new CertRefresher(salt)
+      val result = refresher.checkCert()
+      implicit val executionContext = scala.concurrent.ExecutionContext.global
+      result.onComplete {
+        case Success(r) =>
+          println(s"Successfully refreshed certificates")
+          refresher.stop()
+          
+          System.exit(0)  // ! Hard exit !
+        
+        case Failure(e) =>
+          println(s"Error: Could not refresh certificates.\nReason: ${e.getMessage()}\nSee log file for details.")
+          refresher.stop()
+        
+          System.exit(1) // ! Hard exit !
+      
+      }
+    }
+
+  }
+}
+
+class CertRefresher(salt: String) {
+
+  private[this] val log = org.log4s.getLogger
+
+  implicit val executionContext = scala.concurrent.ExecutionContext.global
+
+  val baseDir = {
     val baseDir = new File(".").getAbsolutePath()
     System.setProperty("blended.container.home", baseDir)
     System.setProperty("scepclient.home", baseDir)
+    baseDir
+  }
+
+  val registry = {
+    // Start Felix Connect Runtime
 
     val symbolicNames = List(
       "blended.security.ssl",
@@ -52,7 +102,7 @@ object ScepClientApp {
         val ctCtxt = new ScepAppContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         val idService = new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid: String = "simple"
+          override lazy val uuid: String = salt
         }
         idService.providesService[ContainerIdentifierService]
         log.debug(s"Provided idService: ${idService}")
@@ -60,71 +110,27 @@ object ScepClientApp {
     }
     idServProvider.start(registry.getBundleContext())
 
-    def stopApp(code: Int = 0): Unit = {
-      // stop the framework
-      registry.getBundleContext().getBundle.stop(0)
-      // signal a proper exit code
-      System.exit(code)
-    }
+    registry
+  }
 
-    implicit val executionContext = scala.concurrent.ExecutionContext.global
+  def stop(): Unit = {
+    registry.getBundleContext().getBundle.stop(0)
+  }
 
-    def uuid(): Future[String] = {
-      val promise = Promise[String]()
-      Future {
-        new DominoActivator {
-          whenBundleActive {
-            whenServicePresent[ContainerIdentifierService] { idServ =>
-              promise.success(idServ.uuid)
-              bundleContext.getBundle.stop()
-            }
+  def checkCert(): Future[(ServerKeyStore, List[String])] = {
+    val promise = Promise[(ServerKeyStore, List[String])]()
+    Future {
+      new DominoActivator {
+        whenBundleActive {
+          whenServicePresent[CertificateManager] { certMgr =>
+            val checked = certMgr.checkCertificates()
+            promise.complete(checked)
+            bundleContext.getBundle.stop()
           }
-        }.start(registry.getBundleContext())
-      }
-      promise.future
+        }
+      }.start(registry.getBundleContext())
     }
-
-    def hashedPassword(pass: String, salt: String): String = new PasswordHasher(salt).password(pass)
-
-    def hashedPasswordDefaultSalt(pass: String): Future[String] = uuid().map(salt => new PasswordHasher(salt).password(pass))
-
-    def checkCert(): Future[(ServerKeyStore, List[String])] = {
-      val promise = Promise[(ServerKeyStore, List[String])]()
-      Future {
-        new DominoActivator {
-          whenBundleActive {
-            whenServicePresent[CertificateManager] { certMgr =>
-              val checked = certMgr.checkCertificates()
-              promise.complete(checked)
-              bundleContext.getBundle.stop()
-            }
-          }
-        }.start(registry.getBundleContext())
-      }
-      promise.future
-    }
-
-    def printAndStop[T](f: => Future[T]): Unit = {
-      f.onComplete {
-        case Success(t) =>
-          println(t)
-          stopApp()
-        case Failure(e) =>
-          println(e)
-          stopApp(1)
-      }
-    }
-
-    if (args.size == 2 && args(0) == "-p") {
-      // -p pass
-      printAndStop(hashedPasswordDefaultSalt(args(1)))
-    } else if (args.size == 3 && args(0) == "-p") {
-      // -p pass salt
-      printAndStop(Future { hashedPassword(args(1), args(2)) })
-    } else {
-      // (default, regen or create initial keystore
-      printAndStop(checkCert())
-    }
+    promise.future
   }
 
 }
