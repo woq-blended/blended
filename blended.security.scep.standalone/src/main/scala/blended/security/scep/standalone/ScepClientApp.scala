@@ -55,10 +55,7 @@ object ScepClientApp {
           override lazy val uuid: String = "simple"
         }
         idService.providesService[ContainerIdentifierService]
-
-        whenServicePresent[CertificateManager] { certMgr =>
-          certMgr.checkCertificates()
-        }
+        log.debug(s"Provided idService: ${idService}")
       }
     }
     idServProvider.start(registry.getBundleContext())
