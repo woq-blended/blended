@@ -167,3 +167,30 @@ blended.security {
     }
   }
 ----
+
+== Export a Server keys to re-use it outside of Java
+
+To use some server keys in other applications, e.g. openssl, you can convert the  keystore at `<scepclient-home>/etc/keystore` (which is in the proprietary JKS format) into the standardized format https://en.wikipedia.org/wiki/PKCS_12[PKCS#12].
+
+The `keytool` is part of each Oracle Java distribution, and can be found under ``${JAVA_HOME}/bin/keytool`.
+
+.Extract server key `<jkskeyalias>` into a PKCS#12 keystore
+----
+$ keytool -importkeystore \
+-srckeystore <scepclient-home>/etc/keystore \
+-destkeystore keystore.p12 -deststoretype PKCS12 \
+-srcalias <jkskeyalias> \
+-deststorepass <password> -destkeypass <password>
+----
+
+After than you can further process the `keystore.p12` with openssl.
+
+.Export certificate from a PKCS#12 keystore
+----
+$ openssl pkcs12 -in keystore.p12  -nokeys -out cert.pem
+----
+
+.Export the private key from a PKCS#12 keystore
+----
+$ openssl pkcs12 -in keystore.p12  -nodes -nocerts -out key.pem
+----
