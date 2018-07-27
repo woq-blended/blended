@@ -60,7 +60,7 @@ Options:
                       --password
 ----
 
-To initialy get the configuraed certificate(s) use:
+To initialy get the configured certificate(s) use the following command:
 
 ----
 $ java -jar scep-client.jar --refresh-certs
