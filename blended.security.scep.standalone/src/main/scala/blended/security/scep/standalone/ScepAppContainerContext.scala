@@ -26,6 +26,10 @@ class ScepAppContainerContext(baseDir: String) extends ContainerContext {
     ConfigFactory.parseFile(
       new File(getProfileConfigDirectory(), "application.conf"),
       ConfigParseOptions.defaults().setAllowMissing(false)
-    ).withFallback(sysProps).withFallback(envProps).resolve()
+    ).
+      withFallback(sysProps).
+      withFallback(envProps).
+      withFallback(ConfigFactory.parseResources(getClass().getClassLoader(), "application-defaults.conf")).
+      resolve()
   }
 }

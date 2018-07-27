@@ -54,20 +54,24 @@ class CertificateManagerImpl(
 
   def start(): Unit = {
 
-    checkCertificates() match {
-      case Failure(e) =>
-        log.error("Could not initialise Server certificate(s)")
-        throw e
+    if (!cfg.skipInitialCheck) {
+      checkCertificates() match {
+        case Failure(e) =>
+          log.error("Could not initialise Server certificate(s)")
+          throw e
 
-      case Success((sks, _)) =>
-        log.info("Successfully obtained Server Certificate(s) for SSLContext")
-        val regScope = registerSslContextProvider(sks.keyStore)
+        case Success((sks, _)) =>
+          log.info("Successfully obtained Server Certificate(s) for SSLContext")
+          val regScope = registerSslContextProvider(sks.keyStore)
 
-        cfg.refresherConfig match {
-          case None => log.debug("No configuration for automatic certificate refresh found")
-          case Some(c) =>
-            capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, regScope))
-        }
+          cfg.refresherConfig match {
+            case None => log.debug("No configuration for automatic certificate refresh found")
+            case Some(c) =>
+              capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, regScope))
+          }
+      }
+    } else {
+      log.debug("Skipping certificate check and refresher initialization as requested by config value: skipInitialCheck")
     }
   }
 
