@@ -16,20 +16,22 @@ Download and unpack the binary distribution file `{binpack}`.
 ----
 {binpack}
 +-- etc/
-|   +-- application.conf <1>
-|   +-- keystore <2>
-+-- libs/ <3>
+|   +-- application.conf      <1>
+|   +-- keystore              <2>
++-- libs/                     <3>
 |       ...
 +-- log/
-|   +-- scep-client.log <4>
-+-- scep-client.jar <5>
+|   +-- scep-client.log       <4>
++-- README.adoc               <5>
++-- scep-client.jar           <6>
 ----
 
 <1> The configuration file`application.conf` in the central place to configure the application.
 <2> The keystore file is automatically created and consecutively updated by the application.
 <3> The`lib` directory contains required libries (JAR files).
 <4> The log file contains verbose runtime information.
-<5> The application JAR file, containing the main application.
+<5> This Documentation.
+<6> The application JAR file, containing the main application.
 
 
 Start the application with:
@@ -168,7 +170,7 @@ blended.security {
   }
 ----
 
-== Export a Server keys to re-use it outside of Java
+== Export a server key and certificate to openssl
 
 To use some server keys in other applications, e.g. openssl, you can convert the  keystore at `<scepclient-home>/etc/keystore` (which is in the proprietary JKS format) into the standardized format https://en.wikipedia.org/wiki/PKCS_12[PKCS#12].
 

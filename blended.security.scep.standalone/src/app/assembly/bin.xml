@@ -25,5 +25,11 @@
       <directory>src/app/resources</directory>
       <outputDirectory />
     </fileSet>
+    <fileSet>
+      <includes>
+        <include>*.adoc</include>
+      </includes>
+      <outputDirectory />
+    </fileSet>
   </fileSets>
 </assembly>
