@@ -1,8 +1,8 @@
 package blended.security
 
-import org.scalatest.{FreeSpec, Matchers}
-import prickle.{Pickle, Unpickle}
 import blended.security.json.PrickleProtocol._
+import org.scalatest.FreeSpec
+import prickle.{Pickle, Unpickle}
 
 class PrickleSpec extends FreeSpec {
 
@@ -24,5 +24,4 @@ class PrickleSpec extends FreeSpec {
       assert(permission === p2)
     }
   }
-
 }
