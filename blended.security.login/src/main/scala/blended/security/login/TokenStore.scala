@@ -12,12 +12,12 @@ import scala.util.Try
   * A class encapsulating a security token identified by a unique key
   * @param id the key to identify the token
   * @param expiresAt the timestamp when this particular token will expire, if 0 it will never expire
-  * @param token The token String, this is normally the compact form ao a JSON Web Token
+  * @param webToken The token String, this is normally the compact form ao a JSON Web Token
   */
 case class Token(
   id : String,
   expiresAt : Long,
-  token : String
+  webToken : String
 )
 
 trait TokenStore {

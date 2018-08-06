@@ -26,7 +26,7 @@ abstract class AbstractTokenStore(
     val token = Token(
       id = user,
       expiresAt = if (ttl.isDefined) System.currentTimeMillis() + ttl.map(_.toMillis).getOrElse(0l) else 0l,
-      token = tokenHandler.createToken(user, ttl, permissions:_*)
+      webToken = tokenHandler.createToken(user, ttl, permissions:_*)
     )
     storeToken(token)
   }

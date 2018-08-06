@@ -38,7 +38,7 @@ abstract class AbstractLoginModule extends LoginModule {
     // This is the subject which needs to be enriched with the user and group information
     this.subject = Option(subject)
 
-    // This is the callbackhandler passed in to determine the username and password
+    // This is the callback handler passed in to determine the username and password
     this.cbHandler = Option(callbackHandler)
   }
 

@@ -19,7 +19,7 @@ class TokenStoreSpec extends FreeSpec
 
   private[this] val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  def withTokenStore[T](f : TokenStore => T) = {
+  def withTokenStore[T](f : TokenStore => T): T = {
     withSimpleBlendedContainer(baseDir) { sr =>
       withStartedBundles(sr)(Seq(
         "blended.akka" -> Some(() => new BlendedAkkaActivator()),
@@ -50,7 +50,7 @@ class TokenStoreSpec extends FreeSpec
         token.id should be("andreas")
         token.expiresAt should be (0)
 
-        val clientClaims = store.verifyToken(token.token)
+        val clientClaims = store.verifyToken(token.webToken)
 
         clientClaims.getHeader.getAlgorithm() should be ("RS512")
         clientClaims.getBody.getSubject() should be ("andreas")
@@ -71,7 +71,7 @@ class TokenStoreSpec extends FreeSpec
         val token2 = Await.result(store.getToken("andreas"), 3.seconds).get
 
         assert(token === token2)
-        val clientClaims = store.verifyToken(token2.token)
+        val clientClaims = store.verifyToken(token2.webToken)
 
         clientClaims.getHeader.getAlgorithm() should be ("RS512")
         clientClaims.getBody.getSubject() should be ("andreas")

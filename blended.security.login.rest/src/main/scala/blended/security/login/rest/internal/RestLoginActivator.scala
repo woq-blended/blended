@@ -3,7 +3,7 @@ package blended.security.login.rest.internal
 import blended.akka.http.{HttpContext, SimpleHttpContext}
 import domino.DominoActivator
 
-class LoginActivator extends DominoActivator {
+class RestLoginActivator extends DominoActivator {
 
   whenBundleActive {
     val svc = new LoginService()
