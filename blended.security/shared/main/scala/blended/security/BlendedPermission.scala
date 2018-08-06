@@ -30,3 +30,5 @@ case class BlendedPermission(
     permissionClass.equals(other.permissionClass) && checkProperties
   }
 }
+
+case class BlendedPermissions(granted: Seq[BlendedPermission])

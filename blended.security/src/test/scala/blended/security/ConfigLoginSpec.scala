@@ -34,9 +34,9 @@ class ConfigLoginSpec extends FreeSpec
 
           val groups = mgr.permissions(sub)
 
-          groups.size should be(2)
-          groups should contain("admins")
-          groups should contain("blended")
+          groups.granted.size should be(2)
+          assert(groups.granted.exists(_.permissionClass == "admins"))
+          assert(groups.granted.exists(_.permissionClass == "blended"))
         }
       }
     }
