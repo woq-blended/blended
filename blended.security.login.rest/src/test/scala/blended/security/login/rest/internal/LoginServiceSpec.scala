@@ -13,11 +13,12 @@ import blended.security.internal.SecurityActivator
 import blended.security.login.internal.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
-import org.scalatest.FreeSpec
+import org.scalatest.{DoNotDiscover, FreeSpec}
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@DoNotDiscover
 class LoginServiceSpec extends FreeSpec
   with ScalatestRouteTest
   with SimplePojosrBlendedContainer
