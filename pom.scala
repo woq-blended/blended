@@ -17,8 +17,7 @@ BlendedModel(
       configuration = Config(
         serverId = "ossrh",
         nexusUrl = "https://oss.sonatype.org/",
-        autoReleaseAfterClose = "true",
-        skipNexusStagingDeployMojo = "true"
+        autoReleaseAfterClose = "true"
       )
     ),
     skipInstallPlugin,
