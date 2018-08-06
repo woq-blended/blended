@@ -8,7 +8,7 @@ import javax.security.auth.Subject
 
 trait DummyBlendedSecurityDirectives extends BlendedSecurityDirectives {
 
-  override def authenticated: AuthenticationDirective[Subject] = provide[Subject](null)
+  override val authenticated: AuthenticationDirective[Subject] = provide[Subject](null)
 
   override def requirePermission(permission: String): Directive0 = pass
 

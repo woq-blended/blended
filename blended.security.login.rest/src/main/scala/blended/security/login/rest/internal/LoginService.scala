@@ -1,20 +1,34 @@
 package blended.security.login.rest.internal
 
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import blended.security.BlendedPermissionManager
+import blended.security.akka.http.JAASSecurityDirectives
+import blended.security.boot.UserPrincipal
+import javax.security.auth.Subject
+import org.slf4j.LoggerFactory
 
-class LoginService {
+import scala.collection.JavaConverters._
+
+class LoginService(permissionMgr: BlendedPermissionManager) extends JAASSecurityDirectives {
+
+  private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
   def route : Route = httpRoute
 
   private[this] lazy val httpRoute : Route = loginRoute ~ logoutRoute
 
   def loginRoute : Route = {
-    path("login") {
+    pathSingleSlash {
+      get {
+        log.warn("Login must be executed with a HTTP Post")
+        complete(HttpResponse(StatusCodes.Forbidden))
+      }
       post {
-        entity(as[HttpRequest]) { request =>
-          complete(HttpResponse(StatusCodes.NotImplemented))
+        authenticated { user : Subject =>
+          val permissions = permissionMgr.permissions(user).mkString(",")
+          complete(permissions)
         }
       }
     }

@@ -3,7 +3,7 @@ package blended.security.akka.http
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials}
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.AuthenticationDirective
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult, Credentials}
 import javax.security.auth.Subject
 import javax.security.auth.callback._
 import javax.security.auth.login.LoginContext
@@ -52,15 +52,18 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
     }
   }
 
-  def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[Either[HttpChallenge, Subject]] =
+  def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[AuthenticationResult[Subject]] =
     Future {
       credentials match {
-        case Some(creds: BasicHttpCredentials) => auth(creds).toRight(challenge)
-        case _ => Left(challenge)
+        case Some(creds: BasicHttpCredentials) => auth(creds) match {
+          case Some(s) => AuthenticationResult.success(s)
+          case None => AuthenticationResult.failWithChallenge(challenge)
+        }
+        case _ => AuthenticationResult.failWithChallenge(challenge)
       }
     }
 
-  override def authenticated: AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
+  override val authenticated  : AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
 
   override def requirePermission(permission: String): Directive0 = mapInnerRoute { inner =>
     authenticated { subject =>

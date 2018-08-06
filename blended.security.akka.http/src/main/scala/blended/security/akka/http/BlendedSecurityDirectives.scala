@@ -6,7 +6,7 @@ import javax.security.auth.Subject
 
 trait BlendedSecurityDirectives {
 
-  def authenticated: AuthenticationDirective[Subject]
+  val authenticated : AuthenticationDirective[Subject]
 
   def requirePermission(permission: String): Directive0
 
