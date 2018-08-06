@@ -1,35 +1,40 @@
 package blended.security.ssl.internal
 
-import java.io.{File, FileInputStream, FileOutputStream}
-import java.security.{KeyPair, KeyStore, PrivateKey}
+import java.io.{ File, FileInputStream, FileOutputStream }
+import java.security.{ KeyPair, KeyStore, PrivateKey }
 import java.util.Date
 
-import blended.security.ssl.{CertificateProvider, ServerCertificate, X509CertificateInfo}
+import blended.security.ssl.{ CertificateManager, CertificateProvider, ServerCertificate, X509CertificateInfo }
 import domino.capsule._
 import domino.service_providing.ServiceProviding
 import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleContext
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 import scala.concurrent.duration._
+import blended.security.ssl.CertificateManager
 
 /**
-  * A class to manage one or more server side certificates within a given keystore
-  * to be used as SSL server certificates.
-  */
-class CertificateManager(
+ * A class to manage one or more server side certificates within a given keystore
+ * to be used as SSL server certificates.
+ */
+class CertificateManagerImpl(
   override val bundleContext: BundleContext,
   override val capsuleContext: CapsuleContext,
   cfg: CertificateManagerConfig,
   providerMap: Map[String, CertificateProvider]
-) extends Capsule with CapsuleConvenience with ServiceProviding {
+)
+  extends CertificateManager
+  with Capsule
+  with CapsuleConvenience
+  with ServiceProviding {
 
   private[this] val log = org.log4s.getLogger
   private[this] val millisPerDay = 1.day.toMillis
 
   private[this] lazy val keyStore = loadKeyStore()
 
-  def getKeystore() : ServerKeyStore = keyStore.get
+  def getKeystore(): ServerKeyStore = keyStore.get
 
   private[internal] def registerSslContextProvider(ks: KeyStore): CapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
     log.debug("Registering SslContextProvider type=client and type=server")
@@ -47,28 +52,32 @@ class CertificateManager(
     }
   }
 
-  def start() : Unit = {
+  def start(): Unit = {
 
-    checkCertificates() match {
-      case Failure(e) =>
-        log.error("Could not initialise Server certificate(s)")
-        throw e
+    if (!cfg.skipInitialCheck) {
+      checkCertificates() match {
+        case Failure(e) =>
+          log.error("Could not initialise Server certificate(s)")
+          throw e
 
-      case Success((sks, _)) =>
-        log.info("Successfully obtained Server Certificate(s) for SSLContext")
-        val regScope = registerSslContextProvider(sks.keyStore)
+        case Success((sks, _)) =>
+          log.info("Successfully obtained Server Certificate(s) for SSLContext")
+          val regScope = registerSslContextProvider(sks.keyStore)
 
-        cfg.refresherConfig match {
-          case None => log.debug("No configuration for automatic certificate refresh found")
-          case Some(c) =>
-            capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, regScope))
-        }
+          cfg.refresherConfig match {
+            case None => log.debug("No configuration for automatic certificate refresh found")
+            case Some(c) =>
+              capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, regScope))
+          }
+      }
+    } else {
+      log.debug("Skipping certificate check and refresher initialization as requested by config value: skipInitialCheck")
     }
   }
 
   override def stop(): Unit = {}
 
-  def nextCertificateTimeout() : Date = if (getKeystore().serverCertificates.values.isEmpty)
+  def nextCertificateTimeout(): Date = if (getKeystore().serverCertificates.values.isEmpty)
     new Date()
   else
     getKeystore().serverCertificates.values.map(_.chain.head.getNotAfter).min
@@ -96,11 +105,14 @@ class CertificateManager(
     serverKeystore(ks)
   }
 
-  def checkCertificates() : Try[(ServerKeyStore, List[String])] = Try {
+  /**
+   * @return When successful, a tuple of keystore and a list of updated certificate aliases, else the failure.
+   */
+  override def checkCertificates(): Try[(ServerKeyStore, List[String])] = Try {
 
     val ks = keyStore.get
 
-    def changedAliases(certConfigs: List[CertificateConfig], changed: List[String]) : Try[List[String]] = Try {
+    def changedAliases(certConfigs: List[CertificateConfig], changed: List[String]): Try[List[String]] = Try {
       certConfigs match {
         case Nil => changed
         case head :: tail =>
@@ -113,7 +125,7 @@ class CertificateManager(
               if (remaining <= head.minValidDays * millisPerDay) {
                 log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
                 updateKeystore(ks.keyStore, existingCert, head).recoverWith {
-                  case _ : Throwable =>
+                  case _: Throwable =>
                     log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
                     changedAliases(tail, changed)
                 }
@@ -124,7 +136,7 @@ class CertificateManager(
               }
             case None =>
               log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
-              updateKeystore(ks.keyStore, None, head)
+              updateKeystore(ks.keyStore, None, head).get
               changedAliases(tail, head.alias :: changed).get
           }
       }
@@ -152,7 +164,7 @@ class CertificateManager(
     }
   }
 
-  private[this] def saveKeyStore(ks: KeyStore) : Try[KeyStore] = Try {
+  private[this] def saveKeyStore(ks: KeyStore): Try[KeyStore] = Try {
     val fos = new FileOutputStream(cfg.keyStore)
     try {
       ks.store(fos, cfg.storePass.toCharArray)
@@ -174,9 +186,9 @@ class CertificateManager(
     }
   }
 
-  private[this] def serverKeystore(ks: KeyStore) : Try[ServerKeyStore] = Try {
+  private[this] def serverKeystore(ks: KeyStore): Try[ServerKeyStore] = Try {
 
-    val certs : Map[String, ServerCertificate] = cfg.certConfigs.map { certCfg =>
+    val certs: Map[String, ServerCertificate] = cfg.certConfigs.map { certCfg =>
       (certCfg.alias, extractServerCertificate(ks, certCfg).get)
     }.filter(_._2.isDefined).toMap.mapValues(_.get)
 

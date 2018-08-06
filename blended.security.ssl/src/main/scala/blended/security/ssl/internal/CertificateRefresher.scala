@@ -40,7 +40,7 @@ object CertificateRefresher {
 
 class CertificateRefresher(
   override val bundleContext: BundleContext,
-  certMgr: CertificateManager,
+  certMgr: CertificateManagerImpl,
   cfg: RefresherConfig,
   scope: CapsuleScope
 ) extends Capsule with ServiceConsuming {
@@ -74,7 +74,7 @@ class CertificateRefresher(
     * This task tries to refresh a certificate.
     * If positive, depending on config, the new certificate is re-published as SslContextProvider or the whole OSGi container will be restarted.
     */
-  class RefreshTask(certMgr: CertificateManager, refresherConfig: RefresherConfig) extends TimerTask {
+  class RefreshTask(certMgr: CertificateManagerImpl, refresherConfig: RefresherConfig) extends TimerTask {
     override def run(): Unit = {
       log.debug(s"About to start refresh timer task. Trying to update certificate(s)")
       // request new cert

@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
-import blended.security.ssl.{CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
+import blended.security.ssl.{CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import domino.DominoActivator
@@ -31,7 +31,8 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
     def waitForProvider(providerNames: List[String], provider: Map[String, CertificateProvider]) : Unit = {
       providerNames match {
         case Nil =>
-          val mgr = new CertificateManager(bundleContext, capsuleContext, mgrConfig, provider)
+          val mgr = new CertificateManagerImpl(bundleContext, capsuleContext, mgrConfig, provider)
+          mgr.providesService[CertificateManager]
           addCapsule(mgr)
         case head :: tail =>
           log.info(s"Waiting for certificate provider [$head]")

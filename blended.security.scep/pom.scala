@@ -11,32 +11,41 @@ BlendedModel(
   packaging = "bundle",
   description = "Bundle to manage the container certificate via SCEP.",
   dependencies = Seq(
-    scalaLib % "provided",
-    scalaReflect % "provided",
+    Deps.scalaLib % "provided",
+    Deps.scalaReflect % "provided",
     Blended.domino,
-    commonsCodec,
+    Deps.commonsCodec,
     Blended.securitySsl,
-    bouncyCastleBcprov,
-    bouncyCastlePkix,
+    Deps.bouncyCastleBcprov,
+    Deps.bouncyCastlePkix,
     Blended.util,
-    slf4j,
-    jcip,
-    scep,
-    "commons-io" % "commons-io" % "2.4",
-    "commons-lang" % "commons-lang" % "2.6",
-    logbackCore % "test",
-    logbackClassic % "test",
-    scalaTest % "test"
+    Deps.slf4j,
+    Deps.jcip,
+    Deps.jscep,
+    Deps.commonsIo,
+    Deps.commonsLang2,
+    Deps.logbackCore % "test",
+    Deps.logbackClassic % "test",
+    Deps.scalaTest % "test"
   ),
   plugins = Seq(
     Plugin(
       mavenBundlePlugin.gav,
       extensions = true,
-      inherited = true,
       configuration = Config(
         instructions = Config(
           _include = "osgi.bnd",
-          `Embed-Dependency` = s"*;artifactId=commons-io,commons-lang,${commonsCodec.artifactId},artifactId=${jcip.artifactId},${scep.artifactId},${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}"
+          `Embed-Dependency` = s"*;artifactId=${
+            Seq(
+              Deps.commonsIo,
+              Deps.commonsLang2,
+              Deps.commonsCodec,
+              Deps.jcip,
+              Deps.jscep,
+              Deps.bouncyCastleBcprov,
+              Deps.bouncyCastlePkix
+            ).map(_.artifactId).mkString(",")
+          }"
         )
       )
     ),
