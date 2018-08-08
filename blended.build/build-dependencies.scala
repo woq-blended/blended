@@ -287,5 +287,6 @@ object Blended {
   val updaterRemote = blended("blended.updater.remote")
   val updaterTools = blended("blended.updater.tools")
   val util = blended("blended.util")
+  val utilLogging = blended("blended.util.logging")
 }
 

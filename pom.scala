@@ -30,6 +30,7 @@ BlendedModel(
         activeByDefault = true
       ),
       modules = Seq(
+        "blended.util.logging",
         "blended.launcher",
         "blended.updater",
         "blended.updater.config",

@@ -25,6 +25,7 @@ val features = Seq(
     FeatureBundle(dependency = scalaCompatJava8),
     FeatureBundle(dependency = scalaParser),
     FeatureBundle(dependency = Blended.akka, start = true),
+    FeatureBundle(dependency = Blended.utilLogging),
     FeatureBundle(dependency = Blended.util, start = true),
     FeatureBundle(dependency = Blended.containerContextApi),
     FeatureBundle(dependency = Blended.containerContextImpl, start = true),
