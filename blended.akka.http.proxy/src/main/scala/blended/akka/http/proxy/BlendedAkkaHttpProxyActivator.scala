@@ -5,10 +5,11 @@ import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.akka.http.proxy.internal.{ProxyConfig, ProxyRoute, SimpleProxyRoute}
 import domino.DominoActivator
 import javax.net.ssl.SSLContext
+import blended.util.logging.Logger
 
 class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[BlendedAkkaHttpProxyActivator]
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>

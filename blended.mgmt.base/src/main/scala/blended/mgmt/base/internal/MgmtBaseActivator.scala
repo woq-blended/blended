@@ -1,14 +1,13 @@
 package blended.mgmt.base.internal
 
-import javax.management.{MBeanServer, ObjectName}
-
 import blended.container.context.api.ContainerIdentifierService
+import blended.util.logging.Logger
 import domino.DominoActivator
-import org.slf4j.LoggerFactory
+import javax.management.{ MBeanServer, ObjectName }
 
 class MgmtBaseActivator extends DominoActivator {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[MgmtBaseActivator]
 
   whenBundleActive {
     whenServicePresent[ContainerIdentifierService] { idSvc =>

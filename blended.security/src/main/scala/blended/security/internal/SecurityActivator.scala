@@ -1,15 +1,16 @@
 package blended.security.internal
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.{BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule}
+import blended.security.{ BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule }
 import blended.security.boot.BlendedLoginModule
+import blended.util.config.Implicits._
+import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.security.auth.login.Configuration
-import blended.util.config.Implicits._
 
 class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[SecurityActivator]
 
   whenBundleActive {
 

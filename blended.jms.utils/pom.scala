@@ -20,6 +20,7 @@ BlendedModel(
     Blended.mgmtBase,
     Blended.containerContextApi,
     Blended.updaterConfig,
+    Blended.utilLogging,
     Deps.camelJms,
     Blended.akka,
     Deps.jms11Spec,

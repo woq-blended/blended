@@ -3,15 +3,16 @@ package blended.jms.utils.internal
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
-import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
-import javax.jms._
-
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 import scala.concurrent.duration._
 import scala.util.Try
 import scala.util.control.NonFatal
+
+import akka.actor.{ Actor, ActorLogging, ActorRef, Cancellable, Props }
 import akka.pattern.pipe
+import blended.jms.utils.{ BlendedJMSConnectionConfig, JMSSupport }
+import blended.util.logging.Logger
+import javax.jms._
 
 private [internal] case class PingInfo(
   cfg: BlendedJMSConnectionConfig,
@@ -25,7 +26,7 @@ private [internal] case class PingInfo(
 
 private [internal] trait PingOperations { this : JMSSupport =>
 
-  private val log = org.log4s.getLogger
+  private val log = Logger[PingOperations]
 
   def closeJmsResources(info: PingInfo)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
     try {

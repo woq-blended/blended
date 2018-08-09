@@ -13,6 +13,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     Blended.containerContextApi,
+    Blended.utilLogging,
     Blended.util,
     Blended.updaterConfig,
     Blended.launcher,
@@ -20,7 +21,6 @@ BlendedModel(
     orgOsgi,
     domino,
     slf4j,
-    log4s,
     julToSlf4j,
     scalaTest % "test",
     mockitoAll % "test",

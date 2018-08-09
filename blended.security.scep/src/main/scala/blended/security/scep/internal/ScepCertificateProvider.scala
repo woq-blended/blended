@@ -16,6 +16,7 @@ import org.jscep.transport.response.Capabilities
 
 import scala.collection.JavaConverters._
 import scala.util.Try
+import blended.util.logging.Logger
 
 case class ScepConfig(
   url : String,
@@ -27,7 +28,7 @@ case class ScepConfig(
 
 class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[ScepCertificateProvider]
 
   private[this] lazy val scepClient : Client = {
     val verifier : CertificateVerifier = new OptimisticCertificateVerifier()

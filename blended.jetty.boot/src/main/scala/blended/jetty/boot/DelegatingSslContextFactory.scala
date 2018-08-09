@@ -1,11 +1,13 @@
 package blended.jetty.boot
 
 import blended.jetty.boot.internal.JettyActivator
+import blended.util.logging.Logger
 import org.eclipse.jetty.util.ssl.SslContextFactory
+
 
 class DelegatingSslContextFactory extends SslContextFactory {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[DelegatingSslContextFactory]
 
   override def doStart(): Unit = {
 

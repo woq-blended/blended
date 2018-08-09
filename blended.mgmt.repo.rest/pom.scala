@@ -20,7 +20,7 @@ BlendedModel(
     Blended.akkaHttp,
     Deps.akkaHttp,
     Blended.util,
-    Deps.log4s,
+    Blended.utilLogging,
     sprayJson,
     scalaTest % "test"
   ),

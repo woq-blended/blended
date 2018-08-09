@@ -14,6 +14,7 @@ BlendedModel(
     Deps.scalaLib % "provided",
     Blended.akka,
     Blended.updaterConfig,
+    Blended.utilLogging,
     Deps.orgOsgi,
     Deps.akkaOsgi,
     Deps.akkaHttp,

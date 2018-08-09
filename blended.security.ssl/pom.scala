@@ -18,7 +18,7 @@ BlendedModel(
     Blended.domino,
     Dependency(Deps.domino).intransitive,
     Blended.mgmtBase,
-    Deps.log4s,
+    Blended.utilLogging,
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test",

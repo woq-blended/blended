@@ -8,6 +8,7 @@ import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
 
 import scala.util.{Failure, Success}
+import blended.util.logging.Logger
 
 object CertificateRefresher {
 
@@ -45,7 +46,7 @@ class CertificateRefresher(
   scope: CapsuleScope
 ) extends Capsule with ServiceConsuming {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[CertificateRefresher]
 
   private[this ]val timerName = "refresh-certificate"
   private[this] val timer = new Timer(timerName, true)

@@ -2,14 +2,15 @@ package blended.security.ssl.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
-import blended.security.ssl.{CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
+import blended.security.ssl.{ CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig }
 import blended.util.config.Implicits._
+import blended.util.logging.Logger
 import com.typesafe.config.Config
 import domino.DominoActivator
 
 class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[CertificateActivator]
 
   private[this] def setupSelfSignedProvider(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
     // Sould we provide a CertifacteProvider with a self-signed certificate?

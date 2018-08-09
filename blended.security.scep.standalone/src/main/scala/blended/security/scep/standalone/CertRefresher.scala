@@ -11,14 +11,14 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.security.ssl.CertificateManager
 import blended.security.ssl.internal.ServerKeyStore
+import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
 import org.apache.felix.connect.launch.PojoServiceRegistryFactory
-import org.slf4j.LoggerFactory
 
 class CertRefresher(salt: String) {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[CertRefresher])
+  private[this] val log = Logger[CertRefresher]
 
   implicit val executionContext = scala.concurrent.ExecutionContext.global
 

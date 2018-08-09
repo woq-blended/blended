@@ -31,6 +31,7 @@ import spray.json.JsValue
 import spray.json.enrichString
 import akka.http.scaladsl.model.HttpHeader
 import akka.http.scaladsl.model.headers.RawHeader
+import blended.util.logging.Logger
 
 trait JolokiaAddress {
   val jolokiaUrl = "http://127.0.0.1:7777/jolokia"
@@ -40,7 +41,7 @@ trait JolokiaAddress {
 
 class JolokiaClient extends Actor with ActorLogging { this: JolokiaAddress =>
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[JolokiaClient]
 
   implicit val eCtxt = context.dispatcher
 

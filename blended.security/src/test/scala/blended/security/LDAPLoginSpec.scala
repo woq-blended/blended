@@ -4,9 +4,10 @@ import java.io.File
 
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
+import blended.testsupport.pojosr.{ PojoSrTestHelper, SimplePojosrBlendedContainer }
+import blended.util.logging.Logger
 import javax.security.auth.login.LoginContext
-import org.scalatest.{DoNotDiscover, FreeSpec}
+import org.scalatest.{ DoNotDiscover, FreeSpec }
 
 @DoNotDiscover
 class LDAPLoginSpec extends FreeSpec
@@ -16,7 +17,7 @@ class LDAPLoginSpec extends FreeSpec
   private[this] val user = "andreas"
   private[this] val pwd = "mysecret"
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[LDAPLoginSpec]
 
   "the security activator should" - {
 

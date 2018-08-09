@@ -4,15 +4,16 @@ import java.io.{ File, FileInputStream, FileOutputStream }
 import java.security.{ KeyPair, KeyStore, PrivateKey }
 import java.util.Date
 
+import scala.concurrent.duration._
+import scala.util.{ Failure, Success, Try }
+
 import blended.security.ssl.{ CertificateManager, CertificateProvider, ServerCertificate, X509CertificateInfo }
+import blended.security.ssl.CertificateManager
+import blended.util.logging.Logger
 import domino.capsule._
 import domino.service_providing.ServiceProviding
 import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleContext
-
-import scala.util.{ Failure, Success, Try }
-import scala.concurrent.duration._
-import blended.security.ssl.CertificateManager
 
 /**
  * A class to manage one or more server side certificates within a given keystore
@@ -29,7 +30,7 @@ class CertificateManagerImpl(
   with CapsuleConvenience
   with ServiceProviding {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[CertificateManagerImpl]
   private[this] val millisPerDay = 1.day.toMillis
 
   private[this] lazy val keyStore = loadKeyStore()

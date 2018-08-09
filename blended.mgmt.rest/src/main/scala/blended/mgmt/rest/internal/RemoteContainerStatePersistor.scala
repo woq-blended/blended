@@ -1,39 +1,39 @@
 package blended.mgmt.rest.internal
 
-import blended.persistence.PersistenceService
 import scala.collection.JavaConverters._
-import org.slf4j.LoggerFactory
-import blended.updater.config.RemoteContainerState
-import scala.util.Try
-import scala.util.Success
 import scala.util.Failure
+import scala.util.Success
+
+import blended.persistence.PersistenceService
 import blended.updater.config.Mapper
+import blended.updater.config.RemoteContainerState
+import blended.util.logging.Logger
 
 class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[RemoteContainerStatePersistor])
+  private[this] val log = Logger[RemoteContainerStatePersistor]
 
   val pClass = "RemoteContainerState"
 
   def findAll(): List[RemoteContainerState] = {
     val result = persistenceService.findAll(pClass)
-    log.debug("loaded {} entries from db", result.size)
+    log.debug(s"loaded ${result.size} entries from db")
     result.toList.flatMap { s =>
       Mapper.unmapRemoteContainerState(s) match {
         case Success(s) => List(s)
         case Failure(e) =>
-          log.warn("Could not create RemoteContainerState from persisted map (ignoring this entry): {}", Array[Object](s, e): _*)
+          log.warn(e)(s"Could not create RemoteContainerState from persisted map (ignoring this entry): ${s}")
           List()
       }
     }
   }
 
   def updateState(state: RemoteContainerState): Unit = {
-    log.debug("About to persist remote container state: {}", state)
+    log.debug(s"About to persist remote container state: ${state}")
     val deleteCount = persistenceService.deleteByExample(pClass, Map("containerInfo.containerId" -> state.containerInfo.containerId).asJava)
-    log.debug("deleted {} old entries", deleteCount)
+    log.debug(s"deleted ${deleteCount} old entries")
     val entry = persistenceService.persist(pClass, Mapper.mapRemoteContainerState(state))
-    log.debug("persisted 1 new entry: {}", entry)
+    log.debug(s"persisted 1 new entry: ${entry}")
   }
 
 }

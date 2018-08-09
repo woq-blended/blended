@@ -13,7 +13,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     typesafeConfig,
-    log4s,
+    Blended.utilLogging,
     scalaTest % "test",
     logbackCore % "test",
     logbackClassic % "test"

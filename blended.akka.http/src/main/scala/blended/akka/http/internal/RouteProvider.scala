@@ -1,22 +1,22 @@
 package blended.akka.http.internal
 
-import domino.capsule.Capsule
-import domino.service_watching.ServiceWatching
-import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.Directives._
-import blended.akka.http.HttpContext
-import domino.capsule.CapsuleContext
-import org.osgi.framework.BundleContext
-import domino.service_watching.ServiceWatcherEvent
-import domino.service_watching.ServiceWatcherContext
-import domino.service_consuming.ServiceConsuming
-import blended.akka.http.SimpleHttpContext
-import org.osgi.framework.ServiceReference
 import akka.http.scaladsl.server.PathMatchers
+import akka.http.scaladsl.server.Route
+import blended.akka.http.HttpContext
+import blended.akka.http.SimpleHttpContext
+import blended.util.logging.Logger
+import domino.capsule.Capsule
+import domino.capsule.CapsuleContext
+import domino.service_consuming.ServiceConsuming
+import domino.service_watching.ServiceWatcherEvent
+import domino.service_watching.ServiceWatching
+import org.osgi.framework.BundleContext
+import org.osgi.framework.ServiceReference
 
 class RouteProvider {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[RouteProvider]
 
   val initialRoute: Route = path("about") {
     get {

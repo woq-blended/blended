@@ -1,8 +1,10 @@
 package blended.container.context.api
 
+import blended.util.logging.Logger
+
 object ContainerPropertyResolver {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ContainerPropertyResolver]
 
   private[this] val startDelim = "$[["
   private[this] val endDelim = "]]"

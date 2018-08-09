@@ -20,6 +20,7 @@ BlendedModel(
     Deps.bouncyCastlePkix,
     Blended.util,
     Deps.slf4j,
+    Blended.utilLogging,
     Deps.jcip,
     Deps.jscep,
     Deps.commonsIo,

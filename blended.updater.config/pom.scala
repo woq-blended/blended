@@ -20,6 +20,7 @@ BlendedModel(
     Deps.scalaLib % "provided",
     Deps.typesafeConfig,
     Deps.slf4j,
+    Blended.utilLogging,
     Deps.prickle,
     Blended.testSupport % "test",
     scalaTest % "test",

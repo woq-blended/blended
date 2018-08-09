@@ -17,7 +17,7 @@ BlendedModel(
     Blended.securityScep.intransitive,
     Blended.securitySsl.intransitive,
     Blended.containerContextImpl.intransitive,
-    Deps.log4s.intransitive,
+    Blended.utilLogging.intransitive,
     Deps.domino.intransitive,
     Deps.typesafeConfig.intransitive,
     Blended.containerContextApi.intransitive,

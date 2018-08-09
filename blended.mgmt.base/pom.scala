@@ -15,7 +15,7 @@ BlendedModel(
     Blended.domino,
     Blended.containerContextApi,
     Blended.util,
-    Deps.log4s,
+    Blended.utilLogging,
     Deps.scalaTest % "test"
   ),
   plugins = Seq(
