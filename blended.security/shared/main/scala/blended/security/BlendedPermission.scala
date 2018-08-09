@@ -1,5 +1,10 @@
 package blended.security
 
+import blended.security.json.PrickleProtocol._
+import prickle.Unpickle
+
+import scala.util.Try
+
 case class BlendedPermission(
   // The name of the entity that is controlled, i.e. container
   permissionClass : String,
@@ -29,6 +34,12 @@ case class BlendedPermission(
 
     permissionClass.equals(other.permissionClass) && checkProperties
   }
+}
+
+object BlendedPermissions {
+
+  def fromJson(json: String) : Try[BlendedPermissions] = Unpickle[BlendedPermissions].fromString(json)
+
 }
 
 case class BlendedPermissions(granted: Seq[BlendedPermission])

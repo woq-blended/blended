@@ -3,13 +3,12 @@ package blended.security.login.rest.internal
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
-import blended.security.boot.UserPrincipal
+import blended.security.json.PrickleProtocol._
+import blended.security.{BlendedPermissionManager, BlendedPermissions}
 import javax.security.auth.Subject
 import org.slf4j.LoggerFactory
-
-import scala.collection.JavaConverters._
+import prickle.Pickle
 
 class LoginService(permissionMgr: BlendedPermissionManager) extends JAASSecurityDirectives {
 
@@ -27,8 +26,8 @@ class LoginService(permissionMgr: BlendedPermissionManager) extends JAASSecurity
       }
       post {
         authenticated { user : Subject =>
-          val permissions = permissionMgr.permissions(user).mkString(",")
-          complete(permissions)
+          val permissions : BlendedPermissions = permissionMgr.permissions(user)
+          complete(Pickle.intoString(permissions))
         }
       }
     }

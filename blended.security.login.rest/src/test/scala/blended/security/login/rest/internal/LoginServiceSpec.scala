@@ -6,6 +6,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
+import blended.security.BlendedPermissions
 import blended.security.internal.SecurityActivator
 import blended.security.login.internal.LoginActivator
 import blended.testsupport.BlendedTestSupport
@@ -84,7 +85,12 @@ class LoginServiceSpec extends FreeSpec
         val r = Await.result(response, 3.seconds)
 
         r.code should be (StatusCodes.Ok)
-        r.body.right.get should be("admins,blended")
+        val json : String = r.body.right.get
+        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+
+        permissions.granted.size should be (2)
+        permissions.granted.find(_.permissionClass == "admins") should be (defined)
+        permissions.granted.find(_.permissionClass == "blended") should be (defined)
       }
 
     }
