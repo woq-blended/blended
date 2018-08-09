@@ -5,12 +5,12 @@ import java.io.File
 import akka.actor.Props
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
-import org.scalatest.{FreeSpec, Matchers}
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
+import org.scalatest.{ FreeSpec, Matchers }
 
 class FileManipulationSpec extends FreeSpec with Matchers {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[FileManipulationSpec])
+  private[this] val log = Logger[FileManipulationSpec]
 
   "The File Manipulation Actor should" - {
 

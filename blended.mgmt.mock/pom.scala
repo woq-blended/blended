@@ -13,6 +13,7 @@ BlendedModel(
   dependencies = Seq(
     Blended.mgmtBase,
     Blended.mgmtAgent,
+    Blended.utilLogging,
     scalaLib,
     slf4j,
     slf4jLog4j12,

@@ -3,20 +3,20 @@ package blended.security
 import java.text.MessageFormat
 import java.util
 
-import blended.security.internal.{LDAPLoginConfig, LdapSearchResult}
-import com.sun.jndi.ldap.LdapCtxFactory
-import javax.naming.Context
-import javax.naming.directory.{DirContext, InitialDirContext, SearchControls}
-import javax.security.auth.login.LoginException
-import org.slf4j.LoggerFactory
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
 
+import blended.security.internal.{ LDAPLoginConfig, LdapSearchResult }
+import blended.util.logging.Logger
+import com.sun.jndi.ldap.LdapCtxFactory
+import javax.naming.Context
+import javax.naming.directory.{ DirContext, InitialDirContext, SearchControls }
+import javax.security.auth.login.LoginException
+
 class LDAPLoginModule extends AbstractLoginModule {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[LDAPLoginModule])
+  private[this] val log = Logger[LDAPLoginModule]
 
   override protected val moduleName: String = "ldap"
 
@@ -39,7 +39,7 @@ class LDAPLoginModule extends AbstractLoginModule {
       new InitialDirContext(new util.Hashtable[String, Object](env.asJava))
     } catch {
       case t : Throwable =>
-        log.error(t.getMessage(), t)
+        log.error(t)(t.getMessage())
         throw new LoginException(t.getMessage())
     }
   }
@@ -53,7 +53,7 @@ class LDAPLoginModule extends AbstractLoginModule {
       dirContext.get
     } catch {
       case t : Throwable =>
-        log.error(t.getMessage(), t)
+        log.error(t)(t.getMessage())
         throw new LoginException(t.getMessage())
     }
 
@@ -99,7 +99,7 @@ class LDAPLoginModule extends AbstractLoginModule {
       }
     } catch {
       case t : Throwable =>
-        log.error(t.getMessage(), t)
+        log.error(t)(t.getMessage())
         throw new LoginException(t.getMessage())
     } finally {
       ldapCfg.systemUser match {

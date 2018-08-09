@@ -8,9 +8,11 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import blended.jms.utils.internal._
 import org.osgi.framework.BundleContext
-import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
+import blended.util.logging.Logger
+import blended.jms.utils.internal.CheckConnection
+import blended.jms.utils.internal.CheckConnection
 
 trait IdAwareConnectionFactory extends ConnectionFactory {
   val clientId : String
@@ -27,7 +29,7 @@ class BlendedSingleConnectionFactory(
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
-  private[this] val log : Logger = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
+  private[this] val log : Logger = Logger[BlendedSingleConnectionFactory]
 
   private[this] val monitorName = s"Monitor-$vendor-$provider"
   private[this] val stateMgrName = s"JMS-$vendor-$provider"

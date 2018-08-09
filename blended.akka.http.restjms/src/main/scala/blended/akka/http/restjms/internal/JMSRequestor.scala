@@ -2,33 +2,33 @@ package blended.akka.http.restjms.internal
 
 import java.util.concurrent.atomic.AtomicLong
 
+import scala.concurrent.{ ExecutionContext, Future }
+import scala.util.{ Failure, Success, Try }
+import scala.util.control.NonFatal
+
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.util.ByteString
-import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
-import org.apache.camel.{CamelContext, Exchange, ExchangePattern}
-import org.slf4j.LoggerFactory
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
+import blended.util.logging.Logger
+import org.apache.camel.{ CamelContext, Exchange, ExchangePattern }
+import org.apache.camel.impl.{ DefaultExchange, DefaultMessage }
 
 trait JMSRequestor {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[JMSRequestor])
+  private[this] val log = Logger[JMSRequestor]
   private[this] val defaultContentTypes = List("application/json", "text/xml")
-  private[this] val opCounter : AtomicLong = new AtomicLong(0l)
+  private[this] val opCounter: AtomicLong = new AtomicLong(0l)
 
-  implicit val eCtxt : ExecutionContext
-  implicit val materializer : ActorMaterializer
+  implicit val eCtxt: ExecutionContext
+  implicit val materializer: ActorMaterializer
 
-  val operations : Map[String, JmsOperationConfig]
-  val camelContext : CamelContext
+  val operations: Map[String, JmsOperationConfig]
+  val camelContext: CamelContext
 
-  val httpRoute : Route = {
+  val httpRoute: Route = {
     path(RemainingPath) { path =>
       post {
         entity(as[HttpRequest]) { request =>
@@ -67,22 +67,23 @@ trait JMSRequestor {
                   )
 
                 case h :: _ =>
-                  complete{
+                  complete {
                     val f = requestReply(path.toString(), opCfg, cType, request)
 
-                    f.onComplete{
-                      r => log.debug(s"HttpResponse is [$r]") }
+                    f.onComplete {
+                      r => log.debug(s"HttpResponse is [$r]")
+                    }
 
                     f
                   }
               }
-           }
+          }
         }
       }
     }
   }
 
-  private[this] def executeCamel(operation: String, opCfg: JmsOperationConfig, cType: ContentType, content: Array[Byte]) : Try[Exchange] = {
+  private[this] def executeCamel(operation: String, opCfg: JmsOperationConfig, cType: ContentType, content: Array[Byte]): Try[Exchange] = {
 
     val producer = camelContext.createProducerTemplate()
     val exchange = new DefaultExchange(camelContext)
@@ -122,31 +123,27 @@ trait JMSRequestor {
     }
   }
 
-  private[this] def requestReply(operation: String, opCfg: JmsOperationConfig, cType: ContentType, request: HttpRequest) : Future[HttpResponse] = {
+  private[this] def requestReply(operation: String, opCfg: JmsOperationConfig, cType: ContentType, request: HttpRequest): Future[HttpResponse] = {
 
     val opNum = opCounter.incrementAndGet()
     val data = request.entity.getDataBytes().runWith(Sink.seq[ByteString], materializer)
 
-    def filterHeaders(headers : Seq[HttpHeader]) : collection.immutable.Seq[HttpHeader] = {
-      val notAllowedInResponses : Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
+    def filterHeaders(headers: Seq[HttpHeader]): collection.immutable.Seq[HttpHeader] = {
+      val notAllowedInResponses: Seq[String] = Seq("Host", "Accept-Encoding", "User-Agent", "Timeout-Access")
       headers.filterNot(h => notAllowedInResponses.contains(h.name())).to[collection.immutable.Seq]
     }
 
     data.map { result =>
 
-      val content : Array[Byte] = result.flatten.toArray
-      if (log.isDebugEnabled()) {
-        log.debug(s"Received request [$opNum] of length [${content.size}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
-      }
+      val content: Array[Byte] = result.flatten.toArray
+      log.debug(s"Received request [$opNum] of length [${content.size}] encoding [${opCfg.encoding}], [${new String(content, opCfg.encoding)}]")
 
       executeCamel(operation, opCfg, cType, content) match {
         case Success(exchange) =>
 
           if (opCfg.jmsReply) {
             val body = exchange.getOut().getBody(classOf[Array[Byte]])
-            if (log.isDebugEnabled()) {
-              log.info(s"Received response [$opNum] of length [${body.size}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
-            }
+            log.info(s"Received response [$opNum] of length [${body.size}] encoding [${opCfg.encoding}], [${new String(body, opCfg.encoding)}]")
 
             HttpResponse(
               status = StatusCodes.OK,

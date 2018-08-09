@@ -4,17 +4,17 @@ import java.io.File
 
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
-import javax.security.auth.login.{LoginContext, LoginException}
-import org.scalatest.{FreeSpec, Matchers}
-import org.slf4j.LoggerFactory
+import blended.testsupport.pojosr.{ PojoSrTestHelper, SimplePojosrBlendedContainer }
+import blended.util.logging.Logger
+import javax.security.auth.login.{ LoginContext, LoginException }
+import org.scalatest.{ FreeSpec, Matchers }
 
 class ConfigLoginSpec extends FreeSpec
   with Matchers
   with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ConfigLoginSpec])
+  private[this] val log = Logger[ConfigLoginSpec]
   private[this] val baseDir = new File(BlendedTestSupport.projectTestOutput, "simple").getAbsolutePath()
 
   "The Simple Login Module should" - {

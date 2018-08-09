@@ -1,18 +1,17 @@
 package blended.itestsupport.compress
 
 import java.io._
-import java.util.zip.GZIPOutputStream
-
-import blended.util.StreamCopySupport
-import org.apache.commons.compress.archivers.ArchiveStreamFactory
-import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
-import org.slf4j.LoggerFactory
 
 import scala.collection.mutable
 
+import blended.util.StreamCopySupport
+import blended.util.logging.Logger
+import org.apache.commons.compress.archivers.ArchiveStreamFactory
+import org.apache.commons.compress.archivers.tar.{ TarArchiveEntry, TarArchiveOutputStream }
+
 object TarFileSupport {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[TarFileSupport])
+  private[this] val log = Logger[TarFileSupport]
 
   def untar(is : InputStream) : Map[String, Array[Byte]] = {
     val tar = new ArchiveStreamFactory().createArchiveInputStream(new BufferedInputStream(is))

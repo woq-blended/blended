@@ -2,14 +2,13 @@ package blended.updater.config
 
 import java.io.File
 
-import com.typesafe.config.{ Config, ConfigFactory }
-import org.slf4j.LoggerFactory
-
-import _root_.scala.collection.immutable
 import scala.collection.JavaConverters._
+import scala.collection.immutable
 import scala.collection.immutable.Map
 import scala.util._
-import com.typesafe.config.ConfigValue
+
+import blended.util.logging.Logger
+import com.typesafe.config.{ Config, ConfigFactory }
 import com.typesafe.config.ConfigValueFactory
 
 /**
@@ -115,7 +114,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
 
 final object LocalOverlays {
 
-  private[this] lazy val log = LoggerFactory.getLogger(classOf[LocalOverlays])
+  private[this] lazy val log = Logger[LocalOverlays.type]
 
   def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
     if (overlays.isEmpty) {
@@ -166,7 +165,7 @@ final object LocalOverlays {
           log.debug("Found local overlays: " + localOverlays)
           List(localOverlays)
         case Failure(e) =>
-          log.error("Could not read overlay config file: " + file, e)
+          log.error(e)(s"Could not read overlay config file: ${file}")
           List()
       }
     }

@@ -1,16 +1,15 @@
 package blended.mgmt.service.jmx.internal
 
-import javax.management.openmbean.{CompositeData, CompositeDataSupport}
-
 import scala.collection.JavaConverters._
-import javax.management.{Attribute, MBeanServer, ObjectInstance, ObjectName}
 
 import blended.updater.config.ServiceInfo
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
+import javax.management.{ Attribute, MBeanServer, ObjectInstance, ObjectName }
+import javax.management.openmbean.{ CompositeData, CompositeDataSupport }
 
 class ServiceJmxAnalyser(server: MBeanServer, config: ServiceJmxConfig) {
 
-  private val log = LoggerFactory.getLogger(classOf[ServiceJmxAnalyser])
+  private val log = Logger[ServiceJmxAnalyser]
 
   def createFilter(svcConfig : SingleServiceConfig, template: ServiceTypeTemplate) : ObjectName = {
 

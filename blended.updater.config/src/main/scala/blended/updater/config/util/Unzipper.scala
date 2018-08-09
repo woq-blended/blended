@@ -5,16 +5,14 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.zip.ZipInputStream
-import scala.collection.immutable.List
-import scala.collection.immutable.Nil
-import scala.collection.immutable.Seq
+
 import scala.util.Try
-import org.slf4j.LoggerFactory
 import scala.util.control.NonFatal
+
+import blended.util.logging.Logger
 
 object Unzipper extends Unzipper {
   // TODO: add failMissingProperty 
@@ -29,7 +27,7 @@ object Unzipper extends Unzipper {
 class Unzipper {
   import Unzipper._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[Unzipper])
+  private[this] val log = Logger[Unzipper]
 
   def unzip(archive: File, targetDir: File, selectedFiles: String*): Try[Seq[File]] = {
     unzip(archive, targetDir, selectedFiles.map(f => (f, null)).toList, None, None)
@@ -64,7 +62,7 @@ class Unzipper {
     if (!archive.exists() || !archive.isFile()) throw new FileNotFoundException("Zip file cannot be found: " + archive)
     targetDir.mkdirs
 
-    log.debug("Extracting zip archive {} to {}", Array(archive, targetDir): _*)
+    log.debug(s"Extracting zip archive ${archive} to ${targetDir}")
 
     val partial = !selectedFiles.isEmpty || fileSelector.isDefined
     if (partial) log.debug("Only extracting some content of zip file")
@@ -119,7 +117,7 @@ class Unzipper {
         val extractFile: Option[File] = if (partial) {
           if (zipEntry.isDirectory) {
             acceptFile(zipEntry.getName).foreach { dir =>
-              log.debug("  Creating {}", dir.getName())
+              log.debug(s"  Creating ${dir.getName()}")
               dir.mkdirs
             }
             None
@@ -128,7 +126,7 @@ class Unzipper {
           }
         } else {
           if (zipEntry.isDirectory) {
-            log.debug("  Creating {}", zipEntry.getName)
+            log.debug(s"  Creating ${zipEntry.getName()}")
             new File(targetDir + "/" + zipEntry.getName).mkdirs
             None
           } else {
@@ -137,16 +135,16 @@ class Unzipper {
         }
 
         if (extractFile.isDefined) {
-          log.debug("  Extracting {}", zipEntry.getName)
+          log.debug(s"  Extracting ${zipEntry.getName()}")
           val targetFile = extractFile.get
           if (targetFile.exists
-            && !targetFile.getParentFile.isDirectory) {
+            && !targetFile.getParentFile().isDirectory()) {
             throw new RuntimeException(
               "Expected directory is a file. Cannot extract zip content: "
-                + zipEntry.getName)
+                + zipEntry.getName())
           }
           // Ensure, that the directory exists
-          targetFile.getParentFile.mkdirs
+          targetFile.getParentFile().mkdirs()
           val outputStream = new BufferedOutputStream(new FileOutputStream(targetFile))
           try {
             fileWriter(zipIs, outputStream)

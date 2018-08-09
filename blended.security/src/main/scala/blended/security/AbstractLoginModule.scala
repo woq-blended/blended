@@ -2,17 +2,17 @@ package blended.security
 
 import java.util
 
-import blended.security.boot.{GroupPrincipal, UserPrincipal}
-import com.typesafe.config.{Config, ConfigFactory}
+import blended.security.boot.{ GroupPrincipal, UserPrincipal }
+import blended.util.logging.Logger
+import com.typesafe.config.{ Config, ConfigFactory }
 import javax.security.auth.Subject
-import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
+import javax.security.auth.callback.{ CallbackHandler, NameCallback, PasswordCallback }
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
-import org.slf4j.LoggerFactory
 
 abstract class AbstractLoginModule extends LoginModule {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[AbstractLoginModule])
+  private[this] val log = Logger[AbstractLoginModule]
 
   protected var subject : Option[Subject] = None
   protected var cbHandler : Option[CallbackHandler] = None

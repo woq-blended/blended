@@ -1,18 +1,18 @@
 package blended.mgmt.rest.internal
 
-import akka.util.Timeout
-import blended.updater.config._
-import blended.updater.config.json.PrickleProtocol._
-import org.slf4j.LoggerFactory
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model._
-
 import scala.collection.immutable
 import scala.concurrent.duration._
-import blended.security.akka.http.BlendedSecurityDirectives
-import blended.prickle.akka.http.PrickleSupport
+
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.ValidationRejection
+import akka.util.Timeout
+import blended.prickle.akka.http.PrickleSupport
+import blended.security.akka.http.BlendedSecurityDirectives
+import blended.updater.config._
+import blended.updater.config.json.PrickleProtocol._
+import blended.util.logging.Logger
 
 trait CollectorService {
   // dependencies
@@ -29,7 +29,7 @@ trait CollectorService {
         rolloutProfileRoute
     }
 
-  private[this] lazy val log = LoggerFactory.getLogger(classOf[CollectorService])
+  private[this] lazy val log = Logger[CollectorService]
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
@@ -78,9 +78,9 @@ trait CollectorService {
     path("container") {
       post {
         entity(as[ContainerInfo]) { info =>
-          log.debug("Processing container info: {}", info)
+          log.debug(s"Processing container info: ${info}")
           val res = processContainerInfo(info)
-          log.debug("Processing result: {}", res)
+          log.debug(s"Processing result: ${res}")
           complete(res)
         }
       }
@@ -94,7 +94,7 @@ trait CollectorService {
           complete {
             log.debug("About to provide container infos")
             val res = getCurrentState()
-            log.debug("Result: {}", res)
+            log.debug(s"Result: ${res}")
             res
           }
         }

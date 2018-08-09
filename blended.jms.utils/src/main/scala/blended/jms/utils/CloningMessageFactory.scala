@@ -1,14 +1,13 @@
 package blended.jms.utils
 
-import javax.jms.{BytesMessage, Message, Session, TextMessage}
-
-import org.slf4j.LoggerFactory
-
 import scala.collection.JavaConverters._
+
+import blended.util.logging.Logger
+import javax.jms.{ BytesMessage, Message, Session, TextMessage }
 
 object CloningMessageFactory extends JMSMessageFactory[Message] {
 
-  private[this] val log = LoggerFactory.getLogger("blended.jms.utils.CloningMessageFactory")
+  private[this] val log = Logger("blended.jms.utils.CloningMessageFactory")
 
   override def createMessage(session: Session, content: Message): Message = {
 

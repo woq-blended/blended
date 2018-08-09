@@ -4,28 +4,28 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
+import scala.annotation.varargs
 import scala.concurrent.Await
 import scala.concurrent.duration.HOURS
 import scala.concurrent.duration.MINUTES
-import com.typesafe.config.ConfigFactory
+
 import akka.actor.ActorRef
 import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.updater.Updater
-import blended.updater.config._
-import blended.updater.Updater.OperationSucceeded
-import blended.updater.Updater.OperationFailed
-import com.typesafe.config.ConfigParseOptions
-
-import scala.annotation.varargs
-import org.slf4j.LoggerFactory
 import blended.updater.LocalProfile
 import blended.updater.ProfileId
+import blended.updater.Updater
+import blended.updater.Updater.OperationFailed
+import blended.updater.Updater.OperationSucceeded
+import blended.updater.config._
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
 
 class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSystem: ActorSystem) {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[Commands])
+  private[this] val log = Logger[Commands]
 
   val commandsWithDescription = Seq(
     "showProfiles" -> "Show all (staged) profiles",
@@ -41,7 +41,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
   def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
     val activeProfile = env.map(env => ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(List.empty)))
-    log.debug("acitive profile: {}", activeProfile)
+    log.debug(s"acitive profile: ${activeProfile}")
 
     val profiles = Await.result(
       ask(updater, Updater.GetProfiles(UUID.randomUUID().toString())).mapTo[Updater.Result[Set[_]]],

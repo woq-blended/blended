@@ -1,17 +1,17 @@
 package blended.itestsupport.docker
 
 import blended.itestsupport.ContainerUnderTest
+import blended.util.logging.Logger
 import org.mockito.Mockito._
+import org.scalatest.{ Matchers, WordSpec }
 import org.scalatest.mockito.MockitoSugar
-import org.scalatest.{Matchers, WordSpec}
-import org.slf4j.LoggerFactory
 
 class DockerContainerSpec extends WordSpec
   with Matchers
   with DockerTestSetup
   with MockitoSugar {
   
-  private[this] val log = LoggerFactory.getLogger(classOf[DockerContainerSpec])
+  private[this] val log = Logger[DockerContainerSpec]
 
   "A Docker Container should" should {
 

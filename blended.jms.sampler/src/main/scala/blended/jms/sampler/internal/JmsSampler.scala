@@ -1,11 +1,11 @@
 package blended.jms.sampler.internal
 
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.jms.ConnectionFactory
 
 import akka.actor.ActorRef
 import blended.akka.OSGIActorConfig
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
+import javax.jms.ConnectionFactory
 
 case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSamplerMBean {
 
@@ -14,7 +14,7 @@ case class JmsSampler(cfg: OSGIActorConfig, cf: ConnectionFactory) extends JmsSa
   private[this] var worker : Option[ActorRef] = None
   private[this] val sampling : AtomicBoolean = new AtomicBoolean(false)
 
-  private[this] val log = LoggerFactory.getLogger(classOf[JmsSampler])
+  private[this] val log = Logger[JmsSampler]
 
   override def getEncoding(): String = encoding
 

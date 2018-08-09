@@ -1,25 +1,25 @@
 package blended.itestsupport
+import java.io.{ ByteArrayOutputStream, File, FileOutputStream }
 
-import java.io.{ByteArrayOutputStream, File, FileOutputStream}
+import scala.concurrent.{ Await, Future }
+import scala.concurrent.duration.FiniteDuration
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ ActorRef, Props }
 import akka.pattern.ask
-import akka.testkit.{TestKit, TestProbe}
+import akka.testkit.{ TestKit, TestProbe }
 import akka.util.Timeout
 import akka.util.Timeout.durationToTimeout
 import blended.itestsupport.compress.TarFileSupport
-import blended.itestsupport.condition.{Condition, ConditionActor}
+import blended.itestsupport.condition.{ Condition, ConditionActor }
 import blended.itestsupport.docker.protocol._
 import blended.itestsupport.protocol._
+import blended.itestsupport.protocol.TestContextRequest
+import blended.util.logging.Logger
 import org.apache.camel.CamelContext
-import org.slf4j.LoggerFactory
-
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{Await, Future}
 
 trait BlendedIntegrationTestSupport {
 
-  private[this] val logger = LoggerFactory.getLogger(classOf[BlendedIntegrationTestSupport])
+  private[this] val logger = Logger[BlendedIntegrationTestSupport]
 
   val testOutput = System.getProperty("projectTestOutput", "")
 

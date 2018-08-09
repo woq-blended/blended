@@ -1,20 +1,20 @@
 package blended.itestsupport
 
-import akka.actor.{ActorSystem, PoisonPill, Props}
+import scala.concurrent.duration._
+import scala.util.control.NonFatal
+
+import akka.actor.{ ActorSystem, PoisonPill, Props }
 import akka.camel.CamelMessage
 import akka.testkit.TestProbe
 import akka.util.Timeout
 import blended.testsupport.camel._
 import blended.testsupport.camel.protocol._
+import blended.util.logging.Logger
 import org.apache.camel.CamelContext
-import org.slf4j.LoggerFactory
-
-import scala.concurrent.duration._
-import scala.util.control.NonFatal
 
 trait ContainerSpecSupport { this: CamelTestSupport =>
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ContainerSpecSupport])
+  private[this] val log = Logger[ContainerSpecSupport]
 
   def blackboxTest(
     message : CamelMessage,

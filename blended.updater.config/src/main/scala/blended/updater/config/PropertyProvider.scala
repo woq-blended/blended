@@ -1,10 +1,10 @@
 package blended.updater.config
 
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
 
 abstract class PropertyProvider {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[PropertyProvider])
+  private[this] val log = Logger[PropertyProvider]
 
   def doProvide(key: String) : Option[String] = {
     provide(key) match {

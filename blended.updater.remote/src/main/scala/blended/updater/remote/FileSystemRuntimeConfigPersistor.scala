@@ -2,15 +2,15 @@ package blended.updater.remote
 
 import java.io.File
 
-import blended.updater.config.{ConfigWriter, RuntimeConfig, RuntimeConfigCompanion}
-import com.typesafe.config.ConfigFactory
-import org.slf4j.LoggerFactory
-
 import scala.util.Try
+
+import blended.updater.config.{ ConfigWriter, RuntimeConfig, RuntimeConfigCompanion }
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
 
 class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPersistor {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[FileSystemRuntimeConfigPersistor])
+  private[this] val log = Logger[FileSystemRuntimeConfigPersistor]
 
   private[this] var runtimeConfigs: Map[File, RuntimeConfig] = Map()
   private[this] var initialized: Boolean = false
@@ -18,7 +18,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
   def fileName(rc: RuntimeConfig): String = s"${rc.name}-${rc.version}.conf"
 
   def initialize(): Unit = {
-    log.debug("About to initialize runtime config persistor for storageDir: {}", storageDir)
+    log.debug(s"About to initialize runtime config persistor for storageDir: ${storageDir}")
     runtimeConfigs = if (!storageDir.exists()) {
       Map()
     } else {
@@ -29,7 +29,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
         }.flatMap { rawConfig =>
           RuntimeConfigCompanion.read(rawConfig)
         }
-        log.debug("Found file: {} with: {}", Array(file, rc))
+        log.debug(s"Found file: ${file} with: ${rc}")
         rc.toOption.map(rc => file -> rc)
       }
       rcs.filter { case (file, rc) => file.getName() == fileName(rc) }.toMap
@@ -47,7 +47,7 @@ class FileSystemRuntimeConfigPersistor(storageDir: File) extends RuntimeConfigPe
         log.debug("RuntimeConfig already persistent")
       } else {
         val msg = "Cannot persist runtime config. Storage location already taken for a different configuration."
-        log.error("{} Found file {} with config: {}", msg, configFile, runtimeConfigs.get(configFile))
+        log.error(s"${msg} Found file ${configFile} with config: ${runtimeConfigs.get(configFile)}")
         sys.error(msg)
       }
     }
