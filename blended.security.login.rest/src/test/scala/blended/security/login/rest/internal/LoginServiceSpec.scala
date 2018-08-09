@@ -85,12 +85,12 @@ class LoginServiceSpec extends FreeSpec
         val r = Await.result(response, 3.seconds)
 
         r.code should be (StatusCodes.Ok)
-        val json : String = r.body.right.get
+        val json : String = r.body.right.get2
         val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
 
         permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == "admins") should be (defined)
-        permissions.granted.find(_.permissionClass == "blended") should be (defined)
+        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
       }
 
     }

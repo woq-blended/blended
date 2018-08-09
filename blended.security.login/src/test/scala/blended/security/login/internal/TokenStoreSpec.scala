@@ -60,8 +60,8 @@ class TokenStoreSpec extends FreeSpec
         val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
 
         permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == "admins") should be (defined)
-        permissions.granted.find(_.permissionClass == "blended") should be (defined)
+        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
         Await.result(store.listTokens(), 3.seconds).size should be(1)
       }
@@ -87,8 +87,8 @@ class TokenStoreSpec extends FreeSpec
         val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
 
         permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == "admins") should be (defined)
-        permissions.granted.find(_.permissionClass == "blended") should be (defined)
+        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
         val token3 = Await.result(store.removeToken("andreas"), 3.seconds).get
         assert(token === token3)
