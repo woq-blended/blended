@@ -30,15 +30,19 @@ trait Logger extends Serializable {
 
 object Logger {
   def apply[T: ClassTag]: Logger = {
-    val base = scala.reflect.classTag[T].runtimeClass.getName
+    val name = scala.reflect.classTag[T].runtimeClass.getName
+    apply(name)
+  }
+
+  def apply(name: String): Logger = {
     try {
       // we expect class loading errors if no slf4j is present
-      new LoggerSlf4j(slf4j.LoggerFactory.getLogger(base))
+      new LoggerSlf4j(slf4j.LoggerFactory.getLogger(name))
     } catch {
       case _: NoClassDefFoundError | _: ClassNotFoundException =>
         try {
           // fall back to jul
-          new LoggerJul(jul.Logger.getLogger(base))
+          new LoggerJul(jul.Logger.getLogger(name))
         } catch {
           case _: NoClassDefFoundError | _: ClassNotFoundException =>
             new LoggerNoOp()
