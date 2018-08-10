@@ -1,4 +1,5 @@
 package blended.itestsupport
+
 import java.io.{ ByteArrayOutputStream, File, FileOutputStream }
 
 import scala.concurrent.{ Await, Future }
@@ -9,6 +10,7 @@ import akka.pattern.ask
 import akka.testkit.{ TestKit, TestProbe }
 import akka.util.Timeout
 import akka.util.Timeout.durationToTimeout
+import blended.itestsupport.BlendedTestContextManager.{ ConfiguredContainer, ConfiguredContainer_?, ContainerReady, ContainerReady_? }
 import blended.itestsupport.compress.TarFileSupport
 import blended.itestsupport.condition.{ Condition, ConditionActor }
 import blended.itestsupport.docker.protocol._
