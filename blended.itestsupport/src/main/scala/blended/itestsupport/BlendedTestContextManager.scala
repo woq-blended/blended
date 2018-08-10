@@ -1,13 +1,13 @@
 package blended.itestsupport
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.camel.CamelExtension
 import akka.pattern._
 import blended.akka.MemoryStash
-import blended.itestsupport.condition.{Condition, ConditionActor, ConditionProvider}
+import blended.itestsupport.condition.{ Condition, ConditionActor, ConditionProvider }
+import blended.itestsupport.docker.{ ContainerManager, DockerClientFactory, DockerClientProvider }
 import blended.itestsupport.docker.protocol._
-import blended.itestsupport.docker.{ContainerManager, DockerClientFactory, DockerClientProvider}
-import blended.itestsupport.protocol.{TestContextRequest, _}
+import blended.itestsupport.protocol.{ TestContextRequest, _ }
 import com.github.dockerjava.api.DockerClient
 import org.apache.camel.CamelContext
 

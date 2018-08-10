@@ -1,8 +1,11 @@
 package blended.itest.node
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import scala.collection.immutable.IndexedSeq
+import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
+
+import akka.actor.{ ActorRef, ActorSystem, Props }
 import akka.testkit.TestKit
 import akka.util.Timeout
 import blended.itestsupport.BlendedIntegrationTestSupport
@@ -10,11 +13,8 @@ import blended.util.logging.Logger
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.refspec.RefSpec
 
-import scala.collection.immutable.IndexedSeq
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
-class BlendedDemoIntegrationSpec extends RefSpec
+class BlendedDemoIntegrationSpec
+  extends RefSpec
   with BeforeAndAfterAll
   with BlendedIntegrationTestSupport {
 
