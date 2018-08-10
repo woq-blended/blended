@@ -2,27 +2,22 @@ package blended.persistence.h2.internal
 
 import java.io.File
 
-import scala.reflect.runtime.universe
-
-import org.slf4j.LoggerFactory
-
-import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
+import scala.util.Failure
+import scala.util.Success
 
 import blended.domino.TypesafeConfigWatching
 import blended.persistence.PersistenceService
-import domino.DominoActivator
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import com.zaxxer.hikari.HikariDataSource
 import blended.persistence.jdbc.PersistedClassDao
 import blended.persistence.jdbc.PersistenceServiceJdbc
-import scala.util.Success
-import scala.util.Failure
+import blended.util.logging.Logger
+import com.zaxxer.hikari.HikariDataSource
+import domino.DominoActivator
 import org.h2.jdbcx.JdbcDataSource
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
 
 class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[H2Activator]
 
   whenBundleActive {
     log.debug("About to start " + getClass())

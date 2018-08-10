@@ -1,22 +1,23 @@
 package blended.persistence.jdbc
 
-import org.springframework.jdbc.support.GeneratedKeyHolder
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import javax.sql.DataSource
-import liquibase.database.jvm.JdbcConnection
-import liquibase.database.DatabaseFactory
-import liquibase.database.Database
-import liquibase.resource.ClassLoaderResourceAccessor
-import liquibase.Liquibase
-import scala.util.Try
-import scala.collection.{ immutable => sci }
-import org.springframework.jdbc.core.RowMapper
 import scala.collection.JavaConverters._
+import scala.collection.{ immutable => sci }
+import scala.util.Try
+
+import blended.util.logging.Logger
+import javax.sql.DataSource
+import liquibase.Liquibase
+import liquibase.database.DatabaseFactory
+import liquibase.database.jvm.JdbcConnection
+import liquibase.resource.ClassLoaderResourceAccessor
+import org.springframework.jdbc.core.RowMapper
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.support.GeneratedKeyHolder
 
 class PersistedClassDao(dataSource: DataSource) {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[PersistedClassDao]
 
   private[this] val jdbcTemplate = new NamedParameterJdbcTemplate(dataSource)
 

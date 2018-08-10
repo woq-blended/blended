@@ -3,10 +3,11 @@ package blended.persistence.jdbc
 import com.zaxxer.hikari.HikariDataSource
 import java.io.File
 import javax.sql.DataSource
+import blended.util.logging.Logger
 
 object DbFactory {
 
-  val log = org.log4s.getLogger
+  private[this] val log = Logger[DbFactory.type]
   
   def createDataSource(dir: File, name: String): HikariDataSource = {
     new File(dir, name).mkdirs()

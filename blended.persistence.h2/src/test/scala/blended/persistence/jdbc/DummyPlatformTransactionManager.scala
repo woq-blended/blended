@@ -1,14 +1,15 @@
 package blended.persistence.jdbc
 
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.TransactionStatus
-import org.springframework.transaction.TransactionDefinition
-import org.springframework.transaction.support.SimpleTransactionStatus
+import blended.util.logging.Logger
 import org.springframework.transaction.IllegalTransactionStateException
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.support.SimpleTransactionStatus
 
 class DummyPlatformTransactionManager extends PlatformTransactionManager {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[DummyPlatformTransactionManager]
   private[this] var inTx: TransactionDefinition = _
 
   def commit(ts: TransactionStatus): Unit = {

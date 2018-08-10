@@ -13,8 +13,8 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib % "provided",
     Blended.persistence,
+    Blended.utilLogging,
     Deps.slf4j,
-    Deps.log4s,
     Deps.domino,
     Deps.orientDbCore,
     Deps.h2,

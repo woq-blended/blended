@@ -1,11 +1,11 @@
 package blended.persistence.jdbc
 
-import blended.persistence.PersistenceService
 import java.{ util => ju }
+
+import blended.persistence.PersistenceService
+import blended.util.logging.Logger
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import javax.sql.DataSource
 
 /**
  * Generic implementation of a PersistenceService using a JDBC DataSource.
@@ -19,7 +19,7 @@ class PersistenceServiceJdbc(
 )
   extends PersistenceService {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[PersistenceServiceJdbc]
 
   private[this] val txTemplate = new TransactionTemplate(txManager)
   private[this] val txTemplateRo = {
