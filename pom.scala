@@ -17,8 +17,7 @@ BlendedModel(
       configuration = Config(
         serverId = "ossrh",
         nexusUrl = "https://oss.sonatype.org/",
-        autoReleaseAfterClose = "true",
-        skipNexusStagingDeployMojo = "true"
+        autoReleaseAfterClose = "true"
       )
     ),
     skipInstallPlugin,
@@ -31,6 +30,7 @@ BlendedModel(
         activeByDefault = true
       ),
       modules = Seq(
+        "blended.util.logging",
         "blended.launcher",
         "blended.updater",
         "blended.updater.config",
@@ -68,6 +68,7 @@ BlendedModel(
         "blended.prickle.akka.http",
         "blended.security",
         "blended.security.scep",
+        "blended.security.scep.standalone",
         "blended.security.ssl",
         "blended.security.boot",
         "blended.security.login",

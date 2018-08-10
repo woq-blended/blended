@@ -1,14 +1,14 @@
 package blended.jms.utils
 
-import java.io.{PrintWriter, StringWriter}
-import javax.jms.ConnectionFactory
-
-import blended.akka.{ActorSystemWatching, OSGIActorConfig}
-import domino.DominoActivator
-import org.slf4j.{Logger, LoggerFactory}
+import java.io.{ PrintWriter, StringWriter }
 
 import scala.collection.JavaConverters._
 import scala.util.control.NonFatal
+
+import blended.akka.{ ActorSystemWatching, OSGIActorConfig }
+import blended.util.logging.Logger
+import domino.DominoActivator
+import javax.jms.ConnectionFactory
 
 object ConnectionFactoryActivator {
 
@@ -34,7 +34,7 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
 
   protected val factoryClassLoader : Option[ClassLoader] = None
 
-  private[this] val log : Logger = LoggerFactory.getLogger(getClass().getName())
+  private[this] val log : Logger = Logger(getClass().getName())
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>

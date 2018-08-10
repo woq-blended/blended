@@ -1,15 +1,15 @@
 package blended.itestsupport.docker
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, InputStream}
-
-import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.api.model._
-import blended.itestsupport.ContainerUnderTest
-import com.github.dockerjava.api.command.InspectExecResponse
-import com.github.dockerjava.core.command.ExecStartResultCallback
-import org.slf4j.LoggerFactory
+import java.io.{ ByteArrayInputStream, ByteArrayOutputStream, InputStream }
 
 import scala.util.control.NonFatal
+
+import blended.itestsupport.ContainerUnderTest
+import blended.util.logging.Logger
+import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.command.InspectExecResponse
+import com.github.dockerjava.api.model._
+import com.github.dockerjava.core.command.ExecStartResultCallback
 
 /*
  * Provide a simple wrapper around the excellent docker Java API to create an abstraction suitable for
@@ -18,7 +18,7 @@ import scala.util.control.NonFatal
 
 class DockerContainer(cut: ContainerUnderTest)(implicit client: DockerClient) {
 
-  private[this] val logger = LoggerFactory.getLogger(classOf[DockerContainer].getName)
+  private[this] val logger = Logger[DockerContainer]
 
   /**
    * Start the container with a given set of exposed ports. Exposed ports are defined in terms of docker

@@ -2,23 +2,19 @@ package blended.persistence.orient.internal
 
 import java.io.File
 
-import scala.reflect.runtime.universe
-
-import org.slf4j.LoggerFactory
-
-import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
-import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
-
 import blended.domino.TypesafeConfigWatching
 import blended.persistence.PersistenceService
+import blended.util.logging.Logger
+import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
+import com.orientechnologies.orient.core.db.document.ODatabaseDocumentTx
 import domino.DominoActivator
 
 class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[OrientActivator])
+  private[this] val log = Logger[OrientActivator]
 
   whenBundleActive {
-    log.debug("About to start {}", getClass())
+    log.debug(s"About to start ${getClass()}")
 
     whenTypesafeConfigAvailable { (config, idService) =>
 
@@ -52,7 +48,7 @@ class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
             val db = new ODatabaseDocumentTx(dbUrl)
             try {
               if (!db.exists()) {
-                log.debug("Database does not exist. About to create it at URL: {}", dbUrl)
+                log.debug(s"Database does not exist. About to create it at URL: ${dbUrl}")
                 db.create()
               }
             } finally {
@@ -61,17 +57,17 @@ class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
           }
 
           val dbPool = new OPartitionedDatabasePool(dbUrl, dbUserName, dbPassword)
-          log.debug("Created database pool: {}", dbPool)
+          log.debug(s"Created database pool: ${dbPool}")
 
           onStop {
-            log.debug("About to close database pool: {}", dbPool)
+            log.debug(s"About to close database pool: ${dbPool}")
             dbPool.close()
           }
 
           val orientExperimental = new PersistenceServiceOrientDb(dbPool)
           orientExperimental.providesService[PersistenceService]("dbUrl" -> dbUrl)
 
-          log.debug("Started {}", getClass())
+          log.debug(s"Started ${getClass()}")
       }
 
     }

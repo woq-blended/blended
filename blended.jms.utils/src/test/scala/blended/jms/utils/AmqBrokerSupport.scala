@@ -7,7 +7,6 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 trait AmqBrokerSupport {
 
   lazy val brokerName : String = "blended"
-
   def amqCf() = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
 
   def startBroker() : Option[BrokerService] = {
@@ -17,6 +16,7 @@ trait AmqBrokerSupport {
     b.setPersistent(false)
     b.setUseJmx(false)
     b.setPersistenceAdapter(new MemoryPersistenceAdapter)
+    b.setDedicatedTaskRunner(true)
 
     b.start()
     b.waitUntilStarted()

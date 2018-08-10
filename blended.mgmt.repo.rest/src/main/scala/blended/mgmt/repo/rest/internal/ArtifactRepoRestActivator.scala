@@ -1,19 +1,20 @@
 package blended.mgmt.repo.rest.internal
 
-import domino.DominoActivator
-import blended.domino.TypesafeConfigWatching
-import blended.akka.http.SimpleHttpContext
 import blended.akka.http.HttpContext
+import blended.akka.http.SimpleHttpContext
+import blended.domino.TypesafeConfigWatching
 import blended.mgmt.repo.ArtifactRepo
-import domino.service_watching.ServiceWatcherEvent.ModifiedService
+import blended.util.logging.Logger
+import domino.DominoActivator
 import domino.service_watching.ServiceWatcherEvent.AddingService
+import domino.service_watching.ServiceWatcherEvent.ModifiedService
 import domino.service_watching.ServiceWatcherEvent.RemovedService
 
 class ArtifactRepoRestActivator
   extends DominoActivator
   with TypesafeConfigWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ArtifactRepoRestActivator]
 
   whenBundleActive {
     log.info(s"Activating bundle ${bundleContext.getBundle().getSymbolicName()}")

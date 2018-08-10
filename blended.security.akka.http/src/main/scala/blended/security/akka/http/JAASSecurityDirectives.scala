@@ -1,16 +1,17 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
+
+import akka.http.scaladsl.model.headers.{ BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials }
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.AuthenticationDirective
+import blended.security.SubjectImplicits._
+import blended.util.logging.Logger
 import javax.security.auth.Subject
 import javax.security.auth.callback._
 import javax.security.auth.login.LoginContext
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
-import blended.security.SubjectImplicits._
 
 /**
  * JAAS Based BlendedSecurityDirectives.
@@ -22,7 +23,7 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
    * External dependency to a security manager.
    */
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[JAASSecurityDirectives]
 
   val challenge = HttpChallenges.basic("blended")
 

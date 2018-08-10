@@ -1,14 +1,15 @@
 package blended.mgmt.rest.internal
 
 import blended.akka.ActorSystemWatching
-import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.akka.http.{ HttpContext, SimpleHttpContext }
 import blended.persistence.PersistenceService
 import blended.updater.remote.RemoteUpdater
+import blended.util.logging.Logger
 import domino.DominoActivator
 
 class MgmtRestActivator extends DominoActivator with ActorSystemWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[MgmtRestActivator]
 
   whenBundleActive {
     whenServicesPresent[RemoteUpdater, PersistenceService] {

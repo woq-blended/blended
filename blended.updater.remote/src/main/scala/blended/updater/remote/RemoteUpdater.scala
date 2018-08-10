@@ -1,14 +1,14 @@
 package blended.updater.remote
 
 import blended.updater.config._
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
 
 class RemoteUpdater(
     runtimeConfigPersistor: RuntimeConfigPersistor,
     containerStatePersistor: ContainerStatePersistor,
     overlayConfigPersistor: OverlayConfigPersistor) {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[RemoteUpdater])
+  private[this] val log = Logger[RemoteUpdater]
 
   type ContainerId = String
 

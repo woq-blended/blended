@@ -69,15 +69,15 @@ class BrokerControlActor extends Actor
 
         val url = s"vm://$brokerName?create=false"
 
-        val jmsCfg = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
+        val jmsCfg : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
           "activemq",
           "activemq",
           cfg.config
         )
 
-        val props = jmsCfg.properties + ("brokerURL" -> url)
+        val props : Map[String,String] = jmsCfg.properties + ("brokerURL" -> url)
 
-        val clientId = cfg.idSvc.resolvePropertyString(jmsCfg.clientId) match {
+        val clientId : String = cfg.idSvc.resolvePropertyString(jmsCfg.clientId) match {
           case Failure(t) => throw t
           case Success(s) => s
         }
@@ -92,7 +92,7 @@ class BrokerControlActor extends Actor
           Some(cfg.bundleContext)
         )
 
-        val svcReg = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
+        val svcReg : ServiceRegistration[BlendedSingleConnectionFactory] = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "vendor" -> vendor,
           "provider" -> provider,
           "brokerName" -> brokerName
@@ -116,7 +116,7 @@ class BrokerControlActor extends Actor
     log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
     try { svcReg.unregister() }
     catch {
-      case e: IllegalStateException => // was already unregistered
+      case _ : IllegalStateException => // was already unregistered
     }
 
     broker.stop()

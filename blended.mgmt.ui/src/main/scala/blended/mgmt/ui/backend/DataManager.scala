@@ -81,7 +81,4 @@ object DataManager {
       }
     }
   }
-
-  
 }
-

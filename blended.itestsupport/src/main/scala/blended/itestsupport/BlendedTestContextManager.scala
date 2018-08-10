@@ -1,18 +1,20 @@
 package blended.itestsupport
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{ Actor, ActorLogging, ActorRef, Props }
 import akka.camel.CamelExtension
 import akka.pattern._
 import blended.akka.MemoryStash
-import blended.itestsupport.condition.{Condition, ConditionActor, ConditionProvider}
+import blended.itestsupport.condition.{ Condition, ConditionActor, ConditionProvider }
+import blended.itestsupport.docker.{ ContainerManager, DockerClientFactory, DockerClientProvider }
 import blended.itestsupport.docker.protocol._
-import blended.itestsupport.docker.{ContainerManager, DockerClientFactory, DockerClientProvider}
-import blended.itestsupport.protocol.{TestContextRequest, _}
+import blended.itestsupport.protocol.{ TestContextRequest, _ }
 import com.github.dockerjava.api.DockerClient
 import org.apache.camel.CamelContext
 
-class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this : TestContextConfigurator =>
-  
+class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash { this: TestContextConfigurator =>
+
+  import BlendedTestContextManager._
+
   val camel = CamelExtension(context.system)
   
   def initializing : Receive = {
@@ -81,5 +83,18 @@ class BlendedTestContextManager extends Actor with ActorLogging with MemoryStash
   def containerReady(cuts: Map[String, ContainerUnderTest]) : Condition = ConditionProvider.alwaysTrue()
 
   def receive = initializing orElse stashing
-  
+
+}
+
+object BlendedTestContextManager {
+
+  case object ContainerReady_?
+  case class ContainerReady(ready: Boolean)
+
+  case object ConfiguredContainers_?
+  case class ConfiguredContainers(cuts: Map[String, ContainerUnderTest])
+
+  case class ConfiguredContainer_?(ctName: String)
+  case class ConfiguredContainer(cut: Option[ContainerUnderTest])
+
 }

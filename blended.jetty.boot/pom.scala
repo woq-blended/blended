@@ -14,7 +14,7 @@ BlendedModel(
     scalaLib % "provided",
     scalaReflect % "provided",
     Blended.domino,
-    log4s,
+    Blended.utilLogging,
     jettyOsgiBoot,
     logbackCore % "test",
     logbackClassic % "test",

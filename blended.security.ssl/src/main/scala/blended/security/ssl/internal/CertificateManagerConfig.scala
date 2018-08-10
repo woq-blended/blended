@@ -14,13 +14,15 @@ import scala.util.Try
  * @param keyPass The key password.
  *   If the days until the end of the certificate validity fall below this threshold,
  *   the [[CertificateManager]] will try to re-new the certificate.
+ * @param skipInitialCheck If `true` no initial certifcate check will be issues.
  */
 case class CertificateManagerConfig(
   keyStore: String,
   storePass: String,
   keyPass: String,
   certConfigs: List[CertificateConfig],
-  refresherConfig: Option[RefresherConfig]
+  refresherConfig: Option[RefresherConfig],
+  skipInitialCheck: Boolean
 )
 
 object CertificateManagerConfig {
@@ -29,23 +31,27 @@ object CertificateManagerConfig {
    * Read a [[CertificateManagerConfig]] from a typesafe [[Config]],
    * using the given [[PasswordHasher]] to hash the passwords (`keyPass` and `storePass`).
    */
-  def fromConfig(cfg: Config, hasher: PasswordHasher, idSvc: ContainerIdentifierService) = {
+  def fromConfig(cfg: Config, hasher: PasswordHasher, idSvc: ContainerIdentifierService): CertificateManagerConfig = {
     val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
     val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
     val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
 
-    val certConfigs = cfg.getConfigMap("certificates", Map.empty).map { case (k, v) =>
-      CertificateConfig.fromConfig(k, v, idSvc)
+    val certConfigs = cfg.getConfigMap("certificates", Map.empty).map {
+      case (k, v) =>
+        CertificateConfig.fromConfig(k, v, idSvc)
     }.toList
 
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
 
+    val skipInitialCheck = cfg.getBoolean("skipInitialCheck", false)
+    
     CertificateManagerConfig(
       keyStore = keyStore,
       storePass = hasher.password(storePass),
       keyPass = hasher.password(keyPass),
       certConfigs,
-      refresherConfig
+      refresherConfig,
+      skipInitialCheck = skipInitialCheck
     )
   }
 }
@@ -54,14 +60,14 @@ case class CertificateConfig(
   provider: String,
   alias: String,
   minValidDays: Int,
-  cnProvider : ConfigCommonNameProvider
+  cnProvider: ConfigCommonNameProvider
 )
 
 object CertificateConfig {
 
   val defaultMinValidDays = 10
 
-  def fromConfig(alias: String, cfg: Config, idSvc: ContainerIdentifierService) : CertificateConfig = {
+  def fromConfig(alias: String, cfg: Config, idSvc: ContainerIdentifierService): CertificateConfig = {
     val provider = cfg.getString("provider", "default")
     val minValidDays = cfg.getInt("minValidDays", defaultMinValidDays)
 
@@ -73,7 +79,8 @@ case class RefresherConfig(
   minValidDays: Int,
   hourOfDay: Int,
   minuteOfDay: Int,
-  onRefreshAction: RefresherConfig.Action)
+  onRefreshAction: RefresherConfig.Action
+)
 
 object RefresherConfig {
 
@@ -95,6 +102,7 @@ object RefresherConfig {
       minValidDays = config.getInt("minValidDays", CertificateConfig.defaultMinValidDays),
       hourOfDay = config.getInt("hour", 0),
       minuteOfDay = config.getInt("minute", 0),
-      onRefreshAction = RefresherConfig.Action.fromString(config.getString("onRefreshAction", "refresh")).get)
+      onRefreshAction = RefresherConfig.Action.fromString(config.getString("onRefreshAction", "refresh")).get
+    )
   }
 }

@@ -4,20 +4,20 @@ import java.io.File
 
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
-import javax.security.auth.callback._
+import blended.testsupport.pojosr.{ PojoSrTestHelper, SimplePojosrBlendedContainer }
+import blended.util.logging.Logger
 import javax.security.auth.login.LoginContext
-import org.scalatest.{DoNotDiscover, FreeSpec}
+import org.scalatest.{ DoNotDiscover, FreeSpec }
 
 @DoNotDiscover
 class LDAPLoginSpec extends FreeSpec
   with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  private[this] val user = "root"
+  private[this] val user = "andreas"
   private[this] val pwd = "mysecret"
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[LDAPLoginSpec]
 
   "the security activator should" - {
 
@@ -29,24 +29,19 @@ class LDAPLoginSpec extends FreeSpec
 
         withStartedBundle(sr)(symbolicName = "blended.security", activator = Some(() => new SecurityActivator())) { sr =>
 
-          val lc : LoginContext = new LoginContext("Test", new TestCallbackHandler(user, pwd))
+          val lc : LoginContext = new LoginContext("Test", new PasswordCallbackHandler(user, pwd.toCharArray()))
           lc.login()
 
           val sub = lc.getSubject()
-          log.info(s"Logged in [$sub]")
-        }
-      }
-    }
-  }
 
-  private class TestCallbackHandler(name: String, password: String) extends CallbackHandler {
+          val ref = sr.getServiceReference(classOf[BlendedPermissionManager].getName())
+          val mgr = sr.getService(ref).asInstanceOf[BlendedPermissionManager]
 
-    override def handle(callbacks: Array[Callback]): Unit = {
-      callbacks.foreach { cb: Callback =>
-        cb match {
-          case nameCallback: NameCallback => nameCallback.setName(name)
-          case pwdCallback: PasswordCallback => pwdCallback.setPassword(password.toCharArray())
-          case other => throw new UnsupportedCallbackException(other, "The submitted callback is not supported")
+          val groups = mgr.permissions(sub)
+
+          assert(groups.size == 2)
+          assert(groups.contains("admins"))
+          assert(groups.contains("blended"))
         }
       }
     }

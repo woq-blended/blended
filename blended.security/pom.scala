@@ -15,7 +15,7 @@ BlendedModel(
     Blended.akka,
     Blended.util,
     Blended.domino,
-    log4s,
+    Blended.utilLogging,
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
     scalaLib % "provided",

@@ -3,18 +3,17 @@ package blended.persistence.orient.internal
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 
+import blended.persistence.PersistenceService
+import blended.util.logging.Logger
 import com.orientechnologies.orient.core.db.OPartitionedDatabasePool
 import com.orientechnologies.orient.core.db.document.ODatabaseDocument
 import com.orientechnologies.orient.core.record.impl.ODocument
 import com.orientechnologies.orient.core.sql.query.OSQLSynchQuery
 
-import blended.persistence.PersistenceService
-import org.slf4j.LoggerFactory
-
 class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
     extends PersistenceService {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[PersistenceServiceOrientDb])
+  private[this] val log = Logger[PersistenceServiceOrientDb]
 
   private[this] var createdClasses: Set[String] = Set()
 
@@ -48,7 +47,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   override def persist(pClass: String, data: java.util.Map[String, _ <: AnyRef]): java.util.Map[String, _ <: AnyRef] = {
-    log.debug("About to persist pClass [{}] with data [{}]", Array[Object](pClass, data): _*)
+    log.debug(s"About to persist pClass [${pClass}] with data [${data}]")
     withDb { db =>
       ensureClassCreated(pClass)
       val doc = new ODocument(pClass)
@@ -56,7 +55,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
         case (k, v) => doc.field(k, v)
       }
       val result = doc.save().toMap()
-      log.debug("persisted as {}: {}", Array[Object](pClass, result): _*)
+      log.debug(s"persisted as ${pClass}: ${result}")
       result
     }
   }
@@ -66,7 +65,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
       withDb { db =>
         val existingClass = Option(db.getMetadata().getSchema().getClass(pClass))
         if (existingClass.isEmpty) {
-          log.debug("Creating schema for class: {}", pClass)
+          log.debug(s"Creating schema for class: ${pClass}")
           db.getMetadata().getSchema().createClass(pClass)
         }
       }
@@ -74,7 +73,7 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   override def findAll(pClass: String): Seq[java.util.Map[String, _ <: AnyRef]] = {
-    log.debug("About to findAll for pClass [{}]", pClass)
+    log.debug(s"About to findAll for pClass [${pClass}]")
     withDb { db =>
       ensureClassCreated(pClass)
       val r = db.browseClass(pClass)
@@ -83,32 +82,32 @@ class PersistenceServiceOrientDb(dbPool: OPartitionedDatabasePool)
   }
 
   override def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]] = {
-    log.debug("About to findByExample for pClass [{}] and example data [{}]", Array[Object](pClass, data): _*)
+    log.debug(s"About to findByExample for pClass [${pClass}] and example data [${data}]")
     withDb { db =>
       ensureClassCreated(pClass)
       val ordered = data.asScala.toList
       val placeholder = ordered.map { case (k, v) => s" ${k} = ? " }
       val values = ordered.map { case (k, v) => v }
       val sql = s"select * from ${pClass} where ${placeholder.mkString(" and ")}"
-      log.debug("About to query: {} with values: {}", Array[Object](sql, values): _*)
+      log.debug(s"About to query: ${sql} with values: ${values}")
       val r: java.util.List[ODocument] = db.query(new OSQLSynchQuery(sql), values.toArray: _*)
-      log.debug("Found {} entries", r.size())
+      log.debug(s"Found ${r.size()} entries")
       r.iterator().asScala.map(d => d.toMap).toList
     }
   }
 
   def deleteByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Long = {
-    log.debug("About to deleteByExample for pClass [{}] and example data [{}]", Array[Object](pClass, data): _*)
+    log.debug(s"About to deleteByExample for pClass [${pClass}] and example data [${data}]")
     withDb { db =>
       ensureClassCreated(pClass)
       val ordered = data.asScala.toList
       val placeholder = ordered.map { case (k, v) => s" ${k} = ? " }
       val values = ordered.map { case (k, v) => v }
       val sql = s"select * from ${pClass} where ${placeholder.mkString(" and ")}"
-      log.debug("About to query: {} with values: {}", Array[Object](sql, values): _*)
+      log.debug(s"About to query: ${sql} with values: ${values}")
       val r: java.util.List[ODocument] = db.query(new OSQLSynchQuery(sql), values.toArray: _*)
       val count = r.size()
-      log.debug("Found {} entries", count)
+      log.debug(s"Found ${count} entries")
       r.iterator().asScala.foreach(d => d.delete())
       count
     }

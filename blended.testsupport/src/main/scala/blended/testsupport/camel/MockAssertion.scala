@@ -4,7 +4,7 @@ import akka.actor.ActorRef
 import akka.camel.CamelMessage
 import akka.util.Timeout
 import blended.testsupport.camel.protocol.{CheckAssertions, CheckResults}
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
 
 import scala.util.Try
 import scala.collection.JavaConverters._
@@ -88,7 +88,7 @@ case class MandatoryHeaders(header: List[String]) extends MockAssertion {
 
 case class ExpectedHeaders(headers : Map[String, Any]*) extends MockAssertion {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ExpectedHeaders])
+  private[this] val log = Logger[ExpectedHeaders]
 
   private[this] def extractHeader (m : CamelMessage) : Map[String, Any] = m.getHeaders.asScala.toMap
 

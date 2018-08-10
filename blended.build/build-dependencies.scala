@@ -63,8 +63,10 @@ object Deps {
   val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
   val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
   val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
-  val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
-  val commonsLang = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsIo = "commons-io" % "commons-io" % "2.6"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
+  val commonsLang = commonsLang3
   val commonsNet = "commons-net" % "commons-net" % "3.3"
   val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
@@ -140,13 +142,13 @@ object Deps {
   val juliOverSlf4j = "com.github.akiraly.reusable-poms" % "tomcat-juli-over-slf4j" % "4"
   val junit = "junit" % "junit" % "4.11"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
   val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
-  val log4s = "org.log4s" %% "log4s" % "1.6.1"
 
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
@@ -169,8 +171,6 @@ object Deps {
   val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
   val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
-
-  val scep = "com.google.code.jscep" % "jscep" % "2.5.0"
 
   val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
   val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
@@ -280,6 +280,7 @@ object Blended {
   val securityAkkaHttp = blended("blended.security.akka.http")
   val securityBoot = blended("blended.security.boot")
   val securityScep = blended("blended.security.scep")
+  val securityScepStandalone = blended("blended.security.scep.standalone")
   val securitySsl = blended("blended.security.ssl")
   val securityLogin = blended("blended.security.login")
   val securityLoginRest = blended("blended.security.login.rest")
@@ -292,5 +293,6 @@ object Blended {
   val updaterRemote = blended("blended.updater.remote")
   val updaterTools = blended("blended.updater.tools")
   val util = blended("blended.util")
+  val utilLogging = blended("blended.util.logging")
 }
 

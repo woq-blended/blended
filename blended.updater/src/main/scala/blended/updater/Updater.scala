@@ -4,17 +4,17 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
+import scala.collection.immutable._
+import scala.concurrent.duration.Duration
+import scala.util.{ Failure, Success, Try }
+
+import akka.actor.{ Actor, ActorLogging, ActorRef, Cancellable, Props }
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
-import blended.updater.config.{UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _}
-import org.slf4j.LoggerFactory
-
-import scala.collection.immutable._
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
+import blended.updater.config.{ UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _ }
+import blended.util.logging.Logger
 
 class Updater(
   installBaseDir: File,
@@ -22,20 +22,23 @@ class Updater(
   restartFramework: () => Unit,
   config: UpdaterConfig,
   launchedProfileDir: Option[File],
-  launchedProfileId: Option[ProfileId])
-    extends Actor
-    with ActorLogging {
+  launchedProfileId: Option[ProfileId]
+)
+  extends Actor
+  with ActorLogging {
 
   import Updater._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[Updater])
+  private[this] val log = Logger[Updater]
 
   val artifactDownloader = context.actorOf(
     BalancingPool(config.artifactDownloaderPoolSize).props(ArtifactDownloader.props(config.mvnRepositories)),
-    "artifactDownloader")
+    "artifactDownloader"
+  )
   val unpacker = context.actorOf(
     BalancingPool(config.unpackerPoolSize).props(Unpacker.props()),
-    "unpacker")
+    "unpacker"
+  )
 
   /////////////////////
   // MUTABLE
@@ -54,7 +57,7 @@ class Updater(
     val id = state.requestId
     val config = state.config
     val progress = state.progress()
-    log.debug("Progress: {} for reqestId: {}", progress, id)
+    log.debug(s"Progress: ${progress} for reqestId: ${id}")
 
     // TODO: generate config files (overlay)
 
@@ -133,7 +136,8 @@ class Updater(
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.schedule(
         Duration(config.autoStagingDelayMSec, TimeUnit.MILLISECONDS),
-        Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)) {
+        Duration(config.autoStagingIntervalMSec, TimeUnit.MILLISECONDS)
+      ) {
           self ! StageNextRuntimeConfig(nextId())
         }
     } else {
@@ -145,7 +149,8 @@ class Updater(
       implicit val eCtx = context.system.dispatcher
       tickers +:= context.system.scheduler.schedule(
         Duration(100, TimeUnit.MILLISECONDS),
-        Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)) {
+        Duration(config.serviceInfoIntervalMSec, TimeUnit.MILLISECONDS)
+      ) {
           self ! PublishServiceInfo
           self ! PublishProfileInfo
         }
@@ -163,7 +168,7 @@ class Updater(
     context.system.eventStream.unsubscribe(context.self)
 
     tickers.foreach { t =>
-      log.info("Disabling ticker: {}", t)
+      log.info(s"Disabling ticker: ${t}")
       t.cancel()
     }
     tickers = Nil
@@ -172,51 +177,43 @@ class Updater(
 
   def handleUpdateAction(event: UpdateAction): Unit = event match {
     case UAAddRuntimeConfig(runtimeConfig) =>
-      log.debug("Received add runtime config request (via event stream) for {}-{}",
-        Array(runtimeConfig.name, runtimeConfig.version))
+      log.debug(s"Received add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version}")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
-        log.debug("Finished add runtime config request (via event stream) for {}-{} with result: {}",
-          Array(runtimeConfig.name, runtimeConfig.version, x))
+        log.debug(s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with result: ${x}")
       }
 
     case UAAddOverlayConfig(overlayConfig) =>
-      log.debug("Received add overlay config request (via event stream) for {}-{}",
-        Array(overlayConfig.name, overlayConfig.version))
+      log.debug(s"Received add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version}")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddOverlayConfig(nextId(), overlayConfig))(timeout).onComplete { x =>
-        log.debug("Finished add overlay config request (via event stream) for {}-{} with result: {}",
-          Array(overlayConfig.name, overlayConfig.version, x))
+        log.debug(s"Finished add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with result: ${x}")
       }
 
     case UAStageProfile(name, version, overlayRefs) =>
-      log.debug("Received stage profile request (via event stream) for {}-{} and overlays: ",
-        Array(name, version, overlayRefs))
+      log.debug(s"Received stage profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs}")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(StageProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
-        log.debug("Finished stage profile request (via event stream) for {}-{} and overlays {} with result: {}",
-          Array(name, version, overlayRefs, x))
+        log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
       }
 
     case UAActivateProfile(name, version, overlayRefs) =>
-      log.debug("Received activate profile request (via event stream) for {}-{} and overlays: {}",
-        Array(name, version, overlayRefs))
+      log.debug(s"Received activate profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs}")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(ActivateProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
-        log.debug("Finished activation profile request (via event stream) for {}-{} and overlays {} with result: {}",
-          Array(name, version, overlayRefs, x))
+        log.debug(s"Finished activation profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
       }
   }
 
@@ -267,7 +264,7 @@ class Updater(
       if (stagingInProgress.isEmpty) {
         profiles.toIterator.collect {
           case (id @ ProfileId(name, version, overlays), LocalProfile(_, _, LocalProfile.Pending(_))) =>
-            log.info("About to auto-stage profile {}", id)
+            log.info(s"About to auto-stage profile ${id}")
             self ! StageProfile(nextId(), name, version, overlays = overlays)
         }.take(1)
       }
@@ -301,11 +298,11 @@ class Updater(
       } map {
         case profile @ LocalProfile(_, _, LocalProfile.Staged) =>
           // already staged
-          log.debug("Profile already staged: {}", profile.profileId)
+          log.debug(s"Profile already staged: ${profile.profileId}")
           sender() ! OperationSucceeded(reqId)
 
         case profile @ LocalProfile(config, localOverlays, state) =>
-          log.debug("About to stage profile: {}", profile.profileId)
+          log.debug(s"About to stage profile: ${profile.profileId}")
           val reqActor = sender()
 
           val validErrors = localOverlays.validate()
@@ -314,11 +311,11 @@ class Updater(
           } else {
             val overlayFiles = localOverlays.materialize()
             val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
-            log.debug("About to save applied overlays config to: {}", overlayFile)
+            log.debug(s"About to save applied overlays config to: ${overlayFile}")
             ConfigWriter.write(LocalOverlays.toConfig(localOverlays), overlayFile, None)
 
             if (stagingInProgress.contains(reqId)) {
-              log.error("Duplicate id detected. Dropping request: {}", msg)
+              log.error(s"Duplicate id detected. Dropping request: ${msg}")
             } else {
               // analyze config
               overlayFiles match {
@@ -348,7 +345,8 @@ class Updater(
                     pendingArtifactsToUnpack = pendingUnpacks,
                     artifactsToUnpack = List.empty,
                     overlays = localOverlays,
-                    issues = List.empty))
+                    issues = List.empty
+                  ))
 
               }
             }
@@ -357,12 +355,12 @@ class Updater(
 
     case ActivateProfile(reqId, name, version, overlays) =>
       val profileId = ProfileId(name, version, overlays)
-      log.debug("Requested activate profile with id: {}", profileId)
+      log.debug(s"Requested activate profile with id: ${profileId}")
       val requestingActor = sender()
       profiles.get(profileId) match {
         case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
           // write config
-          log.debug("About to activate new profile for next startup: {}", profileId)
+          log.debug(s"About to activate new profile for next startup: ${profileId}")
           val success = profileActivator(name, version, profileId.overlays)
           if (success) {
             requestingActor ! OperationSucceeded(reqId)
@@ -371,8 +369,8 @@ class Updater(
             requestingActor ! OperationFailed(reqId, "Could not update next startup profile")
           }
         case r =>
-          log.debug("Could not find staged profile with id {} but: {}", Array(profileId, r): _*)
-          log.trace("All known profiles: {}", profiles.keySet)
+          log.debug(s"Could not find staged profile with id ${profileId} but: ${r}")
+          log.trace(s"All known profiles: ${profiles.keySet}")
           requestingActor ! OperationFailed(reqId, "No such staged runtime configuration found")
       }
 
@@ -412,7 +410,7 @@ class Updater(
 
       val fullProfiles = scanForProfiles(Option(rcs))
       profiles = fullProfiles.map { profile => profile.profileId -> profile }.toMap
-      log.debug("Profiles (after scan): {}", profiles)
+      log.debug(s"Profiles (after scan): ${profiles}")
 
     case PublishProfileInfo =>
       log.debug("About to publish profile infos")
@@ -426,7 +424,7 @@ class Updater(
 
       }
       val toSend = Profile.fromSingleProfiles(singleProfiles)
-      log.debug("About to publish profile info to event stream: {}", toSend)
+      log.debug(s"About to publish profile info to event stream: ${toSend}")
       context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
     case PublishServiceInfo =>
@@ -443,7 +441,7 @@ class Updater(
           "launchedProfileId" -> launchedProfileId.map(_.toString()).getOrElse("")
         )
       )
-      log.debug("About to publish service info: {}", serviceInfo)
+      log.debug(s"About to publish service info: ${serviceInfo}")
       context.system.eventStream.publish(serviceInfo)
 
     case msg: ArtifactDownloader.Reply =>
@@ -452,7 +450,7 @@ class Updater(
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown download id {}", msg.requestId)
+          log.error(s"Unkown download id ${msg.requestId}")
         case (state, bundleInProgress) :: _ =>
           val newArtifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
           msg match {
@@ -474,7 +472,7 @@ class Updater(
       }.toList
       foundProgress match {
         case Nil =>
-          log.error("Unkown unpack process {}", msg.reqId)
+          log.error(s"Unkown unpack process ${msg.reqId}")
         case (state, artifact) :: _ =>
           val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
           msg match {
@@ -578,7 +576,8 @@ object Updater {
     restartFramework: () => Unit,
     config: UpdaterConfig,
     launchedProfileDir: File = null,
-    launchedProfileId: ProfileId = null): Props = {
+    launchedProfileId: ProfileId = null
+  ): Props = {
 
     Props(new Updater(
       installBaseDir = baseDir,
@@ -599,14 +598,15 @@ object Updater {
    * Internal working state of in-progress stagings.
    */
   private case class State(
-      requestId: String,
-      requestActor: ActorRef,
-      config: LocalRuntimeConfig,
-      artifactsToDownload: List[ArtifactInProgress],
-      pendingArtifactsToUnpack: List[ArtifactInProgress],
-      artifactsToUnpack: List[ArtifactInProgress],
-      overlays: LocalOverlays,
-      issues: List[String]) {
+    requestId: String,
+    requestActor: ActorRef,
+    config: LocalRuntimeConfig,
+    artifactsToDownload: List[ArtifactInProgress],
+    pendingArtifactsToUnpack: List[ArtifactInProgress],
+    artifactsToUnpack: List[ArtifactInProgress],
+    overlays: LocalOverlays,
+    issues: List[String]
+  ) {
 
     val profileId = ProfileId(config.runtimeConfig.name, config.runtimeConfig.version, overlays.overlayRefs)
 

@@ -1,16 +1,15 @@
 package blended.activemq.client.internal
 
-import javax.jms.ConnectionFactory
-
 import blended.domino.TypesafeConfigWatching
+import blended.util.logging.Logger
 import domino.DominoActivator
 import domino.logging.Logging
+import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.slf4j.LoggerFactory
 
 class AmqClientActivator extends DominoActivator with TypesafeConfigWatching with Logging {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[AmqClientActivator])
+  private[this] val log = Logger[AmqClientActivator]
 
   whenBundleActive {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>

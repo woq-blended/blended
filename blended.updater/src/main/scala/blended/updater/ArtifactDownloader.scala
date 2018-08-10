@@ -4,9 +4,8 @@ import java.io.File
 
 import scala.util.Failure
 import scala.util.Success
-import org.slf4j.LoggerFactory
-import ArtifactDownloader.DownloadFailed
-import ArtifactDownloader.DownloadFinished
+import scala.util.Try
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
 import akka.actor.Props
@@ -14,14 +13,14 @@ import akka.actor.actorRef2Scala
 import akka.event.LoggingReceive
 import blended.updater.config.{ Artifact, RuntimeConfig, RuntimeConfigCompanion }
 import blended.updater.config.MvnGav
-import scala.util.Try
+import blended.util.logging.Logger
 
 class ArtifactDownloader(mvnRepositories: List[String])
     extends Actor
     with ActorLogging {
   import ArtifactDownloader._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ArtifactDownloader])
+  private[this] val log = Logger[ArtifactDownloader]
 
   def receive: Actor.Receive = LoggingReceive {
 
@@ -30,7 +29,7 @@ class ArtifactDownloader(mvnRepositories: List[String])
       val url = artifact.url
       val urls: Try[List[String]] =
         if (url.startsWith(RuntimeConfig.MvnPrefix)) {
-          log.debug("detected Maven url: {}", url)
+          log.debug(s"detected Maven url: ${url}")
           val gav = MvnGav.parse(artifact.url.substring(RuntimeConfig.MvnPrefix.length()))
           gav.map(gav => mvnRepositories.map(repo => gav.toUrl(repo)))
         } else Success(List(url))
@@ -63,11 +62,11 @@ class ArtifactDownloader(mvnRepositories: List[String])
                     case Some(issue) => sender() ! DownloadFailed(reqId, issue)
                   }
                 case Failure(e) =>
-                  log.error("Could not download file {} from {}", file, url, e)
+                  log.error(e)(s"Could not download file ${file} from ${url}")
                   sender() ! DownloadFailed(reqId, s"Could not download file ${file} from ${url}. Error: ${e.getMessage()}")
               }
             case Failure(e) =>
-              log.error("Could not download file {}", e)
+              log.error(e)("Could not download file ${file}")
               sender() ! DownloadFailed(reqId, s"Could not download file ${file}. Error: ${e.getMessage()}")
           }
       }

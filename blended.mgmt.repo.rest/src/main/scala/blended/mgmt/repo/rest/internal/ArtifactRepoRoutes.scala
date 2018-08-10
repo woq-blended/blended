@@ -1,15 +1,16 @@
 package blended.mgmt.repo.rest.internal
 
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import blended.mgmt.repo.ArtifactRepo
 import blended.security.akka.http.BlendedSecurityDirectives
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Route
+import blended.util.logging.Logger
 
 trait ArtifactRepoRoutes {
   deps: BlendedSecurityDirectives =>
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ArtifactRepoRoutes]
 
   protected def artifactRepos: List[ArtifactRepo]
 

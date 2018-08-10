@@ -23,7 +23,7 @@ class JMSRequestorSpec extends WordSpec
 
   "The JMSRequestor" should {
 
-    "respond to a posted message if the operation is configured" in {
+    "respond to a posted message if the operation is configured [json]" in {
 
       HttpRequest(
         method = HttpMethods.POST,
@@ -31,7 +31,20 @@ class JMSRequestorSpec extends WordSpec
         entity = requestEntity(ContentTypes.`application/json`, "test"*1000)
       ) ~> svc.httpRoute ~> check {
         contentType should be (ContentTypes.`application/json`)
-        responseAs[String] should be ("redeemed")
+        responseAs[String] should be (MockResponses.json)
+        status should be (StatusCodes.OK)
+      }
+    }
+
+    "respond to a posted message if the operation is configured [xml]" in {
+
+      HttpRequest(
+        method = HttpMethods.POST,
+        uri = "/leergut.redeem",
+        entity = requestEntity(ContentTypes.`text/xml(UTF-8)`, "test"*1000)
+      ) ~> svc.httpRoute ~> check {
+        contentType should be (ContentTypes.`text/xml(UTF-8)`)
+        responseAs[String] should be (MockResponses.xml)
         status should be (StatusCodes.OK)
       }
     }

@@ -13,9 +13,12 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     Blended.domino,
+    Blended.akka,
+    Blended.security,
     jjwt,
-    log4s,
     bouncyCastleBcprov,
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
     scalaTest % "test",
     logbackCore % "test",
     logbackClassic % "test"

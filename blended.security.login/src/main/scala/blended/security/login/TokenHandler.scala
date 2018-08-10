@@ -1,6 +1,6 @@
 package blended.security.login
 
-import io.jsonwebtoken.{Claims, Jws}
+import java.security.PublicKey
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -10,6 +10,6 @@ trait TokenHandler {
 
   def createToken(user: String, expire: Option[FiniteDuration], permission: String*) : String
 
-  def verifyToken(token : String) : Jws[Claims]
+  def publicKey() : PublicKey
 
 }

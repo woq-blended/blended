@@ -1,12 +1,13 @@
 package blended.mgmt.rest.internal
 
+import scala.collection.immutable
+
 import akka.event.EventStream
 import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
-
-import scala.collection.immutable
+import blended.util.logging.Logger
 
 class CollectorServiceImpl(
   updater: RemoteUpdater,
@@ -17,7 +18,7 @@ class CollectorServiceImpl(
   with JAASSecurityDirectives
   with PrickleSupport {
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[CollectorServiceImpl]
 
   private[this] var eventStream: Option[EventStream] = None
 

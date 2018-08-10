@@ -1,6 +1,6 @@
 package blended.security.login.internal
 
-import java.security.{KeyPair, KeyPairGenerator}
+import java.security.{KeyPair, KeyPairGenerator, PublicKey}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
@@ -51,7 +51,5 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
       .compact()
   }
 
-  override def verifyToken(token: String) : Jws[Claims] = {
-    Jwts.parser().setSigningKey(keyPair.getPublic()).parseClaimsJws(token)
-  }
+  override def publicKey(): PublicKey = keyPair.getPublic()
 }

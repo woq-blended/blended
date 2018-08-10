@@ -19,6 +19,7 @@ BlendedModel(
     Blended.jolokia,
     Blended.testSupport,
     Blended.jmsUtils,
+    Blended.utilLogging,
     Deps.dockerJava,
     Deps.akkaCamel,
     Deps.typesafeConfig,

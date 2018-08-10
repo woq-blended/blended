@@ -24,7 +24,10 @@ lazy val root = project
     scalaVersion := BlendedVersions.scalaVersion,
     sourcesInBase := false,
 
-    resolvers += "Local Maven Repository" at m2Repo,
+    resolvers ++= Seq(
+      resolvers += Resolver.sonatypeRepo("snapshots"),
+      "Local Maven Repository" at m2Repo
+    )
 
     libraryDependencies ++= Seq(
       "com.github.japgolly.scalajs-react" %%% "core" % Versions.scalajsReact,

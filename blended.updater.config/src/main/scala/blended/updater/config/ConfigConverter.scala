@@ -2,20 +2,20 @@ package blended.updater.config
 
 import java.io.File
 
-import blended.launcher.config.LauncherConfig
-import org.slf4j.LoggerFactory
-
 import scala.collection.immutable._
+
+import blended.launcher.config.LauncherConfig
+import blended.util.logging.Logger
 
 /**
  * Convert between [[LauncherConfig]] and [[ResolvedRuntimeConfig]].
  */
 trait ConfigConverter {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ConfigConverter])
+  private[this] val log = Logger[ConfigConverter]
 
   def runtimeConfigToLauncherConfig(resolvedRuntimeConfig: ResolvedRuntimeConfig, profileDir: String): LauncherConfig = {
-    import LauncherConfig._
+    import blended.launcher.config.LauncherConfig._
 
     val bundlePrefix = s"${profileDir}/bundles"
     val runtimeConfig = resolvedRuntimeConfig.runtimeConfig
@@ -30,7 +30,7 @@ trait ConfigConverter {
       }.
       distinct
 
-    log.debug("Converted bundles: {}", allBundles)
+    log.debug(s"Converted bundles: ${allBundles}")
 
     LauncherConfig(
       frameworkJar = s"${bundlePrefix}/${resolvedRuntimeConfig.framework.jarName.getOrElse(runtimeConfig.resolveFileName(resolvedRuntimeConfig.framework.url).get)}",

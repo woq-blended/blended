@@ -1,9 +1,11 @@
 package blended.security.ssl
 
-import java.security.{KeyPair, Principal}
-import java.security.cert.{Certificate, X509Certificate}
+import java.security.{ KeyPair, Principal }
+import java.security.cert.{ Certificate, X509Certificate }
 
 import scala.util.Try
+
+import blended.util.logging.Logger
 
 case class ServerCertificate private (
   keyPair: KeyPair,
@@ -16,7 +18,7 @@ case class ServerCertificate private (
 
 case object ServerCertificate {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ServerCertificate]
 
   def create(keyPair: KeyPair, chain: List[Certificate]): Try[ServerCertificate] = Try {
 

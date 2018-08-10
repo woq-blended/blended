@@ -1,116 +1,203 @@
 package blended.jms.utils.internal
 
 import java.lang.management.ManagementFactory
+import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.ActorSystem
-import akka.testkit.{ImplicitSender, TestKit, TestProbe}
-import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, JMSSupport}
-import javax.jms.Connection
-import org.apache.activemq.broker.BrokerService
-import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props, Terminated}
+import akka.pattern.ask
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.Source
+import akka.testkit.{ImplicitSender, TestKit}
+import akka.util.Timeout
+import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
+import javax.jms.{Connection, MessageProducer, Session}
+import org.scalatest.FreeSpecLike
 
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
-class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
+case class PingExecute(
+  count: Long,
+  con: Connection,
+  cfg: BlendedJMSConnectionConfig,
+  operations: PingOperations = new DefaultPingOperations()
+)
+
+class PingExecutor extends Actor {
+  override def receive: Receive = {
+    case exec: PingExecute =>
+      val actor = context.actorOf(JmsPingPerformer.props(
+        exec.cfg, exec.con, exec.operations
+      ))
+
+      context.watch(actor)
+
+      actor ! ExecutePing(self, exec.count)
+      context.become(executing(sender()))
+  }
+
+  def executing(requestor: ActorRef) : Receive = {
+    case Terminated(_)  => context.stop(self)
+    case m => requestor ! m
+  }
+}
+
+abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerformer"))
   with FreeSpecLike
   with ImplicitSender
-  with BeforeAndAfterAll
-  with AmqBrokerSupport
   with JMSSupport {
 
-  private[this] val cfg = BlendedJMSConnectionConfig.defaultConfig.copy(vendor = "amq", provider ="amq", clientId = "jmsPing")
-  private[this] var broker : Option[BrokerService] = None
+  private[this] val counter = new AtomicLong(0)
+  private[this] implicit val materializer = ActorMaterializer()
 
-  private[this] def pingTest(
-    con: Connection,
-    cfg: BlendedJMSConnectionConfig,
-    operations: PingOperations = new DefaultPingOperations()
-  )(fish: PartialFunction[Any, Boolean]) : Option[Throwable] = {
+  val pingQueue : String
+  val pingTopic : String
 
-    try {
-      val testActor = system.actorOf(JmsPingPerformer.props(cfg, con, operations))
-      val probe = TestProbe()
+  val cfg : BlendedJMSConnectionConfig
+  var con : Option[Connection]
 
-      testActor ! ExecutePing(probe.ref)
-      probe.fishForMessage(cfg.pingTimeout.seconds)(fish)
-      None
-    } catch {
-      case t : Throwable => Some(t)
-    }
+  val bulkCount : Int = 100000
+  val bulkTimeout = Math.max(1, bulkCount / 50000).minutes
+
+  private[this] implicit val eCtxt : ExecutionContext = system.dispatchers.lookup("FixedPool")
+
+  private[this] def execPing(exec : PingExecute)(implicit to: Timeout) : Future[PingResult] = {
+    (system.actorOf(Props[PingExecutor]) ? exec).mapTo[PingResult]
   }
 
   private[this] val pingSuccess : PartialFunction[Any, Boolean] = {
-    case PingResult(Right(_)) => true
+    case PingSuccess(_) => true
     case _ => false
   }
 
   private[this] val pingFailed : PartialFunction[Any, Boolean] = {
-    case PingResult(Left(_)) => true
+    case PingFailed(_) => true
     case _ => false
   }
 
-  private[this] val failingOps = new DefaultPingOperations() {
-    override def initialisePing(con: Connection, config: BlendedJMSConnectionConfig): PingInfo = {
-      super.initialisePing(con, config).copy(exception = Some(new Exception("failing")))
+  private[this] val failingInit = new DefaultPingOperations() {
+    override def createProducer(s: Session, dest: String): Try[MessageProducer] = Try {
+      throw new Exception("failing")
     }
   }
 
-  private[this] var con : Option[Connection] = None
+  private[this] val timingOut = new DefaultPingOperations() {
+    override def createProducer(s: Session, dest: String): Try[MessageProducer] = {
+      Thread.sleep(100)
+      super.createProducer(s, dest)
+    }
+  }
+
+  private[this] val failingProbe = new DefaultPingOperations() {
+
+    override def probePing(info: PingInfo)(implicit eCtxt: ExecutionContext): Future[PingResult] = Future {
+      PingFailed(new Exception("Failed"))
+    }
+  }
+
+  private[this] def threadCount(): Int = ManagementFactory.getThreadMXBean().getThreadCount
 
   "The JMSPingPerformer should " - {
 
     "perform a queue based ping" in {
-      assert(pingTest(con.get, cfg.copy(clientId = "jmsPing", pingDestination = "queue:blendedPing"))(pingSuccess).isEmpty)
+      val result = Await.result(
+        execPing(PingExecute(
+          counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"queue:$pingQueue")
+        ))(3.seconds), 3.seconds
+      )
+
+      assert(result.isInstanceOf[PingSuccess])
     }
 
     "perform a topic based ping" in {
-      assert(pingTest(con.get, cfg.copy(clientId = "jmsPing", pingDestination = "topic:blendedPing"))(pingSuccess).isEmpty)
+      val result = Await.result(
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic")
+        ))(3.seconds), 3.seconds
+      )
+      assert(result.isInstanceOf[PingSuccess])
     }
 
     "respond with a negative ping result if the ping operation fails" in {
-      assert(pingTest(
-        con.get,
-        cfg.copy(
-          clientId = "jmsPing",
-          pingDestination = "topic:blendedPing"
-        ),
-        failingOps
-      )(pingFailed).isEmpty)
+      val result = Await.result(
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic"),
+          operations = failingInit
+        ))(3.seconds), 3.seconds
+      )
+      assert(result.isInstanceOf[PingFailed])
     }
 
-    "does not leak threads on failed pings" in {
+    "respond with a PingTimeout in case the ping takes too long" in {
+      val result = Await.result(
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 1),
+          operations = timingOut
+        ))(3.seconds), 3.seconds
+      )
+      assert(result == PingTimeout)
+    }
 
-      def threadCount(): Int = ManagementFactory.getThreadMXBean().getThreadCount
+    "does not leak threads on successful pings" in {
 
-      val base = threadCount()
-
-      1.to(500).foreach { _ =>
-        pingTest(
-          con.get,
-          cfg.copy(
-            clientId = "jmsPing",
-            pingDestination = "topic:blendedPing"
-          ),
-          failingOps
-        )(pingFailed)
+      val src = Source(1.to(bulkCount)).map { i : Int  =>
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic")
+        ))(3.seconds)
       }
 
-      val current = threadCount()
+      val result = src.mapAsync(10)(i => i).runFold(true)( (c,i) => c && i.isInstanceOf[PingSuccess])
 
-      //Thread.sleep(3600000)
-      assert(base - 10 <= current && current <= base + 10)
+      assert(Await.result(result, bulkTimeout))
+      Thread.sleep(10000)
+      assert(threadCount() <= 100)
+    }
+
+    "does not leak threads on failed ping inits" in {
+
+      val src = Source(1.to(bulkCount)).map { i : Int  =>
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50),
+          operations = timingOut
+        ))(10.seconds)
+      }
+
+      val result = src.mapAsync(10)(i => i).runFold(true)( (c,i) => c && i == PingTimeout)
+
+      assert(Await.result(result, bulkTimeout * 2))
+      Thread.sleep(10000)
+      assert(threadCount() <= 100)
+    }
+
+    "does not leak threads on failed ping probes" in {
+
+      val src = Source(1.to(bulkCount)).map { i : Int  =>
+        execPing(PingExecute(
+          count = counter.incrementAndGet(),
+          con = con.get,
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic"),
+          operations = failingProbe
+        ))(3.seconds)
+      }
+
+      val result = src.mapAsync(10)(i => i).runFold(true)( (c,i) => c && i.isInstanceOf[PingFailed])
+
+      assert(Await.result(result, bulkTimeout))
+      Thread.sleep(10000)
+      assert(threadCount() <= 100)
     }
   }
-
-  override protected def beforeAll(): Unit = {
-    broker = startBroker()
-    con = Some(amqCf().createConnection())
-    con.foreach(_.start())
-  }
-
-  override protected def afterAll(): Unit = {
-    con.foreach(_.close())
-    stopBroker(broker)
-  }
-
 }

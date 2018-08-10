@@ -22,6 +22,7 @@ import blended.updater.config.ContainerRegistryResponseOK
 import blended.updater.config.ProfileInfo
 import blended.updater.config.ServiceInfo
 import com.typesafe.config.Config
+import blended.util.logging.Logger
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -61,7 +62,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
   private[this] var _profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
   ////////////////////
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[MgmtReporter]
 
   implicit private[this] lazy val eCtxt = context.system.dispatcher
   implicit private[this] lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))

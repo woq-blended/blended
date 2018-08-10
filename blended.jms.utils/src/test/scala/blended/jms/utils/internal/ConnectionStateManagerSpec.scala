@@ -85,7 +85,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
         case _ => false
       }
 
-      (1.to(cfg.pingTolerance)).foreach { _ => csm ! PingResult(Left(new Exception("Boom")))}
+      (1.to(cfg.pingTolerance)).foreach { _ => csm ! PingFailed(new Exception("Boom")) }
       probe.fishForMessage(3.seconds) {
         case sc : ConnectionStateChanged => sc.state.status == ConnectionState.DISCONNECTED
         case _ => false

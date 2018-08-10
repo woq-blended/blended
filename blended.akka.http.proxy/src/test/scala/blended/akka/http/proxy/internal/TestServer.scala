@@ -1,15 +1,17 @@
 package blended.akka.http.proxy.internal
 
-import akka.actor.ActorSystem
 import scala.concurrent.Await
+import scala.concurrent.duration._
+
+import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
-import scala.concurrent.duration._
 import akka.stream.ActorMaterializer
+import blended.util.logging.Logger
 
 object TestServer {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[TestServer.type]
 
   def withServer(
     port: Int,

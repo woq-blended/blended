@@ -33,18 +33,9 @@ package protocol {
   // Use this to kick off the creation of a TestContext based on configured Containers under Test
   case class TestContextRequest(cuts: Map[String, ContainerUnderTest])
 
-  // This class returns a TestCamelContext that can be used for the integration tests or an Exception if 
+  // This class returns a TestCamelContext that can be used for the integration tests or an Exception if
   // the context cannot be created
   case class TestContextResponse(context: Either[Throwable, CamelContext])
-
-  case object ContainerReady_?
-  case class ContainerReady(ready: Boolean)
-
-  case object ConfiguredContainers_?
-  case class ConfiguredContainers(cuts: Map[String, ContainerUnderTest])
-
-  case class ConfiguredContainer_?(ctName: String)
-  case class ConfiguredContainer(cut: Option[ContainerUnderTest])
 
 }
 

@@ -5,15 +5,15 @@ import java.util.Date
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.camel.utils.BlendedCamelContextFactory
-import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, ConnectionException}
-import javax.jms.{ExceptionListener, JMSException}
+import blended.jms.utils.{ AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, ConnectionException }
+import blended.util.logging.Logger
+import javax.jms.{ ExceptionListener, JMSException }
 import org.apache.activemq.ActiveMQConnectionFactory
+import org.apache.camel.{ Exchange, Processor }
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.impl.SimpleRegistry
-import org.apache.camel.{Exchange, Processor}
 import org.scalatest.FreeSpecLike
-import org.slf4j.LoggerFactory
 
 class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
   with FreeSpecLike
@@ -21,7 +21,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
   override lazy val brokerName: String = "shutdown"
 
-  val log = LoggerFactory.getLogger(classOf[CamelShutdownSpec])
+  val log = Logger[CamelShutdownSpec]
 
   "A Camel Context with an JMS endpoint should" - {
 
@@ -110,7 +110,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
 
       new Thread(new Runnable {
         override def run(): Unit = {
-          LoggerFactory.getLogger("CamelStopper").info("Stopping Camel Context ...")
+          Logger("CamelStopper").info("Stopping Camel Context ...")
           camelCtxt.stop()
         }
       }).start()

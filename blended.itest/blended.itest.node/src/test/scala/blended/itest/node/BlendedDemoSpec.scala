@@ -2,6 +2,9 @@ package blended.itest.node
 
 import java.io.File
 
+import scala.concurrent.duration.DurationInt
+import scala.util.{ Failure, Success }
+
 import akka.actor.ActorRef
 import akka.camel.CamelExtension
 import akka.testkit.TestKit
@@ -9,10 +12,7 @@ import akka.util.Timeout
 import blended.itestsupport.{BlendedIntegrationTestSupport, ContainerSpecSupport}
 import blended.testsupport.camel._
 import blended.util.FileHelper
-import org.scalatest.{DoNotDiscover, FreeSpec, Matchers, WordSpec}
-
-import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success}
+import org.scalatest.{ DoNotDiscover, FreeSpec, Matchers }
 
 @DoNotDiscover
 class BlendedDemoSpec(ctProxy: ActorRef)(implicit testKit : TestKit) extends FreeSpec

@@ -15,6 +15,7 @@ BlendedModel(
     Blended.domino,
     Blended.akka,
     Blended.updaterConfig,
+    Blended.utilLogging,
     akkaTestkit % "test",
     scalaTest % "test",
     slf4jLog4j12 % "test"

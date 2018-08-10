@@ -4,23 +4,23 @@ import java.util.concurrent.TimeUnit
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import org.slf4j.LoggerFactory
+import scala.util.Random
+
 import akka.actor.ActorSystem
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.mgmt.mock.MockObjects
+import blended.util.logging.Logger
 import de.tototec.cmdoption.CmdlineParser
-
-import scala.util.Random
 
 class MgmtMockClients(config: Config) {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[MgmtMockClients])
+  private[this] val log = Logger[MgmtMockClients]
   private[this] val rnd = new Random()
 
   implicit val system = ActorSystem("MgmtMockClients")
 
   def start(): Unit = {
-    log.debug("About to start with config: {}", config)
+    log.debug(s"About to start with config: ${config}")
 
     val containerInfos = MockObjects.createContainer(config.clientCount)
 

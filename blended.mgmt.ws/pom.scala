@@ -22,7 +22,7 @@ BlendedModel(
     Blended.akkaHttp,
     Blended.updaterConfig,
     Blended.prickle,
-    Deps.log4s,
+    Blended.utilLogging,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,

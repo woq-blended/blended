@@ -1,20 +1,21 @@
 package blended.akka.http.proxy.internal
 
-import akka.actor.ActorSystem
-import akka.http.scaladsl.{ConnectionContext, Http}
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.{Host, Location}
-import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{RequestContext, Route}
-import akka.stream.ActorMaterializer
-import javax.net.ssl.SSLContext
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
+import akka.actor.ActorSystem
+import akka.http.scaladsl.{ ConnectionContext, Http }
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.{ Host, Location }
+import akka.http.scaladsl.server.{ RequestContext, Route }
+import akka.http.scaladsl.server.Directives._
+import akka.stream.ActorMaterializer
+import blended.util.logging.Logger
+import javax.net.ssl.SSLContext
+
 trait ProxyRoute {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ProxyRoute]
 
   protected def proxyConfig: ProxyTarget
 

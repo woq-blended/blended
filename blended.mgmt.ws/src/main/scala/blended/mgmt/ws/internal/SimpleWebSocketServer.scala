@@ -1,19 +1,20 @@
 package blended.mgmt.ws.internal
 
+import scala.util.Failure
+
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.ws.{ Message, TextMessage }
 import akka.http.scaladsl.server._
+import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Flow
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
+import blended.util.logging.Logger
 import prickle.Pickle
-
-import scala.util.Failure
 
 class SimpleWebSocketServer(system: ActorSystem) {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[SimpleWebSocketServer]
   private[this] implicit val eCtxt = system.dispatcher
   private[this] val dispatcher = Dispatcher.create(system)
 

@@ -2,21 +2,21 @@ package blended.updater.config
 
 import java.io._
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
-import org.slf4j.LoggerFactory
+import com.typesafe.config.{ Config, ConfigFactory, ConfigRenderOptions }
+import blended.util.logging.Logger
 
 /**
  * Helper to write [[Config]] to files or streams.
  */
 trait ConfigWriter {
-  
-  private[this] val log = LoggerFactory.getLogger(classOf[ConfigWriter])
+
+  private[this] val log = Logger[ConfigWriter]
 
   def write(config: Config, file: File, path: Option[String]): Unit = {
     file.getParentFile() match {
       case null =>
-      case parent => 
-        log.debug("Creating dir: {}",parent)
+      case parent =>
+        log.debug(s"Creating dir: ${parent}")
         parent.mkdirs()
     }
     val ps = new PrintStream(new BufferedOutputStream(new FileOutputStream(file)))
@@ -33,7 +33,8 @@ trait ConfigWriter {
       ConfigFactory.empty().withValue(p, config.root())
     }.getOrElse(config)
     ps.print(cnf.root().render(
-      ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(false)))
+      ConfigRenderOptions.defaults().setOriginComments(false).setComments(false).setFormatted(true).setJson(false)
+    ))
     ps.flush()
   }
 

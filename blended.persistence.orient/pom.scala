@@ -13,6 +13,7 @@ BlendedModel(
   dependencies = Seq(
     scalaLib % "provided",
     Blended.persistence,
+    Blended.utilLogging,
     Blended.akka,
     slf4j,
     domino,

@@ -3,11 +3,12 @@ package blended.security.ssl.internal
 import java.io.FileInputStream
 import java.security.KeyStore
 
+import blended.util.logging.Logger
 import javax.net.ssl._
 
 class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[SslContextProvider]
 
   private[this] val propTrustStore = "javax.net.ssl.trustStore"
   private[this] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"

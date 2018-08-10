@@ -19,7 +19,7 @@ object BlendedJMSConnectionConfig {
     pingEnabled = true,
     pingTolerance = 5,
     pingInterval = 30,
-    pingTimeout = 3,
+    pingTimeout = 3000,
     retryInterval = 5,
     minReconnect = 300,
     maxReconnectTimeout = -1,

@@ -12,7 +12,7 @@ BlendedModel(
   description = "Define some convenience to use Prickle with Akka HTTP",
   dependencies = Seq(
     Deps.scalaLib % "provided",
-    Deps.log4s,
+    Blended.utilLogging,
     Deps.akkaHttpCore,
     Deps.akkaHttp,
     Deps.akkaStream,

@@ -1,13 +1,13 @@
 package blended.security.scep.internal
 
-import blended.security.ssl.{CommonNameProvider, X509CertificateInfo}
-import org.slf4j.LoggerFactory
-
 import scala.util.Try
+
+import blended.security.ssl.{ CommonNameProvider, X509CertificateInfo }
+import blended.util.logging.Logger
 
 object ScepTestClient {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ScepTestClient])
+  private[this] val log = Logger[ScepTestClient]
 
   def main(args: Array[String]) : Unit = {
 

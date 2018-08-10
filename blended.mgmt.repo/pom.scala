@@ -14,6 +14,7 @@ BlendedModel(
     scalaLib % "provided",
     Blended.domino,
     Blended.updaterConfig,
+    Blended.utilLogging,
     Blended.mgmtBase,
     sprayJson,
     scalaTest % "test",

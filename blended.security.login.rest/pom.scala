@@ -14,6 +14,11 @@ BlendedModel(
     scalaLib % "provided",
     Blended.domino,
     Blended.akkaHttp,
+    Blended.akka % "test",
+    Blended.security % "test",
+    Blended.securityLogin % "test",
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
     scalaTest % "test",
     akkaHttpTestkit % "test"
   ),

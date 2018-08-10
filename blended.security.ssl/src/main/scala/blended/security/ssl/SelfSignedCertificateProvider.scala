@@ -1,19 +1,20 @@
 package blended.security.ssl
 
 import java.math.BigInteger
-import java.security.{KeyPair, KeyPairGenerator}
+import java.security.{ KeyPair, KeyPairGenerator }
 import java.util.Calendar
-
-import javax.security.auth.x500.X500Principal
-import org.bouncycastle.asn1.x509._
-import org.bouncycastle.cert.jcajce.{JcaX509CertificateConverter, JcaX509v3CertificateBuilder}
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 
 import scala.util.Try
 
+import blended.util.logging.Logger
+import javax.security.auth.x500.X500Principal
+import org.bouncycastle.asn1.x509._
+import org.bouncycastle.cert.jcajce.{ JcaX509CertificateConverter, JcaX509v3CertificateBuilder }
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
+
 class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificateProvider {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[SelfSignedCertificateProvider]
 
   private def generateKeyPair(): KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")

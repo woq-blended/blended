@@ -16,6 +16,7 @@ BlendedModel(
     Deps.domino,
     Deps.akkaOsgi,
     Deps.slf4j,
+    Blended.utilLogging,
     Blended.persistence,
     Deps.typesafeConfig,
     Blended.updaterConfig,

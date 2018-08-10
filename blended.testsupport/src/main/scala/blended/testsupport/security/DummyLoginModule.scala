@@ -2,10 +2,11 @@ package blended.testsupport.security
 
 import java.util
 
-import blended.security.boot.{GroupPrincipal, UserPrincipal}
+import blended.security.boot.{ GroupPrincipal, UserPrincipal }
+import blended.util.logging.Logger
 import javax.security.auth.Subject
-import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
-import javax.security.auth.login.{FailedLoginException, LoginException}
+import javax.security.auth.callback.{ CallbackHandler, NameCallback, PasswordCallback }
+import javax.security.auth.login.{ FailedLoginException, LoginException }
 import javax.security.auth.spi.LoginModule
 
 trait UsersAndGropus {
@@ -20,7 +21,7 @@ trait UsersAndGropus {
 }
 
 class DummyLoginModule extends LoginModule with UsersAndGropus {
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[DummyLoginModule]
 
   private[this] var subject : Option[Subject] = None
   private[this] var cbHandler : Option[CallbackHandler] = None

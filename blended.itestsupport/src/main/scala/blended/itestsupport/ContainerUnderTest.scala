@@ -45,7 +45,9 @@ object NamedContainerPort {
 }
 
 case class NamedContainerPort(
-  name: String, privatePort: Int, publicPort: Int
+  name: String, 
+  privatePort: Int,
+  publicPort: Int
 ) {
   def binding = PortBinding.parse(s"$publicPort:$privatePort")
 }

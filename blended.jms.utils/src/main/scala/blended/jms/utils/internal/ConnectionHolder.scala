@@ -1,18 +1,18 @@
 package blended.jms.utils.internal
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{ PrintWriter, StringWriter }
 import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 
-import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException}
-import blended.util.ReflectionHelper
-import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
-import javax.naming.{Context, InitialContext}
-import org.slf4j.LoggerFactory
-
 import scala.util.Try
 import scala.util.control.NonFatal
+
+import akka.actor.ActorSystem
+import blended.jms.utils.{ BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException }
+import blended.util.ReflectionHelper
+import blended.util.logging.Logger
+import javax.jms.{ Connection, ConnectionFactory, ExceptionListener, JMSException }
+import javax.naming.{ Context, InitialContext }
 
 trait ConnectionHolder {
   val vendor : String
@@ -32,7 +32,7 @@ case class BlendedConnectionHolder(
   override val vendor : String = config.vendor
   override val provider : String = config.provider
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
+  private[this] val log = Logger[ConnectionHolder]
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)

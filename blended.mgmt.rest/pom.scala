@@ -17,6 +17,7 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib % "provided",
     Deps.slf4j,
+    Blended.utilLogging,
     Blended.mgmtBase,
     Blended.akka,
     Deps.akkaHttp,

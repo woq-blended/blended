@@ -3,11 +3,12 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.ContainerContext
-import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
-
 import scala.collection.JavaConverters._
+
+import blended.container.context.api.ContainerContext
+import blended.updater.config.{ LocalOverlays, OverlayRef, RuntimeConfig }
+import blended.util.logging.Logger
+import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -18,7 +19,7 @@ class ContainerContextImpl() extends ContainerContext {
 
   import ContainerContextImpl._
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ContainerContextImpl]
 
   override def getContainerDirectory() = new File(System.getProperty("blended.home")).getAbsolutePath
 

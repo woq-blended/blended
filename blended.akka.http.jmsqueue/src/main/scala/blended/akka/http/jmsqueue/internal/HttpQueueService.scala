@@ -1,16 +1,16 @@
 package blended.akka.http.jmsqueue.internal
 
+import scala.collection.JavaConverters._
+import scala.concurrent.{ ExecutionContext, Future, blocking }
+import scala.util.{ Failure, Success, Try }
+import scala.util.control.NonFatal
+
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import blended.util.logging.Logger
 import javax.jms._
-import org.slf4j.LoggerFactory
-
-import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future, blocking}
-import scala.util.control.NonFatal
-import scala.util.{Failure, Success, Try}
 
 trait HttpQueueService {
 
@@ -18,7 +18,7 @@ trait HttpQueueService {
   val qConfig : HttpQueueConfig
   def withConnectionFactory[T](vendor: String, provider: String)(f: Option[ConnectionFactory] => T) : T
 
-  private[this] val log = LoggerFactory.getLogger(classOf[HttpQueueService])
+  private[this] val log = Logger[HttpQueueService]
 
   private case class ReceiveResult (vendor : String, provider: String, queue: String, msg: Try[Option[Message]])
 
@@ -88,7 +88,7 @@ trait HttpQueueService {
 
     } catch {
       case NonFatal(e) =>
-        log.warn(s"Error receiving message from queue [$queue] for [$vendor:$provider]", e.getMessage())
+        log.warn(s"Error receiving message from queue [$queue] for [$vendor:$provider]. Cause: ${e.getMessage()}")
         ReceiveResult(vendor, provider, queue, Failure(e))
     } finally {
       Future {

@@ -12,11 +12,11 @@ clean:
 
 .PHONY: pom-xml # Generate pom.xml files
 pom-xml:
-	mvn -Pbuild,gen-pom-xml initialize
+	mvn -Pbuild,itest,gen-pom-xml initialize
 
 .PHOMY: eclipse # Generate Eclipse project files
 eclipse: pom-xml
-	mvn -Peclipse,build initialize de.tototec:de.tobiasroeser.eclipse-maven-plugin:0.1.1:eclipse
+	mvn -Peclipse,build,itest initialize de.tototec:de.tobiasroeser.eclipse-maven-plugin:0.1.1:eclipse
 
 .PHONY: full # A full build including docker tests
 full: docker-clean

@@ -1,15 +1,14 @@
 package blended.jms.utils
 
+import blended.util.logging.Logger
 import javax.jms._
-
-import org.slf4j.LoggerFactory
 
 class ForwardingMessageHandler(cf: ConnectionFactory, destName: String, additionalHeader : Map[String, AnyRef] = Map.empty)
   extends JMSMessageHandler
   with JMSSupport
   with JMSMessageFactory[Message] {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ForwardingMessageHandler])
+  private[this] val log = Logger[ForwardingMessageHandler]
 
   override def createMessage(session: Session, content: Message): Message = {
 

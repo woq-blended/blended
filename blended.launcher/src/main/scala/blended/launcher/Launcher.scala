@@ -11,8 +11,9 @@ import scala.util.{ Failure, Success, Try }
 import scala.util.control.NonFatal
 
 import blended.launcher.config.LauncherConfig
-import blended.launcher.internal.{ ARM, Logger }
+import blended.launcher.internal.ARM
 import blended.updater.config._
+import blended.util.logging.Logger
 import com.typesafe.config.{ ConfigFactory, ConfigParseOptions }
 import de.tototec.cmdoption.{ CmdlineParser, CmdlineParserException }
 import org.osgi.framework.{ Bundle, Constants, FrameworkEvent, FrameworkListener }
@@ -40,12 +41,12 @@ object Launcher {
       run(args)
     } catch {
       case t: LauncherException =>
-        log.debug(s"Caught a LauncherException. Exiting with error code: ${t.errorCode} and message: ${t.getMessage()}", t)
+        log.debug(t)(s"Caught a LauncherException. Exiting with error code: ${t.errorCode} and message: ${t.getMessage()}")
         if (!t.getMessage().isEmpty())
           Console.err.println(s"${t.getMessage()}")
         sys.exit(t.errorCode)
       case t: Throwable =>
-        log.error("Caught an exception. Exiting with error code: 1", t)
+        log.error(t)("Caught an exception. Exiting with error code: 1")
         Console.err.println(s"Error: ${t.getMessage()}")
         sys.exit(1)
     }
@@ -137,12 +138,12 @@ object Launcher {
         configs.profileConfig match {
           case Some(c) =>
             // Profile mode, this is an error
-            log.error(msg, e)
+            log.error(e)(msg)
             Console.err.println(msg)
             sys.error(msg)
           case None =>
             // simple config mode, this is not an error
-            log.warn(msg, e)
+            log.warn(e)(msg)
         }
       case Success(id) => log.info(s"ContainerId is [$id] ")
     }
@@ -167,7 +168,7 @@ object Launcher {
         readConfigs(cmdline)
       } catch {
         case e: Throwable =>
-          log.error("Could not read configs", e)
+          log.error(e)("Could not read configs")
           throw e
       }
       log.debug(s"Configs: ${configs}")
@@ -185,7 +186,7 @@ object Launcher {
             retVal = 0
           } catch {
             case e: Throwable =>
-              log.error(s"Could not write system properties file: ${propFile}", e)
+              log.error(e)(s"Could not write system properties file: ${propFile}")
               retVal = 1
           }
         case None =>
@@ -290,7 +291,7 @@ object Launcher {
       val event = framework.waitForStop(0)
       event.getType match {
         case FrameworkEvent.ERROR =>
-          log.info("Framework has encountered an error: ", event.getThrowable)
+          log.info(event.getThrowable())("Framework has encountered an error: ")
           1
         case FrameworkEvent.STOPPED =>
           log.info("Framework has been stopped by bundle " + event.getBundle)
@@ -320,7 +321,7 @@ object Launcher {
         awaitFrameworkStop(framework)
       } catch {
         case NonFatal(x) =>
-          log.error("Framework was interrupted. Cause: ", x)
+          log.error(x)("Framework was interrupted. Cause: ")
           1
       } finally {
         BrandingProperties.setLastBrandingProperties(new Properties())
@@ -508,7 +509,7 @@ class Launcher private (config: LauncherConfig) {
         }
         handle.waitForStop()
       case Failure(e) =>
-        log.error("Could not start framework", e)
+        log.error(e)("Could not start framework")
         1
     }
   }
