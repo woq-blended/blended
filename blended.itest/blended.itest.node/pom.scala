@@ -12,6 +12,7 @@ BlendedModel(
   description = "A sample integration test using docker to fire up the container(s) under test, execute the test suite and shutdown the container(s) afterwards.",
   dependencies = Seq(
     scalaLib,
+    Blended.utilLogging,
     Blended.dockerDemoApacheDS % "provided",
     Blended.dockerDemoNode % "provided",
     activeMqClient % "test",
