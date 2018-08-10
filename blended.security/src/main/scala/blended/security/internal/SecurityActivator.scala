@@ -29,8 +29,6 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
         throw new Exception(s"Configuration is missing config section [$symName.$module]")
       }
 
-      BlendedLoginModule.init(bundleContext)
-
       log.info(s"Initialising security manager with LoginModule [$loginModuleClassName].")
 
       Configuration.setConfiguration(
@@ -41,7 +39,17 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
         )
       )
 
-      new GroupPermissionManager().providesService[BlendedPermissionManager]
+      BlendedLoginModule.init(bundleContext)
+
+      val permissionManager = if (cfg.hasPath("permissions")) {
+        log.info("Using ConfigPermissionManager")
+        new ConfigPermissionManager(cfg.getObject("permissions"))
+      } else {
+        log.info("Using GroupPermissionManager")
+        new GroupPermissionManager()
+      }
+
+      permissionManager.providesService[BlendedPermissionManager]
     }
   }
 }

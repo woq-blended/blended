@@ -9,13 +9,11 @@ import scala.util.Try
   *
   * @param permissionClass The name of the entity that is controlled, i.e. container. If <code>None</code>,
   *                        the permission won't grant access to any object.
-  * @param description A human readable description of the permission, only used for display purposes.
   * @param properties Properties restricting the access to controlled object, further specified in the
-  *                   <code>allows</code> method.
+  *                   <[[allows()]] method.
   */
 case class BlendedPermission(
   permissionClass : Option[String],
-  description: String = "",
   properties: Map[String, Seq[String]] = Map.empty
 ) {
 
@@ -25,15 +23,12 @@ case class BlendedPermission(
 
       val props : Seq[(String, Seq[String], Option[Seq[String]])]= properties.map( p => (p._1, p._2, other.properties.get(p._1))).toSeq
 
-      val contained : Seq[Boolean]= props.map{ p =>
+      props.forall{ p =>
         p._3 match {
           case None => false
           case Some(l) => l.forall(s => p._2.contains(s))
         }
       }
-
-
-      contained.forall(x => x)
     }
 
     permissionClass.equals(other.permissionClass) && checkProperties
@@ -71,7 +66,6 @@ case class BlendedPermission(
 
         BlendedPermission(
           permissionClass = permissionClass,
-          description = description,
           properties = props
         )
       }
@@ -83,4 +77,27 @@ object BlendedPermissions {
   def fromJson(json: String) : Try[BlendedPermissions] = Unpickle[BlendedPermissions].fromString(json)
 }
 
-case class BlendedPermissions(granted: Seq[BlendedPermission])
+case class BlendedPermissions(granted: Seq[BlendedPermission]) {
+
+  /**
+    * Merge all permissions in a sequence from left to right
+    * @param permissions The permissions to merged
+    * @return The merged permission
+    *
+    * @see [[BlendedPermission.merge()]]
+    */
+  def merge(permissions : Seq[BlendedPermission]) : BlendedPermission = permissions match {
+    case Seq() => BlendedPermission(None)
+    case h +: Seq() => h
+    case h +: s +: rest => merge(h.merge(s) +: rest)
+  }
+
+  /**
+    * Return a BlendedPermissions object where all permissions with the same permissionClass
+    * are merged
+    */
+  lazy val merged : BlendedPermissions = {
+    val grouped = granted.groupBy(_.permissionClass)
+    BlendedPermissions(grouped.values.map(merge).toSeq)
+  }
+}

@@ -1,16 +1,17 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials}
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenges, HttpCredentials}
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult, Credentials}
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult}
+import blended.security.{BlendedPermission, BlendedPermissionManager}
+import blended.security.SubjectImplicits._
 import javax.security.auth.Subject
 import javax.security.auth.callback._
 import javax.security.auth.login.LoginContext
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import blended.security.SubjectImplicits._
 
 /**
  * JAAS Based BlendedSecurityDirectives.
@@ -65,11 +66,11 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
 
   override val authenticated  : AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
 
-  override def requirePermission(permission: String): Directive0 = mapInnerRoute { inner =>
+  override def requirePermission(mgr: BlendedPermissionManager, permission: BlendedPermission) : Directive0 = mapInnerRoute { inner =>
     authenticated { subject =>
       log.info(s"subject: ${subject} with principal: ${Option(subject).map(_.getPrincipal()).getOrElse("null")}")
       log.debug(s"checking required permission: ${permission}")
-      authorize(subject.isPermitted(permission)) {
+      authorize(subject.isPermitted(mgr, permission)) {
         log.info(s"subject/principal: ${Option(subject).map(_.getPrincipal()).getOrElse(subject)} has required permissions: ${permission}")
         inner
       }

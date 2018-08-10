@@ -12,7 +12,6 @@ class PrickleSpec extends FreeSpec {
 
       val permission = BlendedPermission(
         permissionClass = Some("container"),
-        description = "A permission controlling read access to container objects",
         Map(
           "country" -> Seq("de", "bg")
         )
@@ -28,13 +27,12 @@ class PrickleSpec extends FreeSpec {
 
       val permission = BlendedPermission(
         permissionClass = Some("container"),
-        description = "A permission controlling read access to container objects",
         Map(
           "country" -> Seq("de", "bg")
         )
       )
 
-      val permissions = BlendedPermissions(Seq(permission))
+      val permissions = BlendedPermissions(List(permission))
 
       val json = Pickle.intoString(permissions)
       val unpickled = Unpickle[BlendedPermissions].fromString(json).get
