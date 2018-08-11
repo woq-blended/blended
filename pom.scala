@@ -78,7 +78,6 @@ BlendedModel(
         "blended.persistence",
         "blended.persistence.orient",
         "blended.jolokia",
-        "blended.itestsupport",
         "blended.samples",
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
