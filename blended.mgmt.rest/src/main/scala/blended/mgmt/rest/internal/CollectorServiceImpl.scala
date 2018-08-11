@@ -2,6 +2,7 @@ package blended.mgmt.rest.internal
 
 import akka.event.EventStream
 import blended.prickle.akka.http.PrickleSupport
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
@@ -11,6 +12,7 @@ import scala.collection.immutable
 class CollectorServiceImpl(
   updater: RemoteUpdater,
   remoteContainerStatePersistor: RemoteContainerStatePersistor,
+  override val mgr: BlendedPermissionManager,
   override val version: String
 )
   extends CollectorService

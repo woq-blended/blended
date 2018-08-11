@@ -51,7 +51,6 @@ BlendedModel(
         "blended.akka",
         "blended.akka.http.api",
         "blended.akka.http",
-        //"blended.mgmt.app",
         "blended.akka.http.jmsqueue",
         "blended.akka.http.proxy",
         "blended.akka.http.restjms",
