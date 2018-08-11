@@ -1,9 +1,0 @@
-dn: ou=groups,o=${DOMAIN_NAME}
-objectClass: organizationalUnit
-objectClass: top
-ou: groups
-
-dn: ou=users,o=${DOMAIN_NAME}
-objectClass: organizationalUnit
-objectClass: top
-ou: users

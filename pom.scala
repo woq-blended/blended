@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = Blended.blended("blended.reactor"),
   packaging = "pom",
-  description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
+  description = "A collection of bundles to develop OSGi applications on top of Scala, Akka and Camel.",
   plugins = Seq(
     Plugin(
       Plugins.nexusStaging,
@@ -55,6 +55,7 @@ BlendedModel(
         "blended.akka.http.jmsqueue",
         "blended.akka.http.proxy",
         "blended.akka.http.restjms",
+        "blended.file",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",
@@ -81,22 +82,7 @@ BlendedModel(
         "blended.samples",
         "blended.activemq.defaultbroker",
         "blended.activemq.client",
-        "blended.launcher.features",
-        "blended.file",
-        "blended.demo"
-      )
-    ),
-    Profile(
-      id = "itest",
-      modules = Seq(
-        "blended.itestsupport",
-        "blended.itest"
-      )
-    ),
-    Profile(
-      id = "docker",
-      modules = Seq(
-        "blended.docker"
+        "blended.launcher.features"
       )
     )
   )

@@ -9,3 +9,4 @@ Import-Package: \
   com.sun.jndi.ldap;resolution:=optional
 
 Fragment-Host: io.hawt.hawtio-web
+

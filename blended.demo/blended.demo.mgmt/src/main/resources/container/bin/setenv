@@ -1,5 +1,0 @@
-export JAVA_HOME=/opt/java
-# export DEBUG_PORT=4444
-# export DEBUG_WAIT=y
-
-export COUNTRY=de
