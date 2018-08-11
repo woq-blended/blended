@@ -10,16 +10,15 @@ trait RichSubject {
   implicit class EnhancedSubject(subj: Subject) {
 
     def getPrincipal() : String = {
-      subj.getPrincipals().asScala.filter(_.isInstanceOf[UserPrincipal]).head.getName()
+      subj.getPrincipals(classOf[UserPrincipal]).asScala.head.getName()
     }
 
     def getGroups() : List[String] = {
-      subj.getPrincipals().asScala.filter(_.isInstanceOf[GroupPrincipal]).map(_.getName()).toList
+      subj.getPrincipals(classOf[GroupPrincipal]).asScala.toList.map(_.getName())
     }
 
-    def isPermitted(permission: String) : Boolean = {
-      // TODO: Map permission evaluation
-      true
+    def isPermitted(mgr: BlendedPermissionManager, permission: BlendedPermission) : Boolean = {
+      mgr.permissions(subj).granted.exists { p => p.allows(permission) }
     }
   }
 

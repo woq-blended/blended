@@ -39,9 +39,9 @@ class LDAPLoginSpec extends FreeSpec
 
           val groups = mgr.permissions(sub)
 
-          assert(groups.size == 2)
-          assert(groups.contains("admins"))
-          assert(groups.contains("blended"))
+          assert(groups.granted.size == 2)
+          assert(groups.granted.exists(_.permissionClass == "admins"))
+          assert(groups.granted.exists(_.permissionClass == "blended"))
         }
       }
     }
