@@ -1,13 +1,13 @@
 package blended.persistence.jdbc
 
-import blended.testsupport.TestFile
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
-import com.typesafe.config.ConfigFactory
 import scala.collection.JavaConverters._
-import org.scalactic.source.Position.apply
 
-class H2ExperimentalTest extends FreeSpec with Matchers with TestFile {
+import blended.testsupport.TestFile
+import com.typesafe.config.ConfigFactory
+import org.scalactic.source.Position.apply
+import org.scalatest.Matchers
+
+class H2ExperimentalTest extends LoggingFreeSpec with Matchers with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteNever
 
@@ -47,8 +47,6 @@ class H2ExperimentalTest extends FreeSpec with Matchers with TestFile {
         val example = Map("key1" -> "value1").asJava
         val byExample = exp.findByExample("CLASS1", example)
         
-        pending
-
         byExample should have size (1)
         byExample.head.get("key1") should equal("value1")
 
@@ -79,24 +77,6 @@ class H2ExperimentalTest extends FreeSpec with Matchers with TestFile {
         loaded should have size (1)
 
         loaded.head should equal(config.root().unwrapped())
-      }
-    }
-  }
-
-  "TEST ensureClassCreated should work" in {
-    withTestDir() { dir =>
-      DbFactory.withDataSource(dir, "db-ensureClassCreated-should-work") { dataSource =>
-        val dao = new PersistedClassDao(dataSource)
-        val txMgr = new DummyPlatformTransactionManager()
-        dao.init()
-        val exp = new PersistenceServiceJdbc(txMgr, dao)
-        //        intercept[IllegalArgumentException] {
-        //          exp.findAll("NEWCLASS")
-        //        }
-        pending
-        //        exp.ensureClassCreated("NEWCLASS")
-        //        val data = exp.findAll("NEWCLASS")
-        //        data should have size (0)
       }
     }
   }

@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.RowMapper
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
+import org.springframework.jdbc.core.namedparam.SqlParameterSource
 
 class PersistedClassDao(dataSource: DataSource) {
 
@@ -168,8 +169,10 @@ class PersistedClassDao(dataSource: DataSource) {
     queryCriterias ::= s"${mainField}.${PF.HolderId} = ${cls}.${PC.Id} and ${cls}.${PC.Name} = :clsName"
     queryParams.addValue("clsName", pClass)
 
+    def _fName(id: Long): String = s"f${id}"
+
     fields.foreach { field =>
-      val fName = s"f${field.fieldId}"
+      val fName = _fName(field.fieldId)
       queryFields ::= fName
 
       // match holder-id
@@ -213,6 +216,9 @@ class PersistedClassDao(dataSource: DataSource) {
           queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
       }
 
+      field.baseFieldId.foreach { baseFieldId =>
+        queryCriterias ::= s"${fName}.${PF.BaseFieldId} = ${_fName(baseFieldId)}.${PF.FieldId}"
+      }
     }
 
     // Example

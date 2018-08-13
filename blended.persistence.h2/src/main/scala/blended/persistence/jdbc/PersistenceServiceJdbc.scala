@@ -31,16 +31,9 @@ class PersistenceServiceJdbc(
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
     log.debug(s"About to delete by example pClass: ${pClass}, data: ${data}")
     val fields = PersistedField.extractFieldsWithoutDataId(data)
-    val unsupportedFields = fields.filter { field => field.baseFieldId.isDefined }
-    if (unsupportedFields.isEmpty) {
-      txTemplate.execute { ts =>
-        dao.deleteByFields(pClass, fields)
-      }
-    } else {
-      log.error(s"deleteByExample is currently not implemented for hierarchical nested fields. Offending fields: ${unsupportedFields}")
-      0L
+    txTemplate.execute { ts =>
+      dao.deleteByFields(pClass, fields)
     }
-
   }
 
   override def findAll(pClass: String): Seq[ju.Map[String, _ <: AnyRef]] = {
@@ -52,25 +45,9 @@ class PersistenceServiceJdbc(
 
   override def findByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Seq[ju.Map[String, _ <: AnyRef]] = {
     val fields = PersistedField.extractFieldsWithoutDataId(data)
-    val queryFields = fields.flatMap { field =>
-      field.baseFieldId match {
-        case Some(baseFieldId) =>
-          log.error(s"findByExample is currently not implemented for hierarchical nested fields. The following field will be ignored: ${field}")
-          Seq()
-        case None =>
-          // we examime a top-level field
-          Seq(field)
-      }
-    }
-
     val classes = txTemplateRo.execute { ts =>
-      dao.findByFields(pClass, queryFields)
+      dao.findByFields(pClass, fields)
     }
-
-    // select cId, ...
-    // from pclass
-    // where
-
     classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 

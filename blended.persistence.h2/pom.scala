@@ -29,7 +29,8 @@ BlendedModel(
     Deps.jclOverSlf4j % "runtime",
     Deps.scalaTest % "test",
     Blended.testSupport.intransitive % "test",
-    Deps.logbackClassic % "test"
+    Deps.logbackClassic % "test",
+    Deps.lambdaTest
   ),
   plugins = Seq(
     mavenBundlePlugin,

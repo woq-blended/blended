@@ -1,17 +1,18 @@
 package blended.persistence.jdbc
 
-import blended.testsupport.TestFile
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
+import java.io.File
+import java.{ lang => jl, util => ju }
+
 import scala.collection.JavaConverters._
+
+import blended.testsupport.TestFile
 import com.typesafe.config.ConfigFactory
 import org.scalactic.source.Position.apply
-import java.io.File
-import java.{ lang => jl }
+import org.scalatest.Matchers
 import org.springframework.transaction.PlatformTransactionManager
 
 class PersistenceServiceJdbcTest
-  extends FreeSpec
+  extends LoggingFreeSpec
   with Matchers
   with TestFile {
 
@@ -117,7 +118,7 @@ class PersistenceServiceJdbcTest
     }
   }
 
-  "persist and delete complex data (nested example search)" in {
+  "persist, load and delete nested data" in {
     val pClass = "type1"
     withTestPersistenceService() { (serv, txMgr) =>
       serv.persist(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava).asJava)
@@ -136,6 +137,13 @@ class PersistenceServiceJdbcTest
         // wrong class
         val cnt = serv.deleteByExample("type2", Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
         assert(cnt === 0)
+      }
+
+      {
+        // find same we delete later
+        val found = serv.findByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
+        assert(found.size === 1)
+        assert(found(0).get("inner").asInstanceOf[ju.Map[String, _]].get("id") === jl.Long.valueOf(1L))
       }
 
       {
