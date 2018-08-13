@@ -14,6 +14,7 @@ BlendedModel(
     Deps.scalaLib % "provided",
     Blended.persistence,
     Blended.utilLogging,
+    Blended.util,
     Deps.slf4j,
     Deps.domino,
     Deps.orientDbCore,

@@ -14,6 +14,7 @@ import com.zaxxer.hikari.HikariDataSource
 import domino.DominoActivator
 import org.h2.jdbcx.JdbcDataSource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import blended.util.config.Implicits._
 
 class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
@@ -30,6 +31,7 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
       val dbUrl = getString("dbUrl").orElse(dbPath.map(p => s"jdbc:h2:${p}"))
       val dbUserName = getString("dbUserName")
       val dbPassword = getString("dbPassword")
+      val extraOptions = getString("options")
 
       (dbUrl, dbUserName, dbPassword) match {
         case (None, _, _) =>
@@ -50,8 +52,11 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
             }
           }
 
+          val finalUrl = dbUrl + extraOptions.filter(!_.isEmpty()).map(";" + _).getOrElse("")
+          log.debug(s"DB url: [${finalUrl}]")
+          
           val ds = new JdbcDataSource();
-          ds.setURL(dbUrl);
+          ds.setURL(finalUrl);
           ds.setUser("admin");
           ds.setPassword("admin");
 
