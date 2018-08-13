@@ -30,7 +30,11 @@ class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
 
   def updateState(state: RemoteContainerState): Unit = {
     log.debug(s"About to persist remote container state: ${state}")
-    val deleteCount = persistenceService.deleteByExample(pClass, Map("containerInfo.containerId" -> state.containerInfo.containerId).asJava)
+    val deleteCount = persistenceService.deleteByExample(pClass, Map(
+      "containerInfo" -> Map(
+        "containerId" -> state.containerInfo.containerId
+      ).asJava
+    ).asJava)
     log.debug(s"deleted ${deleteCount} old entries")
     val entry = persistenceService.persist(pClass, Mapper.mapRemoteContainerState(state))
     log.debug(s"persisted 1 new entry: ${entry}")
