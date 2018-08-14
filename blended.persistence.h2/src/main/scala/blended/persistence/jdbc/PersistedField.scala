@@ -33,8 +33,10 @@ object PersistedField {
 
   def extractFieldsWithoutDataId(data: ju.Map[String, _ <: Any]): Seq[PersistedField] = {
 
-    var _nextId: Long = 0L
-    def nextId(): Long = { _nextId += 1; _nextId }
+    object nextId {
+      private[this] var _nextId: Long = 0L
+      def apply(): Long = { _nextId += 1; _nextId }
+    }
 
     def extractValue(key: String, value: Any, parent: Option[PersistedField] = None): Seq[PersistedField] = {
       val baseFieldId = parent.map(_.fieldId)
