@@ -36,7 +36,8 @@ object TypeName {
     override def name = "Null"
   }
 
-  def fromString(name: String): Option[TypeName] =
-    Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null).find(_.name == name)
+  def values: Seq[TypeName] = Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null)
+
+  def fromString(name: String): Option[TypeName] = values.find(_.name == name)
 
 }

@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.jdbc.support.GeneratedKeyHolder
 import org.springframework.jdbc.core.namedparam.SqlParameterSource
+import scala.util.control.NonFatal
 
 class PersistedClassDao(dataSource: DataSource) {
 
@@ -111,7 +112,7 @@ class PersistedClassDao(dataSource: DataSource) {
       liquibase.update("")
       log.debug(s"Database changelog applied: ${changelogName}")
     } catch {
-      case e: Exception =>
+      case NonFatal(e) =>
         log.error(e)(s"Could not apply DB changelog: ${changelogName}")
         throw e
     } finally {
@@ -129,7 +130,10 @@ class PersistedClassDao(dataSource: DataSource) {
     val valueLong = Option(rs.getLong(prefix + PF.ValueLong))
     val valueDouble = Option(rs.getDouble(prefix + PF.ValueDouble))
     val valueString = Option(rs.getString(prefix + PF.ValueString))
-    val typeName = TypeName.fromString(rs.getString(prefix + PF.TypeName)).get
+    val typeNameString = rs.getString(prefix + PF.TypeName)
+    val typeName = TypeName.fromString(typeNameString).getOrElse {
+      throw new IllegalStateException(s"Unsupported type name [${typeNameString}] found in database column ${PF.TypeName}. Supported types: ${TypeName.values.mkString(", ")}")
+    }
 
     holderId -> PersistedField(fieldId, baseFieldId, name, valueLong, valueDouble, valueString, typeName)
   }
@@ -140,7 +144,9 @@ class PersistedClassDao(dataSource: DataSource) {
       PF.Name, PF.ValueLong, PF.ValueDouble, PF.ValueString,
       PF.TypeName
     )
-    val sql = s"select ${pfCols.map("f." + _).mkString(", ")} from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
+    val sql = s"select ${
+      pfCols.map("f." + _).mkString(", ")
+    } from ${PF.Table} f join ${PC.Table} c on f.${PF.HolderId} = c.${PC.Id} where c.${PC.Name} = :className"
     val paramMap = new MapSqlParameterSource()
     paramMap.addValue("className", pClass)
     val rowMapper = fieldRowMapper()
@@ -162,6 +168,7 @@ class PersistedClassDao(dataSource: DataSource) {
     val mainField = "field"
     val cls = "cls"
 
+    // 3 mutable parts, we build up a query, after all
     var queryFields: List[String] = mainField :: Nil
     var queryCriterias: List[String] = Nil
     val queryParams = new MapSqlParameterSource()
