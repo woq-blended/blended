@@ -1,6 +1,9 @@
 package blended.persistence.jdbc
 
 sealed trait TypeName {
+  /**
+   * Internal storage type name of the type (max 10 characters).
+   */
   def name: String
 }
 
@@ -35,8 +38,11 @@ object TypeName {
   case object Null extends TypeName {
     override def name = "Null"
   }
+  case object LongString extends TypeName {
+    override def name = "LongString"
+  }
 
-  def values: Seq[TypeName] = Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null)
+  def values: Seq[TypeName] = Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null, LongString)
 
   def fromString(name: String): Option[TypeName] = values.find(_.name == name)
 

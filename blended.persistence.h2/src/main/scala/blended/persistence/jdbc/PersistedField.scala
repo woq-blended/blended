@@ -31,6 +31,8 @@ case class PersistedField(
 
 object PersistedField {
 
+  val maxStringLength = 200
+
   def extractFieldsWithoutDataId(data: ju.Map[String, _ <: Any]): Seq[PersistedField] = {
 
     object nextId {
@@ -44,7 +46,15 @@ object PersistedField {
         case null =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.Null))
         case value: String =>
-          Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueString = Some(value), typeName = TypeName.String))
+          if (value.size <= maxStringLength) {
+            Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueString = Some(value), typeName = TypeName.String))
+          } else {
+            val newBase = PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, typeName = TypeName.LongString)
+            Seq(newBase) ++ value.toList.grouped(maxStringLength).map(_.mkString).toList.zipWithIndex.flatMap {
+              case (v, i) =>
+                extractValue(i.toString(), v, Some(newBase))
+            }
+          }
         case value: Long =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Long))
         case value: Int =>
@@ -98,6 +108,9 @@ object PersistedField {
           }
           collection
         case TypeName.Object => internMap(others, Some(field.fieldId))
+        case TypeName.LongString =>
+          val (col, colOther) = others.partition(_.baseFieldId == Some(field.fieldId))
+          col.sortBy(_.fieldId).map(slice => fieldExtract(slice, colOther)).mkString
       }
     }
 

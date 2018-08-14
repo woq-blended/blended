@@ -95,6 +95,16 @@ class PersistedFieldTest extends FreeSpec {
           PersistedField(fieldId = 8, name = "0", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b1")),
           PersistedField(fieldId = 9, name = "1", baseFieldId = Some(7), typeName = TypeName.String, valueString = Some("v3b2"))
         )
+    ),
+    (
+      "LongString",
+      Map("key" -> List.fill(500)("x").mkString).asJava,
+      Seq(
+        PersistedField(fieldId = 1, name = "key", typeName = TypeName.LongString),
+        PersistedField(fieldId = 2, name = "0", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(200)("x").mkString)),
+        PersistedField(fieldId = 3, name = "1", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(200)("x").mkString)),
+        PersistedField(fieldId = 4, name = "2", baseFieldId = Some(1), typeName = TypeName.String, valueString = Some(List.fill(100)("x").mkString))
+      )
     )
   )
 

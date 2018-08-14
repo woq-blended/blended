@@ -83,81 +83,98 @@ class PersistenceServiceJdbcTest
     }
   }
 
-  "persist and delete simple data" in {
-    val pClass = "type1"
-    withTestPersistenceService() { (serv, txMgr) =>
-      serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
-      serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
+  "persist, load and delete" - {
 
-      val all = serv.findAll(pClass)
-      assert(all.size == 2)
+    "simple data" in {
+      val pClass = "type1"
+      withTestPersistenceService() { (serv, txMgr) =>
+        serv.persist(pClass, Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava)
+        serv.persist(pClass, Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava)
 
-      {
-        // no result
-        val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(3L)).asJava)
-        assert(cnt === 0)
-      }
+        val all = serv.findAll(pClass)
+        assert(all.size == 2)
 
-      {
-        // wrong class
-        val cnt = serv.deleteByExample("type2", Map("id" -> jl.Long.valueOf(1L)).asJava)
-        assert(cnt === 0)
-      }
+        {
+          // no result
+          val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(3L)).asJava)
+          assert(cnt === 0)
+        }
 
-      {
-        // one deleted
-        val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(1L)).asJava)
-        assert(cnt === 1)
-      }
+        {
+          // wrong class
+          val cnt = serv.deleteByExample("type2", Map("id" -> jl.Long.valueOf(1L)).asJava)
+          assert(cnt === 0)
+        }
 
-      {
-        // check rest
-        val rest = serv.findAll(pClass)
-        assert(rest.size === 1)
-      }
-    }
-  }
+        {
+          // one deleted
+          val cnt = serv.deleteByExample(pClass, Map("id" -> jl.Long.valueOf(1L)).asJava)
+          assert(cnt === 1)
+        }
 
-  "persist, load and delete nested data" in {
-    val pClass = "type1"
-    withTestPersistenceService() { (serv, txMgr) =>
-      serv.persist(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava).asJava)
-      serv.persist(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava).asJava)
-
-      val all = serv.findAll(pClass)
-      assert(all.size == 2)
-
-      {
-        // no result
-        val cnt = serv.deleteByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(3L)).asJava).asJava)
-        assert(cnt === 0)
-      }
-
-      {
-        // wrong class
-        val cnt = serv.deleteByExample("type2", Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
-        assert(cnt === 0)
-      }
-
-      {
-        // find same we delete later
-        val found = serv.findByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
-        assert(found.size === 1)
-        assert(found(0).get("inner").asInstanceOf[ju.Map[String, _]].get("id") === jl.Long.valueOf(1L))
-      }
-
-      {
-        // one deleted
-        val cnt = serv.deleteByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
-        assert(cnt === 1)
-      }
-
-      {
-        // check rest
-        val rest = serv.findAll(pClass)
-        assert(rest.size === 1)
+        {
+          // check rest
+          val rest = serv.findAll(pClass)
+          assert(rest.size === 1)
+        }
       }
     }
+
+    "nested data" in {
+      val pClass = "type1"
+      withTestPersistenceService() { (serv, txMgr) =>
+        serv.persist(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L), "color" -> "blau").asJava).asJava)
+        serv.persist(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(2L), "color" -> "red").asJava).asJava)
+
+        val all = serv.findAll(pClass)
+        assert(all.size == 2)
+
+        {
+          // no result
+          val cnt = serv.deleteByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(3L)).asJava).asJava)
+          assert(cnt === 0)
+        }
+
+        {
+          // wrong class
+          val cnt = serv.deleteByExample("type2", Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
+          assert(cnt === 0)
+        }
+
+        {
+          // find same we delete later
+          val found = serv.findByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
+          assert(found.size === 1)
+          assert(found(0).get("inner").asInstanceOf[ju.Map[String, _]].get("id") === jl.Long.valueOf(1L))
+        }
+
+        {
+          // one deleted
+          val cnt = serv.deleteByExample(pClass, Map("inner" -> Map("id" -> jl.Long.valueOf(1L)).asJava).asJava)
+          assert(cnt === 1)
+        }
+
+        {
+          // check rest
+          val rest = serv.findAll(pClass)
+          assert(rest.size === 1)
+        }
+      }
+    }
+
+    "long strings" in {
+      val size = 502
+      val longString = List.fill(size)("x").mkString
+      assert(longString.size === size)
+
+      withTestPersistenceService() { (serv, txMgr) =>
+        serv.persist("stringdata", Map("id" -> jl.Long.valueOf(1L), "string" -> longString).asJava)
+        val loaded = serv.findByExample("stringdata", Map("id" -> jl.Long.valueOf(1L)).asJava)
+        assert(loaded.size === 1)
+        assert(loaded(0).asScala("string") === longString)
+      }
+    }
+
   }
 
   "TEST data survives db close and reopen" in {
