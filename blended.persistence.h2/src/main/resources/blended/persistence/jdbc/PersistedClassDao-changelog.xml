@@ -1,0 +1,46 @@
+<databaseChangeLog
+	xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet id="PersistedClassDao-1" author="TobiasRoeser">
+
+		<createTable tableName="PersistedClass">
+			<column name="id" type="BIGINT" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="name" type="VARCHAR(50)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<createTable tableName="PersistedField">
+			<column name="id" type="BIGINT" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="holderId" type="BIGINT">
+				<constraints nullable="false" deleteCascade="true"
+					foreignKeyName="FK_PersistedField_holderId"
+					referencedTableName="PersistedClass" referencedColumnNames="id" />
+			</column>
+			<column name="fieldId" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+			<column name="baseFieldId" type="BIGINT">
+				<constraints nullable="true" />
+			</column>
+			<column name="name" type="VARCHAR(100)">
+				<constraints nullable="false" />
+			</column>
+			<column name="valueLong" type="BIGINT"></column>
+			<column name="valueDouble" type="DOUBLE"></column>
+			<column name="valueString" type="VARCHAR(200)"></column>
+			<column name="typeName" type="VARCHAR(10)">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+	</changeSet>
+
+</databaseChangeLog>

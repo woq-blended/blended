@@ -42,6 +42,7 @@ object Plugins {
   val resources = mavenPluginGroup % "maven-resources-plugin" % "3.1.0"
   val site = mavenPluginGroup % "maven-site-plugin" % "3.7.1"
   val source = mavenPluginGroup % "maven-source-plugin" % "3.0.1"
+  val surefire = mavenPluginGroup % "maven-surefire-plugin" % "2.20.1"
   val war = mavenPluginGroup % "maven-war-plugin" % "3.2.2"
 
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"

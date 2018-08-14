@@ -3,7 +3,7 @@ package blended.security
 import javax.security.auth.login.LoginException
 import blended.util.config.Implicits._
 
-class ConfigLoginModule extends AbstractLoginModule {
+class ConfigLoginModule() extends AbstractLoginModule {
 
   override protected val moduleName: String = "simple"
 

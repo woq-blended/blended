@@ -121,7 +121,8 @@ val features = Seq(
       "blended-base",
       "blended-akka-http",
       "blended-security",
-      "blended-ssl"
+      "blended-ssl",
+      "blended-spring"
     ),
     bundles = Seq(
       FeatureBundle(dependency = Blended.mgmtRest, start = true),
@@ -129,8 +130,15 @@ val features = Seq(
       FeatureBundle(dependency = Blended.mgmtRepoRest, start = true),
       FeatureBundle(dependency = Blended.updaterRemote, start = true),
       FeatureBundle(dependency = Blended.persistence),
-      FeatureBundle(dependency = Blended.persistenceOrient, start = true),
-      FeatureBundle(dependency = orientDbCore),
+      FeatureBundle(dependency = Blended.persistenceH2, start = true),
+      // for Blended.persistenceH2
+      FeatureBundle(dependency = Deps.h2),
+      // for Blended.persistenceH2
+      FeatureBundle(dependency = Deps.hikaricp),
+      // for Blended.persistenceH2
+      FeatureBundle(dependency = Deps.liquibase),
+      // for Deps.liquibase
+      FeatureBundle(dependency = Deps.snakeyaml),
       FeatureBundle(dependency = concurrentLinkedHashMapLru),
       FeatureBundle(dependency = jsr305),
       FeatureBundle(dependency = jacksonAnnotations),
@@ -220,8 +228,9 @@ val features = Seq(
     FeatureBundle(dependency = springAop),
     FeatureBundle(dependency = springContext),
     FeatureBundle(dependency = springContextSupport),
-    FeatureBundle(dependency = springTx),
-    FeatureBundle(dependency = springJms)
+    FeatureBundle(dependency = springJdbc),
+    FeatureBundle(dependency = springJms),
+    FeatureBundle(dependency = springTx)
   )),
   FeatureDef(
     "blended-samples",

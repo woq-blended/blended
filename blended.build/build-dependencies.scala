@@ -99,6 +99,8 @@ object Deps {
   val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
   val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
 
+  val h2 = "com.h2database" % "h2" % "1.4.197"
+  val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
   val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.5.8", `type` = "war")
 
   val javaxEl = "javax.el" % "javax.el-api" % "3.0.1-b04"
@@ -143,7 +145,8 @@ object Deps {
   val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
-  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
+  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
+  val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
@@ -179,6 +182,8 @@ object Deps {
   val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
 
+  val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
+  
   val sprayJson = "io.spray" %% s"spray-json" % BlendedVersions.sprayVersion
 
   private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % BlendedVersions.springVersion
@@ -188,6 +193,7 @@ object Deps {
   val springContextSupport = spring("context-support")
   val springExpression = spring("expression")
   val springCore = spring("core")
+  val springJdbc = spring("jdbc")
   val springJms = spring("jms")
   val springTx = spring("tx")
 
@@ -263,6 +269,7 @@ object Blended {
   val mgmtServiceJmx = blended("blended.mgmt.service.jmx")
   val mgmtWs = blended("blended.mgmt.ws")
   val persistence = blended("blended.persistence")
+  val persistenceH2 = blended("blended.persistence.h2")
   val persistenceOrient = blended("blended.persistence.orient")
   val prickle = blended("blended.prickle")
   val prickleAkkaHttp = blended("blended.prickle.akka.http")

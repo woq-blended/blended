@@ -76,6 +76,7 @@ BlendedModel(
         "blended.security.akka.http",
         "blended.hawtio.login",
         "blended.persistence",
+        "blended.persistence.h2",
         "blended.persistence.orient",
         "blended.jolokia",
         "blended.samples",

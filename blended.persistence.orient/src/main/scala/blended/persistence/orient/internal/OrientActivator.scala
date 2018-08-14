@@ -27,13 +27,13 @@ class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
 
       (dbUrl, dbUserName, dbPassword) match {
         case (None, _, _) =>
-          sys.error("No 'dbUrl' defined in configuration. Cannot start persistence service")
+          sys.error("No 'dbUrl' defined in configuration. Cannot start Orient persistence service")
 
         case (_, None, _) =>
-          sys.error("No 'dbUserName' defined in configuration. Cannot start persistence service")
+          sys.error("No 'dbUserName' defined in configuration. Cannot start Orient persistence service")
 
         case (_, _, None) =>
-          sys.error("No 'dbPassword' defined in configuration. Cannot start persistence service")
+          sys.error("No 'dbPassword' defined in configuration. Cannot start Orient persistence service")
 
         case (Some(dbUrl), Some(dbUserName), Some(dbPassword)) =>
           dbPath.foreach { dbPath =>
@@ -65,7 +65,7 @@ class OrientActivator() extends DominoActivator with TypesafeConfigWatching {
           }
 
           val orientExperimental = new PersistenceServiceOrientDb(dbPool)
-          orientExperimental.providesService[PersistenceService]
+          orientExperimental.providesService[PersistenceService]("dbUrl" -> dbUrl)
 
           log.debug(s"Started ${getClass()}")
       }

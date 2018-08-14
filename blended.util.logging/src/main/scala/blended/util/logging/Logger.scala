@@ -28,12 +28,23 @@ trait Logger extends Serializable {
 
 }
 
+/**
+ * Factory apply-methods try to find a SLF4J-Logger on the classpath
+ * and fall-back to use the `java.util.logging` API if no SLF4J logger could be loaded.
+ */
 object Logger {
+
+  /**
+   * Create a Logger instance by deriving the logger name from the fully qualified class name.
+   */
   def apply[T: ClassTag]: Logger = {
     val name = scala.reflect.classTag[T].runtimeClass.getName
     apply(name)
   }
 
+  /**
+   * Create a Logger instance with the given name.
+   */
   def apply(name: String): Logger = {
     try {
       // we expect class loading errors if no slf4j is present
@@ -51,6 +62,9 @@ object Logger {
   }
 }
 
+/**
+ * A Logger class doing nothing.
+ */
 class LoggerNoOp() extends Logger
 
     

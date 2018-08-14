@@ -1,12 +1,15 @@
 package blended.persistence
 
+import java.{ util => ju }
+
 trait PersistenceService {
 
-  def persist(pClass: String, data: java.util.Map[String, _ <: AnyRef]): java.util.Map[String, _ <: AnyRef]
+  def persist(pClass: String, data: ju.Map[String, _ <: AnyRef]): ju.Map[String, _ <: AnyRef]
 
-  def findAll(pClass: String): Seq[java.util.Map[String, _ <: AnyRef]]
+  def findAll(pClass: String): Seq[ju.Map[String, _ <: AnyRef]]
 
-  def findByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Seq[java.util.Map[String, _ <: AnyRef]]
+  def findByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Seq[ju.Map[String, _ <: AnyRef]]
 
-  def deleteByExample(pClass: String, data: java.util.Map[String, _ <: AnyRef]): Long
+  def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long
+  
 }
