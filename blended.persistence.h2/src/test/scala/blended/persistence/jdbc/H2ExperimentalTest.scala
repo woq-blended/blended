@@ -46,7 +46,7 @@ class H2ExperimentalTest extends LoggingFreeSpec with Matchers with TestFile {
 
         val example = Map("key1" -> "value1").asJava
         val byExample = exp.findByExample("CLASS1", example)
-        
+
         byExample should have size (1)
         byExample.head.get("key1") should equal("value1")
 
@@ -57,12 +57,12 @@ class H2ExperimentalTest extends LoggingFreeSpec with Matchers with TestFile {
   "Test 3 with complex Config Object" in {
 
     val config = ConfigFactory.parseString("""
-			  |key1=value1
-			  |key2=[ kv1, kv2 ]
-			  |key3 {
-			  |  k3a=v3a
-			  |  k3b=[ v3b1, v3b2 ]
-			  |}""".stripMargin)
+        |key1=value1
+        |key2=[ kv1, kv2 ]
+        |key3 {
+        |  k3a=v3a
+        |  k3b=[ v3b1, v3b2 ]
+        |}""".stripMargin)
 
     withTestDir(new java.io.File("target/tmp")) { dir =>
       config.root().unwrapped()
