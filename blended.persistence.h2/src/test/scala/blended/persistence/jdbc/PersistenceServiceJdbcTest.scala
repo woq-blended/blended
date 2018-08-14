@@ -162,21 +162,25 @@ class PersistenceServiceJdbcTest
 
   "TEST data survives db close and reopen" in {
 
-    val config = ConfigFactory.parseString("""
-			  |key1=value1
-			  |key2=[ kv1, kv2 ]
-			  |key3 {
-			  |  k3a=v3a
-			  |  k3b=[ v3b1, v3b2 ]
-			  |}""".stripMargin)
+    val config = ConfigFactory.parseString(
+      """
+        |key1=value1
+        |key2=[ kv1, kv2 ]
+        |key3 {
+        |  k3a=v3a
+        |  k3b=[ v3b1, v3b2 ]
+        |}""".stripMargin
+    )
 
-    val config2 = ConfigFactory.parseString("""
-    				|key1=value2
-    				|key2=[ kv3, kv4 ]
-    				|key3 {
-    				|  k3a=v3a2
-    				|  k3b=[ v3b22, v3b22 ]
-    				|}""".stripMargin)
+    val config2 = ConfigFactory.parseString(
+      """
+        |key1=value2
+        |key2=[ kv3, kv4 ]
+        |key3 {
+        |  k3a=v3a2
+        |  k3b=[ v3b22, v3b22 ]
+        |}""".stripMargin
+    )
 
     withTestDir(new java.io.File("target/tmp")) { dir =>
       // config.root().unwrapped()
