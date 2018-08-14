@@ -272,7 +272,8 @@ object BlendedModel {
       executions = Seq(
         antrunExecution_logbackXml
       )
-    )
+    ),
+    reproducibleBuildPlugin
   )
 
   val distMgmt = DistributionManagement(

@@ -28,6 +28,7 @@ object ScriptHelper {
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
+  // official Maven plugins
   val antrun = mavenPluginGroup % "maven-antrun-plugin" % "1.8"
   val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
   val clean = mavenPluginGroup % "maven-clean-plugin" % "3.1.0"
@@ -45,6 +46,7 @@ object Plugins {
   val surefire = mavenPluginGroup % "maven-surefire-plugin" % "2.20.1"
   val war = mavenPluginGroup % "maven-war-plugin" % "3.2.2"
 
+  // other Plugins
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
   val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.2.1"
@@ -56,11 +58,14 @@ object Plugins {
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
   val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.1"
   val trEclipse = "de.tototec" % "de.tobiasroeser.eclipse-maven-plugin" % "0.1.0"
+  // jars with reproducible checksums
+  val reproducibleBuild = "io.github.zlika" % "reproducible-build-maven-plugin" % "0.6"
   val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
   val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.3.2"
   val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "2.0.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
+  // reporting
   val projectReports = mavenPluginGroup % "maven-project-info-reports-plugin" % "2.9"
 }
 
@@ -455,5 +460,14 @@ val dockerMavenPlugin = Plugin(
     cleanContainerOnly = true,
     removeIntermediateImages = true,
     cache = true
+  )
+)
+
+def reproducibleBuildPlugin = Plugin(
+  Plugins.reproducibleBuild,
+  executions = Seq(
+    Execution(
+      goals = Seq("strip-jar")
+    )
   )
 )
