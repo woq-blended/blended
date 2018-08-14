@@ -22,11 +22,10 @@ abstract class AbstractTokenStore(
     val lc = new LoginContext("loginService", new PasswordCallbackHandler(user, password))
     lc.login()
 
-    val permissions = mgr.permissions(lc.getSubject())
     val token = Token(
       id = user,
       expiresAt = if (ttl.isDefined) System.currentTimeMillis() + ttl.map(_.toMillis).getOrElse(0l) else 0l,
-      webToken = tokenHandler.createToken(user, ttl, permissions:_*)
+      webToken = tokenHandler.createToken(user, ttl, mgr.permissions(lc.getSubject()))
     )
     storeToken(token)
   }

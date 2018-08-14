@@ -7,6 +7,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.ValidationRejection
+import blended.security.BlendedPermissionManager
 import akka.util.Timeout
 import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.BlendedSecurityDirectives
@@ -17,6 +18,8 @@ import blended.util.logging.Logger
 trait CollectorService {
   // dependencies
   deps: BlendedSecurityDirectives with PrickleSupport =>
+
+  val mgr : BlendedPermissionManager
 
   val httpRoute: Route =
     respondWithDefaultHeader(headers.`Access-Control-Allow-Origin`(headers.HttpOriginRange.*)) {
@@ -112,7 +115,7 @@ trait CollectorService {
         }
       } ~
         post {
-          requirePermission("profile:update") {
+          requirePermission(mgr, "profile:update") {
             entity(as[RuntimeConfig]) { rc =>
               registerRuntimeConfig(rc)
               complete(s"Registered ${rc.name}-${rc.version}")
@@ -132,7 +135,7 @@ trait CollectorService {
         }
       } ~
         post {
-          requirePermission("profile:update") {
+          requirePermission(mgr, "profile:update") {
             entity(as[OverlayConfig]) { oc =>
               registerOverlayConfig(oc)
               complete(s"Registered ${oc.name}-${oc.version}")
@@ -145,7 +148,7 @@ trait CollectorService {
   def updateActionRoute: Route = {
     path("container" / Segment / "update") { containerId =>
       post {
-        requirePermission("profile:update") {
+        requirePermission(mgr, "profile:update") {
           entity(as[UpdateAction]) { updateAction =>
             addUpdateAction(containerId, updateAction)
             complete(s"Added UpdateAction to ${containerId}")
@@ -158,7 +161,7 @@ trait CollectorService {
   def rolloutProfileRoute: Route = {
     path("rollout" / "profile") {
       post {
-        requirePermission("profile:update") {
+        requirePermission(mgr, "profile:update") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             // check existence of profile
             getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
@@ -193,5 +196,4 @@ trait CollectorService {
     }
 
   }
-
 }

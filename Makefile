@@ -8,32 +8,19 @@ build:
 
 .PHONY: clean # Run mvn clean
 clean:
-	mvn -Pbuild,itest,docker --fail-at-end clean
+	mvn -Pbuild --fail-at-end clean
 
 .PHONY: pom-xml # Generate pom.xml files
 pom-xml:
-	mvn -Pbuild,itest,gen-pom-xml initialize
+	mvn -Pbuild,gen-pom-xml initialize
 
 .PHOMY: eclipse # Generate Eclipse project files
 eclipse: pom-xml
-	mvn -Peclipse,build,itest initialize de.tototec:de.tobiasroeser.eclipse-maven-plugin:0.1.1:eclipse
-
-.PHONY: full # A full build including docker tests
-full: docker-clean
-	mvn -Pbuild,itest,docker install
+	mvn -Peclipse,build initialize de.tototec:de.tobiasroeser.eclipse-maven-plugin:0.1.1:eclipse
 
 .PHONY: light # Build but skip test executions
 light:
 	mvn -Pbuild -DskipTests install
-
-.PHONY: docker-clean # Cleanup old images from docker registry
-docker-clean:
-	for vm in $$(docker ps -aq); do \
-		docker rm -f $$vm; \
-	done
-	for image in $$(docker images | grep none | awk '{print $$3;}'); \
-		do docker rmi -f $$image; \
-	done
 
 .PHONY: travis-prepare # Prepare travis env, e.g. pre-fetching maven (somewhat quieter)
 travis-prepare:

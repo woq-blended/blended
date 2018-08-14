@@ -14,13 +14,17 @@ BlendedModel(
     scalaLib % "provided",
     Blended.domino,
     Blended.akkaHttp,
+    Blended.securityBoot,
+    Blended.security,
+    Blended.securityAkkaHttp,
     Blended.akka % "test",
-    Blended.security % "test",
     Blended.securityLogin % "test",
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
     scalaTest % "test",
-    akkaHttpTestkit % "test"
+    akkaHttpTestkit % "test",
+    sttp % "test",
+    sttpAkka % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

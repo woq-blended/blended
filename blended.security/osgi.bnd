@@ -8,7 +8,8 @@ Bundle-Activator: \
   ${bundle.namespace}.internal.SecurityActivator
 
 Export-Package: \
-  ${bundle.namespace}
+  ${bundle.namespace},\
+  ${bundle.namespace}.json
 
 Import-Package: \
   *

@@ -5,9 +5,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
 
+import blended.security.BlendedPermissions
 import blended.security.login.TokenHandler
 import io.jsonwebtoken.impl.DefaultClaims
-import io.jsonwebtoken.{Claims, Jws, Jwts, SignatureAlgorithm}
+import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
+import blended.security.json.PrickleProtocol._
+import prickle.Pickle
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -28,7 +31,7 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
 
   val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
 
-  override def createToken(user: String, expire : Option[FiniteDuration], permission: String*): String = {
+  override def createToken(user: String, expire : Option[FiniteDuration], permissions: BlendedPermissions): String = {
 
     val date = new Date()
 
@@ -39,7 +42,7 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
       .setSubject(user)
       .setIssuedAt(date)
 
-    claims.put("permissions", permission.mkString(","))
+    claims.put("permissions", Pickle.intoString(permissions))
 
     expire.foreach{exp =>
       claims.setExpiration(new Date(date.getTime() + exp.toMillis))

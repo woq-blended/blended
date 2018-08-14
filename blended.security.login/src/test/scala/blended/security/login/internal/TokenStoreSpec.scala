@@ -3,14 +3,15 @@ package blended.security.login.internal
 import java.io.File
 
 import blended.akka.internal.BlendedAkkaActivator
+import blended.security.BlendedPermissions
 import blended.security.internal.SecurityActivator
 import blended.security.login.TokenStore
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class TokenStoreSpec extends FreeSpec
   with Matchers
@@ -54,7 +55,13 @@ class TokenStoreSpec extends FreeSpec
 
         clientClaims.getHeader.getAlgorithm() should be ("RS512")
         clientClaims.getBody.getSubject() should be ("andreas")
-        clientClaims.getBody.get("permissions", classOf[String]) should be ("admins,blended")
+
+        val json : String = clientClaims.getBody().get("permissions", classOf[String])
+        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+
+        permissions.granted.size should be (2)
+        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
         Await.result(store.listTokens(), 3.seconds).size should be(1)
       }
@@ -75,7 +82,13 @@ class TokenStoreSpec extends FreeSpec
 
         clientClaims.getHeader.getAlgorithm() should be ("RS512")
         clientClaims.getBody.getSubject() should be ("andreas")
-        clientClaims.getBody.get("permissions", classOf[String]) should be ("admins,blended")
+
+        val json : String = clientClaims.getBody().get("permissions", classOf[String])
+        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+
+        permissions.granted.size should be (2)
+        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
         val token3 = Await.result(store.removeToken("andreas"), 3.seconds).get
         assert(token === token3)
