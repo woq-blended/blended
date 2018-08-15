@@ -1,10 +1,11 @@
 package blended.mgmt.repo
 
 import java.io.File
-import scala.collection.immutable
+
+import blended.updater.config.MvnGav
 
 trait ArtifactRepo {
-  
+
   /**
    * The id (or name) of this repository.
    */
@@ -21,10 +22,22 @@ trait ArtifactRepo {
    * @return A `Some` of the checksum or `None`if the artifact does not exists in the repository.
    */
   def findFileSha1Checksum(path: String): Option[String]
-  
+
   /**
    * Find all known files (recursive) under the given artifact path (with their relative path).
    */
   def listFiles(path: String): Iterator[String]
 
 }
+
+object ArtifactRepo {
+
+  /**
+   * Converts the given Maven GAV into an artifact path eligible for [[ArtifactRepo]] methods.
+   */
+  def mvnArtifactPath(mvnGav: MvnGav): String = {
+    mvnGav.toUrl("")
+  }
+
+}
+  
