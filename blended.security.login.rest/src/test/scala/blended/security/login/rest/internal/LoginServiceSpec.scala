@@ -57,7 +57,12 @@ class LoginServiceSpec extends FreeSpec
     val r = Await.result(response, 3.seconds)
     r.code should be (StatusCodes.Ok)
 
-    val bytes = new BASE64Decoder().decodeBuffer(r.body.right.get)
+    val rawString = r.body.right.get
+      .replace("-----BEGIN PUBLIC KEY-----\n", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replaceAll("\n", "")
+
+    val bytes = new BASE64Decoder().decodeBuffer(rawString)
     val x509 = new X509EncodedKeySpec(bytes)
     val kf = KeyFactory.getInstance("RSA")
     kf.generatePublic(x509)
@@ -105,9 +110,10 @@ class LoginServiceSpec extends FreeSpec
 
         r.code should be (StatusCodes.Ok)
 
+        println(r.body.right.get)
+
         val claims = Jwts.parser().setSigningKey(key).parseClaimsJws(r.body.right.get)
         val json = claims.getBody().get("permissions", classOf[String])
-
 
         val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
 

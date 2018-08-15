@@ -18,6 +18,24 @@ class LoginService(tokenstore: TokenStore)(implicit eCtxt: ExecutionContext) ext
 
   private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
+  private[this] lazy val publicKeyPEM : String = {
+
+    def lines(s : String)(current : List[String] = List.empty) : List[String] = {
+      if (s.length <= 64) {
+        s :: current
+      } else {
+        lines(s.substring(64))( s.substring(0,64) :: current)
+      }
+    }
+
+    val key = tokenstore.publicKey()
+    val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
+
+    val pemLines : List[String] = ("-----BEGIN PUBLIC KEY-----" :: lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))).reverse
+
+    pemLines.mkString("\n")
+  }
+
   def route = httpRoute
 
   private[this] lazy val httpRoute = loginRoute ~ logoutRoute ~ publicKeyRoute
@@ -50,12 +68,7 @@ class LoginService(tokenstore: TokenStore)(implicit eCtxt: ExecutionContext) ext
   private[this] val publicKeyRoute = {
     path("key") {
       get {
-        val key = tokenstore.publicKey()
-
-        val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
-        val encoder = new BASE64Encoder()
-
-        complete(HttpResponse(StatusCodes.OK, entity = encoder.encode(encodedKey)))
+        complete(publicKeyPEM)
       }
     }
   }
