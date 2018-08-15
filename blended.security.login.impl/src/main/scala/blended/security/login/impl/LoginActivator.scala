@@ -1,8 +1,8 @@
-package blended.security.login.internal
+package blended.security.login.impl
 
 import blended.akka.ActorSystemWatching
 import blended.security.BlendedPermissionManager
-import blended.security.login.TokenStore
+import blended.security.login.api.TokenStore
 import domino.DominoActivator
 
 class LoginActivator extends DominoActivator with ActorSystemWatching {

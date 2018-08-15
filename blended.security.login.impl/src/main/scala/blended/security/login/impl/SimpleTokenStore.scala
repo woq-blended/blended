@@ -1,16 +1,18 @@
-package blended.security.login.internal
+package blended.security.login.impl
 
-import akka.actor.FSM.Failure
 import akka.actor.{Actor, ActorSystem, Props}
-import akka.pattern.ask
 import akka.util.Timeout
-import blended.security.BlendedPermissionManager
-import blended.security.login.{AbstractTokenStore, Token, TokenHandler}
+import blended.security.{BlendedPermissionManager, BlendedPermissions}
+import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
+import akka.pattern.ask
+import io.jsonwebtoken.Jwts
+import prickle.{Pickle, Unpickle, Unpickler}
+import blended.security.json.PrickleProtocol._
 
 object TokenStoreMessages {
 
@@ -77,4 +79,11 @@ class SimpleTokenStore(
 
   override def listTokens(): Future[Seq[Token]] =
     (storeActor ? ListTokens).mapTo[Seq[Token]]
+
+  override def verifyToken(token: String): Try[BlendedPermissions] =  {
+    val claims = Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
+    val permissions = claims.getBody().get("permissions", classOf[String])
+
+    Unpickle[BlendedPermissions].fromString(permissions)
+  }
 }

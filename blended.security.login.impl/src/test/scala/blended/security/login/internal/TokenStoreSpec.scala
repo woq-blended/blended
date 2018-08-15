@@ -3,15 +3,20 @@ package blended.security.login.internal
 import java.io.File
 
 import blended.akka.internal.BlendedAkkaActivator
-import blended.security.BlendedPermissions
+import blended.security.PasswordCallbackHandler
 import blended.security.internal.SecurityActivator
-import blended.security.login.TokenStore
+import blended.security.login.api.TokenStore
+import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
+import javax.security.auth.Subject
+import javax.security.auth.login.LoginContext
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.util.Try
 
 class TokenStoreSpec extends FreeSpec
   with Matchers
@@ -34,6 +39,12 @@ class TokenStoreSpec extends FreeSpec
     }
   }
 
+  def login(user: String, password : String) : Try[Subject] =  Try {
+    val lc = new LoginContext("Test", new PasswordCallbackHandler(user, password.toCharArray()))
+    lc.login()
+    lc.getSubject()
+  }
+
   "The token store" - {
 
     "should start empty" in {
@@ -46,18 +57,13 @@ class TokenStoreSpec extends FreeSpec
     "should allow to create a new token" in {
 
       withTokenStore { store =>
-        val token = Await.result(store.newToken("andreas", "mysecret".toCharArray(), None), 3.seconds).get
+        val subj = login("andreas", "mysecret").get
+        val token = Await.result(store.newToken(subj, None), 3.seconds).get
 
         token.id should be("andreas")
         token.expiresAt should be (0)
 
-        val clientClaims = store.verifyToken(token.webToken)
-
-        clientClaims.getHeader.getAlgorithm() should be ("RS512")
-        clientClaims.getBody.getSubject() should be ("andreas")
-
-        val json : String = clientClaims.getBody().get("permissions", classOf[String])
-        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+        val permissions = store.verifyToken(token.webToken).get
 
         permissions.granted.size should be (2)
         permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
@@ -70,7 +76,8 @@ class TokenStoreSpec extends FreeSpec
     "should allow to get and delete an existing token" in {
 
       withTokenStore { store =>
-        val token = Await.result(store.newToken("andreas", "mysecret".toCharArray(), None), 3.seconds).get
+        val subj = login("andreas", "mysecret").get
+        val token = Await.result(store.newToken(subj, None), 3.seconds).get
 
         token.id should be("andreas")
         token.expiresAt should be (0)
@@ -78,13 +85,7 @@ class TokenStoreSpec extends FreeSpec
         val token2 = Await.result(store.getToken("andreas"), 3.seconds).get
 
         assert(token === token2)
-        val clientClaims = store.verifyToken(token2.webToken)
-
-        clientClaims.getHeader.getAlgorithm() should be ("RS512")
-        clientClaims.getBody.getSubject() should be ("andreas")
-
-        val json : String = clientClaims.getBody().get("permissions", classOf[String])
-        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+        val permissions  = store.verifyToken(token2.webToken).get
 
         permissions.granted.size should be (2)
         permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)

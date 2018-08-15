@@ -5,7 +5,7 @@ Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
 Bundle-Activator:\
-  ${bundle.symbolicName}.internal.LoginActivator
+  ${bundle.symbolicName}.LoginActivator
 
 Import-Package: \
   scala.*;version="${scalaImportVersion}", \
@@ -13,8 +13,5 @@ Import-Package: \
   *
 
 Private-Package:\
-  ${bundle.namespace}.internal.*
+  ${bundle.namespace}
 
-Export-Package: \
-  ${bundle.namespace},\
-  ${bundle.namespace}.json

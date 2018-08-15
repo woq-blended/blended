@@ -1,10 +1,11 @@
-package blended.security.login
+package blended.security.login.api
 
 import java.security.PublicKey
 
-import io.jsonwebtoken.{Claims, Jws, Jwts}
+import blended.security.BlendedPermissions
+import javax.security.auth.Subject
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
@@ -49,18 +50,15 @@ trait TokenStore {
     * map the [[blended.security.boot.GroupPrincipal]]s contained in the subject to permissions.
     * Finally, the token will be created for the user with the retrieved permissions.
     * @param user the username, which will identify the new token
-    * @param password the password for the user
     * @param ttl The validatity for the new token
     * @return Success(token) if the token can be created, Failure(_) otherwise, wrapped in a Future
     */
-  def newToken(user : String, password: Array[Char], ttl: Option[FiniteDuration]) : Future[Try[Token]]
+  def newToken(subj : Subject, ttl: Option[FiniteDuration])(implicit eCtxt: ExecutionContext) : Future[Try[Token]]
 
   def listTokens() : Future[Seq[Token]]
 
   def publicKey() : PublicKey
 
-   def verifyToken(token: String) : Jws[Claims] = {
-    Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
-  }
+  def verifyToken(token: String) : Try[BlendedPermissions]
 
 }
