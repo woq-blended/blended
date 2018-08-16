@@ -1,9 +1,10 @@
 package blended.security
 
+import scala.collection.{ immutable => sci }
+import scala.util.Try
+
 import blended.security.json.PrickleProtocol._
 import prickle.Unpickle
-
-import scala.util.Try
 
 /**
   *
@@ -14,7 +15,7 @@ import scala.util.Try
   */
 case class BlendedPermission(
   permissionClass : Option[String],
-  properties: Map[String, Seq[String]] = Map.empty
+  properties: Map[String, sci.Seq[String]] = Map.empty
 ) {
 
   def allows(other: BlendedPermission) : Boolean = {
@@ -62,7 +63,7 @@ case class BlendedPermission(
           // we need the properties defined in both permissions
           .filterKeys(k => other.properties.get(k).isDefined)
           // then we combine the properties of both permissions
-          .map { case (k, v) => (k, (v ++ other.properties.getOrElse(k, Seq.empty)).distinct) }
+          .map { case (k, v) => (k, (v ++ other.properties.getOrElse(k, sci.Seq.empty)).distinct) }
 
         BlendedPermission(
           permissionClass = permissionClass,
@@ -77,7 +78,7 @@ object BlendedPermissions {
   def fromJson(json: String) : Try[BlendedPermissions] = Unpickle[BlendedPermissions].fromString(json)
 }
 
-case class BlendedPermissions(granted: Seq[BlendedPermission]) {
+case class BlendedPermissions(granted: sci.Seq[BlendedPermission]) {
 
   /**
     * Merge all permissions in a sequence from left to right
@@ -98,6 +99,6 @@ case class BlendedPermissions(granted: Seq[BlendedPermission]) {
     */
   lazy val merged : BlendedPermissions = {
     val grouped = granted.groupBy(_.permissionClass)
-    BlendedPermissions(grouped.values.map(merge).toSeq)
+    BlendedPermissions(grouped.values.map(merge).toList)
   }
 }

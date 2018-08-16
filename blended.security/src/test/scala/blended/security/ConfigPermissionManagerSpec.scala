@@ -44,7 +44,7 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
         assertPermissions(
           mgr.permissions(login("tobias", "secret").get),
           BlendedPermission(Some("container"), Map.empty),
-          BlendedPermission(Some("rollout"), Map("country" -> Seq("de")))
+          BlendedPermission(Some("rollout"), Map("country" -> List("de")))
         )
       }
     }
@@ -56,7 +56,7 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
         assertPermissions(
           mgr.permissions(login("john", "secret").get),
-          BlendedPermission(Some("rollout"), Map("country" -> Seq("de", "bg")))
+          BlendedPermission(Some("rollout"), Map("country" -> List("de", "bg")))
         )
 
         assertPermissions(

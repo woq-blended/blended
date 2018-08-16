@@ -2,7 +2,7 @@ package blended.security
 
 import blended.security.json.PrickleProtocol._
 import org.scalatest.FreeSpec
-import prickle.{Pickle, Unpickle}
+import prickle.{ Pickle, Unpickle }
 
 class PrickleSpec extends FreeSpec {
 
@@ -13,7 +13,7 @@ class PrickleSpec extends FreeSpec {
       val permission = BlendedPermission(
         permissionClass = Some("container"),
         Map(
-          "country" -> Seq("de", "bg")
+          "country" -> List("de", "bg")
         )
       )
 
@@ -28,7 +28,7 @@ class PrickleSpec extends FreeSpec {
       val permission = BlendedPermission(
         permissionClass = Some("container"),
         Map(
-          "country" -> Seq("de", "bg")
+          "country" -> List("de", "bg")
         )
       )
 

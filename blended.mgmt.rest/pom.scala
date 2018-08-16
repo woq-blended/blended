@@ -19,6 +19,7 @@ BlendedModel(
     Deps.slf4j,
     Blended.utilLogging,
     Blended.mgmtBase,
+    Blended.mgmtRepo,
     Blended.akka,
     Deps.akkaHttp,
     Deps.akkaHttpCore,

@@ -1,12 +1,12 @@
 package blended.security
 
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
 class BlendedPermissionSpec extends FreeSpec
   with Matchers {
 
-  private val noCountries = Seq("ro")
-  private val countries = Seq("de", "bg", "cz")
+  private val noCountries = List("ro")
+  private val countries = List("de", "bg", "cz")
 
   "The BlendedPermission should" - {
 
@@ -15,8 +15,8 @@ class BlendedPermissionSpec extends FreeSpec
       val permission = BlendedPermission(None)
 
       assert(!permission.allows(BlendedPermission(permissionClass = Some("container"))))
-      assert(!permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq("de")))))
-      assert(!permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq("bg")))))
+      assert(!permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List("de")))))
+      assert(!permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List("bg")))))
       assert(!permission.allows(BlendedPermission(permissionClass = Some("foo"))))
     }
 
@@ -25,8 +25,8 @@ class BlendedPermissionSpec extends FreeSpec
       val permission = BlendedPermission(permissionClass = Some("container"))
 
       assert(permission.allows(BlendedPermission(permissionClass = Some("container"))))
-      assert(permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq("de")))))
-      assert(permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq("bg")))))
+      assert(permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List("de")))))
+      assert(permission.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List("bg")))))
 
       assert(!permission.allows(BlendedPermission(permissionClass = Some("foo"))))
     }
@@ -38,29 +38,29 @@ class BlendedPermissionSpec extends FreeSpec
       val p1 = BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> countries))
 
       assert(countries.forall { c =>
-        p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq(c))))
+        p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c))))
       })
 
       assert(noCountries.forall{ c =>
-        !p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq(c))))
+        !p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c))))
       })
 
-      val p2 = BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> countries, "location" -> Seq("09999")))
+      val p2 = BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> countries, "location" -> List("09999")))
       assert(countries.forall { c =>
-        !p2.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq(c))))
+        !p2.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c))))
       })
 
       assert(countries.forall { c =>
-        p2.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq(c), "location" -> Seq("09999"))))
+        p2.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c), "location" -> List("09999"))))
       })
     }
 
     "match if the controlled object has properties not specified in the granting permission" in {
-      val countries = Seq("de", "bg", "cz")
+      val countries = List("de", "bg", "cz")
       val p1 = BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> countries))
 
       assert(countries.forall { c =>
-        p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> Seq(c), "location" -> Seq("09999"))))
+        p1.allows(BlendedPermission(permissionClass = Some("container"), properties = Map("country" -> List(c), "location" -> List("09999"))))
       })
     }
 
@@ -91,8 +91,8 @@ class BlendedPermissionSpec extends FreeSpec
     }
 
     "a merge of 2 permissions with restrictions on the same property should combine the restrictions" in {
-      val p1 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> Seq("de", "bg")))
-      val p2 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> Seq("de", "cz")))
+      val p1 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> List("de", "bg")))
+      val p2 = BlendedPermission(permissionClass = Some("foo"), properties = Map("country" -> List("de", "cz")))
 
       val values = p1.merge(p2).properties.getOrElse("country", Seq.empty)
       values.size should be (3)
