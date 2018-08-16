@@ -4,6 +4,7 @@ import java.security.spec.X509EncodedKeySpec
 
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.security.login.api.TokenStore
 import javax.security.auth.Subject
@@ -14,7 +15,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class LoginService(tokenstore: TokenStore)(implicit eCtxt: ExecutionContext) extends JAASSecurityDirectives {
+class LoginService(
+  tokenstore: TokenStore,
+  override val mgr : BlendedPermissionManager
+)(implicit eCtxt: ExecutionContext) extends JAASSecurityDirectives {
 
   private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
