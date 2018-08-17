@@ -155,7 +155,6 @@ object Deps {
 
   val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 
-  val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
@@ -270,7 +269,6 @@ object Blended {
   val mgmtWs = blended("blended.mgmt.ws")
   val persistence = blended("blended.persistence")
   val persistenceH2 = blended("blended.persistence.h2")
-  val persistenceOrient = blended("blended.persistence.orient")
   val prickle = blended("blended.prickle")
   val prickleAkkaHttp = blended("blended.prickle.akka.http")
   val samplesReactor = blended("blended.samples.reactor")

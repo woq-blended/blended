@@ -77,7 +77,6 @@ BlendedModel(
         "blended.hawtio.login",
         "blended.persistence",
         "blended.persistence.h2",
-        "blended.persistence.orient",
         "blended.jolokia",
         "blended.samples",
         "blended.activemq.defaultbroker",
