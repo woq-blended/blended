@@ -17,7 +17,6 @@ BlendedModel(
     Blended.util,
     Deps.slf4j,
     Deps.domino,
-    Deps.orientDbCore,
     Deps.h2,
     Deps.hikaricp,
     Deps.springBeans,
