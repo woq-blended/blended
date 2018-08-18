@@ -4,6 +4,9 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Activator:\
+  ${bundle.symbolicName}.internal.RestLoginActivator
+
 Bundle-Classpath: WEB-INF/classes,.
 
 Import-Package: \
@@ -11,8 +14,3 @@ Import-Package: \
 
 Private-Package: \
   ${bundle.namespace}.internal
-
-Webapp-Context: login
-Web-ContextPath: login
-
-
