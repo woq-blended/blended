@@ -81,8 +81,7 @@ BlendedModel(
         "blended.jolokia",
         "blended.samples",
         "blended.activemq.defaultbroker",
-        "blended.activemq.client",
-        "blended.launcher.features"
+        "blended.activemq.client"
       )
     )
   )
