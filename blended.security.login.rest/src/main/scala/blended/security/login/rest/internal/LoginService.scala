@@ -1,41 +1,79 @@
 package blended.security.login.rest.internal
 
+import java.security.spec.X509EncodedKeySpec
+
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
-import blended.security.json.PrickleProtocol._
-import blended.security.{BlendedPermissionManager, BlendedPermissions}
+import blended.security.login.api.TokenStore
 import javax.security.auth.Subject
 import org.slf4j.LoggerFactory
-import prickle.Pickle
+import sun.misc.BASE64Encoder
 
-class LoginService(permissionMgr: BlendedPermissionManager) extends JAASSecurityDirectives {
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
+
+class LoginService(
+  tokenstore: TokenStore,
+  override val mgr : BlendedPermissionManager
+)(implicit eCtxt: ExecutionContext) extends JAASSecurityDirectives {
 
   private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
-  def route : Route = httpRoute
+  private[this] lazy val publicKeyPEM : String = {
 
-  private[this] lazy val httpRoute : Route = loginRoute ~ logoutRoute
+    def lines(s : String)(current : List[String] = List.empty) : List[String] = {
+      if (s.length <= 64) {
+        s :: current
+      } else {
+        lines(s.substring(64))( s.substring(0,64) :: current)
+      }
+    }
 
-  def loginRoute : Route = {
+    val key = tokenstore.publicKey()
+    val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
+
+    val pemLines : List[String] = ("-----BEGIN PUBLIC KEY-----" :: lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))).reverse
+
+    pemLines.mkString("\n")
+  }
+
+  def route = httpRoute
+
+  private[this] lazy val httpRoute = loginRoute ~ logoutRoute ~ publicKeyRoute
+
+  private[this] val loginRoute = {
     pathSingleSlash {
       get {
         log.warn("Login must be executed with a HTTP Post")
         complete(HttpResponse(StatusCodes.Forbidden))
-      }
+      } ~
       post {
-        authenticated { user : Subject =>
-          val permissions : BlendedPermissions = permissionMgr.permissions(user)
-          complete(Pickle.intoString(permissions))
+        authenticated { subj : Subject =>
+          val t : Future[HttpResponse] = tokenstore.newToken(subj, Some(1.minute)).map {
+            case Failure(e) => HttpResponse(StatusCodes.BadRequest)
+            case Success(t) => HttpResponse(StatusCodes.OK, entity = t.webToken)
+          }
+
+          complete(t)
         }
       }
     }
   }
 
-  def logoutRoute : Route = {
-    path("/logout") {
+  private[this] val logoutRoute = {
+    path("logout") {
       complete(HttpResponse(StatusCodes.NotImplemented))
+    }
+  }
+
+  private[this] val publicKeyRoute = {
+    path("key") {
+      get {
+        complete(publicKeyPEM)
+      }
     }
   }
 }

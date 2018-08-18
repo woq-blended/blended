@@ -115,7 +115,7 @@ trait CollectorService {
         }
       } ~
         post {
-          requirePermission(mgr, "profile:update") {
+          requirePermission("profile:update") {
             entity(as[RuntimeConfig]) { rc =>
               registerRuntimeConfig(rc)
               complete(s"Registered ${rc.name}-${rc.version}")
@@ -135,7 +135,7 @@ trait CollectorService {
         }
       } ~
         post {
-          requirePermission(mgr, "profile:update") {
+          requirePermission("profile:update") {
             entity(as[OverlayConfig]) { oc =>
               registerOverlayConfig(oc)
               complete(s"Registered ${oc.name}-${oc.version}")
@@ -148,7 +148,7 @@ trait CollectorService {
   def updateActionRoute: Route = {
     path("container" / Segment / "update") { containerId =>
       post {
-        requirePermission(mgr, "profile:update") {
+        requirePermission("profile:update") {
           entity(as[UpdateAction]) { updateAction =>
             addUpdateAction(containerId, updateAction)
             complete(s"Added UpdateAction to ${containerId}")
@@ -161,7 +161,7 @@ trait CollectorService {
   def rolloutProfileRoute: Route = {
     path("rollout" / "profile") {
       post {
-        requirePermission(mgr, "profile:update") {
+        requirePermission("profile:update") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             // check existence of profile
             getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {

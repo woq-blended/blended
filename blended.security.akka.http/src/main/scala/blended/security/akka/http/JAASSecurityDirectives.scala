@@ -20,9 +20,7 @@ import scala.concurrent.Future
  */
 trait JAASSecurityDirectives extends BlendedSecurityDirectives {
 
-  /**
-   * External dependency to a security manager.
-   */
+  val mgr : BlendedPermissionManager
 
   private[this] lazy val log = Logger[JAASSecurityDirectives]
 
@@ -67,7 +65,7 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
 
   override val authenticated  : AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
 
-  override def requirePermission(mgr: BlendedPermissionManager, permission: BlendedPermission) : Directive0 = mapInnerRoute { inner =>
+  override def requirePermission(permission: BlendedPermission) : Directive0 = mapInnerRoute { inner =>
     authenticated { subject =>
       log.info(s"subject: ${subject} with principal: ${Option(subject).map(_.getPrincipal()).getOrElse("null")}")
       log.debug(s"checking required permission: ${permission}")

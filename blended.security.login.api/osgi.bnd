@@ -1,0 +1,13 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Import-Package: \
+  scala.*;version="${scalaImportVersion}", \
+  android.*;resolution:=optional, \
+  *
+
+Export-Package: \
+  ${bundle.namespace}

@@ -145,7 +145,8 @@ val features = Seq(
       FeatureBundle(dependency = jacksonCore),
       FeatureBundle(dependency = jacksonBind),
       FeatureBundle(dependency = jjwt),
-      FeatureBundle(dependency = Blended.securityLogin, start = true),
+      FeatureBundle(dependency = Blended.securityLoginApi),
+      FeatureBundle(dependency = Blended.securityLoginImpl, start = true),
       FeatureBundle(dependency = Blended.mgmtWs, start = true),
       FeatureBundle(dependency = Blended.securityLoginRest, start = true)
       //FeatureBundle(dependency = Dependency(gav = Blended.mgmtApp, `type` = "war"), start = true)

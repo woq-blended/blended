@@ -1,10 +1,11 @@
 package blended.mgmt.repo.rest.internal
 
 import blended.mgmt.repo.ArtifactRepo
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.util.logging.Logger
 
-class ArtifactRepoRoutesImpl
+class ArtifactRepoRoutesImpl(override val mgr : BlendedPermissionManager)
   extends ArtifactRepoRoutes
   with JAASSecurityDirectives {
 

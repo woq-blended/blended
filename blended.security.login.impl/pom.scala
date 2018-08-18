@@ -7,28 +7,36 @@ import scala.collection.immutable.Seq
 //#include ../blended.build/build-common.scala
 
 BlendedModel(
-  gav = Blended.securityLoginRest,
+  gav = Blended.securityLoginImpl,
   packaging = "bundle",
-  description = "A REST service providing login services and web token management",
+  description = "Implementation of the Login backend.",
   dependencies = Seq(
     scalaLib % "provided",
     Blended.domino,
     Blended.akka,
-    Blended.akkaHttp,
-    Blended.securityBoot,
     Blended.security,
     Blended.securityLoginApi,
-    Blended.securityAkkaHttp,
-    Blended.securityLoginImpl % "test",
+    Deps.jjwt,
+    Deps.prickle,
+    bouncyCastleBcprov,
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
     scalaTest % "test",
-    akkaHttpTestkit % "test",
-    sttp % "test",
-    sttpAkka % "test"
+    logbackCore % "test",
+    logbackClassic % "test"
   ),
   plugins = Seq(
-    mavenBundlePlugin,
+    Plugin(
+      mavenBundlePlugin.gav,
+      extensions = true,
+      inherited = true,
+      configuration = Config(
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = s"*;artifactId=${jjwt.artifactId},artifactId=${bouncyCastleBcprov.artifactId}"
+        )
+      )
+    ),
     scalaCompilerPlugin,
     scalatestMavenPlugin
   )

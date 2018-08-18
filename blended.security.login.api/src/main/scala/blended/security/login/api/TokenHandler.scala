@@ -1,4 +1,4 @@
-package blended.security.login
+package blended.security.login.api
 
 import java.security.PublicKey
 

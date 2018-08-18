@@ -1,6 +1,8 @@
 package blended.security.login.rest.internal
 
 import java.io.File
+import java.security.spec.X509EncodedKeySpec
+import java.security.{KeyFactory, PublicKey}
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.akka.http.HttpContext
@@ -8,15 +10,18 @@ import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.security.BlendedPermissions
 import blended.security.internal.SecurityActivator
-import blended.security.login.internal.LoginActivator
+import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
+import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
+import io.jsonwebtoken.Jwts
 import org.scalatest.{FreeSpec, Matchers}
+import sun.misc.BASE64Decoder
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import com.softwaremill.sttp._
+import scala.util.Try
 
 class LoginServiceSpec extends FreeSpec
   with ScalatestRouteTest
@@ -25,7 +30,6 @@ class LoginServiceSpec extends FreeSpec
   with PojoSrTestHelper {
 
   private[this] implicit val backend = AkkaHttpBackend()
-
 
   def withLoginService[T](f : HttpContext => T) : T = {
     withSimpleBlendedContainer(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()){sr =>
@@ -45,11 +49,30 @@ class LoginServiceSpec extends FreeSpec
     }
   }
 
+  def serverKey : Try[PublicKey] = Try {
+
+    val request = sttp.get(uri"http://localhost:9995/login/key")
+    val response = request.send()
+
+    val r = Await.result(response, 3.seconds)
+    r.code should be (StatusCodes.Ok)
+
+    val rawString = r.body.right.get
+      .replace("-----BEGIN PUBLIC KEY-----\n", "")
+      .replace("-----END PRIVATE KEY-----", "")
+      .replaceAll("\n", "")
+
+    val bytes = new BASE64Decoder().decodeBuffer(rawString)
+    val x509 = new X509EncodedKeySpec(bytes)
+    val kf = KeyFactory.getInstance("RSA")
+    kf.generatePublic(x509)
+  }
+
   "The login service should" - {
 
     "Respond with Unauthorized used without credentials" in {
 
-      withLoginService { sytem =>
+      withLoginService { _ =>
 
         val request = sttp.post(uri"http://localhost:9995/login/")
         val response = request.send()
@@ -63,7 +86,7 @@ class LoginServiceSpec extends FreeSpec
 
     "Respond with Unauthorized used with wrong credentials" in {
 
-      withLoginService { sytem =>
+      withLoginService { _ =>
 
         val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
         val response = request.send()
@@ -77,7 +100,8 @@ class LoginServiceSpec extends FreeSpec
 
     "Respond with Ok if called with correct credentials" in {
 
-      withLoginService { sytem =>
+      withLoginService { _ =>
+        val key = serverKey.get
 
         val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
         val response = request.send()
@@ -85,14 +109,24 @@ class LoginServiceSpec extends FreeSpec
         val r = Await.result(response, 3.seconds)
 
         r.code should be (StatusCodes.Ok)
-        val json : String = r.body.right.get
+
+        println(r.body.right.get)
+
+        val claims = Jwts.parser().setSigningKey(key).parseClaimsJws(r.body.right.get)
+        val json = claims.getBody().get("permissions", classOf[String])
+
         val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
 
         permissions.granted.size should be (2)
         permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
         permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
       }
+    }
 
+    "Respond with the server's public key" in {
+      withLoginService { _ =>
+        serverKey.get.getAlgorithm()  should be ("RSA")
+      }
     }
   }
 

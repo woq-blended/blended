@@ -1,4 +1,4 @@
-package blended.security.login.internal
+package blended.security.login.impl
 
 import java.security.{KeyPair, KeyPairGenerator, PublicKey}
 import java.text.SimpleDateFormat
@@ -6,11 +6,11 @@ import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.BlendedPermissions
-import blended.security.login.TokenHandler
-import io.jsonwebtoken.impl.DefaultClaims
+import blended.security.login.api.TokenHandler
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
-import blended.security.json.PrickleProtocol._
+import io.jsonwebtoken.impl.DefaultClaims
 import prickle.Pickle
+import blended.security.json.PrickleProtocol._
 
 import scala.concurrent.duration.FiniteDuration
 
