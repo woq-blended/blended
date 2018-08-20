@@ -17,6 +17,7 @@ BlendedModel(
   dependencies = Seq(
     Deps.scalaLib % "provided",
     Deps.slf4j,
+    Deps.domino,
     Blended.utilLogging,
     Blended.mgmtBase,
     Blended.mgmtRepo,
@@ -33,7 +34,11 @@ BlendedModel(
     Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",
     Deps.mockitoAll % "test",
-    Deps.logbackClassic % "test"
+    Deps.logbackClassic % "test",
+    Deps.lambdaTest % "test",
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
+    Blended.persistenceH2 % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

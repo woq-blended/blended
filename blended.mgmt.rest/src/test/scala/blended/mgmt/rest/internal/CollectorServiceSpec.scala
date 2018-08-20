@@ -2,7 +2,7 @@ package blended.mgmt.rest.internal
 
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestLatch
-import org.scalatest.{FreeSpec, Matchers}
+import org.scalatest.{ FreeSpec, Matchers }
 
 import scala.collection.immutable.Seq
 import scala.concurrent.Await
@@ -11,8 +11,10 @@ import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import blended.security.akka.http.DummyBlendedSecurityDirectives
 import blended.prickle.akka.http.PrickleSupport
-import blended.security.{BlendedPermission, BlendedPermissionManager, BlendedPermissions}
+import blended.security.{ BlendedPermission, BlendedPermissionManager, BlendedPermissions }
 import javax.security.auth.Subject
+import java.io.File
+import scala.util.Try
 
 class CollectorServiceSpec
   extends FreeSpec
@@ -78,4 +80,7 @@ class CollectorServiceSpec
   override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
 
   override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
+
+  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
+  
 }
