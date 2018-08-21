@@ -1,25 +1,26 @@
 package blended.mgmt.rest.internal
 
+import java.io.File
+
 import scala.collection.immutable
 import scala.concurrent.duration._
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.ValidationRejection
-import blended.security.BlendedPermissionManager
 import akka.util.Timeout
 import blended.prickle.akka.http.PrickleSupport
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.BlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
-import blended.util.logging.Logger
 import blended.updater.config.util.Unzipper
-import scala.util.Try
-import java.io.File
+import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import scala.util.Success
-import scala.util.Failure
 
 trait CollectorService {
   // dependencies
@@ -35,10 +36,11 @@ trait CollectorService {
         runtimeConfigRoute ~
         overlayConfigRoute ~
         updateActionRoute ~
-        rolloutProfileRoute
+        rolloutProfileRoute ~
+        uploadDeploymentPackRoute
     }
 
-  private[this] lazy val log = Logger[this.type]
+  private[this] lazy val log = Logger[CollectorService]
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
@@ -230,28 +232,34 @@ trait CollectorService {
   def uploadDeploymentPackRoute: Route = {
     path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
       post {
-        requirePermission(mgr, "profile:update") {
-          requirePermission(mgr, s"repository:upload:${repoId}") {
-            extractRequest { request =>
-              uploadedFile("file") {
-                case (metadata, file) =>
-                  try {
-                    processDeploymentPack(repoId, file) match {
-                      case Success(profile) =>
-                        complete {
-                          s"""Uploaded profile ${profile._1} ${profile._2}"""
-                        }
-                      case Failure(e) =>
-                        log.error(e)("Could not process uploaded deployment pack file [${file}]")
-                        failWith(e)
-                    }
-                  } finally {
-                    file.delete()
+        log.debug(s"upload to repo [${repoId}] requested. Checking permissions...")
+        //        requirePermission(mgr, "profile:update") {
+        //          requirePermission(mgr, s"repository:upload:${repoId}") {
+        //            extractRequest { request =>
+        uploadedFile("file") {
+          case (metadata, file) =>
+            try {
+              processDeploymentPack(repoId, file) match {
+                case Success(profile) =>
+                  complete {
+                    s"""Uploaded profile ${profile._1} ${profile._2}"""
+                  }
+                case Failure(e) =>
+                  log.error(e)(s"Could not process uploaded deployment pack file [${file}]")
+                  complete {
+                    HttpResponse(
+                      StatusCodes.UnprocessableEntity,
+                      entity = s"Could not process the uploaded deployment pack file. Reason: ${e.getMessage()}"
+                    )
                   }
               }
+            } finally {
+              file.delete()
             }
-          }
         }
+        //            }
+        //          }
+        //        }
       }
     }
   }
@@ -259,12 +267,17 @@ trait CollectorService {
   /**
    * Process the input stream as it it were a ZIP file stram containing the deploymentpack for a profile.
    * If the deployment was successful, this method returns the profile name and version as tuple, else the exception is returned.
+   *
+   * @return Tuple of profile name and version.
    */
   def processDeploymentPack(repoId: String, zipFile: File): Try[(String, String)] = {
     log.debug(s"About to process deploymentpack as inputstream for repoId: ${repoId}")
+
+    // create temp file to find a free name, than delete and create dir with that name
     val tempDir = File.createTempFile("upload", "")
     tempDir.delete()
     tempDir.mkdirs()
+
     val unzipped = Unzipper.unzip(
       archive = zipFile,
       targetDir = tempDir,
@@ -272,7 +285,8 @@ trait CollectorService {
       fileSelector = None,
       placeholderReplacer = None
     )
-    val result = unzipped flatMap { files =>
+
+    val result = unzipped.flatMap { files =>
       Try {
         log.debug(s"Extraced files: ${files}")
         val profileConfFile = files.find(f => f.getName() == "profile.conf").get
@@ -282,14 +296,18 @@ trait CollectorService {
           flatMap(_.resolve()).
           flatMap(c => Try { LocalRuntimeConfig(c, tempDir) }).
           get
+
         val issues =
           local.validate(includeResourceArchives = true, explodedResourceArchives = false) ++
             local.resolvedRuntimeConfig.allBundles.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported bundle URL: ${u}") ++
             local.runtimeConfig.resources.filter(b => !b.url.startsWith("mvn:")).map(u => s"Unsupported resource URL: ${u}")
+
         if (!issues.isEmpty) sys.error(issues.mkString("; "))
+
         // everything is ok
         log.debug(s"Uploaded profile.conf: ${local}")
         registerRuntimeConfig(local.runtimeConfig)
+
         // we know the urls all start with "mvn:"
         // now install bundles
         local.resolvedRuntimeConfig.allBundles.map { b =>

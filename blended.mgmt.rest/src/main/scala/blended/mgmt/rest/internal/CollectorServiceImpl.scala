@@ -24,6 +24,14 @@ class CollectorServiceImpl(
   with PrickleSupport {
 
   private[this] lazy val log = Logger[this.type]
+  log.info(s"This is ${toString()}")
+
+  override def toString(): String = getClass().getSimpleName() +
+    "(updater=" + updater +
+    ",remoteContainerStatePersistor=" + remoteContainerStatePersistor +
+    ",mgr=" + mgr +
+    ",version=" + version +
+    ")"
 
   private[this] var eventStream: Option[EventStream] = None
 

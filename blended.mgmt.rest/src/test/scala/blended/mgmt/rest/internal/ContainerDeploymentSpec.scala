@@ -4,14 +4,15 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
+import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
+import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.TestFile
@@ -20,16 +21,16 @@ import blended.testsupport.TestFile.DeleteWhenNoFailure
 import blended.testsupport.pojosr.BlendedPojoRegistry
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.pojosr.SimplePojosrBlendedContainer
-import blended.util.logging.Logger
-import domino.DominoActivator
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
-import blended.akka.http.HttpContext
+import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.updater.remote.internal.RemoteUpdaterActivator
-import blended.persistence.h2.internal.H2Activator
+import blended.util.logging.Logger
+import com.softwaremill.sttp
+import com.softwaremill.sttp.UriContext
+import domino.DominoActivator
+import org.scalatest.Matchers
 
 class ContainerDeploymentSpec
-  extends FreeSpec
+  extends LoggingFreeSpec
   with Matchers
   with TestFile
   with SimplePojosrBlendedContainer
@@ -66,6 +67,7 @@ class ContainerDeploymentSpec
             whenBundleActive {
               whenServicePresent[WritableArtifactRepo] { repo =>
                 whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
+                  log.info("Test-Server up and running. Starting test case...")
                   f(sr)
                   ok = true
                 }
@@ -83,28 +85,44 @@ class ContainerDeploymentSpec
     Await.result(fut, FiniteDuration(20, TimeUnit.SECONDS))
   }
 
-  "test" in {
-    withServer { sr =>
-      withTestDir() { dir =>
-        log.info("Creating deployment package")
-        writeFile(
-          file = new File(dir, "profile.conf"),
-          content = """name="test.pack.empty"
-                    |version="1.0.0"
-                    |bundle=[]
-                    |features=[]
-                    |startLevel=10
-                    |defaultStartLevel=10
-                    |frameworkProperties={}
-                    |properties={}
-                    |systemProperties={}
-                    |resources=[]
-                    |resolvedFeatures=[]
-                    |""".stripMargin
-        )
+  implicit val sttpBackend = sttp.HttpURLConnectionBackend()
+  val serverUrl = uri"http://localhost:9995/mgmt"
 
-        log.info("Uploading it to server")
-        pending
+  val versionUrl = uri"${serverUrl}/version"
+
+  s"GET ${versionUrl}" in {
+    withServer { sr =>
+      val response = sttp.sttp.get(versionUrl).send()
+      assert(response.body === Right("\"0.0.0\""))
+    }
+  }
+
+  "Upload deployment pack" - {
+
+    val uploadUrl = uri"${serverUrl}/profile/upload/deploymentpack/artifacts"
+
+    s"Multipart POST ${uploadUrl} with empty profile (no bundles) should fail with validation errors" in {
+      withServer { sr =>
+        withTestDir() { dir =>
+          val emptyPackFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.empty-1.0.0.zip")
+          assert(emptyPackFile.exists() === true)
+
+          val response = sttp.sttp.
+            multipartBody(sttp.multipartFile("file", emptyPackFile)).
+            post(uploadUrl).
+            send()
+
+          log.info("body: " + response.body)
+          log.info("headers: " + response.headers)
+          log.info("response: " + response)
+
+          assert(response.code === 422)
+          assert(response.statusText === "Unprocessable Entity")
+          assert(response.body.isLeft)
+          assert(response.body.left.get ===
+            "Could not process the uploaded deployment pack file. Reason: requirement failed: " +
+            "A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0")
+        }
       }
     }
 

@@ -38,7 +38,8 @@ BlendedModel(
     Deps.lambdaTest % "test",
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
-    Blended.persistenceH2 % "test"
+    Blended.persistenceH2 % "test",
+    Deps.sttp % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
