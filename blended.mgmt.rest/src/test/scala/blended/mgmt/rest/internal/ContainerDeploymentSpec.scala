@@ -15,9 +15,6 @@ import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.TestFile
-import blended.testsupport.TestFile.DeletePolicy
-import blended.testsupport.TestFile.DeleteWhenNoFailure
 import blended.testsupport.pojosr.BlendedPojoRegistry
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.pojosr.SimplePojosrBlendedContainer
@@ -32,13 +29,10 @@ import org.scalatest.Matchers
 class ContainerDeploymentSpec
   extends LoggingFreeSpec
   with Matchers
-  with TestFile
   with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
   private[this] val log = Logger[this.type]
-
-  implicit val testFileDeletePolicy: DeletePolicy = DeleteWhenNoFailure
 
   case class Server(serviceRegistry: BlendedPojoRegistry, dir: File)
 
