@@ -1,11 +1,11 @@
 package blended.testsupport
 
-import java.io.PrintStream
-import java.io.FileOutputStream
-import java.io.File
-import java.util.UUID
 import java.io.BufferedOutputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.PrintStream
 import java.io.SyncFailedException
+import java.util.UUID
 
 trait TestFile {
   import TestFile._
@@ -29,7 +29,6 @@ trait TestFile {
     }
   }
 
-  
   def withTestFile[T](content: String, dir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
     val file = File.createTempFile("test", "", dir)
     if (!file.exists()) {
@@ -63,24 +62,35 @@ trait TestFile {
     }
 
     deleteAfter(file) {
-      val fos = new FileOutputStream(file)
-      val os = new PrintStream(new BufferedOutputStream(fos))
-      try {
-        os.print(content)
-      } finally {
-        os.flush()
-        fos.flush()
-        try {
-          fos.getFD().sync()
-        } catch {
-          case e: SyncFailedException => // at least we tried
-        }
-        os.close()
-      }
+      writeFile(file, content)
       f(file)
     }
   }
 
+  def writeFile(file: File, content: String): Unit = writeToFile(file, append = false, content)
+ 
+  def appendFile(file: File, content: String): Unit = writeToFile(file, append = true, content)
+  
+  
+  private[this] def writeToFile(file: File, append: Boolean, content: String): Unit = {
+    Option(file.getParentFile()) foreach { parent =>
+      parent.mkdirs()
+    }
+    val fos = new FileOutputStream(file, append)
+    val os = new PrintStream(new BufferedOutputStream(fos))
+    try {
+      os.print(content)
+    } finally {
+      os.flush()
+      fos.flush()
+      try {
+        fos.getFD().sync()
+      } catch {
+        case e: SyncFailedException => // at least we tried
+      }
+      os.close()
+    }
+  }
 
   def withTestFiles[T](content1: String, content2: String)(f: (File, File) => T)(implicit delete: DeletePolicy): T =
     withTestFile(content1) { file1 =>
@@ -110,9 +120,8 @@ trait TestFile {
       }
     }
 
-
   def withTestDir[T](tmpDir: File)(f: File => T)(implicit delete: DeletePolicy): T = {
-    if(tmpDir != null && !tmpDir.exists()) tmpDir.mkdirs()
+    if (tmpDir != null && !tmpDir.exists()) tmpDir.mkdirs()
     val file = File.createTempFile("test", "", tmpDir)
     file.delete()
     file.mkdir()

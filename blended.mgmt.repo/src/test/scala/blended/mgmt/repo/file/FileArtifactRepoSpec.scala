@@ -1,12 +1,14 @@
 package blended.mgmt.repo.file
 
-import org.scalatest.FreeSpec
-
-import blended.mgmt.repo.ArtifactRepo
-import blended.testsupport.TestFile
-import org.scalatest.Matchers
-import de.tobiasroeser.lambdatest.TempFile
+import java.io.ByteArrayInputStream
 import java.io.File
+
+import scala.util.Success
+
+import blended.testsupport.TestFile
+import de.tobiasroeser.lambdatest.TempFile
+import org.scalatest.FreeSpec
+import org.scalatest.Matchers
 
 class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
 
@@ -54,6 +56,49 @@ class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
         repo.listFiles("").toSet should be(files.toSet)
         repo.listFiles("/").toSet should be(files.toSet)
       }
+    }
+  }
+
+  "A writable artifact repo" - {
+    
+    "should upload a file without checksum" in {
+      withTestDir() { dir =>
+        val path = "p1/p2/f1"
+        val repo = new FileArtifactRepo("test", dir)
+        val baip = new ByteArrayInputStream("content".getBytes())
+        try {
+          repo.uploadFile(path, baip, None)
+        } finally {
+          baip.close()
+        }
+        repo.findFile(path) should be(Some(new File(dir, path)))
+      }
+    }
+    
+    "should fail when uploading a file twice without checksum" in {
+      withTestDir() { dir =>
+        val path = "p1/p2/f1"
+        val repo = new FileArtifactRepo("test", dir)
+        // first upload
+        val baip = new ByteArrayInputStream("test".getBytes())
+        try {
+          repo.uploadFile(path, baip, None) should be(Success[Unit]())
+        } finally {
+          baip.close()
+        }
+        repo.findFile(path) should be(Some(new File(dir, path)))
+        // second upload
+        val baip2 = new ByteArrayInputStream("test".getBytes())
+        try {
+          val fail = repo.uploadFile(path, baip2, None) should be
+        } finally {
+          baip.close()
+        }
+      }
+    }
+    
+    "should accept a second upload of the same file, when the checksum matches" in {
+      pending
     }
   }
 

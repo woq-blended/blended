@@ -7,6 +7,8 @@ import blended.security.BlendedPermissionManager
 import blended.updater.remote.RemoteUpdater
 import blended.util.logging.Logger
 import domino.DominoActivator
+import blended.mgmt.repo.WritableArtifactRepo
+import domino.service_watching.ServiceWatcherEvent
 
 class MgmtRestActivator extends DominoActivator with ActorSystemWatching {
 
@@ -23,13 +25,35 @@ class MgmtRestActivator extends DominoActivator with ActorSystemWatching {
         val collectorService = new CollectorServiceImpl(updater, remoteContainerStatePersistor, mgr, version)
         val route = collectorService.httpRoute
         log.debug("Registering Management REST API route under prefix: mgmt")
-        SimpleHttpContext("mgmt", route).providesService[HttpContext]
+        SimpleHttpContext("mgmt", route).providesService[HttpContext]("prefix" -> "mgmt")
+
+        // dynamically un/register repositories
+        watchServices[WritableArtifactRepo] {
+          case ServiceWatcherEvent.AddingService(service, context) =>
+            val repoId = service.repoId
+            log.debug(s"Adding repo: ${repoId}")
+            collectorService.addArtifactRepo(service)
+          case ServiceWatcherEvent.RemovedService(service, context) =>
+            val repoId = service.repoId
+            log.debug(s"Removing repo: ${repoId}")
+            collectorService.removeArtifactRepo(service)
+          case ServiceWatcherEvent.ModifiedService(service, context) =>
+            val repoId = service.repoId
+            log.debug(s"Modifying repo: ${repoId}")
+            collectorService.removeArtifactRepo(service)
+            collectorService.addArtifactRepo(service)
+        }
+        
+        // initially get all services of this type
+        val repos = services[WritableArtifactRepo]
+        log.debug(s"Initially starting with repos: ${repos}")
+        repos.foreach { s => collectorService.addArtifactRepo(s) }
 
         whenActorSystemAvailable { cfg =>
           log.debug("Setting optional event stream to collector service")
           collectorService.setEventStream(Option(cfg.system.eventStream))
           onStop {
-          log.debug("Unsetting optional event stream to collector service")
+            log.debug("Unsetting optional event stream to collector service")
             collectorService.setEventStream(None)
           }
         }

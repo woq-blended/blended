@@ -4,6 +4,7 @@ import java.io.File
 
 import blended.domino.TypesafeConfigWatching
 import blended.mgmt.repo.ArtifactRepo
+import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.file.FileArtifactRepo
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigException
@@ -31,7 +32,7 @@ class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatchin
         log.info(s"Created service: ${repoService}")
 
         log.debug(s"About to register file based artifact repository to OSGi service registry: ${repoService}")
-        repoService.providesService[ArtifactRepo](
+        repoService.providesService[ArtifactRepo, WritableArtifactRepo](
           "repoId" -> repoId,
           "baseDir" -> baseDir.getAbsolutePath()
         )

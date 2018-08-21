@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 BlendedModel(
   Blended.persistenceH2,
   packaging = "bundle",
-  description = "Implement a persistence backend with OrientDB.",
+  description = "Implement a persistence backend with H2 JDBC database.",
   dependencies = Seq(
     Deps.scalaLib % "provided",
     Blended.persistence,

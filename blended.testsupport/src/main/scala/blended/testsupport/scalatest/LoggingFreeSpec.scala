@@ -1,13 +1,9 @@
-package blended.persistence.jdbc
+package blended.testsupport.scalatest
 
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.FreeSpec
-import org.scalatest.TestData
-import org.scalatest.BeforeAndAfterEachTestData
 import blended.util.logging.Logger
 import org.scalatest.Args
+import org.scalatest.FreeSpec
 import org.scalatest.Status
-import scala.util.control.NonFatal
 
 trait LoggingFreeSpec extends FreeSpec {
 
