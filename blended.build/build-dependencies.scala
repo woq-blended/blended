@@ -196,8 +196,8 @@ object Deps {
   val springJms = spring("jms")
   val springTx = spring("tx")
 
-  val sttp = "com.softwaremill.sttp" %% "core" % "1.2.1"
-  val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.2.1"
+  val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
+  val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
   val shapeless = "com.chuusai" %% "shapeless" % BlendedVersions.shapelessVersion
 
