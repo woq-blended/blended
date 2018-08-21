@@ -146,14 +146,14 @@ class Unzipper {
 
     try {
       val zipIs = new ZipInputStream(inputStream)
-      var zipEntry = zipIs.getNextEntry
+      var zipEntry = zipIs.getNextEntry()
       val finished = partial && fileSelector.isEmpty && filesToExtract.isEmpty
       while (zipEntry != null && !finished) {
         val extractFile: Option[File] = if (partial) {
           if (zipEntry.isDirectory) {
             acceptFile(zipEntry.getName).foreach { dir =>
               log.debug(s"  Creating ${dir.getName()}")
-              dir.mkdirs
+              dir.mkdirs()
             }
             None
           } else {
@@ -162,7 +162,7 @@ class Unzipper {
         } else {
           if (zipEntry.isDirectory) {
             log.debug(s"  Creating ${zipEntry.getName()}")
-            new File(targetDir + "/" + zipEntry.getName).mkdirs
+            new File(targetDir + "/" + zipEntry.getName).mkdirs()
             None
           } else {
             Some(new File(targetDir + "/" + zipEntry.getName))
@@ -197,11 +197,8 @@ class Unzipper {
       }
 
     } catch {
-      //      case e: IOException =>
-      //        throw new RuntimeException("Could not unzip file: " + archive,
-      //          e)
       case NonFatal(e) =>
-        throw new RuntimeException("Could not unzip file: " + archive, e)
+        throw new RuntimeException(s"Could not unzip file: ${archive}", e)
     }
 
     if (!filesToExtract.isEmpty) {
