@@ -2,7 +2,7 @@ package blended.mgmt.rest.internal
 
 import java.io.File
 
-import scala.collection.immutable
+import scala.collection.{ immutable => sci }
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
@@ -14,7 +14,6 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.server.ValidationRejection
 import akka.util.Timeout
 import blended.prickle.akka.http.PrickleSupport
-import blended.security.BlendedPermissionManager
 import blended.security.akka.http.BlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
@@ -25,8 +24,6 @@ import com.typesafe.config.ConfigFactory
 trait CollectorService {
   // dependencies
   deps: BlendedSecurityDirectives with PrickleSupport =>
-
-  val mgr: BlendedPermissionManager
 
   val httpRoute: Route =
     respondWithDefaultHeader(headers.`Access-Control-Allow-Origin`(headers.HttpOriginRange.*)) {
@@ -44,7 +41,7 @@ trait CollectorService {
 
   def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK
 
-  def getCurrentState(): immutable.Seq[RemoteContainerState]
+  def getCurrentState(): sci.Seq[RemoteContainerState]
 
   /** Register a runtime config into the management container. */
   def registerRuntimeConfig(rc: RuntimeConfig): Unit
@@ -53,17 +50,17 @@ trait CollectorService {
   def registerOverlayConfig(oc: OverlayConfig): Unit
 
   /** Get all registered runtime configs of the management container. */
-  def getRuntimeConfigs(): immutable.Seq[RuntimeConfig]
+  def getRuntimeConfigs(): sci.Seq[RuntimeConfig]
 
   /** Get all registered overlay configs of the managament container. */
-  def getOverlayConfigs(): immutable.Seq[OverlayConfig]
+  def getOverlayConfigs(): sci.Seq[OverlayConfig]
 
   /** Promote (stage) an update action to a container. */
   def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit
 
   def version: String
 
-  def findMissingOverlayRef(configs: immutable.Seq[OverlayRef]): Option[OverlayRef] =
+  def findMissingOverlayRef(configs: sci.Seq[OverlayRef]): Option[OverlayRef] =
     if (configs.isEmpty) None
     else {
       val ocs = getOverlayConfigs()
@@ -233,9 +230,8 @@ trait CollectorService {
     path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
       post {
         log.debug(s"upload to repo [${repoId}] requested. Checking permissions...")
-        //        requirePermission(mgr, "profile:update") {
-        //          requirePermission(mgr, s"repository:upload:${repoId}") {
-        //            extractRequest { request =>
+        //        requirePermission("profile:update") {
+        //          requirePermission(s"repository:upload:${repoId}") {
         uploadedFile("file") {
           case (metadata, file) =>
             try {
@@ -257,7 +253,6 @@ trait CollectorService {
               file.delete()
             }
         }
-        //            }
         //          }
         //        }
       }
