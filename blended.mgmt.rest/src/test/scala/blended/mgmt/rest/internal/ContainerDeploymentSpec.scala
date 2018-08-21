@@ -40,11 +40,14 @@ class ContainerDeploymentSpec
 
   implicit val testFileDeletePolicy: DeletePolicy = DeleteWhenNoFailure
 
-  def withServer(f: (BlendedPojoRegistry) => Unit): Unit = {
+  case class Server(serviceRegistry: BlendedPojoRegistry, dir: File)
+
+  def withServer(f: Server => Unit): Unit = {
     import scala.concurrent.ExecutionContext.Implicits.global
     log.info("Starting and waiting...")
     val fut = Future {
-      withSimpleBlendedContainer(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()) { sr =>
+      val serverDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsoluteFile()
+      withSimpleBlendedContainer(serverDir.getPath()) { sr =>
         withStartedBundles(sr)(Seq(
           "blended.akka" -> Some(() => new BlendedAkkaActivator()),
           "blended.akka.http" -> Some(() => new BlendedAkkaHttpActivator()),
@@ -68,7 +71,7 @@ class ContainerDeploymentSpec
               whenServicePresent[WritableArtifactRepo] { repo =>
                 whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
                   log.info("Test-Server up and running. Starting test case...")
-                  f(sr)
+                  f(Server(serviceRegistry = sr, dir = serverDir))
                   ok = true
                 }
               }
@@ -90,7 +93,7 @@ class ContainerDeploymentSpec
 
   val versionUrl = uri"${serverUrl}/version"
 
-  s"GET ${versionUrl}" in {
+  s"GET ${versionUrl} should return the version" in {
     withServer { sr =>
       val response = sttp.sttp.get(versionUrl).send()
       assert(response.body === Right("\"0.0.0\""))
@@ -102,27 +105,52 @@ class ContainerDeploymentSpec
     val uploadUrl = uri"${serverUrl}/profile/upload/deploymentpack/artifacts"
 
     s"Multipart POST ${uploadUrl} with empty profile (no bundles) should fail with validation errors" in {
-      withServer { sr =>
-        withTestDir() { dir =>
-          val emptyPackFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.empty-1.0.0.zip")
-          assert(emptyPackFile.exists() === true)
+      withServer { server =>
+        val emptyPackFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.empty-1.0.0.zip")
+        assert(emptyPackFile.exists() === true)
 
-          val response = sttp.sttp.
-            multipartBody(sttp.multipartFile("file", emptyPackFile)).
-            post(uploadUrl).
-            send()
+        val response = sttp.sttp.
+          multipartBody(sttp.multipartFile("file", emptyPackFile)).
+          post(uploadUrl).
+          send()
 
-          log.info("body: " + response.body)
-          log.info("headers: " + response.headers)
-          log.info("response: " + response)
+        log.info("body: " + response.body)
+        log.info("headers: " + response.headers)
+        log.info("response: " + response)
 
-          assert(response.code === 422)
-          assert(response.statusText === "Unprocessable Entity")
-          assert(response.body.isLeft)
-          assert(response.body.left.get ===
-            "Could not process the uploaded deployment pack file. Reason: requirement failed: " +
-            "A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0")
-        }
+        assert(response.code === 422)
+        assert(response.statusText === "Unprocessable Entity")
+        assert(response.body.isLeft)
+        assert(response.body.left.get ===
+          "Could not process the uploaded deployment pack file. Reason: requirement failed: " +
+          "A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): 0")
+      }
+    }
+
+    s"Multipart POST ${uploadUrl} with minimal profile (one bundles) should succeed" in {
+      withServer { server =>
+        val packFile = new File(BlendedTestSupport.projectTestOutput, "test.pack.minimal-1.0.0.zip")
+        assert(packFile.exists() === true)
+
+        val response = sttp.sttp.
+          multipartBody(sttp.multipartFile("file", packFile)).
+          post(uploadUrl).
+          send()
+
+        log.info("body: " + response.body)
+        log.info("headers: " + response.headers)
+        log.info("response: " + response)
+
+        assert(response.code === 200)
+        assert(response.statusText === "OK")
+        assert(response.body.isRight)
+        assert(response.body.right.get === "\"Uploaded profile test.pack.minimal 1.0.0\"")
+
+        // We expect the bundle file in the local repo
+        assert(new File(server.dir, "repositories/artifacts/org/example/fake/1.0.0/fake-1.0.0.jar").exists())
+        
+        // We expect the profile in the profile repo
+        assert(new File(server.dir, "repositories/rcs/test.pack.minimal-1.0.0.conf").exists())
       }
     }
 
