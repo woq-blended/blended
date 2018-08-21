@@ -2,6 +2,7 @@ package blended.persistence.jdbc
 
 import scala.collection.JavaConverters._
 
+import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import de.tobiasroeser.lambdatest.proxy.TestProxy
 import javax.sql.DataSource

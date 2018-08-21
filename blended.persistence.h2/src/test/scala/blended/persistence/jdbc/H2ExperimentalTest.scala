@@ -3,6 +3,7 @@ package blended.persistence.jdbc
 import scala.collection.JavaConverters._
 
 import blended.testsupport.TestFile
+import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalactic.source.Position.apply
 import org.scalatest.Matchers

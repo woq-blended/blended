@@ -1,11 +1,12 @@
 package blended.persistence.jdbc
 
-import java.io.File
 import java.{ lang => jl, util => ju }
+import java.io.File
 
 import scala.collection.JavaConverters._
 
 import blended.testsupport.TestFile
+import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalactic.source.Position.apply
 import org.scalatest.Matchers
