@@ -3,24 +3,24 @@ package blended.mgmt.ws.internal
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
-import blended.security.login.api.TokenInfo
+import blended.security.login.api.Token
 import blended.updater.config.UpdateContainerInfo
 
 sealed trait DispatcherEvent
 case class NewClient(clientInfo: ClientInfo) extends DispatcherEvent
-case class ClientClosed(info: TokenInfo) extends DispatcherEvent
+case class ClientClosed(info: Token) extends DispatcherEvent
 case class ReceivedMessage(msg: String) extends DispatcherEvent
 case class NewData(data: Any) extends DispatcherEvent
 
 private[ws] case class ClientInfo(
   id : String,
-  token: TokenInfo,
+  token: Token,
   clientActor : ActorRef
 )
 
 trait Dispatcher {
 
-  def newClient(info: TokenInfo) : Flow[String, DispatcherEvent, Any]
+  def newClient(info: Token) : Flow[String, DispatcherEvent, Any]
 }
 
 object Dispatcher {
@@ -28,7 +28,7 @@ object Dispatcher {
     val dispatcherActor = system.actorOf(Props[DispatcherActor])
 
     new Dispatcher {
-      override def newClient(info: TokenInfo): Flow[String, DispatcherEvent, Any] = {
+      override def newClient(info: Token): Flow[String, DispatcherEvent, Any] = {
 
         val in = Flow[String]
           .map(s => ReceivedMessage(s))

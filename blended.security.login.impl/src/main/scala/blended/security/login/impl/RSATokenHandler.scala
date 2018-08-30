@@ -1,18 +1,18 @@
 package blended.security.login.impl
 
 import java.security.{KeyPair, KeyPairGenerator, PublicKey}
-import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.BlendedPermissions
-import blended.security.login.api.TokenHandler
-import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
-import io.jsonwebtoken.impl.DefaultClaims
-import prickle.Pickle
 import blended.security.json.PrickleProtocol._
+import blended.security.login.api.{Token, TokenHandler}
+import io.jsonwebtoken.impl.DefaultClaims
+import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
+import prickle.Pickle
 
 import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
 
 object RSATokenHandler {
 
@@ -29,29 +29,31 @@ object RSATokenHandler {
 
 class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
 
-  val df = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS")
+  override def createToken(id: String, expire : Option[FiniteDuration], permissions: BlendedPermissions): Try[Token] = Try {
 
-  override def createToken(user: String, expire : Option[FiniteDuration], permissions: BlendedPermissions): String = {
-
-    val date = new Date()
-
-    val id = df.format(date) + "-" + RSATokenHandler.counter.incrementAndGet()
+    val date : Date = new Date()
+    val expiresAt : Option[Date] = expire.map{ d => new Date(date.getTime + d.toMillis) }
 
     val claims = new DefaultClaims()
       .setId(id)
-      .setSubject(user)
+      .setSubject(id)
       .setIssuedAt(date)
 
     claims.put("permissions", Pickle.intoString(permissions))
 
-    expire.foreach{exp =>
-      claims.setExpiration(new Date(date.getTime() + exp.toMillis))
-    }
+    expiresAt.foreach { claims.setExpiration }
 
-    Jwts.builder()
+    val token = Jwts.builder()
       .setClaims(claims)
       .signWith(SignatureAlgorithm.RS512, keyPair.getPrivate())
       .compact()
+
+    Token(
+      id,
+      expiresAt.getOrElse(new Date(0)).getTime,
+      permissions,
+      token
+    )
   }
 
   override def publicKey(): PublicKey = keyPair.getPublic()

@@ -5,7 +5,7 @@ import java.io.File
 import blended.akka.internal.BlendedAkkaActivator
 import blended.security.PasswordCallbackHandler
 import blended.security.internal.SecurityActivator
-import blended.security.login.api.TokenStore
+import blended.security.login.api.{Token, TokenStore}
 import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
@@ -13,9 +13,7 @@ import javax.security.auth.Subject
 import javax.security.auth.login.LoginContext
 import org.scalatest.{FreeSpec, Matchers}
 
-import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 import scala.util.Try
 
 class TokenStoreSpec extends FreeSpec
@@ -50,7 +48,7 @@ class TokenStoreSpec extends FreeSpec
     "should start empty" in {
 
       withTokenStore { store =>
-        Await.result(store.listTokens(), 3.seconds) should be(empty)
+        store.listTokens() should be (empty)
       }
     }
 
@@ -58,19 +56,16 @@ class TokenStoreSpec extends FreeSpec
 
       withTokenStore { store =>
         val subj = login("andreas", "mysecret").get
-        val token = Await.result(store.newToken(subj, None), 3.seconds).get
-
+        val token : Token = store.newToken(subj, None).get
 
         token.id should startWith("andreas")
         token.expiresAt should be (0)
 
-        val permissions = store.verifyToken(token.webToken).get
+        token.permissions.granted.size should be (2)
+        token.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        token.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
-        permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
-
-        Await.result(store.listTokens(), 3.seconds).size should be(1)
+        store.listTokens().size should be(1)
       }
     }
 
@@ -78,24 +73,23 @@ class TokenStoreSpec extends FreeSpec
 
       withTokenStore { store =>
         val subj = login("andreas", "mysecret").get
-        val token = Await.result(store.newToken(subj, None), 3.seconds).get
+        val token = store.newToken(subj, None).get
 
-        token.id should be("andreas")
+        token.id should startWith("andreas")
         token.expiresAt should be (0)
 
-        val token2 = Await.result(store.getToken("andreas"), 3.seconds).get
+        val token2 = store.getToken(token.id).get
 
         assert(token === token2)
-        val permissions  = store.verifyToken(token2.webToken).get
 
-        permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+        token2.permissions.granted.size should be (2)
+        token2.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        token2.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
 
-        val token3 = Await.result(store.removeToken("andreas"), 3.seconds).get
+        val token3 = store.removeToken(token.id).get
         assert(token === token3)
 
-        Await.result(store.listTokens(), 3.seconds) should be(empty)
+        store.listTokens() should be(empty)
       }
     }
   }

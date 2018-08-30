@@ -65,13 +65,12 @@ class LoginService(
         complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header:_*))
       } ~
       post {
+        // TODO: Make timeout for token expiry configurable
         authenticated { subj : Subject =>
-          val t : Future[HttpResponse] = tokenstore.newToken(subj, Some(1.minute)).map {
+          complete(tokenstore.newToken(subj, Some(1.minute)) match {
             case Failure(e) => HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
             case Success(t) => HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
-          }
-
-          complete(t)
+          })
         }
       }
     }

@@ -18,6 +18,7 @@ import scala.util.Try
 case class Token(
   id : String,
   expiresAt : Long,
+  permissions: BlendedPermissions,
   webToken : String
 )
 
@@ -28,21 +29,21 @@ trait TokenStore {
     * @param id the identifier to retrieve the token
     * @return the token if it exists or None, wrapped in a Future
    */
-  def getToken(id: String) : Future[Option[Token]]
+  def getToken(id: String) : Option[Token]
 
   /**
     * Remove a token from the store with its identifier.
     * @param id The identifier identifying the token to be removed
     * @return the token that has been removed, if it was present or None, wrapped in a Future
     */
-  def removeToken(id: String) : Future[Option[Token]]
+  def removeToken(id: String) : Option[Token]
 
   /**
     * Store a given token in the store. If the token already exists, an exception is thrown.
     * @param token The token to be stored
     * @return Success(token) if the store was successful, Failure(_) otherwise, wrapped in a Future.
     */
-  def storeToken(token : Token) : Future[Try[Token]]
+  def storeToken(token : Token) : Try[Token]
   /**
     * Create a token with a given user name / password.
     * The implementation will use the standard container LoginContext to perform a login()
@@ -53,12 +54,12 @@ trait TokenStore {
     * @param ttl The validatity for the new token
     * @return Success(token) if the token can be created, Failure(_) otherwise, wrapped in a Future
     */
-  def newToken(subj : Subject, ttl: Option[FiniteDuration])(implicit eCtxt: ExecutionContext) : Future[Try[Token]]
+  def newToken(subj : Subject, ttl: Option[FiniteDuration])(implicit eCtxt: ExecutionContext) : Try[Token]
 
-  def listTokens() : Future[Seq[Token]]
+  def listTokens() : Seq[Token]
 
   def publicKey() : PublicKey
 
-  def verifyToken(token: String) : Try[TokenInfo]
+  def verifyToken(token: String) : Try[Token]
 
 }

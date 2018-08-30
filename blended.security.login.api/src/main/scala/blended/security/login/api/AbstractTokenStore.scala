@@ -9,7 +9,7 @@ import javax.security.auth.Subject
 import javax.security.auth.login.LoginException
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Try}
 
@@ -31,19 +31,15 @@ abstract class AbstractTokenStore(
     * @inheritdoc
     */
   @throws[LoginException]
-  override def newToken(subj: Subject, ttl: Option[FiniteDuration] = None)(implicit eCtxt : ExecutionContext) : Future[Try[Token]] = {
+  override def newToken(subj: Subject, ttl: Option[FiniteDuration] = None)(implicit eCtxt : ExecutionContext) : Try[Token] = {
 
     subj.getPrincipals(classOf[UserPrincipal]).asScala.toSeq match {
-      case Seq() => Future(Failure(new LoginException("Authenticated subject is missing the user principal")))
-      case h +: _ =>
-        val user = h.getName()
-        val token = Token(
-          id = user + "-" + nextId(),
-          expiresAt = if (ttl.isDefined) System.currentTimeMillis() + ttl.map(_.toMillis).getOrElse(0l) else 0l,
-          webToken = tokenHandler.createToken(user, ttl, mgr.permissions(subj))
-        )
+      case Seq() =>
+        Failure(new LoginException("Authenticated subject is missing the user principal"))
 
-        storeToken(token)
+      case h +: _ =>
+        val tokenId = h.getName() + nextId()
+        storeToken(tokenHandler.createToken(tokenId, ttl, mgr.permissions(subj)).get)
     }
   }
 

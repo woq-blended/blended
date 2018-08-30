@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.stream.scaladsl.Flow
-import blended.security.login.api.{TokenInfo, TokenStore}
+import blended.security.login.api.{Token, TokenStore}
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
@@ -23,19 +23,25 @@ class SimpleWebSocketServer(system: ActorSystem, store: TokenStore) {
   def route : Route = routeImpl
 
   private[this] lazy val routeImpl : Route = pathSingleSlash {
-    parameter("token") {token =>
+    parameter("token") { token =>
         store.verifyToken(token) match {
           case Failure(e) =>
             log.error(s"Could not verify token [$token] : [${e.getMessage}]")
             complete(StatusCodes.BadRequest)
-          case Success(info) =>
-            log.info(s"Starting Web Socket message handler ... [${info.id}]")
-            handleWebSocketMessages(dispatcherFlow(info))
+          case Success(token) =>
+            log.info(s"Starting Web Socket message handler ... [${token.id}]")
+
+            store.getToken(token.id) match {
+              case None =>
+                complete(StatusCodes.BadRequest)
+              case Some(info) =>
+                handleWebSocketMessages(dispatcherFlow(info))
+            }
         }
     }
   }
 
-  private[this] def dispatcherFlow(info: TokenInfo) : Flow[Message, Message, Any] = {
+  private[this] def dispatcherFlow(info: Token) : Flow[Message, Message, Any] = {
     Flow[Message]
       .collect {
         case TextMessage.Strict(msg) => msg

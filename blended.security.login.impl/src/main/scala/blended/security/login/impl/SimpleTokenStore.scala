@@ -1,18 +1,18 @@
 package blended.security.login.impl
 
 import akka.actor.{Actor, ActorSystem, Props}
+import akka.pattern.ask
 import akka.util.Timeout
+import blended.security.json.PrickleProtocol._
+import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
 import blended.security.{BlendedPermissionManager, BlendedPermissions}
-import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler, TokenInfo}
+import io.jsonwebtoken.Jwts
+import prickle.Unpickle
 
 import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration._
-import akka.pattern.ask
-import io.jsonwebtoken.Jwts
-import prickle.{Pickle, Unpickle, Unpickler}
-import blended.security.json.PrickleProtocol._
+import scala.concurrent.{Await, ExecutionContext}
+import scala.util.{Failure, Success, Try}
 
 object TokenStoreMessages {
 
@@ -62,34 +62,39 @@ class SimpleTokenStore(
   /**
     * @inheritdoc
     */
-  override def getToken(user: String): Future[Option[Token]] =
-    (storeActor ? GetToken(user)).mapTo[Option[Token]]
+  override def getToken(user: String): Option[Token] = {
+    Await.result((storeActor ? GetToken(user)).mapTo[Option[Token]], 3.seconds)
+  }
 
   /**
     * @inheritdoc
     */
-  override def removeToken(user: String): Future[Option[Token]] =
-    (storeActor ? RemoveToken(user)).mapTo[Option[Token]]
+  override def removeToken(user: String): Option[Token] = {
+    Await.result((storeActor ? RemoveToken(user)).mapTo[Option[Token]], 3.seconds)
+  }
 
   /**
     * @inheritdoc
     */
-  override def storeToken(token: Token): Future[Try[Token]] =
-    (storeActor ? StoreToken(token)).mapTo[Try[Token]]
+  override def storeToken(token: Token): Try[Token] = {
+    Await.result((storeActor ? StoreToken(token)).mapTo[Try[Token]], 3.seconds)
+  }
 
-  override def listTokens(): Future[Seq[Token]] =
-    (storeActor ? ListTokens).mapTo[Seq[Token]]
+  override def listTokens(): Seq[Token] = {
+    Await.result((storeActor ? ListTokens).mapTo[Seq[Token]], 3.seconds)
+  }
 
-  override def verifyToken(token: String): Try[TokenInfo] =  Try {
+  override def verifyToken(token: String): Try[Token] =  Try {
 
     val claims = Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
     val permissionsJson = claims.getBody().get("permissions", classOf[String])
     val permissions = Unpickle[BlendedPermissions].fromString(permissionsJson)
 
-    TokenInfo(
-      id = claims.getBody.getId,
-      expiration = claims.getBody.getExpiration,
-      permissions = permissions.get
+    Token(
+      claims.getBody.getId,
+      Option(claims.getBody.getExpiration).map(_.getTime).getOrElse(0),
+      permissions.get,
+      webToken = token
     )
   }
 }
