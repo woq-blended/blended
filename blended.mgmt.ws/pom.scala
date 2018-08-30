@@ -23,11 +23,12 @@ BlendedModel(
     Blended.updaterConfig,
     Blended.prickle,
     Blended.utilLogging,
+    Blended.securityLoginApi,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
+    Blended.testSupportPojosr % "test",
     Deps.scalaTest % "test",
-    Deps.akkaHttpTestkit % "test",
     Deps.logbackClassic % "test"
   ),
   plugins = Seq(

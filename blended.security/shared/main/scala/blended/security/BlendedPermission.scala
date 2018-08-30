@@ -78,7 +78,7 @@ object BlendedPermissions {
   def fromJson(json: String) : Try[BlendedPermissions] = Unpickle[BlendedPermissions].fromString(json)
 }
 
-case class BlendedPermissions(granted: sci.Seq[BlendedPermission]) {
+case class BlendedPermissions(granted: sci.Seq[BlendedPermission] = sci.Seq.empty[BlendedPermission]) {
 
   /**
     * Merge all permissions in a sequence from left to right

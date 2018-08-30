@@ -59,6 +59,6 @@ trait TokenStore {
 
   def publicKey() : PublicKey
 
-  def verifyToken(token: String) : Try[BlendedPermissions]
+  def verifyToken(token: String) : Try[TokenInfo]
 
 }

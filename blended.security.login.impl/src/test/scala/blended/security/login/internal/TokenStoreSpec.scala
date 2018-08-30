@@ -60,7 +60,8 @@ class TokenStoreSpec extends FreeSpec
         val subj = login("andreas", "mysecret").get
         val token = Await.result(store.newToken(subj, None), 3.seconds).get
 
-        token.id should be("andreas")
+
+        token.id should startWith("andreas")
         token.expiresAt should be (0)
 
         val permissions = store.verifyToken(token.webToken).get

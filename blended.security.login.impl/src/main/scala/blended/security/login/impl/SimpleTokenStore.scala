@@ -3,7 +3,7 @@ package blended.security.login.impl
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.util.Timeout
 import blended.security.{BlendedPermissionManager, BlendedPermissions}
-import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
+import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler, TokenInfo}
 
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
@@ -80,10 +80,16 @@ class SimpleTokenStore(
   override def listTokens(): Future[Seq[Token]] =
     (storeActor ? ListTokens).mapTo[Seq[Token]]
 
-  override def verifyToken(token: String): Try[BlendedPermissions] =  {
-    val claims = Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
-    val permissions = claims.getBody().get("permissions", classOf[String])
+  override def verifyToken(token: String): Try[TokenInfo] =  Try {
 
-    Unpickle[BlendedPermissions].fromString(permissions)
+    val claims = Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
+    val permissionsJson = claims.getBody().get("permissions", classOf[String])
+    val permissions = Unpickle[BlendedPermissions].fromString(permissionsJson)
+
+    TokenInfo(
+      id = claims.getBody.getId,
+      expiration = claims.getBody.getExpiration,
+      permissions = permissions.get
+    )
   }
 }
