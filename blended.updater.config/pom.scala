@@ -22,6 +22,7 @@ BlendedModel(
     Deps.slf4j,
     Blended.utilLogging,
     Deps.prickle,
+    Blended.security,
     Blended.testSupport % "test",
     scalaTest % "test",
     Deps.logbackClassic % "test",

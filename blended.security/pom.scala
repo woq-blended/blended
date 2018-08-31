@@ -11,7 +11,7 @@ val jsArtifact = Blended.security.groupId.get % (Blended.security.artifactId + "
 BlendedModel(
   gav = Blended.security,
   packaging = "bundle",
-  description = "Configuration bundle for the Apache Shiro security framework.",
+  description = "Configuration bundle for the security framework.",
   dependencies = Seq(
     Blended.securityBoot,
     Blended.akka,
@@ -20,11 +20,8 @@ BlendedModel(
     Blended.utilLogging,
     Deps.prickle,
     Blended.testSupport % "test",
-    Blended.testSupportPojosr % "test",
     scalaLib % "provided",
-    scalaTest % "test",
-    logbackCore % "test",
-    logbackClassic % "test"
+    scalaTest % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,

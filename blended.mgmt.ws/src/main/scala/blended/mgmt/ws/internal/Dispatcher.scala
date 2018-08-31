@@ -3,6 +3,7 @@ package blended.mgmt.ws.internal
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Terminated}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Sink, Source}
+import blended.security.GrantableObject
 import blended.security.login.api.Token
 import blended.updater.config.UpdateContainerInfo
 
@@ -45,13 +46,26 @@ object Dispatcher {
 
   class DispatcherActor extends Actor with ActorLogging {
 
+    private[this] var clients: Map[String, ClientInfo] = Map.empty
 
     private[this] def dispatch(e: DispatcherEvent) : Unit = {
-      log.info(s"Dispatching event [$e] to [${clients.size}] clients")
-      clients.values.foreach(_.clientActor ! e)
+
+      // If we have to dispatch some data, we make sure, the client has the permission to see it
+      val filteredClients = clients.values.filter { c =>
+        e match {
+          case NewData(obj) => obj match {
+            case g : GrantableObject => c.token.permissions.allows(g.permission)
+            case _ => true
+          }
+          case ReceivedMessage(msg) => true
+          case _ => false
+        }
+      }
+
+      log.info(s"Dispatching event [$e] to [${filteredClients.size}] clients")
+      filteredClients.foreach(_.clientActor ! e)
     }
 
-    private[this] var clients: Map[String, ClientInfo] = Map.empty
 
     override def preStart(): Unit = {
       context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
@@ -62,9 +76,11 @@ object Dispatcher {
     }
 
     override def receive: Receive = {
-      case m : ReceivedMessage => dispatch(m)
+      case m : ReceivedMessage =>
+        dispatch(m)
 
-      case UpdateContainerInfo(ctInfo) => dispatch(NewData(ctInfo))
+      case UpdateContainerInfo(ctInfo) =>
+        dispatch(NewData(ctInfo))
 
       case NewClient(info) =>
         log.info(s"New client connected [${info.id}]")

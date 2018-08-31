@@ -67,6 +67,7 @@ BlendedModel(
         "blended.prickle",
         "blended.prickle.akka.http",
         "blended.security",
+        "blended.security.test",
         "blended.security.scep",
         "blended.security.scep.standalone",
         "blended.security.ssl",

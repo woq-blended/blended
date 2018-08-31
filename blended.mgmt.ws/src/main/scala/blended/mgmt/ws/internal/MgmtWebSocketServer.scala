@@ -14,9 +14,9 @@ import prickle.Pickle
 
 import scala.util.{Failure, Success}
 
-class SimpleWebSocketServer(system: ActorSystem, store: TokenStore) {
+class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
 
-  private[this] val log = Logger[SimpleWebSocketServer]
+  private[this] val log = Logger[MgmtWebSocketServer]
   private[this] implicit val eCtxt = system.dispatcher
   private[this] val dispatcher = Dispatcher.create(system)
 
@@ -24,20 +24,20 @@ class SimpleWebSocketServer(system: ActorSystem, store: TokenStore) {
 
   private[this] lazy val routeImpl : Route = pathSingleSlash {
     parameter("token") { token =>
-        store.verifyToken(token) match {
-          case Failure(e) =>
-            log.error(s"Could not verify token [$token] : [${e.getMessage}]")
-            complete(StatusCodes.BadRequest)
-          case Success(token) =>
-            log.info(s"Starting Web Socket message handler ... [${token.id}]")
+      store.verifyToken(token) match {
+        case Failure(e) =>
+          log.error(s"Could not verify token [$token] : [${e.getMessage}]")
+          complete(StatusCodes.BadRequest)
+        case Success(token) =>
+          log.info(s"Starting Web Socket message handler ... [${token.id}]")
 
-            store.getToken(token.id) match {
-              case None =>
-                complete(StatusCodes.BadRequest)
-              case Some(info) =>
-                handleWebSocketMessages(dispatcherFlow(info))
-            }
-        }
+          store.getToken(token.id) match {
+            case None =>
+              complete(StatusCodes.BadRequest)
+            case Some(info) =>
+              handleWebSocketMessages(dispatcherFlow(info))
+          }
+      }
     }
   }
 
@@ -56,6 +56,8 @@ class SimpleWebSocketServer(system: ActorSystem, store: TokenStore) {
           case ctInfo : ContainerInfo =>
             val json : String = Pickle.intoString(ctInfo)
             TextMessage.Strict(json)
+
+          case msg : String => TextMessage.Strict(msg)
 
           case _ => TextMessage.Strict("")
         }

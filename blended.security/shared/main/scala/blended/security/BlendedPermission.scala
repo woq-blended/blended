@@ -101,4 +101,6 @@ case class BlendedPermissions(granted: sci.Seq[BlendedPermission] = sci.Seq.empt
     val grouped = granted.groupBy(_.permissionClass)
     BlendedPermissions(grouped.values.map(merge).toList)
   }
+
+  def allows(p : BlendedPermission) : Boolean = granted.exists { g => g.allows(p) }
 }
