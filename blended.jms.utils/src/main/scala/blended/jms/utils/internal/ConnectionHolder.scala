@@ -1,29 +1,38 @@
 package blended.jms.utils.internal
 
-import java.io.{PrintWriter, StringWriter}
+import java.io.{ PrintWriter, StringWriter }
 import java.util
 import java.util.concurrent.atomic.AtomicBoolean
-import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
-import javax.naming.{Context, InitialContext}
 
-import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
-import blended.util.ReflectionHelper
-import org.osgi.framework.BundleContext
-import org.slf4j.LoggerFactory
-
+import scala.util.Try
 import scala.util.control.NonFatal
 
-case class ConnectionHolder(
+import akka.actor.ActorSystem
+import blended.jms.utils.{ BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException }
+import blended.util.ReflectionHelper
+import blended.util.logging.Logger
+import javax.jms.{ Connection, ConnectionFactory, ExceptionListener, JMSException }
+import javax.naming.{ Context, InitialContext }
+
+trait ConnectionHolder {
+  val vendor : String
+  val provider : String
+  def getConnection() : Option[BlendedJMSConnection]
+
+  def connect() : Connection
+
+  def close() : Try[Unit]
+}
+
+case class BlendedConnectionHolder(
   config : BlendedJMSConnectionConfig,
-  system : ActorSystem,
-  bundleContext: Option[BundleContext] = None
-) {
+  system : ActorSystem
+) extends ConnectionHolder {
 
-  lazy val vendor : String = config.vendor
-  lazy val provider : String = config.provider
+  override val vendor : String = config.vendor
+  override val provider : String = config.provider
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ConnectionHolder])
+  private[this] val log = Logger[ConnectionHolder]
   private[this] var conn : Option[BlendedJMSConnection] = None
 
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
@@ -112,6 +121,7 @@ case class ConnectionHolder(
 
   def getConnection() : Option[BlendedJMSConnection] = conn
 
+  @throws[JMSException]
   def connect() : Connection = conn match {
     case Some(c) => c
     case None =>
@@ -132,8 +142,8 @@ case class ConnectionHolder(
 
             c.setExceptionListener(new ExceptionListener {
               override def onException(e: JMSException): Unit = {
-                log.warn(s"Exception encountered in connection for provider [$provider] : ${e.getMessage()}")
-                system.eventStream.publish(ConnectionException(provider, e))
+                log.warn(s"Exception encountered in connection for provider [$vendor:$provider] : ${e.getMessage()}")
+                system.eventStream.publish(ConnectionException(vendor, provider, e))
               }
             })
           } catch {
@@ -163,9 +173,11 @@ case class ConnectionHolder(
       }
   }
 
-  def close() : Unit = {
+  def close() : Try[Unit] = Try {
     log.info(s"Closing underlying connection for provider [$provider]")
-    conn.foreach(_.connection.close())
+    conn.foreach { c =>
+      c.connection.close()
+    }
     conn = None
   }
 }

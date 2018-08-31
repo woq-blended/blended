@@ -22,17 +22,18 @@ BlendedModel(
     Blended.akkaHttp,
     Blended.updaterConfig,
     Blended.prickle,
-    Deps.log4s,
+    Blended.utilLogging,
+    Blended.securityLoginApi,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
+    Blended.testSupportPojosr % "test",
     Deps.scalaTest % "test",
-    Deps.akkaHttpTestkit % "test",
     Deps.logbackClassic % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

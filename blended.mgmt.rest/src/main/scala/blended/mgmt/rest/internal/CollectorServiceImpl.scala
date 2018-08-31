@@ -1,25 +1,47 @@
 package blended.mgmt.rest.internal
 
+import scala.collection.immutable
+
 import akka.event.EventStream
 import blended.prickle.akka.http.PrickleSupport
+import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
-
-import scala.collection.immutable
+import blended.util.logging.Logger
+import java.io.File
+import scala.util.Try
+import blended.mgmt.repo.WritableArtifactRepo
 
 class CollectorServiceImpl(
   updater: RemoteUpdater,
   remoteContainerStatePersistor: RemoteContainerStatePersistor,
+  override val mgr: BlendedPermissionManager,
   override val version: String
 )
   extends CollectorService
   with JAASSecurityDirectives
   with PrickleSupport {
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[this.type]
+  log.info(s"This is ${toString()}")
+
+  override def toString(): String = getClass().getSimpleName() +
+    "(updater=" + updater +
+    ",remoteContainerStatePersistor=" + remoteContainerStatePersistor +
+    ",mgr=" + mgr +
+    ",version=" + version +
+    ")"
 
   private[this] var eventStream: Option[EventStream] = None
+
+  private[this] var artifactRepos: Map[String, WritableArtifactRepo] = Map()
+  def addArtifactRepo(repo: WritableArtifactRepo): Unit = {
+    artifactRepos += repo.repoId -> repo
+  }
+  def removeArtifactRepo(repo: WritableArtifactRepo): Unit = {
+    artifactRepos = artifactRepos.filterKeys(name => name != repo.repoId)
+  }
 
   def setEventStream(eventStream: Option[EventStream]): Unit = this.eventStream = eventStream
 
@@ -54,5 +76,16 @@ class CollectorServiceImpl(
   override def getOverlayConfigs(): immutable.Seq[OverlayConfig] = updater.getOverlayConfigs()
 
   override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = updater.addAction(containerId, updateAction)
+
+  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = Try {
+    log.debug(s"About to install bundle into repoId: ${repoId} at path: ${path}, file: ${file} with checksum: ${sha1Sum}")
+    val repo = artifactRepos.getOrElse(repoId, sys.error(s"No artifact repository with ID ${repoId} registered"))
+    val stream = file.toURI().toURL().openStream()
+    try {
+      repo.uploadFile(path, stream, sha1Sum).get
+    } finally {
+      stream.close()
+    }
+  }
 
 }

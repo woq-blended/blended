@@ -1,28 +1,92 @@
 package blended.security.login.rest.internal
 
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.http.scaladsl.server.Route
+import java.security.spec.X509EncodedKeySpec
+
+import akka.http.scaladsl.model.{HttpHeader, HttpMethods, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import blended.security.BlendedPermissionManager
+import blended.security.akka.http.JAASSecurityDirectives
+import blended.security.login.api.TokenStore
+import javax.security.auth.Subject
+import org.slf4j.LoggerFactory
+import sun.misc.BASE64Encoder
+import akka.http.scaladsl.model.headers._
 
-class LoginService {
+import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
-  def route : Route = httpRoute
+class LoginService(
+  tokenstore: TokenStore,
+  override val mgr : BlendedPermissionManager
+)(implicit eCtxt: ExecutionContext) extends JAASSecurityDirectives {
 
-  private[this] lazy val httpRoute : Route = loginRoute ~ logoutRoute
+  private[this] val log = LoggerFactory.getLogger(classOf[LoginService])
 
-  def loginRoute : Route = {
-    path("login") {
+  private[this] lazy val publicKeyPEM : String = {
+
+    def lines(s : String)(current : List[String] = List.empty) : List[String] = {
+      if (s.length <= 64) {
+        s :: current
+      } else {
+        lines(s.substring(64))( s.substring(0,64) :: current)
+      }
+    }
+
+    val key = tokenstore.publicKey()
+    val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
+
+    val pemLines : List[String] = ("-----BEGIN PUBLIC KEY-----" :: lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))).reverse
+
+    pemLines.mkString("\n")
+  }
+
+  def route = httpRoute
+
+  private[this] lazy val httpRoute = loginRoute ~ logoutRoute ~ publicKeyRoute
+
+  private[this] val loginRoute = {
+
+    val header : Seq[HttpHeader] = Seq(
+      `Access-Control-Allow-Origin`.*,
+      `Access-Control-Allow-Methods`(HttpMethods.GET, HttpMethods.POST, HttpMethods.OPTIONS),
+      `Access-Control-Max-Age`(1000),
+      `Access-Control-Allow-Headers`("origin", "x-csrftoken", "content-type", "accept", "authorization")
+    )
+
+    pathSingleSlash {
+      options {
+        complete(
+          HttpResponse(StatusCodes.OK).withHeaders(header:_*)
+        )
+      } ~
+      get {
+        log.warn("Login must be executed with a HTTP Post")
+        complete(HttpResponse(StatusCodes.Forbidden).withHeaders(header:_*))
+      } ~
       post {
-        entity(as[HttpRequest]) { request =>
-          complete(HttpResponse(StatusCodes.NotImplemented))
+        // TODO: Make timeout for token expiry configurable
+        authenticated { subj : Subject =>
+          complete(tokenstore.newToken(subj, Some(1.minute)) match {
+            case Failure(e) => HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
+            case Success(t) => HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
+          })
         }
       }
     }
   }
 
-  def logoutRoute : Route = {
-    path("/logout") {
+  private[this] val logoutRoute = {
+    path("logout") {
       complete(HttpResponse(StatusCodes.NotImplemented))
+    }
+  }
+
+  private[this] val publicKeyRoute = {
+    path("key") {
+      get {
+        complete(publicKeyPEM)
+      }
     }
   }
 }

@@ -4,10 +4,11 @@ import blended.domino.TypesafeConfigWatching
 import blended.security.ssl.{CertificateProvider, CommonNameProvider}
 import blended.util.config.Implicits._
 import domino.DominoActivator
+import blended.util.logging.Logger
 
 class ScepActivator extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ScepActivator]
 
   whenBundleActive {
     whenTypesafeConfigAvailable{ (cfg, _) =>

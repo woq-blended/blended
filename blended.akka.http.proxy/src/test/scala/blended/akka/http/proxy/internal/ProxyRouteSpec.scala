@@ -1,24 +1,20 @@
 package blended.akka.http.proxy.internal
 
-import org.scalatest.FreeSpec
+import scala.concurrent.duration._
 
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.headers.Location
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.Http
-import scala.concurrent.duration._
-import scala.util.Failure
-import scala.util.Success
-import akka.http.scaladsl.model.StatusCodes
-import scala.concurrent.Await
-import akka.http.scaladsl.model.HttpResponse
-import akka.util.Timeout
 import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import blended.util.logging.Logger
+import org.scalatest.FreeSpec
 
 class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ProxyRouteSpec]
 
   val localPort = 9999
 
@@ -175,7 +171,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           path = "path",
           uri = "http://heise.de",
           timeout = 1,
-          redirectCount = 0
+          redirectCount = 0,
+          redirectHeaderPolicy = RedirectHeaderPolicy.Redirect_Replace
         )
         override val sslContext = None
       }
@@ -202,7 +199,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           path = "path",
           uri = "http://heise.de",
           timeout = 1,
-          redirectCount = 1
+          redirectCount = 1,
+          redirectHeaderPolicy = RedirectHeaderPolicy.Redirect_Replace
         )
         override val sslContext = None
       }

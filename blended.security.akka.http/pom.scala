@@ -14,6 +14,7 @@ BlendedModel(
     Deps.scalaLib,
     Blended.akka,
     Blended.security,
+    Blended.utilLogging,
     Deps.akkaHttp,
     Deps.akkaStream,
     Deps.orgOsgi,
@@ -28,7 +29,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

@@ -103,12 +103,40 @@ val eclipseProfile = Profile(
       Plugin(
         Plugins.trEclipse,
         configuration = Config(
-          alternativeOutput = "target-ide"
+          // alternativeOutput = "target-ide"
+          outputDirectory = "${basedir}/target-ide/classes",
+          testOutputDirectory = "${basedir}/target-ide/test-classes"
         )
       )
     )
   )
 )
+
+/**
+ * Removed duplicate plugins by merging their configurations and executions.
+ */
+def sanitizePlugins(plugins: Seq[Plugin]): Seq[Plugin] = plugins.foldLeft(Seq[Plugin]()) { (l, r) =>
+  l.find(p => p.gav == r.gav) match {
+    case None => l ++ Seq(r)
+    case Some(existing) => l.map { p =>
+      if (p == existing) {
+        Plugin(
+          gav = p.gav,
+          dependencies = p.dependencies ++ r.dependencies,
+          extensions = p.extensions || r.extensions,
+          inherited = p.inherited || r.inherited,
+          executions = p.executions ++ r.executions,
+          configuration = (p.configuration, r.configuration) match {
+            case (None, None) => null
+            case (Some(c), None) => c
+            case (None, Some(c)) => c
+            case (Some(a), Some(b)) => new Config(a.elements ++ b.elements)
+          }
+        )
+      } else p
+    }
+  }
+}
 
 // We define the BlendedModel with some defaults, so that they can be reused
 // throughout the build
@@ -122,7 +150,9 @@ object BlendedModel {
       "bundle.symbolicName" -> "${project.artifactId}",
       "bundle.namespace" -> "${project.artifactId}",
       "java.version" -> BlendedVersions.javaVersion,
-      "scala.version" -> scalaVersion.binaryVersion,
+      "scala.version" -> scalaVersion.version,
+      "scala.binary.version" -> scalaVersion.binaryVersion,
+      "scalaImportVersion" -> "[${scala.binary.version},${scala.binary.version}.50)",
       "blended.version" -> BlendedVersions.blendedVersion
     )
 
@@ -216,7 +246,7 @@ object BlendedModel {
           configuration = Config(
             rules = Config(
               requireMavenVersion = Config(
-                version = "3.0.5"
+                version = "3.3.1"
               )
             )
           )
@@ -238,11 +268,12 @@ object BlendedModel {
       )
     ),
     Plugin(
-      gav = Plugins.scala,
+      gav = Plugins.antrun,
       executions = Seq(
-        scalaExecution_logbackXml
+        antrunExecution_logbackXml
       )
-    )
+    ),
+    reproducibleBuildPlugin
   )
 
   val distMgmt = DistributionManagement(
@@ -273,59 +304,55 @@ object BlendedModel {
     modules: immutable.Seq[String] = Nil,
     packaging: String,
     pluginRepositories: immutable.Seq[Repository] = Nil,
-    pomFile: Option[File] = None,
     prerequisites: Prerequisites = null,
     profiles: immutable.Seq[Profile] = Seq.empty,
     properties: Map[String, String] = Map.empty,
     repositories: immutable.Seq[Repository] = Nil,
-    parent: Parent = null,
     resources: Seq[Resource] = Seq.empty,
     testResources: Seq[Resource] = Seq.empty,
     plugins: Seq[Plugin] = Seq.empty,
     pluginManagement: Seq[Plugin] = null
   ) = {
-    if (parent != null) println(s"Project with parent: ${gav}")
+
     val theBuild = {
-      val usedPlugins = plugins ++ defaultPlugins
-      Option(Build(
+      val usedPlugins = sanitizePlugins(plugins ++ defaultPlugins)
+      Build(
         resources = resources ++ defaultResources,
         testResources = testResources ++ defaultTestResources,
         plugins = usedPlugins,
         pluginManagement = PluginManagement(plugins = Option(pluginManagement).getOrElse(usedPlugins))
-      ))
+      )
     }
 
-    val allDeps = pureDependencies.map(_.pure) ++ dependencies
-    
-    new Model(
+    val allDeps = distinctDependencies(pureDependencies.map(_.intransitive) ++ dependencies)
+
+    Model(
       gav = gav,
       build = theBuild,
-      ciManagement = Option(ciManagement),
+      ciManagement = ciManagement,
       contributors = contributors,
-      dependencyManagement = Option(dependencyManagement).orElse(Option(DependencyManagement(allDeps))),
+      dependencyManagement = Option(dependencyManagement).getOrElse(DependencyManagement(allDeps)),
       dependencies = allDeps,
-      description = Option(description),
+        description = description,
       developers = defaultDevelopers ++ developers,
-      distributionManagement = Option(distMgmt),
-      inceptionYear = Option(inceptionYear),
-      issueManagement = Option(issueManagement),
+      distributionManagement = distMgmt,
+      inceptionYear = inceptionYear,
+      issueManagement = issueManagement,
       licenses = defaultLicenses ++ licenses,
       mailingLists = mailingLists,
       modelEncoding = modelEncoding,
-      modelVersion = Some("4.0.0"),
+      modelVersion = "4.0.0",
       modules = modules,
-      name = Some("${project.artifactId}"),
-      organization = Option(organization),
+      name = "${project.artifactId}",
+      organization = organization,
       packaging = packaging,
-      parent = Option(parent),
       pluginRepositories = pluginRepositories,
-      pomFile = pomFile,
-      prerequisites = Option(prerequisites),
+      prerequisites = prerequisites,
       profiles = defaultProfiles ++ profiles,
       properties = defaultProperties ++ properties,
       repositories = defaultRepositories ++ repositories,
-      scm = Option(scm),
-      url = Some("https://github.com/woq-blended/blended")
+      scm = scm,
+      url = "https://github.com/woq-blended/blended"
     )
   }
 }
@@ -381,18 +408,19 @@ case class FeatureBundle(
 
 // Create the String content of a feature file from a sequence of FeatureBundles
 
-def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] = {
-  features.flatMap(_.bundles.map(_.dependency))
-    .foldLeft(List[Dependency]()) { (ds, n) =>
-      if (ds.exists(d =>
-        d.gav.groupId == n.gav.groupId &&
-          d.gav.artifactId == n.gav.artifactId &&
-          d.gav.version == n.gav.version &&
-          d.classifier == n.classifier &&
-          d.scope == n.scope)) ds
-      else n :: ds
-    }
-}
+def featureDependencies(features: Seq[FeatureDef]): Seq[Dependency] =
+  distinctDependencies(features.flatMap(_.bundles.map(_.dependency)))
+
+def distinctDependencies(deps: Seq[Dependency]): Seq[Dependency] =
+  deps.foldLeft(List[Dependency]()) { (ds, n) =>
+    if (ds.exists(d =>
+      d.gav.groupId == n.gav.groupId &&
+        d.gav.artifactId == n.gav.artifactId &&
+        d.gav.version == n.gav.version &&
+        d.classifier == n.classifier &&
+        d.scope == n.scope)) ds
+    else n :: ds
+  }.reverse
 
 // This is the content of the feature file
 def featureFile(feature: FeatureDef): String = {
@@ -465,6 +493,9 @@ def featuresMavenPlugins(features: Seq[FeatureDef]) = Seq(
   )
 )
 
+/**
+ *  A Blended project containing resources for a Blended Container Profile.
+ */
 object BlendedProfileResourcesContainer {
   def apply(
     gav: Gav,
@@ -519,7 +550,9 @@ object BlendedContainer {
     description: String,
     properties: Map[String, String] = Map.empty,
     features: immutable.Seq[Dependency] = Seq.empty,
-    blendedProfileResouces: Gav = null
+    blendedProfileResouces: Gav = null,
+    overlayDir: String = null,
+    overlays: Seq[String] = Seq.empty
   ) = {
 
     BlendedModel(
@@ -553,7 +586,9 @@ object BlendedContainer {
               configuration = Config(
                 srcProfile = "${project.build.directory}/classes/profile/profile.conf",
                 destDir = "${project.build.directory}/classes/profile",
-                explodeResources = true
+                explodeResources = true,
+                createLaunchConfig = "${project.build.directory}/classes/container/launch.conf",
+                overlays = new Config(overlays.map(o => "overlay" -> Some(Option(overlayDir).getOrElse("") + "/" + o)))
               )
             )
           )
@@ -601,42 +636,6 @@ object BlendedContainer {
           )
         ),
         Plugin(
-          gav = Plugins.scala,
-          executions = Seq(
-            // Generate the following resources
-            // - container/launch.conf
-            // - profile/overlays/base.conf
-            Execution(
-              id = "build-product",
-              phase = "generate-resources",
-              goals = Seq(
-                "script"
-              ),
-              configuration = Config(
-                script = scriptHelper + """
-  import java.io.File
-
-  // make launchfile
-
-  val tarLaunchFile = new File(project.getBasedir(), "target/classes/container/launch.conf")
-
-  val launchConf =
-    "profile.baseDir=${BLENDED_HOME}/profiles\n" +
-    "profile.name=""" + gav.artifactId + """\n" +
-    "profile.version=""" + gav.version.get + """"
-
-  ScriptHelper.writeFile(tarLaunchFile, launchConf)
-
-  // make overlays base.conf
-
-  val baseConfFile = new File(project.getBasedir(), "target/classes/profile/overlays/base.conf")
-  ScriptHelper.writeFile(baseConfFile, "overlays = []")
-  """
-              )
-            )
-          )
-        ),
-        Plugin(
           gav = Plugins.assembly,
           executions = Seq(
             // Build the various assemblies
@@ -675,77 +674,145 @@ object BlendedDockerContainer {
     gav: Gav,
     image: Dependency,
     folder: String,
-    ports: List[Int] = List.empty
-  ) = BlendedModel(
-    gav = gav,
-    packaging = "jar",
-    description = "Packaging the launcher sample container into a docker image.",
-    dependencies = Seq(image),
+    ports: List[Int] = List.empty,
+    overlayDir: String = null,
+    overlays: Seq[String] = Seq.empty
+  ) = {
 
-    properties = Map(
-      "docker.src.type" -> image.`type`,
-      "docker.target" -> folder,
-      "docker.src.version" -> image.gav.version.get,
-      "docker.src.artifactId" -> image.gav.artifactId,
-      "docker.src.classifier" -> image.classifier.get,
-      "docker.src.groupId" -> image.gav.groupId.get
-    ),
+    val containerDir = "${project.build.directory}/docker/${docker.target}/container"
+    val imageDir = image.gav.artifactId + "-" + image.gav.version.get
+    val profileDir = imageDir + "/profiles/" + image.gav.artifactId + "/" + image.gav.version.get
+    val profileConf = profileDir + "/profile.conf"
 
-    plugins = Seq(
-      Plugin(
-        Plugins.dependency,
-        executions = Seq(
-          Execution(
-            id = "extract-blended-container",
-            phase = "process-resources",
-            goals = Seq(
-              "copy-dependencies"
-            ),
-            configuration = Config(
-              includeScope = "provided",
-              outputDirectory = "${project.build.directory}/docker/${docker.target}"
+    val dockerOverlayCmd =
+      if (overlays.isEmpty) "# no extra overlays"
+      else "ADD container/" + imageDir + " /opt/${docker.target}"
+
+    val addPlugins =
+      if (overlays.isEmpty) Seq()
+      else Seq(
+        // unpack
+        Plugin(
+          Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "dependency-unpack-blended-container",
+              phase = "process-resources",
+              goals = Seq(
+                "unpack"
+              ),
+              configuration = Config(
+                artifactItems = Config(
+                  artifactItem = Config(
+                    groupId = image.gav.groupId.get,
+                    artifactId = image.gav.artifactId,
+                    version = image.gav.version.get,
+                    `type` = image.`type`,
+                    classifier = image.classifier.getOrElse(""),
+                    outputDirectory = containerDir,
+                    includes = profileConf
+                  )
+                )
+              )
+            )
+          )
+        ),
+        // materialize overlays config files into profile
+        Plugin(
+          gav = Blended.updaterMavenPlugin,
+          executions = Seq(
+            // Materialize a complete profile based on profile.conf and maven dependencies
+            Execution(
+              id = "updater-add-overlays-to-container",
+              phase = "compile",
+              goals = Seq(
+                "add-overlays"
+              ),
+              configuration = Config(
+                srcProfile = containerDir + "/" + profileConf,
+                destDir = containerDir + "/" + profileDir,
+                createLaunchConfig = containerDir + "/" + imageDir + "/launch.conf",
+                overlaysDir = overlayDir,
+                overlays = new Config(overlays.map(o => "overlay" -> Some(Option(overlayDir).getOrElse("") + "/" + o)))
+              )
             )
           )
         )
+      )
+
+    BlendedModel(
+      gav = gav,
+      packaging = "jar",
+      description = "Packaging the launcher sample container into a docker image.",
+      dependencies = Seq(image),
+
+      properties = Map(
+        "docker.src.type" -> image.`type`,
+        "docker.target" -> folder,
+        "docker.src.version" -> image.gav.version.get,
+        "docker.src.artifactId" -> image.gav.artifactId,
+        "docker.src.classifier" -> image.classifier.get,
+        "docker.src.groupId" -> image.gav.groupId.get
       ),
-      Plugin(
-        gav = Plugins.scala,
-        executions = Seq(
-          Execution(
-            id = "prepare-docker",
-            phase = "generate-resources",
-            goals = Seq(
-              "script"
-            ),
-            configuration = Config(
-              script = scriptHelper + """
-  import java.io.File
 
-  // make Dockerfile
-
-  val dockerfile = new File(project.getBasedir() + "/src/main/docker/""" + folder + """", "Dockerfile")
-
-  val dockerconf =
-    "FROM atooni/blended-base:latest\n" +
-    "MAINTAINER Blended Team version: """ + gav.version.get + """\n" +
-    "ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt\n" +
-    "RUN ln -s /opt/${docker.src.artifactId}-${docker.src.version} /opt/${docker.target}\n" +
-    "RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}\n" +
-    "RUN chown -R blended.blended /opt/${docker.target}\n" +
-    "USER blended\n" +
-    "ENV JAVA_HOME /opt/java\n" +
-    "ENV PATH ${PATH}:${JAVA_HOME}/bin\n" +
-    "ENTRYPOINT [\"/bin/sh\", \"/opt/${docker.target}/bin/blended.sh\"]\n" +
-    """" + ports.map(p => "EXPOSE " + p + "\\n").mkString + """"
-
-  ScriptHelper.writeFile(dockerfile, dockerconf)
-
-  """
+      plugins = sanitizePlugins(addPlugins ++ Seq(
+        Plugin(
+          Plugins.dependency,
+          executions = Seq(
+            Execution(
+              id = "extract-blended-container",
+              phase = "process-resources",
+              goals = Seq(
+                "copy-dependencies"
+              ),
+              configuration = Config(
+                includeScope = "provided",
+                outputDirectory = "${project.build.directory}/docker/${docker.target}",
+                excludeTransitive = "true"
+              )
             )
           )
-        )
-      ),
-      dockerMavenPlugin
+        ),
+        Plugin(
+          gav = Plugins.scala,
+          executions = Seq(
+            Execution(
+              id = "prepare-docker",
+              phase = "generate-resources",
+              goals = Seq(
+                "script"
+              ),
+              configuration = Config(
+                script = scriptHelper + """
+    import java.io.File
+  
+    // make Dockerfile
+  
+    val dockerfile = new File(project.getBasedir() + "/src/main/docker/""" + folder + """", "Dockerfile")
+  
+    val dockerconf =
+      "FROM atooni/blended-base:latest\n" +
+      "MAINTAINER Blended Team version: """ + gav.version.get + """\n" +
+      "ADD ${docker.src.artifactId}-${docker.src.version}-${docker.src.classifier}.${docker.src.type} /opt\n" +
+      "RUN ln -s /opt/${docker.src.artifactId}-${docker.src.version} /opt/${docker.target}\n" +
+      """" + dockerOverlayCmd + """\n" +
+      "RUN chown -R blended.blended /opt/${docker.src.artifactId}-${project.version}\n" +
+      "RUN chown -R blended.blended /opt/${docker.target}\n" +
+      "USER blended\n" +
+      "ENV JAVA_HOME /opt/java\n" +
+      "ENV PATH ${PATH}:${JAVA_HOME}/bin\n" +
+      "ENTRYPOINT [\"/bin/sh\", \"/opt/${docker.target}/bin/blended.sh\"]\n" +
+      """" + ports.map(p => "EXPOSE " + p + "\\n").mkString + """"
+  
+    ScriptHelper.writeFile(dockerfile, dockerconf)
+  
+    """
+              )
+            )
+          )
+        ),
+        dockerMavenPlugin
+      ))
     )
-  )
+  }
 }

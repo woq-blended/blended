@@ -2,15 +2,15 @@ package blended.updater.remote
 
 import java.io.File
 
-import blended.updater.config.{ConfigWriter, OverlayConfig, OverlayConfigCompanion}
-import com.typesafe.config.ConfigFactory
-import org.slf4j.LoggerFactory
-
 import scala.util.Try
+
+import blended.updater.config.{ ConfigWriter, OverlayConfig, OverlayConfigCompanion }
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
 
 class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPersistor {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[FileSystemOverlayConfigPersistor])
+  private[this] val log = Logger[FileSystemOverlayConfigPersistor]
 
   private[this] var overlayConfigs: Map[File, OverlayConfig] = Map()
   private[this] var initalized: Boolean = false
@@ -18,7 +18,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
   def overlayConfigFileName(oc: OverlayConfig): String = s"${oc.name}-${oc.version}.conf"
 
   def initialize(): Unit = {
-    log.debug("About to initialize overlay config persistor for storageDir: {}", storageDir)
+    log.debug(s"About to initialize overlay config persistor for storageDir: ${storageDir}")
     overlayConfigs = if (!storageDir.exists()) {
       Map()
     } else {
@@ -29,7 +29,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
         }.flatMap { rawConfig =>
           OverlayConfigCompanion.read(rawConfig)
         }
-        log.debug("Found file: {} with: {}", Array(file, oc))
+        log.debug(s"Found file: ${file} with: {oc}")
         oc.toOption.map(oc => file -> oc)
       }
       ocs.filter { case (file, oc) => file.getName() == overlayConfigFileName(oc) }.toMap
@@ -47,7 +47,7 @@ class FileSystemOverlayConfigPersistor(storageDir: File) extends OverlayConfigPe
         log.debug("OverlayConfig already persistent")
       } else {
         val msg = "Cannot persist overlay config. Storage location already taken for a different configuration."
-        log.error("{} Found file {} with config: {}", msg, configFile, overlayConfigs.get(configFile))
+        log.error(s"${msg} Found file ${configFile} with config: ${overlayConfigs.get(configFile)}")
         sys.error(msg)
       }
     }

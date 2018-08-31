@@ -1,16 +1,16 @@
 package blended.samples.jms.internal
 
 import java.util.concurrent.atomic.AtomicLong
-import javax.jms.ConnectionFactory
 
 import blended.camel.utils.BlendedCamelContextFactory
 import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
+import blended.util.logging.Logger
 import domino.DominoActivator
+import javax.jms.ConnectionFactory
+import org.apache.camel.{ Exchange, Processor }
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
-import org.apache.camel.{Exchange, Processor}
-import org.slf4j.LoggerFactory
 
 object JmsSampleActivator {
   val msgCounter : AtomicLong = new AtomicLong()
@@ -19,7 +19,7 @@ object JmsSampleActivator {
 class JmsSampleActivator extends DominoActivator with TypesafeConfigWatching {
   import JmsSampleActivator.msgCounter
 
-  private[this] val log = LoggerFactory.getLogger(classOf[JmsSampleActivator])
+  private[this] val log = Logger[JmsSampleActivator]
 
   whenBundleActive {
     whenTypesafeConfigAvailable { (cfg, idSvc) =>

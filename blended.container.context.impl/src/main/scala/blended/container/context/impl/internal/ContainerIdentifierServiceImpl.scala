@@ -3,16 +3,17 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.nio.file.Files
 
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
-import blended.updater.config.RuntimeConfig
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
-
 import scala.collection.JavaConverters._
-import scala.util.{Success, Try}
+import scala.util.{ Success, Try }
+
+import blended.container.context.api.{ ContainerContext, ContainerIdentifierService }
+import blended.updater.config.RuntimeConfig
+import blended.util.logging.Logger
+import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
 
 class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ContainerIdentifierServiceImpl]
 
   override lazy val uuid : String = {
     val idFile = new File(System.getProperty("blended.home") + "/etc", s"blended.container.context.id")

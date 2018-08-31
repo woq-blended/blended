@@ -2,45 +2,44 @@ package blended.mgmt.repo.internal
 
 import java.io.File
 
-import org.slf4j.LoggerFactory
-
-import com.typesafe.config.ConfigException
-
 import blended.domino.TypesafeConfigWatching
-import blended.mgmt.repo.file.FileArtifactRepo
-import domino.DominoActivator
 import blended.mgmt.repo.ArtifactRepo
+import blended.mgmt.repo.WritableArtifactRepo
+import blended.mgmt.repo.file.FileArtifactRepo
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigException
+import domino.DominoActivator
 
 class ArtifactRepoActivator() extends DominoActivator with TypesafeConfigWatching {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ArtifactRepoActivator])
+  private[this] val log = Logger[ArtifactRepoActivator]
 
   whenBundleActive {
-    log.info("About to activate bundle: {}", bundleContext.getBundle().getSymbolicName())
+    log.info(s"About to activate bundle: ${bundleContext.getBundle().getSymbolicName()}")
 
     whenTypesafeConfigAvailable { (config, idService) =>
-      log.debug("Config: {}", config)
+      log.debug(s"Config: ${config}")
 
       try {
         val repoId = config.getString("repoId")
 
         val baseDir = new File(config.getString("baseDir")).getAbsoluteFile()
         if (!baseDir.exists()) {
-          log.warn("baseDir for artifact repository does not exists: {}", baseDir)
+          log.warn(s"baseDir for artifact repository does not exists: ${baseDir}")
         }
 
         val repoService = new FileArtifactRepo(repoId, baseDir)
-        log.info("Created service: {}", repoService)
+        log.info(s"Created service: ${repoService}")
 
-        log.debug("About to register file based artifact repository to OSGi service registry: {}", repoService)
-        repoService.providesService[ArtifactRepo](
+        log.debug(s"About to register file based artifact repository to OSGi service registry: ${repoService}")
+        repoService.providesService[ArtifactRepo, WritableArtifactRepo](
           "repoId" -> repoId,
           "baseDir" -> baseDir.getAbsolutePath()
         )
 
       } catch {
         case e: ConfigException =>
-          log.warn("Missing or invalid configuration. Cannot provide file base artifact repository. See error message for details.", e)
+          log.warn(e)("Missing or invalid configuration. Cannot provide file base artifact repository. See error message for details.")
       }
 
     }

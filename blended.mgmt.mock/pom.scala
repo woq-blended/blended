@@ -13,6 +13,7 @@ BlendedModel(
   dependencies = Seq(
     Blended.mgmtBase,
     Blended.mgmtAgent,
+    Blended.utilLogging,
     scalaLib,
     slf4j,
     slf4jLog4j12,
@@ -26,7 +27,7 @@ BlendedModel(
     "bundle.namespace" -> "${project.artifactId}"
   ),
   plugins = Seq(
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.exec,
       executions = Seq(

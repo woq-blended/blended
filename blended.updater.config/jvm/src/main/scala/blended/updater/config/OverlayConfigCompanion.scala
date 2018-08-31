@@ -1,10 +1,11 @@
 package blended.updater.config
 
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
-import scala.util.{Left, Right, Try}
+import scala.util.{ Left, Right, Try }
+import blended.updater.config.util.ConfigPropertyMapConverter
 
 /**
  * Helper for [[OverlayConfig]] containing common useful operations.
@@ -24,7 +25,7 @@ final object OverlayConfigCompanion {
     }
   }
 
-  def aggregateGeneratedConfigs(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
+  private def aggregateGeneratedConfigs(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Map[String, Object]]] = {
     // seen configurations per target file
     var fileToConfig: Map[String, Map[String, Object]] = Map()
     val issues = generatedConfigs.flatMap { gc =>
@@ -44,17 +45,29 @@ final object OverlayConfigCompanion {
     if (issues.isEmpty) Right(fileToConfig) else Left(issues.toList)
   }
 
+  def aggregateGeneratedConfigs2(generatedConfigs: Iterable[GeneratedConfig]): Either[Seq[String], Map[String, Config]] = {
+    aggregateGeneratedConfigs(generatedConfigs) match {
+      case Left(issues) =>
+        // issue pass through
+        Left(issues)
+      case Right(fileToMap) =>
+        // instead of a Map we aggregate a Config via Config API (to avoid structural changes)
+        Right(
+          generatedConfigs.foldLeft(Map[String, Config]()) { (l, gc) =>
+            val config = GeneratedConfigCompanion.config(gc)
+            l.get(gc.configFile) match {
+              case None =>
+                l ++ Map(gc.configFile -> config)
+              case Some(existingConfig) =>
+                val mergedConfig = config.withFallback(existingConfig)
+                l ++ Map(gc.configFile -> mergedConfig)
+            }
+          }
+        )
+    }
+  }
 
   def read(config: Config): Try[OverlayConfig] = Try {
-
-    def configAsMap(key: String, default: Option[() => Map[String, String]] = None): Map[String, String] =
-      if (default.isDefined && !config.hasPath(key)) {
-        default.get.apply()
-      } else {
-        config.getConfig(key).entrySet().asScala.map {
-          entry => entry.getKey() -> entry.getValue().unwrapped().asInstanceOf[String]
-        }.toMap
-      }
 
     OverlayConfig(
       name = config.getString("name"),
@@ -67,7 +80,7 @@ final object OverlayConfigCompanion {
           GeneratedConfigCompanion.create(fileName, genConfig)
         }.toList
       } else Nil,
-      properties = configAsMap("properties", Some(() => Map()))
+      properties = ConfigPropertyMapConverter.getKeyAsPropertyMap(config, "properties", Some(() => Map()))
     )
   }
 
@@ -81,7 +94,7 @@ final object OverlayConfigCompanion {
           "config" -> GeneratedConfigCompanion.config(genConfig).root().unwrapped()
         ).asJava
       }.asJava,
-      "properties" -> overlayConfig.properties.asJava
+      "properties" -> ConfigPropertyMapConverter.propertyMapToConfigValue(overlayConfig.properties)
     ).asJava
     ConfigFactory.parseMap(config)
   }

@@ -1,13 +1,14 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.ContainerIdentifierService
-import domino.DominoActivator
-
 import scala.util.control.NonFatal
+
+import blended.container.context.api.ContainerIdentifierService
+import blended.util.logging.Logger
+import domino.DominoActivator
 
 class ContainerContextActivator extends DominoActivator {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[ContainerContextActivator]
 
   whenBundleActive {
     try {

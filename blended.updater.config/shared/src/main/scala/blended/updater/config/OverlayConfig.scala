@@ -10,17 +10,23 @@ package blended.updater.config
  * @param generatedConfigs
  *   The config file generators.
  * @param properties
- *   Additional system propetries.
+ *   Additional system properties.
  */
 final case class OverlayConfig(
-    name: String,
-    version: String,
-    generatedConfigs: List[GeneratedConfig] = List.empty,
-    properties: Map[String, String] = Map.empty) extends Ordered[OverlayConfig] {
+  name: String,
+  version: String,
+  generatedConfigs: List[GeneratedConfig] = List.empty,
+  properties: Map[String, String] = Map.empty
+) extends Ordered[OverlayConfig] {
 
   override def compare(other: OverlayConfig): Int = overlayRef.compare(other.overlayRef)
 
   def overlayRef: OverlayRef = OverlayRef(name, version)
 
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},generatedConfigs=${generatedConfigs})"
+  override def toString(): String = getClass().getSimpleName() +
+    "(name=" + name +
+    ",version=" + version +
+    ",generatedConfigs=" + generatedConfigs +
+    ",properties=" + properties +
+    ")"
 }

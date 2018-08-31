@@ -2,14 +2,14 @@ package blended.updater.config
 
 import java.io.File
 
-import com.typesafe.config.{Config, ConfigFactory}
-import org.slf4j.LoggerFactory
-
-import _root_.scala.collection.immutable
 import scala.collection.JavaConverters._
+import scala.collection.immutable
 import scala.collection.immutable.Map
 import scala.util._
 
+import blended.util.logging.Logger
+import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.ConfigValueFactory
 
 /**
  * A materialized set of overlays.
@@ -63,7 +63,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
    */
   def materialize(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -71,8 +71,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
           case (fileName, config) =>
             val file = new File(dir, fileName)
             file.getParentFile().mkdirs()
-            val configFileContent = ConfigFactory.parseMap(config.asJava)
-            ConfigWriter.write(configFileContent, file, None)
+            ConfigWriter.write(config, file, None)
             file
         }.toList
     }
@@ -83,7 +82,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
    */
   def materializedFiles(): Try[immutable.Seq[File]] = Try {
     val dir = materializedDir
-    OverlayConfigCompanion.aggregateGeneratedConfigs(overlays.flatMap(_.generatedConfigs)) match {
+    OverlayConfigCompanion.aggregateGeneratedConfigs2(overlays.flatMap(_.generatedConfigs)) match {
       case Left(issues) =>
         sys.error("Cannot materialize invalid or inconsistent overlays. Issues: " + issues.mkString(";"))
       case Right(configByFile) =>
@@ -115,7 +114,7 @@ final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) 
 
 final object LocalOverlays {
 
-  lazy val log = LoggerFactory.getLogger(classOf[LocalOverlays].getName())
+  private[this] lazy val log = Logger[LocalOverlays.type]
 
   def materializedDir(overlays: Iterable[OverlayRef], profileDir: File): File = {
     if (overlays.isEmpty) {
@@ -144,23 +143,29 @@ final object LocalOverlays {
   }
 
   def toConfig(localOverlays: LocalOverlays): Config = {
-    val config = (Map(
-      "overlays" -> localOverlays.overlays.toList.sorted.map(OverlayConfigCompanion.toConfig).map(_.root().unwrapped()).asJava
-    ).asJava)
-    ConfigFactory.parseMap(config)
+    val configs = localOverlays.overlays.toList.sorted.map { o =>
+      val config = OverlayConfigCompanion.toConfig(o)
+      config.root()
+    }
+    val configs2 = ConfigValueFactory.fromIterable(configs.asJava)
+    ConfigFactory.empty().withValue("overlays", configs2)
   }
 
+  /**
+   * Find all local overlays installed under the given `profileDir`.
+   */
   def findLocalOverlays(profileDir: File): List[LocalOverlays] = {
     val overlaysDir = new File(profileDir, "overlays")
     val candidates = Option(overlaysDir.listFiles()).getOrElse(Array()).filter(f => f.isFile() && f.getName().endsWith(".conf"))
-    log.debug(s"About to find local overlays. Candidates: ${candidates.mkString(", ")}")
+    log.debug(s"About to parse found files and find valid local overlays: ${candidates.mkString(", ")}")
     val localOverlays = candidates.toList.flatMap { file =>
       val overlay = Try(ConfigFactory.parseFile(file)).flatMap(c => LocalOverlays.read(c, profileDir))
       overlay match {
         case Success(localOverlays) =>
+          log.debug("Found local overlays: " + localOverlays)
           List(localOverlays)
         case Failure(e) =>
-          log.error("Could not read overlay config file: {}", Array(file, e))
+          log.error(e)(s"Could not read overlay config file: ${file}")
           List()
       }
     }

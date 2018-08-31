@@ -1,14 +1,15 @@
 package blended.launcher.jvmrunner
 
-import java.io.{File, FileInputStream}
+import java.io.{ File, FileInputStream }
 import java.util.Properties
-
-import blended.launcher.internal.{ARM, Logger}
-import blended.updater.config.OverlayConfigCompanion
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
+
+import blended.launcher.internal.ARM
+import blended.updater.config.OverlayConfigCompanion
+import blended.util.logging.Logger
 
 object JvmLauncher {
 
@@ -115,7 +116,7 @@ class JvmLauncher() {
                     props.load(inStream)
                   }
                 }.recover {
-                  case e: Throwable => log.error("Could not read properties file", e)
+                  case e: Throwable => log.error(e)("Could not read properties file")
                 }
                 sysPropsFile.delete()
                 props.asScala.toList.toMap

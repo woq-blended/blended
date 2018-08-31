@@ -5,7 +5,7 @@ Bundle-SymbolicName: \
   ${bundle.symbolicName}; singleton:=true
 
 Import-Package: \
-  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.*;version="${scalaImportVersion}", \
   org.apache.commons.daemon;resolution:=optional, \
   de.tototec.cmdoption.*;resolution:=optional, \
   *

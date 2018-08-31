@@ -6,17 +6,17 @@ import akka.http.scaladsl.model.ContentTypeRange
 import akka.http.scaladsl.model.MediaTypes
 import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
 import akka.http.scaladsl.unmarshalling.Unmarshaller
+import blended.util.logging.Logger
 import microjson.JsValue
 import prickle.PConfig
 import prickle.Pickle
 import prickle.Pickler
-import prickle.Unpickler
 import prickle.Unpickle
-import akka.http.scaladsl.model.ContentTypes
+import prickle.Unpickler
 
 trait PrickleSupport {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[PrickleSupport]
 
   val prickleMediaType = MediaTypes.`application/json`
 

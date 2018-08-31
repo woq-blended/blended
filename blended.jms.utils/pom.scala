@@ -15,26 +15,29 @@ BlendedModel(
       |to monitor the connection via an active ping.
     """.stripMargin,
   dependencies = Seq(
-    scalaLib % "provided",
+    Deps.scalaLib % "provided",
     Blended.domino,
     Blended.mgmtBase,
     Blended.containerContextApi,
-    camelJms,
+    Blended.updaterConfig,
+    Blended.utilLogging,
+    Deps.camelJms,
     Blended.akka,
-    jms11Spec,
-    log4s,
-    scalaTest % "test",
-    akkaSlf4j % "test",
-    mockitoAll % "test",
-    activeMqBroker % "test",
-    activeMqKahadbStore % "test",
-    akkaTestkit % "test",
+    Deps.jms11Spec,
+    Deps.scalaTest % "test",
+    Deps.akkaSlf4j % "test",
+    Deps.akkaStream % "test",
+    Deps.activeMqBroker % "test",
+    Deps.activeMqKahadbStore % "test",
+    Deps.akkaTestkit % "test",
+    Deps.logbackCore % "test",
+    Deps.logbackClassic % "test",
     Blended.camelUtils % "test",
     Blended.testSupport % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

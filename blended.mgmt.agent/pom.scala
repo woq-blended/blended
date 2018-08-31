@@ -11,18 +11,20 @@ BlendedModel(
   packaging = "bundle",
   description = "Bundle to regularly report monitoring information to a central container hosting the container registry.",
   dependencies = Seq(
-    scalaLib % "provided",
+    Deps.scalaLib % "provided",
     Blended.akka,
     Blended.updaterConfig,
-    Blended.sprayApi,
-    Blended.spray,
-    orgOsgi,
-    akkaOsgi,
-    akkaTestkit % "test",
-    scalaTest % "test"
+    Blended.utilLogging,
+    Deps.orgOsgi,
+    Deps.akkaOsgi,
+    Deps.akkaHttp,
+    Deps.akkaStream,
+    Blended.prickleAkkaHttp,
+    Deps.akkaTestkit % "test",
+    Deps.scalaTest % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin
+    scalaCompilerPlugin
   )
 )

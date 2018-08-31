@@ -1,18 +1,19 @@
 package blended.mgmt.rest.internal
 
-import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.testkit.TestLatch
+import java.io.File
 
-import org.scalatest.{ FreeSpec, Matchers }
-
-import scala.collection.immutable.Seq
+import scala.collection.{ immutable => sci }
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.Try
 
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.testkit.TestLatch
+import blended.prickle.akka.http.PrickleSupport
+import blended.security.akka.http.DummyBlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
-import blended.security.akka.http.DummyBlendedSecurityDirectives
-import blended.prickle.akka.http.PrickleSupport
+import org.scalatest.{ FreeSpec, Matchers }
 
 class CollectorServiceSpec
   extends FreeSpec
@@ -58,7 +59,7 @@ class CollectorServiceSpec
     ContainerRegistryResponseOK(info.containerId)
   }
 
-  override def getCurrentState(): Seq[RemoteContainerState] = {
+  override def getCurrentState(): sci.Seq[RemoteContainerState] = {
     getCurrentStateLatch.countDown()
     List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List()))
   }
@@ -67,11 +68,14 @@ class CollectorServiceSpec
 
   override def registerRuntimeConfig(rc: RuntimeConfig): Unit = ???
 
-  override def getOverlayConfigs(): Seq[OverlayConfig] = ???
+  override def getOverlayConfigs(): sci.Seq[OverlayConfig] = ???
 
-  override def getRuntimeConfigs(): Seq[RuntimeConfig] = ???
+  override def getRuntimeConfigs(): sci.Seq[RuntimeConfig] = ???
 
   override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
 
   override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
+
+  override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
+
 }

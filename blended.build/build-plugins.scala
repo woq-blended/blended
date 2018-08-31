@@ -28,37 +28,44 @@ object ScriptHelper {
 object Plugins {
   val mavenPluginGroup = "org.apache.maven.plugins"
 
+  // official Maven plugins
   val antrun = mavenPluginGroup % "maven-antrun-plugin" % "1.8"
   val assembly = mavenPluginGroup % "maven-assembly-plugin" % "3.1.0"
-  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.0.0"
-  val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.5.1"
-  val dependency = mavenPluginGroup % "maven-dependency-plugin" % "2.10"
+  val clean = mavenPluginGroup % "maven-clean-plugin" % "3.1.0"
+  val compiler = mavenPluginGroup % "maven-compiler-plugin" % "3.7.0"
+  val dependency = mavenPluginGroup % "maven-dependency-plugin" % "3.1.1"
   val deploy = mavenPluginGroup % "maven-deploy-plugin" % "2.8.2"
-  val enforcer = mavenPluginGroup % "maven-enforcer-plugin" % "1.3.1"
+  val enforcer = mavenPluginGroup % "maven-enforcer-plugin" % "1.4.1"
   val gpg = mavenPluginGroup % "maven-gpg-plugin" % "1.6"
   val install = mavenPluginGroup % "maven-install-plugin" % "2.5.2"
-  val jar = mavenPluginGroup % "maven-jar-plugin" % "2.6"
-  val plugin = mavenPluginGroup % "maven-plugin-plugin" % "3.2"
-  val resources = mavenPluginGroup % "maven-resources-plugin" % "3.0.1"
+  val jar = mavenPluginGroup % "maven-jar-plugin" % "3.1.0"
+  val plugin = mavenPluginGroup % "maven-plugin-plugin" % "3.5.2"
+  val resources = mavenPluginGroup % "maven-resources-plugin" % "3.1.0"
+  val site = mavenPluginGroup % "maven-site-plugin" % "3.7.1"
   val source = mavenPluginGroup % "maven-source-plugin" % "3.0.1"
-  val war = mavenPluginGroup % "maven-war-plugin" % "3.0.0"
+  val surefire = mavenPluginGroup % "maven-surefire-plugin" % "2.20.1"
+  val war = mavenPluginGroup % "maven-war-plugin" % "3.2.2"
 
+  // other Plugins
   val buildHelper = "org.codehaus.mojo" % "build-helper-maven-plugin" % "3.0.0"
   val bundle = "org.apache.felix" % "maven-bundle-plugin" % "3.2.0"
-  val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.0.1"
+  val dependencyCheck = "org.owasp" % "dependency-check-maven" % "3.2.1"
   val docker = "com.alexecollins.docker" % "docker-maven-plugin" % "2.11.24"
+  val download = "com.googlecode.maven-download-plugin" % "download-maven-plugin" % "1.3.0"
   val exec = "org.codehaus.mojo" % "exec-maven-plugin" % "1.5.0"
   val jetty = "org.mortbay.jetty" % "jetty-maven-plugin" % "8.1.16.v20140903"
   val lifecycle = "org.eclipse.m2e" % "lifecycle-mapping" % "1.0.0"
   val nexusStaging = "org.sonatype.plugins" % "nexus-staging-maven-plugin" % "1.6.8"
-  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.0"
+  val polyglot = "io.takari.polyglot" % "polyglot-translate-plugin" % "0.3.1"
   val trEclipse = "de.tototec" % "de.tobiasroeser.eclipse-maven-plugin" % "0.1.0"
+  // jars with reproducible checksums
+  val reproducibleBuild = "io.github.zlika" % "reproducible-build-maven-plugin" % "0.6"
   val sbtCompiler = "com.google.code.sbt-compiler-maven-plugin" % "sbt-compiler-maven-plugin" % "1.0.0"
-  val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.2.1"
-  val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "1.0"
+  val scala = "net.alchim31.maven" % "scala-maven-plugin" % "3.3.2"
+  val scalaTest = "org.scalatest" % "scalatest-maven-plugin" % "2.0.0"
   val scoverage = "org.scoverage" % "scoverage-maven-plugin" % "1.3.1-SNAPSHOT"
 
-  val site = mavenPluginGroup % "maven-site-plugin" % "3.3"
+  // reporting
   val projectReports = mavenPluginGroup % "maven-project-info-reports-plugin" % "2.9"
 }
 
@@ -155,6 +162,7 @@ val bundleWarPlugin = Plugin(
 )
 
 val scalaCompilerConfig = Config(
+  scalaVersion = BlendedVersions.scalaVersion,
   fork = "true",
   recompileMode = "incremental",
   useZincServer = "true",
@@ -221,10 +229,6 @@ val scalatestMavenPlugin = Plugin(
 
 val polyglotTranslatePlugin = Plugin(
   gav = Plugins.polyglot,
-  // we need this dependency, because somehow without, a too old version (1.1) is used which lacks required classes
-  dependencies = Seq(
-    "org.codehaus.plexus" % "plexus-utils" % "3.0.24"
-  ),
   executions = Seq(
     Execution(
       id = "pom-scala-to-pom-xml",
@@ -238,10 +242,90 @@ val polyglotTranslatePlugin = Plugin(
   )
 )
 
-/**
-  * Scala execution to generate logback-test.xml on the fly.
-  */
+val scalaExecution_addSource: Execution = Execution(
+  id = "scala-addSource",
+  goals = Seq("add-source"),
+  phase = "initialize",
+  configuration = scalaCompilerConfig
+)
 
+val scalaExecution_compile: Execution = Execution(
+  id = "scala-compile",
+  goals = Seq("compile"),
+  configuration = scalaCompilerConfig
+)
+val scalaExecution_testCompile: Execution = Execution(
+  id = "scala-testCompile",
+  goals = Seq("testCompile"),
+  configuration = scalaCompilerConfig
+)
+
+val scalaMavenPlugin = Plugin(
+  gav = Plugins.scala,
+  executions = Seq(
+    scalaExecution_addSource,
+    scalaExecution_compile,
+    scalaExecution_testCompile
+  ),
+  configuration = scalaCompilerConfig
+)
+
+val scalaCompilerPlugin = if (System.getenv("USE_SBT") == "1") sbtCompilerPlugin else scalaMavenPlugin
+
+def ant_write(file: String, lines: Seq[String]): Seq[(String, Option[Any])] = {
+  var line = 0
+  val tasks = Config(
+    echo = Config(
+      `@file` = file,
+      `@append` = "false",
+      `@message` = ""
+    )
+  ).elements ++
+    lines.map(line =>
+      "echo" -> Some(Config(
+        `@file` = file,
+        `@append` = "true",
+        `@message` = line + "${line.separator}"
+      )))
+  tasks
+}
+
+val antrunExecution_logbackXml: Execution = Execution(
+  id = "antrun-generate-test-logback-config",
+  phase = "generate-test-resources",
+  goals = Seq("run"),
+  configuration = Config(
+    target = new Config(ant_write(
+      "${basedir}/target/test-classes/logback-test.xml",
+      Seq(
+        "<configuration scan=\"true\" scanPeriod=\"30 seconds\">",
+        "",
+        "  <appender name=\"FILE\" class=\"ch.qos.logback.core.FileAppender\">",
+        "    <file>target/test.log</file>",
+        "    <encoder>",
+        "      <pattern>%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%thread] %logger{36} : %msg%n</pattern>",
+        "    </encoder>",
+        "  </appender>",
+        "",
+        "  <appender name=\"ASYNC_FILE\" class=\"ch.qos.logback.classic.AsyncAppender\">",
+        "    <appender-ref ref=\"FILE\" />",
+        "  </appender>",
+        "",
+        "  <logger name=\"blended\" level=\"DEBUG\" />",
+        "",
+        "  <root level=\"DEBUG\">",
+        "    <appender-ref ref=\"FILE\" />",
+        "  </root>",
+        "</configuration>",
+        ""
+      )
+    ))
+  )
+)
+
+/**
+ * Scala execution to generate logback-test.xml on the fly.
+ */
 val scalaExecution_logbackXml: Execution = Execution(
   id = "generateLogbackConfig",
   phase = "generate-test-resources",
@@ -376,5 +460,14 @@ val dockerMavenPlugin = Plugin(
     cleanContainerOnly = true,
     removeIntermediateImages = true,
     cache = true
+  )
+)
+
+def reproducibleBuildPlugin = Plugin(
+  Plugins.reproducibleBuild,
+  executions = Seq(
+    Execution(
+      goals = Seq("strip-jar")
+    )
   )
 )

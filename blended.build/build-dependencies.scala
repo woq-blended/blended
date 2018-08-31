@@ -12,28 +12,6 @@ implicit class ScalaJsGroupId(groupId: String) {
   }
 }
 
-/** Helper class, to improve writing dependency experience. */
-implicit class RichDependency(d: Dependency) {
-  def copy(
-    gav: Gav = d.gav,
-    `type`: String = d.`type`,
-    classifier: Option[String] = d.classifier,
-    scope: Option[String] = d.scope,
-    systemPath: Option[String] = d.systemPath,
-    exclusions: scala.collection.immutable.Seq[GroupArtifactId] = d.exclusions,
-    optional: Boolean = d.optional
-  ): Dependency =
-    new Dependency(gav, `type`, classifier, scope, systemPath, exclusions, optional)
-
-  def %(scope: String): Dependency = d.copy(scope = Option(scope).filter(!_.trim().isEmpty()))
-
-  def classifier(classifier: String): Dependency = copy(classifier = Option(classifier))
-
-  def pure: Dependency = copy(exclusions = Seq("*" % "*"))
-
-  def exclude(ga: GroupArtifactId): Dependency = copy(exclusions = d.exclusions ++ Seq(ga))
-}
-
 // Dependencies
 object Deps {
   val activationApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.activation-api-1.1" % "2.2.0"
@@ -85,12 +63,14 @@ object Deps {
   val commonsDiscovery = "org.apache.commons" % "com.springsource.org.apache.commons.discovery" % "0.4.0"
   val commonsExec = "org.apache.commons" % "commons-exec" % "1.3"
   val commonsHttpclient = "org.apache.commons" % "com.springsource.org.apache.commons.httpclient" % "3.1.0"
-  val commonsIo = "org.apache.commons" % "com.springsource.org.apache.commons.io" % "1.4.0"
-  val commonsLang = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsIo = "commons-io" % "commons-io" % "2.6"
+  val commonsLang3 = "org.apache.commons" % "commons-lang3" % "3.7"
+  val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
+  val commonsLang = commonsLang3
   val commonsNet = "commons-net" % "commons-net" % "3.3"
   val commonsPool = "commons-pool" % "commons-pool" % "1.6"
 
-  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
+  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
@@ -119,6 +99,8 @@ object Deps {
   val geronimoServlet25Spec = "org.apache.geronimo.specs" % "geronimo-servlet_2.5_spec" % "1.2"
   val geronimoServlet30Spec = "org.apache.geronimo.specs" % "geronimo-servlet_3.0_spec" % "1.0"
 
+  val h2 = "com.h2database" % "h2" % "1.4.197"
+  val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
   val hawtioWeb = Dependency(gav = "io.hawt" % "hawtio-web" % "1.5.8", `type` = "war")
 
   val javaxEl = "javax.el" % "javax.el-api" % "3.0.1-b04"
@@ -151,7 +133,7 @@ object Deps {
 
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
-  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.5.4"
+  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
   val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % BlendedVersions.jolokiaVersion
   val jolokiaJvmAgent = Dependency(
     jolokiaJvm,
@@ -160,19 +142,19 @@ object Deps {
   val juliOverSlf4j = "com.github.akiraly.reusable-poms" % "tomcat-juli-over-slf4j" % "4"
   val junit = "junit" % "junit" % "4.11"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
+  val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.1"
 
-  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.2.4"
+  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
+  val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
-  val log4s = "org.log4s" %% "log4s" % "1.6.1"
 
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
   val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
 
   val ops4jBaseLang = "org.ops4j.base" % "ops4j-base-lang" % "1.4.0"
 
-  val orientDbCore = "com.orientechnologies" % "orientdb-core" % "2.2.7"
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
   val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
@@ -189,8 +171,6 @@ object Deps {
   val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
-  val scep = "com.google.code.jscep" % "jscep" % "2.5.0"
-
   val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
   val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
   val servicemixJaxbRuntime = "org.jvnet.jaxb2_commons" % "jaxb2-basics-runtime" % "0.6.4"
@@ -201,17 +181,9 @@ object Deps {
   val slf4jJul = "org.slf4j" % "jul-to-slf4j" % BlendedVersions.slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % BlendedVersions.slf4jVersion
 
-  private def spray(n: String) = "io.spray" %% s"spray-${n}" % BlendedVersions.sprayVersion
-  val sprayClient = spray("client")
-  val sprayCaching = spray("caching")
-  val sprayHttp = spray("http")
-  val sprayHttpx = spray("httpx")
-  val sprayIo = spray("io")
-  val sprayJson = spray("json")
-  val sprayRouting = spray("routing")
-  val sprayServlet = spray("servlet")
-  val sprayTestkit = spray("testkit")
-  val sprayUtil = spray("util")
+  val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
+  
+  val sprayJson = "io.spray" %% s"spray-json" % BlendedVersions.sprayVersion
 
   private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % BlendedVersions.springVersion
   val springBeans = spring("beans")
@@ -220,8 +192,12 @@ object Deps {
   val springContextSupport = spring("context-support")
   val springExpression = spring("expression")
   val springCore = spring("core")
+  val springJdbc = spring("jdbc")
   val springJms = spring("jms")
   val springTx = spring("tx")
+
+  val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
+  val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
   val shapeless = "com.chuusai" %% "shapeless" % BlendedVersions.shapelessVersion
 
@@ -253,7 +229,9 @@ object Blended {
   val akka = blended("blended.akka")
   val akkaHttp = blended("blended.akka.http")
   val akkaHttpApi = blended("blended.akka.http.api")
+  val akkaHttpJmsQueue = blended("blended.akka.http.jmsqueue")
   val akkaHttpProxy = blended("blended.akka.http.proxy")
+  val akkaHttpRestJms = blended("blended.akka.http.restjms")
   val akkaHttpSampleHelloworld = blended("blended.akka.http.sample.helloworld")
   val camelUtils = blended("blended.camel.utils")
   val containerContextApi = blended("blended.container.context.api")
@@ -282,32 +260,30 @@ object Blended {
   val launcher = blended("blended.launcher")
   val launcherFeatures = blended("blended.launcher.features")
   val mgmtAgent = blended("blended.mgmt.agent")
-  val mgmtApp = blended("blended.mgmt.app")
   val mgmtBase = blended("blended.mgmt.base")
   val mgmtRepo = blended("blended.mgmt.repo")
   val mgmtRepoRest = blended("blended.mgmt.repo.rest")
   val mgmtMock = blended("blended.mgmt.mock")
   val mgmtRest = blended("blended.mgmt.rest")
   val mgmtServiceJmx = blended("blended.mgmt.service.jmx")
-  val mgmtUi = blended("blended.mgmt.ui")
   val mgmtWs = blended("blended.mgmt.ws")
   val persistence = blended("blended.persistence")
-  val persistenceOrient = blended("blended.persistence.orient")
+  val persistenceH2 = blended("blended.persistence.h2")
   val prickle = blended("blended.prickle")
   val prickleAkkaHttp = blended("blended.prickle.akka.http")
   val samplesReactor = blended("blended.samples.reactor")
   val samplesCamel = blended("blended.samples.camel")
   val samplesJms = blended("blended.samples.jms")
-  val samplesSprayHelloworld = blended("blended.samples.spray.helloworld")
   val security = blended("blended.security")
+  val securityTest = blended("blended.security.test")
   val securityAkkaHttp = blended("blended.security.akka.http")
   val securityBoot = blended("blended.security.boot")
   val securityScep = blended("blended.security.scep")
+  val securityScepStandalone = blended("blended.security.scep.standalone")
   val securitySsl = blended("blended.security.ssl")
-  val securityLogin = blended("blended.security.login")
+  val securityLoginApi = blended("blended.security.login.api")
+  val securityLoginImpl = blended("blended.security.login.impl")
   val securityLoginRest = blended("blended.security.login.rest")
-  val spray = blended("blended.spray")
-  val sprayApi = blended("blended.spray.api")
   val sslContext = blended("blended.sslcontext")
   val testSupport = blended("blended.testsupport")
   val testSupportPojosr = blended("blended.testsupport.pojosr")
@@ -317,5 +293,6 @@ object Blended {
   val updaterRemote = blended("blended.updater.remote")
   val updaterTools = blended("blended.updater.tools")
   val util = blended("blended.util")
+  val utilLogging = blended("blended.util.logging")
 }
 

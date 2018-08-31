@@ -1,9 +1,0 @@
-dn: uid=${USER},ou=users,o=${DOMAIN_NAME}
-objectClass: top
-objectClass: person
-objectClass: organizationalPerson
-objectClass: inetOrgPerson
-uid: ${USER}
-cn: ${USER_CN}
-sn: ${USER_SN}
-userPassword:: ${USER_PWD}

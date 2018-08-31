@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import blended.container.context.api.ContainerIdentifierService
 import org.apache.camel.CamelContext
-import org.apache.camel.impl.DefaultCamelContext
+import org.apache.camel.impl.{DefaultCamelContext, SimpleRegistry}
 
 object BlendedCamelContextFactory {
 
@@ -33,7 +33,7 @@ class BlendedCamelContextFactory { this: CamelContextPropertyProvider =>
     withJmx: Boolean
   ) : CamelContext = {
 
-    val result = new DefaultCamelContext()
+    val result = new DefaultCamelContext(new SimpleRegistry())
     result.setName(name)
 
     val agent = result.getManagementStrategy().getManagementAgent()

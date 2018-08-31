@@ -20,13 +20,13 @@ BlendedModel(
     Blended.akkaHttp,
     Deps.akkaHttp,
     Blended.util,
-    Deps.log4s,
+    Blended.utilLogging,
     sprayJson,
     scalaTest % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

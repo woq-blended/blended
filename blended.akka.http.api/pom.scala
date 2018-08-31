@@ -11,10 +11,10 @@ BlendedModel(
   packaging = "bundle",
   description = "Package the complete Spray API into a bundle.",
   dependencies = Seq(
-    scalaLib % "provided",
-    akkaHttp,
-    akkaHttpCore,
-    akkaParsing
+    Deps.scalaLib % "provided",
+    Deps.akkaHttp,
+    Deps.akkaHttpCore,
+    Deps.akkaParsing
   ),
   plugins = Seq(
     Plugin(
@@ -22,14 +22,12 @@ BlendedModel(
       extensions = true,
       inherited = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option("*;scope=compile"),
-          "_exportcontents" -> Option(
-            "akka.http.*;version="+ BlendedVersions.akkaHttpVersion + ";-split-package:=merge-first,"
-          ),
-          "Embed-Transitive" -> Option("true")
-        ))
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = "*;scope=compile",
+          _exportcontents = "akka.http.*;version=" + BlendedVersions.akkaHttpVersion + ";-split-package:=merge-first,",
+          `Embed-Transitive` = "true"
+        )
       )
     )
   )

@@ -8,11 +8,11 @@ import domino.capsule.CapsuleContext
 import org.osgi.framework.BundleContext
 import akka.actor.ActorSystem
 import domino.capsule.Capsule
-import org.slf4j.LoggerFactory
+import blended.util.logging.Logger
 
 trait ActorSystemWatching extends DominoImplicits {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[ActorSystemWatching])
+  private[this] val log = Logger[ActorSystemWatching]
 
   /** Dependency */
   protected def capsuleContext: CapsuleContext
@@ -29,7 +29,7 @@ trait ActorSystemWatching extends DominoImplicits {
 
   def setupBundleActor(system: ActorSystem, props: Props): ActorRef = {
     val actorName = bundleContext.getBundle().getSymbolicName()
-    log.debug("About to create bundle actor for bundle: {}", actorName)
+    log.debug(s"About to create bundle actor for bundle: ${actorName}")
     val actorRef = system.actorOf(props, actorName)
     system.eventStream.publish(BundleActorStarted(actorName))
 
@@ -37,7 +37,7 @@ trait ActorSystemWatching extends DominoImplicits {
       override def start() {
       }
       override def stop() {
-        log.debug("About to stop bundle actor for bundle: {}", actorName)
+        log.debug(s"About to stop bundle actor for bundle: ${actorName}")
         system.stop(actorRef)
       }
     })

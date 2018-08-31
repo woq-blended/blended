@@ -4,19 +4,13 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
+Bundle-Activator:\
+  ${bundle.symbolicName}.internal.RestLoginActivator
+
 Bundle-Classpath: WEB-INF/classes,.
 
 Import-Package: \
-  spray.routing,\
-  spray.routing.directives,\
-  spray.servlet,\
-  shapeless,\
   *
 
 Private-Package: \
   ${bundle.namespace}.internal
-
-Webapp-Context: login
-Web-ContextPath: login
-
-

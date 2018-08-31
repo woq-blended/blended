@@ -2,14 +2,27 @@ package blended.updater.config
 
 import java.io.File
 
-import blended.testsupport.TestFile
-import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
-import com.typesafe.config.ConfigFactory
-import org.scalatest.{FreeSpec, Matchers}
-
 import scala.collection.JavaConverters._
+import scala.util.Success
+
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.{ DeletePolicy, DeleteWhenNoFailure }
+import blended.updater.config.util.ConfigPropertyMapConverter
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
+import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.Args
+import org.scalatest.Status
 
 class OverlaysTest extends FreeSpec with Matchers with TestFile {
+
+  private[this] val log = Logger[OverlaysTest]
+
+  override def runTest(testName: String, args: Args): Status = {
+    log.info("START runTest " + testName)
+    try super.runTest(testName, args)
+    finally log.info("FINISHED runTest " + testName)
+  }
 
   implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
 
@@ -31,7 +44,8 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           |      file2key: value
           |    }
           |  }
-          |]""".stripMargin) { file =>
+          |]""".stripMargin
+      ) { file =>
           val config = ConfigFactory.parseFile(file).resolve()
           val read = OverlayConfigCompanion.read(config)
           read.isSuccess shouldEqual true
@@ -63,7 +77,8 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
             "etc/file2",
             ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
           )
-        ))
+        )
+      )
       val read = OverlayConfigCompanion.read(OverlayConfigCompanion.toConfig(c))
       read.isSuccess shouldEqual true
       read.get.name shouldEqual "overlay"
@@ -217,6 +232,50 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       withTestDir() { dir =>
         val overlays = LocalOverlays(List(o1, o2), dir)
         overlays.materialize().isFailure shouldBe true
+      }
+    }
+
+    "preserves property-key formatting in merged generated content" in {
+      val config1 = ConfigFactory.parseString("props {\n\"a.b.c\"=val1\n}")
+      val o1 = OverlayConfig(
+        name = "o1", version = "1",
+        generatedConfigs = List(
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
+        )
+      )
+      log.info("overlay config 1: " + o1)
+
+      //       FIXME: also enable this
+      //      val config2 = ConfigFactory.parseString("props {\n\"a.b.d\"=val2\n}")
+      val config2 = ConfigFactory.parseString("props2 {\n\"a.b.d\"=val2\n}")
+      val o2 = OverlayConfig(
+        name = "o2", version = "1",
+        generatedConfigs = List(
+          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+        )
+      )
+      log.info("overlay config 2: " + o2)
+
+      withTestDir() { dir =>
+        val overlays = LocalOverlays(List(o1, o2), dir)
+        val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
+        val expectedConfigFile = new File(expectedEtcDir, "application_overlay.conf")
+        assert(overlays.materialize().map(_.toSet) === Success(Set(expectedConfigFile)))
+        //        overlays.materialize().isSuccess shouldBe true
+        //        overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
+        //        expectedEtcDir.listFiles() shouldBe Array(expectedConfigFile)
+
+        val expectedConfig = ConfigFactory.parseFile(expectedConfigFile)
+
+        log.info("expectedConfig: " + expectedConfig)
+
+        val props = ConfigPropertyMapConverter.getKeyAsPropertyMap(expectedConfig, "props", None)
+        assert(props("a.b.c") === "val1")
+        val props2 = ConfigPropertyMapConverter.getKeyAsPropertyMap(expectedConfig, "props2", None)
+        assert(props2("a.b.d") === "val2")
+
+        //        .getString("key1") shouldBe "val1"
+        //        ConfigFactory.parseFile(expectedConfigFile).getString("key2") shouldBe "val2"
       }
     }
 

@@ -1,23 +1,11 @@
 package blended.mgmt.agent.internal
 
-import akka.actor.{ Cancellable, Props }
-import akka.event.LoggingReceive
-import akka.pattern.pipe
-import blended.akka.{ OSGIActor, OSGIActorConfig }
-import blended.spray.SprayPrickleSupport
-import blended.updater.config.{ ContainerInfo, ContainerRegistryResponseOK, ServiceInfo }
-import com.typesafe.config.Config
-import org.slf4j.LoggerFactory
-import spray.client.pipelining._
-import spray.http.HttpRequest
-
-import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{ Failure, Try }
-import blended.updater.config.json.PrickleProtocol._
-import blended.updater.config.Profile
-import blended.updater.config.ProfileInfo
+
+import akka.actor.Props
+import blended.akka.{ OSGIActor, OSGIActorConfig }
+import blended.updater.config.ContainerInfo
+import blended.util.logging.Logger
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -42,14 +30,14 @@ class OsgiMgmtReporter(cfg: OSGIActorConfig) extends OSGIActor(cfg) with MgmtRep
 
   import MgmtReporter._
 
-  private[this] val log = LoggerFactory.getLogger(classOf[MgmtReporter])
+  private[this] val log = Logger[OsgiMgmtReporter]
 
   val config: Try[MgmtReporterConfig] = MgmtReporterConfig.fromConfig(cfg.config) match {
     case f @ Failure(e) =>
-      log.warn("Incomplete management reporter config. Disabled connection to management server.", e)
+      log.warn(e)("Incomplete management reporter config. Disabled connection to management server.")
       f
     case x =>
-      log.info("Management reporter config: {}", x)
+      log.info(s"Management reporter config: ${x}")
       x
   }
 

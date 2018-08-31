@@ -1,16 +1,16 @@
 package blended.akka.internal
 
+import scala.util.control.NonFatal
+
 import akka.actor.ActorSystem
 import akka.event.LogSource
 import akka.osgi.ActorSystemActivator
-import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
+import blended.container.context.api.{ ContainerContext, ContainerIdentifierService }
+import blended.util.logging.Logger
 import com.typesafe.config.Config
 import domino.DominoActivator
 import domino.capsule.Capsule
 import org.osgi.framework.BundleContext
-import org.slf4j.LoggerFactory
-
-import scala.util.control.NonFatal
 
 object BlendedAkkaActivator {
   implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
@@ -21,7 +21,7 @@ object BlendedAkkaActivator {
 
 class BlendedAkkaActivator extends DominoActivator {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[BlendedAkkaActivator])
+  private[this] val log = Logger[BlendedAkkaActivator]
 
   private class AkkaCapsule(bundleContext: BundleContext, containerContext: ContainerContext)
       extends ActorSystemActivator with Capsule {

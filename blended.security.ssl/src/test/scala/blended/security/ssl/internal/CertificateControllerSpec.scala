@@ -2,9 +2,10 @@ package blended.security.ssl.internal
 
 import org.scalatest.FreeSpec
 
+// TODO FIXME: Review and re-enable this test
 class CertificateControllerSpec extends FreeSpec {
 
-//  private[this] val log = org.log4s.getLogger
+//  private[this] val log = Logger[CertificateControllerSpec]
 //  private[this] val subject = "CN=test, O=blended, C=Germany"
 //  private[this] val validDays: Int = 10
 //

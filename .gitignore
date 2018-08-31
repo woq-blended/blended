@@ -28,8 +28,10 @@ blended.sslcontext/notes.txt
 .mvn/maven.settings
 .mvn/maven.config
 .polyglot.pom.scala
+.mvn.polyglot/
 pom.xml
 target/
+.bloop/
 
 # Eclipse settings and caches
 .project

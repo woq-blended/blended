@@ -3,6 +3,7 @@ package blended.security.boot
 import java.security.Principal
 
 class GroupPrincipal(group: String) extends Principal {
+
   override def getName(): String = group
 
   override def hashCode(): Int = group.hashCode()

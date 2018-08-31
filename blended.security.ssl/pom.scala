@@ -16,9 +16,9 @@ BlendedModel(
     Deps.bouncyCastleBcprov % "provided",
     Deps.bouncyCastlePkix,
     Blended.domino,
-    Dependency(Deps.domino).pure,
+    Dependency(Deps.domino).intransitive,
     Blended.mgmtBase,
-    Deps.log4s,
+    Blended.utilLogging,
     logbackCore % "test",
     logbackClassic % "test",
     scalaTest % "test",
@@ -31,13 +31,13 @@ BlendedModel(
       extensions = true,
       inherited = true,
       configuration = Config(
-        instructions = new Config(Seq(
-          "_include" -> Option("osgi.bnd"),
-          "Embed-Dependency" -> Option(s"*;artifactId=${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}")
-        ))
+        instructions = Config(
+          _include = "osgi.bnd",
+          `Embed-Dependency` = s"*;artifactId=${bouncyCastleBcprov.artifactId},${bouncyCastlePkix.artifactId}"
+        )
       )
     ),
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

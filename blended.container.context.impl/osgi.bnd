@@ -7,7 +7,7 @@ Bundle-SymbolicName:\
 Bundle-Activator: ${bundle.namespace}.internal.ContainerContextActivator
 
 Import-Package: \
-  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.*;version="${scalaImportVersion}", \
   blended.launcher.runtime;resolution:=optional, \
   *
 

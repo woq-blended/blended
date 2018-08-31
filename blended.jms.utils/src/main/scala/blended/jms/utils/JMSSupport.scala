@@ -1,14 +1,13 @@
 package blended.jms.utils
 
-import javax.jms._
-
-import org.slf4j.LoggerFactory
-
 import scala.util.control.NonFatal
+
+import blended.util.logging.Logger
+import javax.jms._
 
 trait JMSSupport {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[JMSSupport])
+  private[this] val log = Logger[JMSSupport]
 
   val TOPICTAG = "topic:"
   val QUEUETAG = "queue:"
@@ -23,7 +22,7 @@ trait JMSSupport {
       None
     } catch {
       case NonFatal(e) =>
-        log.debug(s"Encountered JMS Exception [${e.getMessage}]", e)
+        log.debug(e)(s"Encountered JMS Exception [${e.getMessage}]")
         Some(e)
     } finally {
       session.foreach(_.close())
@@ -68,7 +67,7 @@ trait JMSSupport {
     subscriptionName : Option[String] = None
   ) : Unit = {
 
-    if (log.isTraceEnabled()) {
+    if (log.isTraceEnabled) {
       val maxMsg = if (maxMessages <= 0) "Unbounded" else s"$maxMessages"
       log.trace(s"Receiving messages from [$destName], maximum count is [$maxMsg], receiveTimeout [$receiveTimeout]")
     }

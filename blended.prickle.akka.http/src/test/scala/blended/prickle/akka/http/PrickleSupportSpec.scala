@@ -1,20 +1,22 @@
 package blended.prickle.akka.http
 
-import org.scalatest.FreeSpec
+import scala.util.Success
+
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import prickle.Pickler
-import prickle.Pickle
-import akka.http.scaladsl.model.HttpEntity
-import prickle.PConfig
-import prickle.JsConfig
+import blended.util.logging.Logger
 import microjson.JsValue
+import org.scalatest.FreeSpec
+import prickle.JsConfig
+import prickle.PConfig
+import prickle.Pickle
+import prickle.Pickler
 import prickle.Unpickle
-import scala.util.Success
 
 class PrickleSupportSpec extends FreeSpec with ScalatestRouteTest with PrickleSupport {
 
-  private[this] val log = org.log4s.getLogger
+  private[this] val log = Logger[PrickleSupportSpec]
 
   case class Foo(bar: String, baz: Long)
 

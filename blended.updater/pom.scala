@@ -22,7 +22,6 @@ BlendedModel(
     Blended.mgmtBase,
     Blended.containerContextApi,
     Blended.akka,
-    Blended.sprayApi,
     akkaTestkit % "test",
     scalaTest % "test",
     felixFramework % "test",
@@ -37,7 +36,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

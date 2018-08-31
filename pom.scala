@@ -9,7 +9,7 @@ import scala.collection.immutable.Seq
 BlendedModel(
   gav = Blended.blended("blended.reactor"),
   packaging = "pom",
-  description = "A collection of bundles to develop OSGi application on top of Scala and Akka and Camel.",
+  description = "A collection of bundles to develop OSGi applications on top of Scala, Akka and Camel.",
   plugins = Seq(
     Plugin(
       Plugins.nexusStaging,
@@ -17,8 +17,7 @@ BlendedModel(
       configuration = Config(
         serverId = "ossrh",
         nexusUrl = "https://oss.sonatype.org/",
-        autoReleaseAfterClose = "true",
-        skipNexusStagingDeployMojo = "true"
+        autoReleaseAfterClose = "true"
       )
     ),
     skipInstallPlugin,
@@ -31,6 +30,7 @@ BlendedModel(
         activeByDefault = true
       ),
       modules = Seq(
+        "blended.util.logging",
         "blended.launcher",
         "blended.updater",
         "blended.updater.config",
@@ -52,8 +52,10 @@ BlendedModel(
         "blended.akka",
         "blended.akka.http.api",
         "blended.akka.http",
-        "blended.mgmt.app",
+        "blended.akka.http.jmsqueue",
         "blended.akka.http.proxy",
+        "blended.akka.http.restjms",
+        "blended.file",
         "blended.mgmt.base",
         "blended.mgmt.repo",
         "blended.mgmt.repo.rest",
@@ -64,39 +66,23 @@ BlendedModel(
         "blended.mgmt.ws",
         "blended.prickle",
         "blended.prickle.akka.http",
-        "blended.spray.api",
-        "blended.spray",
         "blended.security",
+        "blended.security.test",
         "blended.security.scep",
+        "blended.security.scep.standalone",
         "blended.security.ssl",
         "blended.security.boot",
-        "blended.security.login",
+        "blended.security.login.api",
+        "blended.security.login.impl",
         "blended.security.login.rest",
         "blended.security.akka.http",
         "blended.hawtio.login",
         "blended.persistence",
-        "blended.persistence.orient",
+        "blended.persistence.h2",
         "blended.jolokia",
-        "blended.itestsupport",
         "blended.samples",
         "blended.activemq.defaultbroker",
-        "blended.activemq.client",
-        "blended.launcher.features",
-        "blended.file",
-        "blended.demo"
-      )
-    ),
-    Profile(
-      id = "itest",
-      modules = Seq(
-        "blended.itestsupport",
-        "blended.itest"
-      )
-    ),
-    Profile(
-      id = "docker",
-      modules = Seq(
-        "blended.docker"
+        "blended.activemq.client"
       )
     )
   )

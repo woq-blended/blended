@@ -1,6 +1,0 @@
-project/build.properties
-project/plugins.sbt
-node_modules
-node
-assets
-.tmpBin/

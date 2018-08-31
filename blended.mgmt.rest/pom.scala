@@ -15,9 +15,12 @@ BlendedModel(
     "bundle.namespace" -> "${project.artifactId}"
   ),
   dependencies = Seq(
-    scalaLib % "provided",
-    slf4j % "provided",
+    Deps.scalaLib % "provided",
+    Deps.slf4j,
+    Deps.domino,
+    Blended.utilLogging,
     Blended.mgmtBase,
+    Blended.mgmtRepo,
     Blended.akka,
     Deps.akkaHttp,
     Deps.akkaHttpCore,
@@ -26,16 +29,21 @@ BlendedModel(
     Blended.prickleAkkaHttp,
     Blended.securityAkkaHttp,
     Blended.updaterRemote,
-    orgOsgi,
-    orgOsgiCompendium,
-    scalaTest % "test",
+    Deps.orgOsgi,
+    Deps.orgOsgiCompendium,
+    Deps.scalaTest % "test",
     Deps.akkaHttpTestkit % "test",
-    mockitoAll % "test",
-    Deps.logbackClassic % "test"
+    Deps.mockitoAll % "test",
+    Deps.logbackClassic % "test",
+    Deps.lambdaTest % "test",
+    Blended.testSupport % "test",
+    Blended.testSupportPojosr % "test",
+    Blended.persistenceH2 % "test",
+    Deps.sttp % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

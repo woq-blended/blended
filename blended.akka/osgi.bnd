@@ -12,7 +12,7 @@ Export-Package: \
   ${bundle.namespace}.protocol
   
 Import-Package: \
-  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.*;version="${scalaImportVersion}", \
   *
 
 Private-Package:\

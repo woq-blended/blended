@@ -1,25 +1,23 @@
 package blended.updater.internal
 
 import java.io.File
-import org.slf4j.LoggerFactory
 
-import org.slf4j.LoggerFactory
-
-import scala.reflect.runtime.universe
 import scala.util.Failure
 import scala.util.Success
-import org.osgi.framework.ServiceRegistration
-import com.typesafe.config.ConfigFactory
+
 import blended.akka.ActorSystemWatching
+import blended.updater.ProfileActivator
+import blended.updater.ProfileId
 import blended.updater.Updater
 import blended.updater.UpdaterConfig
 import blended.updater.config.ConfigWriter
+import blended.updater.config.OverlayRef
 import blended.updater.config.ProfileLookup
 import blended.updater.config.RuntimeConfig
+import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
-import blended.updater.config.OverlayRef
-import blended.updater.ProfileActivator
-import blended.updater.ProfileId
+import org.osgi.framework.ServiceRegistration
 
 case class UpdateEnv(
   launchedProfileName: String,
@@ -31,7 +29,7 @@ case class UpdateEnv(
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[BlendedUpdaterActivator])
+  private[this] val log = Logger[BlendedUpdaterActivator]
 
   private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 

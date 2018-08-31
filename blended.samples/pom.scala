@@ -19,7 +19,6 @@ BlendedModel(
       modules = Seq(
         "blended.samples.camel",
         "blended.samples.jms",
-        "blended.samples.spray.helloworld",
         "blended.akka.http.sample.helloworld"
       )
     )

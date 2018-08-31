@@ -17,16 +17,20 @@ BlendedModel(
   packaging = "bundle",
   description = "Configurations for Updater and Launcher",
   dependencies = Seq(
-    scalaLib % "provided",
-    typesafeConfig,
-    slf4j,
-    prickle,
+    Deps.scalaLib % "provided",
+    Deps.typesafeConfig,
+    Deps.slf4j,
+    Blended.utilLogging,
+    Deps.prickle,
+    Blended.security,
     Blended.testSupport % "test",
-    scalaTest % "test"
+    scalaTest % "test",
+    Deps.logbackClassic % "test",
+    Deps.logbackCore % "test"
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     Plugin(
       gav = Plugins.scala,
       executions = Seq(
@@ -37,8 +41,8 @@ BlendedModel(
     Plugin(
       gav = Plugins.exec,
       executions = Seq(
-        execExecution_compileJs(execId = "compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
-        execExecution_compileJs(execId = "packageJS", phase = "package", args = List("-batch", "packageBin"))
+        execExecution_compileJs(execId = "sbt-compileJS", phase = "compile", args = List("-batch", "fastOptJS", "test")),
+        execExecution_compileJs(execId = "sbt-packageJS", phase = "package", args = List("-batch", "packageBin"))
       )
     ),
     Plugin(

@@ -2,8 +2,8 @@
 
 function setenv() {
 
-  if [ -f $BLENDED_HOME/bin/setenv ] ; then
-    . $BLENDED_HOME/bin/setenv
+  if [ -f "$BLENDED_HOME/bin/setenv" ] ; then
+    . "$BLENDED_HOME/bin/setenv"
   fi
 }
 
@@ -11,7 +11,7 @@ function blended_home() {
 
   home=$1
 
-  if [ x"$BLENDED_HOME" == "x" ] ; then
+  if [ "x$BLENDED_HOME" == "x" ] ; then
     OLDDIR=$(pwd)
     dir="$(dirname $0)/.."
     cd $dir
@@ -39,7 +39,7 @@ if [ -z "${INTERACTIVE}" ]; then
   INTERACTIVE=true
 fi
 
-LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id"
+LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id --strict"
 
 # Options for the service daemen JVM (outer) with controls the container JVM
 JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
@@ -80,6 +80,7 @@ ${BLENDED_HOME}/lib/blended.launcher-@blended.launcher.version@.jar;\
 ${BLENDED_HOME}/lib/config-@typesafe.config.version@.jar;\
 ${BLENDED_HOME}/lib/org.osgi.core-@org.osgi.core.version@.jar;\
 ${BLENDED_HOME}/lib/blended.updater.config-@blended.updater.config.version@.jar;\
+${BLENDED_HOME}/lib/blended.util.logging-@blended.util.logging.version@.jar;\
 ${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar;\
 ${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar;\
 ${BLENDED_HOME}/lib/slf4j-api-@slf4j.version@.jar;\

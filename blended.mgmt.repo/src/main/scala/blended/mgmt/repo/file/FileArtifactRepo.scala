@@ -3,20 +3,34 @@ package blended.mgmt.repo.file
 import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Path
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.util.Formatter
 
+import scala.collection.JavaConverters._
+import scala.util.Try
 import scala.util.control.NonFatal
 
 import blended.mgmt.repo.ArtifactRepo
-import java.nio.file.Path
-import java.nio.file.Files
-import scala.collection.JavaConverters._
-import scala.util.Try
+import blended.mgmt.repo.WritableArtifactRepo
+import blended.updater.config.util.StreamCopy
+import blended.util.logging.Logger
 
-class FileArtifactRepo(override val repoId: String, baseDir: File) extends ArtifactRepo {
+class FileArtifactRepo(override val repoId: String, baseDir: File)
+  extends ArtifactRepo
+  with WritableArtifactRepo {
 
+  import FileArtifactRepo._
+
+  private[this] val log = Logger[this.type]
+
+  /**
+   * Only continue when the given `path` is valid.
+   */
   def withCheckedFilePath[T](path: String)(f: File => T): Try[T] = Try {
     val base = baseDir.toURI().normalize()
     val toCheck = new File(baseDir, path).toURI().normalize()
@@ -32,6 +46,10 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
     }.getOrElse(None)
   }
 
+  /**
+   * Try to find a file under the given path.
+   * @return The checksum of the found file or [[None]] if the file was not found.
+   */
   def findFileSha1Checksum(path: String): Option[String] = {
     findFile(path) flatMap { file =>
       val sha1Stream = new DigestInputStream(new BufferedInputStream(new FileInputStream(file)), MessageDigest.getInstance("SHA"))
@@ -46,15 +64,10 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
     }
   }
 
-  def bytesToString(digest: Array[Byte]): String = {
-    import java.lang.StringBuilder
-    val result = new StringBuilder(32);
-    val f = new Formatter(result)
-    digest.foreach(b => f.format("%02x", b.asInstanceOf[Object]))
-    result.toString
-  }
-
-  override def toString(): String = getClass().getSimpleName() + "(repoId=" + repoId + ",baseDir=" + baseDir + ")"
+  override def toString(): String = getClass().getSimpleName() +
+    "(repoId=" + repoId +
+    ",baseDir=" + baseDir +
+    ")"
 
   def listFiles(path: String): Iterator[String] = {
     val base = baseDir.toURI().normalize()
@@ -78,5 +91,57 @@ class FileArtifactRepo(override val repoId: String, baseDir: File) extends Artif
       }
     }.getOrElse(Iterator.empty)
   }
+
+  override def uploadFile(path: String, fileContent: InputStream, sha1Sum: Option[String]): Try[Unit] =
+    withCheckedFilePath(path) { file =>
+      if (file.exists()) {
+        // file already exists
+        if (file.isFile()) {
+          // collision
+          // no checksum or checksum differs means we cannot ensure the artifact is identical, so we abort
+          sha1Sum match {
+            case None =>
+              throw new ArtifactCollisionException(s"There is already an artifact installed under path: ${path}")
+            case sum =>
+              val existingSum = findFileSha1Checksum(path)
+              if (sum != existingSum) {
+                log.info(s"Artifact with different checksum (existing: ${existingSum}, new: ${sum}) already present: ${path}")
+                throw new ArtifactCollisionException(s"There is already an artifact with a different checksum installed under path: ${path}")
+              } else {
+                // else nothing to do
+                log.info(s"Artifact with same checksum already present: ${path}")
+              }
+          }
+        } else {
+          log.error(s"Artifact path [${path}] is a directory. Cannot upload")
+          // e.g. an existing directory
+          throw new IllegalArgumentException(s"The given path [${path}] cannot be used as artifact path")
+        }
+      } else {
+        // file does not exists, installing now
+        Option(file.getParentFile()).map(_.mkdirs())
+        val fos = new FileOutputStream(file)
+        try {
+          log.debug(s"About to save file: ${file}")
+          StreamCopy.copy(fileContent, fos)
+        } finally {
+          fos.close()
+        }
+      }
+    }
+
+}
+
+object FileArtifactRepo {
+
+  def bytesToString(digest: Array[Byte]): String = {
+    import java.lang.StringBuilder
+    val result = new StringBuilder(32)
+    val f = new Formatter(result)
+    digest.foreach(b => f.format("%02x", b.asInstanceOf[Object]))
+    result.toString()
+  }
+
+  class ArtifactCollisionException(msg: String) extends RuntimeException(msg)
 
 }

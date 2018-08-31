@@ -1,5 +1,0 @@
-dn: cn=${GROUP_NAME},ou=groups,o=${DOMAIN_NAME}
-objectClass: top
-objectClass: groupOfNames
-cn: ${GROUP_NAME}
-member: ${MEMBER}

@@ -28,6 +28,7 @@ BlendedModel(
     Deps.logbackClassic,
     Deps.typesafeConfig,
     Deps.commonsDaemon,
+    Blended.utilLogging,
     Blended.updaterConfig,
     Deps.cmdOption,
     Blended.testSupport % "test",
@@ -36,6 +37,7 @@ BlendedModel(
   properties = Map(
     "blended.launcher.version" -> Blended.launcher.version.get,
     "blended.updater.config.version" -> Blended.updaterConfig.version.get,
+    "blended.util.logging.version" -> Blended.utilLogging.version.get,
     "cmdoption.version" -> cmdOption.version.get,
     "org.osgi.core.version" -> orgOsgi.version.get,
     "scala.library.version" -> scalaLib.version.get,
@@ -45,7 +47,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     // Scalatest, we need to fork the tests, as Laucher depends on sys properties, which we mutate in tests
     Plugin(
       gav = Plugins.scalaTest,

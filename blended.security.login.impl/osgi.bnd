@@ -1,0 +1,17 @@
+Bundle-Version:\
+  ${project.version}
+
+Bundle-SymbolicName:\
+  ${bundle.symbolicName}; singleton:=true
+
+Bundle-Activator:\
+  ${bundle.symbolicName}.LoginActivator
+
+Import-Package: \
+  scala.*;version="${scalaImportVersion}", \
+  android.*;resolution:=optional, \
+  *
+
+Private-Package:\
+  ${bundle.namespace}
+

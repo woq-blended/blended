@@ -1,17 +1,13 @@
 package blended.updater.remote
 
-import blended.persistence.PersistenceService
-
 import scala.collection.JavaConverters._
-import scala.util.Try
 
-import blended.updater.config._
-import com.typesafe.config.ConfigFactory
-import org.slf4j.LoggerFactory
+import blended.persistence.PersistenceService
+import blended.util.logging.Logger
 
 class PersistentContainerStatePersistor(persistenceService: PersistenceService) extends ContainerStatePersistor {
 
-  private[this] val log = LoggerFactory.getLogger(classOf[PersistentContainerStatePersistor])
+  private[this] val log = Logger[PersistentContainerStatePersistor]
 
   val pClassName = "ContainerState"
 
@@ -27,10 +23,10 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
   }
 
   override def updateContainerState(containerState: ContainerState): Unit = {
-    log.debug("About to persist container state: {}", containerState)
+    log.debug(s"About to persist container state: ${containerState}")
     val deleteCount = persistenceService.deleteByExample(pClassName, Map("containerId" -> containerState.containerId).asJava)
-    log.debug("deleted {} old entries", deleteCount)
+    log.debug(s"deleted ${deleteCount} old entries")
     val entry = persistenceService.persist(pClassName, Mapper.mapContainerState(containerState))
-    log.debug("persisted 1 new entry: {}", entry)
+    log.debug(s"persisted 1 new entry: ${entry}")
   }
 }

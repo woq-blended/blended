@@ -4,6 +4,7 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFacto
 
 import scala.collection.JavaConverters._
 
+// TODO: move to blended.util project
 object ConfigPropertyMapConverter {
 
   def unpackStringKey(key: String): String = key.replaceAll("[\"]", "")
@@ -24,10 +25,6 @@ object ConfigPropertyMapConverter {
   }
 
   def propertyMapToConfigValue(m: Map[String, String]): ConfigValue = {
-
-//    val m1 = m.map{ case (k, v) => "\"" + k + "\"" -> v }
-    val result = ConfigValueFactory.fromMap(m.asJava)
-
-    result
+    ConfigValueFactory.fromMap(m.asJava)
   }
 }

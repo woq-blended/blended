@@ -11,7 +11,8 @@ BlendedModel(
   packaging = "bundle",
   description = "Define some convenience to use Prickle with Akka HTTP",
   dependencies = Seq(
-    Deps.log4s,
+    Deps.scalaLib % "provided",
+    Blended.utilLogging,
     Deps.akkaHttpCore,
     Deps.akkaHttp,
     Deps.akkaStream,
@@ -22,7 +23,7 @@ BlendedModel(
   ),
   plugins = Seq(
     mavenBundlePlugin,
-    sbtCompilerPlugin,
+    scalaCompilerPlugin,
     scalatestMavenPlugin
   )
 )

@@ -1,13 +1,13 @@
 package blended.updater.config
 
 /**
-  * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
-  *
-  * If there are unresolved (transitive) features, this class construction throws with a [java.lang.IllegalArgumentException].
-  *
-  * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
-  *
-  */
+ * Encapsulated a [RuntimeConfig] guaranteed to contain resolved [FeatureConfig]s for each contained (transitive) [FreatureRef].
+ *
+ * If there are unresolved (transitive) features, this class construction throws with a [java.lang.IllegalArgumentException].
+ *
+ * @see [FeatureResolver] for a way to automatically resolve features, e.g. from remote repositories.
+ *
+ */
 case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 
   {
@@ -44,8 +44,8 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   }
 
   /**
-    * All referenced features.
-    */
+   * All referenced features.
+   */
   def allReferencedFeatures: List[FeatureConfig] = {
     def find(features: List[FeatureRef]): List[FeatureConfig] = features.flatMap { f =>
       val feature = lookupFeature(f).get
@@ -55,13 +55,15 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
   }
 
   /**
-    * All bundles of this runtime config including those trasitively defined in the features.
-    */
+   * All bundles of this runtime config including those trasitively defined in the features.
+   */
   def allBundles: List[BundleConfig] = (runtimeConfig.bundles ++ allReferencedFeatures.flatMap(_.bundles)).distinct
 
   val framework: BundleConfig = {
     val fs = allBundles.filter(b => b.startLevel == Some(0))
-    require(fs.distinct.size == 1, s"A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}\n  ${fs.mkString("\n  ")}")
+    require(fs.distinct.size == 1, s"A ResolvedRuntimeConfig needs exactly one bundle with startLevel '0', but this one has (distinct): ${fs.size}${
+      if (fs.isEmpty) "" else fs.mkString("\n  ", "\n  ", "")
+    }")
     fs.head
   }
 }
@@ -69,8 +71,8 @@ case class ResolvedRuntimeConfig(runtimeConfig: RuntimeConfig) {
 object ResolvedRuntimeConfig extends (RuntimeConfig => ResolvedRuntimeConfig) {
 
   /**
-    * Construct with additional resolved features.
-    */
+   * Construct with additional resolved features.
+   */
   def apply(runtimeConfig: RuntimeConfig, features: List[FeatureConfig]): ResolvedRuntimeConfig = {
 
     val allFeatures = (runtimeConfig.resolvedFeatures ++ features).distinct

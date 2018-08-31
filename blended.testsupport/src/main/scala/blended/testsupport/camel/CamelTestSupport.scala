@@ -1,14 +1,14 @@
 package blended.testsupport.camel
 
+import scala.collection.convert.Wrappers.JMapWrapper
+import scala.util.Try
+
 import akka.camel.CamelMessage
 import blended.testsupport.XMLMessageFactory
 import blended.util.FileHelper
+import blended.util.logging.Logger
+import org.apache.camel.{ CamelContext, Exchange, ExchangePattern, Message }
 import org.apache.camel.impl.DefaultExchange
-import org.apache.camel.{CamelContext, Exchange, ExchangePattern, Message}
-import org.slf4j.LoggerFactory
-
-import scala.collection.convert.Wrappers.JMapWrapper
-import scala.util.Try
 
 trait CamelTestSupport {
 
@@ -27,7 +27,7 @@ trait CamelTestSupport {
   }
 
   def sendTestMessage(message: CamelMessage, uri: String)(implicit context: CamelContext) : Try[CamelMessage] = {
-    val log = LoggerFactory.getLogger(classOf[CamelTestSupport])
+    val log = Logger[CamelTestSupport]
 
     Try {
       val exchange = camelExchange(message)
@@ -54,7 +54,7 @@ trait CamelTestSupport {
 
   def executeRequest(message: String, properties : Map[String, String], uri: String, evaluateXML: Boolean, binary: Boolean)(implicit context: CamelContext) : Try[CamelMessage] = {
 
-    val log = LoggerFactory.getLogger(classOf[CamelTestSupport])
+    val log = Logger[CamelTestSupport]
 
     val exchange = camelExchange(createMessage(message, properties, evaluateXML, binary))
     exchange.setPattern(ExchangePattern.InOut)

@@ -3,15 +3,17 @@ package blended.mgmt.mock
 import java.text.DecimalFormat
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
+
+import scala.util.Random
+
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
+import blended.util.logging.Logger
 import prickle._
-import scala.util.Random
-import org.slf4j.LoggerFactory
 
 object MockObjects {
 
-  private[this] val log = LoggerFactory.getLogger("blended.mgmt.mock.MockObjects")
+  private[this] val log = Logger("blended.mgmt.mock.MockObjects")
 
   private[this] lazy val countries: List[String] = List("de", "cz", "bg", "ro")
   private[this] lazy val osTypes: List[String] = List("Lnx", "Windows")
@@ -91,12 +93,12 @@ object MockObjects {
 
   // use this method and one of the defined environments in the mock server
   def containerList(l: List[ContainerInfo]): String = {
-    log.debug("about to pickle: {}", l)
+    log.debug("about to pickle: ${l}")
     Pickle.intoString(l)
   }
 
   def remoteContainerStateList(l: List[ContainerInfo]): String = {
-    log.debug("about to pickle: {}", l)
+    log.debug(s"about to pickle: ${l}")
     val result = l.map(ci => RemoteContainerState(containerInfo = ci, outstandingUpdateActions = List()))
     Pickle.intoString(result)
   }

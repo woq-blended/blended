@@ -8,9 +8,11 @@ import akka.actor.ActorSystem
 import akka.util.Timeout
 import blended.jms.utils.internal._
 import org.osgi.framework.BundleContext
-import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration._
+import blended.util.logging.Logger
+import blended.jms.utils.internal.CheckConnection
+import blended.jms.utils.internal.CheckConnection
 
 trait IdAwareConnectionFactory extends ConnectionFactory {
   val clientId : String
@@ -27,15 +29,16 @@ class BlendedSingleConnectionFactory(
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
-  private[this] val log : Logger = LoggerFactory.getLogger(classOf[BlendedSingleConnectionFactory])
+  private[this] val log : Logger = Logger[BlendedSingleConnectionFactory]
 
   private[this] val monitorName = s"Monitor-$vendor-$provider"
   private[this] val stateMgrName = s"JMS-$vendor-$provider"
 
-  val holder = new ConnectionHolder(
+  override val clientId : String = config.clientId
+
+  val holder = new BlendedConnectionHolder(
     config = config,
-    system = system,
-    bundleContext = bundleContext
+    system = system
   )
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
@@ -45,7 +48,7 @@ class BlendedSingleConnectionFactory(
 
       val mbean : Option[ConnectionMonitor] = if (config.jmxEnabled) {
         val jmxServer = ManagementFactory.getPlatformMBeanServer
-        val jmxBean = new ConnectionMonitor(provider, clientId)
+        val jmxBean = new ConnectionMonitor(vendor, provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
         jmxServer.registerMBean(jmxBean, objName)
@@ -90,6 +93,4 @@ class BlendedSingleConnectionFactory(
     log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
-
-  override val clientId : String = config.clientId
 }

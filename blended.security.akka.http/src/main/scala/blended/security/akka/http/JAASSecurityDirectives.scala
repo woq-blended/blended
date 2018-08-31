@@ -1,16 +1,18 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenge, HttpChallenges, HttpCredentials}
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenges, HttpCredentials}
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.AuthenticationDirective
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult}
+import blended.security.{BlendedPermission, BlendedPermissionManager}
+import blended.security.SubjectImplicits._
+import blended.util.logging.Logger
 import javax.security.auth.Subject
 import javax.security.auth.callback._
 import javax.security.auth.login.LoginContext
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import blended.security.SubjectImplicits._
 
 /**
  * JAAS Based BlendedSecurityDirectives.
@@ -18,11 +20,9 @@ import blended.security.SubjectImplicits._
  */
 trait JAASSecurityDirectives extends BlendedSecurityDirectives {
 
-  /**
-   * External dependency to a security manager.
-   */
+  val mgr : BlendedPermissionManager
 
-  private[this] lazy val log = org.log4s.getLogger
+  private[this] lazy val log = Logger[JAASSecurityDirectives]
 
   val challenge = HttpChallenges.basic("blended")
 
@@ -52,21 +52,24 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
     }
   }
 
-  def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[Either[HttpChallenge, Subject]] =
+  def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[AuthenticationResult[Subject]] =
     Future {
       credentials match {
-        case Some(creds: BasicHttpCredentials) => auth(creds).toRight(challenge)
-        case _ => Left(challenge)
+        case Some(creds: BasicHttpCredentials) => auth(creds) match {
+          case Some(s) => AuthenticationResult.success(s)
+          case None => AuthenticationResult.failWithChallenge(challenge)
+        }
+        case _ => AuthenticationResult.failWithChallenge(challenge)
       }
     }
 
-  override def authenticated: AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
+  override val authenticated  : AuthenticationDirective[Subject] = authenticateOrRejectWithChallenge(myUserPassAuthenticator _)
 
-  override def requirePermission(permission: String): Directive0 = mapInnerRoute { inner =>
+  override def requirePermission(permission: BlendedPermission) : Directive0 = mapInnerRoute { inner =>
     authenticated { subject =>
       log.info(s"subject: ${subject} with principal: ${Option(subject).map(_.getPrincipal()).getOrElse("null")}")
       log.debug(s"checking required permission: ${permission}")
-      authorize(subject.isPermitted(permission)) {
+      authorize(subject.isPermitted(mgr, permission)) {
         log.info(s"subject/principal: ${Option(subject).map(_.getPrincipal()).getOrElse(subject)} has required permissions: ${permission}")
         inner
       }
@@ -82,7 +85,6 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
         inner
       }
     }
-
   }
 }
 

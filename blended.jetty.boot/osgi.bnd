@@ -15,7 +15,7 @@ Export-Package: \
 DynamicImport-Package: org.eclipse.jetty.*;${jettyVersion}
 
 Import-Package: \
-  scala.*;version="[${scala.version},${scala.version}.50)", \
+  scala.*;version="${scalaImportVersion}", \
   org.eclipse.jetty.annotations;${jettyVersion};resolution:=optional, \
   org.eclipse.jetty.deploy;${jettyVersion}, \
   org.eclipse.jetty.deploy.bindings;${jettyVersion}, \

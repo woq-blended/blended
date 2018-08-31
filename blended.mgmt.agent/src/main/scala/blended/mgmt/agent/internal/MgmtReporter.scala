@@ -1,24 +1,28 @@
 package blended.mgmt.agent.internal
 
-import akka.actor.{ Cancellable, Props }
-import akka.event.LoggingReceive
-import akka.pattern.pipe
-import blended.akka.{ OSGIActor, OSGIActorConfig }
-import blended.spray.SprayPrickleSupport
-import blended.updater.config.{ ContainerInfo, ContainerRegistryResponseOK, ServiceInfo }
-import com.typesafe.config.Config
-import org.slf4j.LoggerFactory
-import spray.client.pipelining._
-import spray.http.HttpRequest
+import scala.concurrent.duration.DurationLong
+import scala.util.Try
 
-import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.{ Failure, Try }
-import blended.updater.config.json.PrickleProtocol._
-import blended.updater.config.Profile
-import blended.updater.config.ProfileInfo
 import akka.actor.Actor
+import akka.actor.Cancellable
+import akka.event.LoggingReceive
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpMethods
+import akka.http.scaladsl.model.HttpRequest
+import akka.http.scaladsl.model.HttpResponse
+import akka.http.scaladsl.model.MessageEntity
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.ActorMaterializer
+import akka.stream.ActorMaterializerSettings
+import blended.prickle.akka.http.PrickleSupport
+import blended.updater.config.ContainerInfo
+import blended.updater.config.ContainerRegistryResponseOK
+import blended.updater.config.ProfileInfo
+import blended.updater.config.ServiceInfo
+import com.typesafe.config.Config
+import blended.util.logging.Logger
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.
@@ -39,9 +43,10 @@ import akka.actor.Actor
  * The target URL of the management container is configured with the `registryUrl` config entry.
  *
  */
-trait MgmtReporter extends Actor with SprayPrickleSupport {
+trait MgmtReporter extends Actor with PrickleSupport {
 
   import MgmtReporter._
+  import blended.updater.config.json.PrickleProtocol._
 
   ////////////////////
   // ABSTRACT
@@ -57,9 +62,10 @@ trait MgmtReporter extends Actor with SprayPrickleSupport {
   private[this] var _profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
   ////////////////////
 
-  private[this] lazy val log = LoggerFactory.getLogger(classOf[MgmtReporter])
+  private[this] lazy val log = Logger[MgmtReporter]
 
   implicit private[this] lazy val eCtxt = context.system.dispatcher
+  implicit private[this] lazy val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
   protected def serviceInfos: Map[String, ServiceInfo] = _serviceInfos
 
@@ -72,7 +78,7 @@ trait MgmtReporter extends Actor with SprayPrickleSupport {
       if (config.initialUpdateDelayMsec < 0 || config.updateIntervalMsec <= 0) {
         log.warn("Inapropriate timing configuration detected. Disabling automatic container status reporting")
       } else {
-        log.info("Activating automatic container status reporting with update interval [{}]", config.updateIntervalMsec)
+        log.info(s"Activating automatic container status reporting with update interval [${config.updateIntervalMsec}]")
         _ticker = Some(context.system.scheduler.schedule(config.initialUpdateDelayMsec.milliseconds, config.updateIntervalMsec.milliseconds, self, Tick))
       }
     }
@@ -94,36 +100,64 @@ trait MgmtReporter extends Actor with SprayPrickleSupport {
 
     case Tick =>
       config.foreach { config =>
+
         val info = createContainerInfo
-        log.debug("Performing report [{}].", info)
-        val pipeline: HttpRequest => Future[ContainerRegistryResponseOK] = {
-          sendReceive ~> unmarshal[ContainerRegistryResponseOK]
+        log.debug(s"Performing report [${info}].")
+
+        val entity = Marshal(info).to[MessageEntity]
+
+        val request = entity.map { entity =>
+          HttpRequest(
+            uri = config.registryUrl,
+            method = HttpMethods.POST,
+            entity = entity
+          )
         }
-        pipeline { Post(config.registryUrl, info) }.mapTo[ContainerRegistryResponseOK].pipeTo(self)
+
+        // TODO think about ssl
+        val responseFuture = request.flatMap { request =>
+          Http(context.system).singleRequest(request)
+        }
+
+        import akka.pattern.pipe
+        responseFuture.pipeTo(self)
+      }
+
+    case response @ HttpResponse(status, headers, entity, protocol) =>
+      status match {
+        case StatusCodes.OK =>
+          import akka.pattern.pipe
+
+          // OK; unmarshal and process
+          Unmarshal(entity).to[ContainerRegistryResponseOK].pipeTo(self)
+
+        case _ =>
+          log.warn(s"Non-OK response ${config.map(c => s"(${c.registryUrl})").getOrElse()} from node: ${response}")
+          response.discardEntityBytes()
       }
 
     case ContainerRegistryResponseOK(id, actions) =>
-      log.debug("Reported [{}] to management node", id)
+      log.debug(s"Reported [${id}] to management node")
       if (!actions.isEmpty) {
-        log.info("Received {} update actions from management node: {}", actions.size, actions)
+        log.info(s"Received ${actions.size} update actions from management node: ${actions}")
         actions.foreach { action =>
-          log.debug("Publishing event: {}", action)
+          log.debug(s"Publishing event: ${action}")
           context.system.eventStream.publish(action)
         }
       }
 
     // from event stream
     case serviceInfo @ ServiceInfo(name, svcType, ts, lifetime, props) =>
-      log.debug("Update service info for: {}", name)
+      log.debug(s"Update service info for: ${name}")
       _serviceInfos += name -> serviceInfo
 
     // from event stream
     case pi @ ProfileInfo(timestamp, _) =>
       if (timestamp > _profileInfo.timeStamp) {
-        log.debug("Update profile info to:  {}", pi)
+        log.debug("Update profile info to: " + pi)
         _profileInfo = pi
       } else {
-        log.debug("Ingnoring profile info with timestamp [{}] which is older than [{}]: {}", Array[Object](timestamp.underlying(), _profileInfo.timeStamp.underlying(), pi): _*)
+        log.debug(s"Ingnoring profile info with timestamp [${timestamp.underlying()}] which is older than [${_profileInfo.timeStamp.underlying()}]: ${pi}")
       }
   }
 }
@@ -141,9 +175,10 @@ object MgmtReporter {
   }
 
   case class MgmtReporterConfig(
-      registryUrl: String,
-      updateIntervalMsec: Long,
-      initialUpdateDelayMsec: Long) {
+    registryUrl: String,
+    updateIntervalMsec: Long,
+    initialUpdateDelayMsec: Long
+  ) {
 
     override def toString(): String = s"${getClass().getSimpleName()}(registryUrl=${registryUrl},updateInetervalMsec=${updateIntervalMsec},initialUpdateDelayMsec=${initialUpdateDelayMsec})"
   }
