@@ -1,7 +1,7 @@
 import sbt._
 
 // this is required to use proper values in osgi manifest require capability
-val initSystemEarly = Option(System.getProperty("java.version"))
+val initSystemEarly : Unit = Option(System.getProperty("java.version"))
   .map(v => v.split("[.]", 3).take(2).mkString("."))
   .foreach(v => System.setProperty("java.version", v))
 
@@ -62,15 +62,15 @@ lazy val root = project
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
     blendedUtilLogging,
-    blendedSecurityBoot
+    blendedSecurityBoot,
+    blendedContainerContextApi,
+    blendedDomino
 //    blendedUtil
 //    blendedTestsupport,
 //    blendedUpdaterConfigJs,
 //    blendedUpdaterConfigJvm,
 //    blendedLauncher,
-//    blendedContainerContextApi,
 //    blendedContainerContextImpl,
-//    blendedDomino,
 //    blendedMgmtBase,
 //    blendedAkka
   )
@@ -84,6 +84,18 @@ lazy val blendedSecurityBoot = project.in(file("blended.security.boot"))
   .settings(doPublish)
   .settings(BlendedSecurityBoot.settings)
   .enablePlugins(SbtOsgi)
+
+lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
+  .settings(doPublish)
+  .settings(BlendedContainerContextApi.settings)
+  .enablePlugins(SbtOsgi)
+  .dependsOn(blendedUtilLogging)
+
+lazy val blendedDomino = project.in(file("blended.domino"))
+  .settings(doPublish)
+  .settings(BlendedDomino.settings)
+  .enablePlugins(SbtOsgi)
+  .dependsOn(blendedContainerContextApi)
 
 //lazy val blendedUtil = project.in(file("blended.util"))
 

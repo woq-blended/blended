@@ -52,7 +52,7 @@ class PropertyResolverSpec extends FreeSpec
     "should throw an Exception when the end delimiter is missing" in {
 
       try {
-        val s = ContainerPropertyResolver.resolve(idSvc, "$[[foo")
+        ContainerPropertyResolver.resolve(idSvc, "$[[foo")
         fail()
       } catch {
         case pre : PropertyResolverException =>
@@ -66,7 +66,7 @@ class PropertyResolverSpec extends FreeSpec
         fail()
       } catch {
         case pre : PropertyResolverException =>
-        case _ => fail()
+        case _ : Throwable => fail()
       }
     }
 

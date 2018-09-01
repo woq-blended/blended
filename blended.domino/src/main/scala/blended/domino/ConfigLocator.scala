@@ -23,9 +23,23 @@ class ConfigLocator(ctContext: ContainerContext) {
       ConfigFactory.empty()
   }
 
+  /**
+    * Retrieve a configuartion by it's id.
+    *
+    * If a config file <code>id.conf</code> exists in the configuration directory, the result
+    * is the content of that file read in as a Config object.
+    *
+    * If no such file exists, the global container configuration is checked whether it has a
+    * sub section <code>id</code>. If that is the case, the return value is that subsection as
+    * a <code>Config</code> object.
+    *
+    * If no config can be found in either case, an empty <code>Config</code> object will be returned.
+    *
+    * @param id The config id to search for
+    * @return The <code>Config</code> object as specified above
+    */
   def getConfig(id: String): Config = config(s"$id.conf") match {
     case empty if empty.isEmpty =>
-
       val cfg = ctContext.getContainerConfig()
       if (cfg.hasPath(id)) cfg.getConfig(id) else ConfigFactory.empty()
 
