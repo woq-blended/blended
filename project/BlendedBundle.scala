@@ -1,10 +1,8 @@
 import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
-import org.osgi.framework.BundleActivator
 import sbt.Keys._
 import sbt._
 
-object BlendedBundle {
-
+case class BlendedBundle(
 
   /**
     * Create a bundle with proper Manifest headers.
@@ -33,44 +31,44 @@ object BlendedBundle {
     * A map with additional manifest entries.
     * @return
     */
-  def apply(
     bundleSymbolicName: String = null,
     bundleVersion: String = null,
     bundleActivator: String = null,
     importPackage: Seq[String] = null,
-    privatePackage: Seq[String] = null,
-    exportPackage: Seq[String] = null,
+    privatePackage: Seq[String] = Seq.empty,
+    exportPackage: Seq[String] = Seq.empty,
     embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
     exportContents: Seq[String] = null,
-    additionalHeaders: Map[String, String] = null
-  ): Seq[Setting[_]] = {
+    additionalHeaders: Map[String, String] = Map.empty
+  ) {
 
-    val extraEntries: Map[String, String] =
-      Option(additionalHeaders).getOrElse(Map()) ++
-        (Option(exportContents).map(c => Map("-exportcontents" -> c.mkString(","))).getOrElse(Map()))
+  private[this] val extraEntries : Seq[Setting[_]] = Seq(
+    OsgiKeys.additionalHeaders ++= Map(
+      "Bundle-Name" -> bundleSymbolicName,
+      "Bundle-Description" -> description.value
+    ) ++
+    (Option(exportContents).map(c => Map("-exportcontents" -> c.mkString(","))).getOrElse(Map())) ++
+    additionalHeaders
+  )
 
 
-    osgiSettings ++
+  val osgiSettings : Seq[Setting[_]] = Seq(
+    OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
+    OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
+    OsgiKeys.bundleActivator := Option(bundleActivator),
+    OsgiKeys.importPackage :=
       Seq(
-        OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
-        OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
-        OsgiKeys.bundleActivator := Option(bundleActivator),
-        OsgiKeys.importPackage :=
-          Seq(
-            BuildHelper.scalaRangeImport(scalaBinaryVersion.value),
-          ) ++ Option(importPackage).getOrElse(Seq("*")
-          ),
-        // ensure we build a package with OSGi Manifest
-        packageBin.in(Compile) := {
-          packageBin.in(Compile).value
-          OsgiKeys.bundle.value
-        }
-      ) ++
-      Option(exportPackage).map(e => OsgiKeys.exportPackage := e) ++
-      Option(privatePackage).map(p => OsgiKeys.privatePackage := p) ++
-      Option(embeddedJars) ++
-      (if (extraEntries.isEmpty) Seq() else {
-        OsgiKeys.additionalHeaders := extraEntries
-      })
-  }
+        BuildHelper.scalaRangeImport(scalaBinaryVersion.value),
+      ) ++ Option(importPackage).getOrElse(Seq("*")
+      ),
+    OsgiKeys.exportPackage := exportPackage,
+    OsgiKeys.privatePackage := privatePackage,
+    // ensure we build a package with OSGi Manifest
+    Compile/packageBin := {
+      packageBin.in(Compile).value
+      OsgiKeys.bundle.value
+    }
+  ) ++
+  Option(embeddedJars) ++
+  extraEntries
 }

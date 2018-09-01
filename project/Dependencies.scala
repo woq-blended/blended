@@ -1,4 +1,5 @@
 import sbt._
+import sbt.Keys._
 
 object Dependencies {
 
@@ -43,9 +44,9 @@ object Dependencies {
   val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
 
-  val scalaLibrary = "org.scala-lang" % "scala-library" % BlendedVersions.scala
+  val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
-  val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scala
+  val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
