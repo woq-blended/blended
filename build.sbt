@@ -66,8 +66,8 @@ lazy val root = project
     blendedUtilLogging,
     blendedSecurityBoot,
     blendedContainerContextApi,
-    blendedDomino
-//    blendedUtil
+    blendedDomino,
+    blendedUtil
 //    blendedTestsupport,
 //    blendedUpdaterConfigJs,
 //    blendedUpdaterConfigJvm,
@@ -99,11 +99,11 @@ lazy val blendedDomino = project.in(file("blended.domino"))
   .enablePlugins(SbtOsgi)
   .dependsOn(blendedContainerContextApi)
 
-//lazy val blendedUtil = project.in(file("blended.util"))
+lazy val blendedUtil = project.in(file("blended.util"))
+  .settings(doPublish)
+  .settings(BlendedUtil.settings)
+  .enablePlugins(SbtOsgi)
 
-//lazy val blendedSecurityBoot =  project.in(file("blended.security.boot"))
-//  .settings(commonSettings)
-//
 //lazy val blendedTestsupport = project.in(file("blended.testsupport"))
 //  .settings(commonSettings)
 //  .dependsOn(blendedUtil, blendedSecurityBoot)
