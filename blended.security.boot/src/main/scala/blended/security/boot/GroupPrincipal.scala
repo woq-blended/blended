@@ -8,9 +8,9 @@ class GroupPrincipal(group: String) extends Principal {
 
   override def hashCode(): Int = group.hashCode()
 
-  override def equals(other: scala.Any): Boolean = other match {
+  override def equals(other: Any): Boolean = other match {
     case p : GroupPrincipal => group.equals(p.getName())
-    case o => false
+    case _ => false
   }
 
   override def toString: String = s"GroupPrincipal($group)"

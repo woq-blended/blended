@@ -24,6 +24,8 @@ inThisBuild(Seq(
     "-target", "1.8"
   ),
 
+  coverageEnabled := true,
+
   scalaVersion := "2.12.6",
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
   // essential to not try to compile pom.scala files

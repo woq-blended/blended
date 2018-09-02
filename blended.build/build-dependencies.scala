@@ -1,6 +1,6 @@
 implicit val scalaVersion = ScalaVersion(BlendedVersions.scalaVersion)
 
-case class ScalaJsVersion(val version: String) {
+case class ScalaJsVersion(version: String) {
   val binaryVersion = version.split("\\.", 3).take(2).mkString(".")
 }
 

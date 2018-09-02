@@ -49,11 +49,11 @@ class BlendedLoginModule extends LoginModule {
     val moduleBundle: Option[String] = Option(newOptions.remove(propBundle).toString())
 
     (moduleClass, moduleBundle) match {
-      case (None, _) => throw new IllegalStateException(s"Option [${propBundle}] must be set to the name of the factory service bundle.")
-      case (_, None) => throw new IllegalStateException(s"Option [${propModule}] must be set to the name of the factory service.")
+      case (None, _) => throw new IllegalStateException(s"Option [$propBundle] must be set to the name of the factory service bundle.")
+      case (_, None) => throw new IllegalStateException(s"Option [$propModule] must be set to the name of the factory service.")
       case (Some(clazz), Some(bundleName)) =>
         loginBundle(bundleName) match {
-          case None => throw new IllegalStateException(s"Bundle [${bundleName}] not found.")
+          case None => throw new IllegalStateException(s"Bundle [$bundleName] not found.")
           case Some(bundle) =>
             try {
               target = Option(bundle.loadClass(clazz).newInstance().asInstanceOf[LoginModule])
@@ -65,7 +65,7 @@ class BlendedLoginModule extends LoginModule {
               ))
             } catch {
               case _ : ClassNotFoundException =>
-                throw new IllegalStateException(s"Could not load Login Module [${clazz}] from bundle [${bundleName}]")
+                throw new IllegalStateException(s"Could not load Login Module [$clazz] from bundle [$bundleName]")
               case e: Exception =>
                 throw new IllegalStateException(s"${e.getClass().getName()} : ${e.getMessage()}")
             }
@@ -74,7 +74,7 @@ class BlendedLoginModule extends LoginModule {
   }
 
   private[this] def loginBundle(name: String): Option[Bundle] =
-    bundleContext.getBundles().find(_.getSymbolicName().equals(name))
+    bundleContext.getBundles().find( b => b.getSymbolicName().equals(name))
 
   override def logout(): Boolean = target match {
     case None => throw new LoginException(NotInitialised)

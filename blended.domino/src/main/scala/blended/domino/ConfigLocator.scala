@@ -17,10 +17,11 @@ class ConfigLocator(ctContext: ContainerContext) {
     val file = new File(ctContext.getProfileConfigDirectory(), fileName)
     log.debug(s"Retrieving config from [${file.getAbsolutePath()}]")
 
-    if (file.exists && file.isFile && file.canRead)
+    if (file.exists && file.isFile && file.canRead) {
       ConfigFactory.parseFile(file).withFallback(sysProps).withFallback(envProps).resolve()
-    else
+    } else {
       ConfigFactory.empty()
+    }
   }
 
   /**

@@ -14,7 +14,7 @@ lazy val projectSettings = Seq(
   scalaVersion := BlendedVersions.scalaVersionJS,
   moduleName := appName,
 
-  publishMavenStyle := true, 
+  publishMavenStyle := true,
 
   publishArtifact in Test := false,
 
@@ -22,7 +22,7 @@ lazy val projectSettings = Seq(
     "Maven2 Local" at m2Repo
   ),
 
-  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"), 
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"

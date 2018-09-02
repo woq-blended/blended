@@ -20,10 +20,11 @@ lazy val projectSettings = Seq(
 
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
-    if(isSnapshot.value)
+    if(isSnapshot.value) {
       Some("snapshots" at nexus + "content/repositories/snapshots")
-    else
+    } else {
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
+    }
   },
 
   // avoid picking up pom.scala as source file

@@ -10,7 +10,7 @@ object BuildHelper {
     case s => symbolicName + "." + s
   }
 
-  def scalaRangeImport(scalaBinaryVersion: String) = s"""scala.*;version="[${scalaBinaryVersion},${scalaBinaryVersion}.50)""""
+  def scalaRangeImport(scalaBinaryVersion: String) : String = s"""scala.*;version="[$scalaBinaryVersion,$scalaBinaryVersion.50)""""
 
   def bundleSettings(
     exportPkgs: Seq[String] = Seq.empty,
