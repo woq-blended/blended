@@ -31,4 +31,5 @@ travis-prepare:
 travis-build: build
 
 .PHONY: travis # Run a full travis build
-travis: travis-prepare travis-build
+travis: 
+	sbt test publishM2 
