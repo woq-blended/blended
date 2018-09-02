@@ -40,7 +40,7 @@ case class BlendedBundle(
     additionalHeaders: Map[String, String] = Map.empty
   ) {
 
-  private[this] val extraEntries : Seq[Setting[_]] = Seq(
+  private[this] lazy val extraEntries : Seq[Setting[_]] = Seq(
     OsgiKeys.additionalHeaders ++= Map(
       "Bundle-Name" -> bundleSymbolicName,
       "Bundle-Description" -> description.value
@@ -50,7 +50,7 @@ case class BlendedBundle(
   )
 
 
-  val osgiSettings : Seq[Setting[_]] = Seq(
+  lazy val osgiSettings : Seq[Setting[_]] = Seq(
     OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
     OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
     OsgiKeys.bundleActivator := Option(bundleActivator),

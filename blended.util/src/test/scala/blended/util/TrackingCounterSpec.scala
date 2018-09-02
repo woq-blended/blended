@@ -5,6 +5,7 @@ import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import blended.util.protocol._
 import org.scalatest.{Matchers, WordSpecLike}
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
@@ -12,17 +13,17 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
   with Matchers
   with ImplicitSender {
 
-  implicit val ctxt = system.dispatcher
+  implicit val ctxt : ExecutionContext = system.dispatcher
 
   "A tracking counter" should {
 
     "send a Counter Info after it has timed out" in {
 
-      val counter = TestActorRef(Props(TrackingCounter(10.millis, testActor)))
+      TestActorRef(Props(TrackingCounter(10.millis, testActor)))
 
       fishForMessage() {
         case info : CounterInfo =>
-          info.count == 0 && !info.firstCount.isDefined && !info.lastCount.isDefined
+          info.count == 0 && info.firstCount.isEmpty && info.lastCount.isEmpty
       }
     }
 
@@ -33,14 +34,14 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
 
       fishForMessage() {
         case info : CounterInfo =>
-          info.count == 0 && !info.firstCount.isDefined && !info.lastCount.isDefined
+          info.count == 0 && info.firstCount.isEmpty && info.lastCount.isEmpty
       }
     }
 
     "perform normal count operations" in {
       val counter = TestActorRef(Props(TrackingCounter(10.minutes, testActor)))
 
-      counter ! new IncrementCounter()
+      counter ! IncrementCounter()
       counter ! StopCounter
 
       fishForMessage() {
@@ -52,8 +53,8 @@ class TrackingCounterSpec extends TestKit(ActorSystem("TrackingCounterSpec"))
     "perform normal stats operations" in {
       val counter = TestActorRef(Props(TrackingCounter(2.seconds, testActor)))
 
-      counter ! new IncrementCounter()
-      system.scheduler.scheduleOnce(1.second, counter, new IncrementCounter())
+      counter ! IncrementCounter()
+      system.scheduler.scheduleOnce(1.second, counter, IncrementCounter())
       system.scheduler.scheduleOnce(1.01.seconds, counter, StopCounter)
 
       fishForMessage(5.seconds) {
