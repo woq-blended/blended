@@ -3,7 +3,7 @@ import sbt.Keys._
 
 object Dependencies {
 
-  val akkaVersion = "2.5.9"
+  val akkaVersion = "2.5.16"
   val camelVersion = "2.17.3"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"

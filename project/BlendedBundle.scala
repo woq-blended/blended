@@ -2,6 +2,9 @@ import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 import sbt.Keys._
 import sbt._
 
+object BlendedBundle {
+  def scalaRangeImport(scalaBinaryVersion: String) : String = s"""scala.*;version="[$scalaBinaryVersion,$scalaBinaryVersion.50)""""
+}
 /**
   * Create a bundle with proper Manifest headers.
   *
@@ -32,11 +35,11 @@ case class BlendedBundle(
     bundleSymbolicName: String = null,
     bundleVersion: String = null,
     bundleActivator: String = null,
-    importPackage: Seq[String] = null,
+    importPackage: Seq[String] = Seq.empty,
     privatePackage: Seq[String] = Seq.empty,
     exportPackage: Seq[String] = Seq.empty,
     embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
-    exportContents: Seq[String] = null,
+    exportContents: Seq[String] = Seq.empty,
     additionalHeaders: Map[String, String] = Map.empty
   ) {
 
@@ -56,9 +59,8 @@ case class BlendedBundle(
     OsgiKeys.bundleActivator := Option(bundleActivator),
     OsgiKeys.importPackage :=
       Seq(
-        BuildHelper.scalaRangeImport(scalaBinaryVersion.value),
-      ) ++ Option(importPackage).getOrElse(Seq("*")
-      ),
+        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value),
+      ) ++ importPackage ++ Seq("*"),
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
     // ensure we build a package with OSGi Manifest

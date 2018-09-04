@@ -1,4 +1,5 @@
 import sbt._
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 // this is required to use proper values in osgi manifest require capability
 val initSystemEarly : Unit = Option(System.getProperty("java.version"))
@@ -58,7 +59,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "blended",
-    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject // -- inProjects(blendedUpdaterConfigJs)
+    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJS)
   )
   .settings(noPublish)
   .enablePlugins(ScalaUnidocPlugin)
@@ -68,13 +69,15 @@ lazy val root = project
     blendedContainerContextApi,
     blendedDomino,
     blendedUtil,
-    blendedTestsupport
+    blendedTestsupport,
+    blendedAkka,
+    blendedSecurity.js,
+    blendedSecurity.jvm
 //    blendedUpdaterConfigJs,
 //    blendedUpdaterConfigJvm,
 //    blendedLauncher,
 //    blendedContainerContextImpl,
 //    blendedMgmtBase,
-//    blendedAkka
   )
 
 lazy val blendedUtilLogging = project.in(file("blended.util.logging"))
@@ -114,6 +117,22 @@ lazy val blendedAkka = project.in(file("blended.akka"))
   .settings(BlendedAkka.settings)
   .dependsOn(blendedUtilLogging, blendedContainerContextApi, blendedDomino)
   .enablePlugins(SbtOsgi)
+
+lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
+  .withoutSuffixFor(JVMPlatform)
+  .settings(doPublish)
+  .in(file("blended.security"))
+
+lazy val blendedSecurityJVM = blendedSecurity.jvm
+  .settings(BlendedSecurityJVM.settings)
+  .dependsOn(blendedUtilLogging, blendedDomino, blendedUtil, blendedSecurityBoot)
+  .enablePlugins(SbtOsgi)
+
+lazy val blendedSecurityJS = blendedSecurity.js
+  .settings(
+    libraryDependencies ++= BlendedSecurityJS.libDependencies.value
+  )
 
 //lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
 //  //  .enablePlugins(BlendedPlugin)
