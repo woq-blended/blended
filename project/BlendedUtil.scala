@@ -13,7 +13,7 @@ object BlendedUtil extends ProjectSettings(
   )
 
   override def bundle: BlendedBundle = super.bundle.copy(
-    exportContents = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
+    exportPackage = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
   )
 
 }

@@ -1,8 +1,6 @@
 package blended.akka {
 
   import akka.actor.ActorRef
-  import com.typesafe.config.Config
-  import org.osgi.framework.BundleContext
 
   package protocol {
     
