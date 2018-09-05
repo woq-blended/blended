@@ -7,8 +7,9 @@ import Dependencies._
 import com.typesafe.sbt.osgi.OsgiKeys
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
-import com.typesafe.sbt.packager.SettingsHelper._
 import NativePackagerHelper._
+
+import FilterResources.autoImport._
 
 object BlendedLauncher extends ProjectSettings(
   prjName = "blended.launcher",
@@ -25,8 +26,22 @@ object BlendedLauncher extends ProjectSettings(
   )
 
   override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
-    Test/resourceGenerators += Def.task {
 
+    Compile/filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
+    Compile/filterTargetDir := target.value / "runner",
+    Compile/filterRegex := "(@)([^\\n]+?)(@)",
+    Compile/filterProperties := Map(
+      "blended.launcher.version" -> version.value,
+      "blended.updater.config.version" -> version.value,
+      "blended.util.logging.version" -> version.value,
+      "cmdoption.version" -> cmdOption.revision,
+      "org.osgi.core.version" -> orgOsgi.revision,
+      "scala.library.version" -> scalaVersion.value,
+      "typesafe.config.version" -> typesafeConfig.revision,
+      "slf4j.version" -> slf4j.revision,
+      "logback.version" -> logbackClassic.revision
+    ),
+    Test/resourceGenerators += Def.task {
       val frameworks : Seq[ModuleID] = Seq(
         "org.apache.felix" % "org.apache.felix.framework" % "5.0.0",
         "org.apache.felix" % "org.apache.felix.framework" % "5.6.10",
@@ -55,7 +70,7 @@ object BlendedLauncher extends ProjectSettings(
         Files.copy(f.toPath, tf.toPath, StandardCopyOption.REPLACE_EXISTING)
         tf
       }
-    }.taskValue
+    }.taskValue,
   ) ++ Seq(
     Universal/mappings ++= (
       Seq(OsgiKeys.bundle.value).map { f =>
@@ -69,6 +84,7 @@ object BlendedLauncher extends ProjectSettings(
     Universal/mappings ++= (Compile/dependencyClasspathAsJars).value.filter(_.data.isFile).map{ f =>
       f.data -> s"lib/${f.data.getName}"
     },
+    Universal/mappings ++= (Compile/filterResources).value,
     Universal/packageBin/mainClass := None,
   ) ++
     addArtifact(Universal/packageBin/artifact, Universal/packageBin).settings ++

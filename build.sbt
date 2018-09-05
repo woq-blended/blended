@@ -127,7 +127,7 @@ lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
 lazy val blendedLauncher = project.in(file("blended.launcher"))
   .settings(BlendedLauncher.settings)
   .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedAkka, blendedTestsupport % "test")
-  .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin)
+  .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin, FilterResources)
 
 //lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
 //  .settings(commonSettings)
