@@ -1,5 +1,7 @@
+import java.nio.file.{CopyOption, Files, StandardCopyOption}
+
 import sbt._
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 // this is required to use proper values in osgi manifest require capability
 val initSystemEarly : Unit = Option(System.getProperty("java.version"))
@@ -32,34 +34,13 @@ inThisBuild(Seq(
   publishMavenStyle := true
 ))
 
-// General settings for subprojects to be published
-lazy val doPublish = Seq(
-  publishMavenStyle := true,
-  publishArtifact in Test := false,
-  credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if(isSnapshot.value) {
-      Some("snapshots" at nexus + "content/repositories/snapshots")
-    } else {
-      Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    }
-  }
-)
-
-// General settings for subprojects not to be published
-lazy val noPublish = Seq(
-  publishArtifact := false,
-  publishLocal := {}
-)
-
 lazy val root = project
   .in(file("."))
   .settings(
     name := "blended",
-    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJS)
+    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJS, blendedUpdaterConfigJS)
   )
-  .settings(noPublish)
+  .settings(PublishConfg.noPublish)
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
     blendedUtilLogging,
@@ -72,46 +53,39 @@ lazy val root = project
     blendedSecurity.js,
     blendedSecurity.jvm,
     blendedUpdaterConfigJS,
-    blendedUpdaterConfigJVM
-//    blendedLauncher,
+    blendedUpdaterConfigJVM,
+    blendedLauncher,
 //    blendedContainerContextImpl,
 //    blendedMgmtBase,
   )
 
 lazy val blendedUtilLogging = project.in(file("blended.util.logging"))
-  .settings(doPublish)
   .settings(BlendedUtilLogging.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedSecurityBoot = project.in(file("blended.security.boot"))
-  .settings(doPublish)
   .settings(BlendedSecurityBoot.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
-  .settings(doPublish)
   .settings(BlendedContainerContextApi.settings)
   .dependsOn(blendedUtilLogging)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedDomino = project.in(file("blended.domino"))
-  .settings(doPublish)
   .settings(BlendedDomino.settings)
   .dependsOn(blendedContainerContextApi)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedUtil = project.in(file("blended.util"))
-  .settings(doPublish)
   .settings(BlendedUtil.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedTestsupport = project.in(file("blended.testsupport"))
-  .settings(doPublish)
   .settings(BlendedTestsupport.settings)
   .dependsOn(blendedUtil, blendedUtilLogging, blendedSecurityBoot)
 
 lazy val blendedAkka = project.in(file("blended.akka"))
-  .settings(doPublish)
   .settings(BlendedAkka.settings)
   .dependsOn(blendedUtilLogging, blendedContainerContextApi, blendedDomino)
   .enablePlugins(SbtOsgi)
@@ -119,7 +93,6 @@ lazy val blendedAkka = project.in(file("blended.akka"))
 lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
-  .settings(doPublish)
   .in(file("blended.security"))
 
 lazy val blendedSecurityJVM = blendedSecurity.jvm
@@ -135,7 +108,6 @@ lazy val blendedSecurityJS = blendedSecurity.js
 lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
-  .settings(doPublish)
   .in(file("blended.updater.config"))
 
 lazy val blendedUpdaterConfigJVM = blendedUpdaterConfig.jvm
@@ -149,11 +121,45 @@ lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
   )
   .dependsOn(blendedSecurityJS)
 
-//
-//lazy val blendedLauncher = project.in(file("blended.launcher"))
-//  .settings(commonSettings)
-//  .dependsOn(blendedUpdaterConfigJvm)
-//
+
+lazy val blendedLauncher = project.in(file("blended.launcher"))
+  .settings(BlendedLauncher.settings)
+  .settings(
+    Test/resourceGenerators += Def.task {
+
+      val frameworks : Seq[ModuleID] = Seq(
+        "org.apache.felix" % "org.apache.felix.framework" % "5.0.0",
+        "org.apache.felix" % "org.apache.felix.framework" % "5.6.10",
+
+        "org.eclipse" % "org.eclipse.osgi" % "3.8.0.v20120529-1548",
+        "org.osgi" % "org.eclipse.osgi" % "3.10.100.v20150529-1857",
+        "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50",
+        "org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.9.1.v20130814-1242",
+        "org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.10.0.v20140606-1445"
+      )
+
+      val osgiDir = target.value / "test-osgi"
+
+      BuildHelper.deleteRecursive(osgiDir)
+      Files.createDirectories(osgiDir.toPath)
+
+      val files = frameworks
+        .map{ mid => BuildHelper.resolveModuleFile(mid, target.value) }
+        .collect {
+          case f if !f.isEmpty => f
+        }
+        .flatten
+
+      files.map { f =>
+        val tf = new File(osgiDir, f.getName)
+        Files.copy(f.toPath, tf.toPath, StandardCopyOption.REPLACE_EXISTING)
+        tf
+      }
+    }.taskValue
+  )
+  .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedTestsupport % "test")
+  .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin)
+
 //lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
 //  .settings(commonSettings)
 //  .dependsOn(

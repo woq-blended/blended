@@ -34,7 +34,7 @@ object Dependencies {
   val mimepull = "org.jvnet.mimepull" % "mimepull" % "1.9.5"
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
-  val orgOsgi = "org.osgi" % "org.osgi.core" % "5.0.0"
+  val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
 
   val parboiledCore = "org.parboiled" % "parboiled-core" % parboiledVersion
   val parboiledScala = "org.parboiled" %% "parboiled-scala" % parboiledVersion

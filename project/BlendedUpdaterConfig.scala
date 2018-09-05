@@ -28,9 +28,4 @@ object BlendedUpdaterConfigJVM extends ProjectSettings(
   override def bundle: BlendedBundle = super.bundle.copy(
     exportPackage = Seq(prjName, s"$prjName.json", s"$prjName.util", "blended.launcher.config")
   )
-
-  override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
-    Compile/unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
-    Test/unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
-  )
 }

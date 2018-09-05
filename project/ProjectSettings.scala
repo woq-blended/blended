@@ -4,7 +4,8 @@ import sbt.Keys._
 case class ProjectSettings(
   prjName: String,
   desc: String,
-  osgi : Boolean = true
+  osgi : Boolean = true,
+  publish : Boolean = true
 ) {
 
   def libDependencies : Seq[ModuleID] = Seq()
@@ -29,7 +30,11 @@ case class ProjectSettings(
       description := desc,
       libraryDependencies ++= libDependencies,
       Test/javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
-      Test/fork := true
-    ) ++ osgiSettings
+      Test/fork := true,
+      Compile/unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
+      Test/unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
+    ) ++ osgiSettings ++ (
+      if (publish) PublishConfg.doPublish else PublishConfg.noPublish
+    )
   }
 }
