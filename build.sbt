@@ -1,5 +1,3 @@
-import java.nio.file.{CopyOption, Files, StandardCopyOption}
-
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
@@ -31,7 +29,11 @@ inThisBuild(Seq(
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
   // essential to not try to compile pom.scala files, only required until migration to  sbt is complete
   sourcesInBase := false,
-  publishMavenStyle := true
+  publishMavenStyle := true,
+  resolvers ++= Seq(
+    Resolver.sonatypeRepo("snapshots"),
+    "Maven2 Local" at m2Repo
+  )
 ))
 
 lazy val root = project
@@ -124,40 +126,7 @@ lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
 
 lazy val blendedLauncher = project.in(file("blended.launcher"))
   .settings(BlendedLauncher.settings)
-  .settings(
-    Test/resourceGenerators += Def.task {
-
-      val frameworks : Seq[ModuleID] = Seq(
-        "org.apache.felix" % "org.apache.felix.framework" % "5.0.0",
-        "org.apache.felix" % "org.apache.felix.framework" % "5.6.10",
-
-        "org.eclipse" % "org.eclipse.osgi" % "3.8.0.v20120529-1548",
-        "org.osgi" % "org.eclipse.osgi" % "3.10.100.v20150529-1857",
-        "org.eclipse.platform" % "org.eclipse.osgi" % "3.12.50",
-        "org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.9.1.v20130814-1242",
-        "org.eclipse.birt.runtime" % "org.eclipse.osgi" % "3.10.0.v20140606-1445"
-      )
-
-      val osgiDir = target.value / "test-osgi"
-
-      BuildHelper.deleteRecursive(osgiDir)
-      Files.createDirectories(osgiDir.toPath)
-
-      val files = frameworks
-        .map{ mid => BuildHelper.resolveModuleFile(mid, target.value) }
-        .collect {
-          case f if !f.isEmpty => f
-        }
-        .flatten
-
-      files.map { f =>
-        val tf = new File(osgiDir, f.getName)
-        Files.copy(f.toPath, tf.toPath, StandardCopyOption.REPLACE_EXISTING)
-        tf
-      }
-    }.taskValue
-  )
-  .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedTestsupport % "test")
+  .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedAkka, blendedTestsupport % "test")
   .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin)
 
 //lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))

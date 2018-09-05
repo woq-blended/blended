@@ -18,7 +18,8 @@ object Dependencies {
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.4.2"
+  val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
+  val commonsDaemon =  "commons-daemon" % "commons-daemon" % "1.0.15"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
