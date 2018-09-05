@@ -144,7 +144,6 @@ class LauncherConfigTest extends FreeSpec {
        |  p6 = v6
        |}
        |""".stripMargin
-
       val a = read(ConfigFactory.parseString(config))
       val b = read(toConfig(a))
 

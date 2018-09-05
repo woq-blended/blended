@@ -25,11 +25,9 @@ inThisBuild(Seq(
     "-target", "1.8"
   ),
 
-  coverageEnabled := true,
-
   scalaVersion := "2.12.6",
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
-  // essential to not try to compile pom.scala files
+  // essential to not try to compile pom.scala files, only required until migration to  sbt is complete
   sourcesInBase := false,
   publishMavenStyle := true
 ))
@@ -38,7 +36,7 @@ inThisBuild(Seq(
 lazy val doPublish = Seq(
   publishMavenStyle := true,
   publishArtifact in Test := false,
-  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+  credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if(isSnapshot.value) {
@@ -72,9 +70,9 @@ lazy val root = project
     blendedTestsupport,
     blendedAkka,
     blendedSecurity.js,
-    blendedSecurity.jvm
-//    blendedUpdaterConfigJs,
-//    blendedUpdaterConfigJvm,
+    blendedSecurity.jvm,
+    blendedUpdaterConfigJS,
+    blendedUpdaterConfigJVM
 //    blendedLauncher,
 //    blendedContainerContextImpl,
 //    blendedMgmtBase,
@@ -134,58 +132,33 @@ lazy val blendedSecurityJS = blendedSecurity.js
     libraryDependencies ++= BlendedSecurityJS.libDependencies.value
   )
 
-//lazy val blendedUpdaterConfig = crossProject.in(file("blended.updater.config"))
-//  //  .enablePlugins(BlendedPlugin)
-//  .settings(commonSettings,
-//  libraryDependencies ++= Seq(
-//    Dependencies.prickle.organization %%% Dependencies.prickle.name % Dependencies.prickleVersion,
-//    Dependencies.scalatest.organization %%% Dependencies.scalatest.name % Dependencies.scalatestVersion % "test"
-//  )
-//)
-//  .jvmSettings(BuildHelper.bundleSettings(
-//    exportPkgs = Seq("", "json", "util", "/blended.launcher.config"),
-//    importPkgs = Seq.empty
-//  ): _*)
-//  .jvmSettings(
-//    unmanagedResourceDirectories in Compile += baseDirectory.value / "src" / "main" / "binaryResources",
-//    unmanagedResourceDirectories in Test += baseDirectory.value / "src" / "test" / "binaryResources",
-//    javaOptions in Test += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
-//    fork in Test := true,
-//    libraryDependencies ++= Seq(
-//      Dependencies.typesafeConfig,
-//      Dependencies.slf4j,
-//      Dependencies.scalatest % "test",
-//      Dependencies.logbackCore % "test",
-//      Dependencies.logbackClassic % "test"
-//    )
-//  )
-//
-//lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
-//  .dependsOn(blendedTestsupport % "test")
-//  .enablePlugins(SbtOsgi)
-//
-//lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
+lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Full)
+  .withoutSuffixFor(JVMPlatform)
+  .settings(doPublish)
+  .in(file("blended.updater.config"))
+
+lazy val blendedUpdaterConfigJVM = blendedUpdaterConfig.jvm
+  .settings(BlendedUpdaterConfigJVM.settings)
+  .dependsOn(blendedUtilLogging, blendedSecurityJVM, blendedTestsupport % "test")
+  .enablePlugins(SbtOsgi)
+
+lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
+  .settings(
+    libraryDependencies ++= BlendedSecurityJS.libDependencies.value
+  )
+  .dependsOn(blendedSecurityJS)
+
 //
 //lazy val blendedLauncher = project.in(file("blended.launcher"))
 //  .settings(commonSettings)
 //  .dependsOn(blendedUpdaterConfigJvm)
-//
-//lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
-//  .settings(commonSettings)
-//  .dependsOn(
-//    blendedUpdaterConfigJvm,
-//    blendedLauncher
-//  )
 //
 //lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
 //  .settings(commonSettings)
 //  .dependsOn(
 //    blendedContainerContextApi
 //  )
-//
-//lazy val blendedDomino = project.in(file("blended.domino"))
-//  .settings(commonSettings)
-//  .dependsOn(blendedContainerContextApi)
 //
 //lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
 //  .settings(commonSettings)
@@ -195,9 +168,3 @@ lazy val blendedSecurityJS = blendedSecurity.js
 //    blendedUpdaterConfigJvm
 //  )
 //
-//lazy val blendedAkka = project.in(file("blended.akka"))
-//  .settings(commonSettings)
-//  .dependsOn(
-//    blendedContainerContextApi,
-//    blendedDomino
-//  )

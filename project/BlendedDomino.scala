@@ -1,5 +1,5 @@
 object BlendedDomino extends ProjectSettings(
-  "blended.domnino",
+  "blended.domino",
   "Blended Domino extension for new Capsule scopes."
 ) {
 

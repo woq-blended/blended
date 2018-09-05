@@ -28,6 +28,8 @@ case class ProjectSettings(
       name := prjName,
       description := desc,
       libraryDependencies ++= libDependencies,
+      Test/javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
+      Test/fork := true
     ) ++ osgiSettings
   }
 }
