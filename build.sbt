@@ -57,8 +57,8 @@ lazy val root = project
     blendedUpdaterConfigJS,
     blendedUpdaterConfigJVM,
     blendedLauncher,
+    blendedMgmtBase
 //    blendedContainerContextImpl,
-//    blendedMgmtBase,
   )
 
 lazy val blendedUtilLogging = project.in(file("blended.util.logging"))
@@ -129,17 +129,16 @@ lazy val blendedLauncher = project.in(file("blended.launcher"))
   .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedAkka, blendedTestsupport % "test")
   .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin, FilterResources)
 
+
+lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
+  .dependsOn(blendedDomino, blendedContainerContextApi, blendedUtil, blendedUtilLogging)
+  .settings(BlendedMgmtBase.settings)
+  .enablePlugins(SbtOsgi)
+
 //lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
 //  .settings(commonSettings)
 //  .dependsOn(
 //    blendedContainerContextApi
 //  )
 //
-//lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
-//  .settings(commonSettings)
-//  .dependsOn(
-//    blendedUtil,
-//    blendedDomino,
-//    blendedUpdaterConfigJvm
-//  )
 //
