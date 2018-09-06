@@ -58,4 +58,6 @@ object Dependencies {
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
+
 }
+

@@ -1,5 +1,4 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import Dependencies._
 import sbt._
 
 object BlendedSecurityJS extends JSProjectSettings() {
@@ -17,10 +16,10 @@ object BlendedSecurityJVM extends ProjectSettings(
 ) {
 
   override def libDependencies: Seq[sbt.ModuleID] = Seq(
-    prickle,
-    scalatest % "test",
-    logbackCore % "test",
-    logbackClassic % "test"
+    Dependencies.prickle,
+    Dependencies.scalatest % "test",
+    Dependencies.logbackCore % "test",
+    Dependencies.logbackClassic % "test"
   )
 
   override def bundle: BlendedBundle = super.bundle.copy(

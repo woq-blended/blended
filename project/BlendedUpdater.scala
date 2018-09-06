@@ -1,8 +1,3 @@
-import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import Dependencies._
-import sbt._
-import sbt.Keys._
-
 object BlendedUpdater extends ProjectSettings(
   prjName = "blended.updater",
   desc = "OSGi Updater"

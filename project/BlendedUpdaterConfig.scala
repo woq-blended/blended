@@ -1,9 +1,8 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import Dependencies._
 import sbt._
 
 object BlendedUpdaterConfigJS extends JSProjectSettings() {
-  override def libDependencies : Def.Initialize[Seq[librarymanagement.ModuleID]] = Def.setting(
+  override def libDependencies: Def.Initialize[Seq[librarymanagement.ModuleID]] = Def.setting(
     Seq(
       "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
       "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
@@ -17,14 +16,19 @@ object BlendedUpdaterConfigJVM extends ProjectSettings(
 ) {
 
   override def libDependencies: Seq[sbt.ModuleID] = Seq(
-    prickle,
-    typesafeConfig,
-    scalatest % "test",
-    logbackClassic % "test",
-    logbackCore % "test"
+    Dependencies.prickle,
+    Dependencies.typesafeConfig,
+    Dependencies.scalatest % "test",
+    Dependencies.logbackClassic % "test",
+    Dependencies.logbackCore % "test"
   )
 
   override def bundle: BlendedBundle = super.bundle.copy(
-    exportPackage = Seq(prjName, s"$prjName.json", s"$prjName.util", "blended.launcher.config")
+    exportPackage = Seq(
+      prjName,
+      s"${prjName}.json",
+      s"${prjName}.util",
+      "blended.launcher.config"
+    )
   )
 }

@@ -9,7 +9,7 @@ object PublishConfg {
     credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
-      if(isSnapshot.value) {
+      if (isSnapshot.value) {
         Some("snapshots" at nexus + "content/repositories/snapshots")
       } else {
         Some("releases" at nexus + "service/local/staging/deploy/maven2")
