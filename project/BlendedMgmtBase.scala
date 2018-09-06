@@ -10,5 +10,5 @@ object BlendedMgmtBase extends ProjectSettings(
   override def bundle: BlendedBundle = super.bundle.copy(
     bundleActivator = s"${prjName}.internal.MgmtBaseActivator"
   )
-  
+
 }
