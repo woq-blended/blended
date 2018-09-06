@@ -27,7 +27,7 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
       store.verifyToken(token) match {
         case Failure(e) =>
           log.error(s"Could not verify token [$token] : [${e.getMessage}]")
-          complete(StatusCodes.BadRequest)
+          complete(StatusCodes.Unauthorized)
         case Success(token) =>
           log.info(s"Starting Web Socket message handler ... [${token.id}]")
 
