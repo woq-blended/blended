@@ -61,7 +61,7 @@ object BlendedLauncher extends ProjectSettings(
       val files = frameworks
         .map{ mid => BuildHelper.resolveModuleFile(mid, target.value) }
         .collect {
-          case f if !f.isEmpty => f
+          case f if f.nonEmpty => f
         }
         .flatten
 

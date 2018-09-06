@@ -1,7 +1,6 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import Dependencies._
 import sbt._
-import sbt.Keys._
 
 object BlendedUpdaterConfigJS extends JSProjectSettings() {
   override def libDependencies : Def.Initialize[Seq[librarymanagement.ModuleID]] = Def.setting(
