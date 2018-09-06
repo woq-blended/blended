@@ -27,6 +27,8 @@ BlendedModel(
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
+    Deps.sttp % "test",
+    sttpAkka % "test",
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
     Blended.securityLoginImpl % "test",

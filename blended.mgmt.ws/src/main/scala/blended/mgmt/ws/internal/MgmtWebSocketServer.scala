@@ -23,7 +23,9 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
   def route : Route = routeImpl
 
   private[this] lazy val routeImpl : Route = pathSingleSlash {
+    log.info("Received Web Socket upgrade request")
     parameter("token") { token =>
+      log.debug(s"Evaluating token [$token]")
       store.verifyToken(token) match {
         case Failure(e) =>
           log.error(s"Could not verify token [$token] : [${e.getMessage}]")
