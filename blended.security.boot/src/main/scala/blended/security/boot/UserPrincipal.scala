@@ -9,7 +9,7 @@ class UserPrincipal(user: String) extends Principal {
 
   override def equals(other: scala.Any): Boolean = other match {
     case p : UserPrincipal => user.equals(p.getName())
-    case o => false
+    case _ => false
   }
 
   override def toString: String = s"UserPrincipal($user)"

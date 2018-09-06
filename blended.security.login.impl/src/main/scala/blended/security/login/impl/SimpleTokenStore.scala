@@ -3,11 +3,8 @@ package blended.security.login.impl
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.security.json.PrickleProtocol._
+import blended.security.BlendedPermissionManager
 import blended.security.login.api.{AbstractTokenStore, Token, TokenHandler}
-import blended.security.{BlendedPermissionManager, BlendedPermissions}
-import io.jsonwebtoken.Jwts
-import prickle.Unpickle
 
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -84,17 +81,5 @@ class SimpleTokenStore(
     Await.result((storeActor ? ListTokens).mapTo[Seq[Token]], 3.seconds)
   }
 
-  override def verifyToken(token: String): Try[Token] =  Try {
-
-    val claims = Jwts.parser().setSigningKey(publicKey()).parseClaimsJws(token)
-    val permissionsJson = claims.getBody().get("permissions", classOf[String])
-    val permissions = Unpickle[BlendedPermissions].fromString(permissionsJson)
-
-    Token(
-      claims.getBody.getId,
-      Option(claims.getBody.getExpiration).map(_.getTime).getOrElse(0),
-      permissions.get,
-      webToken = token
-    )
-  }
+  override def verifyToken(token: String): Try[Token] =  Token(token, publicKey())
 }

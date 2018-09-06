@@ -5,12 +5,15 @@ import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
 
 import blended.security.BlendedPermissions
+import blended.security.boot.{GroupPrincipal, UserPrincipal}
 import blended.security.json.PrickleProtocol._
 import blended.security.login.api.{Token, TokenHandler}
 import io.jsonwebtoken.impl.DefaultClaims
 import io.jsonwebtoken.{Jwts, SignatureAlgorithm}
+import javax.security.auth.Subject
 import prickle.Pickle
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
@@ -29,7 +32,7 @@ object RSATokenHandler {
 
 class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
 
-  override def createToken(id: String, expire : Option[FiniteDuration], permissions: BlendedPermissions): Try[Token] = Try {
+  override def createToken(id: String, subj: Subject, expire : Option[FiniteDuration], permissions: BlendedPermissions): Try[Token] = Try {
 
     val date : Date = new Date()
     val expiresAt : Option[Date] = expire.map{ d => new Date(date.getTime + d.toMillis) }
@@ -39,7 +42,16 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
       .setSubject(id)
       .setIssuedAt(date)
 
-    claims.put("permissions", Pickle.intoString(permissions))
+    val user : UserPrincipal = subj.getPrincipals(classOf[UserPrincipal]).asScala.toList match {
+      case Nil => throw new Exception("Subject is missing the User Principal")
+      case h :: _ => h
+    }
+
+    val groups : List[GroupPrincipal] = subj.getPrincipals(classOf[GroupPrincipal]).asScala.toList
+
+    claims.put("user", user.getName())
+    claims.put("groups", groups.map(_.getName()).mkString(","))
+    if (groups.nonEmpty) claims.put("permissions", Pickle.intoString(permissions))
 
     expiresAt.foreach { claims.setExpiration }
 
@@ -50,6 +62,8 @@ class RSATokenHandler(keyPair : KeyPair) extends TokenHandler {
 
     Token(
       id,
+      user,
+      groups,
       expiresAt.getOrElse(new Date(0)).getTime,
       permissions,
       token

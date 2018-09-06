@@ -2,17 +2,18 @@ package blended.security.login.rest.internal
 
 import java.security.spec.X509EncodedKeySpec
 
+import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpHeader, HttpMethods, HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.security.login.api.TokenStore
 import javax.security.auth.Subject
 import org.slf4j.LoggerFactory
 import sun.misc.BASE64Encoder
-import akka.http.scaladsl.model.headers._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -36,14 +37,15 @@ class LoginService(
     val key = tokenstore.publicKey()
     val encodedKey : Array[Byte] = new X509EncodedKeySpec(key.getEncoded()).getEncoded()
 
-    val pemLines : List[String] = ("-----BEGIN PUBLIC KEY-----" :: lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))).reverse
+    val pemLines : List[String] = (
+      "-----END PUBLIC KEY-----" ::
+      lines(new BASE64Encoder().encode(encodedKey))(List("-----BEGIN PUBLIC KEY-----"))
+    ).reverse
 
     pemLines.mkString("\n")
   }
 
-  def route = httpRoute
-
-  private[this] lazy val httpRoute = loginRoute ~ logoutRoute ~ publicKeyRoute
+  def route: Route = loginRoute ~ logoutRoute ~ publicKeyRoute
 
   private[this] val loginRoute = {
 
@@ -68,8 +70,12 @@ class LoginService(
         // TODO: Make timeout for token expiry configurable
         authenticated { subj : Subject =>
           complete(tokenstore.newToken(subj, Some(1.minute)) match {
-            case Failure(e) => HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
-            case Success(t) => HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
+            case Failure(e) =>
+              log.error(s"Could not create token : [${e.getMessage()}]")
+              HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
+            case Success(t) =>
+              log.info(s"User [${t.user}] logged in successgully, token-id is [${t.id}]")
+              HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
           })
         }
       }

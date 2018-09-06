@@ -15,6 +15,7 @@ BlendedModel(
     Blended.domino,
     Blended.akka,
     Deps.prickle,
+    Deps.jjwt,
     Blended.security,
     Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
