@@ -278,7 +278,7 @@ object RuntimeConfigBuilder {
           sys.error("Inconsistent overlays given:\n- " + errors.mkString("\n- "))
       }
 
-      // materialize config generators of overlay configs, e.g. <profileDir>/A-1/B-2/etc/application_overlay.conf
+      // materialize config generators of overlay configs, e.g. <profileDir>/A-1/B-2/container/application_overlay.conf
       localOverlays.materialize().get
 
       // write resulting overlay config, e.g. <profileDir>/overlays/A-1-B-2.conf (or base.conf)

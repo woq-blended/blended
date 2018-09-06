@@ -39,7 +39,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           |    }
           |  },
           |  {
-          |    file = etc/file2.conf
+          |    file = container/file2.conf
           |    config = {
           |      file2key: value
           |    }
@@ -57,7 +57,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
               ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
             ),
             GeneratedConfigCompanion.create(
-              "etc/file2.conf",
+              "container/file2.conf",
               ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
             )
           )
@@ -74,7 +74,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
             ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
           ),
           GeneratedConfigCompanion.create(
-            "etc/file2",
+            "container/file2",
             ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
           )
         )
@@ -89,7 +89,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           ConfigFactory.parseMap(Map("file1key" -> "value").asJava)
         ),
         GeneratedConfigCompanion.create(
-          "etc/file2",
+          "container/file2",
           ConfigFactory.parseMap(Map("file2key" -> "value").asJava)
         )
       )
@@ -143,14 +143,14 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
       val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
@@ -167,8 +167,8 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val overlay = OverlayConfig(
         name = "o", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1),
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config1),
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
       OverlayConfigCompanion.findCollisions(overlay.generatedConfigs) shouldEqual Seq("Double defined config key found: key")
@@ -192,20 +192,20 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key2=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
       withTestDir() { dir =>
         val overlays = LocalOverlays(List(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
-        val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
+        val expectedEtcDir = new File(dir, "o1-1/o2-1/container")
         overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
         val expectedConfigFile = new File(expectedEtcDir, "application_overlay.conf")
         expectedEtcDir.listFiles() shouldBe Array(expectedConfigFile)
@@ -219,14 +219,14 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config1)
         )
       )
       val config2 = ConfigFactory.parseString("key1=val2")
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
       withTestDir() { dir =>
@@ -240,7 +240,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig(
         name = "o1", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config1)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config1)
         )
       )
       log.info("overlay config 1: " + o1)
@@ -251,14 +251,14 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o2 = OverlayConfig(
         name = "o2", version = "1",
         generatedConfigs = List(
-          GeneratedConfigCompanion.create("etc/application_overlay.conf", config2)
+          GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
       log.info("overlay config 2: " + o2)
 
       withTestDir() { dir =>
         val overlays = LocalOverlays(List(o1, o2), dir)
-        val expectedEtcDir = new File(dir, "o1-1/o2-1/etc")
+        val expectedEtcDir = new File(dir, "o1-1/o2-1/container")
         val expectedConfigFile = new File(expectedEtcDir, "application_overlay.conf")
         assert(overlays.materialize().map(_.toSet) === Success(Set(expectedConfigFile)))
         //        overlays.materialize().isSuccess shouldBe true

@@ -20,7 +20,7 @@ class MvnUrlTest extends FreeSpec {
     ok(MvnGav("a.b.c", "d.e.f", "1"), "a/b/c/d.e.f/1/d.e.f-1.jar")
     ok(MvnGav("a.b.c", "d.e.f", "1", fileExt = "zip"), "a/b/c/d.e.f/1/d.e.f-1.zip")
     ok(MvnGav("a.b.c", "d.e.f", "1", Some("test")), "a/b/c/d.e.f/1/d.e.f-1-test.jar")
-    ok(MvnGav("a.b.c", "d.e.f", "1", Some("etc"), "zip"), "a/b/c/d.e.f/1/d.e.f-1-etc.zip")
+    ok(MvnGav("a.b.c", "d.e.f", "1", Some("container"), "zip"), "a/b/c/d.e.f/1/d.e.f-1-container.zip")
     ok(MvnGav("a.b.c", "d.e.f", "1", None, "war"), "a/b/c/d.e.f/1/d.e.f-1.war")
     ok(MvnGav("a.b.c", "d.e.f", "1", Some("jar"), "jar"), "a/b/c/d.e.f/1/d.e.f-1.jar")
 

@@ -8,14 +8,13 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
-import blended.security.BlendedPermissions
 import blended.security.internal.SecurityActivator
+import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
-import io.jsonwebtoken.Jwts
 import org.scalatest.{FreeSpec, Matchers}
 import sun.misc.BASE64Decoder
 
@@ -101,30 +100,46 @@ class LoginServiceSpec extends FreeSpec
     "Respond with Ok if called with correct credentials" in {
 
       withLoginService { _ =>
-        val key = serverKey.get
+        val key : PublicKey = serverKey.get
 
         val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
         val response = request.send()
-
         val r = Await.result(response, 3.seconds)
 
         r.code should be (StatusCodes.Ok)
 
-        println(r.body.right.get)
+        val token = Token(r.body.right.get, key).get
 
-        val claims = Jwts.parser().setSigningKey(key).parseClaimsJws(r.body.right.get)
-        val json = claims.getBody().get("permissions", classOf[String])
+        token.permissions.granted.size should be (2)
+        token.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
+        token.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+      }
+    }
 
-        val permissions : BlendedPermissions = BlendedPermissions.fromJson(json).get
+    "Allow a user to login twice" in {
+      withLoginService { _ =>
+        val key : PublicKey = serverKey.get
 
-        permissions.granted.size should be (2)
-        permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+        val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+
+        val response1 = request.send()
+        val r1 = Await.result(response1, 3.seconds)
+        r1.code should be (StatusCodes.Ok)
+        val t1 = Token(r1.body.right.get, key).get
+
+        val response2 = request.send()
+        val r2 = Await.result(response2, 3.seconds)
+        r2.code should be (StatusCodes.Ok)
+        val t2 = Token(r2.body.right.get, key).get
+
+        assert(t1.id != t2.id)
+
       }
     }
 
     "Respond with the server's public key" in {
       withLoginService { _ =>
+        serverKey.get.getFormat() should be("X.509")
         serverKey.get.getAlgorithm()  should be ("RSA")
       }
     }

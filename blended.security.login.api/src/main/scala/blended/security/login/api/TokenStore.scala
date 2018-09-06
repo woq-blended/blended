@@ -3,12 +3,41 @@ package blended.security.login.api
 import java.security.PublicKey
 
 import blended.security.BlendedPermissions
+import blended.security.boot.{GroupPrincipal, UserPrincipal}
+import io.jsonwebtoken.Jwts
 import javax.security.auth.Subject
+import prickle.Unpickle
+import blended.security.json.PrickleProtocol._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
+object Token {
+  def apply(webToken : String, key: PublicKey) : Try[Token] = Try {
+    val claims = Jwts.parser().setSigningKey(key).parseClaimsJws(webToken)
+
+    val permissionsJson = claims.getBody().get("permissions", classOf[String])
+    val permissions = Unpickle[BlendedPermissions].fromString(permissionsJson)
+
+    val user : UserPrincipal = new UserPrincipal(claims.getBody().get("user", classOf[String]))
+    val groups : List[GroupPrincipal] = Option(
+      claims.getBody().get("groups", classOf[String])
+    ) match {
+      case None => List.empty
+      case Some(s) => s.split(",").map(sg => new GroupPrincipal(sg)).toList
+    }
+
+    Token(
+      claims.getBody.getId,
+      user,
+      groups,
+      Option(claims.getBody.getExpiration).map(_.getTime).getOrElse(0),
+      permissions.get,
+      webToken = webToken
+    )
+  }
+}
 /**
   * A class encapsulating a security token identified by a unique key
   * @param id the key to identify the token
@@ -17,6 +46,8 @@ import scala.util.Try
   */
 case class Token(
   id : String,
+  user: UserPrincipal,
+  groups: List[GroupPrincipal],
   expiresAt : Long,
   permissions: BlendedPermissions,
   webToken : String

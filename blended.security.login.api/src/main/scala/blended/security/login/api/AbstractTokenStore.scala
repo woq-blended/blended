@@ -38,8 +38,8 @@ abstract class AbstractTokenStore(
         Failure(new LoginException("Authenticated subject is missing the user principal"))
 
       case h +: _ =>
-        val tokenId = h.getName() + nextId()
-        storeToken(tokenHandler.createToken(tokenId, ttl, mgr.permissions(subj)).get)
+        val tokenId = h.getName() + "-" + nextId()
+        storeToken(tokenHandler.createToken(tokenId, subj, ttl, mgr.permissions(subj)).get)
     }
   }
 

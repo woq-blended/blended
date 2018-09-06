@@ -12,7 +12,7 @@ class MockContainerContext(baseDir: String) extends ContainerContext {
 
   override def getContainerDirectory(): String = baseDir
 
-  override def getContainerConfigDirectory(): String = getContainerDirectory() + "/etc"
+  override def getContainerConfigDirectory(): String = getContainerDirectory() + "/container"
 
   override def getContainerLogDirectory(): String = baseDir
 

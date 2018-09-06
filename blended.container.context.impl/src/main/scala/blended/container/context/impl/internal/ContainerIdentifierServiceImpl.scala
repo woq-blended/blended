@@ -16,7 +16,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
   private[this] val log = Logger[ContainerIdentifierServiceImpl]
 
   override lazy val uuid : String = {
-    val idFile = new File(System.getProperty("blended.home") + "/etc", s"blended.container.context.id")
+    val idFile = new File(System.getProperty("blended.home") + "/container", s"blended.container.context.id")
     val lines = Files.readAllLines(idFile.toPath)
     if (!lines.isEmpty) {
       log.info(s"Using Container ID [${lines.get(0)}]")
