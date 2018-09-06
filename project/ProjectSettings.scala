@@ -13,10 +13,10 @@ case class ProjectSettings(
   def bundle : BlendedBundle = BlendedBundle(
     bundleSymbolicName = prjName,
     exportPackage = Seq(prjName),
-    privatePackage = Seq(prjName + ".internal")
+    privatePackage = Seq(s"${prjName}.internal.*")
   )
 
-  final protected def sbtBundle : Option[BlendedBundle] = if (osgi) {
+  protected final def sbtBundle : Option[BlendedBundle] = if (osgi) {
     Some(bundle)
   } else {
     None

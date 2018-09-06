@@ -27,6 +27,7 @@ inThisBuild(Seq(
 
   scalaVersion := "2.12.6",
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
+
   // essential to not try to compile pom.scala files, only required until migration to  sbt is complete
   sourcesInBase := false,
   publishMavenStyle := true,
@@ -71,13 +72,13 @@ lazy val blendedSecurityBoot = project.in(file("blended.security.boot"))
   .enablePlugins(SbtOsgi)
 
 lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
-  .settings(BlendedContainerContextApi.settings)
   .dependsOn(blendedUtilLogging)
+  .settings(BlendedContainerContextApi.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedDomino = project.in(file("blended.domino"))
-  .settings(BlendedDomino.settings)
   .dependsOn(blendedContainerContextApi)
+  .settings(BlendedDomino.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedUtil = project.in(file("blended.util"))
@@ -85,12 +86,12 @@ lazy val blendedUtil = project.in(file("blended.util"))
   .enablePlugins(SbtOsgi)
 
 lazy val blendedTestsupport = project.in(file("blended.testsupport"))
-  .settings(BlendedTestsupport.settings)
   .dependsOn(blendedUtil, blendedUtilLogging, blendedSecurityBoot)
+  .settings(BlendedTestsupport.settings)
 
 lazy val blendedAkka = project.in(file("blended.akka"))
-  .settings(BlendedAkka.settings)
   .dependsOn(blendedUtilLogging, blendedContainerContextApi, blendedDomino)
+  .settings(BlendedAkka.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
@@ -99,8 +100,8 @@ lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
   .in(file("blended.security"))
 
 lazy val blendedSecurityJVM = blendedSecurity.jvm
-  .settings(BlendedSecurityJVM.settings)
   .dependsOn(blendedUtilLogging, blendedDomino, blendedUtil, blendedSecurityBoot)
+  .settings(BlendedSecurityJVM.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedSecurityJS = blendedSecurity.js
@@ -114,20 +115,19 @@ lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
   .in(file("blended.updater.config"))
 
 lazy val blendedUpdaterConfigJVM = blendedUpdaterConfig.jvm
-  .settings(BlendedUpdaterConfigJVM.settings)
   .dependsOn(blendedUtilLogging, blendedSecurityJVM, blendedTestsupport % "test")
+  .settings(BlendedUpdaterConfigJVM.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
+  .dependsOn(blendedSecurityJS)
   .settings(
     libraryDependencies ++= BlendedSecurityJS.libDependencies.value
   )
-  .dependsOn(blendedSecurityJS)
-
 
 lazy val blendedLauncher = project.in(file("blended.launcher"))
-  .settings(BlendedLauncher.settings)
   .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedAkka, blendedTestsupport % "test")
+  .settings(BlendedLauncher.settings)
   .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin, FilterResources)
 
 
