@@ -60,7 +60,8 @@ lazy val root = project
     blendedLauncher,
     blendedMgmtBase,
     blendedUpdater,
-    blendedUpdaterTools
+    blendedUpdaterTools,
+    blendedPersistence
 //    blendedContainerContextImpl,
   )
 
@@ -148,6 +149,11 @@ lazy val blendedUpdater = project.in(file("blended.updater"))
 lazy val blendedUpdaterTools = project.in(file("blended.updater.tools"))
   .dependsOn(blendedUpdaterConfigJVM)
   .settings(BlendedUpdaterTools.settings)
+  .enablePlugins(SbtOsgi)
+
+lazy val blendedPersistence = project.in(file("blended.persistence"))
+  .dependsOn(blendedAkka, blendedTestsupport % "test")
+  .settings(BlendedPersistence.settings)
   .enablePlugins(SbtOsgi)
 
 

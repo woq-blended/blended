@@ -50,6 +50,7 @@ object Dependencies {
   val scalatest = "org.scalatest" %% "scalatest" % scalatestVersion
   val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
+  val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
 
   val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
