@@ -27,7 +27,12 @@ BlendedModel(
     Deps.akkaHttp,
     Deps.akkaHttpCore,
     Deps.akkaStream,
+    Blended.testSupport % "test",
     Blended.testSupportPojosr % "test",
+    Blended.securityLoginImpl % "test",
+    Blended.securityLoginRest % "test",
+    Blended.persistenceH2 % "test",
+    Blended.mgmtRest % "test",
     Deps.scalaTest % "test",
     Deps.logbackClassic % "test"
   ),
