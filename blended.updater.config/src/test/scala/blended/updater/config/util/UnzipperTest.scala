@@ -62,8 +62,8 @@ class UnzipperTest extends FreeSpec
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map("VERSION" -> "1.0.0"),
           failOnMissing = true
         )))
-        assert(listFilesRecursive(dir).toSet === Set("container", "container/test.conf"))
-        assert(Source.fromFile(new File(dir, "container/test.conf")).getLines().toList === List("name = \"replaced-version-1.0.0\"", ""))
+        assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
+        assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-1.0.0\"", ""))
       }
     }
     "unpacking everything and replacing a missing varible should not work" in {
@@ -84,8 +84,8 @@ class UnzipperTest extends FreeSpec
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
           failOnMissing = false
         )))
-        assert(listFilesRecursive(dir).toSet === Set("container", "container/test.conf"))
-        assert(Source.fromFile(new File(dir, "container/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))
+        assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
+        assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))
       }
     }
 

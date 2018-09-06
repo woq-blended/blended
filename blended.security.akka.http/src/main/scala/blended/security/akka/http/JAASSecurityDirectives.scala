@@ -24,9 +24,9 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
 
   private[this] lazy val log = Logger[JAASSecurityDirectives]
 
-  val challenge = HttpChallenges.basic("blended")
+  private[this] val challenge = HttpChallenges.basic("blended")
 
-  def auth(creds: BasicHttpCredentials): Option[Subject] = {
+  private[this] def auth(creds: BasicHttpCredentials): Option[Subject] = {
 
     val cbHandler = new CallbackHandler {
       override def handle(callbacks: Array[Callback]): Unit = {
@@ -52,7 +52,7 @@ trait JAASSecurityDirectives extends BlendedSecurityDirectives {
     }
   }
 
-  def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[AuthenticationResult[Subject]] =
+  private[this] def myUserPassAuthenticator(credentials: Option[HttpCredentials]): Future[AuthenticationResult[Subject]] =
     Future {
       credentials match {
         case Some(creds: BasicHttpCredentials) => auth(creds) match {
