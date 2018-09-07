@@ -2,7 +2,7 @@ import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 // this is required to use proper values in osgi manifest require capability
-val initSystemEarly : Unit = Option(System.getProperty("java.version"))
+val initSystemEarly: Unit = Option(System.getProperty("java.version"))
   .map(v => v.split("[.]", 3).take(2).mkString("."))
   .foreach(v => System.setProperty("java.version", v))
 
@@ -62,105 +62,73 @@ lazy val root = project
     blendedUpdater,
     blendedUpdaterTools,
     blendedPersistence
-//    blendedContainerContextImpl,
   )
 
-lazy val blendedUtilLogging = project.in(file("blended.util.logging"))
-  .settings(BlendedUtilLogging.settings)
-  .enablePlugins(SbtOsgi)
+lazy val blendedUtilLogging = BlendedUtilLogging.project
 
-lazy val blendedSecurityBoot = project.in(file("blended.security.boot"))
-  .settings(BlendedSecurityBoot.settings)
-  .enablePlugins(SbtOsgi)
+lazy val blendedSecurityBoot = BlendedSecurityBoot.project
 
-lazy val blendedContainerContextApi = project.in(file("blended.container.context.api"))
+lazy val blendedContainerContextApi = BlendedContainerContextApi.project
   .dependsOn(blendedUtilLogging)
-  .settings(BlendedContainerContextApi.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedDomino = project.in(file("blended.domino"))
+lazy val blendedDomino = BlendedDomino.project
   .dependsOn(blendedContainerContextApi)
-  .settings(BlendedDomino.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedUtil = project.in(file("blended.util"))
-  .settings(BlendedUtil.settings)
-  .enablePlugins(SbtOsgi)
+lazy val blendedUtil = BlendedUtil.project
 
-lazy val blendedTestsupport = project.in(file("blended.testsupport"))
+lazy val blendedTestsupport = BlendedTestsupport.project
   .dependsOn(blendedUtil, blendedUtilLogging, blendedSecurityBoot)
-  .settings(BlendedTestsupport.settings)
 
-lazy val blendedAkka = project.in(file("blended.akka"))
+lazy val blendedAkka = BlendedAkka.project
   .dependsOn(blendedUtilLogging, blendedContainerContextApi, blendedDomino)
-  .settings(BlendedAkka.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
+lazy val blendedSecurityCross = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
   .in(file("blended.security"))
 
-lazy val blendedSecurityJvm = blendedSecurity.jvm
-  .dependsOn(blendedUtilLogging, blendedDomino, blendedUtil, blendedSecurityBoot)
-  .settings(BlendedSecurityJvm.settings)
-  .enablePlugins(SbtOsgi)
+lazy val blendedSecurityJvm = {
+  BlendedSecurityJvm.projectFactory = Some(() => blendedSecurityCross.jvm)
+  BlendedSecurityJvm.project
+    .dependsOn(blendedUtilLogging, blendedDomino, blendedUtil, blendedSecurityBoot)
+}
 
-lazy val blendedSecurityJs = blendedSecurity.js
+lazy val blendedSecurityJs = blendedSecurityCross.js
   .settings(
     libraryDependencies ++= BlendedSecurityJs.libDependencies.value
   )
 
-lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
+lazy val blendedUpdaterConfigCross = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Full)
   .withoutSuffixFor(JVMPlatform)
   .in(file("blended.updater.config"))
 
-lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
-  .dependsOn(blendedUtilLogging, blendedSecurityJvm, blendedTestsupport % "test")
-  .settings(BlendedUpdaterConfigJvm.settings)
-  .enablePlugins(SbtOsgi)
+lazy val blendedUpdaterConfigJvm = {
+  BlendedUpdaterConfigJvm.projectFactory = Some(() => blendedUpdaterConfigCross.jvm)
+  BlendedUpdaterConfigJvm.project
+    .dependsOn(blendedUtilLogging, blendedSecurityJvm, blendedTestsupport % "test")
+}
 
-lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
+lazy val blendedUpdaterConfigJs = blendedUpdaterConfigCross.js
   .dependsOn(blendedSecurityJs)
   .settings(
     libraryDependencies ++= BlendedSecurityJs.libDependencies.value
   )
 
-lazy val blendedLauncher = project.in(file("blended.launcher"))
+lazy val blendedLauncher = BlendedLauncher.project
   .dependsOn(blendedUtilLogging, blendedUpdaterConfigJvm, blendedAkka, blendedTestsupport % "test")
-  .settings(BlendedLauncher.settings)
-  .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin, FilterResources)
 
-
-lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
+lazy val blendedMgmtBase = BlendedMgmtBase.project
   .dependsOn(blendedDomino, blendedContainerContextApi, blendedUtil, blendedUtilLogging)
-  .settings(BlendedMgmtBase.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedUpdater = project.in(file("blended.updater"))
+lazy val blendedUpdater = BlendedUpdater.project
   .dependsOn(
     blendedUpdaterConfigJvm, blendedLauncher, blendedMgmtBase, blendedContainerContextApi, blendedAkka,
     blendedTestsupport % "test"
   )
-  .settings(BlendedUpdater.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedUpdaterTools = project.in(file("blended.updater.tools"))
+lazy val blendedUpdaterTools = BlendedUpdaterTools.project
   .dependsOn(blendedUpdaterConfigJvm)
-  .settings(BlendedUpdaterTools.settings)
-  .enablePlugins(SbtOsgi)
 
-lazy val blendedPersistence = project.in(file("blended.persistence"))
+lazy val blendedPersistence = BlendedPersistence.project
   .dependsOn(blendedAkka, blendedTestsupport % "test")
-  .settings(BlendedPersistence.settings)
-  .enablePlugins(SbtOsgi)
-
-
-//lazy val blendedContainerContextImpl = project.in(file("blended.container.context.impl"))
-//  .settings(commonSettings)
-//  .dependsOn(
-//    blendedContainerContextApi
-//  )
-//
-//

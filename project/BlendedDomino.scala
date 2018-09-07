@@ -1,11 +1,10 @@
-object BlendedDomino extends ProjectSettings(
-  "blended.domino",
-  "Blended Domino extension for new Capsule scopes."
-) {
-
-  override def libDependencies: Seq[sbt.ModuleID] = Seq(
-    Dependencies.typesafeConfig,
-    Dependencies.domino
+object BlendedDomino
+  extends ProjectSettings(
+    prjName = "blended.domino",
+    desc = "Blended Domino extension for new Capsule scopes.",
+    libDeps = Seq(
+      Dependencies.typesafeConfig,
+      Dependencies.domino
+    )
   )
-}
 

@@ -5,25 +5,32 @@ import sbt.Keys._
 import Dependencies._
 
 import com.typesafe.sbt.osgi.OsgiKeys
+import com.typesafe.sbt.packager.universal.UniversalPlugin
+import com.typesafe.sbt.packager.universal.UniversalDeployPlugin
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.SbtNativePackager.autoImport._
 import NativePackagerHelper._
 
 import FilterResources.autoImport._
 
-object BlendedLauncher extends ProjectSettings(
+object BlendedLauncher
+extends ProjectSettings(
   prjName = "blended.launcher",
-  desc = "Provide an OSGi Launcher"
-) {
-
-  override def libDependencies: Seq[sbt.ModuleID] = Seq(
-    cmdOption,
-    orgOsgi,
-    typesafeConfig,
-    logbackCore,
-    logbackClassic,
-    commonsDaemon
+  desc = "Provide an OSGi Launcher",
+   libDeps = Seq(
+      Dependencies.cmdOption,
+      Dependencies.orgOsgi,
+      Dependencies.typesafeConfig,
+      Dependencies.logbackCore,
+      Dependencies.logbackClassic,
+      Dependencies.commonsDaemon
+  ),
+  extraPlugins = Seq(
+      UniversalPlugin,
+      UniversalDeployPlugin,
+      FilterResources
   )
+) {
 
   override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
 
@@ -93,4 +100,6 @@ object BlendedLauncher extends ProjectSettings(
     publishM2 := publishM2.dependsOn(Universal/publishM2).value,
     publishLocal := publishLocal.dependsOn(Universal/publishLocal).value
   )
+
 }
+
