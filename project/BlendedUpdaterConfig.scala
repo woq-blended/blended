@@ -1,7 +1,7 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import sbt._
 
-object BlendedUpdaterConfigJS extends JSProjectSettings() {
+object BlendedUpdaterConfigJs extends JsProjectSettings() {
   override def libDependencies: Def.Initialize[Seq[librarymanagement.ModuleID]] = Def.setting(
     Seq(
       "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
@@ -10,7 +10,7 @@ object BlendedUpdaterConfigJS extends JSProjectSettings() {
   )
 }
 
-object BlendedUpdaterConfigJVM extends ProjectSettings(
+object BlendedUpdaterConfigJvm extends ProjectSettings(
   prjName = "blended.updater.config",
   desc = "Configurations for Updater and Launcher"
 ) {

@@ -41,7 +41,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "blended",
-    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJS, blendedUpdaterConfigJS)
+    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
   )
   .settings(PublishConfg.noPublish)
   .enablePlugins(ScalaUnidocPlugin)
@@ -53,10 +53,10 @@ lazy val root = project
     blendedUtil,
     blendedTestsupport,
     blendedAkka,
-    blendedSecurity.js,
-    blendedSecurity.jvm,
-    blendedUpdaterConfigJS,
-    blendedUpdaterConfigJVM,
+    blendedSecurityJs,
+    blendedSecurityJvm,
+    blendedUpdaterConfigJs,
+    blendedUpdaterConfigJvm,
     blendedLauncher,
     blendedMgmtBase,
     blendedUpdater,
@@ -101,14 +101,14 @@ lazy val blendedSecurity = crossProject(JVMPlatform, JSPlatform)
   .withoutSuffixFor(JVMPlatform)
   .in(file("blended.security"))
 
-lazy val blendedSecurityJVM = blendedSecurity.jvm
+lazy val blendedSecurityJvm = blendedSecurity.jvm
   .dependsOn(blendedUtilLogging, blendedDomino, blendedUtil, blendedSecurityBoot)
-  .settings(BlendedSecurityJVM.settings)
+  .settings(BlendedSecurityJvm.settings)
   .enablePlugins(SbtOsgi)
 
-lazy val blendedSecurityJS = blendedSecurity.js
+lazy val blendedSecurityJs = blendedSecurity.js
   .settings(
-    libraryDependencies ++= BlendedSecurityJS.libDependencies.value
+    libraryDependencies ++= BlendedSecurityJs.libDependencies.value
   )
 
 lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
@@ -116,19 +116,19 @@ lazy val blendedUpdaterConfig = crossProject(JVMPlatform, JSPlatform)
   .withoutSuffixFor(JVMPlatform)
   .in(file("blended.updater.config"))
 
-lazy val blendedUpdaterConfigJVM = blendedUpdaterConfig.jvm
-  .dependsOn(blendedUtilLogging, blendedSecurityJVM, blendedTestsupport % "test")
-  .settings(BlendedUpdaterConfigJVM.settings)
+lazy val blendedUpdaterConfigJvm = blendedUpdaterConfig.jvm
+  .dependsOn(blendedUtilLogging, blendedSecurityJvm, blendedTestsupport % "test")
+  .settings(BlendedUpdaterConfigJvm.settings)
   .enablePlugins(SbtOsgi)
 
-lazy val blendedUpdaterConfigJS = blendedUpdaterConfig.js
-  .dependsOn(blendedSecurityJS)
+lazy val blendedUpdaterConfigJs = blendedUpdaterConfig.js
+  .dependsOn(blendedSecurityJs)
   .settings(
-    libraryDependencies ++= BlendedSecurityJS.libDependencies.value
+    libraryDependencies ++= BlendedSecurityJs.libDependencies.value
   )
 
 lazy val blendedLauncher = project.in(file("blended.launcher"))
-  .dependsOn(blendedUtilLogging, blendedUpdaterConfigJVM, blendedAkka, blendedTestsupport % "test")
+  .dependsOn(blendedUtilLogging, blendedUpdaterConfigJvm, blendedAkka, blendedTestsupport % "test")
   .settings(BlendedLauncher.settings)
   .enablePlugins(SbtOsgi, UniversalPlugin, UniversalDeployPlugin, FilterResources)
 
@@ -140,14 +140,14 @@ lazy val blendedMgmtBase = project.in(file("blended.mgmt.base"))
 
 lazy val blendedUpdater = project.in(file("blended.updater"))
   .dependsOn(
-    blendedUpdaterConfigJVM, blendedLauncher, blendedMgmtBase, blendedContainerContextApi, blendedAkka,
+    blendedUpdaterConfigJvm, blendedLauncher, blendedMgmtBase, blendedContainerContextApi, blendedAkka,
     blendedTestsupport % "test"
   )
   .settings(BlendedUpdater.settings)
   .enablePlugins(SbtOsgi)
 
 lazy val blendedUpdaterTools = project.in(file("blended.updater.tools"))
-  .dependsOn(blendedUpdaterConfigJVM)
+  .dependsOn(blendedUpdaterConfigJvm)
   .settings(BlendedUpdaterTools.settings)
   .enablePlugins(SbtOsgi)
 

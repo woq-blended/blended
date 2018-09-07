@@ -1,7 +1,7 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 import sbt._
 
-object BlendedSecurityJS extends JSProjectSettings() {
+object BlendedSecurityJs extends JsProjectSettings() {
   override def libDependencies : Def.Initialize[Seq[librarymanagement.ModuleID]] = Def.setting(
     Seq(
       "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
@@ -10,7 +10,7 @@ object BlendedSecurityJS extends JSProjectSettings() {
   )
 }
 
-object BlendedSecurityJVM extends ProjectSettings(
+object BlendedSecurityJvm extends ProjectSettings(
   prjName = "blended.security",
   desc = "Configuration bundle for the security framework."
 ) {
