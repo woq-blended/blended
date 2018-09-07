@@ -22,39 +22,41 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
 
-class LoginServiceSpec extends FreeSpec
-  with ScalatestRouteTest
-  with Matchers
-  with SimplePojosrBlendedContainer
-  with PojoSrTestHelper {
+class LoginServiceSpec
+    extends FreeSpec
+    with ScalatestRouteTest
+    with Matchers
+    with SimplePojosrBlendedContainer
+    with PojoSrTestHelper {
 
   private[this] implicit val backend = AkkaHttpBackend()
 
-  def withLoginService[T](f : HttpContext => T) : T = {
-    withSimpleBlendedContainer(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()){sr =>
-      withStartedBundles(sr)(Seq(
-        "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-        "blended.akka.http" -> Some(() => new BlendedAkkaHttpActivator()),
-        "blended.security" -> Some(() => new SecurityActivator()),
-        "blended.security.login" -> Some(() => new LoginActivator()),
-        "blended.security.login.rest" -> Some(() => new RestLoginActivator())
-      )) { sr =>
-
-        val ref = sr.getServiceReference(classOf[HttpContext].getName())
-        val svc : HttpContext = sr.getService(ref).asInstanceOf[HttpContext]
+  def withLoginService[T](f: HttpContext => T): T = {
+    withSimpleBlendedContainer(
+      new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()) { sr =>
+      withStartedBundles(sr)(
+        Seq(
+          "blended.akka"                -> Some(() => new BlendedAkkaActivator()),
+          "blended.akka.http"           -> Some(() => new BlendedAkkaHttpActivator()),
+          "blended.security"            -> Some(() => new SecurityActivator()),
+          "blended.security.login"      -> Some(() => new LoginActivator()),
+          "blended.security.login.rest" -> Some(() => new RestLoginActivator())
+        )) { sr =>
+        val ref              = sr.getServiceReference(classOf[HttpContext].getName())
+        val svc: HttpContext = sr.getService(ref).asInstanceOf[HttpContext]
 
         f(svc)
       }
     }
   }
 
-  def serverKey : Try[PublicKey] = Try {
+  def serverKey: Try[PublicKey] = Try {
 
-    val request = sttp.get(uri"http://localhost:9995/login/key")
+    val request  = sttp.get(uri"http://localhost:9995/login/key")
     val response = request.send()
 
     val r = Await.result(response, 3.seconds)
-    r.code should be (StatusCodes.Ok)
+    r.code should be(StatusCodes.Ok)
 
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
@@ -62,8 +64,8 @@ class LoginServiceSpec extends FreeSpec
       .replaceAll("\n", "")
 
     val bytes = new BASE64Decoder().decodeBuffer(rawString)
-    val x509 = new X509EncodedKeySpec(bytes)
-    val kf = KeyFactory.getInstance("RSA")
+    val x509  = new X509EncodedKeySpec(bytes)
+    val kf    = KeyFactory.getInstance("RSA")
     kf.generatePublic(x509)
   }
 
@@ -72,13 +74,12 @@ class LoginServiceSpec extends FreeSpec
     "Respond with Unauthorized used without credentials" in {
 
       withLoginService { _ =>
-
-        val request = sttp.post(uri"http://localhost:9995/login/")
+        val request  = sttp.post(uri"http://localhost:9995/login/")
         val response = request.send()
 
         val r = Await.result(response, 3.seconds)
 
-        r.code should be (StatusCodes.Unauthorized)
+        r.code should be(StatusCodes.Unauthorized)
       }
 
     }
@@ -86,13 +87,12 @@ class LoginServiceSpec extends FreeSpec
     "Respond with Unauthorized used with wrong credentials" in {
 
       withLoginService { _ =>
-
-        val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
+        val request  = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "foo")
         val response = request.send()
 
         val r = Await.result(response, 3.seconds)
 
-        r.code should be (StatusCodes.Unauthorized)
+        r.code should be(StatusCodes.Unauthorized)
       }
 
     }
@@ -100,36 +100,36 @@ class LoginServiceSpec extends FreeSpec
     "Respond with Ok if called with correct credentials" in {
 
       withLoginService { _ =>
-        val key : PublicKey = serverKey.get
+        val key: PublicKey = serverKey.get
 
-        val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
+        val request  = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
         val response = request.send()
-        val r = Await.result(response, 3.seconds)
+        val r        = Await.result(response, 3.seconds)
 
-        r.code should be (StatusCodes.Ok)
+        r.code should be(StatusCodes.Ok)
 
         val token = Token(r.body.right.get, key).get
 
-        token.permissions.granted.size should be (2)
-        token.permissions.granted.find(_.permissionClass == Some("admins")) should be (defined)
-        token.permissions.granted.find(_.permissionClass == Some("blended")) should be (defined)
+        token.permissions.granted.size should be(2)
+        token.permissions.granted.find(_.permissionClass == Some("admins")) should be(defined)
+        token.permissions.granted.find(_.permissionClass == Some("blended")) should be(defined)
       }
     }
 
     "Allow a user to login twice" in {
       withLoginService { _ =>
-        val key : PublicKey = serverKey.get
+        val key: PublicKey = serverKey.get
 
         val request = sttp.post(uri"http://localhost:9995/login/").auth.basic("andreas", "mysecret")
 
         val response1 = request.send()
-        val r1 = Await.result(response1, 3.seconds)
-        r1.code should be (StatusCodes.Ok)
+        val r1        = Await.result(response1, 3.seconds)
+        r1.code should be(StatusCodes.Ok)
         val t1 = Token(r1.body.right.get, key).get
 
         val response2 = request.send()
-        val r2 = Await.result(response2, 3.seconds)
-        r2.code should be (StatusCodes.Ok)
+        val r2        = Await.result(response2, 3.seconds)
+        r2.code should be(StatusCodes.Ok)
         val t2 = Token(r2.body.right.get, key).get
 
         assert(t1.id != t2.id)
@@ -140,7 +140,7 @@ class LoginServiceSpec extends FreeSpec
     "Respond with the server's public key" in {
       withLoginService { _ =>
         serverKey.get.getFormat() should be("X.509")
-        serverKey.get.getAlgorithm()  should be ("RSA")
+        serverKey.get.getAlgorithm() should be("RSA")
       }
     }
   }

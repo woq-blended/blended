@@ -35,6 +35,7 @@ BlendedModel(
     Blended.securityLoginRest % "test",
     Blended.persistenceH2 % "test",
     Blended.mgmtRest % "test",
+    Blended.updaterRemote % "test",
     Deps.scalaTest % "test",
     Deps.logbackClassic % "test"
   ),

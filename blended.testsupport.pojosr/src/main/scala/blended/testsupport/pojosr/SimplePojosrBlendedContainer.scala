@@ -7,10 +7,13 @@ import org.osgi.framework.BundleActivator
 
 trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
 
-  private[this] def idSvcActivator(baseDir: String, mandatoryProperties: Option[String] = None): BundleActivator =
+  private[this] def idSvcActivator(
+    baseDir: String,
+    mandatoryProperties: Option[String] = None
+  ): BundleActivator = {
     new DominoActivator {
-
-      mandatoryProperties.foreach(s => System.setProperty("blended.updater.profile.properties.keys", s))
+      mandatoryProperties.foreach(s =>
+        System.setProperty("blended.updater.profile.properties.keys", s))
 
       whenBundleActive {
         val ctCtxt = new MockContainerContext(baseDir)
@@ -20,10 +23,12 @@ trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
         }.providesService[ContainerIdentifierService]
       }
     }
+  }
 
   def withSimpleBlendedContainer[T](
-    baseDir: String, mandatoryProperties: List[String] = List.empty
-  )(f: BlendedPojoRegistry => T) = {
+    baseDir: String,
+    mandatoryProperties: List[String] = List.empty
+  )(f: BlendedPojoRegistry => T): T = {
 
     System.setProperty("BLENDED_HOME", baseDir)
     System.setProperty("blended.home", baseDir)
