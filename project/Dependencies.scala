@@ -18,6 +18,7 @@ object Dependencies {
   val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
+  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
@@ -42,6 +43,7 @@ object Dependencies {
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 
   val orgOsgi = "org.osgi" % "org.osgi.core" % "6.0.0"
+  val orgOsgiCompendium = "org.osgi" % "org.osgi.compendium" % "5.0.0"
 
   val parboiledCore = "org.parboiled" % "parboiled-core" % parboiledVersion
   val parboiledScala = "org.parboiled" %% "parboiled-scala" % parboiledVersion
