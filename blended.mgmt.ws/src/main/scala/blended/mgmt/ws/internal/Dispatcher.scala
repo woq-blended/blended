@@ -20,7 +20,6 @@ private[ws] case class ClientInfo(
 )
 
 trait Dispatcher {
-
   def newClient(info: Token) : Flow[String, DispatcherEvent, Any]
 }
 
@@ -62,10 +61,9 @@ object Dispatcher {
         }
       }
 
-      log.info(s"Dispatching event [$e] to [${filteredClients.size}] clients")
+      log.debug(s"Dispatching event [$e] to [${filteredClients.map(_.id)}] [${filteredClients.size}/${clients.size}]")
       filteredClients.foreach(_.clientActor ! e)
     }
-
 
     override def preStart(): Unit = {
       context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
