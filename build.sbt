@@ -61,7 +61,8 @@ lazy val root = project
     blendedMgmtBase,
     blendedUpdater,
     blendedUpdaterTools,
-    blendedPersistence
+    blendedPersistence,
+    blendedUpdaterRemote
   )
 
 lazy val blendedUtilLogging = BlendedUtilLogging.project
@@ -132,3 +133,15 @@ lazy val blendedUpdaterTools = BlendedUpdaterTools.project
 
 lazy val blendedPersistence = BlendedPersistence.project
   .dependsOn(blendedAkka, blendedTestsupport % "test")
+
+lazy val blendedUpdaterRemote = BlendedUpdaterRemote.project
+  .dependsOn(
+    blendedUtilLogging,
+    blendedPersistence,
+    blendedUpdaterConfigJvm,
+    blendedMgmtBase,
+    blendedLauncher,
+    blendedContainerContextApi,
+    blendedAkka,
+    blendedTestsupport % "test"
+  )
