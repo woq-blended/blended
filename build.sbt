@@ -149,3 +149,15 @@ lazy val blendedUpdaterRemote = BlendedUpdaterRemote.project
 
 lazy val blendedCamelUtils = BlendedCamelUtils.project
   .dependsOn(blendedAkka)
+
+lazy val blendedJmsUtils = BlendedJmsUtils.project
+  .dependsOn(
+    blendedDomino,
+    blendedMgmtBase,
+    blendedContainerContextApi,
+    blendedUpdaterConfigJvm,
+    blendedUtilLogging,
+    blendedAkka,
+    blendedCamelUtils % "test",
+    blendedTestsupport % "test"
+  )

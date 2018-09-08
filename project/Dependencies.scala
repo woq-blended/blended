@@ -3,6 +3,7 @@ import sbt.Keys._
 
 object Dependencies {
 
+  val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.16"
   val camelVersion = "2.17.3"
   val parboiledVersion = "1.1.6"
@@ -10,6 +11,8 @@ object Dependencies {
   val slf4jVersion = "1.7.25"
   val scalatestVersion = "3.0.5"
 
+  val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
+  val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
   val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
@@ -31,6 +34,7 @@ object Dependencies {
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
 
+  val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
 
