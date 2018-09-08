@@ -13,6 +13,7 @@ object Dependencies {
 
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
+  val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
   val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
   val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
   val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
