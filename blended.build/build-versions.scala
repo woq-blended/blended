@@ -11,7 +11,7 @@ object BlendedVersions {
   val scalaVersionJS = "2.12.6"
   val scalaVersionJSBinary = "2.12"
 
-  val scalaJsVersion = "0.6.23"
+  val scalaJsVersion = "0.6.25"
   val scalaJsBundlerVersion = "0.12.0"
 
   val scalaTestVersion = "3.0.5"
@@ -19,7 +19,7 @@ object BlendedVersions {
   val activeMqVersion = "5.15.3"
 
   val akkaVersion = "2.5.16"
-  val akkaHttpVersion = "10.1.1"
+  val akkaHttpVersion = "10.1.3"
 
   val camelVersion = "2.17.3"
 
