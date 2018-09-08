@@ -65,7 +65,8 @@ lazy val root = project
     blendedUpdaterRemote,
     blendedCamelUtils,
     blendedJmsUtils,
-    blendedActivemqBrokerstarter
+    blendedActivemqBrokerstarter,
+    blendedContainerContextImpl
   )
 
 lazy val blendedUtilLogging = BlendedUtilLogging.project
@@ -166,3 +167,12 @@ lazy val blendedJmsUtils = BlendedJmsUtils.project
 
 lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
   .dependsOn(blendedAkka, blendedJmsUtils)
+
+lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
+  .dependsOn(
+    blendedContainerContextApi,
+    blendedUtilLogging,
+    blendedUtil,
+    blendedUpdaterConfigJvm,
+    blendedLauncher
+  )
