@@ -30,9 +30,7 @@ case class ProjectSettings(
   }
 
   def settings: Seq[Setting[_]] = {
-    val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap {
-      _.osgiSettings
-    }
+    val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
     Seq(
       name := prjName,
@@ -60,10 +58,10 @@ case class ProjectSettings(
 
   // creates the project and apply settings and plugins
   lazy val project: Project = {
-    val plugins: Seq[AutoPlugin] =
-      extraPlugins ++
-        (if (osgi) Seq(SbtOsgi) else Seq())
-    projectFactory.getOrElse(sys.error(s"Custom project factory not initialized for ${prjName}")).apply()
+    val plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
+    projectFactory
+      .getOrElse(sys.error(s"Custom project factory not initialized for ${prjName}"))
+      .apply()
       .settings(settings)
       .enablePlugins(plugins: _*)
   }

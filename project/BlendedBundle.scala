@@ -59,7 +59,7 @@ case class BlendedBundle(
     OsgiKeys.bundleActivator := Option(bundleActivator),
     OsgiKeys.importPackage :=
       Seq(
-        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value),
+        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value)
       ) ++ importPackage ++ Seq("*"),
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
