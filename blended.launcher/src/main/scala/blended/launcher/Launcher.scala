@@ -26,7 +26,7 @@ object Launcher {
   private lazy val log = Logger[Launcher.type]
 
   private lazy val blendedHomeDir = Option(System.getProperty("blended.home")).getOrElse(".")
-  private lazy val containerConfigDirectory = blendedHomeDir + "/container"
+  private lazy val containerConfigDirectory = blendedHomeDir + "/etc"
   private lazy val containerIdFile = "blended.container.context.id"
 
   case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)

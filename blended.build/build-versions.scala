@@ -18,7 +18,7 @@ object BlendedVersions {
 
   val activeMqVersion = "5.15.3"
 
-  val akkaVersion = "2.5.9"
+  val akkaVersion = "2.5.16"
   val akkaHttpVersion = "10.1.1"
 
   val camelVersion = "2.17.3"

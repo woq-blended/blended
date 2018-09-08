@@ -12,7 +12,7 @@ import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
-  private val CONFIG_DIR = "container"
+  private val CONFIG_DIR = "etc"
 }
 
 class ContainerContextImpl() extends ContainerContext {
@@ -108,7 +108,7 @@ class ContainerContextImpl() extends ContainerContext {
             if (overlayRefs.isEmpty) None
             else {
               val dir = LocalOverlays.materializedDir(overlayRefs, new File(profileDir))
-              val confFile = new File(dir, "container/application_overlay.conf")
+              val confFile = new File(dir, s"$CONFIG_DIR/application_overlay.conf")
               if (confFile.exists()) {
                 log.debug(s"About to read extra application overlay override file: ${confFile}")
                 Some(confFile)
