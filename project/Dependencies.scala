@@ -60,12 +60,12 @@ object Dependencies {
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
 
   val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
-  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
-  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
+  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"
 
 }
 
