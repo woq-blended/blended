@@ -32,16 +32,16 @@ object BlendedBundle {
   * A map with additional manifest entries.
   */
 case class BlendedBundle(
-    bundleSymbolicName: String = null,
-    bundleVersion: String = null,
-    bundleActivator: String = null,
-    importPackage: Seq[String] = Seq.empty,
-    privatePackage: Seq[String] = Seq.empty,
-    exportPackage: Seq[String] = Seq.empty,
-    embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
-    exportContents: Seq[String] = Seq.empty,
-    additionalHeaders: Map[String, String] = Map.empty
-  ) {
+  bundleSymbolicName: String = null,
+  bundleVersion: String = null,
+  bundleActivator: String = null,
+  importPackage: Seq[String] = Seq.empty,
+  privatePackage: Seq[String] = Seq.empty,
+  exportPackage: Seq[String] = Seq.empty,
+  embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
+  exportContents: Seq[String] = Seq.empty,
+  additionalHeaders: Map[String, String] = Map.empty
+) {
 
   private[this] lazy val extraEntries : Seq[Setting[_]] = Seq(
     OsgiKeys.additionalHeaders ++= Map(
@@ -53,7 +53,7 @@ case class BlendedBundle(
   )
 
 
-  lazy val osgiSettings : Seq[Setting[_]] = Seq(
+  val osgiSettings : Seq[Setting[_]] = Seq(
     OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
     OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
     OsgiKeys.bundleActivator := Option(bundleActivator),

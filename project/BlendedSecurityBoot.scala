@@ -1,12 +1,18 @@
-object BlendedSecurityBoot extends ProjectSettings(
-  prjName = "blended.security.boot",
-  desc = "A delegating Login Module for the Blended Container.",
-  libDeps = Seq(
-    Dependencies.orgOsgi
-  )
-) {
+object BlendedSecurityBoot extends ProjectHelper {
 
-  override val bundle: BlendedBundle = super.bundle.copy(
-    additionalHeaders = Map("Fragment-Host" -> "system.bundle;extension:=framework")
-  )
+  private[this] val helper = new ProjectSettings(
+    "blended.security.boot",
+    "A delegating Login Module for the Blended Container."
+  ) {
+
+    override val libDeps = Seq(
+      Dependencies.orgOsgi
+    )
+
+    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+      additionalHeaders = Map("Fragment-Host" -> "system.bundle;extension:=framework")
+    )
+  }
+
+  override  val project = helper.baseProject
 }

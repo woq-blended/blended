@@ -1,15 +1,25 @@
-object BlendedJmsSampler
-  extends ProjectSettings(
-    prjName = "blended.jms.sampler",
-    desc = "A bundle to sample messages from a given JMS topic."
+import sbt._
+
+object BlendedJmsSampler extends ProjectHelper {
+
+  private[this] val helper = new ProjectSettings(
+    "blended.jms.sampler",
+    "A bundle to sample messages from a given JMS topic."
   ) {
 
-  override def libDependencies: scala.Seq[sbt.ModuleID] = Seq(
-    Dependencies.geronimoJms11Spec
-  )
+    override val libDeps = Seq(
+      Dependencies.geronimoJms11Spec
+    )
 
-  override def bundle: BlendedBundle = super.bundle.copy(
-    exportPackage = Seq.empty,
-    bundleActivator = s"$prjName.internal.JmsSamplerActivator"
+    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+      exportPackage = Seq.empty,
+      bundleActivator = s"$prjName.internal.JmsSamplerActivator"
+    )
+  }
+
+  override  val project  = helper.baseProject.dependsOn(
+    BlendedDomino.project,
+    BlendedAkka.project,
+    BlendedUtil.project
   )
 }
