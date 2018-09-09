@@ -166,10 +166,10 @@ object Deps {
 
   val scalaCompatJava8 = "org.scala-lang.modules" %% "scala-java8-compat" % "0.8.0"
   val scalaLib = "org.scala-lang" % "scala-library" % BlendedVersions.scalaVersion
-  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.6"
+  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaReflect = "org.scala-lang" % "scala-reflect" % BlendedVersions.scalaVersion
   val scalaTest = "org.scalatest" %% "scalatest" % BlendedVersions.scalaTestVersion
-  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.0.6"
+  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
 
   val servicemixJaxbApi = "org.apache.servicemix.specs" % "org.apache.servicemix.specs.jaxb-api-2.2" % "2.5.0"
   val servicemixJaxbImpl = "org.apache.servicemix.bundles" % "org.apache.servicemix.bundles.jaxb-impl" % "2.2.1.1_2"
@@ -202,7 +202,7 @@ object Deps {
   val shapeless = "com.chuusai" %% "shapeless" % BlendedVersions.shapelessVersion
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
-  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.2"
+  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"
 
   val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
   val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
