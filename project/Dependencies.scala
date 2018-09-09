@@ -36,6 +36,8 @@ object Dependencies {
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
 
+  val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
 

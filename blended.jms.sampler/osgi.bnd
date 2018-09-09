@@ -4,7 +4,7 @@ Bundle-Version:\
 Bundle-SymbolicName:\
   ${bundle.symbolicName}; singleton:=true
 
-Bundle-Activator: ${bundle.namespace}.internal.JmsSamplerActivator
+Bundle-Activator: ${bundle.namespace}.internal.
 
 Export-Package:
 
