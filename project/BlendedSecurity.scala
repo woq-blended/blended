@@ -6,24 +6,27 @@ import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
 object BlendedSecurityCross {
 
-  val project = crossProject(JVMPlatform, JSPlatform)
-    .crossType(CrossType.Full)
-    .withoutSuffixFor(JVMPlatform)
-    .in(file("blended.security"))
+  val builder = sbtcrossproject.CrossProject("blendedSecurity",file("blended.security"))(JVMPlatform, JSPlatform )
 
+  val project = builder
+    .crossType(CrossType.Full)
+    .build()
 }
 
 object BlendedSecurityJs extends ProjectHelper {
 
-  override  val project  = BlendedSecurityCross.project.js.settings(
-    Seq(
-      name := "blendedSecurityJs",
-       libraryDependencies ++= Seq(
-        "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
-        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
+  override val project  = {
+    println(BlendedSecurityCross.project)
+
+    BlendedSecurityCross.project.js.settings(
+      Seq(
+        libraryDependencies ++= Seq(
+          "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
+          "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
+        )
       )
     )
-  )
+  }
 }
 
 object BlendedSecurityJvm extends ProjectHelper {
