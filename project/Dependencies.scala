@@ -6,6 +6,7 @@ object Dependencies {
   val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.16"
   val camelVersion = "2.17.3"
+  val jettyVersion =  "9.4.8.v20171121"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val slf4jVersion = "1.7.25"
@@ -34,6 +35,9 @@ object Dependencies {
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
+
+  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
+  val jettyOsgiBoot = jettyOsgi("osgi-boot")
 
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion

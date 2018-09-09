@@ -3,14 +3,14 @@ import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
 
 case class ProjectSettings(
-                            prjName: String,
-                            desc: String,
-                            osgi: Boolean = true,
-                            publish: Boolean = true,
-                            libDeps: Seq[ModuleID] = Seq.empty,
-                            customProjectFactory: Boolean = false,
-                            extraPlugins: Seq[AutoPlugin] = Seq.empty
-                          ) {
+  prjName: String,
+  desc: String,
+  osgi: Boolean = true,
+  publish: Boolean = true,
+  libDeps: Seq[ModuleID] = Seq.empty,
+  customProjectFactory: Boolean = false,
+  extraPlugins: Seq[AutoPlugin] = Seq.empty
+) {
 
   /**
     * Dependencies to other libraries (Maven, Ivy).
@@ -23,11 +23,12 @@ case class ProjectSettings(
     privatePackage = Seq(s"${prjName}.internal.*")
   )
 
-  protected final def sbtBundle: Option[BlendedBundle] = if (osgi) {
-    Some(bundle)
-  } else {
-    None
-  }
+  protected final def sbtBundle: Option[BlendedBundle] =
+    if (osgi) {
+      Some(bundle)
+    } else {
+      None
+    }
 
   def settings: Seq[Setting[_]] = {
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
@@ -42,19 +43,20 @@ case class ProjectSettings(
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
     ) ++ osgiSettings ++ (
       if (publish) PublishConfg.doPublish else PublishConfg.noPublish
-      )
+    )
   }
 
   var projectFactory: Option[() => Project] =
     if (customProjectFactory) None
-    else Some { () =>
-      // make camelCase name
-      val name = prjName.split("[.]").foldLeft("") { (name, next) =>
-        if (name.isEmpty) next
-        else name + next.substring(0, 1).toUpperCase() + next.substring(1)
+    else
+      Some { () =>
+        // make camelCase name
+        val name = prjName.split("[.]").foldLeft("") { (name, next) =>
+          if (name.isEmpty) next
+          else name + next.substring(0, 1).toUpperCase() + next.substring(1)
+        }
+        Project(name, file(prjName))
       }
-      Project(name, file(prjName))
-    }
 
   // creates the project and apply settings and plugins
   lazy val project: Project = {

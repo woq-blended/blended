@@ -67,7 +67,8 @@ lazy val root = project
     blendedJmsUtils,
     blendedActivemqBrokerstarter,
     blendedContainerContextImpl,
-    blendedJmx
+    blendedJmx,
+    blendedJettyBoot
   )
 
 lazy val blendedUtilLogging = BlendedUtilLogging.project
@@ -179,3 +180,9 @@ lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
   )
 
 lazy val blendedJmx = BlendedJmx.project
+
+lazy val blendedJettyBoot = BlendedJettyBoot.project
+  .dependsOn(
+    blendedDomino,
+    blendedUtilLogging
+  )
