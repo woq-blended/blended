@@ -6,7 +6,7 @@ object Dependencies {
   val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.16"
   val camelVersion = "2.17.3"
-  val jettyVersion =  "9.4.8.v20171121"
+  val jettyVersion = "9.4.8.v20171121"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val slf4jVersion = "1.7.25"
