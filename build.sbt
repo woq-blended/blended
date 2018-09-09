@@ -66,7 +66,8 @@ lazy val root = project
     blendedCamelUtils,
     blendedJmsUtils,
     blendedActivemqBrokerstarter,
-    blendedContainerContextImpl
+    blendedContainerContextImpl,
+    blendedJmx
   )
 
 lazy val blendedUtilLogging = BlendedUtilLogging.project
@@ -176,3 +177,5 @@ lazy val blendedContainerContextImpl = BlendedContainerContextImpl.project
     blendedUpdaterConfigJvm,
     blendedLauncher
   )
+
+lazy val blendedJmx = BlendedJmx.project
