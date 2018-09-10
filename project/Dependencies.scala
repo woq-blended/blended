@@ -30,6 +30,7 @@ object Dependencies {
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
 
+  val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
   val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
