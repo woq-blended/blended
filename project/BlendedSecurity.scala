@@ -51,7 +51,7 @@ object BlendedSecurityJvm extends ProjectHelper {
     )
 
     override def bundle: BlendedBundle = defaultBundle.copy(
-      bundleActivator = "blended.security.internal.SecurityActivator",
+      bundleActivator = s"$prjName.internal.SecurityActivator",
       exportPackage = Seq(prjName, s"$prjName.json")
     )
   }
