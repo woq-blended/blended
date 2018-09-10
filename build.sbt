@@ -27,6 +27,9 @@ inThisBuild(Seq(
   scalaVersion := "2.12.6",
   scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
 
+  scalariformAutoformat := false,
+  scalariformWithBaseDirectory := true,
+
   // essential to not try to compile pom.scala files, only required until migration to  sbt is complete
   sourcesInBase := false,
   publishMavenStyle := true,
