@@ -6,7 +6,8 @@ import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
 object BlendedSecurityCross {
 
-  val builder = sbtcrossproject.CrossProject("blendedSecurity",file("blended.security"))(JVMPlatform, JSPlatform )
+  private[this] val builder = sbtcrossproject
+    .CrossProject("blendedSecurity",file("blended.security"))(JVMPlatform, JSPlatform )
 
   val project = builder
     .crossType(CrossType.Full)
@@ -16,8 +17,6 @@ object BlendedSecurityCross {
 object BlendedSecurityJs extends ProjectHelper {
 
   override val project  = {
-    println(BlendedSecurityCross.project)
-
     BlendedSecurityCross.project.js.settings(
       Seq(
         libraryDependencies ++= Seq(

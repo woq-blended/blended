@@ -54,19 +54,21 @@ lazy val root = project
     blendedAkka,
     blendedSecurityJs,
     blendedSecurityJvm,
-//    blendedUpdaterConfigJs,
-//    blendedUpdaterConfigJvm,
-    //blendedLauncher,
-//    blendedMgmtBase,
-//    blendedUpdater,
-//    blendedUpdaterTools,
-//    blendedPersistence,
-//    blendedJmsUtils,
-//    blendedActivemqBrokerstarter,
-//    blendedContainerContextImpl,
-//    blendedJmx,
-//    blendedJettyBoot,
-//    blendedJmsSampler
+    blendedUpdaterConfigJs,
+    blendedUpdaterConfigJvm,
+    blendedLauncher,
+    blendedMgmtBase,
+    blendedUpdater,
+    blendedUpdaterTools,
+    blendedPersistence,
+    blendedUpdaterRemote,
+    blendedCamelUtils,
+    blendedJmsUtils,
+    blendedActivemqBrokerstarter,
+    blendedContainerContextImpl,
+    blendedJmx,
+    blendedJettyBoot,
+    blendedJmsSampler
   )
 
 // TODO: Can we get rid of these ?
@@ -80,19 +82,19 @@ lazy val blendedAkka                  = BlendedAkka.project
 lazy val blendedSecurityCross         = BlendedSecurityCross.project
 lazy val blendedSecurityJvm           = BlendedSecurityJvm.project
 lazy val blendedSecurityJs            = BlendedSecurityJs.project
-//lazy val blendedUpdaterConfigCross    = BlendedUpdaterConfigCross.project
-//lazy val blendedUpdaterConfigJs       = BlendedUpdaterConfigJs.project
-//lazy val blendedUpdaterConfigJvm      = BlendedUpdaterConfigJvm.project
-////lazy val blendedLauncher              = BlendedLauncher.project
-//lazy val blendedMgmtBase              = BlendedMgmtBase.project
-//lazy val blendedUpdater               = BlendedUpdater.project
-//lazy val blendedUpdaterTools          = BlendedUpdaterTools.project
-//lazy val blendedPersistence           = BlendedPersistence.project
-//lazy val blendedUpdaterRemote         = BlendedUpdaterRemote.project
-//lazy val blendedCamelUtils            = BlendedCamelUtils.project
-//lazy val blendedJmsUtils              = BlendedJmsUtils.project
-//lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
-//lazy val blendedContainerContextImpl  = BlendedContainerContextImpl.project
-//lazy val blendedJmx                   = BlendedJmx.project
-//lazy val blendedJettyBoot             = BlendedJettyBoot.project
-//lazy val blendedJmsSampler            = BlendedJmsSampler.project
+lazy val blendedUpdaterConfigCross    = BlendedUpdaterConfigCross.project
+lazy val blendedUpdaterConfigJs       = BlendedUpdaterConfigJs.project
+lazy val blendedUpdaterConfigJvm      = BlendedUpdaterConfigJvm.project
+lazy val blendedLauncher              = BlendedLauncher.project
+lazy val blendedMgmtBase              = BlendedMgmtBase.project
+lazy val blendedUpdater               = BlendedUpdater.project
+lazy val blendedUpdaterTools          = BlendedUpdaterTools.project
+lazy val blendedPersistence           = BlendedPersistence.project
+lazy val blendedUpdaterRemote         = BlendedUpdaterRemote.project
+lazy val blendedCamelUtils            = BlendedCamelUtils.project
+lazy val blendedJmsUtils              = BlendedJmsUtils.project
+lazy val blendedActivemqBrokerstarter = BlendedActivemqBrokerstarter.project
+lazy val blendedContainerContextImpl  = BlendedContainerContextImpl.project
+lazy val blendedJmx                   = BlendedJmx.project
+lazy val blendedJettyBoot             = BlendedJettyBoot.project
+lazy val blendedJmsSampler            = BlendedJmsSampler.project

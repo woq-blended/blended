@@ -33,6 +33,7 @@ object BlendedLauncher extends ProjectHelper {
       UniversalDeployPlugin,
       FilterResources
     )
+
     override val settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
       Compile/filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
@@ -101,7 +102,7 @@ object BlendedLauncher extends ProjectHelper {
       )
   }
 
-  override  val project  = helper.baseProject.dependsOn(
+  override  val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedUpdaterConfigJvm.project,
     BlendedAkka.project,

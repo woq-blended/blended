@@ -6,14 +6,15 @@ import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
 object BlendedUpdaterConfigCross  {
 
-  val project = crossProject(JVMPlatform, JSPlatform)
+  private[this ]val builder = sbtcrossproject
+    .CrossProject("blendedUpdaterConfig", file("blended.updater.config"))(JVMPlatform, JSPlatform)
+
+  val project = builder
     .crossType(CrossType.Full)
-    .withoutSuffixFor(JVMPlatform)
-    .in(file("blended.updater.config"))
+    .build()
 }
 
 object BlendedUpdaterConfigJs extends ProjectHelper {
-
 
   override  val project  = BlendedUpdaterConfigCross.project.js.settings(
     Seq(
@@ -22,7 +23,7 @@ object BlendedUpdaterConfigJs extends ProjectHelper {
         "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
       )
     )
-  )
+  ).dependsOn(BlendedSecurityJs.project)
 }
 
 object BlendedUpdaterConfigJvm extends ProjectHelper {
@@ -52,7 +53,11 @@ object BlendedUpdaterConfigJvm extends ProjectHelper {
     override def baseProject = BlendedUpdaterConfigCross.project.jvm
       .settings(settings)
       .enablePlugins(plugins: _*)
-      .dependsOn(BlendedUtilLogging.project)
+      .dependsOn(
+        BlendedUtilLogging.project,
+        BlendedSecurityJvm.project,
+        BlendedTestsupport.project
+      )
   }
 
   override  val project  = helper.baseProject

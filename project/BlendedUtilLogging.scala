@@ -9,6 +9,7 @@ object BlendedUtilLogging extends ProjectHelper {
       Dependencies.slf4j
     )
   }
-  override val project  = helper.baseProject
+
+  override val project  = helper.baseProject.withId("blendedUtilLogging")
 }
 

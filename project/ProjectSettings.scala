@@ -11,13 +11,13 @@ abstract class ProjectSettings(
   val desc : String
 ) {
 
-  val osgi: Boolean = true
-  val publish: Boolean = true
+  def osgi: Boolean = true
+  def publish: Boolean = true
 
-  val libDeps: Seq[ModuleID] = Seq.empty
-  val extraPlugins: Seq[AutoPlugin] = Seq.empty
+  def libDeps: Seq[ModuleID] = Seq.empty
+  def extraPlugins: Seq[AutoPlugin] = Seq.empty
 
-  val projectFactory : () => Project = { () =>
+  def projectFactory : () => Project = { () =>
     val name = prjName.split("[.]").foldLeft("") { (name, next) =>
       if (name.isEmpty) {
         next
@@ -29,22 +29,22 @@ abstract class ProjectSettings(
     Project(name, file(prjName))
   }
 
-  lazy val defaultBundle : BlendedBundle = BlendedBundle(
+  def defaultBundle : BlendedBundle = BlendedBundle(
     bundleSymbolicName = prjName,
     exportPackage = Seq(prjName),
     privatePackage = Seq(s"${prjName}.internal.*")
   )
 
-  lazy val bundle = defaultBundle
+  def bundle = defaultBundle
 
-  lazy val sbtBundle: Option[BlendedBundle] =
+  def sbtBundle: Option[BlendedBundle] =
     if (osgi) {
       Some(bundle)
     } else {
       None
     }
 
-  val defaultSettings : Seq[Setting[_]] = {
+  def defaultSettings : Seq[Setting[_]] = {
 
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
@@ -61,16 +61,19 @@ abstract class ProjectSettings(
     )
   }
 
-  val settings = defaultSettings
+  def settings = defaultSettings
 
-  val plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
+  def plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
   def baseProject: Project = {
-    projectFactory
+    val p = projectFactory
       .apply()
       .settings(settings)
       .enablePlugins(plugins: _*)
+
+    println(p)
+    p
   }
 
 }
