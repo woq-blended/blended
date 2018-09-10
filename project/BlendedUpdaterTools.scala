@@ -1,17 +1,23 @@
 import sbt._
 
-object BlendedUpdaterTools extends ProjectSettings(
-  prjName = "blended.updater.tools",
-  desc = "Configurations for Updater and Launcher",
-  libDeps = Seq(
-    Dependencies.typesafeConfig,
-    Dependencies.cmdOption,
-    Dependencies.scalatest % "test"
-  )
-) {
+object BlendedUpdaterTools extends ProjectHelper {
 
-  override def bundle: BlendedBundle = super.bundle.copy(
-    privatePackage = super.bundle.privatePackage ++ Seq(s"${prjName}.configbuilder")
-  )
+  private[this] val helper = new ProjectSettings(
+    "blended.updater.tools",
+    "Configurations for Updater and Launcher"
+  ) {
+    override val libDeps = Seq(
+      Dependencies.typesafeConfig,
+      Dependencies.cmdOption,
+      Dependencies.scalatest % "test"
+    )
 
+    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+      privatePackage = defaultBundle.privatePackage ++ Seq(s"${prjName}.configbuilder")
+    )
+  }
+
+  override  val project  = helper.baseProject.dependsOn(
+    BlendedUpdaterConfigJvm.project
+  )
 }

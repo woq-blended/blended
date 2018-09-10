@@ -1,8 +1,11 @@
-object BlendedUtil
-  extends ProjectSettings(
-    prjName = "blended.util",
-    desc = "Utility classes to use in other bundles.",
-    libDeps = Seq(
+object BlendedUtil extends ProjectHelper {
+
+  private[this] val helper = new ProjectSettings(
+    "blended.util",
+     "Utility classes to use in other bundles."
+  ) {
+
+    override val libDeps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaSlf4j,
       Dependencies.slf4j,
@@ -12,9 +15,12 @@ object BlendedUtil
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test"
     )
-  ) {
 
-  override def bundle: BlendedBundle = super.bundle.copy(
-    exportPackage = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
-  )
+    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+      exportPackage = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
+    )
+  }
+
+  override  val project  = helper.baseProject
 }
+

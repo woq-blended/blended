@@ -2,41 +2,56 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
 
-case class ProjectSettings(
-  prjName: String,
-  desc: String,
-  osgi: Boolean = true,
-  publish: Boolean = true,
-  libDeps: Seq[ModuleID] = Seq.empty,
-  customProjectFactory: Boolean = false,
-  extraPlugins: Seq[AutoPlugin] = Seq.empty
+trait ProjectHelper {
+  val project: Project
+}
+
+abstract class ProjectSettings(
+  val prjName : String,
+  val desc : String
 ) {
 
-  /**
-    * Dependencies to other libraries (Maven, Ivy).
-    */
-  def libDependencies: Seq[ModuleID] = libDeps
+  def osgi: Boolean = true
+  def publish: Boolean = true
 
-  def bundle: BlendedBundle = BlendedBundle(
+  def libDeps: Seq[ModuleID] = Seq.empty
+  def extraPlugins: Seq[AutoPlugin] = Seq.empty
+
+  def projectFactory : () => Project = { () =>
+    val name = prjName.split("[.]").foldLeft("") { (name, next) =>
+      if (name.isEmpty) {
+        next
+      } else {
+        name + next.capitalize
+      }
+    }
+
+    Project(name, file(prjName))
+  }
+
+  def defaultBundle : BlendedBundle = BlendedBundle(
     bundleSymbolicName = prjName,
     exportPackage = Seq(prjName),
     privatePackage = Seq(s"${prjName}.internal.*")
   )
 
-  protected final def sbtBundle: Option[BlendedBundle] =
+  def bundle = defaultBundle
+
+  def sbtBundle: Option[BlendedBundle] =
     if (osgi) {
       Some(bundle)
     } else {
       None
     }
 
-  def settings: Seq[Setting[_]] = {
+  def defaultSettings : Seq[Setting[_]] = {
+
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
     Seq(
       name := prjName,
       description := desc,
-      libraryDependencies ++= libDependencies,
+      libraryDependencies ++= libDeps,
       Test / javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
       Test / fork := true,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
@@ -46,26 +61,19 @@ case class ProjectSettings(
     )
   }
 
-  var projectFactory: Option[() => Project] =
-    if (customProjectFactory) None
-    else
-      Some { () =>
-        // make camelCase name
-        val name = prjName.split("[.]").foldLeft("") { (name, next) =>
-          if (name.isEmpty) next
-          else name + next.substring(0, 1).toUpperCase() + next.substring(1)
-        }
-        Project(name, file(prjName))
-      }
+  def settings = defaultSettings
+
+  def plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
-  lazy val project: Project = {
-    val plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
-    projectFactory
-      .getOrElse(sys.error(s"Custom project factory not initialized for ${prjName}"))
+  def baseProject: Project = {
+    val p = projectFactory
       .apply()
       .settings(settings)
       .enablePlugins(plugins: _*)
+
+    println(p)
+    p
   }
 
 }
