@@ -8,7 +8,7 @@ object BlendedContainerContextApi extends ProjectHelper {
   ) {
 
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.scalatest      % "test",
       Dependencies.logbackCore    % "test",

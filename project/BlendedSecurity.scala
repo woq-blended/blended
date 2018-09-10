@@ -35,7 +35,7 @@ object BlendedSecurityJvm extends ProjectHelper {
     "Configuration bundle for the security framework."
   ) {
 
-    override  val projectFactory: () => Project = { () =>
+    override def projectFactory: () => Project = { () =>
       BlendedSecurityCross.project.jvm.settings(
         Seq(
           name := "blendedSecurityJvm"
@@ -43,18 +43,19 @@ object BlendedSecurityJvm extends ProjectHelper {
       )
     }
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.prickle,
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       bundleActivator = "blended.security.internal.SecurityActivator",
       exportPackage = Seq(prjName, s"$prjName.json")
     )
   }
+
   override  val project  = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedDomino.project,

@@ -5,7 +5,7 @@ object BlendedUtilLogging extends ProjectHelper {
      "Logging utility classes to use in other bundles."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.slf4j
     )
   }

@@ -28,12 +28,12 @@ object BlendedUpdaterConfigJs extends ProjectHelper {
 
 object BlendedUpdaterConfigJvm extends ProjectHelper {
 
-  private[this] val helper = new ProjectSettings(
+  private[this] def helper = new ProjectSettings(
     "blended.updater.config",
     "Configurations for Updater and Launcher"
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.prickle,
       Dependencies.typesafeConfig,
       Dependencies.scalatest % "test",
@@ -41,7 +41,7 @@ object BlendedUpdaterConfigJvm extends ProjectHelper {
       Dependencies.logbackCore % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       exportPackage = Seq(
         prjName,
         s"$prjName.json",

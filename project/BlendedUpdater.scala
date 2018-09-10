@@ -7,7 +7,7 @@ object BlendedUpdater extends ProjectHelper {
     "OSGi Updater"
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -25,11 +25,12 @@ object BlendedUpdater extends ProjectHelper {
       Dependencies.mockitoAll % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       bundleActivator = s"${prjName}.internal.BlendedUpdaterActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
     )
   }
+
   override  val project  = helper.baseProject.dependsOn(
     BlendedUpdaterConfigJvm.project,
     BlendedLauncher.project,

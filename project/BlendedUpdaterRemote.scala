@@ -6,7 +6,7 @@ object BlendedUpdaterRemote extends ProjectHelper {
     "blended.updater.remote",
     "OSGi Updater remote handle support"
   ) {
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -24,10 +24,11 @@ object BlendedUpdaterRemote extends ProjectHelper {
       Dependencies.mockitoAll % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       bundleActivator = s"${prjName}.internal.RemoteUpdaterActivator"
     )
   }
+
   override  val project  = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedPersistence.project,

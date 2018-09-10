@@ -5,7 +5,7 @@ object BlendedUtil extends ProjectHelper {
      "Utility classes to use in other bundles."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaSlf4j,
       Dependencies.slf4j,
@@ -16,7 +16,7 @@ object BlendedUtil extends ProjectHelper {
       Dependencies.logbackCore % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       exportPackage = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
     )
   }

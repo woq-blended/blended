@@ -6,7 +6,7 @@ object BlendedDomino extends ProjectHelper {
     "blended.domino",
     "Blended Domino extension for new Capsule scopes."
   ) {
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.domino
     )

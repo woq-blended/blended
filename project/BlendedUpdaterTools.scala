@@ -6,13 +6,13 @@ object BlendedUpdaterTools extends ProjectHelper {
     "blended.updater.tools",
     "Configurations for Updater and Launcher"
   ) {
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.cmdOption,
       Dependencies.scalatest % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       privatePackage = defaultBundle.privatePackage ++ Seq(s"${prjName}.configbuilder")
     )
   }

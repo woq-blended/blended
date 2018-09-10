@@ -7,17 +7,18 @@ object BlendedAkka extends ProjectHelper {
     "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaActor,
       Dependencies.akkaOsgi,
       Dependencies.domino
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       exportPackage = Seq(prjName, s"$prjName.protocol")
     )
   }
+
   override  val project  = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedContainerContextApi.project,

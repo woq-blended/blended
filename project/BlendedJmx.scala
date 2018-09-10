@@ -5,11 +5,11 @@ object BlendedJmx extends ProjectHelper {
     "Helper bundle to expose the platform's MBeanServer as OSGI Service."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.domino
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       bundleActivator = s"${prjName}.internal.BlendedJmxActivator"
     )
   }

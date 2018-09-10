@@ -6,9 +6,10 @@ object BlendedTestsupport extends ProjectHelper {
     "blended.testsupport",
     "Some test helper classes."
   ) {
-    override val osgi = false
 
-    override val libDeps = Seq(
+    override def osgi = false
+
+    override def libDeps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,
       Dependencies.akkaCamel,
@@ -16,6 +17,7 @@ object BlendedTestsupport extends ProjectHelper {
       Dependencies.junit
     )
   }
+
   override  val project  = helper.baseProject.dependsOn(
     BlendedUtil.project,
     BlendedUtilLogging.project,

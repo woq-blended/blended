@@ -7,7 +7,7 @@ object BlendedContainerContextImpl extends ProjectHelper {
     "A simple OSGI service to provide access to the container's config directory"
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.orgOsgiCompendium,
       Dependencies.orgOsgi,
       Dependencies.domino,
@@ -19,7 +19,7 @@ object BlendedContainerContextImpl extends ProjectHelper {
       Dependencies.logbackClassic % "test"
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       bundleActivator = s"${prjName}.internal.ContainerContextActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
     )

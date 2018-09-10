@@ -19,7 +19,7 @@ object BlendedLauncher extends ProjectHelper {
     "blended.launcher",
     "Provide an OSGi Launcher"
   ) {
-    override val  libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.cmdOption,
       Dependencies.orgOsgi,
       Dependencies.typesafeConfig,
@@ -28,13 +28,13 @@ object BlendedLauncher extends ProjectHelper {
       Dependencies.commonsDaemon
     )
 
-    override val extraPlugins = Seq(
+    override def extraPlugins = Seq(
       UniversalPlugin,
       UniversalDeployPlugin,
       FilterResources
     )
 
-    override val settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
       Compile/filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
       Compile/filterTargetDir := target.value / "runner",

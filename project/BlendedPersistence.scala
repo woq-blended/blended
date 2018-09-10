@@ -7,7 +7,7 @@ object BlendedPersistence extends ProjectHelper {
     "Provide a technology agnostic persistence API with pluggable Data Objects defined in other bundles."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.slf4j,
       Dependencies.domino,
       Dependencies.scalatest % "test",

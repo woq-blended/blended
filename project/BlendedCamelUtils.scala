@@ -7,7 +7,7 @@ object BlendedCamelUtils extends ProjectHelper {
     "Useful helpers for Camel"
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
       Dependencies.camelJms,

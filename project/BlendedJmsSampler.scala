@@ -7,11 +7,11 @@ object BlendedJmsSampler extends ProjectHelper {
     "A bundle to sample messages from a given JMS topic."
   ) {
 
-    override val libDeps = Seq(
+    override def libDeps = Seq(
       Dependencies.geronimoJms11Spec
     )
 
-    override lazy val bundle: BlendedBundle = defaultBundle.copy(
+    override def bundle: BlendedBundle = defaultBundle.copy(
       exportPackage = Seq.empty,
       bundleActivator = s"$prjName.internal.JmsSamplerActivator"
     )
