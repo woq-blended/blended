@@ -9,7 +9,6 @@ object BlendedJmx extends ProjectHelper {
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedJmxActivator"
     )
-
   )
 
   override val project = helper.baseProject

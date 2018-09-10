@@ -5,6 +5,7 @@ object Dependencies {
 
   val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.16"
+  val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.3"
   val jettyVersion = "9.4.8.v20171121"
   val parboiledVersion = "1.1.6"
@@ -12,15 +13,22 @@ object Dependencies {
   val slf4jVersion = "1.7.25"
   val scalatestVersion = "3.0.5"
 
+  def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
+
+  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
+
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
   val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
-  val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVersion
-  val akkaCamel = "com.typesafe.akka" %% "akka-camel" % akkaVersion
-  val akkaOsgi = "com.typesafe.akka" %% "akka-osgi" % akkaVersion
-  val akkaStream = "com.typesafe.akka" %% "akka-stream" % akkaVersion
-  val akkaTestkit = "com.typesafe.akka" %% "akka-testkit" % akkaVersion
-  val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVersion
+  val akkaActor = akka("actor")
+  val akkaCamel = akka("camel")
+  val akkaHttp = akka_Http("http")
+  val akkaHttpCore = akka_Http("http-core")
+  val akkaOsgi = akka("osgi")
+  val akkaParsing = akka_Http("parsing")
+  val akkaStream = akka("stream")
+  val akkaTestkit = akka("testkit")
+  val akkaSlf4j = akka("slf4j")
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
   val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
@@ -40,6 +48,7 @@ object Dependencies {
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
+
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
 
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"

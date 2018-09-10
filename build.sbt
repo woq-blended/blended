@@ -72,7 +72,8 @@ lazy val root = project
     blendedJmx,
     blendedJettyBoot,
     blendedJmsSampler,
-    blendedTestsupportPojosr
+    blendedTestsupportPojosr,
+    blendedAkkaHttpApi
   )
 
 // TODO: Can we get rid of these ?
@@ -103,3 +104,4 @@ lazy val blendedJmx = BlendedJmx.project
 lazy val blendedJettyBoot = BlendedJettyBoot.project
 lazy val blendedJmsSampler = BlendedJmsSampler.project
 lazy val blendedTestsupportPojosr = BlendedTestsupportPojosr.project
+lazy val blendedAkkaHttpApi = BlendedAkkaHttpApi.project
