@@ -4,20 +4,18 @@ object BlendedUpdaterTools extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
     "blended.updater.tools",
-    "Configurations for Updater and Launcher"
-  ) {
-    override def libDeps = Seq(
+    "Configurations for Updater and Launcher",
+    deps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.cmdOption,
       Dependencies.scalatest % "test"
+    ),
+    adaptBundle = b => b.copy(
+      privatePackage = b.privatePackage ++ Seq(s"${b.bundleSymbolicName}.configbuilder")
     )
+  )
 
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      privatePackage = defaultBundle.privatePackage ++ Seq(s"${prjName}.configbuilder")
-    )
-  }
-
-  override  val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedUpdaterConfigJvm.project
   )
 }

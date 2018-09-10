@@ -3,11 +3,9 @@ import sbt._
 object BlendedUpdater extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    "blended.updater",
-    "OSGi Updater"
-  ) {
-
-    override def libDeps = Seq(
+    projectName = "blended.updater",
+    description = "OSGi Updater",
+    deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -23,15 +21,15 @@ object BlendedUpdater extends ProjectHelper {
       Dependencies.felixGogoCommand % "test",
       Dependencies.felixFileinstall % "test",
       Dependencies.mockitoAll % "test"
-    )
-
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      bundleActivator = s"${prjName}.internal.BlendedUpdaterActivator",
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedUpdaterActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
-    )
-  }
 
-  override  val project  = helper.baseProject.dependsOn(
+    )
+  )
+
+  override val project = helper.baseProject.dependsOn(
     BlendedUpdaterConfigJvm.project,
     BlendedLauncher.project,
     BlendedMgmtBase.project,

@@ -1,11 +1,9 @@
 object BlendedUtil extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    "blended.util",
-     "Utility classes to use in other bundles."
-  ) {
-
-    override def libDeps = Seq(
+    projectName = "blended.util",
+    description = "Utility classes to use in other bundles",
+    deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaSlf4j,
       Dependencies.slf4j,
@@ -14,13 +12,12 @@ object BlendedUtil extends ProjectHelper {
       Dependencies.junit % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test"
+    ),
+    adaptBundle = b => b.copy(
+      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.protocol", s"${b.bundleSymbolicName}.config")
     )
+  )
 
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      exportPackage = Seq(prjName, s"$prjName.protocol", s"$prjName.config")
-    )
-  }
-
-  override  val project  = helper.baseProject
+  override val project = helper.baseProject
 }
 

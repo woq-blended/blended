@@ -2,19 +2,19 @@ import sbt._
 
 object BlendedContainerContextApi extends ProjectHelper {
 
-  private[this] val helper : ProjectSettings = new ProjectSettings(
-    "blended.container.context.api",
-    "The API for the Container Context and Identifier Services"
-  ) {
-
-
-    override def libDeps = Seq(
+  private[this] val helper: ProjectSettings = new ProjectSettings(
+    projectName = "blended.container.context.api",
+    description = "The API for the Container Context and Identifier Services",
+    deps = Seq(
       Dependencies.typesafeConfig,
-      Dependencies.scalatest      % "test",
-      Dependencies.logbackCore    % "test",
+      Dependencies.scalatest % "test",
+      Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  }
+  )
 
-  override val project  = helper.baseProject.dependsOn(BlendedUtilLogging.project)
+  override val project = helper.baseProject.dependsOn(
+    BlendedUtilLogging.project
+  )
+
 }

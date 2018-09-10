@@ -3,11 +3,9 @@ import sbt._
 object BlendedContainerContextImpl extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    "blended.container.context.impl",
-    "A simple OSGI service to provide access to the container's config directory"
-  ) {
-
-    override def libDeps = Seq(
+    projectName = "blended.container.context.impl",
+    description = "A simple OSGI service to provide access to the container's config directory",
+    deps = Seq(
       Dependencies.orgOsgiCompendium,
       Dependencies.orgOsgi,
       Dependencies.domino,
@@ -17,15 +15,14 @@ object BlendedContainerContextImpl extends ProjectHelper {
       Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    )
-
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      bundleActivator = s"${prjName}.internal.ContainerContextActivator",
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.ContainerContextActivator",
       importPackage = Seq("blended.launcher.runtime;resolution:=optional")
     )
-  }
+  )
 
-  override  val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedContainerContextApi.project,
     BlendedUtilLogging.project,
     BlendedUtil.project,

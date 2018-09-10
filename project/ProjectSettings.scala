@@ -6,36 +6,43 @@ trait ProjectHelper {
   val project: Project
 }
 
-abstract class ProjectSettings(
-  val prjName : String,
-  val desc : String
-) {
+/**
+  * Blended project settings.
+  *
+  * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
+  * @param description The project description, also used as Bundle-Description.
+  * @param deps        The project classpath dependencies (exclusive of other blended projects).
+  * @param osgi        If `true` this project is packaged as OSGi Bundle.
+  * @param publish     If `true`, this projects package will be publish.
+  */
+class ProjectSettings(
+                       val projectName: String,
+                       val description: String,
+                       deps: Seq[ModuleID] = Seq.empty,
+                       osgi: Boolean = true,
+                       publish: Boolean = true,
+                       adaptBundle: BlendedBundle => BlendedBundle = identity
+                     ) {
 
-  def osgi: Boolean = true
-  def publish: Boolean = true
+  def libDeps: Seq[ModuleID] = deps
 
-  def libDeps: Seq[ModuleID] = Seq.empty
   def extraPlugins: Seq[AutoPlugin] = Seq.empty
 
-  def projectFactory : () => Project = { () =>
-    val name = prjName.split("[.]").foldLeft("") { (name, next) =>
-      if (name.isEmpty) {
-        next
-      } else {
-        name + next.capitalize
-      }
+  def projectFactory: () => Project = { () =>
+    val name = projectName.split("[.]").foldLeft("") {
+      case ("", next) => next
+      case (name, next) => name + next.capitalize
     }
-
-    Project(name, file(prjName))
+    Project(name, file(projectName))
   }
 
-  def defaultBundle : BlendedBundle = BlendedBundle(
-    bundleSymbolicName = prjName,
-    exportPackage = Seq(prjName),
-    privatePackage = Seq(s"${prjName}.internal.*")
+  def defaultBundle: BlendedBundle = BlendedBundle(
+    bundleSymbolicName = projectName,
+    exportPackage = Seq(projectName),
+    privatePackage = Seq(s"${projectName}.internal.*")
   )
 
-  def bundle = defaultBundle
+  def bundle: BlendedBundle = adaptBundle(defaultBundle)
 
   def sbtBundle: Option[BlendedBundle] =
     if (osgi) {
@@ -44,24 +51,24 @@ abstract class ProjectSettings(
       None
     }
 
-  def defaultSettings : Seq[Setting[_]] = {
+  def defaultSettings: Seq[Setting[_]] = {
 
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
     Seq(
-      name := prjName,
-      description := desc,
-      libraryDependencies ++= libDeps,
+      Keys.name := projectName,
+      Keys.description := description,
+      Keys.libraryDependencies ++= libDeps,
       Test / javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
       Test / fork := true,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
     ) ++ osgiSettings ++ (
       if (publish) PublishConfg.doPublish else PublishConfg.noPublish
-    )
+      )
   }
 
-  def settings = defaultSettings
+  def settings: Seq[sbt.Setting[_]] = defaultSettings
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
 

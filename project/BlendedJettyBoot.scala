@@ -4,15 +4,19 @@ import com.typesafe.sbt.osgi.OsgiKeys
 
 object BlendedJettyBoot extends ProjectHelper {
 
-  private[this] val helper : ProjectSettings = new ProjectSettings(
-    "blended.jetty.boot",
-    "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services",
+  private[this] val helper: ProjectSettings = new ProjectSettings(
+    projectName = "blended.jetty.boot",
+    description = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services",
+    deps = Seq(
+      Dependencies.domino,
+      Dependencies.jettyOsgiBoot
+    )
   ) {
 
     private val jettyVersion = "version=\"[9.4,20)\""
 
     override def bundle: BlendedBundle = super.bundle.copy(
-      bundleActivator = s"$prjName.internal.JettyActivator",
+      bundleActivator = s"$projectName.internal.JettyActivator",
       importPackage = Seq(
         s"org.eclipse.jetty.annotations;$jettyVersion;resolution:=optional",
         s"org.eclipse.jetty.deploy;$jettyVersion",
@@ -43,11 +47,6 @@ object BlendedJettyBoot extends ProjectHelper {
     )
 
 
-    override def libDeps: Seq[sbt.ModuleID] = Seq(
-      Dependencies.domino,
-      Dependencies.jettyOsgiBoot
-    )
-
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
       OsgiKeys.embeddedJars := {
         val jettyOsgi = BuildHelper.resolveModuleFile(Dependencies.jettyOsgiBoot.intransitive(), target.value)
@@ -56,7 +55,7 @@ object BlendedJettyBoot extends ProjectHelper {
     )
   }
 
-  override  val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedDomino.project,
     BlendedUtilLogging.project
   )

@@ -4,10 +4,10 @@ import sbt._
 import sbt.Keys._
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
-object BlendedSecurityCross {
+private object BlendedSecurityCross {
 
   private[this] val builder = sbtcrossproject
-    .CrossProject("blendedSecurity",file("blended.security"))(JVMPlatform, JSPlatform )
+    .CrossProject("blendedSecurity", file("blended.security"))(JVMPlatform, JSPlatform)
 
   val project = builder
     .crossType(CrossType.Full)
@@ -16,7 +16,7 @@ object BlendedSecurityCross {
 
 object BlendedSecurityJs extends ProjectHelper {
 
-  override val project  = {
+  override val project = {
     BlendedSecurityCross.project.js.settings(
       Seq(
         libraryDependencies ++= Seq(
@@ -31,8 +31,18 @@ object BlendedSecurityJs extends ProjectHelper {
 object BlendedSecurityJvm extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    "blended.security",
-    "Configuration bundle for the security framework."
+    projectName = "blended.security",
+    description = "Configuration bundle for the security framework.",
+    deps = Seq(
+      Dependencies.prickle,
+      Dependencies.scalatest % "test",
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test"
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.SecurityActivator",
+      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.json")
+    )
   ) {
 
     override def projectFactory: () => Project = { () =>
@@ -43,20 +53,9 @@ object BlendedSecurityJvm extends ProjectHelper {
       )
     }
 
-    override def libDeps = Seq(
-      Dependencies.prickle,
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
-    )
-
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      bundleActivator = s"$prjName.internal.SecurityActivator",
-      exportPackage = Seq(prjName, s"$prjName.json")
-    )
   }
 
-  override  val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedDomino.project,
     BlendedUtil.project,

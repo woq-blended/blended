@@ -4,9 +4,8 @@ object BlendedUpdaterRemote extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
     "blended.updater.remote",
-    "OSGi Updater remote handle support"
-  ) {
-    override def libDeps = Seq(
+    "OSGi Updater remote handle support",
+    deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -22,14 +21,13 @@ object BlendedUpdaterRemote extends ProjectHelper {
       Dependencies.felixGogoCommand % "test",
       Dependencies.felixFileinstall % "test",
       Dependencies.mockitoAll % "test"
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.RemoteUpdaterActivator"
     )
+  )
 
-    override def bundle: BlendedBundle = defaultBundle.copy(
-      bundleActivator = s"${prjName}.internal.RemoteUpdaterActivator"
-    )
-  }
-
-  override  val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedPersistence.project,
     BlendedUpdaterConfigJvm.project,

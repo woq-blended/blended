@@ -4,10 +4,8 @@ object BlendedJmsUtils extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
     "blended.jms.utils",
-    "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping."
-  ) {
-
-    override def libDeps = Seq(
+    "A bundle to provide a ConnectionFactory wrapper that monitors a single connection and is able to monitor the connection via an active ping.",
+    deps = Seq(
       Dependencies.camelJms,
       Dependencies.jms11Spec,
       Dependencies.scalatest % "test",
@@ -19,9 +17,9 @@ object BlendedJmsUtils extends ProjectHelper {
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  }
+  )
 
-  override val project  = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedDomino.project,
     BlendedMgmtBase.project,
     BlendedContainerContextApi.project,

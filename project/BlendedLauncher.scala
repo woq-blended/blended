@@ -16,10 +16,9 @@ import FilterResources.autoImport._
 object BlendedLauncher extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    "blended.launcher",
-    "Provide an OSGi Launcher"
-  ) {
-    override def libDeps = Seq(
+    projectName = "blended.launcher",
+    description = "Provide an OSGi Launcher",
+    deps = Seq(
       Dependencies.cmdOption,
       Dependencies.orgOsgi,
       Dependencies.typesafeConfig,
@@ -27,6 +26,7 @@ object BlendedLauncher extends ProjectHelper {
       Dependencies.logbackClassic,
       Dependencies.commonsDaemon
     )
+  ) {
 
     override def extraPlugins = Seq(
       UniversalPlugin,
@@ -36,10 +36,10 @@ object BlendedLauncher extends ProjectHelper {
 
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
-      Compile/filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
-      Compile/filterTargetDir := target.value / "runner",
-      Compile/filterRegex := "(@)([^\\n]+?)(@)",
-      Compile/filterProperties := Map(
+      Compile / filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
+      Compile / filterTargetDir := target.value / "runner",
+      Compile / filterRegex := "(@)([^\\n]+?)(@)",
+      Compile / filterProperties := Map(
         "blended.launcher.version" -> version.value,
         "blended.updater.config.version" -> version.value,
         "blended.util.logging.version" -> version.value,
@@ -50,8 +50,8 @@ object BlendedLauncher extends ProjectHelper {
         "slf4j.version" -> slf4j.revision,
         "logback.version" -> logbackClassic.revision
       ),
-      Test/resourceGenerators += Def.task {
-        val frameworks : Seq[ModuleID] = Seq(
+      Test / resourceGenerators += Def.task {
+        val frameworks: Seq[ModuleID] = Seq(
           "org.apache.felix" % "org.apache.felix.framework" % "5.0.0",
           "org.apache.felix" % "org.apache.felix.framework" % "5.6.10",
 
@@ -68,7 +68,7 @@ object BlendedLauncher extends ProjectHelper {
         Files.createDirectories(osgiDir.toPath)
 
         val files = frameworks
-          .map{ mid => BuildHelper.resolveModuleFile(mid, target.value) }
+          .map { mid => BuildHelper.resolveModuleFile(mid, target.value) }
           .collect {
             case f if f.nonEmpty => f
           }
@@ -79,30 +79,30 @@ object BlendedLauncher extends ProjectHelper {
           Files.copy(f.toPath, tf.toPath, StandardCopyOption.REPLACE_EXISTING)
           tf
         }
-      }.taskValue,
+      }.taskValue
     ) ++ Seq(
-      Universal/mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
+      Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
         f -> s"lib/${f.getName}"
       },
-      Universal/mappings ++= {
+      Universal / mappings ++= {
         val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
         PathFinder(dir).**("***").pair(relativeTo(dir))
       },
-      Universal/mappings ++= (Compile/dependencyClasspathAsJars).value.filter(_.data.isFile).map{ f =>
+      Universal / mappings ++= (Compile / dependencyClasspathAsJars).value.filter(_.data.isFile).map { f =>
         f.data -> s"lib/${f.data.getName}"
       },
-      Universal/mappings ++= (Compile/filterResources).value,
-      Universal/packageBin/mainClass := None,
+      Universal / mappings ++= (Compile / filterResources).value,
+      Universal / packageBin / mainClass := None,
     ) ++
-      addArtifact(Universal/packageBin/artifact, Universal/packageBin).settings ++
-      addArtifact(Universal/packageZipTarball/artifact, Universal/packageZipTarball).settings ++
+      addArtifact(Universal / packageBin / artifact, Universal / packageBin).settings ++
+      addArtifact(Universal / packageZipTarball / artifact, Universal / packageZipTarball).settings ++
       Seq(
-        publishM2 := publishM2.dependsOn(Universal/publishM2).value,
-        publishLocal := publishLocal.dependsOn(Universal/publishLocal).value
+        publishM2 := publishM2.dependsOn(Universal / publishM2).value,
+        publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
       )
   }
 
-  override  val project = helper.baseProject.dependsOn(
+  override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedUpdaterConfigJvm.project,
     BlendedAkka.project,
