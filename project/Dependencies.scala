@@ -24,6 +24,7 @@ object Dependencies {
   val akkaCamel = akka("camel")
   val akkaHttp = akka_Http("http")
   val akkaHttpCore = akka_Http("http-core")
+  val akkaHttpTestkit = akka_Http("http-testkit")
   val akkaOsgi = akka("osgi")
   val akkaParsing = akka_Http("parsing")
   val akkaStream = akka("stream")
