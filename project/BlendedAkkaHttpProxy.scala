@@ -1,13 +1,15 @@
 import sbt._
 
-object BlendedAkkaHttpJmsqueue extends ProjectHelper {
+object BlendedAkkaHttpProxy extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka.http.jmsqueue",
-    description = "Provide a simple REST interface to consume messages from JMS Queues",
+    projectName = "blended.akka.http.proxy",
+    description = "Provide Akka HTTP Proxy support",
     deps = Seq(
       Dependencies.domino,
-      Dependencies.jms11Spec,
+      Dependencies.akkaStream,
+      Dependencies.akkaHttp,
+      Dependencies.akkaActor,
       Dependencies.akkaSlf4j % "test",
       Dependencies.akkaTestkit % "test",
       Dependencies.scalatest % "test",
@@ -23,6 +25,7 @@ object BlendedAkkaHttpJmsqueue extends ProjectHelper {
     BlendedAkka.project,
     BlendedAkkaHttp.project,
     BlendedUtil.project,
+    BlendedUtilLogging.project,
     BlendedTestsupportPojosr.project % "test"
   )
 }
