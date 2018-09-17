@@ -10,8 +10,9 @@ object Dependencies {
   val jettyVersion = "9.4.8.v20171121"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
-  val slf4jVersion = "1.7.25"
   val scalatestVersion = "3.0.5"
+  val slf4jVersion = "1.7.25"
+  val sprayVersion = "1.3.4"
 
   def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
 
@@ -57,6 +58,7 @@ object Dependencies {
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
 
+  val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -81,6 +83,7 @@ object Dependencies {
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
+  val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
