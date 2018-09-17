@@ -1,7 +1,7 @@
 import sbt._
 import sbt.Keys._
 
-object PublishConfg {
+object PublishConfig {
   // General settings for subprojects to be published
   lazy val doPublish = Seq(
     publishMavenStyle := true,

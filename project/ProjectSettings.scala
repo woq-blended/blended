@@ -1,28 +1,29 @@
 import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
+//import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 
 trait ProjectHelper {
   val project: Project
 }
 
 /**
-  * Blended project settings.
-  *
-  * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
-  * @param description The project description, also used as Bundle-Description.
-  * @param deps        The project classpath dependencies (exclusive of other blended projects).
-  * @param osgi        If `true` this project is packaged as OSGi Bundle.
-  * @param publish     If `true`, this projects package will be publish.
-  */
+ * Blended project settings.
+ *
+ * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
+ * @param description The project description, also used as Bundle-Description.
+ * @param deps        The project classpath dependencies (exclusive of other blended projects).
+ * @param osgi        If `true` this project is packaged as OSGi Bundle.
+ * @param publish     If `true`, this projects package will be publish.
+ */
 class ProjectSettings(
-                       val projectName: String,
-                       val description: String,
-                       deps: Seq[ModuleID] = Seq.empty,
-                       osgi: Boolean = true,
-                       publish: Boolean = true,
-                       adaptBundle: BlendedBundle => BlendedBundle = identity
-                     ) {
+  val projectName: String,
+  val description: String,
+  deps: Seq[ModuleID] = Seq.empty,
+  osgi: Boolean = true,
+  publish: Boolean = true,
+  adaptBundle: BlendedBundle => BlendedBundle = identity
+) {
 
   def libDeps: Seq[ModuleID] = deps
 
@@ -44,12 +45,7 @@ class ProjectSettings(
 
   def bundle: BlendedBundle = adaptBundle(defaultBundle)
 
-  def sbtBundle: Option[BlendedBundle] =
-    if (osgi) {
-      Some(bundle)
-    } else {
-      None
-    }
+  def sbtBundle: Option[BlendedBundle] = if (osgi) Some(bundle) else None
 
   def defaultSettings: Seq[Setting[_]] = {
 
@@ -64,13 +60,19 @@ class ProjectSettings(
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
     ) ++ osgiSettings ++ (
-      if (publish) PublishConfg.doPublish else PublishConfg.noPublish
+        // We need to explicitly load the rb settings again to
+        // make sure the OSGi package is post-processed:
+        //        ReproducibleBuildsPlugin.projectSettings
+        //      ) ++ (
+        if (publish) PublishConfig.doPublish else PublishConfig.noPublish
       )
   }
 
   def settings: Seq[sbt.Setting[_]] = defaultSettings
 
-  def plugins: Seq[AutoPlugin] = extraPlugins ++ (if (osgi) Seq(SbtOsgi) else Seq())
+  def plugins: Seq[AutoPlugin] = extraPlugins ++
+    //    Seq(ReproducibleBuildsPlugin) ++
+    (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
   def baseProject: Project = {

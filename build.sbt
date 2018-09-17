@@ -45,7 +45,7 @@ lazy val root = project
     name := "blended",
     unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
   )
-  .settings(PublishConfg.noPublish)
+  .settings(PublishConfig.noPublish)
   .enablePlugins(ScalaUnidocPlugin)
   .aggregate(
     blendedUtilLogging,
