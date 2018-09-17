@@ -76,7 +76,8 @@ lazy val root = project
     blendedAkkaHttpApi,
     blendedAkkaHttp,
     blendedAkkaHttpJmsqueue,
-    blendedAkkaHttpProxy
+    blendedAkkaHttpProxy,
+    blendedAkkaHttpRestjms
   )
 
 // TODO: Can we get rid of these ?
@@ -111,3 +112,4 @@ lazy val blendedAkkaHttpApi = BlendedAkkaHttpApi.project
 lazy val blendedAkkaHttp = BlendedAkkaHttp.project
 lazy val blendedAkkaHttpJmsqueue = BlendedAkkaHttpJmsqueue.project
 lazy val blendedAkkaHttpProxy = BlendedAkkaHttpProxy.project
+lazy val blendedAkkaHttpRestjms = BlendedAkkaHttpRestjms.project

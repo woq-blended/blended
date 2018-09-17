@@ -18,6 +18,7 @@ object Dependencies {
   def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
 
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
+  val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
   val activeMqKahadbStore = "org.apache.activemq" % "activemq-kahadb-store" % activeMqVersion
   val activeMqSpring = "org.apache.activemq" % "activemq-spring" % activeMqVersion
   val akkaActor = akka("actor")
@@ -80,6 +81,8 @@ object Dependencies {
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
+  val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
+  val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"
