@@ -80,7 +80,8 @@ lazy val root = project
     blendedAkkaHttpRestjms,
     blendedFile,
     blendedMgmtRepo,
-    blendedSecurityAkkaHttp
+    blendedSecurityAkkaHttp,
+    blendedMgmtRepoRest
   )
 
 // TODO: Can we get rid of these ?
@@ -119,3 +120,4 @@ lazy val blendedAkkaHttpRestjms = BlendedAkkaHttpRestjms.project
 lazy val blendedFile = BlendedFile.project
 lazy val blendedMgmtRepo = BlendedMgmtRepo.project
 lazy val blendedSecurityAkkaHttp = BlendedSecurityAkkaHttp.project
+lazy val blendedMgmtRepoRest = BlendedMgmtRepoRest.project
