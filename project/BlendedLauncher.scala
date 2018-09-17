@@ -38,7 +38,7 @@ object BlendedLauncher extends ProjectHelper {
 
       Compile / filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
       Compile / filterTargetDir := target.value / "runner",
-      Compile / filterRegex := "(@)([^\\n]+?)(@)",
+      Compile / filterRegex := "[@]([^\\n]+?)[@]",
       Compile / filterProperties := Map(
         "blended.launcher.version" -> version.value,
         "blended.updater.config.version" -> version.value,

@@ -1,5 +1,7 @@
 import sbt._
 
+import FilterResources.autoImport._
+
 object BlendedFile extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
@@ -15,7 +17,19 @@ object BlendedFile extends ProjectHelper {
     adaptBundle = b => b.copy(
       exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.protocol")
     )
-  )
+
+  ) {
+
+    override def extraPlugins: Seq[AutoPlugin] = super.extraPlugins ++ Seq(
+      FilterResources
+    )
+
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / filterProperties := Map(
+        "project.build.testOutputDirectory" -> (Test / Keys.classDirectory).value.getAbsolutePath()
+      )
+    )
+  }
 
   override val project = helper.baseProject.dependsOn(
     BlendedAkka.project,

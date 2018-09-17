@@ -27,8 +27,14 @@ class ProjectSettings(
 
   def libDeps: Seq[ModuleID] = deps
 
+  /**
+   * Override this method to specify additional plugins for this project.
+   */
   def extraPlugins: Seq[AutoPlugin] = Seq.empty
 
+  /**
+    * Override this method to customize the creation of this project.
+    */
   def projectFactory: () => Project = { () =>
     val name = projectName.split("[.]").foldLeft("") {
       case ("", next) => next
