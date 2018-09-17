@@ -17,7 +17,7 @@ class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatc
 
       // read config
       val config = ProxyConfig.parse(cfg.config)
-      log.debug(s"Parsed configuration: [${config}]")
+      log.debug(s"Parsed configuration: [$config]")
       config.failed.foreach { e =>
         log.error(e)("Config parse error")
       }

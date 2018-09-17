@@ -43,7 +43,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "blended",
-    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject //-- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
+    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
   )
   .settings(PublishConfg.noPublish)
   .enablePlugins(ScalaUnidocPlugin)

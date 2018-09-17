@@ -13,11 +13,11 @@ import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
 import scala.collection.JavaConverters._
 
 class UpdaterTest
-    extends TestKit(ActorSystem("updater-test"))
-    with FreeSpecLike
-    with TestFile
-    with ImplicitSender
-    with BeforeAndAfterAll {
+  extends TestKit(ActorSystem("updater-test"))
+  with FreeSpecLike
+  with TestFile
+  with ImplicitSender
+  with BeforeAndAfterAll {
 
   implicit val deletePolicy = DeleteNever
 
@@ -38,7 +38,8 @@ class UpdaterTest
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
             Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
-            s"updater-${nextId()}")
+            s"updater-${nextId()}"
+          )
 
           assert(!installBaseDir.exists())
 
@@ -84,7 +85,8 @@ class UpdaterTest
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
             Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
-            s"updater-${nextId()}")
+            s"updater-${nextId()}"
+          )
 
           assert(!installBaseDir.exists())
 
@@ -151,7 +153,8 @@ class UpdaterTest
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
             Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
-            s"updater-${nextId()}")
+            s"updater-${nextId()}"
+          )
 
           assert(!installBaseDir.exists())
 
@@ -210,7 +213,8 @@ class UpdaterTest
           val installBaseDir = new File(baseDir, "install")
           val updater = system.actorOf(
             Updater.props(installBaseDir, dummyProfileActivator, { () => }, config = UpdaterConfig.default),
-            s"updater-${nextId()}")
+            s"updater-${nextId()}"
+          )
 
           assert(!installBaseDir.exists())
 
@@ -274,7 +278,7 @@ class UpdaterTest
             assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/bundles").list().toSet ===
               Set("org.osgi.core-5.0.0.jar"))
             assert(new File(installBaseDir, "test-with-1-framework-bundle/1.0.0/o-1").list().toSet ===
-            Set("application_overlay.conf"))
+              Set("application_overlay.conf"))
           }
 
           {
@@ -320,7 +324,8 @@ class UpdaterTest
                 }
               },
               () => restarted = true,
-              config = UpdaterConfig.default),
+              config = UpdaterConfig.default
+            ),
             s"updater-${nextId()}"
           )
 
@@ -348,7 +353,8 @@ class UpdaterTest
                   start = true,
                   startLevel = 2,
                   jarName = "bundle3-1.0.0.jar"
-                )),
+                )
+              ),
               startLevel = 10,
               defaultStartLevel = 10
             ))
@@ -364,7 +370,7 @@ class UpdaterTest
 
             {
               val stageId = nextId()
-              updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = List.empty )
+              updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = List.empty)
               expectMsgPF(hint = s"waiting for: ${Updater.OperationSucceeded(stageId)}") {
                 case Updater.OperationSucceeded(`stageId`) => true
               }
@@ -380,7 +386,7 @@ class UpdaterTest
             {
               val queryId = nextId()
               updater ! Updater.GetProfiles(queryId)
-              expectMsgPF(hint = s"Query id: ${queryId}") {
+              expectMsgPF(hint = s"Query id: $queryId") {
                 case Updater.Result(`queryId`, profiles: Set[_]) =>
                   profiles.toList match {
                     case List(LocalProfile(LocalRuntimeConfig(`config`, _),
