@@ -34,8 +34,10 @@ object Dependencies {
   val akkaSlf4j = akka("slf4j")
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
+
   val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
+  val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
@@ -51,13 +53,12 @@ object Dependencies {
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
-
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
-
+  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
-  val junit = "junit" % "junit" % "4.11"
 
+  val junit = "junit" % "junit" % "4.11"
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
