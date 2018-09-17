@@ -13,6 +13,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
+  val springVersion = "3.2.18.RELEASE_1"
 
   def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
 
@@ -52,14 +53,18 @@ object Dependencies {
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
+  val h2 = "com.h2database" % "h2" % "1.4.197"
+  val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
+
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
-
   val junit = "junit" % "junit" % "4.11"
+
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
+  val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -75,16 +80,28 @@ object Dependencies {
   val parboiledScala = "org.parboiled" %% "parboiled-scala" % parboiledVersion
   val prickle = "com.github.benhutchison" %% "prickle" % prickleVersion
 
+  // SCALA
+  val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
+  val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
+  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
+
   val scalatest = "org.scalatest" %% "scalatest" % scalatestVersion
   val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
-
-  val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
-  val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
-  val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
-  val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
+  val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
+  private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
+  val springBeans = spring("beans")
+  //val springAop = spring("aop")
+  //val springContext = spring("context")
+  //val springContextSupport = spring("context-support")
+  //val springExpression = spring("expression")
+  val springCore = spring("core")
+  val springJdbc = spring("jdbc")
+  // val springJms = spring("jms")
+  val springTx = spring("tx")
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
