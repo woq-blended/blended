@@ -95,6 +95,7 @@ lazy val root = project
     blendedSecurityLoginRest,
     blendedSecurityTest,
     blendedSecuritySsl,
+    blendedSecurityScep,
     blendedHawtioLogin,
     blendedJolokia,
     blendedSamplesCamel,
@@ -161,3 +162,4 @@ lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
 lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
 lazy val blendedActivemqClient = BlendedActivemqClient.project
+lazy val blendedSecurityScep = BlendedSecurityScep.project

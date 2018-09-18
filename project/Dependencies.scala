@@ -43,7 +43,10 @@ object Dependencies {
   val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
+  val commonsCodec = "commons-codec" % "commons-codec" % "1.11"
   val commonsDaemon = "commons-daemon" % "commons-daemon" % "1.0.15"
+  val commonsIo = "commons-io" % "commons-io" % "2.6"
+  val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
   val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
@@ -60,6 +63,7 @@ object Dependencies {
   val h2 = "com.h2database" % "h2" % "1.4.197"
   val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
 
+  val jcip = "net.jcip" % "jcip-annotations" % "1.0"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
@@ -67,6 +71,7 @@ object Dependencies {
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % jolokiaVersion
   val jolokiaJvmAgent = jolokiaJvm.classifier("agent")
+  val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
