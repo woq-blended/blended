@@ -96,7 +96,8 @@ lazy val root = project
     blendedSecurityTest,
     blendedHawtioLogin,
     blendedSamplesCamel,
-    blendedSamplesJms
+    blendedSamplesJms,
+    blendedAkkaHttpSampleHelloworld
   )
 
 // TODO: Can we get rid of these ?
@@ -151,3 +152,4 @@ lazy val blendedSecurityTest = BlendedSecurityTest.project
 lazy val blendedHawtioLogin = BlendedHawtioLogin.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
+lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
