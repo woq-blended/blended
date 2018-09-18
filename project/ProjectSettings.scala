@@ -1,6 +1,7 @@
 import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
+import TestLogConfig.autoImport._
 //import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 
 trait ProjectHelper {
@@ -64,7 +65,13 @@ class ProjectSettings(
       Test / javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
       Test / fork := true,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
-      Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources"
+      Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources",
+
+      Test/testlogLogToConsole := false,
+      Test/testlogLogToFile := true,
+
+      Test/resourceGenerators += (Test/testlogCreateConfig).taskValue
+
     ) ++ osgiSettings ++ (
         // We need to explicitly load the rb settings again to
         // make sure the OSGi package is post-processed:
@@ -78,7 +85,7 @@ class ProjectSettings(
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
-    (if (osgi) Seq(SbtOsgi) else Seq())
+    (if (osgi) Seq(SbtOsgi,TestLogConfig) else Seq(TestLogConfig))
 
   // creates the project and apply settings and plugins
   def baseProject: Project = projectFactory

@@ -1,6 +1,5 @@
 felix-cache
 *.log
-*.log
 *.aux
 *.backup
 *~
