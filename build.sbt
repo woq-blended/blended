@@ -88,7 +88,8 @@ lazy val root = project
     blendedMgmtRest,
     blendedMgmtMock,
     blendedMgmtServiceJmx,
-    blendedPrickle
+    blendedPrickle,
+    blendedSecurityLoginApi
   )
 
 // TODO: Can we get rid of these ?
@@ -135,3 +136,4 @@ lazy val blendedMgmtRest = BlendedMgmtRest.project
 lazy val blendedMgmtMock = BlendedMgmtMock.project
 lazy val blendedMgmtServiceJmx = BlendedMgmtServiceJmx.project
 lazy val blendedPrickle = BlendedPrickle.project
+lazy val blendedSecurityLoginApi = BlendedSecurityLoginApi.project

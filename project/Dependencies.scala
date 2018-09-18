@@ -56,9 +56,10 @@ object Dependencies {
   val h2 = "com.h2database" % "h2" % "1.4.197"
   val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
 
+  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
   private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
-  val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
+  val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
