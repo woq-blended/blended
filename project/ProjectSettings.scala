@@ -63,6 +63,7 @@ class ProjectSettings(
 
     Seq(
       Keys.name := projectName,
+      Keys.moduleName := Keys.name.value,
       Keys.description := description,
       Keys.libraryDependencies ++= libDeps,
       Test / javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
