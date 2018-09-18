@@ -56,6 +56,7 @@ case class BlendedBundle(
   )
 
   val osgiSettings: Seq[Setting[_]] = Seq(
+    OsgiKeys.failOnUndecidedPackage := true,
     OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
     OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
     OsgiKeys.bundleActivator := Option(bundleActivator),

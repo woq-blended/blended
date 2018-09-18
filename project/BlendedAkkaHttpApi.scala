@@ -1,5 +1,6 @@
-import com.typesafe.sbt.osgi.OsgiKeys
 import sbt._
+import sbt.Keys._
+import com.typesafe.sbt.osgi.OsgiKeys._
 
 object BlendedAkkaHttpApi extends ProjectHelper {
 
@@ -28,8 +29,8 @@ object BlendedAkkaHttpApi extends ProjectHelper {
 
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
-      OsgiKeys.embeddedJars := {
-        (Keys.externalDependencyClasspath in Compile).value
+      embeddedJars := {
+        (Compile/externalDependencyClasspath).value
           .map(_.data)
           .filter(f =>
             f.getName().contains("akka-parsing_") ||
