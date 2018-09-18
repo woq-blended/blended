@@ -8,6 +8,7 @@ object Dependencies {
   val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.3"
   val jettyVersion = "9.4.8.v20171121"
+  val jolokiaVersion = "1.5.0"
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
@@ -64,6 +65,9 @@ object Dependencies {
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
+  val jolokiaJvm = "org.jolokia" % "jolokia-jvm" % jolokiaVersion
+  val jolokiaJvmAgent = jolokiaJvm.classifier("agent")
+  val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
   val junit = "junit" % "junit" % "4.11"
 
