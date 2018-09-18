@@ -3,7 +3,7 @@ import sbt.Keys._
 import sbt._
 
 object BlendedBundle {
-  def blendedRangeImport: String = """blended.*;version="[2.5,3)""""
+//  def blendedRangeImport: String = """blended.*;version="[2.5,3)""""
 
   def scalaRangeImport(scalaBinaryVersion: String): String = s"""scala.*;version="[$scalaBinaryVersion,$scalaBinaryVersion.50)""""
 }
@@ -61,8 +61,9 @@ case class BlendedBundle(
     OsgiKeys.bundleActivator := Option(bundleActivator),
     OsgiKeys.importPackage :=
       Seq(
-        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value),
-        BlendedBundle.blendedRangeImport
+        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value)
+//        ,
+//        BlendedBundle.blendedRangeImport
       ) ++ importPackage ++ Seq("*"),
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
