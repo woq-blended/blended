@@ -93,7 +93,8 @@ lazy val root = project
     blendedMgmtWs,
     blendedSecurityLoginImpl,
     blendedSecurityLoginRest,
-    blendedHawtioLogin
+    blendedHawtioLogin,
+    blendedSamplesCamel
   )
 
 // TODO: Can we get rid of these ?
@@ -145,3 +146,4 @@ lazy val blendedMgmtWs = BlendedMgmtWs.project
 lazy val blendedSecurityLoginImpl = BlendedSecurityLoginImpl.project
 lazy val blendedSecurityLoginRest = BlendedSecurityLoginRest.project
 lazy val blendedHawtioLogin = BlendedHawtioLogin.project
+lazy val blendedSamplesCamel = BlendedSamplesCamel.project
