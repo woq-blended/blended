@@ -1,12 +1,11 @@
 import com.typesafe.sbt.osgi.OsgiKeys
-import sbt.Keys._
 import sbt._
 
 object BlendedAkkaHttpApi extends ProjectHelper {
 
   private[this] val helper: ProjectSettings = new ProjectSettings(
     projectName = "blended.akka.http.api",
-    description = "Package the complete Spray API into a bundle.",
+    description = "Package the Akka Http API into a bundle.",
     deps = Seq(
       Dependencies.akkaHttp.intransitive(),
       Dependencies.akkaHttpCore.intransitive(),
@@ -28,30 +27,19 @@ object BlendedAkkaHttpApi extends ProjectHelper {
   ) {
 
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
-      // OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
+
       OsgiKeys.embeddedJars := {
         (Keys.externalDependencyClasspath in Compile).value
           .map(_.data)
           .filter(f =>
             f.getName().contains("akka-parsing_") ||
-              f.getName().contains("akka-http-core_") ||
-              f.getName().contains("akka-http_")
+            f.getName().contains("akka-http-core_") ||
+            f.getName().contains("akka-http_")
           )
       }
-
-      //        OsgiKeys.embeddedJars := {
-      //      Seq(
-      //        BuildHelper.resolveModuleFile(Dependencies.akkaHttp.intransitive(), target.value),
-      //        BuildHelper.resolveModuleFile(Dependencies.akkaHttpCore.intransitive(), target.value),
-      //        BuildHelper.resolveModuleFile(Dependencies.akkaParsing.intransitive(), target.value)
-      //      ).flatten.distinct
-
     )
   }
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedUtilLogging.project
-  )
+  override val project = helper.baseProject
 }
 

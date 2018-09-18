@@ -8,6 +8,7 @@ object Dependencies {
   val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.3"
   val jettyVersion = "9.4.8.v20171121"
+  val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val scalatestVersion = "3.0.5"
@@ -68,7 +69,7 @@ object Dependencies {
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
-  val microjson = "com.github.benhutchison" %% "microjson" % "1.4"
+  val microjson = "com.github.benhutchison" %% "microjson" % microJsonVersion
   val mimepull = "org.jvnet.mimepull" % "mimepull" % "1.9.5"
   val mockitoAll = "org.mockito" % "mockito-all" % "1.9.5"
 

@@ -81,14 +81,9 @@ class ProjectSettings(
     (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
-  def baseProject: Project = {
-    val p = projectFactory
-      .apply()
-      .settings(settings)
-      .enablePlugins(plugins: _*)
-
-    println(p)
-    p
-  }
+  def baseProject: Project = projectFactory
+    .apply()
+    .settings(settings)
+    .enablePlugins(plugins: _*)
 
 }
