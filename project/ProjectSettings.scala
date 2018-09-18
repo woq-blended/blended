@@ -16,6 +16,8 @@ trait ProjectHelper {
  * @param deps        The project classpath dependencies (exclusive of other blended projects).
  * @param osgi        If `true` this project is packaged as OSGi Bundle.
  * @param publish     If `true`, this projects package will be publish.
+ * @param adaptBundle adapt the bundle configuration (used by sbt-osgi)
+ * @param projectDir Optional project directory (use this if not equal to project name)
  */
 class ProjectSettings(
   val projectName: String,
@@ -23,7 +25,8 @@ class ProjectSettings(
   deps: Seq[ModuleID] = Seq.empty,
   osgi: Boolean = true,
   publish: Boolean = true,
-  adaptBundle: BlendedBundle => BlendedBundle = identity
+  adaptBundle: BlendedBundle => BlendedBundle = identity,
+  val projectDir: Option[String] = None
 ) {
 
   def libDeps: Seq[ModuleID] = deps
@@ -34,14 +37,14 @@ class ProjectSettings(
   def extraPlugins: Seq[AutoPlugin] = Seq.empty
 
   /**
-    * Override this method to customize the creation of this project.
-    */
+   * Override this method to customize the creation of this project.
+   */
   def projectFactory: () => Project = { () =>
     val name = projectName.split("[.]").foldLeft("") {
       case ("", next) => next
       case (name, next) => name + next.capitalize
     }
-    Project(name, file(projectName))
+    Project(name, file(projectDir.getOrElse(projectName)))
   }
 
   def defaultBundle: BlendedBundle = BlendedBundle(
@@ -67,10 +70,10 @@ class ProjectSettings(
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources",
 
-      Test/testlogLogToConsole := false,
-      Test/testlogLogToFile := true,
+      Test / testlogLogToConsole := false,
+      Test / testlogLogToFile := true,
 
-      Test/resourceGenerators += (Test/testlogCreateConfig).taskValue
+      Test / resourceGenerators += (Test / testlogCreateConfig).taskValue
 
     ) ++ osgiSettings ++ (
         // We need to explicitly load the rb settings again to
@@ -85,7 +88,7 @@ class ProjectSettings(
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
-    (if (osgi) Seq(SbtOsgi,TestLogConfig) else Seq(TestLogConfig))
+    (if (osgi) Seq(SbtOsgi, TestLogConfig) else Seq(TestLogConfig))
 
   // creates the project and apply settings and plugins
   def baseProject: Project = projectFactory
