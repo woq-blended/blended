@@ -31,7 +31,6 @@ You can build with a simple:
 
 As most IDE's do not understand the `pom.scala` files, you can use the Maven profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
 
-
 After that, your IDE can use the generated `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
 
 .Build `pom.xml` files from top level directory
