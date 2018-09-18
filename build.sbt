@@ -94,6 +94,7 @@ lazy val root = project
     blendedSecurityLoginImpl,
     blendedSecurityLoginRest,
     blendedSecurityTest,
+    blendedSecuritySsl,
     blendedHawtioLogin,
     blendedSamplesCamel,
     blendedSamplesJms,
@@ -149,6 +150,7 @@ lazy val blendedMgmtWs = BlendedMgmtWs.project
 lazy val blendedSecurityLoginImpl = BlendedSecurityLoginImpl.project
 lazy val blendedSecurityLoginRest = BlendedSecurityLoginRest.project
 lazy val blendedSecurityTest = BlendedSecurityTest.project
+lazy val blendedSecuritySsl = BlendedSecuritySsl.project
 lazy val blendedHawtioLogin = BlendedHawtioLogin.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
