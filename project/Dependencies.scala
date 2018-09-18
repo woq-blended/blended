@@ -15,9 +15,8 @@ object Dependencies {
   val sprayVersion = "1.3.4"
   val springVersion = "3.2.18.RELEASE_1"
 
-  def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
-
-  def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
+  private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
+  private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
 
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
   val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
