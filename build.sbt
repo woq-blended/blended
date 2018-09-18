@@ -98,7 +98,8 @@ lazy val root = project
     blendedHawtioLogin,
     blendedSamplesCamel,
     blendedSamplesJms,
-    blendedAkkaHttpSampleHelloworld
+    blendedAkkaHttpSampleHelloworld,
+    blendedActivemqDefaultbroker
   )
 
 // TODO: Can we get rid of these ?
@@ -155,3 +156,4 @@ lazy val blendedHawtioLogin = BlendedHawtioLogin.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
+lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
