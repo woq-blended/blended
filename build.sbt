@@ -85,7 +85,8 @@ lazy val root = project
     blendedPrickleAkkaHttp,
     blendedMgmtAgent,
     blendedPersistenceH2,
-    blendedMgmtRest
+    blendedMgmtRest,
+    blendedMgmtMock
   )
 
 // TODO: Can we get rid of these ?
@@ -129,3 +130,4 @@ lazy val blendedPrickleAkkaHttp = BlendedPrickleAkkaHttp.project
 lazy val blendedMgmtAgent = BlendedMgmtAgent.project
 lazy val blendedPersistenceH2 = BlendedPersistenceH2.project
 lazy val blendedMgmtRest = BlendedMgmtRest.project
+lazy val blendedMgmtMock = BlendedMgmtMock.project

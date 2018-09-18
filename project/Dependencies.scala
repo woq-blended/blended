@@ -107,5 +107,8 @@ object Dependencies {
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"
 
+  val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
+  val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
+
 }
 
