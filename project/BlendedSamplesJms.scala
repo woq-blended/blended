@@ -1,11 +1,11 @@
 import sbt._
 
-object BlendedSamplesCamel extends ProjectHelper {
+object BlendedSamplesJms extends ProjectHelper {
 
   private[this] val helper = new ProjectSettings(
-    projectName = "blended.samples.camel",
-    description = "A sample camel route",
-    projectDir = Some("blended.samples/blended.samples.camel"),
+    projectName = "blended.samples.jms",
+    description = "A combined JMS example",
+    projectDir = Some("blended.samples/blended.samples.jms"),
     deps = Seq(
       Dependencies.domino,
       Dependencies.camelCore,
@@ -14,12 +14,13 @@ object BlendedSamplesCamel extends ProjectHelper {
       Dependencies.slf4j
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.CamelSampleActivator",
+      bundleActivator = s"${b.bundleSymbolicName}.internal.JmsSampleActivator",
       exportPackage = Seq()
     )
   )
 
   override val project = helper.baseProject.dependsOn(
+    BlendedDomino.project,
     BlendedCamelUtils.project
   )
 }
