@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 import sbt.Keys._
 import sbt._
@@ -69,13 +71,19 @@ case class BlendedBundle(
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
     // ensure we build a package with OSGi Manifest
-    Compile / packageBin := {
-      // Make sure the classes directory exists before we start bundling 
-      // to avoid unnecessary bnd errors 
-      
+    Compile / packageBin := ({
+      OsgiKeys.bundle
+    }.dependsOn(Def.task[Unit] {
+      // Make sure the classes directory exists before we start bundling
+      // to avoid unnecessary bnd errors
       // packageBin.in(Compile).value
-      OsgiKeys.bundle.value
-    }
+      val log = streams.value.log
+      val classDir = (Compile/classDirectory).value
+      if (!classDir.exists()) {
+        log.info(s"Creating diretory [${classDir.getAbsolutePath()}]")
+        Files.createDirectories(classDir.toPath())
+      }
+    })).value
   ) ++
     Option(embeddedJars) ++
     extraEntries

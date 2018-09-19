@@ -53,8 +53,6 @@ object BlendedSecurityScepStandalone extends ProjectHelper {
             .filter(_.data.isFile())
             .map( af => s"$libDir/${af.data.getName()}")
 
-          streams.value.log.info(s"Application Classpath is [$appClasspath]")
-
           Package.ManifestAttributes(
             "Class-Path" -> appClasspath.mkString(" ")
           )
@@ -63,7 +61,7 @@ object BlendedSecurityScepStandalone extends ProjectHelper {
         addArtifact(Universal/packageBin/artifact, Universal/packageBin).settings ++
         Seq(
           packageBin := (Universal/packageBin).dependsOn(Compile/packageBin).value,
-          publishM2 := publishM2.dependsOn(Universal/publishM2).value,
+          publishM2 := (Universal/publishM2).dependsOn(Compile/packageBin).value,
           publishLocal := publishLocal.dependsOn(Universal/publishLocal).value
         )
   }
