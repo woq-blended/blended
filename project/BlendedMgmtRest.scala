@@ -33,6 +33,7 @@ object BlendedMgmtRest extends ProjectHelper {
     BlendedPrickleAkkaHttp.project,
     BlendedMgmtRepo.project,
 
+    BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test",
     BlendedPersistenceH2.project % "test"
   )

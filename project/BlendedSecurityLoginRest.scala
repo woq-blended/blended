@@ -9,6 +9,7 @@ object BlendedSecurityLoginRest extends ProjectHelper {
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
+      Dependencies.scalatest % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.akkaHttpTestkit % "test",
@@ -26,6 +27,7 @@ object BlendedSecurityLoginRest extends ProjectHelper {
     BlendedUtilLogging.project,
     BlendedSecurityLoginApi.project,
 
+    BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test",
     BlendedSecurityLoginImpl.project % "test"
   )

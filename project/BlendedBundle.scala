@@ -70,6 +70,9 @@ case class BlendedBundle(
     OsgiKeys.privatePackage := privatePackage,
     // ensure we build a package with OSGi Manifest
     Compile / packageBin := {
+      // Make sure the classes directory exists before we start bundling 
+      // to avoid unnecessary bnd errors 
+      
       // packageBin.in(Compile).value
       OsgiKeys.bundle.value
     }

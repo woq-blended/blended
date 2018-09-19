@@ -9,6 +9,7 @@ object BlendedMgmtWs extends ProjectHelper {
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
+      Dependencies.akkaTestkit % "test",
       Dependencies.sttp % "test",
       Dependencies.sttpAkka % "test",
       Dependencies.scalatest % "test",
@@ -27,6 +28,7 @@ object BlendedMgmtWs extends ProjectHelper {
     BlendedSecurityLoginApi.project,
     BlendedUpdaterConfigJvm.project,
 
+    BlendedTestsupport.project % "test",
     BlendedMgmtRest.project % "test",
     BlendedUpdaterRemote.project % "test",
     BlendedPersistenceH2.project % "test",
