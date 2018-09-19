@@ -17,7 +17,7 @@ trait ProjectFactory {
  * @param osgi        If `true` this project is packaged as OSGi Bundle.
  * @param publish     If `true`, this projects package will be publish.
  * @param adaptBundle adapt the bundle configuration (used by sbt-osgi)
- * @param projectDir Optional project directory (use this if not equal to project name)
+ * @param projectDir  Optional project directory (use this if not equal to project name)
  */
 class ProjectSettings(
   val projectName: String,
@@ -89,7 +89,8 @@ class ProjectSettings(
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
-    (if (osgi) Seq(SbtOsgi, TestLogConfig) else Seq(TestLogConfig))
+    Seq(TestLogConfig) ++
+    (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
   def baseProject: Project = projectFactory
