@@ -1,25 +1,18 @@
 package blended.updater
 
 import java.io.File
-import java.net.URL
-import scala.sys.process.urlToProcess
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
+
 import akka.actor.Actor
 import akka.actor.ActorLogging
-import akka.actor.actorRef2Scala
-import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
-import scala.util.control.NonFatal
-import java.io.BufferedInputStream
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
-import blended.updater.config.RuntimeConfig
+import akka.actor.actorRef2Scala
+import akka.event.LoggingReceive
 import blended.updater.config.util.Unzipper
-import scala.util.Failure
+
 import scala.collection.immutable._
+import scala.util.Failure
+import scala.util.Success
 
 object Unpacker {
 
