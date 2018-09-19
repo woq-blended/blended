@@ -10,6 +10,11 @@ object BlendedContainerContextApi extends ProjectFactory {
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
+    ),
+    adaptBundle = b => b.copy(
+      importPackage = Seq(
+        "blended.launcher.runtime;resolution:=optional"
+      )
     )
   )
 

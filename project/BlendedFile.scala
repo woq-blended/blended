@@ -13,11 +13,7 @@ object BlendedFile extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.protocol")
     )
-
   ) {
 
     override def extraPlugins: Seq[AutoPlugin] = super.extraPlugins ++ Seq(

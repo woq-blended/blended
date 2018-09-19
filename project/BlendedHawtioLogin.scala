@@ -10,6 +10,7 @@ object BlendedHawtioLogin extends ProjectFactory {
         "blended.security.boot",
         "com.sun.jndi.ldap;resolution:=optional"
       ),
+      exportPackage = Seq(),
       additionalHeaders = Map(
         "Fragment-Host" -> "io.hawt.hawtio-web"
       )
