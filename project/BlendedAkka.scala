@@ -12,7 +12,10 @@ object BlendedAkka extends ProjectHelper {
       Dependencies.domino
     ),
     adaptBundle = b => b.copy(
-      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.protocol"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedAkkaActivator",
+      exportPackage = Seq(
+        b.bundleSymbolicName,
+        s"${b.bundleSymbolicName}.protocol"
       )
     )
   )
