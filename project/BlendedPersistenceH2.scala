@@ -22,7 +22,8 @@ object BlendedPersistenceH2 extends ProjectFactory {
       Dependencies.lambdaTest % "test"
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.H2Activator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.H2Activator",
+      exportPackage = Seq()
     )
   )
 

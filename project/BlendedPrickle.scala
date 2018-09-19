@@ -12,7 +12,10 @@ object BlendedPrickle extends ProjectFactory {
       Dependencies.microjson.intransitive()
     ),
     adaptBundle = b => b.copy(
-      importPackage = Seq("*"),
+      importPackage = Seq(
+        "prickle",
+        "microjson"
+      ),
       privatePackage = Seq.empty,
       exportContents = Seq(
         s"prickle;version=${Dependencies.prickleVersion};-split-package:=merge-first",
@@ -24,8 +27,7 @@ object BlendedPrickle extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
       OsgiKeys.embeddedJars := {
-        (Compile/externalDependencyClasspath).value
-          .map { attrFile => attrFile.data }
+        (Compile / externalDependencyClasspath).value.map(_.data)
           .filter { f =>
             f.getName().startsWith("prickle") || f.getName().startsWith("microjson")
           }

@@ -41,7 +41,10 @@ object BlendedSecurityJvm extends ProjectFactory {
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.SecurityActivator",
-      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.json")
+      exportPackage = Seq(
+        b.bundleSymbolicName,
+        s"${b.bundleSymbolicName}.json"
+      )
     )
   ) {
 

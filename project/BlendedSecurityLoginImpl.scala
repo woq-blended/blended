@@ -16,7 +16,8 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.LoginActivator",
       importPackage = Seq("android.*;resolution:=optional"),
-      privatePackage = Seq(b.bundleSymbolicName)
+      privatePackage = Seq(b.bundleSymbolicName),
+      exportPackage = Seq()
     )
   ) {
 
