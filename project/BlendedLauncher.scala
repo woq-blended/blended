@@ -25,6 +25,17 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
       Dependencies.commonsDaemon
+    ),
+    adaptBundle = b => b.copy(
+      importPackage = Seq(
+        "org.apache.commons.daemon;resolution:=optional",
+        "de.tototec.cmdoption.*;resolution:=optional"
+      ),
+      privatePackage = Seq(
+        s"${b.bundleSymbolicName}.internal",
+        s"${b.bundleSymbolicName}.jvmrunner",
+        s"${b.bundleSymbolicName}.runtime"
+      )
     )
   ) {
 
@@ -81,25 +92,25 @@ object BlendedLauncher extends ProjectFactory {
         }
       }.taskValue
     ) ++ Seq(
-      Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
-        f -> s"lib/${f.getName}"
-      },
-      Universal / mappings ++= {
-        val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
-        PathFinder(dir).**("***").pair(relativeTo(dir))
-      },
-      Universal / mappings ++= (Compile / dependencyClasspathAsJars).value.filter(_.data.isFile).map { f =>
-        f.data -> s"lib/${f.data.getName}"
-      },
-      Universal / mappings ++= (Compile / filterResources).value,
-      Universal / packageBin / mainClass := None,
-    ) ++
-      addArtifact(Universal / packageBin / artifact, Universal / packageBin).settings ++
-      addArtifact(Universal / packageZipTarball / artifact, Universal / packageZipTarball).settings ++
-      Seq(
-        publishM2 := publishM2.dependsOn(Universal / publishM2).value,
-        publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
-      )
+        Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
+          f -> s"lib/${f.getName}"
+        },
+        Universal / mappings ++= {
+          val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
+          PathFinder(dir).**("***").pair(relativeTo(dir))
+        },
+        Universal / mappings ++= (Compile / dependencyClasspathAsJars).value.filter(_.data.isFile).map { f =>
+          f.data -> s"lib/${f.data.getName}"
+        },
+        Universal / mappings ++= (Compile / filterResources).value,
+        Universal / packageBin / mainClass := None
+      ) ++
+        addArtifact(Universal / packageBin / artifact, Universal / packageBin).settings ++
+        addArtifact(Universal / packageZipTarball / artifact, Universal / packageZipTarball).settings ++
+        Seq(
+          publishM2 := publishM2.dependsOn(Universal / publishM2).value,
+          publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
+        )
   }
 
   override val project = helper.baseProject.dependsOn(

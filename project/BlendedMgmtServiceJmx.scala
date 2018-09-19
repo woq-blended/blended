@@ -6,7 +6,8 @@ object BlendedMgmtServiceJmx extends ProjectFactory {
     projectName = "blended.mgmt.service.jmx",
     description = "A JMX based Service Info Collector.",
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.ServiceJmxActivator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.ServiceJmxActivator",
+      exportPackage = Seq()
     ),
     deps = Seq(
       Dependencies.scalatest % "test",

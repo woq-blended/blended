@@ -7,7 +7,8 @@ object BlendedJmx extends ProjectFactory {
       Dependencies.domino
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedJmxActivator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedJmxActivator",
+      exportPackage = Seq()
     )
   )
 

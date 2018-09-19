@@ -18,7 +18,8 @@ object BlendedMgmtWs extends ProjectFactory {
       Dependencies.jclOverSlf4j % "test"
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtWSActivator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtWSActivator",
+      exportPackage = Seq()
     )
   )
 

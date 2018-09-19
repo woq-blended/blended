@@ -21,7 +21,8 @@ object BlendedMgmtRest extends ProjectFactory {
       Dependencies.jclOverSlf4j % "test"
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtRestActivator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtRestActivator",
+      exportPackage = Seq()
     )
   )
   override  val project = helper.baseProject.dependsOn(
