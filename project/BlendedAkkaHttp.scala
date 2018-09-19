@@ -1,4 +1,3 @@
-import com.typesafe.sbt.osgi.OsgiKeys
 import sbt._
 
 object BlendedAkkaHttp extends ProjectFactory {
