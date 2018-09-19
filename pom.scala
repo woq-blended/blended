@@ -36,7 +36,6 @@ BlendedModel(
         "blended.updater.config",
         "blended.updater.tools",
         "blended.updater.remote",
-        "blended-updater-maven-plugin",
         "blended.activemq.brokerstarter",
         "blended.container.context.api",
         "blended.container.context.impl",
