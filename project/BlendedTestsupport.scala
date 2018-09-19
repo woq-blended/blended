@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedTestsupport extends ProjectHelper {
+object BlendedTestsupport extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     "blended.testsupport",

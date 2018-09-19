@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys._
 
-object BlendedSecuritySsl extends ProjectHelper {
+object BlendedSecuritySsl extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.ssl",

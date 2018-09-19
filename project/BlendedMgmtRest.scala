@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedMgmtRest extends ProjectHelper {
+object BlendedMgmtRest extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.mgmt.rest",

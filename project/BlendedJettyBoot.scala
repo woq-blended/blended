@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys
 
-object BlendedJettyBoot extends ProjectHelper {
+object BlendedJettyBoot extends ProjectFactory {
 
   private[this] val helper: ProjectSettings = new ProjectSettings(
     projectName = "blended.jetty.boot",

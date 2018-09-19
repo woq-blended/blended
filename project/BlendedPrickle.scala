@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys
 
-object BlendedPrickle extends ProjectHelper {
+object BlendedPrickle extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.prickle",

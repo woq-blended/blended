@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedAkkaHttpJmsqueue extends ProjectHelper {
+object BlendedAkkaHttpJmsqueue extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.akka.http.jmsqueue",

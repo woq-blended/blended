@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedAkkaHttpRestjms extends ProjectHelper {
+object BlendedAkkaHttpRestjms extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.akka.http.restjms",

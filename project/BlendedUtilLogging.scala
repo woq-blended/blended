@@ -1,4 +1,4 @@
-object BlendedUtilLogging extends ProjectHelper {
+object BlendedUtilLogging extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.util.logging",

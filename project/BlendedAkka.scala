@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedAkka extends ProjectHelper {
+object BlendedAkka extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.akka",

@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedPersistence extends ProjectHelper {
+object BlendedPersistence extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.persistence",

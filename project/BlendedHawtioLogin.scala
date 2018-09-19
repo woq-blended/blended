@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedHawtioLogin extends ProjectHelper {
+object BlendedHawtioLogin extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.hawtio.login",

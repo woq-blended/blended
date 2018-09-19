@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedPrickleAkkaHttp extends ProjectHelper {
+object BlendedPrickleAkkaHttp extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.prickle.akka.http",

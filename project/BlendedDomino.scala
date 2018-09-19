@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedDomino extends ProjectHelper {
+object BlendedDomino extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.domino",

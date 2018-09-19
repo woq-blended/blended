@@ -1,4 +1,4 @@
-object BlendedJmx extends ProjectHelper {
+object BlendedJmx extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     "blended.jmx",

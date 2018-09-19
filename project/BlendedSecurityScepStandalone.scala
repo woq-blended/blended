@@ -4,7 +4,7 @@ import com.typesafe.sbt.packager.universal.UniversalPlugin
 import com.typesafe.sbt.packager.universal.UniversalDeployPlugin
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 
-object BlendedSecurityScepStandalone extends ProjectHelper {
+object BlendedSecurityScepStandalone extends ProjectFactory {
 
   private[this] val libDir = "libs"
 

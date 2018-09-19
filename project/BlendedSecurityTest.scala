@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedSecurityTest extends ProjectHelper {
+object BlendedSecurityTest extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.test",

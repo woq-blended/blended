@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys._
 
-object BlendedSecurityLoginImpl extends ProjectHelper {
+object BlendedSecurityLoginImpl extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.login.impl",

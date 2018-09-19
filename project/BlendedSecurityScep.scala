@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys._
 
-object BlendedSecurityScep extends ProjectHelper {
+object BlendedSecurityScep extends ProjectFactory {
   private[this] val embeddedPrefixes : Seq[String] = Seq(
     "bcprov", "bcpkix", "commons-io", "commons-lang", "commons-codec", "jcip-annotations",
     "jscep"

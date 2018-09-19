@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedMgmtMock extends ProjectHelper {
+object BlendedMgmtMock extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.mgmt.mock",

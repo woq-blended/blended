@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedActivemqBrokerstarter extends ProjectHelper {
+object BlendedActivemqBrokerstarter extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.activemq.brokerstarter",

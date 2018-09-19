@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedAkkaHttpSampleHelloworld extends ProjectHelper {
+object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.akka.http.sample.helloworld",

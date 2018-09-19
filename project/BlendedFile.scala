@@ -2,7 +2,7 @@ import sbt._
 
 import FilterResources.autoImport._
 
-object BlendedFile extends ProjectHelper {
+object BlendedFile extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.file",

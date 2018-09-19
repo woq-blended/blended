@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedSamplesCamel extends ProjectHelper {
+object BlendedSamplesCamel extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.samples.camel",

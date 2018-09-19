@@ -14,7 +14,7 @@ private object BlendedSecurityCross {
     .build()
 }
 
-object BlendedSecurityJs extends ProjectHelper {
+object BlendedSecurityJs extends ProjectFactory {
 
   override val project = {
     BlendedSecurityCross.project.js.settings(
@@ -28,7 +28,7 @@ object BlendedSecurityJs extends ProjectHelper {
   }
 }
 
-object BlendedSecurityJvm extends ProjectHelper {
+object BlendedSecurityJvm extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security",

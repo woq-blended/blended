@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedUpdaterRemote extends ProjectHelper {
+object BlendedUpdaterRemote extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     "blended.updater.remote",

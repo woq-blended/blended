@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedActivemqClient extends ProjectHelper {
+object BlendedActivemqClient extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.activemq.client",

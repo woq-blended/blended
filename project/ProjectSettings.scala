@@ -4,7 +4,7 @@ import com.typesafe.sbt.osgi.SbtOsgi
 import TestLogConfig.autoImport._
 //import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 
-trait ProjectHelper {
+trait ProjectFactory {
   val project: Project
 }
 

@@ -1,6 +1,6 @@
 import sbt._
 
-private object BlendedSecurityAkkaHttp extends ProjectHelper {
+private object BlendedSecurityAkkaHttp extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.akka.http",

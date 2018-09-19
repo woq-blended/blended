@@ -1,4 +1,4 @@
-object BlendedSecurityBoot extends ProjectHelper {
+object BlendedSecurityBoot extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.boot",

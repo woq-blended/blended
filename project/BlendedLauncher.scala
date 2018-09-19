@@ -13,7 +13,7 @@ import NativePackagerHelper._
 
 import FilterResources.autoImport._
 
-object BlendedLauncher extends ProjectHelper {
+object BlendedLauncher extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.launcher",

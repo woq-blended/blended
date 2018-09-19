@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedJmsUtils extends ProjectHelper {
+object BlendedJmsUtils extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     "blended.jms.utils",

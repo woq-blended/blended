@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedMgmtAgent extends ProjectHelper {
+object BlendedMgmtAgent extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.mgmt.agent",

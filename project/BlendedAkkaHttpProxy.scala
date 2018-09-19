@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedAkkaHttpProxy extends ProjectHelper {
+object BlendedAkkaHttpProxy extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.akka.http.proxy",

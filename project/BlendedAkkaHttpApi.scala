@@ -2,7 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys._
 
-object BlendedAkkaHttpApi extends ProjectHelper {
+object BlendedAkkaHttpApi extends ProjectFactory {
 
   private[this] val helper: ProjectSettings = new ProjectSettings(
     projectName = "blended.akka.http.api",

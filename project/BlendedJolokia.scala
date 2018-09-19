@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedJolokia extends ProjectHelper {
+object BlendedJolokia extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.jolokia",

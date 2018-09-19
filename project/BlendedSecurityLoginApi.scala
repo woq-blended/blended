@@ -1,6 +1,6 @@
 import sbt._
 
-private object BlendedSecurityLoginApi extends ProjectHelper {
+private object BlendedSecurityLoginApi extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.login.api",

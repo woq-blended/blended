@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedSecurityLoginRest extends ProjectHelper {
+object BlendedSecurityLoginRest extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.login.rest",

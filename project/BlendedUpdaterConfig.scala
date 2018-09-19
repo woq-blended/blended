@@ -14,7 +14,7 @@ private object BlendedUpdaterConfigCross {
     .build()
 }
 
-object BlendedUpdaterConfigJs extends ProjectHelper {
+object BlendedUpdaterConfigJs extends ProjectFactory {
 
   override val project = BlendedUpdaterConfigCross.project.js.settings(
     Seq(
@@ -29,7 +29,7 @@ object BlendedUpdaterConfigJs extends ProjectHelper {
 
 }
 
-object BlendedUpdaterConfigJvm extends ProjectHelper {
+object BlendedUpdaterConfigJvm extends ProjectFactory {
 
   private[this] def helper = new ProjectSettings(
     "blended.updater.config",

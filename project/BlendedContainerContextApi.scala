@@ -1,6 +1,6 @@
 import sbt._
 
-object BlendedContainerContextApi extends ProjectHelper {
+object BlendedContainerContextApi extends ProjectFactory {
 
   private[this] val helper: ProjectSettings = new ProjectSettings(
     projectName = "blended.container.context.api",
