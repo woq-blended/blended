@@ -7,6 +7,9 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
+addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
+addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
+
 inThisBuild(Seq(
   organization := "de.wayofquality.blended",
   homepage := Some(url("https://github.com/woq-blended/blended")),
@@ -39,72 +42,75 @@ inThisBuild(Seq(
   )
 ))
 
-lazy val root = project
-  .in(file("."))
-  .settings(
-    name := "blended",
-    unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
-  )
-  .settings(PublishConfig.noPublish)
-  .enablePlugins(ScalaUnidocPlugin)
-  .aggregate(
-    blendedUtilLogging,
-    blendedSecurityBoot,
-    blendedContainerContextApi,
-    blendedDomino,
-    blendedUtil,
-    blendedTestsupport,
-    blendedAkka,
-    blendedSecurityJs,
-    blendedSecurityJvm,
-    blendedUpdaterConfigJs,
-    blendedUpdaterConfigJvm,
-    blendedLauncher,
-    blendedMgmtBase,
-    blendedUpdater,
-    blendedUpdaterTools,
-    blendedPersistence,
-    blendedUpdaterRemote,
-    blendedCamelUtils,
-    blendedJmsUtils,
-    blendedActivemqBrokerstarter,
-    blendedContainerContextImpl,
-    blendedJmx,
-    blendedJettyBoot,
-    blendedJmsSampler,
-    blendedTestsupportPojosr,
-    blendedAkkaHttpApi,
-    blendedAkkaHttp,
-    blendedAkkaHttpJmsqueue,
-    blendedAkkaHttpProxy,
-    blendedAkkaHttpRestjms,
-    blendedFile,
-    blendedMgmtRepo,
-    blendedSecurityAkkaHttp,
-    blendedMgmtRepoRest,
-    blendedPrickleAkkaHttp,
-    blendedMgmtAgent,
-    blendedPersistenceH2,
-    blendedMgmtRest,
-    blendedMgmtMock,
-    blendedMgmtServiceJmx,
-    blendedPrickle,
-    blendedSecurityLoginApi,
-    blendedMgmtWs,
-    blendedSecurityLoginImpl,
-    blendedSecurityLoginRest,
-    blendedSecurityTest,
-    blendedSecuritySsl,
-    blendedSecurityScep,
-    blendedSecurityScepStandalone,
-    blendedHawtioLogin,
-    blendedJolokia,
-    blendedSamplesCamel,
-    blendedSamplesJms,
-    blendedAkkaHttpSampleHelloworld,
-    blendedActivemqDefaultbroker,
-    blendedActivemqClient
-  )
+lazy val root = {
+  project
+    .in(file("."))
+    .settings(
+      name := "blended",
+      unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
+    )
+    .settings(addCommandAlias("publishAll", "; clean ; coverageOff ; publishM2" ).settings)
+    .settings(PublishConfig.noPublish)
+    .enablePlugins(ScalaUnidocPlugin)
+    .aggregate(
+      blendedUtilLogging,
+      blendedSecurityBoot,
+      blendedContainerContextApi,
+      blendedDomino,
+      blendedUtil,
+      blendedTestsupport,
+      blendedAkka,
+      blendedSecurityJs,
+      blendedSecurityJvm,
+      blendedUpdaterConfigJs,
+      blendedUpdaterConfigJvm,
+      blendedLauncher,
+      blendedMgmtBase,
+      blendedUpdater,
+      blendedUpdaterTools,
+      blendedPersistence,
+      blendedUpdaterRemote,
+      blendedCamelUtils,
+      blendedJmsUtils,
+      blendedActivemqBrokerstarter,
+      blendedContainerContextImpl,
+      blendedJmx,
+      blendedJettyBoot,
+      blendedJmsSampler,
+      blendedTestsupportPojosr,
+      blendedAkkaHttpApi,
+      blendedAkkaHttp,
+      blendedAkkaHttpJmsqueue,
+      blendedAkkaHttpProxy,
+      blendedAkkaHttpRestjms,
+      blendedFile,
+      blendedMgmtRepo,
+      blendedSecurityAkkaHttp,
+      blendedMgmtRepoRest,
+      blendedPrickleAkkaHttp,
+      blendedMgmtAgent,
+      blendedPersistenceH2,
+      blendedMgmtRest,
+      blendedMgmtMock,
+      blendedMgmtServiceJmx,
+      blendedPrickle,
+      blendedSecurityLoginApi,
+      blendedMgmtWs,
+      blendedSecurityLoginImpl,
+      blendedSecurityLoginRest,
+      blendedSecurityTest,
+      blendedSecuritySsl,
+      blendedSecurityScep,
+      blendedSecurityScepStandalone,
+      blendedHawtioLogin,
+      blendedJolokia,
+      blendedSamplesCamel,
+      blendedSamplesJms,
+      blendedAkkaHttpSampleHelloworld,
+      blendedActivemqDefaultbroker,
+      blendedActivemqClient
+    )
+}
 
 // TODO: Can we get rid of these ?
 lazy val blendedUtilLogging = BlendedUtilLogging.project
