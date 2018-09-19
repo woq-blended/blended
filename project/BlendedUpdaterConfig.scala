@@ -64,6 +64,7 @@ object BlendedUpdaterConfigJvm extends ProjectHelper {
     .dependsOn(
       BlendedUtilLogging.project,
       BlendedSecurityJvm.project,
-      BlendedTestsupport.project
+
+      BlendedTestsupport.project % "test"
     )
 }
