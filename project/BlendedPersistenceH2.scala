@@ -23,7 +23,11 @@ object BlendedPersistenceH2 extends ProjectFactory {
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.H2Activator",
-      exportPackage = Seq()
+      exportPackage = Seq(),
+      privatePackage = Seq(
+        s"${b.bundleSymbolicName}.internal",
+        "blended.persistence.jdbc"
+      )
     )
   )
 

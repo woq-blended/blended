@@ -7,6 +7,7 @@ object BlendedAkkaHttpApi extends ProjectFactory {
   private[this] val helper: ProjectSettings = new ProjectSettings(
     projectName = "blended.akka.http.api",
     description = "Package the Akka Http API into a bundle.",
+    osgiDefaultImports = false,
     deps = Seq(
       Dependencies.akkaHttp.intransitive(),
       Dependencies.akkaHttpCore.intransitive(),
@@ -19,7 +20,8 @@ object BlendedAkkaHttpApi extends ProjectFactory {
         "net.liftweb.*;resolution:=optional",
         "play.*;resolution:=optional",
         "twirl.*;resolution:=optional",
-        "org.json4s.*;resolution:=optional"
+        "org.json4s.*;resolution:=optional",
+        "*"
       ),
       exportContents = Seq(
         s"akka.http.*;version=${Dependencies.akkaHttpVersion};-split-package:=merge-first"

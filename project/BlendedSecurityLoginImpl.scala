@@ -8,6 +8,7 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
     projectName = "blended.security.login.impl",
     description = "Implementation of the Login backend.",
     deps = Seq(
+      Dependencies.jjwt, 
       Dependencies.bouncyCastleBcprov,
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
@@ -24,7 +25,7 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
       embeddedJars := {
         (Compile/externalDependencyClasspath).value.map(_.data).filter { f =>
-          f.getName.startsWith("bcprov")
+          f.getName.startsWith("bcprov") || f.getName().startsWith("jjwt")
         }
       }
     )

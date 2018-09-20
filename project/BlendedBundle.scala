@@ -45,7 +45,8 @@ case class BlendedBundle(
   exportPackage: Seq[String] = Seq.empty,
   embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
   exportContents: Seq[String] = Seq.empty,
-  additionalHeaders: Map[String, String] = Map.empty
+  additionalHeaders: Map[String, String] = Map.empty,
+  defaultImports : Boolean = true
 ) {
 
   private[this] lazy val extraEntries: Seq[Setting[_]] = Seq(
@@ -58,16 +59,29 @@ case class BlendedBundle(
   )
 
   val osgiSettings: Seq[Setting[_]] = Seq(
-    OsgiKeys.failOnUndecidedPackage := true,
+    // This setting does not seem to have an effect as it does not fail if a package is missing from the jar
+    // OsgiKeys.failOnUndecidedPackage := true,
+
     OsgiKeys.bundleSymbolicName := Option(bundleSymbolicName).getOrElse(name.value),
     OsgiKeys.bundleVersion := Option(bundleVersion).getOrElse(version.value),
     OsgiKeys.bundleActivator := Option(bundleActivator),
-    OsgiKeys.importPackage :=
-      Seq(
-        BlendedBundle.scalaRangeImport(scalaBinaryVersion.value)
-//        ,
-//        BlendedBundle.blendedRangeImport
-      ) ++ importPackage ++ Seq("*"),
+    OsgiKeys.importPackage := {
+      val effectiveImports = (if (defaultImports) {
+        Seq(BlendedBundle.scalaRangeImport(scalaBinaryVersion.value))
+      } else {
+        Seq.empty
+      }) ++
+        importPackage ++
+        (if (defaultImports) {
+          Seq("*")
+        } else {
+          Seq.empty
+        })
+
+      sLog.value.debug(s"Effective package imports for [$bundleSymbolicName] : [$effectiveImports]")
+
+      effectiveImports
+    },
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
     // ensure we build a package with OSGi Manifest
@@ -76,7 +90,6 @@ case class BlendedBundle(
     }.dependsOn(Def.task[Unit] {
       // Make sure the classes directory exists before we start bundling
       // to avoid unnecessary bnd errors
-      // packageBin.in(Compile).value
       val log = streams.value.log
       val classDir = (Compile/classDirectory).value
       if (!classDir.exists()) {

@@ -24,6 +24,7 @@ class ProjectSettings(
   val description: String,
   deps: Seq[ModuleID] = Seq.empty,
   osgi: Boolean = true,
+  osgiDefaultImports : Boolean = true,
   publish: Boolean = true,
   adaptBundle: BlendedBundle => BlendedBundle = identity,
   val projectDir: Option[String] = None
@@ -50,7 +51,8 @@ class ProjectSettings(
   def defaultBundle: BlendedBundle = BlendedBundle(
     bundleSymbolicName = projectName,
     exportPackage = Seq(projectName),
-    privatePackage = Seq(s"${projectName}.internal.*")
+    privatePackage = Seq(s"${projectName}.internal.*"),
+    defaultImports = osgiDefaultImports
   )
 
   def bundle: BlendedBundle = adaptBundle(defaultBundle)
