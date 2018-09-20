@@ -25,10 +25,11 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
         "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
       )
     )
-  ).dependsOn(
+  )
+  .settings(PublishConfig.doPublish)
+  .dependsOn(
     BlendedSecurityJs.project
   )
-
 }
 
 object BlendedUpdaterConfigJvm extends ProjectFactory {

@@ -33,13 +33,16 @@ inThisBuild(Seq(
   scalariformAutoformat := false,
   scalariformWithBaseDirectory := true,
 
-  // essential to not try to compile pom.scala files, only required until migration to  sbt is complete
-  sourcesInBase := false,
   publishMavenStyle := true,
   resolvers ++= Seq(
     Resolver.sonatypeRepo("snapshots"),
     "Maven2 Local" at m2Repo
-  )
+  ),
+
+  useGpg := false,
+  pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
+  pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
+  pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
 ))
 
 lazy val root = {

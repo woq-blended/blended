@@ -26,7 +26,8 @@ object BlendedSecurityJs extends ProjectFactory {
           "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
         )
       )
-    )
+    ) 
+    .settings(PublishConfig.doPublish)
   }
 }
 
