@@ -77,7 +77,7 @@ object ResourceFilter {
         val mapper: syntax.File => Option[String] = {
           f =>
             if (f.isFile) {
-              Some(f.getAbsolutePath().substring(sources.getAbsolutePath.length))
+              Some(f.getAbsolutePath().substring(sources.getAbsolutePath().length + 1))
             } else {
               None
             }

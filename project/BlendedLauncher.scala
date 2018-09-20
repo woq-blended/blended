@@ -92,6 +92,9 @@ object BlendedLauncher extends ProjectFactory {
         }
       }.taskValue
     ) ++ Seq(
+      
+        Universal / topLevelDirectory := None,
+      
         Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
           f -> s"lib/${f.getName}"
         },

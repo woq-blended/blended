@@ -19,6 +19,8 @@ object BlendedSecurityJs extends ProjectFactory {
   override val project = {
     BlendedSecurityCross.project.js.settings(
       Seq(
+        name := "blended.security",
+        moduleName := "blended.security",
         libraryDependencies ++= Seq(
           "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
           "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"

@@ -18,6 +18,8 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
 
   override val project = BlendedUpdaterConfigCross.project.js.settings(
     Seq(
+      name := "blended.updater.config",
+      moduleName := "blended.updater.config",
       libraryDependencies ++= Seq(
         "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
         "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
