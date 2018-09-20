@@ -7,6 +7,7 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
 
 val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
+addCommandAlias("ciBuild", "; clean ; test ; packageBin ; publishLocalSigned")
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
