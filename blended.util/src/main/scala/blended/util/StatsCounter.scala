@@ -10,7 +10,7 @@ class StatsCounter extends Actor with ActorLogging {
   var firstCount : Option[Long] = None
   var lastCount  : Option[Long] = None
 
-  override def receive = LoggingReceive {
+  override def receive: Receive = LoggingReceive {
     case IncrementCounter(c) =>
       firstCount match {
         case None =>
@@ -19,7 +19,7 @@ class StatsCounter extends Actor with ActorLogging {
         case _ => lastCount = Some(System.currentTimeMillis)
       }
       count += c
-    case QueryCounter => sender ! new CounterInfo(
+    case QueryCounter => sender ! CounterInfo(
       count,
       firstCount,
       lastCount

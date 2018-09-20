@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 
 class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
 
-  val config1 =
+  val config1 : String =
     """|string1 = val1
        |int1 = 1
        |long1 = 1
@@ -24,15 +24,15 @@ class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
 
   val config2 = ""
 
-  val present = ConfigFactory.parseString(config1)
-  val missing = ConfigFactory.parseString(config2)
+  val present : Config = ConfigFactory.parseString(config1)
+  val missing : Config = ConfigFactory.parseString(config2)
 
   var count = 0
-  def nextCount = { count += 1; count }
+  def nextCount : Int = { count += 1; count }
 
   def checkGetter[T](typeName: String, existing: T, default: T, f: (Config, T) => T): Unit = {
     require(existing != default, "The test case makes only sense, if existing and default value are not the same")
-    s"${nextCount}. Implicit get${typeName} with default should" - {
+    s"$nextCount. Implicit get$typeName with default should" - {
       "return the present value" in {
         assert(f(present, default) === existing)
       }

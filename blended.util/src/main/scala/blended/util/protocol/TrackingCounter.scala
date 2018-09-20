@@ -6,10 +6,11 @@ import akka.pattern.ask
 import akka.util.Timeout
 import blended.util.StatsCounter
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 object TrackingCounter {
-  def apply(idleTimeout: FiniteDuration = 3.seconds, counterFor: ActorRef) =
+  def apply(idleTimeout: FiniteDuration = 3.seconds, counterFor: ActorRef): TrackingCounter =
     new TrackingCounter(idleTimeout, counterFor)
 }
 
@@ -18,8 +19,8 @@ class TrackingCounter(idleTimeout: FiniteDuration, counterFor: ActorRef)
 
   case object Tick
 
-  implicit val ctxt = context.dispatcher
-  implicit val timeout = Timeout(3.seconds)
+  implicit val ctxt : ExecutionContext = context.dispatcher
+  implicit val timeout : Timeout = Timeout(3.seconds)
 
   var counter : ActorRef = _
   var timer   : Option[Cancellable] = None
@@ -30,22 +31,19 @@ class TrackingCounter(idleTimeout: FiniteDuration, counterFor: ActorRef)
     resetTimer()
   }
 
-  override def receive = LoggingReceive {
-    case Tick => {
+  override def receive: Receive = LoggingReceive {
+    case Tick =>
       self ! StopCounter
-    }
-    case ic : IncrementCounter => {
+    case ic : IncrementCounter =>
       resetTimer()
       counter.forward(ic)
-    }
-    case StopCounter => {
+    case StopCounter =>
       timer.foreach(_.cancel())
       (counter ? QueryCounter).mapTo[CounterInfo].map { info =>
         log.info(s"Tracking counter ending with [$info] for [$counterFor]")
         counterFor ! info
         context.stop(self)
       }
-    }
     case QueryCounter => counter.forward(QueryCounter)
   }
 

@@ -1,9 +1,0 @@
-Bundle-Version:\
-  ${project.version}
-
-Bundle-SymbolicName:\
-  ${bundle.symbolicName}; singleton:=true
-
-Import-Package: *
-
-Export-Package: ${bundle.symbolicName}

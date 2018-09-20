@@ -1,8 +1,7 @@
 package blended.updater
 
-import com.typesafe.config.Config
-import scala.collection.JavaConverters._
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 object UpdaterConfig {
 
@@ -49,5 +48,5 @@ case class UpdaterConfig(
   autoStagingIntervalMSec: Long,
   serviceInfoIntervalMSec: Long,
   serviceInfoLifetimeMSec: Long,
-  mvnRepositories: List[String])
-    
+  mvnRepositories: List[String]
+)

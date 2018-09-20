@@ -1,32 +1,22 @@
 package blended.updater
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.PrintStream
-import scala.io.Source
-import scala.sys.process.fileToProcess
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.Finders
-import org.scalatest.FreeSpecLike
-import akka.actor.ActorSystem
-import akka.actor.Props
-import akka.actor.actorRef2Scala
-import akka.testkit.ImplicitSender
-import akka.testkit.TestKit
-import scala.util.Failure
-import java.io.FileNotFoundException
-import java.util.UUID
+import java.io.{File, PrintStream}
+
+import akka.actor.{ActorSystem, actorRef2Scala}
+import akka.testkit.{ImplicitSender, TestKit}
 import blended.testsupport.TestFile
-import blended.testsupport.TestFile.DeleteWhenNoFailure
-import blended.testsupport.TestFile.DeletePolicy
+import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import blended.updater.config.Artifact
+import org.scalatest.{BeforeAndAfterAll, FreeSpecLike}
+
+import scala.io.Source
 
 class ArtifactDownloaderTest
-    extends TestKit(ActorSystem("test"))
-    with FreeSpecLike
-    with ImplicitSender
-    with BeforeAndAfterAll
-    with TestFile {
+  extends TestKit(ActorSystem("test"))
+  with FreeSpecLike
+  with ImplicitSender
+  with BeforeAndAfterAll
+  with TestFile {
 
   implicit val deletePolicy: DeletePolicy = DeleteWhenNoFailure
 

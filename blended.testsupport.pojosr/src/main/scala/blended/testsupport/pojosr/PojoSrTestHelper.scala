@@ -2,7 +2,6 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import org.apache.felix.connect.launch.PojoServiceRegistry
 import org.osgi.framework.BundleActivator
 
 import scala.util.control.NonFatal

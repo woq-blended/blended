@@ -66,7 +66,3 @@ object Logger {
  * A Logger class doing nothing.
  */
 class LoggerNoOp() extends Logger
-
-    
-    
-    

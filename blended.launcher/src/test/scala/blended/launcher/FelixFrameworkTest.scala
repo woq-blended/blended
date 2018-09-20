@@ -19,7 +19,7 @@ class FelixFrameworkTest extends FreeSpec with TestFile {
       s"minimal: just the framework version ${v}" in {
 
         val launcherConfig = (
-          "repo = \"" + new File("target/test-felix").getAbsolutePath() + """"
+          "repo = \"" + new File("target/test-osgi").getAbsolutePath() + """"
         |frameworkBundle = ${repo}"/org.apache.felix.framework-""" + v + """.jar"
         |startLevel = 10
         |defaultStartLevel = 4

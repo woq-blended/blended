@@ -7,7 +7,7 @@ class UserPrincipal(user: String) extends Principal {
 
   override def hashCode(): Int = user.hashCode()
 
-  override def equals(other: scala.Any): Boolean = other match {
+  override def equals(other: Any): Boolean = other match {
     case p : UserPrincipal => user.equals(p.getName())
     case _ => false
   }

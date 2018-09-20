@@ -1,28 +1,30 @@
 package blended.container.context.api
 
+import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.util.control.NonFatal
 
 
+//noinspection NotImplementedCode
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
 
-  val ctCtxt = new ContainerContext() {
+  val ctCtxt : ContainerContext = new ContainerContext() {
 
-    override def getProfileDirectory() = ???
+    override def getProfileDirectory() : String  = ???
 
-    override def getProfileConfigDirectory() = ???
+    override def getProfileConfigDirectory() : String = ???
 
-    override def getContainerLogDirectory() = ???
+    override def getContainerLogDirectory() : String = ???
 
-    override def getContainerDirectory() = ???
+    override def getContainerDirectory() : String = ???
 
-    override def getContainerConfigDirectory() = ???
+    override def getContainerConfigDirectory() : String = ???
 
-    override def getContainerHostname() = ???
+    override def getContainerHostname() : String = ???
 
-    override def getContainerConfig() = ???
+    override def getContainerConfig() : Config = ???
   }
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
@@ -52,11 +54,11 @@ class PropertyResolverSpec extends FreeSpec
     "should throw an Exception when the end delimiter is missing" in {
 
       try {
-        val s = ContainerPropertyResolver.resolve(idSvc, "$[[foo")
+        ContainerPropertyResolver.resolve(idSvc, "$[[foo")
         fail()
       } catch {
-        case pre : PropertyResolverException =>
-        case NonFatal(e) => fail()
+        case _ : PropertyResolverException =>
+        case NonFatal(e) => fail(e)
       }
     }
 
@@ -65,8 +67,8 @@ class PropertyResolverSpec extends FreeSpec
         ContainerPropertyResolver.resolve(idSvc, "$[[noprop]]")
         fail()
       } catch {
-        case pre : PropertyResolverException =>
-        case _ => fail()
+        case _ : PropertyResolverException =>
+        case _ : Throwable => fail()
       }
     }
 

@@ -29,9 +29,4 @@ class LoggerJul(underlying: jul.Logger) extends Logger {
   override def info(e: Throwable)(msg: => String): Unit = log(jul.Level.INFO, msg, e)
   override def debug(e: Throwable)(msg: => String): Unit = log(jul.Level.FINE, msg, e)
   override def trace(e: Throwable)(msg: => String): Unit = log(jul.Level.FINER, msg, e)
-
 }
-    
-    
-    
-    

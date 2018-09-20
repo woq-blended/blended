@@ -8,17 +8,17 @@ import domino.service_consuming.ServiceConsuming
 import domino.service_providing.ServiceProviding
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
-abstract class OSGIActor(actorConfig: OSGIActorConfig) 
+abstract class OSGIActor(actorConfig: OSGIActorConfig)
   extends Actor
-  with ActorLogging 
+  with ActorLogging
   with ServiceConsuming
   with ServiceProviding {
 
-  private[this] implicit val timeout = new Timeout(500.millis)
-  private[this] implicit val ec = context.dispatcher
+  private[this] implicit val timeout : Timeout = new Timeout(500.millis)
+  private[this] implicit val ec : ExecutionContext = context.dispatcher
 
   override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
 

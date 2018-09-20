@@ -20,7 +20,7 @@ class EquinoxFrameworkTest extends FreeSpec with TestFile {
 
       s"minimal: just the framework version ${v} " in {
         val launcherConfig = (
-          "repo = \"" + new File("target/test-equinox").getAbsolutePath() + """"
+          "repo = \"" + new File("target/test-osgi").getAbsolutePath() + """"
         |frameworkBundle = ${repo}"/org.eclipse.osgi-""" + v + """.jar"
         |startLevel = 10
         |defaultStartLevel = 4

@@ -1,5 +1,5 @@
 
-= Project Blended
+= Blended - a Scala based Integration framework
 :toc:
 :toc-placement: preamble
 
@@ -9,60 +9,74 @@ image:https://api.travis-ci.org/woq-blended/blended.svg?branch=master[Building w
 image:https://badges.gitter.im/Join%20Chat.svg[Join the chat at, link="https://gitter.im/woq-blended/blended?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"]
 endif::[]
 
+== Project Mission
 
-This project is dedicated to provide reusable components for developing OSGI based application.
-It builds on top of Apache ActiveMQ, Apache Camel, HawtIO, Akka and Spray and Domino.
+_Blended_ provides a Scala based integration framework to easily develop component based applications on top of Akka, AkkaHttp, JMS and other communication libraries.
 
-The project documentation has moved to its own [github pages repository](https://github.com/woq/woq.github.io) and is live at [http://www.wayofquality.de/projects/blended](http://www.wayofquality.de/projects/blended).
-We are currently busy getting the initial use cases documented. Stay tuned for more to come ...
+The _Blended runtime components_ provide a well defined environment for the user defined components and provides common services for component configuration, security services standard integrations to an enterprise level infrastructure, such as messaging services or authentication and authorization servers.
+
+The _Blended management framework_ allows to monitor and manage a large number of distributed framework containers without sacrificing the stability of the environment when the management infrastructure is unavailable.
+
+The _Blended test framework_ allows to execute functional cross-component tests mimicking the final container environment with minimal effort.
+
+The _Blended integration test framework_ uses docker to create and deploy docker images from within the build process and supports the developer in creating integration tests for the final container.
+
+====
+_Blended_ is the backend for a distributed retail communication software. All components and services not directly related to the actual business components are licensed under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
+
+Currently blended is in it's 3rd generation and in production since ~2014.
+
+The next upcoming release will complete the migration to https://www.scala-lang.org/[Scala 2.12] and finalize the migration from maven to https://www.scala-sbt.org/[sbt].
+====
+
+== Related projects
+
+https://github.com/woq-blended/blended.itestsupport[Blended Integration Test Framework]::
+  The _Blended Integration Test Framework_ to create docker based integration tests.
+
+https://github.com/woq-blended/blended.mgmt.ui[Blended Management UI]::
+  A web front end the _Blended Management Framework_ built with Scala.Js.
+
+https://github.com/woq-blended/blended.container[Blended example container and integration tests]::
+  Some packaging examples and simple integration flows complete with packaging and integration tests.
 
 == Build from source
 
-We use Maven to build.
-You need at least Maven 3.3.1 as we are using the https://github.com/takari/polyglot-maven[Maven Polyglot Scala Extension] to build Blended.
-So, if you look for pom-Files, look for `pom.scala`.
-We recommend to use Maven 3.5.0 or newer.
+We use `sbt 1.2.3` to build blended.
 
-You can build with a simple:
+====
+The build files are *not* compatible with sbt versions 0.13.x as they intensively use the new unified syntax to reference properties.
+====
 
-`mvn clean install`
+As we have some shared modules between Scala and Scala.Js, node and yarn is also required on the developer machine.
 
-=== Generate `pom.xml` files
+After cloning the repository, simply navigate to the checkout directory and start sbt with a bit more memory (2GB or more):
 
-As most IDE's do not understand the `pom.scala` files, you can use the Maven profile `gen-pom-xml` with binds the `polyglot-translate-plugin:translate-project` goal to the `initialize` phase to generate the `pom.xml`'s.
+```
+sbt -mem 2048
+```
 
+The first start might take a moment as sbt needs to download the required dependencies.
 
-After that, your IDE can use the generated `pom.xml`, but keep in mind to re-run the script after changes were made to the Scala files.
+For convenience we have defined some command aliases for sbt:
 
-.Build `pom.xml` files from top level directory
-----
-mvn -P gen-pom-xml,build,docker,itest initialize
-----
+cleanPublish::
+  `; clean ; coverageOff ; publishM2`
 
-.Build `pom.xml` file in a local project
-----
-mvn -P gen-pom-xml initialize
-----
+cleanCoverage::
+  `; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff`
 
-=== IntelliJ
+=== IDE support
 
-Newer versions of IntelliJ have support for polyglot-maven, thus you don't need to generate the `pom.xml`s at al. In fact, current IntelliJ has some issues and double-detects projects when it founds a `pom.scala` and a `pom.xml`.
+We use https://www.jetbrains.com/idea/[IntelliJ] in our project and the project opens well enough in IntelliJ, though the import of the sbt file can take a moment.
 
-=== Eclipse
-
-The following plugins are recommended, to properly import the Maven projects.
-
-* m2e - Maven Integration for Eclipse
-* Maven Integration for Scala IDE
-
-For polyglot-maven support, you should also install the m2e-polyglot-poc plugin. It needs a present `pom.xml` in each project, but automatically updates it, when the `pom.scala` changes.
-
+====
+There is an experimental support for the Scala Compile Server, https://github.com/scalacenter/bloop[bloop]. Currently we cannot use it as there seems to be an issue with loading mixed JVM / JS projects. Once that is solved, the bloop support should give a very good performance loading / refreshing and compiling the project.
+====
 
 == Download  artifacts from Maven Central
 
 You can download released artifacts including binary and source JARs from http://search.maven.org/#search|ga|1|g%3A%22de.wayofquality.blended%22[Maven Central].
-
-
 
 == License
 
@@ -72,9 +86,12 @@ Blended ist published under the http://www.apache.org/licenses/LICENSE-2.0[Apach
 
 Why not just clone our repo, dig around and send us some pull requests ....
 
+== Supporters
+
+https://www.jetbrains.com[JetBrains] is kindly supporting our project with full developer licenses of their product stack.
+
 == Feedback
 
 We are keen to know what you think about Blended. What are your use cases, your wishes?
 
-We are developing on top of OSGi and Akka.
-If you spot somethings that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)
+If you spot something that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)
