@@ -1,4 +1,5 @@
 import sbt._
+import com.typesafe.sbt.SbtPgp.autoImport._
 
 // this is required to use proper values in osgi manifest require capability
 val initSystemEarly: Unit = Option(System.getProperty("java.version"))
