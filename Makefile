@@ -24,4 +24,4 @@ light:
 
 .PHONY: travis # Run a full travis build
 travis: 
-	sbt clean test packageBin publishLocalSigned 
+	sbt clean test packageBin publishSigned
