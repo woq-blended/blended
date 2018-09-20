@@ -1,14 +1,19 @@
 language: scala
 
 scala: 2.12.6
-  
+
 jdk: oraclejdk8
 
-script: 
-  - make travis
+script:
+- make travis
 
 cache:
   directories:
-  - $HOME/.m2
-  - $HOME/.ivy2
-  - $HOME/.sbt
+  - "$HOME/.m2"
+  - "$HOME/.ivy2"
+  - "$HOME/.sbt"
+
+env:
+  global:
+    - secure QXwgbQ68GpPWDl8dQF/LJ///TL/pWo5w8xdzNqUdaY64Q/Sm6Tr9jyQTAb6HvY9kcjITK4U1YJMQ9x5mt4Do5CPtauDfjmHzIPEZz5wfYYWbkuOzufD+FVs5DBti01GoI+yVRBz1FOXzsg7bZYqCiJwJGXKAsNYAHS+4ucwZSFU=
+

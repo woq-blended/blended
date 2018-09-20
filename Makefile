@@ -22,14 +22,6 @@ eclipse: pom-xml
 light:
 	mvn -Pbuild -DskipTests install
 
-.PHONY: travis-prepare # Prepare travis env, e.g. pre-fetching maven (somewhat quieter)
-travis-prepare:
-	# Errors in the next command are ignored
-	-mvn --fail-at-end dependency:resolve -Dsilent=true | grep -vi download
-
-.PHONY: travis-build # Build the project with travis
-travis-build: build
-
 .PHONY: travis # Run a full travis build
 travis: 
-	sbt test publishM2 
+	sbt clean test packageBin publishLocalSigned 
