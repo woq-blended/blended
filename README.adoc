@@ -94,4 +94,4 @@ https://www.jetbrains.com[JetBrains] is kindly supporting our project with full 
 
 We are keen to know what you think about Blended. What are your use cases, your wishes?
 
-If you spot somethings that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)
+If you spot something that makes you want to pull your hair, https://github.com/woq-blended/blended/issues[let us know] ;)
