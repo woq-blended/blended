@@ -93,7 +93,6 @@ case class BlendedBundle(
       val log = streams.value.log
       val classDir = (Compile/classDirectory).value
       if (!classDir.exists()) {
-        log.info(s"Creating diretory [${classDir.getAbsolutePath()}]")
         Files.createDirectories(classDir.toPath())
       }
     })).value
