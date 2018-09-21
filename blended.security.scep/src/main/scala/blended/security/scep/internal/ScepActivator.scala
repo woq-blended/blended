@@ -29,7 +29,7 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
           csrSignAlgorithm = csrSignAlgorithm,
           scepChallenge = scepChallenge
         )
-        new ScepCertificateProvider(scepCfg).providesService[CertificateProvider](Map("provider" -> "scep"))
+        new ScepCertificateProvider(scepCfg).providesService[CertificateProvider]("provider" -> "scep")
       }
     }
   }
