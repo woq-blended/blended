@@ -1,0 +1,9 @@
+[source,text]
+----
+include::{sourcedir}/src/docs/asciidoc/comfis-reporting.v2.adoc[tags=Mapping]
+----
+
+
+// tag::Mapping[]
+
+// end::Mapping[]
