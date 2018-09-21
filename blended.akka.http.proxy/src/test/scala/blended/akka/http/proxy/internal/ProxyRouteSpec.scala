@@ -130,7 +130,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
   }
 
-  "Live Tests - you need to have internet access - enable with env variabe test.online=true" - {
+  "Live Tests - you need to have internet access - enable with env variabe TEST_ONLINE=true" - {
 
     def whenOnline(test: => Unit): Unit = System.getenv("TEST_ONLINE") match {
       case null | "false" | "0" => pending
