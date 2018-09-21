@@ -7,7 +7,7 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
 
 addCommandAlias("ciBuild", "; clean ; test ; packageBin")
 addCommandAlias("ciPublish", "; publishSigned")
-addCommandAlias("ciRelease", "; publishSigned ; sonatypeReleaseAll")
+addCommandAlias("ciRelease", "; sonatypeDrop ; publishSigned ; sonatypeReleaseAll")
 
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
@@ -23,77 +23,6 @@ lazy val global = Def.settings(
   Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
   Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
 )
-
-lazy val root = {
-  project
-    .in(file("."))
-    .settings(
-      name := "blended",
-      unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
-    )
-    .settings(global)
-    .settings(CommonSettings())
-    .settings(PublishConfig.noPublish)
-    .enablePlugins(ScalaUnidocPlugin)
-    .aggregate(
-      blendedUtilLogging,
-      blendedSecurityBoot,
-      blendedContainerContextApi,
-      blendedDomino,
-      blendedUtil,
-      blendedTestsupport,
-      blendedAkka,
-      blendedSecurityJs,
-      blendedSecurityJvm,
-      blendedUpdaterConfigJs,
-      blendedUpdaterConfigJvm,
-      blendedLauncher,
-      blendedMgmtBase,
-      blendedUpdater,
-      blendedUpdaterTools,
-      blendedPersistence,
-      blendedUpdaterRemote,
-      blendedCamelUtils,
-      blendedJmsUtils,
-      blendedActivemqBrokerstarter,
-      blendedContainerContextImpl,
-      blendedJmx,
-      blendedJettyBoot,
-      blendedJmsSampler,
-      blendedTestsupportPojosr,
-      blendedAkkaHttpApi,
-      blendedAkkaHttp,
-      blendedAkkaHttpJmsqueue,
-      blendedAkkaHttpProxy,
-      blendedAkkaHttpRestjms,
-      blendedFile,
-      blendedMgmtRepo,
-      blendedSecurityAkkaHttp,
-      blendedMgmtRepoRest,
-      blendedPrickleAkkaHttp,
-      blendedMgmtAgent,
-      blendedPersistenceH2,
-      blendedMgmtRest,
-      blendedMgmtMock,
-      blendedMgmtServiceJmx,
-      blendedPrickle,
-      blendedSecurityLoginApi,
-      blendedMgmtWs,
-      blendedSecurityLoginImpl,
-      blendedSecurityLoginRest,
-      blendedSecurityTest,
-      blendedSecuritySsl,
-      blendedSecurityScep,
-      blendedSecurityScepStandalone,
-      blendedHawtioLogin,
-      blendedJolokia,
-      blendedSamplesCamel,
-      blendedSamplesJms,
-      blendedAkkaHttpSampleHelloworld,
-      blendedActivemqDefaultbroker,
-      blendedActivemqClient
-    )
-}
 
 // TODO: Can we get rid of these ?
 lazy val blendedUtilLogging = BlendedUtilLogging.project
@@ -154,3 +83,80 @@ lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
 lazy val blendedActivemqClient = BlendedActivemqClient.project
 lazy val blendedSecurityScep = BlendedSecurityScep.project
 lazy val blendedSecurityScepStandalone = BlendedSecurityScepStandalone.project
+
+lazy val aggregates : Seq[ProjectReference] = Seq(
+  blendedUtilLogging,
+  blendedSecurityBoot,
+  blendedContainerContextApi,
+  blendedDomino,
+  blendedUtil,
+  blendedTestsupport,
+  blendedAkka,
+  blendedSecurityJs,
+  blendedSecurityJvm,
+  blendedUpdaterConfigJs,
+  blendedUpdaterConfigJvm,
+  blendedLauncher,
+  blendedMgmtBase,
+  blendedUpdater,
+  blendedUpdaterTools,
+  blendedPersistence,
+  blendedUpdaterRemote,
+  blendedCamelUtils,
+  blendedJmsUtils,
+  blendedActivemqBrokerstarter,
+  blendedContainerContextImpl,
+  blendedJmx,
+  blendedJettyBoot,
+  blendedJmsSampler,
+  blendedTestsupportPojosr,
+  blendedAkkaHttpApi,
+  blendedAkkaHttp,
+  blendedAkkaHttpJmsqueue,
+  blendedAkkaHttpProxy,
+  blendedAkkaHttpRestjms,
+  blendedFile,
+  blendedMgmtRepo,
+  blendedSecurityAkkaHttp,
+  blendedMgmtRepoRest,
+  blendedPrickleAkkaHttp,
+  blendedMgmtAgent,
+  blendedPersistenceH2,
+  blendedMgmtRest,
+  blendedMgmtMock,
+  blendedMgmtServiceJmx,
+  blendedPrickle,
+  blendedSecurityLoginApi,
+  blendedMgmtWs,
+  blendedSecurityLoginImpl,
+  blendedSecurityLoginRest,
+  blendedSecurityTest,
+  blendedSecuritySsl,
+  blendedSecurityScep,
+  blendedSecurityScepStandalone,
+  blendedHawtioLogin,
+  blendedJolokia,
+  blendedSamplesCamel,
+  blendedSamplesJms,
+  blendedAkkaHttpSampleHelloworld,
+  blendedActivemqDefaultbroker,
+  blendedActivemqClient
+)
+
+lazy val root = {
+  project
+    .in(file("."))
+    .settings(
+      name := "blended",
+      unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
+    )
+    .settings(global)
+    .settings(CommonSettings())
+    .settings(PublishConfig.doPublish)
+    .enablePlugins(ScalaUnidocPlugin)
+    .aggregate(
+      aggregates:_*
+    )
+}
+
+
