@@ -29,4 +29,22 @@ class Cmdline {
   )
   var refreshCerts: Boolean = false
 
+  @CmdOption(
+    names = Array("--csr"),
+    args = Array("csr-file"),
+    description = "Use the given certificate signign request file (CSR) as starting point",
+    hidden = true
+  )
+  var _csrFile: String = _
+  def csrFile = Option(_csrFile)
+
+  @CmdOption(
+    names = Array("--cert-info"),
+    args = Array("cert-file"),
+    description = "Try to give some info about the given {0}",
+    hidden = true
+  )
+  var _infoFile: String = _
+  def infoFile = Option(_infoFile)
+
 }
