@@ -21,8 +21,6 @@ object PublishConfig {
         password)
       ).getOrElse(credentials ++= Seq()),
     
-    credentials += Credentials(Path.userHome / ".sbt" / "sonatype.credentials"),
-    
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
       if (isSnapshot.value) {
