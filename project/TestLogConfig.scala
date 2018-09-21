@@ -8,6 +8,7 @@ object TestLogConfig extends AutoPlugin {
   object autoImport {
     val testlogLogToFile = settingKey[Boolean]("Specify whether the test logs should go to a file.")
     val testlogLogToConsole = settingKey[Boolean]("Specify whether the test logs should go to the console.")
+    val testlogDirectory = settingKey[File]("The directory for collecting the test logs.")
     val testlogFileName = settingKey[String]("The log file name for the test logs.")
     val testlogPattern = settingKey[String]("The pattern used for the test logs.")
     val testlogDefaultLevel = settingKey[String]("The log level for the test root logger.")
@@ -21,7 +22,7 @@ object TestLogConfig extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] = inConfig(Test)(Seq(
     testlogLogToFile := false,
     testlogLogToConsole := true,
-    testlogFileName := target.value / name.value + "-test.log",
+    testlogFileName := name.value + "-test.log",
     testlogPattern := "%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%thread] %logger{36} : %msg%n",
     testlogDefaultLevel := "INFO",
     testlogLogPackages := Map.empty,
@@ -29,7 +30,7 @@ object TestLogConfig extends AutoPlugin {
     testlogCreateConfig := {
       ConfigGenerator(
         configFile = target.value / "logback-test.xml",
-        logFileName = testlogFileName.value,
+        logFileName = (testlogDirectory.value / testlogFileName.value).getAbsolutePath(),
         pattern = testlogPattern.value,
         defaultLogLevel = testlogDefaultLevel.value,
         logPackages = testlogLogPackages.value,
