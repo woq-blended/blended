@@ -20,6 +20,9 @@ lazy val root = {
       unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
     )
     .settings(
+      Global/scalariformAutoformat := false,
+      Global/scalariformWithBaseDirectory := true,
+
       Global/testlogDirectory := target.value / "testlog",
       
       Global/useGpg := false,
