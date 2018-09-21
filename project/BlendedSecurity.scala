@@ -27,6 +27,7 @@ object BlendedSecurityJs extends ProjectFactory {
         )
       )
     )
+    .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
   }
 }

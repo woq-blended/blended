@@ -26,6 +26,7 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
       )
     )
   )
+  .settings(CommonSettings())
   .settings(PublishConfig.doPublish)
   .dependsOn(
     BlendedSecurityJs.project

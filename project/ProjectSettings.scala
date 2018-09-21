@@ -60,7 +60,7 @@ class ProjectSettings(
 
   def sbtBundle: Option[BlendedBundle] = if (osgi) Some(bundle) else None
 
-  def defaultSettings: Seq[Setting[_]] = {
+  def defaultSettings: Seq[Setting[_]] = CommonSettings() ++ {
 
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
@@ -89,7 +89,7 @@ class ProjectSettings(
       )
   }
 
-  def settings: Seq[sbt.Setting[_]] = CommonSettings() ++ defaultSettings
+  def settings: Seq[sbt.Setting[_]] =  defaultSettings
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
