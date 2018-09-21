@@ -19,4 +19,5 @@ env:
   secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
 
 after_success:
-  - "[[ $TRAVIS_BRANCH == \"master\" ]] && { sbt ciPublish };"
+  # if we are on a SNAPSHOT branch, the sonatype release step won't do anything
+  - "[[ $TRAVIS_BRANCH == \"master\" ]] && { sbt ciRelease };"

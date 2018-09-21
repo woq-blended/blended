@@ -1,53 +1,16 @@
 import sbt._
-import com.typesafe.sbt.SbtPgp.autoImport._
 
 // this is required to use proper values in osgi manifest require capability
 val initSystemEarly: Unit = Option(System.getProperty("java.version"))
   .map(v => v.split("[.]", 3).take(2).mkString("."))
   .foreach(v => System.setProperty("java.version", v))
 
-val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
-
 addCommandAlias("ciBuild", "; clean ; test ; packageBin")
 addCommandAlias("ciPublish", "; publishSigned")
+addCommandAlias("ciRelease", "; publishSigned ; sonatypeReleaseAll")
 
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
-
-inThisBuild(Seq(
-  organization := "de.wayofquality.blended",
-  homepage := Some(url("https://github.com/woq-blended/blended")),
-  version := "2.5.0-SBT-SNAPSHOT",
-
-  licenses += ("Apache 2.0", url("https://www.apache.org/licenses/LICENSE-2.0.html")),
-
-  developers := List(
-    Developer(id = "andreas", name = "Andreas Gies", email = "andreas@wayofquality.de", url = url("https://github.com/atooni")),
-    Developer(id = "tobias", name = "Tobias Roeser", email = "tobias.roser@tototec.de", url = url("https://github.com/lefou"))
-  ),
-
-  javacOptions in Compile ++= Seq(
-    "-source", "1.8",
-    "-target", "1.8"
-  ),
-
-  scalaVersion := "2.12.6",
-  scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
-
-  scalariformAutoformat := false,
-  scalariformWithBaseDirectory := true,
-
-  publishMavenStyle := true,
-  resolvers ++= Seq(
-    Resolver.sonatypeRepo("snapshots"),
-    "Maven2 Local" at m2Repo
-  ),
-
-  useGpg := false,
-  pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
-  pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
-  pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
-))
 
 lazy val root = {
   project
@@ -56,7 +19,15 @@ lazy val root = {
       name := "blended",
       unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
     )
-    .settings(addCommandAlias("publishAll", "; clean ; coverageOff ; publishM2" ).settings)
+    .settings(
+      Global/testlogDirectory := target.value / "testlog",
+      
+      Global/useGpg := false,
+      Global/pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
+      Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
+      Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
+    )
+    .settings(CommonSettings())
     .settings(PublishConfig.noPublish)
     .enablePlugins(ScalaUnidocPlugin)
     .aggregate(

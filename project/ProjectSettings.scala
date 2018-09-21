@@ -2,6 +2,7 @@ import sbt._
 import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
 import TestLogConfig.autoImport._
+import xerial.sbt.Sonatype
 //import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 
 trait ProjectFactory {
@@ -11,13 +12,13 @@ trait ProjectFactory {
 /**
  * Blended project settings.
  *
- * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
- * @param description The project description, also used as Bundle-Description.
- * @param deps        The project classpath dependencies (exclusive of other blended projects).
- * @param osgi        If `true` this project is packaged as OSGi Bundle.
- * @param publish     If `true`, this projects package will be publish.
- * @param adaptBundle adapt the bundle configuration (used by sbt-osgi)
- * @param projectDir  Optional project directory (use this if not equal to project name)
+ * @param projectName   The Project name, also used as Bundle-Name and prefix for package names.
+ * @param description   The project description, also used as Bundle-Description.
+ * @param deps          The project classpath dependencies (exclusive of other blended projects).
+ * @param osgi          If `true` this project is packaged as OSGi Bundle.
+ * @param publish       If `true`, this projects package will be publish.
+ * @param adaptBundle   adapt the bundle configuration (used by sbt-osgi)
+ * @param projectDir    Optional project directory (use this if not equal to project name)
  */
 class ProjectSettings(
   val projectName: String,
@@ -73,6 +74,7 @@ class ProjectSettings(
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources",
 
+      Test / testlogDirectory := (Global/testlogDirectory).value,
       Test / testlogLogToConsole := false,
       Test / testlogLogToFile := true,
 
@@ -91,7 +93,7 @@ class ProjectSettings(
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
-    Seq(TestLogConfig) ++
+    Seq(TestLogConfig, Sonatype) ++
     (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins
