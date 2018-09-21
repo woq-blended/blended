@@ -3,10 +3,15 @@ import sbt.Keys._
 import com.typesafe.sbt.packager.universal.UniversalPlugin
 import com.typesafe.sbt.packager.universal.UniversalDeployPlugin
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
+import sbt.librarymanagement.InclExclRule
 
 object BlendedSecurityScepStandalone extends ProjectFactory {
 
   private[this] val libDir = "libs"
+
+  implicit class ImplicitModuleId(moduleId: ModuleID) {
+    def pure: ModuleID = moduleId.withExclusions(Vector(InclExclRule()))
+  }
 
   private[this] val helper = new ProjectSettings(
     projectName = "blended.security.scep.standalone",
@@ -14,20 +19,21 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
     osgi = false,
     deps = Seq(
       Dependencies.felixConnect,
-      Dependencies.domino.intransitive,
-      Dependencies.typesafeConfig.intransitive,
-      Dependencies.slf4j.intransitive,
-      Dependencies.orgOsgi.intransitive,
-      Dependencies.cmdOption.intransitive,
-      Dependencies.jcip.intransitive,
-      Dependencies.jscep.intransitive,
+      Dependencies.domino.pure,
+      Dependencies.typesafeConfig.pure,
+      Dependencies.slf4j.pure,
+      Dependencies.orgOsgi.pure,
+      Dependencies.cmdOption.pure,
+      Dependencies.jcip.pure,
+      Dependencies.jscep.pure,
       Dependencies.bouncyCastlePkix,
       Dependencies.bouncyCastleBcprov,
       Dependencies.commonsIo,
       Dependencies.commonsLang2,
       Dependencies.commonsCodec,
       Dependencies.logbackCore,
-      Dependencies.logbackClassic
+      Dependencies.logbackClassic,
+      Dependencies.scalatest % "test"
     )
   ) {
 
@@ -73,6 +79,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
     BlendedUtilLogging.project,
     BlendedContainerContextApi.project,
     BlendedDomino.project,
-    BlendedUpdaterConfigJvm.project
+    BlendedUpdaterConfigJvm.project,
+    BlendedTestsupport.project % "test"
   )
 }
