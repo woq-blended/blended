@@ -25,10 +25,10 @@ object ScepClientApp {
   private[this] val log = Logger[ScepClientApp.type]
 
   /**
-   * Entry point of the scep client app.
-   * The app logic is done by [[run()]] which throws an [[ExitAppException]] to signal the exit code.
-   * This will stop the running VM with [[java.lang.System#exit]]
-   */
+    * Entry point of the scep client app.
+    * The app logic is done by [[run()]] which throws an [[ExitAppException]] to signal the exit code.
+    * This will stop the running VM with [[java.lang.System#exit]]
+    */
   def main(args: Array[String]): Unit = {
     try {
       run(args)
@@ -39,7 +39,7 @@ object ScepClientApp {
         e.errMsg.foreach { m =>
           Console.err.println(m)
         }
-        Logger[ScepClientApp.type].warn(e)(s"About to exit VM from main-method with exit code [${e.exitCode}]")
+        Logger[ScepClientApp.type].debug(e)(s"About to exit VM from main-method with exit code [${e.exitCode}]")
         System.exit(e.exitCode) // ! Hard exit !
       case NonFatal(e) =>
         Logger[ScepClientApp.type].error(e)(s"An unexepected error occured. Exiting the application with exit code [2]\nReason: ${e.getMessage()}")
@@ -48,11 +48,11 @@ object ScepClientApp {
   }
 
   /**
-   * Run the scep client app.
-   *
-   * @param args
-   * @throws ExitAppException The signal the exit code of the application
-   */
+    * Run the scep client app.
+    *
+    * @param args
+    * @throws ExitAppException The signal the exit code of the application
+    */
   def run(args: Array[String]): Unit = {
     val cmdline = new Cmdline()
     val cp = new CmdlineParser(cmdline)
@@ -121,26 +121,20 @@ object ScepClientApp {
     readObject match {
 
       case csr: PKCS10CertificationRequest =>
-        log.debug(s"Got a CSR. subject [${csr.getSubject()}], " +
-          s"attributes [${csr.getAttributes().map(a => s"Attribute(type [${a.getAttrType()}], values [${a.getAttrValues}])").mkString(", ")}]")
-
-        val details = Map(
+        val subjectPublicKeyInfo = csr.getSubjectPublicKeyInfo()
+        val details = Seq(
           "subject" -> csr.getSubject(),
-          "subjectPublicKeyInfo" -> {
-            val prefix = "subjectPublicKeyInfo."
-            val info = csr.getSubjectPublicKeyInfo()
-            Map(
-              s"${prefix}algorithm" -> info.getAlgorithm(),
-              s"${prefix}publicKeyData" -> info.getPublicKeyData()
-            )
-          },
-          "attributes" -> csr.getAttributes(),
-          "signature" -> csr.getSignature(),
+          "attributes" -> csr.getAttributes().toList,
+          "signature" -> csr.getSignature().toList,
           "signatureAlgorithm" -> csr.getSignatureAlgorithm(),
-          "ASN.1" -> csr.toASN1Structure()
+          "subjectPublicKeyInfo" -> subjectPublicKeyInfo,
+          "subjectPublicKeyInfo.algorithm" -> subjectPublicKeyInfo.getAlgorithm(),
+          "subjectPublicKeyInfo.algorithm.algorithm" -> subjectPublicKeyInfo.getAlgorithm().getAlgorithm(),
+          "subjectPublicKeyInfo.algorithm.parameters" -> subjectPublicKeyInfo.getAlgorithm().getParameters(),
+          "subjectPublicKeyInfo.publicKeyData" -> subjectPublicKeyInfo.getPublicKeyData()
         )
 
-        log.debug(s"Got a CSR. Info:\n${details.mkString("\n")}")
+        log.debug(s"Got a CSR. Info:\n  ${details.map(t => s"${t._1}: ${t._2}").mkString("\n  ")}")
 
       case other =>
         val msg = s"File [${csrFile}] has no supported CSR file format"
