@@ -2,7 +2,6 @@ import sbt._
 import sbt.Keys._
 import xerial.sbt.Sonatype.SonatypeKeys._
 import com.typesafe.sbt.SbtScalariform.autoImport._
-import com.typesafe.sbt.SbtPgp.autoImport._
 
 object CommonSettings {
 

@@ -12,6 +12,18 @@ addCommandAlias("ciRelease", "; publishSigned ; sonatypeReleaseAll")
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
+lazy val global = Def.settings(
+  Global/scalariformAutoformat := false,
+  Global/scalariformWithBaseDirectory := true,
+
+  Global/testlogDirectory := target.value / "testlog",
+
+  Global/useGpg := false,
+  Global/pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
+  Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
+  Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
+)
+
 lazy val root = {
   project
     .in(file("."))
@@ -19,17 +31,7 @@ lazy val root = {
       name := "blended",
       unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
     )
-    .settings(
-      Global/scalariformAutoformat := false,
-      Global/scalariformWithBaseDirectory := true,
-
-      Global/testlogDirectory := target.value / "testlog",
-      
-      Global/useGpg := false,
-      Global/pgpPublicRing := baseDirectory.value / "project" / ".gnupg" / "pubring.gpg",
-      Global/pgpSecretRing := baseDirectory.value / "project" / ".gnupg" / "secring.gpg",
-      Global/pgpPassphrase := sys.env.get("PGP_PASS").map(_.toArray)
-    )
+    .settings(global)
     .settings(CommonSettings())
     .settings(PublishConfig.noPublish)
     .enablePlugins(ScalaUnidocPlugin)

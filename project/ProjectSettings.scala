@@ -89,7 +89,7 @@ class ProjectSettings(
       )
   }
 
-  def settings: Seq[sbt.Setting[_]] = defaultSettings
+  def settings: Seq[sbt.Setting[_]] = CommonSettings() ++ defaultSettings
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
