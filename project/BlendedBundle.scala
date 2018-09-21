@@ -5,7 +5,7 @@ import sbt.Keys._
 import sbt._
 
 object BlendedBundle {
-//  def blendedRangeImport: String = """blended.*;version="[2.5,3)""""
+  //  def blendedRangeImport: String = """blended.*;version="[2.5,3)""""
 
   def scalaRangeImport(scalaBinaryVersion: String): String = s"""scala.*;version="[$scalaBinaryVersion,$scalaBinaryVersion.50)""""
 }
@@ -28,7 +28,7 @@ object BlendedBundle {
  * A set of jars to be embedded into the bundle as JARs. Those will also be added to the `Bundle-Classpath`.
  * Example:
  * {{{
- *                      OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
+ *                       OsgiKeys.embeddedJars := dependencyClasspath.in(Compile).value.files
  * }}}
  * The value is a rather complex TaskKey to support references to other tasks and settings via `.value`.
  * @param exportContents
@@ -46,7 +46,7 @@ case class BlendedBundle(
   embeddedJars: Setting[Task[Seq[sbt.File]]] = null,
   exportContents: Seq[String] = Seq.empty,
   additionalHeaders: Map[String, String] = Map.empty,
-  defaultImports : Boolean = true
+  defaultImports: Boolean = true
 ) {
 
   private[this] lazy val extraEntries: Seq[Setting[_]] = Seq(
@@ -85,17 +85,17 @@ case class BlendedBundle(
     OsgiKeys.exportPackage := exportPackage,
     OsgiKeys.privatePackage := privatePackage,
     // ensure we build a package with OSGi Manifest
-    Compile / packageBin := ({
+    Compile / packageBin := {
       OsgiKeys.bundle
     }.dependsOn(Def.task[Unit] {
       // Make sure the classes directory exists before we start bundling
       // to avoid unnecessary bnd errors
       val log = streams.value.log
-      val classDir = (Compile/classDirectory).value
+      val classDir = (Compile / classDirectory).value
       if (!classDir.exists()) {
         Files.createDirectories(classDir.toPath())
       }
-    })).value
+    }).value
   ) ++
     Option(embeddedJars) ++
     extraEntries
