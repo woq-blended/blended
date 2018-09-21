@@ -93,7 +93,8 @@ class ProjectSettings(
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
     //    Seq(ReproducibleBuildsPlugin) ++
-    Seq(TestLogConfig, Sonatype) ++
+    Seq(TestLogConfig) ++
+    (if (publish) Seq(Sonatype) else Seq()) ++ 
     (if (osgi) Seq(SbtOsgi) else Seq())
 
   // creates the project and apply settings and plugins

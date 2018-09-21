@@ -20,6 +20,14 @@ env:
     - secure: "b3aSUvpBixtHJ7EuxN5d7/sLzU6zXtD3OGyHXIDyfZWSnc55YOju89yZsfmj7Cnx2SqXvAuHIjb/bXwGtJg30f9LaR9EKueawkFpIBHKuPeEsJKoBAw2Uwu+si2Dn5Kb4joZZUwokJic4SnhmU5MmAI5YVdv6fzCyuBhY+zoFbA="
     - secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
 
-after_success:
-  - "[[ $TRAVIS_BRANCH == \"master\" ]] && { sbt ciRelease ; } ;"
+stages:
+  - Test
+  - name: Deploy
+    if: branch = master AND type = push
 
+jobs:
+  include:
+  - stage: Test
+    script: sbt ciBuild
+  - stage: Deploy
+    script: sbt ciRelease
