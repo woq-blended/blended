@@ -35,8 +35,8 @@ object Dependencies {
   val akkaTestkit = akka("testkit")
   val akkaSlf4j = akka("slf4j")
 
-  val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.59"
-  val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.59"
+  val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.60"
+  val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
 
