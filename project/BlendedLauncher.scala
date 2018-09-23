@@ -92,9 +92,9 @@ object BlendedLauncher extends ProjectFactory {
         }
       }.taskValue
     ) ++ Seq(
-      
+
         Universal / topLevelDirectory := None,
-      
+
         Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
           f -> s"lib/${f.getName}"
         },
@@ -107,13 +107,15 @@ object BlendedLauncher extends ProjectFactory {
         },
         Universal / mappings ++= (Compile / filterResources).value,
         Universal / packageBin / mainClass := None
+
       ) ++
-        addArtifact(Universal / packageBin / artifact, Universal / packageBin).settings ++
-        addArtifact(Universal / packageZipTarball / artifact, Universal / packageZipTarball).settings ++
-        Seq(
-          publishM2 := publishM2.dependsOn(Universal / publishM2).value,
-          publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
-        )
+      Seq(
+        packagedArtifacts ++= (Universal/packagedArtifacts).value, 
+      ) ++
+      Seq(
+        publishM2 := publishM2.dependsOn(Universal / publishM2).value,
+        publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
+      )
   }
 
   override val project = helper.baseProject.dependsOn(

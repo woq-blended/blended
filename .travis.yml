@@ -14,7 +14,7 @@ cache:
   - "$HOME/.sbt"
 
 before_cache:
-  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local
+  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
 
 env:
   global:
