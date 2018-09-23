@@ -5,9 +5,8 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
   .map(v => v.split("[.]", 3).take(2).mkString("."))
   .foreach(v => System.setProperty("java.version", v))
 
-addCommandAlias("ciBuild", "; clean ; test ; packageBin")
-addCommandAlias("ciPublish", "; publishSigned")
-addCommandAlias("ciRelease", """; sonatypeOpen "Auto Release via Travis" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
+addCommandAlias("ciBuild", "; clean ; test ")
+addCommandAlias("ciRelease", """; clean; packageBin ; sonatypeOpen "Auto Release via Travis" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
 
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
