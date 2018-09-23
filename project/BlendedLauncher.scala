@@ -106,15 +106,9 @@ object BlendedLauncher extends ProjectFactory {
           f.data -> s"lib/${f.data.getName}"
         },
         Universal / mappings ++= (Compile / filterResources).value,
-        Universal / packageBin / mainClass := None
+        Universal / packageBin / mainClass := None,
 
-      ) ++
-      Seq(
-        packagedArtifacts ++= (Universal/packagedArtifacts).value, 
-      ) ++
-      Seq(
-        publishM2 := publishM2.dependsOn(Universal / publishM2).value,
-        publishLocal := publishLocal.dependsOn(Universal / publishLocal).value
+        packagedArtifacts ++= (Universal/packagedArtifacts).value
       )
   }
 

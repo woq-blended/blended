@@ -153,9 +153,7 @@ lazy val root = {
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin)
-    .aggregate(
-      aggregates:_*
-    )
+    .aggregate(aggregates:_*)
 }
 
 

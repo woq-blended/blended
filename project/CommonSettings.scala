@@ -10,7 +10,6 @@ object CommonSettings {
   def apply() : Seq[Def.Setting[_]] = Seq(
     organization := "de.wayofquality.blended",
     homepage := Some(url("https://github.com/woq-blended/blended")),
-    version := "2.5.0-SBT",
 
     publishMavenStyle := true,
 
