@@ -7,7 +7,7 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
 
 addCommandAlias("ciBuild", "; clean ; test ; packageBin")
 addCommandAlias("ciPublish", "; publishSigned")
-addCommandAlias("ciRelease", "; sonatypeDrop ; publishSigned ; sonatypeReleaseAll")
+addCommandAlias("ciRelease", """; sonatypeOpen "Auto Release via Travis" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
 
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
