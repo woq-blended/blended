@@ -3,7 +3,7 @@ import sbt.Keys._
 import com.typesafe.sbt.osgi.SbtOsgi
 import TestLogConfig.autoImport._
 import xerial.sbt.Sonatype
-//import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
+import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 
 trait ProjectFactory {
   val project: Project
@@ -12,20 +12,20 @@ trait ProjectFactory {
 /**
  * Blended project settings.
  *
- * @param projectName   The Project name, also used as Bundle-Name and prefix for package names.
- * @param description   The project description, also used as Bundle-Description.
- * @param deps          The project classpath dependencies (exclusive of other blended projects).
- * @param osgi          If `true` this project is packaged as OSGi Bundle.
- * @param publish       If `true`, this projects package will be publish.
- * @param adaptBundle   adapt the bundle configuration (used by sbt-osgi)
- * @param projectDir    Optional project directory (use this if not equal to project name)
+ * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
+ * @param description The project description, also used as Bundle-Description.
+ * @param deps        The project classpath dependencies (exclusive of other blended projects).
+ * @param osgi        If `true` this project is packaged as OSGi Bundle.
+ * @param publish     If `true`, this projects package will be publish.
+ * @param adaptBundle adapt the bundle configuration (used by sbt-osgi)
+ * @param projectDir  Optional project directory (use this if not equal to project name)
  */
 class ProjectSettings(
   val projectName: String,
   val description: String,
   deps: Seq[ModuleID] = Seq.empty,
   osgi: Boolean = true,
-  osgiDefaultImports : Boolean = true,
+  osgiDefaultImports: Boolean = true,
   publish: Boolean = true,
   adaptBundle: BlendedBundle => BlendedBundle = identity,
   val projectDir: Option[String] = None
@@ -83,16 +83,16 @@ class ProjectSettings(
     ) ++ osgiSettings ++ (
         // We need to explicitly load the rb settings again to
         // make sure the OSGi package is post-processed:
-        //        ReproducibleBuildsPlugin.projectSettings
-        //      ) ++ (
-        if (publish) PublishConfig.doPublish else PublishConfig.noPublish
-      )
+        ReproducibleBuildsPlugin.projectSettings
+      ) ++ (
+          if (publish) PublishConfig.doPublish else PublishConfig.noPublish
+        )
   }
 
   def settings: Seq[sbt.Setting[_]] =  defaultSettings
 
   def plugins: Seq[AutoPlugin] = extraPlugins ++
-    //    Seq(ReproducibleBuildsPlugin) ++
+    Seq(ReproducibleBuildsPlugin) ++
     Seq(TestLogConfig) ++
     (if (publish) Seq(Sonatype) else Seq()) ++ 
     (if (osgi) Seq(SbtOsgi) else Seq())
