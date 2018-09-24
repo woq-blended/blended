@@ -24,13 +24,17 @@ env:
     - secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
 
 stages:
+  - verifyPublish
+    if: branch = publish AND type = push
   - Test
   - name: Deploy
-    if: branch = master AND type = push
+    if: branch = publish AND type = push
 
 jobs:
   include:
+  - stage: verifyPublish
+    script: verifyPublish.sh ; 
   - stage: Test
     script: sbt ciBuild
   - stage: Deploy
-    script: sbt ciRelease
+    script: runPublish.sh

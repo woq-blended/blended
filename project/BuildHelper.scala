@@ -1,4 +1,7 @@
-import sbt.{File, Keys}
+import java.nio.file.Files
+
+import sbt.{Def, File }
+import sbt.Keys._
 import sbt.librarymanagement._
 import ivy._
 
@@ -21,6 +24,15 @@ object BuildHelper {
       case Left(w) => throw w.resolveException
       case Right(files) => files
     }
+  }
+
+  def readVersion(versionFile : File) : Seq[Def.Setting[_]] = {
+    val buildVersion = Files.readAllLines(versionFile.toPath()).get(0)
+
+    Seq(
+      version := buildVersion,
+      isSnapshot := buildVersion.endsWith("SNAPSHOT")
+    )
   }
 
 //  def classpathDepsByScope(cp: Keys.Classpath, scope: String) : Seq[File] = {

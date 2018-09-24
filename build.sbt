@@ -5,11 +5,21 @@ val initSystemEarly: Unit = Option(System.getProperty("java.version"))
   .map(v => v.split("[.]", 3).take(2).mkString("."))
   .foreach(v => System.setProperty("java.version", v))
 
+val travisBuildNumber = sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "Not on Travis")
+
+// A convenience to execute all tests in travis
 addCommandAlias("ciBuild", "; clean ; test ")
-addCommandAlias("ciRelease", """; clean; packageBin ; sonatypeOpen "Auto Release via Travis" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
+
+// A convenience to push SNAPSHOT to sonatype Snapshots
+addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned ")
+
+// A convenience to package everything, sign it and push it to maven central
+addCommandAlias("ciRelease", s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
 
 addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
 addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
+
+inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
 lazy val global = Def.settings(
   Global/scalariformAutoformat := false,

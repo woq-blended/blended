@@ -5,8 +5,6 @@ object PublishConfig {
   // General settings for subprojects to be published
   lazy val doPublish = Seq(
     
-    isSnapshot := version.value.endsWith("SNAPSHOT"),
-    
     publishMavenStyle := true,
     publishArtifact in Test := false,
     
