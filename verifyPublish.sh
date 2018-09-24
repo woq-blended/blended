@@ -23,7 +23,7 @@ else
     export PUBCMD="ciRelease"
   else 
     export PUBCMD=
-    echo "A tag matching the version to be released is required to push the release to Maven central."
+    echo "A tag matching the version to be released ($VERSION) is required to push the release to Maven central."
     exit 1
   fi
 fi
