@@ -25,10 +25,10 @@ env:
 
 stages:
   - name: VerifyPublish
-    if: (branch = publish AND type = push) OR tag != ""
+    if: branch = publish AND type = push
   - Test
   - name: Deploy
-    if: (branch = publish AND type = push) OR tag != ""
+    if: branch = publish AND type = push
 
 jobs:
   include:
