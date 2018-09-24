@@ -13,5 +13,5 @@ A sample scala file would be
 
 [source,scala]
 ----
-include::{sourcedir}/project/BlendedActivemqClient.scala
+include::project/BlendedActivemqClient.scala[]
 ----
