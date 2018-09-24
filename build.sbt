@@ -89,7 +89,9 @@ lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
 lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
+// tag::Building[]
 lazy val blendedActivemqClient = BlendedActivemqClient.project
+// end::Building[]
 lazy val blendedSecurityScep = BlendedSecurityScep.project
 lazy val blendedSecurityScepStandalone = BlendedSecurityScepStandalone.project
 
