@@ -49,7 +49,7 @@ object Dependencies {
   val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
-  val domino = "com.github.domino-osgi" %% "domino" % "1.1.2"
+  val domino = "com.github.domino-osgi" %% "domino" % "1.1.3-SNAPSHOT"
 
   val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"

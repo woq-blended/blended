@@ -39,7 +39,10 @@ if [ -z "${INTERACTIVE}" ]; then
   INTERACTIVE=true
 fi
 
-LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id --strict"
+LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id"
+if [ "x$BLENDED_STRICT" != "x" ] ; then
+  LAUNCHER_OPTS="$LAUNCHER_OPTS --strict"
+fi
 
 # Options for the service daemen JVM (outer) with controls the container JVM
 JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
