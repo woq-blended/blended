@@ -69,7 +69,7 @@ class ProjectSettings(
       Keys.moduleName := Keys.name.value,
       Keys.description := description,
       Keys.libraryDependencies ++= libDeps,
-      Test / javaOptions += ("-DprojectTestOutput=" + target.value / s"scala-${scalaBinaryVersion.value}" / "test-classes"),
+      Test / javaOptions += ("-DprojectTestOutput=" + (Test / classDirectory).value), 
       Test / fork := true,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources",
