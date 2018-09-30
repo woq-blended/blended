@@ -127,10 +127,10 @@ class ContainerContextImpl() extends ContainerContext {
     }
     config.withFallback(ConfigFactory.parseFile(
       new File(getProfileConfigDirectory(), "application.conf"), ConfigParseOptions.defaults().setAllowMissing(false)
-    )).
-      withFallback(sysProps).
-      withFallback(envProps).
-      resolve()
+    ))
+    .withFallback(sysProps)
+    .withFallback(envProps)
+    .resolve()
   }
 
   override def getContainerConfig() = ctConfig
