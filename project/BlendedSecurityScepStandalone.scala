@@ -50,7 +50,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
           .map(_.data)
           .map(f => f -> s"$libDir/${f.getName()}"),
 
-        Universal/mappings += (Compile/packageBin/artifactPath).value -> "scep-client.jar",
+        Universal/mappings += (Compile/packageBin).value -> "scep-client.jar",
         Universal/mappings += baseDirectory.value / "README.adoc" -> "README.adoc",
 
         Compile/packageOptions += {
