@@ -6,7 +6,6 @@ object BlendedMgmtRepo extends ProjectFactory {
     projectName = "blended.mgmt.repo",
     description = "File Artifact Repository",
     deps = Seq(
-      Dependencies.sprayJson,
       Dependencies.scalatest % "test",
       Dependencies.lambdaTest % "test",
       Dependencies.akkaTestkit % "test",

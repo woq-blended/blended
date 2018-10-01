@@ -9,7 +9,7 @@ import org.apache.camel.component.jms.JmsComponent
 
 object MockResponses {
 
-val json = """{ result: "redeem" }"""
+  val json = """{ result: "redeem" }"""
 
   val xml =
     """<?xml version="1.0" encoding="UTF-8" ?>
