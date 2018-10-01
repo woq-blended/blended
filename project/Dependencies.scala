@@ -7,7 +7,7 @@ object Dependencies {
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.3"
-  val dominoVersion = "1.1.2"
+  val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
   val microJsonVersion = "1.4"
@@ -57,7 +57,7 @@ object Dependencies {
   val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "6.0.1"
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 

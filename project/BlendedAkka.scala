@@ -8,7 +8,6 @@ object BlendedAkka extends ProjectFactory {
     deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaActor,
-      Dependencies.akkaOsgi,
       Dependencies.domino
     ),
     adaptBundle = b => b.copy(

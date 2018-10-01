@@ -1,57 +1,26 @@
 package blended.akka.internal
 
-import scala.util.control.NonFatal
-
 import akka.actor.ActorSystem
-import akka.event.LogSource
-import akka.osgi.ActorSystemActivator
-import blended.container.context.api.{ ContainerContext, ContainerIdentifierService }
+import blended.container.context.api.ContainerIdentifierService
 import blended.util.logging.Logger
-import com.typesafe.config.Config
 import domino.DominoActivator
-import domino.capsule.Capsule
-import org.osgi.framework.BundleContext
-
-object BlendedAkkaActivator {
-  implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
-    def genString(o: AnyRef): String = o.getClass.getName
-    override def getClazz(o: AnyRef): Class[_] = o.getClass
-  }
-}
 
 class BlendedAkkaActivator extends DominoActivator {
 
   private[this] val log = Logger[BlendedAkkaActivator]
 
-  private class AkkaCapsule(bundleContext: BundleContext, containerContext: ContainerContext)
-      extends ActorSystemActivator with Capsule {
-
-    override def start(): Unit = start(bundleContext)
-
-    override def stop(): Unit = stop(bundleContext)
-
-    def configure(osgiContext: BundleContext, system: ActorSystem): Unit = {
-
-      log.info("Registering Actor System as Service.")
-      registerService(osgiContext, system)
-
-      log.info(s"ActorSystem [${system.name}] initialized.")
-    }
-
-    override def getActorSystemName(context: BundleContext): String = "BlendedActorSystem"
-
-    override def getActorSystemConfiguration(context: BundleContext): Config = try {
-      containerContext.getContainerConfig()
-    } catch {
-      case NonFatal(e) =>
-        log.warn(s"Error retrieving config for ActorSystem [${e.getMessage()}]")
-        throw e
-    }
-  }
-
   whenBundleActive {
     whenServicePresent[ContainerIdentifierService] { svc =>
-      addCapsule(new AkkaCapsule(bundleContext, svc.containerContext))
+      val ctConfig = svc.containerContext.getContainerConfig()
+
+      log.debug(s"$ctConfig")
+
+      val system : ActorSystem = ActorSystem.create("BlendedActorSystem", ctConfig, classOf[ActorSystem].getClassLoader())
+      system.providesService[ActorSystem]
+
+      onStop {
+        system.terminate()
+      }
     }
   }
 }
