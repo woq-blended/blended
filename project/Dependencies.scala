@@ -1,12 +1,13 @@
 import sbt._
 import sbt.Keys._
+import sbt.librarymanagement.InclExclRule
 
 object Dependencies {
 
   val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.17.3"
+  val camelVersion = "2.22.1"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
@@ -16,7 +17,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "3.2.18.RELEASE_1"
+  val springVersion = "5.0.7.RELEASE_1"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -40,8 +41,8 @@ object Dependencies {
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
+  val camelJms = ("org.apache.camel" % "camel-jms" % camelVersion).withExclusions(Vector(InclExclRule().withName("geronimo-jms_2.0_spec")))
 
-  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
   val commonsCodec = "commons-codec" % "commons-codec" % "1.11"
@@ -106,6 +107,7 @@ object Dependencies {
   val slf4jLog4j12 = "org.slf4j" % "slf4j-log4j12" % slf4jVersion
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
+
   private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
   val springBeans = spring("beans")
   //val springAop = spring("aop")

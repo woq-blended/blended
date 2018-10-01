@@ -7,7 +7,6 @@ object BlendedMgmtRepoRest extends ProjectFactory {
     description = "File Artifact Repository REST Service",
     deps = Seq(
       Dependencies.akkaHttp,
-      Dependencies.sprayJson,
       Dependencies.scalatest % "test"
     ),
     adaptBundle = b => b.copy(

@@ -4,7 +4,7 @@ import javax.jms._
 
 class BlendedJMSConnection(conn: Connection) extends Connection {
 
-  protected[utils] def connection = conn
+  protected[utils] def connection: Connection = conn
 
   override def createDurableConnectionConsumer(topic: Topic, s: String, s1: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer =
     conn.createDurableConnectionConsumer(topic, s, s1, serverSessionPool, i)

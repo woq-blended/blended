@@ -12,7 +12,6 @@ import org.osgi.framework.BundleContext
 import scala.concurrent.duration._
 import blended.util.logging.Logger
 import blended.jms.utils.internal.CheckConnection
-import blended.jms.utils.internal.CheckConnection
 
 trait IdAwareConnectionFactory extends ConnectionFactory {
   val clientId : String
