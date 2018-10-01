@@ -95,8 +95,9 @@ object BlendedLauncher extends ProjectFactory {
 
         Universal / topLevelDirectory := None,
 
-        Universal / mappings ++= Seq(OsgiKeys.bundle.value).map { f =>
-          f -> s"lib/${f.getName}"
+        Universal / mappings += {
+          val packaged = (Compile/packageBin).value
+          packaged -> s"lib/${packaged.getName}"
         },
         Universal / mappings ++= {
           val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
