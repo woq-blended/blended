@@ -1,6 +1,8 @@
 package blended.testsupport;
 
+import org.apache.camel.CamelContext;
 import org.apache.camel.Message;
+import org.apache.camel.impl.DefaultCamelContext;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,7 +13,9 @@ public class XMLMessageFactoryTest {
   @Test
   public void createMessageTest() throws Exception{
 
-    Message msg = new XMLMessageFactory(FILE).createTextMessage();
+    CamelContext ctxt = new DefaultCamelContext();
+
+    Message msg = new XMLMessageFactory(ctxt, FILE).createTextMessage();
     Assert.assertNotNull(msg);
 
     Assert.assertTrue(msg.getHeaders().size() > 0);

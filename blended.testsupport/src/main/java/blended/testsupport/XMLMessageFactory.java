@@ -1,6 +1,7 @@
 package blended.testsupport;
 
 import blended.util.FileHelper;
+import org.apache.camel.CamelContext;
 import org.apache.camel.Message;
 import org.apache.camel.impl.DefaultMessage;
 import org.slf4j.Logger;
@@ -19,11 +20,14 @@ import java.lang.reflect.Constructor;
 public class XMLMessageFactory implements MessageFactory {
 
   private final String resourceName;
+  private final CamelContext camelContext;
 
   private final static Logger LOGGER = LoggerFactory.getLogger(XMLMessageFactory.class);
   private final static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-  public XMLMessageFactory(String fileName) {
+  public XMLMessageFactory(CamelContext context, String fileName) {
+
+    this.camelContext = context;
     this.resourceName = fileName;
   }
 
@@ -39,7 +43,7 @@ public class XMLMessageFactory implements MessageFactory {
 
   private Message createMessage(final boolean binary) throws Exception {
 
-    final Message result = new DefaultMessage();
+    final Message result = new DefaultMessage(camelContext);
     LOGGER.debug("Creating message from file [{}]", resourceName);
 
     Document doc = readMessageFile();
