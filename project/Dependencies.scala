@@ -7,7 +7,7 @@ object Dependencies {
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.22.1"
+  val camelVersion = "2.21.2"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
@@ -17,7 +17,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "5.0.7.RELEASE_1"
+  val springVersion = "4.3.16.RELEASE_1"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
