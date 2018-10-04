@@ -3,7 +3,7 @@ import sbt.Keys._
 
 object Dependencies {
 
-  val activeMqVersion = "5.15.3"
+  val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.7"
