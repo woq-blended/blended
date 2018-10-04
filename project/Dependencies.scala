@@ -7,7 +7,7 @@ object Dependencies {
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
   val camelVersion = "2.17.7"
-  val dominoVersion = "1.1.2"
+  val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
   val microJsonVersion = "1.4"
