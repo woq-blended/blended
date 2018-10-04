@@ -1,13 +1,12 @@
 import sbt._
 import sbt.Keys._
-import sbt.librarymanagement.InclExclRule
 
 object Dependencies {
 
-  val activeMqVersion = "5.15.6"
+  val activeMqVersion = "5.15.3"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.19.5"
+  val camelVersion = "2.17.7"
   val dominoVersion = "1.1.2"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
@@ -17,7 +16,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "4.3.12.RELEASE_1"
+  val springVersion = "3.2.18.RELEASE_1"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -54,11 +53,12 @@ object Dependencies {
   val domino = "com.github.domino-osgi" %% "domino" % dominoVersion
 
   val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
-  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
-  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
-  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
+  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.0.2"
+  val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.0"
+  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.0"
+  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"  
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "6.0.1"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.0"
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 

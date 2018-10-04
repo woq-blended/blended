@@ -20,14 +20,11 @@ import java.lang.reflect.Constructor;
 public class XMLMessageFactory implements MessageFactory {
 
   private final String resourceName;
-  private final CamelContext camelContext;
 
   private final static Logger LOGGER = LoggerFactory.getLogger(XMLMessageFactory.class);
   private final static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-  public XMLMessageFactory(CamelContext context, String fileName) {
-
-    this.camelContext = context;
+  public XMLMessageFactory(String fileName) {
     this.resourceName = fileName;
   }
 

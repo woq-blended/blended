@@ -5,6 +5,8 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.util.logging.Logger
 import domino.DominoActivator
 
+import scala.util.control.NonFatal
+
 class BlendedAkkaActivator extends DominoActivator {
 
   private[this] val log = Logger[BlendedAkkaActivator]
@@ -15,11 +17,17 @@ class BlendedAkkaActivator extends DominoActivator {
 
       log.debug(s"$ctConfig")
 
-      val system : ActorSystem = ActorSystem.create("BlendedActorSystem", ctConfig, classOf[ActorSystem].getClassLoader())
-      system.providesService[ActorSystem]
+      try {
+        val system : ActorSystem = ActorSystem.create("BlendedActorSystem", ctConfig, classOf[ActorSystem].getClassLoader())
+        system.providesService[ActorSystem]
 
-      onStop {
-        system.terminate()
+        onStop {
+          system.terminate()
+        }
+      } catch {
+        case NonFatal(e) =>
+          log.error(s"Error starting actor system [$e]")
+          throw e
       }
     }
   }
