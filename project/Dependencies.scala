@@ -6,7 +6,7 @@ object Dependencies {
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.17.7"
+  val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
@@ -16,7 +16,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "3.2.18.RELEASE_1"
+  val springVersion = "4.3.11.RELEASE"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -108,7 +108,7 @@ object Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
-  private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
+  private def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
   val springBeans = spring("beans")
   //val springAop = spring("aop")
   //val springContext = spring("context")
@@ -118,6 +118,7 @@ object Dependencies {
   val springJdbc = spring("jdbc")
   // val springJms = spring("jms")
   val springTx = spring("tx")
+
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
 
