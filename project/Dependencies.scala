@@ -7,8 +7,8 @@ object Dependencies {
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.9"
   val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.21.2"
-  val dominoVersion = "1.1.3"
+  val camelVersion = "2.19.5"
+  val dominoVersion = "1.1.2"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
   val microJsonVersion = "1.4"
@@ -17,7 +17,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "4.3.16.RELEASE_1"
+  val springVersion = "4.3.12.RELEASE_1"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -41,7 +41,7 @@ object Dependencies {
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-  val camelJms = ("org.apache.camel" % "camel-jms" % camelVersion).withExclusions(Vector(InclExclRule().withName("geronimo-jms_2.0_spec")))
+  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"

@@ -43,7 +43,7 @@ public class XMLMessageFactory implements MessageFactory {
 
   private Message createMessage(final boolean binary) throws Exception {
 
-    final Message result = new DefaultMessage(camelContext);
+    final Message result = new DefaultMessage();
     LOGGER.debug("Creating message from file [{}]", resourceName);
 
     Document doc = readMessageFile();
