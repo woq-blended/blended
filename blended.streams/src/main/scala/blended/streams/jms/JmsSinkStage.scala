@@ -36,7 +36,7 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
         content.header.filter{
           case (k, v) => !k.startsWith("JMS")
         }.foreach {
-          case (k,v) => msg.setObjectProperty(k, v.value())
+          case (k,v) => msg.setObjectProperty(k, v.value)
         }
 
         msg
@@ -61,7 +61,7 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
               ttl = 0l
             )
 
-            log.debug(s"JMS message sent in [${System.currentTimeMillis() - start}]")
+            log.debug(s"JMS message [$elem] sent in [${System.currentTimeMillis() - start}]")
 
             pull(in)
           }

@@ -3,18 +3,17 @@ package blended.streams.testapps
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory}
-import com.typesafe.config.ConfigFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 
-import scala.collection.JavaConverters._
+import scala.concurrent.ExecutionContext
 
 abstract class AbstractStreamRunner(s : String) {
 
-  implicit val system = ActorSystem(s)
-  implicit val materializer = ActorMaterializer()
-  implicit val ec = system.dispatcher
+  implicit val system : ActorSystem = ActorSystem(s)
+  implicit val materializer : ActorMaterializer = ActorMaterializer()
+  implicit val ec : ExecutionContext = system.dispatcher
 
   def broker() : BrokerService = {
 
@@ -30,14 +29,11 @@ abstract class AbstractStreamRunner(s : String) {
     b
   }
 
-  val config = ConfigFactory.parseMap(Map(
-    "provider" -> "activemq",
-    "clientId" -> "JmsSender",
-    "properties.brokerURL" -> s"vm://blended?create=false"
-  ).asJava)
-
   val cf = new BlendedSingleConnectionFactory(
-    BlendedJMSConnectionConfig("activemq", config).copy(
+    BlendedJMSConnectionConfig.defaultConfig.copy(
+      vendor = "activemq",
+      provider =  "activemq",
+      properties = Map("brokerURL" -> "vm://blended?create=false"),
       cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)
     ),
     system,

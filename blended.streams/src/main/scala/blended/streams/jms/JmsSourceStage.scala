@@ -13,9 +13,9 @@ object JmsSourceStage {
 
   val jms2flowMessage : Flow[Message, FlowMessage, NotUsed] = {
 
-    val f : (Message => FlowMessage) = { m : Message =>
+    val f : Message => FlowMessage = { m : Message =>
 
-      val props : Map[String, MsgProperty] = m.getPropertyNames().asScala.map { name =>
+      val props : Map[String, MsgProperty[_]] = m.getPropertyNames().asScala.map { name =>
         (name.toString, MsgProperty.lift(m.getObjectProperty(name.toString())).get)
       }.toMap
 

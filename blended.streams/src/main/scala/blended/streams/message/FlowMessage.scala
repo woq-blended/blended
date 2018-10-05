@@ -5,43 +5,43 @@ import akka.util.ByteString
 
 import scala.util.Try
 
-sealed trait MsgProperty {
-  def value() : Any
-  override def toString: String = value().toString()
+sealed trait MsgProperty[T] {
+  def value : T
+  override def toString: String = value.toString()
 }
 
-case class StringMsgProperty(value: String) extends MsgProperty
-case class IntMsgProperty(value: Int) extends MsgProperty
-case class LongMsgProperty(value: Long) extends MsgProperty
-case class BooleanMsgProperty(value : Boolean) extends MsgProperty
-case class ByteMsgProperty(value : Byte) extends MsgProperty
-case class ShortMsgProperty(value : Short) extends MsgProperty
-case class FloatMsgProperty(value: Float) extends MsgProperty
-case class DoubleMsgProperty(value: Double) extends MsgProperty
+case class StringMsgProperty(override val value: String) extends MsgProperty[String]
+case class IntMsgProperty(override val value: Int) extends MsgProperty[Int]
+case class LongMsgProperty(override val value: Long) extends MsgProperty[Long]
+case class BooleanMsgProperty(override val value : Boolean) extends MsgProperty[Boolean]
+case class ByteMsgProperty(override val value : Byte) extends MsgProperty[Byte]
+case class ShortMsgProperty(override val value : Short) extends MsgProperty[Short]
+case class FloatMsgProperty(override val value: Float) extends MsgProperty[Float]
+case class DoubleMsgProperty(override val value: Double) extends MsgProperty[Double]
 
-case object MsgProperty {
+object MsgProperty {
 
   import scala.language.implicitConversions
 
-  implicit def stringToProp(s: String) : MsgProperty = StringMsgProperty(s)
-  implicit def intToProp(i : Int) : MsgProperty = IntMsgProperty(i)
-  implicit def longToProp(l : Long) : MsgProperty = LongMsgProperty(l)
-  implicit def boolToProp(b : Boolean) : MsgProperty = BooleanMsgProperty(b)
-  implicit def byteToProp(b : Byte) : MsgProperty = ByteMsgProperty(b)
-  implicit def shortToProp(s : Short) : MsgProperty = ShortMsgProperty(s)
-  implicit def floatToProp(f : Float) : MsgProperty = FloatMsgProperty(f)
-  implicit def doubleToProp(d : Double) : MsgProperty = DoubleMsgProperty(d)
+  implicit def stringToProp(s: String) : MsgProperty[String] = StringMsgProperty(s)
+  implicit def intToProp(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
+  implicit def longToProp(l : Long) : MsgProperty[Long] = LongMsgProperty(l)
+  implicit def boolToProp(b : Boolean) : MsgProperty[Boolean] = BooleanMsgProperty(b)
+  implicit def byteToProp(b : Byte) : MsgProperty[Byte] = ByteMsgProperty(b)
+  implicit def shortToProp(s : Short) : MsgProperty[Short] = ShortMsgProperty(s)
+  implicit def floatToProp(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
+  implicit def doubleToProp(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
 
-  def apply(s : String) : MsgProperty = new StringMsgProperty(s)
-  def apply(i : Int) : MsgProperty = new IntMsgProperty(i)
-  def apply(l : Long) : MsgProperty = new LongMsgProperty(l)
-  def apply(b : Boolean) : MsgProperty = new BooleanMsgProperty(b)
-  def apply(b : Byte) : MsgProperty = new ByteMsgProperty(b)
-  def apply(s : Short) : MsgProperty = new ShortMsgProperty(s)
-  def apply(f : Float) : MsgProperty = new FloatMsgProperty(f)
-  def apply(d : Double) : MsgProperty = new DoubleMsgProperty(d)
+  def apply(s : String) : MsgProperty[String] = StringMsgProperty(s)
+  def apply(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
+  def apply(l : Long) : MsgProperty[Long] = LongMsgProperty(l)
+  def apply(b : Boolean) : MsgProperty[Boolean] = BooleanMsgProperty(b)
+  def apply(b : Byte) : MsgProperty[Byte] = ByteMsgProperty(b)
+  def apply(s : Short) : MsgProperty[Short] = ShortMsgProperty(s)
+  def apply(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
+  def apply(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
 
-  def lift(o : AnyRef) : Try[MsgProperty] = Try {
+  def lift(o : AnyRef) : Try[MsgProperty[_]] = Try {
     o match {
       case s: String => apply(s)
       case i: Integer => apply(i)
@@ -55,7 +55,7 @@ case object MsgProperty {
     }
   }
 
-  def unapply(p: MsgProperty): Any = p match {
+  def unapply(p: MsgProperty[_]): Any = p match {
     case s : StringMsgProperty => s.value
     case i : IntMsgProperty => i.value
     case l : LongMsgProperty => l.value
@@ -67,32 +67,32 @@ case object MsgProperty {
   }
 }
 
-sealed abstract class FlowMessage(h: Map[String, MsgProperty]) {
+sealed abstract class FlowMessage(h: Map[String, MsgProperty[_]]) {
 
   def body() : Any
-  def header : Map[String, MsgProperty] = h
+  def header : Map[String, MsgProperty[_]] = h
 
-  override def toString: String = s"${getClass().getSimpleName()}(${header})($body)"
+  override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
 }
 
-class BaseFlowMessage(override val header: Map[String, MsgProperty]) extends FlowMessage(header) {
+class BaseFlowMessage(override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = NotUsed
 }
 
-class BinaryFlowMessage(header: Map[String, MsgProperty], content: ByteString) extends FlowMessage(header) {
+class BinaryFlowMessage(header: Map[String, MsgProperty[_]], content: ByteString) extends FlowMessage(header) {
   override def body(): Any = content
-  def getBytes() = content
+  def getBytes() : ByteString = content
 }
 
-class TextFlowMessage(header: Map[String, MsgProperty], content: String) extends FlowMessage(header) {
+class TextFlowMessage(header: Map[String, MsgProperty[_]], content: String) extends FlowMessage(header) {
   override def body(): Any = content
-  def getText() = content
+  def getText(): String = content
 }
 
 case object FlowMessage {
 
-  def apply(props: Map[String, MsgProperty]) = new BaseFlowMessage(props)
-  def apply(props : Map[String, MsgProperty], content : String) = new TextFlowMessage(props, content)
-  def apply(props : Map[String, MsgProperty], content: ByteString) = new BinaryFlowMessage(props, content)
+  def apply(props: Map[String, MsgProperty[_]]): FlowMessage = new BaseFlowMessage(props)
+  def apply(props : Map[String, MsgProperty[_]], content : String): FlowMessage= new TextFlowMessage(props, content)
+  def apply(props : Map[String, MsgProperty[_]], content: ByteString):FlowMessage = new BinaryFlowMessage(props, content)
 
 }
