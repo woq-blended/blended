@@ -21,6 +21,8 @@ object BlendedStreams extends ProjectFactory {
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+      Test / testlogLogToFile := false, 
+      Test / testlogLogToConsole := true,
       Test / testlogLogPackages ++= Map("blended" -> "DEBUG")
     )
   }
