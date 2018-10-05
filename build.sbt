@@ -94,6 +94,7 @@ lazy val blendedActivemqClient = BlendedActivemqClient.project
 // end::Building[]
 lazy val blendedSecurityScep = BlendedSecurityScep.project
 lazy val blendedSecurityScepStandalone = BlendedSecurityScepStandalone.project
+lazy val blendedJmsBridge = BlendedJmsBridge.project
 
 lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
@@ -151,7 +152,8 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedSamplesJms,
   blendedAkkaHttpSampleHelloworld,
   blendedActivemqDefaultbroker,
-  blendedActivemqClient
+  blendedActivemqClient,
+  blendedJmsBridge
 )
 
 lazy val root = {

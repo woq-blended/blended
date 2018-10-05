@@ -4,8 +4,8 @@ import sbt.Keys._
 object Dependencies {
 
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.9"
-  val akkaHttpVersion = "10.1.1"
+  val akkaVersion = "2.5.17"
+  val akkaHttpVersion = "10.1.5"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
