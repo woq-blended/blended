@@ -2,7 +2,7 @@ package blended.streams.jms
 
 import java.util.concurrent.Semaphore
 
-import akka.stream.stage.{GraphStageLogic, GraphStageWithMaterializedValue}
+import akka.stream.stage._
 import akka.stream.{Attributes, KillSwitch, Outlet, SourceShape}
 import akka.util.ByteString
 import blended.jms.utils.{JmsConsumerSession, JmsDestination}
@@ -36,7 +36,32 @@ class JmsSourceStage(settings: JMSConsumerSettings) extends GraphStageWithMateri
 
   private val out = Outlet[FlowMessage]("JmsSource.out")
 
-  override def shape: SourceShape[FlowMessage] = SourceShape[FlowMessage](out)
+  override def shape: SourceShape[FlowMessage] = SourceShape(out)
+
+//  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
+//
+//    val logic = new GraphStageLogic(shape) with StageLogging {
+//
+//      override def preStart(): Unit = {
+//        log.info("Starting JMS Source stage")
+//      }
+//
+//      setHandler(
+//        out, new OutHandler {
+//          override def onPull(): Unit = {
+//            //log.info("Pushing new message")
+//            push(out, FlowMessage(Map.empty[String, MsgProperty[_]], "Hallo Andreas"))
+//          }
+//        }
+//      )
+//
+//      override def postStop(): Unit = {
+//        log.debug("Stopping JMS Source stage")
+//      }
+//    }
+//
+//    logic
+//  }
 
   override def createLogicAndMaterializedValue(inheritedAttributes: Attributes): (GraphStageLogic, KillSwitch) = {
 

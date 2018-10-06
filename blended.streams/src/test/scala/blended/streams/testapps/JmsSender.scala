@@ -1,14 +1,20 @@
 package blended.streams.testapps
 
-import akka.stream.KillSwitch
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.{KillSwitch, KillSwitches}
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import blended.jms.utils.JmsQueue
 import blended.streams.jms.{JMSConsumerSettings, JmsSinkStage, JmsSourceStage}
 import blended.streams.message.{FlowMessage, MsgProperty}
+import akka.pattern.after
+import org.slf4j.LoggerFactory
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object JmsSender extends AbstractStreamRunner("JmsSender") {
+
+  private[this] val log = LoggerFactory.getLogger("JmsSender")
 
   def main(args: Array[String]) : Unit = {
 
@@ -21,23 +27,26 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
     val source = Source.fromIterator( () => msgs.toIterator )
     source.runWith(new JmsSinkStage(cf))
 
-    val cSettings = JMSConsumerSettings(
-      cf,
-      1.second,
-      JmsQueue("blended.test")
-    )
+    val cSettings = JMSConsumerSettings.create(cf).withDestination(JmsQueue("blended.test"))
 
-    Thread.sleep(10000)
+    log.info("Created JMS consumer settings.")
 
-    val jmsSource : Source[FlowMessage, KillSwitch] = Source.fromGraph(new JmsSourceStage(cSettings))
-    val f = jmsSource.take(5).runWith(Sink.seq)
-    f.onComplete( msgs => msgs.get.foreach(println))
+    val (killSwitch, jmsSource)  = Source.fromGraph(new JmsSourceStage(cSettings))
+      .viaMat(KillSwitches.single)(Keep.right)
+      .toMat(Sink.seq)(Keep.both)
+      .run()
 
-    Thread.sleep(10000)
+    after[Unit](1000.millis, system.scheduler)(Future(killSwitch.shutdown()))
 
-    system.terminate().onComplete { _ =>
-      jmsBroker.stop()
-      jmsBroker.waitUntilStopped()
+    jmsSource.onComplete {
+      case Success(l) =>
+        log.info(s"Jms Source produced [${l.size}] messages : [${l.mkString(",")}]")
+        jmsBroker.stop()
+        jmsBroker.waitUntilStopped()
+        system.terminate()
+
+      case Failure(exception) =>
+        exception.printStackTrace()
     }
   }
 }

@@ -39,6 +39,5 @@ abstract class AbstractStreamRunner(s : String) {
     system,
     None
   )
-
 }
 

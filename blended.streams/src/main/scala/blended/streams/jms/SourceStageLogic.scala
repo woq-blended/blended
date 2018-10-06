@@ -41,9 +41,9 @@ abstract class SourceStageLogic(
   }
 
   override def preStart(): Unit = {
-    log.info("--->>> Starting JMS SOURCE")
+    log.info("--->>> Starting JMS Source Stage")
     ec = executionContext(inheritedAttributes)
-    initSessionAsync()
+    initSessionAsync(false)
   }
 
   private[jms] val handleMessage = getAsyncCallback[FlowMessage] { msg =>
@@ -123,6 +123,7 @@ abstract class SourceStageLogic(
   }
 
   override def postStop(): Unit = {
+    log.info("Stopping Jms Source")
     queue.clear()
     stopSessions()
   }

@@ -24,8 +24,8 @@ sealed trait JmsSettings {
 
 final case class JMSConsumerSettings(
   connectionFactory: ConnectionFactory,
-  connectionTimeout : FiniteDuration,
-  jmsDestination: Option[JmsDestination],
+  connectionTimeout : FiniteDuration = 1.second,
+  jmsDestination: Option[JmsDestination] = None,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   sessionCount: Int = 1,
   bufferSize: Int = 100,
@@ -33,6 +33,11 @@ final case class JMSConsumerSettings(
   ackTimeout: Duration = 1.second,
   durableName: Option[String] = None
 ) extends JmsSettings {
+
+  def withConnectionTimeout(d : FiniteDuration) = copy(connectionTimeout = d)
+
+  def noDestination() : JMSConsumerSettings = copy(jmsDestination = None)
+  def withDestination(d: JmsDestination) : JMSConsumerSettings = copy(jmsDestination = Some(d))
 
   def withAcknowledgeMode(m: AcknowledgeMode): JMSConsumerSettings = copy(acknowledgeMode = m)
   def withSessionCount(c : Int): JMSConsumerSettings = copy(sessionCount = c)
@@ -49,9 +54,7 @@ final case class JMSConsumerSettings(
 }
 
 object JMSConsumerSettings {
-
-  def apply(cf: ConnectionFactory, connectionTimeout: Duration, destination: JmsDestination) : JMSConsumerSettings =
-    JMSConsumerSettings(cf, connectionTimeout, destination)
+  def create(cf: ConnectionFactory) : JMSConsumerSettings = JMSConsumerSettings(cf)
 }
 
 final case class JmsProducerSettings(
@@ -73,6 +76,7 @@ final case class JmsProducerSettings(
 }
 
 object JmsProducerSettings {
+
   def create(connectionFactory: ConnectionFactory, connectionTimeout : FiniteDuration) =
     JmsProducerSettings(connectionFactory, connectionTimeout)
 }
