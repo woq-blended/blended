@@ -121,7 +121,7 @@ trait JmsConnector[S <: JmsSession] {
     Future.firstCompletedOf(Iterator(connectionFuture, timeoutFuture))
   }
 
-  private[jms] def openRecoverableConnection(
+  private[jms] def openConnection(
     startConnection: Boolean,
     onConnectionFailure: JMSException => Unit
   ): Future[Connection] = {
@@ -149,7 +149,7 @@ trait JmsConnector[S <: JmsSession] {
 trait JmsConsumerConnector extends JmsConnector[JmsConsumerSession] { this: GraphStageLogic with StageLogging =>
 
   override def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[JmsConsumerSession]] =
-    openRecoverableConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
+    openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
 
       val createDestination : Session => Destination = jmsSettings.jmsDestination match {
         case Some(destination) => destination.create

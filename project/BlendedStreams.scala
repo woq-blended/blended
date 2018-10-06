@@ -28,6 +28,7 @@ object BlendedStreams extends ProjectFactory {
   }
 
   override val project = helper.baseProject.dependsOn(
+    BlendedUtilLogging.project,
     BlendedJmsUtils.project
   )
 }

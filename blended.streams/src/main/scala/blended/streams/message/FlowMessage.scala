@@ -89,10 +89,10 @@ case class TextFlowMessage(override val header: Map[String, MsgProperty[_]], con
   def getText(): String = content
 }
 
-case object FlowMessage {
+object FlowMessage {
 
   def apply(props: Map[String, MsgProperty[_]]): FlowMessage = BaseFlowMessage(props)
-  def apply(props : Map[String, MsgProperty[_]], content : String): FlowMessage= TextFlowMessage(props, content)
-  def apply(props : Map[String, MsgProperty[_]], content: ByteString):FlowMessage = BinaryFlowMessage(props, content)
+  def apply(content : String, props : Map[String, MsgProperty[_]]): FlowMessage= TextFlowMessage(props, content)
+  def apply(content: ByteString, props : Map[String, MsgProperty[_]]):FlowMessage = BinaryFlowMessage(props, content)
 
 }

@@ -33,6 +33,7 @@ abstract class AbstractStreamRunner(s : String) {
     BlendedJMSConnectionConfig.defaultConfig.copy(
       vendor = "activemq",
       provider =  "activemq",
+      clientId = "test",
       properties = Map("brokerURL" -> "vm://blended?create=false"),
       cfClassName = Some(classOf[ActiveMQConnectionFactory].getName)
     ),

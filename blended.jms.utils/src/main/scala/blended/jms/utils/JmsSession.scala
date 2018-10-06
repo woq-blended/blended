@@ -57,11 +57,10 @@ class JmsAckSession(
   override val connection: Connection,
   override val session: Session,
   override val jmsDestination: JmsDestination,
-  val maxPendingAcks: Int
 ) extends JmsConsumerSession(connection, session, jmsDestination) {
 
   var pendingAck = 0
-  val ackQueue = new ArrayBlockingQueue[() => Unit](maxPendingAcks + 1)
+  val ackQueue = new ArrayBlockingQueue[() => Unit](2)
 
   def ack(message: Message): Unit = ackQueue.put(() => message.acknowledge())
 

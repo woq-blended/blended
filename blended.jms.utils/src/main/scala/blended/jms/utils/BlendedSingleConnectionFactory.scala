@@ -14,7 +14,11 @@ import blended.util.logging.Logger
 import blended.jms.utils.internal.CheckConnection
 
 trait IdAwareConnectionFactory extends ConnectionFactory {
+  val vendor : String
+  val provider : String
   val clientId : String
+
+  def id : String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
 }
 
 class BlendedSingleConnectionFactory(
@@ -23,8 +27,8 @@ class BlendedSingleConnectionFactory(
   bundleContext : Option[BundleContext]
 ) extends IdAwareConnectionFactory {
 
-  private[this] val vendor = config.vendor
-  private[this] val provider = config.provider
+  override val vendor = config.vendor
+  override val provider = config.provider
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
@@ -74,7 +78,7 @@ class BlendedSingleConnectionFactory(
       try {
         holder.getConnection() match {
           case Some(c) => c
-          case None => throw new Exception(s"Error connecting to [$vendor:$provider].")
+          case None => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
         case e: Exception => {
@@ -84,12 +88,12 @@ class BlendedSingleConnectionFactory(
         }
       }
     } else {
-      throw new JMSException(s"Connection for provider [$vendor:$provider] is disabled.")
+      throw new JMSException(s"Connection for provider [$id] is disabled.")
     }
   }
 
   override def createConnection(user: String, password: String): Connection = {
-    log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
+    log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
 }
