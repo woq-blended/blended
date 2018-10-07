@@ -2,8 +2,10 @@ package blended.jms.utils
 
 import java.util.concurrent.ArrayBlockingQueue
 
+import blended.util.logging.Logger
 import javax.jms._
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 sealed trait JmsSession {
@@ -30,7 +32,7 @@ class JmsProducerSession(
 class JmsConsumerSession(
   val connection: Connection,
   val session: Session,
-  val jmsDestination: JmsDestination,
+  val jmsDestination: JmsDestination
 ) extends JmsSession {
 
   def createConsumer(
@@ -57,21 +59,16 @@ class JmsAckSession(
   override val connection: Connection,
   override val session: Session,
   override val jmsDestination: JmsDestination,
+  val sessionId : String,
+  val ackTimeout : FiniteDuration = 1.second
 ) extends JmsConsumerSession(connection, session, jmsDestination) {
 
-  var pendingAck = 0
-  val ackQueue = new ArrayBlockingQueue[() => Unit](2)
+  private[this] val log = Logger[JmsAckSession]
 
-  def ack(message: Message): Unit = ackQueue.put(() => message.acknowledge())
+  val ackQueue = new ArrayBlockingQueue[Either[Throwable, String]](2)
 
-  override def closeSession(): Unit = stopMessageListenerAndCloseSession()
-
-  override def abortSession(): Unit = stopMessageListenerAndCloseSession()
-
-  private def stopMessageListenerAndCloseSession(): Unit = {
-    ackQueue.put(() => throw StopMessageListenerException())
-    session.close()
+  def ack(message: Message): Unit = {
+    ackQueue.put(Right(sessionId))
   }
-}
 
-final case class StopMessageListenerException() extends Exception("Stopping MessageListener.")
+}

@@ -82,7 +82,9 @@ class BlendedSingleConnectionFactory(
         }
       } catch {
         case e: Exception => {
-          val jmsEx = new JMSException("Error getting Connection Factory")
+          val msg = s"Error getting Connection Factory [${e.getMessage()}]"
+          log.error(msg)
+          val jmsEx = new JMSException(msg)
           jmsEx.setLinkedException(e)
           throw jmsEx
         }

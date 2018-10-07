@@ -5,8 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, GraphStageLogic, StageLogging}
-import akka.stream.{ActorAttributes, ActorMaterializer, Attributes}
-import blended.jms.utils.{JmsConsumerSession, JmsDestination, JmsProducerSession, JmsSession}
+import blended.jms.utils.{JmsConsumerSession, JmsSession}
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -14,7 +13,8 @@ import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 trait JmsConnector[S <: JmsSession] {
   this: GraphStageLogic with StageLogging =>
 
-  implicit protected var ec: ExecutionContext =_
+  implicit protected var ec : ExecutionContext = _
+  implicit protected var system : ActorSystem = _
 
   @volatile protected var jmsConnection: Future[Connection] = _
 
@@ -31,24 +31,6 @@ trait JmsConnector[S <: JmsSession] {
     onSessionOpened(session)
   }
 
-  protected def system = materializer match {
-    case am : ActorMaterializer => am.system
-    case _ => throw new Exception("Expected to run on top of an ActorSystem")
-  }
-
-  protected def executionContext(attributes: Attributes): ExecutionContext = {
-
-    val dispatcher = attributes.get[ActorAttributes.Dispatcher](
-      ActorAttributes.Dispatcher("akka.stream.default-blocking-io-dispatcher")
-    ) match {
-      case ActorAttributes.Dispatcher("") =>
-        ActorAttributes.Dispatcher("akka.stream.default-blocking-io-dispatcher")
-      case d => d
-    }
-
-    system.dispatchers.lookup(dispatcher.dispatcher)
-  }
-
   protected def createSession(connection: Connection, createDestination: Session => Destination): S
 
   sealed trait ConnectionStatus
@@ -56,13 +38,11 @@ trait JmsConnector[S <: JmsSession] {
   case object Connected extends ConnectionStatus
   case object TimedOut extends ConnectionStatus
 
-  protected def initSessionAsync(withReconnect: Boolean = true): Unit = {
+  protected def initSessionAsync(): Unit = {
 
-    def failureHandler(ex: Throwable) =
-      if (withReconnect && ex.isInstanceOf[JMSException]) initSessionAsync()
-      else fail.invoke(ex)
+    def failureHandler(ex: Throwable) = fail.invoke(ex)
 
-    log.debug(s"Creating [${jmsSettings.sessionCount}] for JMS Source stage")
+    log.debug(s"Creating [${jmsSettings.sessionCount}] session for JMS Source stage")
 
     val allSessions = openSessions(failureHandler)
     allSessions.failed.foreach(failureHandler)
@@ -126,7 +106,7 @@ trait JmsConnector[S <: JmsSession] {
     onConnectionFailure: JMSException => Unit
   ): Future[Connection] = {
 
-    jmsConnection = openConnection(startConnection)(system).map { connection =>
+    jmsConnection = openConnection(startConnection).map { connection =>
       connection.setExceptionListener(new ExceptionListener {
         override def onException(ex: JMSException) = {
           try {
@@ -140,15 +120,15 @@ trait JmsConnector[S <: JmsSession] {
         }
       })
       connection
-    }
+    }(ec)
 
     jmsConnection
   }
 }
 
-trait JmsConsumerConnector extends JmsConnector[JmsConsumerSession] { this: GraphStageLogic with StageLogging =>
+trait JmsConsumerConnector[S <: JmsConsumerSession] extends JmsConnector[S] { this: GraphStageLogic with StageLogging =>
 
-  override def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[JmsConsumerSession]] =
+  override def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] = (
     openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
 
       val createDestination : Session => Destination = jmsSettings.jmsDestination match {
@@ -157,10 +137,11 @@ trait JmsConsumerConnector extends JmsConnector[JmsConsumerSession] { this: Grap
       }
 
       val sessionFutures =
-        for (_ <- 0 until jmsSettings.sessionCount) yield Future(createSession(connection, createDestination))
+        for (_ <- 0 until jmsSettings.sessionCount - jmsSessions.size) yield Future(createSession(connection, createDestination))
 
       Future.sequence(sessionFutures)
     }
+  )(ec)
 }
 
 //private[jms] trait JmsProducerConnector extends JmsConnector[JmsProducerSession] { this: GraphStageLogic =>

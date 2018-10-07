@@ -59,9 +59,9 @@ class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessa
               deliveryMode = DeliveryMode.NON_PERSISTENT,
               priority = 4,
               ttl = 0l
-            )
-
-            log.debug(s"JMS message [$elem] sent in [${System.currentTimeMillis() - start}]")
+            ) match {
+              case None => log.debug(s"JMS message [$elem] sent in [${System.currentTimeMillis() - start}]")
+            }
 
             pull(in)
           }

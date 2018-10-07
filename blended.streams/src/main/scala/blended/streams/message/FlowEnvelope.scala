@@ -1,12 +1,12 @@
 package blended.streams.message
 
 import blended.jms.utils.JmsAckSession
-import javax.jms.{Message, Session}
+import javax.jms.Message
 
-abstract class FlowEnvelope(msg: FlowMessage) {
+abstract class FlowEnvelope(m: FlowMessage) {
 
+  def flowMessage : FlowMessage = m
   def acknowledge() : Unit
-
 }
 
 final case class DefaultFlowEnvelope(msg: FlowMessage) extends FlowEnvelope(msg) {
@@ -15,8 +15,7 @@ final case class DefaultFlowEnvelope(msg: FlowMessage) extends FlowEnvelope(msg)
   override def acknowledge(): Unit = {}
 }
 
-final case class JmsAckEnvelope(flowMsg: FlowMessage, jmsMsg: Message, session: JmsAckSession) extends FlowEnvelope(flowMsg) {
+final case class JmsAckEnvelope( msg: FlowMessage, jmsMsg: Message, session: JmsAckSession, created: Long) extends FlowEnvelope(msg) {
 
-  // TODO define acknowledge
-  override def acknowledge(): Unit = ???
+  override def acknowledge(): Unit = session.ack(jmsMsg)
 }

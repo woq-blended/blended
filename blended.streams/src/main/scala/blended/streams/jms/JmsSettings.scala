@@ -30,7 +30,7 @@ final case class JMSConsumerSettings(
   sessionCount: Int = 1,
   bufferSize: Int = 100,
   selector: Option[String] = None,
-  ackTimeout: Duration = 1.second,
+  ackTimeout: FiniteDuration = 100.millis,
   durableName: Option[String] = None
 ) extends JmsSettings {
 
@@ -47,7 +47,7 @@ final case class JMSConsumerSettings(
   def noSelector(): JMSConsumerSettings = copy(selector = None)
   def withSelector(s : String): JMSConsumerSettings = copy(selector = Some(s))
 
-  def withAckTimeout(d : Duration): JMSConsumerSettings = copy(ackTimeout = d)
+  def withAckTimeout(d : FiniteDuration): JMSConsumerSettings = copy(ackTimeout = d)
 
   def noDurableName(): JMSConsumerSettings = copy(durableName = None)
   def withDurableName(s: String): JMSConsumerSettings = copy(durableName = Some(s))
