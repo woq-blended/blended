@@ -29,17 +29,20 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
 
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
-        case None => throw new JMSException("Destination must be defined for consumer")
+        case None => throw new IllegalArgumentException("Destination must be defined for consumer")
       }
 
       override protected def createSession(
         connection: Connection,
-        createDestination: Session => Destination
       ): JmsConsumerSession = {
 
         val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
-
-        new JmsConsumerSession(connection, session, dest)
+        new JmsConsumerSession(
+          connection = connection,
+          session = session,
+          sessionId = nextSessionId(),
+          jmsDestination = dest
+        )
       }
 
       override protected def pushMessage(msg: FlowEnvelope): Unit = {

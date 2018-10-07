@@ -2,7 +2,7 @@ package blended.streams.jms
 
 import akka.util.ByteString
 import blended.streams.message.{BinaryFlowMessage, FlowMessage, MsgProperty, TextFlowMessage}
-import javax.jms.{BytesMessage, Message, TextMessage}
+import javax.jms.{BytesMessage, Message, Session, TextMessage}
 
 import scala.collection.JavaConverters._
 
@@ -27,4 +27,26 @@ object JmsFlowMessage {
       case _ => FlowMessage(props)
     }
   }
+
+  val flowMessage2jms : (Session, FlowMessage) => Message = { (session, flowMsg) =>
+
+    val msg = flowMsg match {
+      case t : TextFlowMessage => session.createTextMessage(t.getText())
+      case b : BinaryFlowMessage =>
+        val r = session.createBytesMessage()
+        r.writeBytes(b.getBytes().toArray)
+
+        r
+      case _ => session.createMessage()
+    }
+
+    flowMsg.header.filter{
+      case (k, v) => !k.startsWith("JMS")
+    }.foreach {
+      case (k,v) => msg.setObjectProperty(k, v.value)
+    }
+
+    msg
+  }
+
 }

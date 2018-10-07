@@ -8,7 +8,7 @@ import javax.jms._
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-sealed trait JmsSession {
+abstract class JmsSession {
 
   def connection: Connection
 
@@ -21,17 +21,21 @@ sealed trait JmsSession {
   def abortSessionAsync()(implicit ec: ExecutionContext): Future[Unit] = Future { abortSession() }
 
   def abortSession(): Unit = closeSession()
+
+  def sessionId : String
 }
 
-class JmsProducerSession(
+case class JmsProducerSession(
   val connection: Connection,
   val session: Session,
-  val jmsDestination: JmsDestination
+  override val sessionId : String,
+  val jmsDestination: Option[JmsDestination]
 ) extends JmsSession
 
 class JmsConsumerSession(
   val connection: Connection,
   val session: Session,
+  override val sessionId : String,
   val jmsDestination: JmsDestination
 ) extends JmsSession {
 
@@ -58,10 +62,10 @@ class JmsConsumerSession(
 class JmsAckSession(
   override val connection: Connection,
   override val session: Session,
+  override val sessionId : String,
   override val jmsDestination: JmsDestination,
-  val sessionId : String,
   val ackTimeout : FiniteDuration = 1.second
-) extends JmsConsumerSession(connection, session, jmsDestination) {
+) extends JmsConsumerSession(connection, session, sessionId, jmsDestination) {
 
   private[this] val log = Logger[JmsAckSession]
 

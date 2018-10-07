@@ -1,14 +1,29 @@
 package blended.streams.jms
 
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 
 import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, GraphStageLogic, StageLogging}
-import blended.jms.utils.{JmsConsumerSession, JmsSession}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
+
+
+object JmsConnector {
+
+  private[this] val sessionIdCounter : AtomicLong = new AtomicLong(0L)
+
+  def nextSessionId : String = {
+
+    if (sessionIdCounter.get() == Long.MaxValue) {
+      sessionIdCounter.set(0l)
+    }
+
+    s"${sessionIdCounter.incrementAndGet()}"
+  }
+}
 
 trait JmsConnector[S <: JmsSession] {
   this: GraphStageLogic with StageLogging =>
@@ -18,7 +33,7 @@ trait JmsConnector[S <: JmsSession] {
 
   @volatile protected var jmsConnection: Future[Connection] = _
 
-  protected var jmsSessions = Seq.empty[S]
+  protected var jmsSessions : Map[String, S] = Map.empty
 
   protected def jmsSettings: JmsSettings
 
@@ -27,11 +42,19 @@ trait JmsConnector[S <: JmsSession] {
   protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable](e => failStage(e))
 
   private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
-    jmsSessions :+= session
+    jmsSessions += (session.sessionId -> session)
     onSessionOpened(session)
   }
 
-  protected def createSession(connection: Connection, createDestination: Session => Destination): S
+  // Just to identify the Source stage in log statements
+  protected val id : String = { jmsSettings.connectionFactory match {
+    case idAware: IdAwareConnectionFactory => idAware.id
+    case cf => cf.toString()
+  }}
+
+  protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
+
+  protected def createSession(connection: Connection): S
 
   sealed trait ConnectionStatus
   case object Connecting extends ConnectionStatus
@@ -42,18 +65,34 @@ trait JmsConnector[S <: JmsSession] {
 
     def failureHandler(ex: Throwable) = fail.invoke(ex)
 
-    log.debug(s"Creating [${jmsSettings.sessionCount}] session for JMS Source stage")
-
     val allSessions = openSessions(failureHandler)
     allSessions.failed.foreach(failureHandler)
     // wait for all sessions to successfully initialize before invoking the onSession callback.
     // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
-    allSessions.foreach(_.foreach(onSession.invoke))
+    allSessions.foreach(_.foreach{ s =>
+      log.debug(s"Calling Session creation callback for [${s.sessionId}]")
+      onSession.invoke(s)
+    })(ec)
   }
 
-  def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]]
+  def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] =
 
-  private def openConnection(startConnection: Boolean)(implicit system: ActorSystem): Future[Connection] = {
+    openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
+      log.debug(s"Creating [${jmsSettings.sessionCount}] sessions with [$jmsSettings]")
+
+      val sessionFutures =
+        for (_ <- 0 until jmsSettings.sessionCount) yield Future {
+          val s = createSession(connection)
+          log.debug(s"Created session [${s.sessionId}]")
+          s
+        }
+
+    Future.sequence(sessionFutures)
+  }
+
+
+  private def openConnection(startConnection: Boolean) : Future[Connection] = {
+
     val factory = jmsSettings.connectionFactory
     val connectionRef = new AtomicReference[Option[Connection]](None)
 
@@ -87,7 +126,7 @@ trait JmsConnector[S <: JmsSession] {
         connectionRef.set(None)
         Future.failed(
           new TimeoutException(
-            s"Timed out after $connectTimeout trying to establish connection. " +
+            s"Timed out after [$connectTimeout] trying to establish connection. " +
               "Please see ConnectionRetrySettings.connectTimeout"
           )
         )
@@ -98,7 +137,7 @@ trait JmsConnector[S <: JmsSession] {
         }
     }
 
-    Future.firstCompletedOf(Iterator(connectionFuture, timeoutFuture))
+    Future.firstCompletedOf(Iterator(connectionFuture, timeoutFuture))(ec)
   }
 
   private[jms] def openConnection(
@@ -107,6 +146,7 @@ trait JmsConnector[S <: JmsSession] {
   ): Future[Connection] = {
 
     jmsConnection = openConnection(startConnection).map { connection =>
+      log.debug(s"Successfully connected [$id]")
       connection.setExceptionListener(new ExceptionListener {
         override def onException(ex: JMSException) = {
           try {
@@ -114,59 +154,15 @@ trait JmsConnector[S <: JmsSession] {
           } catch {
             case _: Throwable =>
           }
-          jmsSessions = Seq.empty
+          jmsSessions = Map.empty
 
           onConnectionFailure(ex)
         }
       })
       connection
-    }(ec)
+    }
 
     jmsConnection
   }
 }
 
-trait JmsConsumerConnector[S <: JmsConsumerSession] extends JmsConnector[S] { this: GraphStageLogic with StageLogging =>
-
-  override def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] = (
-    openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
-
-      val createDestination : Session => Destination = jmsSettings.jmsDestination match {
-        case Some(destination) => destination.create
-        case _ => throw new IllegalArgumentException("Destination for consumer is missing")
-      }
-
-      val sessionFutures =
-        for (_ <- 0 until jmsSettings.sessionCount - jmsSessions.size) yield Future(createSession(connection, createDestination))
-
-      Future.sequence(sessionFutures)
-    }
-  )(ec)
-}
-
-//private[jms] trait JmsProducerConnector extends JmsConnector[JmsProducerSession] { this: GraphStageLogic =>
-//
-//
-//
-//  protected final def createSession(
-//    connection: Connection,
-//    createDestination: Session => Destination
-//  ): JmsProducerSession = {
-//    val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
-//    new JmsProducerSession(connection, session, createDestination(session))
-//  }
-//
-//  def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[JmsProducerSession]] =
-//
-//    openRecoverableConnection(startConnection = false, onConnectionFailure).flatMap { connection =>
-//      val createDestination = jmsSettings.destination match {
-//        case Some(destination) => destination.create
-//        case _ => throw new IllegalArgumentException("Destination is missing")
-//      }
-//
-//      val sessionFutures =
-//        for (_ <- 0 until jmsSettings.sessionCount)
-//          yield Future(createSession(connection, createDestination))
-//      Future.sequence(sessionFutures)
-//    }
-//}

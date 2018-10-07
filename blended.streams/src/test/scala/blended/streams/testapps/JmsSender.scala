@@ -2,11 +2,11 @@ package blended.streams.testapps
 
 import akka.NotUsed
 import akka.pattern.after
-import akka.stream.{KillSwitch, KillSwitches}
-import akka.stream.scaladsl.{Keep, RestartSource, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
+import akka.stream.{FlowShape, Graph, KillSwitch, KillSwitches}
 import blended.jms.utils.JmsQueue
-import blended.streams.jms.{JMSConsumerSettings, JmsAckSourceStage, JmsSinkStage, JmsSourceStage}
-import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.jms._
+import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -35,8 +35,8 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
     val (killSwitch, jmsFlow) = source
       .viaMat(KillSwitches.single)(Keep.right)
      .filter { env =>
-        env.flowMessage.header.get("msgno") match {
-          case Some(p) => p.value != 5
+        env.flowMessage.header[Int]("msgno") match {
+          case Some(p) => p != 5
           case None => false
         }
       }
@@ -57,34 +57,50 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
   def main(args: Array[String]) : Unit = {
 
     val jmsBroker = broker()
+    Thread.sleep(1000)
 
     val msgs = 1.to(10).map { i =>
       val header : Map[String, MsgProperty[_]] = Map("foo" -> "bar", "msgno" -> i)
       FlowMessage(s"Message $i", header)
     }
 
-    val source = Source.fromIterator( () => msgs.toIterator )
-    source.runWith(new JmsSinkStage(cf))
+    val settings : JmsProducerSettings = JmsProducerSettings(
+      connectionFactory = cf,
+      connectionTimeout = 1.second
+    )
 
-    consume(true).onComplete {
-      case Success(l) =>
-        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = new JmsSinkStage(settings)
 
-      case Failure(exception) =>
-        exception.printStackTrace()
+    val source = Source
+      .fromIterator( () => msgs.toIterator)
+      .map(m => DefaultFlowEnvelope(m))
+      .via(g)
+
+    source.runWith(Sink.seq).onComplete{
+      case Success(msgs) => log.info(msgs.mkString("\n"))
+      case Failure(t) => t.printStackTrace()
     }
 
-    Thread.sleep(5000)
-
-    consume(false).onComplete {
-      case Success(l) =>
-        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
-
-      case Failure(exception) =>
-        exception.printStackTrace()
-    }
-
-    Thread.sleep(3600000)
+//
+//    consume(true).onComplete {
+//      case Success(l) =>
+//        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
+//
+//      case Failure(exception) =>
+//        exception.printStackTrace()
+//    }
+//
+//    Thread.sleep(5000)
+//
+//    consume(false).onComplete {
+//      case Success(l) =>
+//        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
+//
+//      case Failure(exception) =>
+//        exception.printStackTrace()
+//    }
+//
+    Thread.sleep(10000)
     jmsBroker.stop()
     system.terminate()
   }

@@ -1,69 +1,94 @@
 package blended.streams.jms
 
-import javax.jms.{ConnectionFactory, DeliveryMode, Message, Session}
+import java.util.concurrent.Semaphore
 
-import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, StageLogging}
-import akka.stream.{ActorAttributes, Attributes, Inlet, SinkShape}
-import blended.jms.utils.{JMSMessageFactory, JMSSupport}
-import blended.streams.message.{BinaryFlowMessage, FlowMessage, TextFlowMessage}
+import akka.actor.ActorSystem
+import akka.stream._
+import akka.stream.stage._
+import blended.jms.utils.JmsProducerSession
+import blended.streams.message.FlowEnvelope
+import javax.jms.Connection
 
-class JmsSinkStage(cf: ConnectionFactory) extends GraphStage[SinkShape[FlowMessage]] {
+import scala.util.Random
 
-  private val in = Inlet[FlowMessage]("JmsSink.in")
+class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorSystem)
+  extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
-  override def shape : SinkShape[FlowMessage] = SinkShape.of(in)
+  private val in = Inlet[FlowEnvelope]("JmsSink.in")
+  private val out = Outlet[FlowEnvelope]("JmsSink.out")
+
+  private var pushEnv: Option[FlowEnvelope] = None
+
+  override val shape : FlowShape[FlowEnvelope, FlowEnvelope] = FlowShape(in, out)
 
   override protected def initialAttributes: Attributes =
-    ActorAttributes.dispatcher("akka.stream.default-blocking-io-dispatcher")
+    ActorAttributes.dispatcher("FixedPool")
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
-    new GraphStageLogic(shape) with StageLogging with JMSSupport with JMSMessageFactory[FlowMessage] {
+    new JmsStageLogic[JmsProducerSession, JmsProducerSettings](
+      settings,
+      inheritedAttributes,
+      shape
+    ) with StageLogging with JmsConnector[JmsProducerSession] {
 
-      private val logic = this
+      private[this] val rnd = new Random()
 
-      override def createMessage(session: Session, content: FlowMessage): Message = {
-
-        val msg = content match {
-          case t : TextFlowMessage => session.createTextMessage(t.getText())
-          case b : BinaryFlowMessage =>
-            val r = session.createBytesMessage()
-            r.writeBytes(b.getBytes().toArray)
-
-            r
-          case _ => session.createMessage()
-        }
-
-        content.header.filter{
-          case (k, v) => !k.startsWith("JMS")
-        }.foreach {
-          case (k,v) => msg.setObjectProperty(k, v.value)
-        }
-
-        msg
+      override protected def createSession(connection: Connection): JmsProducerSession = {
+        val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
+        new JmsProducerSession(
+          connection = connection,
+          session = session,
+          sessionId = nextSessionId(),
+          jmsDestination = jmsSettings.jmsDestination
+        )
       }
 
-      override def preStart(): Unit = pull(in)
+
+      override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
+        super.onSessionOpened(jmsSession)
+        pushEnv.foreach(sendMessage)
+      }
+
+      def sendMessage(env: FlowEnvelope): Unit = {
+        // select one sender session randomly
+        val idx : Int = rnd.nextInt(jmsSessions.size)
+        val key = jmsSessions.keys.takeRight(idx+1).head
+        val p = jmsSessions.toIndexedSeq(idx)
+        val session = p._2
+
+        log.debug(s"Using session [${session.sessionId}] to send JMS message.")
+
+        val outEnvelope : FlowEnvelope = try {
+          env
+        } catch {
+          case t : Throwable =>
+            log.error(s"Error sending message to JMS [] in [${session.sessionId}]")
+            env.withException(t)
+        }
+
+        push(out, outEnvelope)
+        if (!hasBeenPulled(in)) pull(in)
+      }
+
+      // First simply pass the pull upstream if any
+      setHandler(out,
+        new OutHandler {
+          override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
+        }
+      )
 
       setHandler(in,
         new InHandler {
 
           override def onPush(): Unit = {
 
-            val (elem, start) = (grab(in), System.currentTimeMillis())
+            val env = grab(in)
 
-            sendMessage[FlowMessage](
-              cf = cf,
-              destName = "blended.test",
-              content = elem,
-              msgFactory = logic,
-              deliveryMode = DeliveryMode.NON_PERSISTENT,
-              priority = 4,
-              ttl = 0l
-            ) match {
-              case None => log.debug(s"JMS message [$elem] sent in [${System.currentTimeMillis() - start}]")
+            if (jmsSessions.size > 0) {
+              sendMessage(env)
+            } else {
+              pushEnv = Some(env)
             }
-
-            pull(in)
           }
         }
       )

@@ -1,12 +1,11 @@
 package blended.streams.jms
 
 import java.util.concurrent.Semaphore
-import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStageLogic, GraphStageWithMaterializedValue}
-import blended.jms.utils.{JmsAckSession, JmsConsumerSession, JmsDestination}
+import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message.{FlowEnvelope, JmsAckEnvelope}
 import javax.jms._
 
@@ -14,19 +13,6 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object JmsAckSourceStage {
-
-  private[this] val sessionIdCounter : AtomicLong = new AtomicLong(0L)
-
-  def nextSessionId : String = {
-
-    if (sessionIdCounter.get() == Long.MaxValue) {
-      sessionIdCounter.set(0l)
-    }
-
-    s"${sessionIdCounter.incrementAndGet()}"
-  }
-}
 
 final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : ActorSystem)
   extends GraphStageWithMaterializedValue[SourceShape[FlowEnvelope], KillSwitch] {
@@ -97,15 +83,34 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
         cancelTimer("Ack")
       }
 
+
+      override protected def createSession(connection: Connection): JmsAckSession = {
+
+        jmsSettings.jmsDestination match {
+          case Some(d) =>
+            val session = connection.createSession(false, AcknowledgeMode.ClientAcknowledge.mode)
+            new JmsAckSession(
+              connection = connection,
+              session = session,
+              sessionId = nextSessionId,
+              jmsDestination = d
+            )
+          case None =>
+            val msg = s"Destination must be set for consumer in [$id]"
+            log.error(msg)
+            throw new IllegalArgumentException(msg)
+        }
+      }
+
       private[this] def closeSession(session: JmsAckSession) : Unit = {
 
         try {
           session.closeSessionAsync().onComplete { _ =>
-            jmsSessions = jmsSessions.filter(s => s.sessionId != session.sessionId)
+            jmsSessions = jmsSessions.filter(_ != session.sessionId)
             onSessionClosed()
           }
         } catch {
-          case _ =>
+          case _ : Throwable =>
             log.error(s"Error closing session with id [${session.sessionId}]")
         }
       }
@@ -117,26 +122,6 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
         case None => throw new Exception("Destination must be set for Consumer")
-      }
-
-      protected def createSession(
-        connection: Connection,
-        createDestination: Session => javax.jms.Destination
-      ): JmsAckSession = {
-
-        val session =
-          connection.createSession(false, AcknowledgeMode.ClientAcknowledge.mode)
-
-        val sessionId = s"$id-${JmsAckSourceStage.nextSessionId}"
-
-        log.debug(s"Creating client acknowledge session [$sessionId]")
-
-        new JmsAckSession(
-          connection = connection,
-          session = session,
-          jmsDestination = dest,
-          sessionId = sessionId
-        )
       }
 
       protected def pushMessage(msg: FlowEnvelope): Unit = {

@@ -5,7 +5,7 @@ import akka.util.ByteString
 
 import scala.util.Try
 
-sealed trait MsgProperty[T] {
+sealed trait MsgProperty[T <: Any] {
   def value : T
   override def toString: String = value.toString()
 }
@@ -41,7 +41,7 @@ object MsgProperty {
   def apply(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
   def apply(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
 
-  def lift(o : AnyRef) : Try[MsgProperty[_]] = Try {
+  def lift(o : Any) : Try[MsgProperty[_]] = Try {
     o match {
       case s: String => apply(s)
       case i: Integer => apply(i)
@@ -71,6 +71,17 @@ sealed abstract class FlowMessage(h: Map[String, MsgProperty[_]]) {
 
   def body() : Any
   def header : Map[String, MsgProperty[_]] = h
+
+  def header[T <: AnyVal](name : String): Option[T] = header.get(name) match {
+    case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
+    case Some(_) => None
+    case _ => None
+  }
+
+  def headerWithDefault[T <: AnyVal](name: String, default: T) : T = header[T](name) match {
+    case Some(v) => v
+    case None => default
+  }
 
   override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
 }
