@@ -7,6 +7,7 @@ import akka.stream._
 import akka.stream.stage.{GraphStageLogic, GraphStageWithMaterializedValue}
 import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message.{FlowEnvelope, JmsAckEnvelope}
+import blended.util.logging.Logger
 import javax.jms._
 
 import scala.collection.mutable
@@ -28,6 +29,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
 
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
+      private[this] val log = Logger(classOf[JmsAckSourceStage].getName())
       private[this] val pendingAcks : mutable.Map[String, Semaphore] = mutable.Map.empty
       private[this] val inflight : mutable.Map[String, JmsAckEnvelope] = mutable.Map.empty
 

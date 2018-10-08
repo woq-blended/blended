@@ -7,14 +7,16 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.{JmsConsumerSession, JmsDestination}
 import blended.streams.message._
+import blended.util.logging.Logger
 import javax.jms._
 
 import scala.util.{Failure, Success}
 
 class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) extends GraphStageWithMaterializedValue[SourceShape[FlowEnvelope], KillSwitch] {
 
-  private val out = Outlet[FlowEnvelope]("JmsSource.out")
+  private[this] val log = Logger[JmsSourceStage]
 
+  private val out = Outlet[FlowEnvelope]("JmsSource.out")
   override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
   override protected def initialAttributes: Attributes =

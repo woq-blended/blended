@@ -7,6 +7,7 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.JmsProducerSession
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.Logger
 import javax.jms.Connection
 
 import scala.util.Random
@@ -16,6 +17,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
 
   private val in = Inlet[FlowEnvelope]("JmsSink.in")
   private val out = Outlet[FlowEnvelope]("JmsSink.out")
+  private[this] val log = Logger[JmsSinkStage]
 
   private var pushEnv: Option[FlowEnvelope] = None
 
@@ -29,7 +31,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
       settings,
       inheritedAttributes,
       shape
-    ) with StageLogging with JmsConnector[JmsProducerSession] {
+    ) with JmsConnector[JmsProducerSession] {
 
       private[this] val rnd = new Random()
 

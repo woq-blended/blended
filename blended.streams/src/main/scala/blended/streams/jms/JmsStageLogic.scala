@@ -6,6 +6,7 @@ import akka.Done
 import akka.stream._
 import akka.stream.stage.{StageLogging, TimerGraphStageLogic}
 import blended.jms.utils.JmsSession
+import blended.util.logging.Logger
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -16,8 +17,9 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   inheritedAttributes: Attributes,
   shape : Shape
 ) extends TimerGraphStageLogic(shape)
-  with JmsConnector[S]
-  with StageLogging {
+  with JmsConnector[S] {
+
+  private[this] val log = Logger(getClass().getName())
 
   override protected def jmsSettings: T = settings
 
@@ -63,7 +65,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     if (stopping.compareAndSet(false, true)) {
       val closeSessionFutures = jmsSessions.values.map { s =>
         val f = s.closeSessionAsync()
-        f.failed.foreach(e => log.error(e, s"Error closing jms session in JMS source stage [$id]"))
+        f.failed.foreach(e => log.error(e)(s"Error closing jms session in JMS source stage [$id]"))
         f
       }
       Future
@@ -73,7 +75,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
             try {
               connection.close()
             } catch {
-              case NonFatal(e) => log.error(e, s"Error closing JMS connection in Jms source stage [$id]")
+              case NonFatal(e) => log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
             } finally {
               // By this time, after stopping the connection, closing sessions, all async message submissions to this
               // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
@@ -90,7 +92,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     if (stopping.compareAndSet(false, true)) {
       val abortSessionFutures = jmsSessions.values.map { s =>
         val f = s.abortSessionAsync()
-        f.failed.foreach(e => log.error(e, s"Error closing jms session in Jms source stage [$id]"))
+        f.failed.foreach(e => log.error(e)(s"Error closing jms session in Jms source stage [$id]"))
         f
       }
       Future
@@ -100,7 +102,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
             try {
               connection.close()
             } catch {
-              case NonFatal(e) => log.error(e, s"Error closing JMS connection in Jms source stage [$id]")
+              case NonFatal(e) => log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
             } finally {
               markAborted.invoke(ex)
             }

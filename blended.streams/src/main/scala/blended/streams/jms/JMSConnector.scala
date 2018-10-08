@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, GraphStageLogic, StageLogging}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
+import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -25,13 +26,14 @@ object JmsConnector {
   }
 }
 
-trait JmsConnector[S <: JmsSession] {
-  this: GraphStageLogic with StageLogging =>
+trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
   implicit protected var ec : ExecutionContext = _
   implicit protected var system : ActorSystem = _
 
   @volatile protected var jmsConnection: Future[Connection] = _
+
+  private[this] val log = Logger[JmsConnector.type]
 
   protected var jmsSessions : Map[String, S] = Map.empty
 
