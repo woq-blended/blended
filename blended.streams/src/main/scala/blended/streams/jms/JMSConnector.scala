@@ -83,10 +83,13 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
   def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] =
 
     openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
-      log.debug(s"Creating [${jmsSettings.sessionCount}] sessions with [$jmsSettings]")
+
+      val toBeCreated = jmsSettings.sessionCount - jmsSessions.size
+
+      log.debug(s"Creating [$toBeCreated] sessions with [$jmsSettings]")
 
       val sessionFutures =
-        for (_ <- 0 until jmsSettings.sessionCount) yield Future {
+        for (_ <- 0 until toBeCreated) yield Future {
           val s = createSession(connection)
           log.debug(s"Created session [${s.sessionId}]")
           s
