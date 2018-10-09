@@ -1,14 +1,14 @@
 package blended.jms.utils
 
-import javax.jms.{Destination, JMSException, Session}
+import javax.jms._
 
 import scala.util.Try
 
 object JmsDestination {
 
-  private[this] val destSeparator = ":"
-  private[this] val TOPICTAG = "topic"
-  private[this] val QUEUETAG = "queue"
+  private[utils] val destSeparator = ":"
+  private[utils] val TOPICTAG = "topic"
+  private[utils] val QUEUETAG = "queue"
 
   def create(destName : String) : Try[JmsDestination] = Try {
 
@@ -32,21 +32,34 @@ object JmsDestination {
       case _ => throw new IllegalArgumentException(s"Illegal format for destination name [$name]")
     }
   }
+
+  def create(jmsDest : Destination) : Try[JmsDestination] = Try {
+    jmsDest match {
+      case t : Topic => JmsTopic(t.getTopicName())
+      case q : Queue => JmsQueue(q.getQueueName())
+      case _ => throw new IllegalArgumentException(s"Unknown destination type [${jmsDest.getClass().getName()}]")
+    }
+  }
 }
 
 sealed trait  JmsDestination {
   val name : String
   val create : Session => Destination
+  val asString : String
 }
 
 final case class JmsTopic(override val name : String) extends JmsDestination {
+
   override val create: Session => Destination = session => session.createTopic(name)
+  override val asString: String = s"${JmsDestination.TOPICTAG}${JmsDestination.destSeparator}$name"
 }
 
 final case class JmsDurableTopic(override val name : String, subscriberName : String) extends JmsDestination {
   override val create: Session => Destination = session => session.createTopic(name)
+  override val asString: String = s"${JmsDestination.TOPICTAG}:${JmsDestination.destSeparator}$subscriberName${JmsDestination.destSeparator}:$name"
 }
 
 final case class JmsQueue(override val name : String) extends JmsDestination {
   override val create: Session => Destination = session => session.createQueue(name)
+  override val asString: String = s"${JmsDestination.QUEUETAG}${JmsDestination.destSeparator}$name"
 }

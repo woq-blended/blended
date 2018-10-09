@@ -1,9 +1,11 @@
 package blended.streams.testapps
 
+import java.util.UUID
+
 import akka.NotUsed
 import akka.pattern.after
-import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
-import akka.stream.{FlowShape, Graph, KillSwitch, KillSwitches}
+import akka.stream.scaladsl.{Flow, Keep, RestartFlow, RestartSource, Sink, Source}
+import akka.stream.{KillSwitch, KillSwitches}
 import blended.jms.utils.JmsQueue
 import blended.streams.jms._
 import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
@@ -57,7 +59,6 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
   def main(args: Array[String]) : Unit = {
 
     val jmsBroker = broker()
-    Thread.sleep(1000)
 
     val msgs = 1.to(10).map { i =>
       val header : Map[String, MsgProperty[_]] = Map("foo" -> "bar", "msgno" -> i)
@@ -66,20 +67,28 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
 
     val settings : JmsProducerSettings = JmsProducerSettings(
       connectionFactory = cf,
-      connectionTimeout = 1.second
+      connectionTimeout = 1.second,
+      jmsDestination = Some(JmsQueue("blended.test")),
+      correlationId = () => Some(UUID.randomUUID().toString())
     )
 
-    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = new JmsSinkStage(settings)
+    val flow : Flow[FlowEnvelope, FlowEnvelope, _] = RestartFlow.onFailuresWithBackoff[FlowEnvelope, FlowEnvelope](
+      minBackoff = 2.seconds,
+      maxBackoff = 30.seconds,
+      randomFactor = 0.2,
+      maxRestarts = -1,
+    ){ () => Flow.fromGraph(new JmsSinkStage(settings)) }
 
     val source = Source
       .fromIterator( () => msgs.toIterator)
       .map(m => DefaultFlowEnvelope(m))
-      .via(g)
+      .via(flow)
 
     source.runWith(Sink.seq).onComplete{
       case Success(msgs) => log.info(msgs.mkString("\n"))
       case Failure(t) => t.printStackTrace()
     }
+
 
 //
 //    consume(true).onComplete {
@@ -100,7 +109,7 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
 //        exception.printStackTrace()
 //    }
 //
-    Thread.sleep(10000)
+    Thread.sleep(3600000)
     jmsBroker.stop()
     system.terminate()
   }

@@ -140,7 +140,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                 consumer.setMessageListener(new MessageListener {
 
                   def onMessage(message: Message): Unit = {
-                    val flowMessage = JmsFlowMessage.jms2flowMessage(message)
+                    val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
                     log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                     try {
 

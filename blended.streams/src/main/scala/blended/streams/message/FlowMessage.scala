@@ -72,7 +72,7 @@ sealed abstract class FlowMessage(h: Map[String, MsgProperty[_]]) {
   def body() : Any
   def header : Map[String, MsgProperty[_]] = h
 
-  def header[T <: AnyVal](name : String): Option[T] = header.get(name) match {
+  def header[T](name : String): Option[T] = header.get(name) match {
     case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
     case Some(_) => None
     case _ => None

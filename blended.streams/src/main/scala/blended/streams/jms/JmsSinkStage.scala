@@ -1,14 +1,12 @@
 package blended.streams.jms
 
-import java.util.concurrent.Semaphore
-
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.JmsProducerSession
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-import javax.jms.Connection
+import javax.jms.{Connection, MessageProducer}
 
 import scala.util.Random
 
@@ -33,7 +31,15 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
       shape
     ) with JmsConnector[JmsProducerSession] {
 
+      override def preStart(): Unit = {
+        if (!jmsSettings.sendParamsFromMessage && jmsSettings.jmsDestination.isEmpty) {
+          throw new IllegalArgumentException(s"A JMS Destination must be set in [$jmsSettings]if the message headers are not evaluated for send parameters.")
+        }
+        super.preStart()
+      }
+
       private[this] val rnd = new Random()
+      private[this] var producer : Option[MessageProducer] = None
 
       override protected def createSession(connection: Connection): JmsProducerSession = {
         val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
@@ -45,9 +51,9 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
         )
       }
 
-
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
         super.onSessionOpened(jmsSession)
+        producer = Some(jmsSession.session.createProducer(null))
         pushEnv.foreach(sendMessage)
       }
 
@@ -61,14 +67,30 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
         log.debug(s"Using session [${session.sessionId}] to send JMS message.")
 
         val outEnvelope : FlowEnvelope = try {
+          val sendParams = JmsFlowMessage.flowMessage2jms(jmsSettings, session.session, env.flowMessage).get
+          producer.foreach { p =>
+            log.debug(s"Using JMS send parameter [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
+
+            val sendTtl : Long = sendParams.ttl match {
+              case Some(l) => if (l.toMillis < 0L) {
+                  log.warn(s"The message [${env.flowMessage}] has expired and wont be sent to the JMS destination.")
+                }
+                l.toMillis
+              case None => 0L
+            }
+            if (sendTtl >= 0L) {
+              p.send(sendParams.destination, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
+            }
+          }
           env
         } catch {
           case t : Throwable =>
-            log.error(s"Error sending message to JMS [] in [${session.sessionId}]")
+            log.error(s"Error sending message to JMS [$env] in [${session.sessionId}]")
             env.withException(t)
         }
 
         push(out, outEnvelope)
+        // Todo: Is this pull required ?
         if (!hasBeenPulled(in)) pull(in)
       }
 

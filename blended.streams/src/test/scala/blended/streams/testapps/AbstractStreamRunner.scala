@@ -20,7 +20,7 @@ abstract class AbstractStreamRunner(s : String) {
     val b = new BrokerService()
     b.setBrokerName("blended")
     b.setPersistent(false)
-    b.setUseJmx(false)
+    b.setUseJmx(true)
     b.setPersistenceAdapter(new MemoryPersistenceAdapter)
 
     b.start()
