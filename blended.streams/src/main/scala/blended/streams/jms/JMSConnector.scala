@@ -41,7 +41,10 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
   protected def onSessionOpened(jmsSession: S): Unit = {}
 
-  protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable](e => failStage(e))
+  protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
+    log.debug(e)("Failing stage")
+    failStage(e)
+  }
 
   private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
     jmsSessions += (session.sessionId -> session)

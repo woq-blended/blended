@@ -29,6 +29,10 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
       private val bufferSize = (settings.bufferSize + 1) * settings.sessionCount
       private val backpressure = new Semaphore(bufferSize)
 
+      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
+        fail(out, ex)
+      }
+
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
         case None => throw new IllegalArgumentException("Destination must be defined for consumer")

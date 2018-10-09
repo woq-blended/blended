@@ -2,13 +2,14 @@ package blended.streams.testapps
 
 import java.util.UUID
 
-import akka.NotUsed
 import akka.pattern.after
-import akka.stream.scaladsl.{Flow, Keep, RestartFlow, RestartSource, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
 import akka.stream.{KillSwitch, KillSwitches}
+import akka.{Done, NotUsed}
 import blended.jms.utils.JmsQueue
 import blended.streams.jms._
 import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
+import blended.util.logging.Logger
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
@@ -31,13 +32,14 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
       minBackoff = 2.seconds,
       maxBackoff = 10.seconds,
       randomFactor = 0.2,
-      maxRestarts = -1,
+      maxRestarts = 10,
     ) { () => innerSource }
 
     val (killSwitch, jmsFlow) = source
       .viaMat(KillSwitches.single)(Keep.right)
      .filter { env =>
-        env.flowMessage.header[Int]("msgno") match {
+       log.debug(s"$env")
+       env.flowMessage.header[Int]("msgno") match {
           case Some(p) => p != 5
           case None => false
         }
@@ -54,11 +56,12 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
     jmsFlow
   }
 
-  private[this] val log = LoggerFactory.getLogger("JmsSender")
+  private[this] val log = Logger[JmsSender.type]
 
   def main(args: Array[String]) : Unit = {
 
     val jmsBroker = broker()
+    Thread.sleep(5000)
 
     val msgs = 1.to(10).map { i =>
       val header : Map[String, MsgProperty[_]] = Map("foo" -> "bar", "msgno" -> i)
@@ -72,32 +75,35 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
       correlationId = () => Some(UUID.randomUUID().toString())
     )
 
-    val flow : Flow[FlowEnvelope, FlowEnvelope, _] = RestartFlow.onFailuresWithBackoff[FlowEnvelope, FlowEnvelope](
-      minBackoff = 2.seconds,
-      maxBackoff = 30.seconds,
-      randomFactor = 0.2,
-      maxRestarts = -1,
-    ){ () => Flow.fromGraph(new JmsSinkStage(settings)) }
-
-    val source = Source
-      .fromIterator( () => msgs.toIterator)
+    val sink = Flow[FlowMessage]
       .map(m => DefaultFlowEnvelope(m))
-      .via(flow)
+      .viaMat(Flow.fromGraph(new JmsSinkStage(settings)))(Keep.left)
 
-    source.runWith(Sink.seq).onComplete{
-      case Success(msgs) => log.info(msgs.mkString("\n"))
-      case Failure(t) => t.printStackTrace()
+
+
+    val foo = Source
+      .fromIterator( () => msgs.toIterator)
+      .viaMat(sink)(Keep.right)
+      .toMat(Sink.seq)(Keep.right)
+
+    foo.run().onComplete {
+      case Success(msgs) => log.info(s"Processed [${msgs.size}] messages.")
+      case Failure(t) => log.error(t)("Encountered exception")
     }
 
 
-//
-//    consume(true).onComplete {
-//      case Success(l) =>
-//        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
-//
-//      case Failure(exception) =>
-//        exception.printStackTrace()
-//    }
+    Thread.sleep(5000)
+
+
+
+
+    consume(true).onComplete {
+      case Success(l) =>
+        log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
+
+      case Failure(exception) =>
+        exception.printStackTrace()
+    }
 //
 //    Thread.sleep(5000)
 //

@@ -31,6 +31,10 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
       shape
     ) with JmsConnector[JmsProducerSession] {
 
+      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
+       failStage(ex)
+      }
+
       override def preStart(): Unit = {
         if (!jmsSettings.sendParamsFromMessage && jmsSettings.jmsDestination.isEmpty) {
           throw new IllegalArgumentException(s"A JMS Destination must be set in [$jmsSettings]if the message headers are not evaluated for send parameters.")
@@ -79,7 +83,9 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
               case None => 0L
             }
             if (sendTtl >= 0L) {
-              p.send(sendParams.destination, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
+              val dest = sendParams.destination.create(session.session)
+              p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
+              log.info(s"Successfuly sent [${env.flowMessage}] to [${sendParams.destination}]@[$id]")
             }
           }
           env

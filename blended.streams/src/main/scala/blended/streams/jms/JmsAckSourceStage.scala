@@ -1,7 +1,5 @@
 package blended.streams.jms
 
-import java.util.concurrent.Semaphore
-
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStageLogic, GraphStageWithMaterializedValue}
@@ -11,12 +9,16 @@ import blended.util.logging.Logger
 import javax.jms._
 
 import scala.collection.mutable
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-
 final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : ActorSystem)
   extends GraphStageWithMaterializedValue[SourceShape[FlowEnvelope], KillSwitch] {
+
+  sealed trait TimerEvent
+  private case object Ack extends TimerEvent
+  private case class Poll(s : String) extends TimerEvent
 
   private val out = Outlet[FlowEnvelope]("JmsSource.out")
 
@@ -30,8 +32,12 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
       private[this] val log = Logger(classOf[JmsAckSourceStage].getName())
-      private[this] val pendingAcks : mutable.Map[String, Semaphore] = mutable.Map.empty
       private[this] val inflight : mutable.Map[String, JmsAckEnvelope] = mutable.Map.empty
+      private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
+
+      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
+        fail(out, ex)
+      }
 
       private val acknowledge : JmsAckEnvelope => Unit = { env =>
         log.debug(s"Acknowledging message for session id [${env.session.sessionId}] : ${env.flowMessage}")
@@ -39,12 +45,12 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
           // the acknowlede might not work a message might be in inflight while the previous message has not been
           // acknowledged. In this case we will have closed the session and created a new one.
           env.jmsMsg.acknowledge()
+          scheduleOnce(Poll(env.session.sessionId), 10.millis)
         } catch {
           case e: JMSException =>
+            log.error(e)(s"Error acknowledging message for session [${env.session.sessionId}] : [${env.flowMessage}]")
+            closeSession(env.session)
         } finally {
-          pendingAcks.get(env.session.sessionId).foreach { s =>
-            s.release()
-          }
           inflight -= env.session.sessionId
         }
       }
@@ -68,23 +74,47 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                 inflight -= sessionId
                 // Recovering the session, so that unacknowledged messages may be redelivered
                 closeSession(envelope.session)
-                // Finally, release the semaphore, so that the session may consume more messages
-                pendingAcks.get(sessionId).foreach(_.release())
               }
           }
         }
       }
 
+      private[this] def poll(sid : String) : Future[Unit] = Future {
+
+        (jmsSessions.get(sid), consumer.get(sid)) match {
+          case (Some(session), Some(c)) =>
+
+            log.debug(s"Polling [${session.jmsDestination}] for [${session.sessionId}]")
+
+            Option(c.receive(100)) match {
+              case Some(message) =>
+                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
+                log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
+                try {
+                  val envelope = JmsAckEnvelope(flowMessage, message, session, System.currentTimeMillis())
+                  inflight += (session.sessionId -> envelope)
+                  handleMessage.invoke(envelope)
+                } catch {
+                  case e: JMSException =>
+                    handleError.invoke(e)
+                }
+
+              case None => scheduleOnce(Poll(sid), 10.millis)
+            }
+          case (_, _) => scheduleOnce(Poll(sid), 100.millis)
+        }
+      }(ec)
+
       override def preStart(): Unit = {
         super.preStart()
-        schedulePeriodically("Ack", 10.millis)
+        schedulePeriodically(Ack, 10.millis)
       }
 
       override def postStop(): Unit = {
         super.postStop()
-        cancelTimer("Ack")
+        cancelTimer(Poll)
+        cancelTimer(Ack)
       }
-
 
       override protected def createSession(connection: Connection): JmsAckSession = {
 
@@ -107,8 +137,10 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
       private[this] def closeSession(session: JmsAckSession) : Unit = {
 
         try {
+          log.debug(s"Closing session [${session.sessionId}]")
           session.closeSessionAsync().onComplete { _ =>
-            jmsSessions = jmsSessions.filter(_ != session.sessionId)
+            consumer -= session.sessionId
+            jmsSessions -= session.sessionId
             onSessionClosed()
           }
         } catch {
@@ -119,7 +151,15 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
 
       private[this] def onSessionClosed() : Unit = initSessionAsync()
 
-      override protected def onTimer(timerKey: Any): Unit = ackQueued()
+      override protected def onTimer(timerKey: Any): Unit = {
+
+        timerKey match {
+          case Ack => ackQueued()
+          case p : Poll =>
+            poll(p.s)
+          case _ =>
+        }
+      }
 
       private val dest : JmsDestination = jmsSettings.jmsDestination match {
         case Some(d) => d
@@ -130,44 +170,24 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
         push(out, msg)
       }
 
+      private[this] def createConsumer(session: JmsAckSession) : Unit = {
+        log.debug(s"Creating message consumer for session [${session.sessionId}]")
+        session.createConsumer(settings.selector).onComplete {
+
+          case Success(c) =>
+            consumer += (session.sessionId -> c)
+            scheduleOnce(Poll(session.sessionId), 100.millis)
+
+          case Failure(e) =>
+            fail.invoke(e)
+        }
+      }
+
       override protected def onSessionOpened(jmsSession: JmsAckSession): Unit =
 
         jmsSession match {
           case session: JmsAckSession =>
-            session.createConsumer(settings.selector).onComplete {
-              case Success(consumer) =>
-
-                consumer.setMessageListener(new MessageListener {
-
-                  def onMessage(message: Message): Unit = {
-                    val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
-                    log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
-                    try {
-
-                      val semaphore : Semaphore = pendingAcks.get(session.sessionId) match {
-                        case Some(s) => s
-                        case None =>
-                          val s = new Semaphore(1)
-                          pendingAcks += (session.sessionId -> s)
-                          s
-                      }
-
-                      // Aquire the semaphore and memorize the inflight message
-                      semaphore.acquire()
-                      val envelope = JmsAckEnvelope(flowMessage, message, session, System.currentTimeMillis())
-                      inflight += (session.sessionId -> envelope)
-                      handleMessage.invoke(envelope)
-
-                    } catch {
-                      case e: JMSException =>
-                        handleError.invoke(e)
-                    }
-                  }
-                })
-              case Failure(e) =>
-                fail.invoke(e)
-            }
-
+            createConsumer(session)
           case _ =>
             throw new IllegalArgumentException(
               "Session must be of type JMSAckSession, it is a " + jmsSession.getClass.getName

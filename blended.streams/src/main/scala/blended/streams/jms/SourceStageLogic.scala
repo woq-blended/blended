@@ -20,7 +20,6 @@ abstract class SourceStageLogic[S <: JmsConsumerSession](
   // A buffer holding the current inFlight messages
   private val queue = mutable.Queue[FlowEnvelope]()
 
-
   override private[jms] def doMarkStopped: Unit = {
     super.doMarkStopped
     if (queue.isEmpty) completeStage()

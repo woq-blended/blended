@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.Done
 import akka.stream._
-import akka.stream.stage.{StageLogging, TimerGraphStageLogic}
+import akka.stream.stage.{AsyncCallback, StageLogging, TimerGraphStageLogic}
 import blended.jms.utils.JmsSession
 import blended.util.logging.Logger
 
@@ -41,9 +41,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   }
 
   // async callback, so that downstream flow elements can signal an error
-  private[jms] val handleError = getAsyncCallback[Throwable] { e =>
-    failStage(e)
-  }
+  private[jms] val handleError : AsyncCallback[Throwable]
 
   // Start the confirgured sessions
   override def preStart(): Unit = {

@@ -11,7 +11,7 @@ import scala.util.Try
 
 final case class JmsSendParameter(
   message : Message,
-  destination : Destination,
+  destination : JmsDestination,
   deliveryMode : JmsDeliveryMode = JmsDeliveryMode.Persistent,
   priority : Int,
   ttl : Option[FiniteDuration]
@@ -68,17 +68,17 @@ object JmsFlowMessage {
     }
 
     // Get the destination
-    val dest : Destination = if (settings.sendParamsFromMessage) {
+    val dest : JmsDestination = if (settings.sendParamsFromMessage) {
       flowMsg.header[String](s"${jmsHeaderPrefix(settings)}$destHeader") match {
-        case Some(s) => JmsDestination.create(s).get.create(session)
+        case Some(s) => JmsDestination.create(s).get
         case None => settings.jmsDestination match {
-          case Some(d) => d.create(session)
+          case Some(d) => d
           case None => throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
         }
       }
     } else {
       settings.jmsDestination match {
-        case Some(d) => d.create(session)
+        case Some(d) => d
         case None => throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
       }
     }
