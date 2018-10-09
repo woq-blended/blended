@@ -94,9 +94,6 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
 
     Thread.sleep(5000)
 
-
-
-
     consume(true).onComplete {
       case Success(l) =>
         log.info(s"Jms Source produced [${l.size}] messages : [${l.map(_.flowMessage).mkString("\n")}]")
