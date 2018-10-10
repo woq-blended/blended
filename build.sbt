@@ -88,7 +88,6 @@ lazy val blendedJolokia = BlendedJolokia.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
-lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
 // tag::Building[]
 lazy val blendedActivemqClient = BlendedActivemqClient.project
 // end::Building[]
@@ -152,7 +151,6 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedSamplesCamel,
   blendedSamplesJms,
   blendedAkkaHttpSampleHelloworld,
-  blendedActivemqDefaultbroker,
   blendedActivemqClient,
   blendedJmsBridge,
   blendedStreams
