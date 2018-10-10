@@ -78,8 +78,10 @@ private[bridge] class StreamController(streamCfg: StreamControllerConfig) extend
 
         context.system.scheduler.scheduleOnce(interval, self, StreamController.Start)
 
-        if (streamCfg.exponential) interval *= 2 else interval += interval
-        interval = if (interval <= streamCfg.maxDelay) interval else streamCfg.maxDelay
+        if (interval < streamCfg.maxDelay) {
+          if (streamCfg.exponential) interval *= 2 else interval += interval
+          interval = if (interval <= streamCfg.maxDelay) interval else streamCfg.maxDelay
+        }
 
         context.become(starting)
       } else {

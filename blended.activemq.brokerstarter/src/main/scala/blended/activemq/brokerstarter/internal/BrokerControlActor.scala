@@ -1,44 +1,114 @@
 package blended.activemq.brokerstarter.internal
 
 import java.net.URI
-import javax.jms.ConnectionFactory
-import javax.net.ssl.SSLContext
 
-import akka.actor.{Actor, ActorLogging}
+import akka.actor.{Actor, OneForOneStrategy, Props, SupervisorStrategy}
+import akka.pattern.{Backoff, BackoffSupervisor}
 import blended.akka.OSGIActorConfig
 import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, IdAwareConnectionFactory}
+import blended.util.logging.Logger
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
+import javax.jms.ConnectionFactory
+import javax.net.ssl.SSLContext
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
+import scala.concurrent.duration._
 import scala.language.reflectiveCalls
-import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
-class BrokerControlActor extends Actor
-  with ActorLogging {
+object BrokerControlSupervisor {
 
-  private[this] val vendor = "activemq"
+  def props(
+    cfg: OSGIActorConfig,
+    sslContext : Option[SSLContext],
+    broker : List[BrokerConfig]
+  ) : Props = Props(new BrokerControlSupervisor(
+    cfg, sslContext, broker
+  ))
+}
 
+class BrokerControlSupervisor(
+  cfg : OSGIActorConfig,
+  sslContext: Option[SSLContext],
+  broker : List[BrokerConfig]
+) extends Actor {
+
+  private[this] val log = Logger[BrokerControlSupervisor]
+
+  private case object Start
+
+  override def preStart(): Unit = {
+    self ! Start
+  }
+
+  override def receive: Receive = {
+    case Start =>
+
+      log.info(s"Starting ${getClass().getSimpleName()} with [${broker.mkString(",")}]")
+      broker.map { brokerCfg =>
+
+        log.debug(s"Configuring Broker controller for [$brokerCfg]")
+        val controlProps = BrokerControlActor.props(brokerCfg, cfg, sslContext)
+        val restartProps = BackoffSupervisor.props(
+          Backoff.onStop(
+            childProps = controlProps,
+            childName = brokerCfg.brokerName,
+            minBackoff = 10.seconds,
+            maxBackoff = 2.minutes,
+            randomFactor = 0.2,
+            maxNrOfRetries = -1
+          ).withAutoReset(10.seconds)
+            .withSupervisorStrategy(
+              OneForOneStrategy() {
+                case _ : Throwable => SupervisorStrategy.Restart
+              }
+            )
+        )
+
+
+        context.system.actorOf(restartProps, brokerCfg.brokerName)
+      }
+  }
+}
+
+object BrokerControlActor {
+
+  case object StartBroker
+  case object StopBroker
+
+  def props(
+    brokerCfg : BrokerConfig,
+    cfg : OSGIActorConfig,
+    sslCtxt : Option[SSLContext]
+  ) : Props = Props(new BrokerControlActor(brokerCfg, cfg, sslCtxt))
+}
+
+class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt: Option[SSLContext])
+  extends Actor {
+
+  private[this] val log = Logger[BrokerControlActor]
+
+
+  override def preStart(): Unit = self ! BrokerControlActor.StartBroker
+
+  // Memorize pending cleanup tasks
   private[this] var cleanUp : List[() => Unit] = List.empty
 
-  private[this] def startBroker(cfg: OSGIActorConfig, sslCtxt : Option[SSLContext]) :
+  private[this] def startBroker() :
     (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
-    val brokerName = cfg.config.getString("brokerName")
     val cfgDir = cfg.idSvc.containerContext.getProfileConfigDirectory()
-    val uri = s"file://$cfgDir/${cfg.config.getString("file")}"
+    val uri = s"file://$cfgDir/${brokerCfg.file}"
 
     try {
 
-      log.info(s"Starting ActiveMQ broker [$brokerName] with config file [$uri] ")
-
-      val provider = cfg.config.getString("provider")
+      log.info(s"Starting ActiveMQ broker [${brokerCfg.brokerName}] with config file [$uri] ")
 
       BrokerFactory.setStartDefault(false)
 
@@ -54,11 +124,12 @@ class BrokerControlActor extends Actor
         broker.setSslContext(amqSslContext)
       }
 
-      broker.setBrokerName(brokerName)
+      // TODO: set Datadirectories from Code ?
+      broker.setBrokerName(brokerCfg.brokerName)
       broker.start()
       broker.waitUntilStarted()
 
-      log.info(s"ActiveMQ broker [$brokerName] started successfully.")
+      log.info(s"ActiveMQ broker [${brokerCfg.brokerName}] started successfully.")
 
       val registrar = new Object with ServiceProviding {
 
@@ -66,35 +137,30 @@ class BrokerControlActor extends Actor
 
         override protected def bundleContext: BundleContext = cfg.bundleContext
 
-        val url = s"vm://$brokerName?create=false"
+        val url = s"vm://${brokerCfg.brokerName}?create=false"
 
         val jmsCfg : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
-          "activemq",
-          "activemq",
-          cfg.config
+          brokerCfg.vendor,
+          provider = brokerCfg.provider,
+          cfg = cfg.config.getConfig("broker").getConfig(brokerCfg.brokerName)
         )
 
         val props : Map[String,String] = jmsCfg.properties + ("brokerURL" -> url)
-
-        val clientId : String = cfg.idSvc.resolvePropertyString(jmsCfg.clientId) match {
-          case Failure(t) => throw t
-          case Success(s) => s
-        }
 
         val cf = new BlendedSingleConnectionFactory(
           jmsCfg.copy(
             properties = props,
             cfClassName = Some(classOf[ActiveMQConnectionFactory].getName),
-            clientId = clientId
+            clientId = brokerCfg.clientId
           ),
           cfg.system,
           Some(cfg.bundleContext)
         )
 
         val svcReg : ServiceRegistration[BlendedSingleConnectionFactory] = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
-          "vendor" -> vendor,
-          "provider" -> provider,
-          "brokerName" -> brokerName
+          "vendor" -> brokerCfg.vendor,
+          "provider" -> brokerCfg.provider,
+          "brokerName" -> brokerCfg.brokerName
         ))
       }
 
@@ -104,7 +170,7 @@ class BrokerControlActor extends Actor
 
     } catch {
       case NonFatal(t) =>
-        log.warning(s"Error starting ActiveMQ broker [$brokerName]", t.getMessage())
+        log.warn(t)(s"Error starting ActiveMQ broker [${brokerCfg.brokerName}]")
         throw t
     } finally {
       Thread.currentThread().setContextClassLoader(oldLoader)
@@ -112,7 +178,7 @@ class BrokerControlActor extends Actor
   }
 
   private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
-    log.info("Stopping ActiveMQ Broker [{}]", broker.getBrokerName())
+    log.info(s"Stopping ActiveMQ Broker [${brokerCfg.brokerName}]")
     try { svcReg.unregister() }
     catch {
       case _ : IllegalStateException => // was already unregistered
@@ -126,7 +192,7 @@ class BrokerControlActor extends Actor
 
 
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
-    log.error("Error starting Active MQ broker", reason)
+    log.error(reason)(s"Error starting Active MQ broker [${brokerCfg.brokerName}]")
     super.preRestart(reason, message)
   }
 
@@ -135,17 +201,17 @@ class BrokerControlActor extends Actor
   override def receive : Receive = withoutBroker
 
   def withoutBroker : Receive = {
-    case StartBroker(cfg : OSGIActorConfig, sslCtxt: Option[SSLContext]) =>
-      val (broker, reg) = startBroker(cfg, sslCtxt)
+    case BrokerControlActor.StartBroker =>
+      val (broker, reg) = startBroker()
       context.become(withBroker(broker, reg))
-    case StopBroker =>
+    case BrokerControlActor.StopBroker =>
       log.debug("Ignoring stop command for ActiveMQ as Broker is already stopped")
   }
 
   def withBroker(broker: BrokerService, reg: ServiceRegistration[BlendedSingleConnectionFactory]) : Receive = {
-    case StartBroker =>
+    case BrokerControlActor.StartBroker =>
       log.debug("Ignoring start command for ActiveMQ as Broker is already started")
-    case StopBroker =>
+    case BrokerControlActor.StopBroker =>
       stopBroker(broker, reg)
       context.become(withoutBroker)
   }

@@ -1,14 +1,124 @@
 package blended.jms.bridge.internal
 
-import blended.container.context.api.ContainerIdentifierService
+import akka.actor.{OneForOneStrategy, SupervisorStrategy}
+import akka.pattern.{Backoff, BackoffSupervisor}
+import blended.akka.ActorSystemWatching
+import blended.jms.utils.IdAwareConnectionFactory
 import domino.DominoActivator
+import blended.util.config.Implicits._
+import blended.util.logging.Logger
+import domino.service_watching.ServiceWatcherContext
+import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
 
-class BridgeActivator extends DominoActivator {
+import scala.concurrent.duration._
+import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
-  whenBundleActive {
-    whenServicePresent[ContainerIdentifierService] { idSvc =>
+class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
+  private[this] val log = Logger[BridgeActivator]
+
+  private[this] def getProperty(context: ServiceWatcherContext[IdAwareConnectionFactory], name : String) : Option[String] = {
+    Option(context.ref.getProperty(name)) match {
+      case None => None
+      case Some(o) => Some(o.toString())
+    }
+  }
+  private[this] def identifyCf(context: ServiceWatcherContext[IdAwareConnectionFactory]) : Try[(String, String)] = Try {
+    (getProperty(context, "vendor"), getProperty(context, "provider")) match {
+      case (Some(v), Some(p)) => (v, p)
+      case (v, p) =>
+        val msg = s"Detected connection Factory [$v, $p] is missing either the vendor or provider property."
+        throw new Exception(msg)
     }
   }
 
+  whenBundleActive {
+    whenActorSystemAvailable { osgiCfg =>
+
+      val internalVendor = osgiCfg.config.getString("internalProvider", "activemq")
+      val internalProvider = osgiCfg.config.getString("internalProvider", "activemq")
+
+      log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
+
+      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=${internalVendor})(provider=${internalProvider}))") { cf =>
+
+        try {
+
+          val providerList : List[BridgeProviderConfig] =
+            osgiCfg.config.getConfigList("provider").asScala.map { p =>
+              BridgeProviderConfig.create(osgiCfg.idSvc, p).get
+            }.toList
+
+          val inboundList : List[InboundConfig ]=
+            osgiCfg.config.getConfigList("inbound").asScala.map { i =>
+              InboundConfig.create(osgiCfg.idSvc, i).get
+            }.toList
+
+          val bridgeProps = BridgeController.props(
+            BridgeControllerConfig(
+              internalVendor = internalVendor,
+              internalProvider = Some(internalProvider),
+              internalConnectionFactory = cf,
+              jmsProvider = providerList,
+              inbound = inboundList
+            )
+          )
+
+          val restartProps = BackoffSupervisor.props(
+            Backoff.onStop(
+              bridgeProps,
+              childName = "BridgeController",
+              minBackoff = 3.seconds,
+              maxBackoff = 1.minute,
+              randomFactor = 0.2,
+              maxNrOfRetries = -1
+            ).withAutoReset(30.seconds)
+              .withSupervisorStrategy(
+                OneForOneStrategy() {
+                  case _ => SupervisorStrategy.Restart
+                }
+              )
+          )
+
+          log.info("Starting JMS bridge supervising actor.")
+          val bridge = osgiCfg.system.actorOf(bridgeProps, "BridgeSupervisor")
+
+          watchServices[IdAwareConnectionFactory] {
+
+            case AddingService(cf, context) => identifyCf(context) match {
+              case Success(_) =>
+                bridge ! BridgeController.AddConnectionFactory(cf)
+              case Failure(t) =>
+                log.warn(t.getMessage)
+            }
+
+            case ModifiedService(cf, context) => identifyCf(context) match {
+              case Success(_) =>
+                bridge ! BridgeController.RemoveConnectionFactory(cf)
+                bridge ! BridgeController.AddConnectionFactory(cf)
+              case Failure(t) =>
+                log.warn(t.getMessage)
+            }
+
+            case RemovedService(cf, context) => identifyCf(context) match {
+              case Success(_) =>
+                bridge ! BridgeController.RemoveConnectionFactory(cf)
+              case Failure(t) =>
+                log.warn(t.getMessage)
+            }
+          }
+
+          onStop {
+            log.info("Stopping JMS bridge supervising actor.")
+            osgiCfg.system.stop(bridge)
+          }
+
+        } catch {
+          case t : Throwable =>
+            log.error(t)("Error starting JMS bridge")
+        }
+      }
+    }
+  }
 }

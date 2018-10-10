@@ -2,8 +2,10 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
-import org.osgi.framework.BundleActivator
+import org.osgi.framework.{BundleActivator, ServiceReference}
 
+import scala.concurrent.duration.FiniteDuration
+import scala.reflect.ClassTag
 import scala.util.control.NonFatal
 
 object PojoSrTestHelper {
@@ -55,6 +57,25 @@ trait PojoSrTestHelper {
     } finally {
       sr.getBundleContext().getBundle(bundleId).stop()
     }
+  }
+
+  def waitOnService[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T], timeout : FiniteDuration) : Option[T] = {
+
+    var result : Option[T] = None
+
+    val start = System.currentTimeMillis()
+
+    do {
+      val refs : Array[ServiceReference[T]] = Option(sr.getServiceReferences(clazz.runtimeClass.getName(), filter.getOrElse("")))
+        .getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
+
+      if (refs.size > 0) {
+        result = Some(sr.getService[T](refs.head))
+      }
+
+    } while (System.currentTimeMillis() - start < timeout.toMillis && result.isEmpty)
+
+    result
   }
 
   def withStartedBundles[T](sr: BlendedPojoRegistry)(

@@ -1,38 +1,53 @@
 package blended.activemq.brokerstarter
 
+import blended.activemq.brokerstarter.internal.{BrokerConfig, BrokerControlSupervisor}
+import blended.akka.ActorSystemWatching
+import blended.util.config.Implicits._
+import blended.util.logging.Logger
+import domino.DominoActivator
 import javax.net.ssl.SSLContext
 
-import akka.actor.{PoisonPill, Props}
-import blended.activemq.brokerstarter.internal.{BrokerControlActor, StartBroker}
-import blended.akka.ActorSystemWatching
-import domino.DominoActivator
-
-class BrokerActivator extends DominoActivator
+class BrokerActivator
+  extends DominoActivator
   with ActorSystemWatching  {
+
+  private[this] val log = Logger[BrokerActivator]
 
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
-      val withSsl = !osgiCfg.config.hasPath("withSsl") || osgiCfg.config.getBoolean("withSsl")
+      try {
 
-      if (withSsl) {
-        whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
-          val actor = osgiCfg.system.actorOf(Props[BrokerControlActor], bundleContext.getBundle().getSymbolicName())
-          actor ! StartBroker(osgiCfg, Some(sslCtxt))
+        val brokerConfigs = osgiCfg.config.getConfigMap("broker", Map.empty).map { case (brokerName, cfg) =>
+          (brokerName -> BrokerConfig.create(brokerName, osgiCfg.idSvc, cfg).get)
+        }
+
+        val withSsl = brokerConfigs.values.exists(_.withSsl)
+
+        if (withSsl) {
+          log.info("Starting configured ActiveMQ brokers with SSL")
+          whenAdvancedServicePresent[SSLContext]("(type=server)") { sslCtxt =>
+
+            val supervisor = osgiCfg.system.actorOf(BrokerControlSupervisor.props(
+              osgiCfg, Some(sslCtxt), brokerConfigs.values.toList
+            ), bundleContext.getBundle().getSymbolicName())
+
+            onStop {
+              osgiCfg.system.stop(supervisor)
+            }
+          }
+
+        } else {
+          log.info("Starting configured ActiveMQ brokers without SSL")
+          val supervisor = osgiCfg.system.actorOf(BrokerControlSupervisor.props(
+            osgiCfg, None, brokerConfigs.values.toList
+          ), bundleContext.getBundle().getSymbolicName())
 
           onStop {
-            actor ! PoisonPill
+            osgiCfg.system.stop(supervisor)
           }
         }
-      } else {
-        val actor = osgiCfg.system.actorOf(Props[BrokerControlActor], bundleContext.getBundle().getSymbolicName())
-        actor ! StartBroker(osgiCfg, None)
-
-        onStop {
-          actor ! PoisonPill
-        }
       }
-
     }
   }
 }
