@@ -8,6 +8,9 @@ object BlendedJmsBridge extends ProjectFactory {
     deps = Seq(
       Dependencies.typesafeConfig,
 
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test",
+      Dependencies.activeMqBroker % "test",
       Dependencies.scalatest % "test"
     )
   )
@@ -18,6 +21,7 @@ object BlendedJmsBridge extends ProjectFactory {
     BlendedJmsUtils.project,
     BlendedDomino.project,
     BlendedAkka.project,
+    BlendedStreams.project,
 
     BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test"

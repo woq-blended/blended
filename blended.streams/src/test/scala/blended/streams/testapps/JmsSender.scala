@@ -79,15 +79,14 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
       .map(m => DefaultFlowEnvelope(m))
       .viaMat(Flow.fromGraph(new JmsSinkStage(settings)))(Keep.left)
 
-
-
     val foo = Source
       .fromIterator( () => msgs.toIterator)
       .viaMat(sink)(Keep.right)
-      .toMat(Sink.seq)(Keep.right)
+      .watchTermination()(Keep.right)
+      .toMat(Sink.ignore)(Keep.both)
 
-    foo.run().onComplete {
-      case Success(msgs) => log.info(s"Processed [${msgs.size}] messages.")
+    foo.run()._1.onComplete {
+      case Success(msgs) => log.info(s"Processed all messages.")
       case Failure(t) => log.error(t)("Encountered exception")
     }
 

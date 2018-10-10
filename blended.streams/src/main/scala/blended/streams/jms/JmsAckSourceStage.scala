@@ -44,7 +44,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
         try {
           // the acknowlede might not work a message might be in inflight while the previous message has not been
           // acknowledged. In this case we will have closed the session and created a new one.
-          env.jmsMsg.acknowledge()
+          env.jmsMessage.acknowledge()
           scheduleOnce(Poll(env.session.sessionId), 10.millis)
         } catch {
           case e: JMSException =>
@@ -89,7 +89,13 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                 val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
-                  val envelope = JmsAckEnvelope(flowMessage, message, session, System.currentTimeMillis())
+                  val envelope = JmsAckEnvelope(
+                    flowMessage = flowMessage,
+                    requiresAcknowledge = true,
+                    jmsMessage = message,
+                    session = session,
+                    created = System.currentTimeMillis()
+                  )
                   inflight += (session.sessionId -> envelope)
                   handleMessage.invoke(envelope)
                 } catch {
