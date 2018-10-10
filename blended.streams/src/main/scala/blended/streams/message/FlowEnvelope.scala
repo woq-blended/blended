@@ -7,6 +7,7 @@ sealed trait FlowEnvelope {
 
   def exception : Option[Throwable]
   def flowMessage : FlowMessage
+  def requiresAcknowledge : Boolean
   def acknowledge() : Unit
 
   def clearException() : FlowEnvelope
@@ -15,6 +16,7 @@ sealed trait FlowEnvelope {
 
 final case class DefaultFlowEnvelope(
   override val flowMessage: FlowMessage,
+  override val requiresAcknowledge : Boolean = false,
   override val exception: Option[Throwable] = None
 ) extends FlowEnvelope {
 
@@ -27,6 +29,7 @@ final case class DefaultFlowEnvelope(
 
 final case class JmsAckEnvelope(
   override val flowMessage :FlowMessage,
+  override val requiresAcknowledge : Boolean = true,
   jmsMsg: Message,
   session:
   JmsAckSession,
