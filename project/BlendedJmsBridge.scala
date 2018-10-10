@@ -1,4 +1,5 @@
 import sbt._
+import TestLogConfig.autoImport._
 
 object BlendedJmsBridge extends ProjectFactory {
 
@@ -13,7 +14,11 @@ object BlendedJmsBridge extends ProjectFactory {
       Dependencies.activeMqBroker % "test",
       Dependencies.scalatest % "test"
     )
-  )
+  ) {
+    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+      Test / testlogLogPackages ++= Map("blended" -> "DEBUG")
+    )
+  }
 
   override val project = helper.baseProject.dependsOn(
     BlendedUtil.project,
@@ -23,6 +28,7 @@ object BlendedJmsBridge extends ProjectFactory {
     BlendedAkka.project,
     BlendedStreams.project,
 
+    BlendedActivemqBrokerstarter.project % "test",
     BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test"
   )

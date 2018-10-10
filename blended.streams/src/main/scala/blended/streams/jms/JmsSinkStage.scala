@@ -37,7 +37,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
 
       override def preStart(): Unit = {
         if (!jmsSettings.sendParamsFromMessage && jmsSettings.jmsDestination.isEmpty) {
-          throw new IllegalArgumentException(s"A JMS Destination must be set in [$jmsSettings]if the message headers are not evaluated for send parameters.")
+          throw new IllegalArgumentException(s"A JMS Destination must be set in [$jmsSettings] if the message headers are not evaluated for send parameters.")
         }
         super.preStart()
       }

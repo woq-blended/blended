@@ -36,24 +36,26 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
-      val internalVendor = osgiCfg.config.getString("internalProvider", "activemq")
-      val internalProvider = osgiCfg.config.getString("internalProvider", "activemq")
+      val providerList = osgiCfg.config.getConfigList("provider").asScala.map { p =>
+          BridgeProviderConfig.create(osgiCfg.idSvc, p).get
+        }.toList
+
+      val inboundList : List[InboundConfig ]=
+        osgiCfg.config.getConfigList("inbound").asScala.map { i =>
+          InboundConfig.create(osgiCfg.idSvc, i).get
+        }.toList
+
+      val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
+        case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+        case h :: Nil => (h.vendor, h.provider.getOrElse(h.vendor))
+        case h :: _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+      }
 
       log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
 
       whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=${internalVendor})(provider=${internalProvider}))") { cf =>
 
         try {
-
-          val providerList : List[BridgeProviderConfig] =
-            osgiCfg.config.getConfigList("provider").asScala.map { p =>
-              BridgeProviderConfig.create(osgiCfg.idSvc, p).get
-            }.toList
-
-          val inboundList : List[InboundConfig ]=
-            osgiCfg.config.getConfigList("inbound").asScala.map { i =>
-              InboundConfig.create(osgiCfg.idSvc, i).get
-            }.toList
 
           val bridgeProps = BridgeController.props(
             BridgeControllerConfig(

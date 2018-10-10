@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Source}
 import blended.jms.utils.JmsQueue
+import blended.streams.{StreamController, StreamControllerConfig}
 import blended.streams.jms._
 import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
 import blended.util.logging.Logger

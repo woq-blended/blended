@@ -1,17 +1,16 @@
-package blended.jms.bridge.internal
+package blended.streams
 
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.{Actor, Props}
-import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
-import scala.concurrent.duration._
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Success}
 
-private[bridge] case class StreamControllerConfig(
+case class StreamControllerConfig(
 
   name : String,
   stream : Source[FlowEnvelope, NotUsed],
@@ -22,7 +21,8 @@ private[bridge] case class StreamControllerConfig(
   random : Double = 0.2
 )
 
-private[bridge] object StreamController {
+
+object StreamController {
 
   case object Start
   case object Stop
@@ -32,7 +32,7 @@ private[bridge] object StreamController {
   def props(streamCfg : StreamControllerConfig) : Props = Props(new StreamController(streamCfg))
 }
 
-private[bridge] class StreamController(streamCfg: StreamControllerConfig) extends Actor {
+class StreamController(streamCfg: StreamControllerConfig) extends Actor {
 
   private[this] val log = Logger[StreamController]
   private[this] implicit val materializer = ActorMaterializer()
