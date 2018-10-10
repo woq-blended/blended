@@ -19,10 +19,12 @@ trait ContainerIdentifierService {
   val containerContext: ContainerContext
 
   /**
-   * Try to resolved the properties inside a given String and return a string with the replaced properties values.
+   * Try to resolve the properties inside a given String and return a string with the replaced properties values.
    */
-  def resolvePropertyString(value: String): Try[String] =
-    Try(ContainerPropertyResolver.resolve(this, value))
+  def resolvePropertyString(value : String) : Try[String] = resolvePropertyString(value, Map.empty)
+
+  def resolvePropertyString(value: String, additionalProps: Map[String, String]) : Try[String] =
+    Try(ContainerPropertyResolver.resolve(this, value, additionalProps))
 }
 
 object ContainerIdentifierService {
