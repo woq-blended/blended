@@ -1,14 +1,20 @@
 package blended.jms.bridge.internal
 
-import akka.actor.{Actor, Props}
+import akka.NotUsed
+import akka.actor.{Actor, ActorRef, Props}
+import akka.stream.scaladsl.Source
+import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.jms.{JMSConsumerSettings, JmsAckSourceStage, JmsProducerSettings, JmsSinkStage}
+import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 import javax.jms.ConnectionFactory
 
 private[bridge] case class BridgeControllerConfig(
   internalVendor : String,
   internalProvider : Option[String],
-  internalConnectionFactory : ConnectionFactory,
+  internalConnectionFactory : IdAwareConnectionFactory,
   jmsProvider : List[BridgeProviderConfig],
   inbound : List[InboundConfig]
 )
@@ -22,9 +28,66 @@ object BridgeController{
     Props(new BridgeController(ctrlCfg))
 }
 
-class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor {
+class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
 
   private[this] val log = Logger[BridgeController]
 
-  override def receive: Receive = Actor.emptyBehavior
+  // This is the map of active streams
+  private[this] var streams : Map[String, ActorRef] = Map.empty
+
+  // Register any required internal streams
+
+  private[this] def createInternalStreams() : Unit = {
+  }
+
+  override def receive: Receive = {
+    case AddConnectionFactory(cf) =>
+      log.info(s"Adding connection factory [${cf.id}]")
+
+      if (cf.id == ctrlCfg.internalConnectionFactory.id) {
+        log.debug("Adding internal streams")
+        createInternalStreams()
+      } else {
+        // Create inbound streams for all matching inbound configs
+        val inProvider = ProviderFilter.listProviderFilter(ctrlCfg.inbound, cf.vendor, Some(cf.provider))
+        log.debug(s"Creating inbound Streams : [${inProvider.mkString(",")}]")
+
+        inProvider.foreach { in =>
+          val streamId = s"${cf.id}:${in.name}"
+          log.info(s"Creating inbound Stream [$streamId]")
+
+          val srcSettings = JMSConsumerSettings(cf)
+            .withDestination(in.from)
+            .withSessionCount(in.listener)
+            .withSelector(in.selector)
+
+          val toSettings = JmsProducerSettings(ctrlCfg.internalConnectionFactory)
+
+          val inLogger = Logger(s"bridge.in.${in.from.asString}")
+          val source :
+            Source[FlowEnvelope, NotUsed] =
+            Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
+              .via(FlowProcessor.logProcessor(s"$streamId-log")(inLogger))
+              .via(new JmsSinkStage(toSettings)(context.system))
+
+          val ctrlConfig = StreamControllerConfig(
+            name = streamId, stream = source
+          )
+
+          streams += (streamId -> context.actorOf(StreamController.props(ctrlConfig)))
+        }
+      }
+
+
+    case RemoveConnectionFactory(cf) => {
+      log.info(s"Removing connection factory [${cf.vendor}:${cf.provider}]")
+
+      streams.filter{ case (key, stream) => key.startsWith(cf.id) }.foreach { case (id, stream) =>
+
+        log.info(s"Stopping stream [$id]")
+        stream ! StreamController.Stop
+        streams -= id
+      }
+    }
+  }
 }

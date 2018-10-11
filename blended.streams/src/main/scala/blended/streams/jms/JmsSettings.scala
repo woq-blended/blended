@@ -87,8 +87,7 @@ final case class JMSConsumerSettings(
 
   def withBufferSize(s : Int): JMSConsumerSettings = copy(bufferSize = s)
 
-  def noSelector(): JMSConsumerSettings = copy(selector = None)
-  def withSelector(s : String): JMSConsumerSettings = copy(selector = Some(s))
+  def withSelector(s : Option[String]): JMSConsumerSettings = copy(selector = s)
 
   def withAckTimeout(d : FiniteDuration): JMSConsumerSettings = copy(ackTimeout = d)
 

@@ -12,7 +12,7 @@ import javax.jms._
 
 import scala.util.{Failure, Success}
 
-class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) extends GraphStageWithMaterializedValue[SourceShape[FlowEnvelope], KillSwitch] {
+class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private[this] val log = Logger[JmsSourceStage]
 
@@ -22,7 +22,8 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
   override protected def initialAttributes: Attributes =
     ActorAttributes.dispatcher("FixedPool")
 
-  override def createLogicAndMaterializedValue(inheritedAttributes: Attributes): (GraphStageLogic, KillSwitch) = {
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 
     val logic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes) {
 
@@ -66,7 +67,7 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
               override def onMessage(message: Message): Unit = {
                 backpressure.acquire()
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
-                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
+                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [$id] : $flowMessage")
                 handleMessage.invoke(DefaultFlowEnvelope(flowMessage))
               }
@@ -77,7 +78,7 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
       }
     }
 
-    (logic, logic.killSwitch)
+    logic
   }
 
 }

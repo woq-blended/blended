@@ -2,7 +2,7 @@ package blended.streams.jms
 
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.stage.{GraphStageLogic, GraphStageWithMaterializedValue}
+import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message.{FlowEnvelope, JmsAckEnvelope}
 import blended.util.logging.Logger
@@ -14,7 +14,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : ActorSystem)
-  extends GraphStageWithMaterializedValue[SourceShape[FlowEnvelope], KillSwitch] {
+  extends GraphStage[SourceShape[FlowEnvelope]] {
 
   sealed trait TimerEvent
   private case object Ack extends TimerEvent
@@ -27,7 +27,8 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
   override protected def initialAttributes: Attributes =
     ActorAttributes.dispatcher("FixedPool")
 
-  override def createLogicAndMaterializedValue(inheritedAttributes: Attributes): (GraphStageLogic, KillSwitch) = {
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
 
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
@@ -87,7 +88,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
             // TODO: Make the receive timeout configurable
             Option(c.receive(100)) match {
               case Some(message) =>
-                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message)
+                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
                   val envelope = JmsAckEnvelope(
@@ -200,6 +201,6 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
         }
     }
 
-    (logic, logic.killSwitch)
+    logic
   }
 }

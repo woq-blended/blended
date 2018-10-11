@@ -26,17 +26,23 @@ object InboundConfig {
       case t : JmsDurableTopic => t
     }
 
+    val selector = cfg.getStringOption("selector")
+
     val outDest = JmsDestination.create(resolve(cfg.getString("to"))).get
 
-    val listener = cfg.getInt("listener", 5)
+    val persistent = cfg.getString("persistent", "passthrough")
 
-    new InboundConfig(
+    val listener = cfg.getInt("listener", 2)
+
+    InboundConfig(
       name = name,
       vendor = vendor,
       provider = provider,
       from = inDest,
+      selector = selector,
       to = outDest,
-      listener
+      persistent = persistent,
+      listener = listener
     )
   }
 }
@@ -46,6 +52,8 @@ case class InboundConfig (
   vendor : String,
   provider : Option[String],
   from : JmsDestination,
+  selector : Option[String],
   to : JmsDestination,
-  listener: Int
+  persistent : String,
+  listener : Int
 ) extends ProviderAware

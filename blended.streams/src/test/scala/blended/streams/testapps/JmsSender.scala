@@ -2,15 +2,14 @@ package blended.streams.testapps
 
 import java.util.UUID
 
+import akka.NotUsed
 import akka.pattern.after
+import akka.stream.KillSwitches
 import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
-import akka.stream.{KillSwitch, KillSwitches}
-import akka.{Done, NotUsed}
 import blended.jms.utils.JmsQueue
 import blended.streams.jms._
 import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
 import blended.util.logging.Logger
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -22,7 +21,7 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
 
     val cSettings = JMSConsumerSettings.create(cf).withDestination(JmsQueue("blended.test")).withSessionCount(5)
 
-    val innerSource : Source[FlowEnvelope, KillSwitch]= if (withAck) {
+    val innerSource : Source[FlowEnvelope, NotUsed]= if (withAck) {
       Source.fromGraph(new JmsAckSourceStage(cSettings, system))
     } else {
       Source.fromGraph(new JmsSourceStage(cSettings, system))

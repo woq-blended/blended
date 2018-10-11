@@ -107,6 +107,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
         }
       )
 
+      // We can only start pushing message after at least one session is available
       setHandler(in,
         new InHandler {
 

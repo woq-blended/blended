@@ -40,6 +40,14 @@ object JmsDestination {
       case _ => throw new IllegalArgumentException(s"Unknown destination type [${jmsDest.getClass().getName()}]")
     }
   }
+
+  def asString(jmsDest: JmsDestination) : String = {
+    jmsDest match {
+      case q : JmsQueue => q.name
+      case t : JmsTopic => s"topic${destSeparator}${t.name}"
+      case dt : JmsDurableTopic => s"topic${destSeparator}:${dt.subscriberName}:${dt.name}"
+    }
+  }
 }
 
 sealed trait  JmsDestination {

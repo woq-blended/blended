@@ -66,7 +66,7 @@ trait PojoSrTestHelper {
     val start = System.currentTimeMillis()
 
     do {
-      val refs : Array[ServiceReference[T]] = Option(sr.getServiceReferences(clazz.runtimeClass.getName(), filter.getOrElse("")))
+      val refs : Array[ServiceReference[T]] = Option(sr.getServiceReferences(clazz.runtimeClass.getName(), filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")))
         .getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
 
       if (refs.size > 0) {

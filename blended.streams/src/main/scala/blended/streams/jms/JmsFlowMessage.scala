@@ -19,19 +19,40 @@ final case class JmsSendParameter(
 
 object JmsFlowMessage {
 
+  import MsgProperty.lift
+
   private[this] val jmsHeaderPrefix : JmsSettings => String = settings => settings.headerPrefix + "JMS"
 
-  private[this] val destHeader = "Destination"
-  private[this] val corrIdHeader = "CorrelationId"
-  private[this] val priorityHeader = "Priority"
-  private[this] val expireHeader = "Expiration"
-  private[this] val deliveryModeHeader = "DeliveryMode"
+  private[this] val destHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Destination"
+  private[this] val corrIdHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "CorrelationId"
+  private[this] val priorityHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Priority"
+  private[this] val expireHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Expiration"
+  private[this] val deliveryModeHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "DeliveryMode"
 
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
-  val jms2flowMessage : (JmsSettings, Message) => FlowMessage = { (settings, msg) =>
+  val jms2flowMessage : (JmsSettings, Message) => Try[FlowMessage] = { (settings, msg) => Try {
+
+    expireHeader
+
+    def jmsProperties: Map[String, MsgProperty[_]] = {
+
+      val dest = JmsDestination.asString(JmsDestination.create(msg.getJMSDestination()).get)
+
+      val headers : Map[String, MsgProperty[_]] = Map(
+        destHeader(settings) -> MsgProperty.lift(dest).get,
+        priorityHeader(settings) -> MsgProperty.lift(msg.getJMSPriority()).get,
+        deliveryModeHeader(settings) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
+        expireHeader(settings) -> MsgProperty.lift(msg.getJMSExpiration()).get
+      )
+
+      val corrIdMap : Map[String, MsgProperty[_]] =
+        Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(settings) -> MsgProperty.lift(s).get).toMap
+
+      headers ++ corrIdMap
+    }
 
     val props : Map[String, MsgProperty[_]] = msg.getPropertyNames().asScala.map { name =>
-      (name.toString, MsgProperty.lift(msg.getObjectProperty(name.toString())).get)
+      (name.toString, lift(msg.getObjectProperty(name.toString())).get)
     }.toMap
 
     msg match {
@@ -47,6 +68,8 @@ object JmsFlowMessage {
       case _ => FlowMessage(props)
     }
   }
+  }
+
 
   val flowMessage2jms : (JmsProducerSettings, Session, FlowMessage) => Try[JmsSendParameter] = (settings, session, flowMsg) =>  Try {
     val msg = flowMsg match {
@@ -84,13 +107,13 @@ object JmsFlowMessage {
     }
 
     // Always try to get the CorrelationId from the flow Message
-    flowMsg.header[String](s"${jmsHeaderPrefix(settings)}$corrIdHeader") match {
+    flowMsg.header[String](corrIdHeader(settings)) match {
       case Some(id) => msg.setJMSCorrelationID(id)
       case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
     }
 
     val prio = if(settings.sendParamsFromMessage) {
-      flowMsg.header[Int](s"${jmsHeaderPrefix}$priorityHeader") match {
+      flowMsg.header[Int](priorityHeader(settings)) match {
         case Some(p) => p
         case None => settings.priority
       }
@@ -99,8 +122,8 @@ object JmsFlowMessage {
     }
 
     val timeToLive : Option[FiniteDuration] = if (settings.sendParamsFromMessage) {
-      flowMsg.header[Long](s"${jmsHeaderPrefix}$expireHeader") match {
-        case Some(l) => Some( (l - System.currentTimeMillis()).millis )
+      flowMsg.header[Long](expireHeader(settings)) match {
+        case Some(l) => Some( (Math.max(1L, l - System.currentTimeMillis())).millis)
         case None => settings.timeToLive
       }
     } else {
@@ -108,7 +131,7 @@ object JmsFlowMessage {
     }
 
     val delMode : JmsDeliveryMode = if (settings.sendParamsFromMessage) {
-      flowMsg.header[String](s"${jmsHeaderPrefix}$deliveryModeHeader") match {
+      flowMsg.header[String](deliveryModeHeader(settings)) match {
         case Some(s) => JmsDeliveryMode.create(s).get
         case None => settings.deliveryMode
       }
