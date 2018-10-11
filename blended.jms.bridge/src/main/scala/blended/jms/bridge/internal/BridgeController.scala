@@ -6,15 +6,15 @@ import akka.stream.scaladsl.Source
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
-import blended.streams.jms.{JMSConsumerSettings, JmsAckSourceStage, JmsProducerSettings, JmsSinkStage}
+import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-import javax.jms.ConnectionFactory
 
 private[bridge] case class BridgeControllerConfig(
   internalVendor : String,
   internalProvider : Option[String],
   internalConnectionFactory : IdAwareConnectionFactory,
+  queuePrefix : String,
   jmsProvider : List[BridgeProviderConfig],
   inbound : List[InboundConfig]
 )
@@ -62,13 +62,17 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
             .withSelector(in.selector)
 
           val toSettings = JmsProducerSettings(ctrlCfg.internalConnectionFactory)
+            .withDestination(in.to)
+            .withSendParamsFromMessage(false)
+            .withDeliveryMode(JmsDeliveryMode.Persistent)
 
-          val inLogger = Logger(s"bridge.in.${in.from.asString}")
           val source :
             Source[FlowEnvelope, NotUsed] =
             Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
-              .via(FlowProcessor.logProcessor(s"$streamId-log")(inLogger))
+              .via(FlowProcessor.log(s"$streamId-log")(Logger(s"bridge.in.${in.from.asString}")))
               .via(new JmsSinkStage(toSettings)(context.system))
+              .via(FlowProcessor.ack(s"$streamId-ack")(log))
+              .via(FlowProcessor.log(s"$streamId-log")(Logger(s"bridge.out.${in.to.asString}")))
 
           val ctrlConfig = StreamControllerConfig(
             name = streamId, stream = source

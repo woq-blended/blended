@@ -2,22 +2,24 @@ package blended.jms.bridge.internal
 
 import java.io.File
 
+import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.jms.{JmsProducerSettings, JmsSinkStage}
-import blended.streams.message.{DefaultFlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.FlowProcessor
+import blended.streams.jms._
+import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
 
 
@@ -31,12 +33,42 @@ class BridgeActivatorSpec extends LoggingFreeSpec
 
     "The bridge activator should" - {
 
-      def sendTestMessages(
+      def consume(
         cf: IdAwareConnectionFactory,
-        dest: JmsDestination
+        withAck: Boolean,
+        dest: JmsDestination,
+        timeout: FiniteDuration
+      )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : Source[FlowEnvelope, NotUsed] = {
+
+        val cSettings = JMSConsumerSettings.create(cf).withDestination(dest).withSessionCount(5)
+
+        val innerSource : Source[FlowEnvelope, NotUsed]= if (withAck) {
+          Source.fromGraph(new JmsAckSourceStage(cSettings, system))
+        } else {
+          Source.fromGraph(new JmsSourceStage(cSettings, system))
+        }
+
+        val source : Source[FlowEnvelope, NotUsed] = RestartSource.onFailuresWithBackoff(
+          minBackoff = 2.seconds,
+          maxBackoff = 10.seconds,
+          randomFactor = 0.2,
+          maxRestarts = 10,
+        ) { () => innerSource }
+
+        val jmsFlow = source
+          .via(FlowProcessor.ack("testAck")(log))
+
+        jmsFlow
+      }
+
+
+      def sendMessages(
+        cf: IdAwareConnectionFactory,
+        dest: JmsDestination,
+        count: Int
       )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): Unit = {
 
-        val msgs = 1.to(10).map { i =>
+        val msgs = 1.to(count).map { i =>
           val header: Map[String, MsgProperty[_]] = Map("foo" -> "bar", "msgno" -> i)
           FlowMessage(s"Message $i", header)
         }
@@ -83,12 +115,13 @@ class BridgeActivatorSpec extends LoggingFreeSpec
                 implicit val ectxt = system.dispatcher
 
                 (
-                  waitOnService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=blended))")),
-                  waitOnService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=broker2))"))
+                  waitOnService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=internal))")),
+                  waitOnService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=external))"))
                 ) match {
                   case (Some(cf1), Some(cf2)) =>
-                    sendTestMessages(cf1, JmsQueue("sampleIn"))
-                    Thread.sleep(10000)
+                    sendMessages(cf2, JmsQueue("sampleIn"), 10)
+                    val received = consume(cf1, true, JmsQueue("bridge.data.in"), 10.seconds).take(10).runWith(Sink.seq)
+                    Await.result(received, 5.seconds) should have size(10)
 
                   case _ => fail("Missing one connection factory")
                 }

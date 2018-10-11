@@ -34,7 +34,7 @@ object JmsFlowMessage {
 
     expireHeader
 
-    def jmsProperties: Map[String, MsgProperty[_]] = {
+    val props: Map[String, MsgProperty[_]] = {
 
       val dest = JmsDestination.asString(JmsDestination.create(msg.getJMSDestination()).get)
 
@@ -48,12 +48,12 @@ object JmsFlowMessage {
       val corrIdMap : Map[String, MsgProperty[_]] =
         Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(settings) -> MsgProperty.lift(s).get).toMap
 
-      headers ++ corrIdMap
-    }
+      val props : Map[String, MsgProperty[_]] = msg.getPropertyNames().asScala.map { name =>
+        (name.toString -> lift(msg.getObjectProperty(name.toString())).get)
+      }.toMap
 
-    val props : Map[String, MsgProperty[_]] = msg.getPropertyNames().asScala.map { name =>
-      (name.toString, lift(msg.getObjectProperty(name.toString())).get)
-    }.toMap
+      props ++ headers ++ corrIdMap
+    }
 
     msg match {
       case t : TextMessage =>
@@ -67,11 +67,11 @@ object JmsFlowMessage {
 
       case _ => FlowMessage(props)
     }
-  }
-  }
+  }}
 
 
   val flowMessage2jms : (JmsProducerSettings, Session, FlowMessage) => Try[JmsSendParameter] = (settings, session, flowMsg) =>  Try {
+
     val msg = flowMsg match {
       case t :
         TextFlowMessage => session.createTextMessage(t.getText())
@@ -84,7 +84,7 @@ object JmsFlowMessage {
       case _ => session.createMessage()
     }
 
-    flowMsg.header.filter{
+    flowMsg.header.filter {
       case (k, v) => !k.startsWith("JMS")
     }.foreach {
       case (k,v) => msg.setObjectProperty(k, v.value)

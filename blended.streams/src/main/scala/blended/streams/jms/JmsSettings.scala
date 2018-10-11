@@ -7,7 +7,19 @@ import javax.jms.{ConnectionFactory, Session}
 import scala.concurrent.duration._
 import scala.util.Try
 
-final class AcknowledgeMode(val mode: Int)
+final class AcknowledgeMode(val mode: Int) {
+
+  override def toString: String = {
+    val modeName = mode match {
+      case Session.AUTO_ACKNOWLEDGE => "AutoAcknowldge"
+      case Session.CLIENT_ACKNOWLEDGE => "ClientAcknowledge"
+      case Session.DUPS_OK_ACKNOWLEDGE => "DupsOkAcknowledge"
+      case Session.SESSION_TRANSACTED => "SessionTransacted"
+    }
+
+    s"${getClass().getSimpleName()}($modeName)"
+  }
+}
 
 object AcknowledgeMode {
   val AutoAcknowledge: AcknowledgeMode = new AcknowledgeMode(Session.AUTO_ACKNOWLEDGE)
@@ -117,10 +129,13 @@ final case class JmsProducerSettings(
   correlationId : () => Option[String] = () => None
 ) extends JmsSettings {
 
+  def withSendParamsFromMessage(b : Boolean) : JmsProducerSettings = copy(sendParamsFromMessage = b)
+
   def withConnectionTimeout(d : FiniteDuration): JmsProducerSettings = copy(connectionTimeout = d)
 
   def withSessionCount(count: Int): JmsProducerSettings = copy(sessionCount = count)
 
+  def withDestination(dest : JmsDestination) : JmsProducerSettings = copy(jmsDestination = Some(dest))
   def withQueue(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsQueue(name)))
   def withTopic(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsTopic(name)))
 
@@ -129,6 +144,8 @@ final case class JmsProducerSettings(
   def withTimeToLive(ttl: java.time.Duration): JmsProducerSettings = copy(timeToLive = Some(Duration.fromNanos(ttl.toNanos)))
   def withTimeToLive(ttl: FiniteDuration): JmsProducerSettings = copy(timeToLive = Some(ttl))
   def withTimeToLive(ttl: Long, unit: TimeUnit): JmsProducerSettings = copy(timeToLive = Some(Duration(ttl, unit)))
+
+  def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
 }
 
 object JmsProducerSettings {

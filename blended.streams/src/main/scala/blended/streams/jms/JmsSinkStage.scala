@@ -91,7 +91,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
           env
         } catch {
           case t : Throwable =>
-            log.error(s"Error sending message to JMS [$env] in [${session.sessionId}]")
+            log.error(t)(s"Error sending message to JMS [$env] in [${session.sessionId}]")
             env.withException(t)
         }
 

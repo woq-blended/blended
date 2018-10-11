@@ -28,8 +28,18 @@ object FlowProcessor {
     Flow.fromFunction(checkException)
   }
 
-  def logProcessor(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
-    log.info(s"$env")
+  def log(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
+    log.info(s"${env.flowMessage}")
     Success(env)
+  }
+
+  def ack(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
+    env.exception match {
+      case Some(t) =>
+        Failure(t)
+      case None =>
+        env.acknowledge()
+        Success(env)
+    }
   }
 }
