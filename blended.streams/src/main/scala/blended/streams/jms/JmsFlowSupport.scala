@@ -19,6 +19,10 @@ final case class JmsSendParameter(
 
 trait JmsEnvelopeHeader {
   val jmsHeaderPrefix : JmsSettings => String = settings => settings.headerPrefix + "JMS"
+
+  val srcVendorHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcVendor"
+  val srcProviderHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcProvider"
+  val srcDestHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcDestination"
   val destHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Destination"
   val corrIdHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "CorrelationId"
   val priorityHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Priority"
@@ -42,10 +46,13 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       val delMode = new JmsDeliveryMode(msg.getJMSDeliveryMode()).asString
 
       val headers : Map[String, MsgProperty[_]] = Map(
-        destHeader(settings) -> MsgProperty.lift(dest).get,
+        srcVendorHeader(settings) -> MsgProperty.lift(settings.connectionFactory.vendor).get,
+        srcProviderHeader(settings) -> MsgProperty.lift(settings.connectionFactory.provider).get,
+        srcDestHeader(settings) -> MsgProperty.lift(dest).get,
         priorityHeader(settings) -> MsgProperty.lift(msg.getJMSPriority()).get,
         deliveryModeHeader(settings) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
-        expireHeader(settings) -> MsgProperty.lift(msg.getJMSExpiration()).get
+        expireHeader(settings) -> MsgProperty.lift(msg.getJMSExpiration()).get,
+        deliveryModeHeader(settings) -> MsgProperty.lift(delMode).get
       )
 
       val corrIdMap : Map[String, MsgProperty[_]] =

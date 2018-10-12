@@ -1,6 +1,6 @@
 package blended.streams.jms
 
-import blended.jms.utils.{JmsDestination, JmsQueue, JmsTopic}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import javax.jms
 import javax.jms.{ConnectionFactory, Session}
 
@@ -59,7 +59,7 @@ object JmsSettings {
 sealed trait JmsSettings {
 
   // The underlying JMS Connection Factory
-  def connectionFactory: ConnectionFactory
+  def connectionFactory: IdAwareConnectionFactory
 
   // A Connection Timeout, a JMS stage configured with these settings will
   // terminate with an error if a connection is not possible within the
@@ -78,7 +78,7 @@ sealed trait JmsSettings {
 }
 
 final case class JMSConsumerSettings(
-  connectionFactory: ConnectionFactory,
+  connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
@@ -106,11 +106,11 @@ final case class JMSConsumerSettings(
 }
 
 object JMSConsumerSettings {
-  def create(cf: ConnectionFactory) : JMSConsumerSettings = JMSConsumerSettings(cf)
+  def create(cf: IdAwareConnectionFactory) : JMSConsumerSettings = JMSConsumerSettings(cf)
 }
 
 final case class JmsProducerSettings(
-  connectionFactory: ConnectionFactory,
+  connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
@@ -148,5 +148,5 @@ final case class JmsProducerSettings(
 
 object JmsProducerSettings {
 
-  def create(connectionFactory: ConnectionFactory) = JmsProducerSettings(connectionFactory)
+  def create(connectionFactory: IdAwareConnectionFactory) = JmsProducerSettings(connectionFactory)
 }
