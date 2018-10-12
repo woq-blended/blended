@@ -88,7 +88,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
             // TODO: Make the receive timeout configurable
             Option(c.receive(100)) match {
               case Some(message) =>
-                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message).get
+                val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
                   val envelope = JmsAckEnvelope(

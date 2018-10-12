@@ -67,7 +67,7 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
               override def onMessage(message: Message): Unit = {
                 backpressure.acquire()
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
-                val flowMessage = JmsFlowMessage.jms2flowMessage(jmsSettings, message).get
+                val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [$id] : $flowMessage")
                 handleMessage.invoke(DefaultFlowEnvelope(flowMessage))
               }

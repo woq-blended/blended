@@ -35,13 +35,6 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
        failStage(ex)
       }
 
-      override def preStart(): Unit = {
-        if (!jmsSettings.sendParamsFromMessage && jmsSettings.jmsDestination.isEmpty) {
-          throw new IllegalArgumentException(s"A JMS Destination must be set in [$jmsSettings] if the message headers are not evaluated for send parameters.")
-        }
-        super.preStart()
-      }
-
       private[this] val rnd = new Random()
       private[this] var producer : Option[MessageProducer] = None
 
@@ -71,7 +64,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
         log.debug(s"Using session [${session.sessionId}] to send JMS message.")
 
         val outEnvelope : FlowEnvelope = try {
-          val sendParams = JmsFlowMessage.flowMessage2jms(jmsSettings, session.session, env.flowMessage).get
+          val sendParams = JmsFlowSupport.envelope2jms(jmsSettings, session.session, env).get
           producer.foreach { p =>
             log.debug(s"Using JMS send parameter [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
 

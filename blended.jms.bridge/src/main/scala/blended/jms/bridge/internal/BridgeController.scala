@@ -15,6 +15,7 @@ private[bridge] case class BridgeControllerConfig(
   internalProvider : Option[String],
   internalConnectionFactory : IdAwareConnectionFactory,
   queuePrefix : String,
+  headerPrefix : String,
   jmsProvider : List[BridgeProviderConfig],
   inbound : List[InboundConfig]
 )
@@ -57,14 +58,15 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
           log.info(s"Creating inbound Stream [$streamId]")
 
           val srcSettings = JMSConsumerSettings(cf)
-            .withDestination(in.from)
+            .withHeaderPrefix(ctrlCfg.headerPrefix)
+            .withDestination(Some(in.from))
             .withSessionCount(in.listener)
             .withSelector(in.selector)
 
           val toSettings = JmsProducerSettings(ctrlCfg.internalConnectionFactory)
-            .withDestination(in.to)
-            .withSendParamsFromMessage(false)
+            .withDestination(Some(in.to))
             .withDeliveryMode(JmsDeliveryMode.Persistent)
+            .withHeaderPrefix(ctrlCfg.headerPrefix)
 
           val source :
             Source[FlowEnvelope, NotUsed] =

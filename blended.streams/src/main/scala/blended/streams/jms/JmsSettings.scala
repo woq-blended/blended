@@ -29,14 +29,14 @@ object AcknowledgeMode {
 }
 
 final class JmsDeliveryMode(val mode: Int) {
-  override def toString: String = {
-    val sMode = mode match {
-      case jms.DeliveryMode.PERSISTENT => "Persistent"
-      case jms.DeliveryMode.NON_PERSISTENT => "NonPersistent"
-      case _ => "Unknown"
-    }
-    s"${getClass().getSimpleName()}($sMode)"
+
+  def asString : String = mode match {
+    case jms.DeliveryMode.PERSISTENT => "Persistent"
+    case jms.DeliveryMode.NON_PERSISTENT => "NonPersistent"
+    case _ => "Unknown"
   }
+
+  override def toString: String = s"${getClass().getSimpleName()}($asString)"
 }
 
 object JmsDeliveryMode {
@@ -57,6 +57,7 @@ object JmsSettings {
 }
 
 sealed trait JmsSettings {
+
   // The underlying JMS Connection Factory
   def connectionFactory: ConnectionFactory
 
@@ -89,22 +90,19 @@ final case class JMSConsumerSettings(
   durableName: Option[String] = None
 ) extends JmsSettings {
 
-  def withConnectionTimeout(d : FiniteDuration): JMSConsumerSettings = copy(connectionTimeout = d)
-
-  def noDestination() : JMSConsumerSettings = copy(jmsDestination = None)
-  def withDestination(d: JmsDestination) : JMSConsumerSettings = copy(jmsDestination = Some(d))
+  def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
+  def withQueue(name: String): JMSConsumerSettings = copy(jmsDestination = Some(JmsQueue(name)))
+  def withTopic(name: String): JMSConsumerSettings = copy(jmsDestination = Some(JmsTopic(name)))
 
   def withAcknowledgeMode(m: AcknowledgeMode): JMSConsumerSettings = copy(acknowledgeMode = m)
   def withSessionCount(c : Int): JMSConsumerSettings = copy(sessionCount = c)
-
   def withBufferSize(s : Int): JMSConsumerSettings = copy(bufferSize = s)
-
   def withSelector(s : Option[String]): JMSConsumerSettings = copy(selector = s)
-
+  def withHeaderPrefix(p : String) : JMSConsumerSettings = copy(headerPrefix = p)
   def withAckTimeout(d : FiniteDuration): JMSConsumerSettings = copy(ackTimeout = d)
+  def withConnectionTimeout(d : FiniteDuration): JMSConsumerSettings = copy(connectionTimeout = d)
 
-  def noDurableName(): JMSConsumerSettings = copy(durableName = None)
-  def withDurableName(s: String): JMSConsumerSettings = copy(durableName = Some(s))
+  def withSubScriberName(name : Option[String]): JMSConsumerSettings = copy(durableName = name)
 }
 
 object JMSConsumerSettings {
@@ -118,7 +116,7 @@ final case class JmsProducerSettings(
   sessionCount: Int = 1,
   headerPrefix : String = JmsSettings.defaultHeaderPrefix,
   // Should we evaluate the mesage for send parameters ?
-  sendParamsFromMessage : Boolean = true,
+  destinationResolver  : JmsProducerSettings => JmsDestinationResolver = s => new SettingsDestinationResolver(s),
   // the priority to used as default
   priority : Int = 4,
   // the delivery mode to be used as a default
@@ -129,22 +127,22 @@ final case class JmsProducerSettings(
   correlationId : () => Option[String] = () => None
 ) extends JmsSettings {
 
-  def withSendParamsFromMessage(b : Boolean) : JmsProducerSettings = copy(sendParamsFromMessage = b)
+  def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)
 
-  def withConnectionTimeout(d : FiniteDuration): JmsProducerSettings = copy(connectionTimeout = d)
 
-  def withSessionCount(count: Int): JmsProducerSettings = copy(sessionCount = count)
-
-  def withDestination(dest : JmsDestination) : JmsProducerSettings = copy(jmsDestination = Some(dest))
+  def withDestination(dest : Option[JmsDestination]) : JmsProducerSettings = copy(jmsDestination = dest)
   def withQueue(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsQueue(name)))
   def withTopic(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsTopic(name)))
 
+  def withConnectionTimeout(d : FiniteDuration): JmsProducerSettings = copy(connectionTimeout = d)
+  def withSessionCount(count: Int): JmsProducerSettings = copy(sessionCount = count)
   def withPriority(p : Int) : JmsProducerSettings = copy(priority = p)
 
   def withTimeToLive(ttl: java.time.Duration): JmsProducerSettings = copy(timeToLive = Some(Duration.fromNanos(ttl.toNanos)))
-  def withTimeToLive(ttl: FiniteDuration): JmsProducerSettings = copy(timeToLive = Some(ttl))
+  def withTimeToLive(ttl: Option[FiniteDuration]): JmsProducerSettings = copy(timeToLive = ttl)
   def withTimeToLive(ttl: Long, unit: TimeUnit): JmsProducerSettings = copy(timeToLive = Some(Duration(ttl, unit)))
 
+  def withHeaderPrefix(p : String) : JmsProducerSettings = copy(headerPrefix = p)
   def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
 }
 

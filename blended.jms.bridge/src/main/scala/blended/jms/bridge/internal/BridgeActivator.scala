@@ -4,6 +4,7 @@ import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.jms.JmsSettings
 import blended.util.logging.Logger
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
@@ -36,6 +37,8 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
+      val headerPrefix = osgiCfg.idSvc.containerContext.getContainerConfig().getString("blended.flow.headerPrefix", JmsSettings.defaultHeaderPrefix)
+
       val providerList = osgiCfg.config.getConfigList("provider").asScala.map { p =>
           BridgeProviderConfig.create(osgiCfg.idSvc, p).get
         }.toList
@@ -64,6 +67,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
               internalVendor = internalVendor,
               internalProvider = Some(internalProvider),
               queuePrefix = queuePrefix,
+              headerPrefix = headerPrefix,
               internalConnectionFactory = cf,
               jmsProvider = providerList,
               inbound = inboundList

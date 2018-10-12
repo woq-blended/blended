@@ -40,7 +40,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
         timeout: FiniteDuration
       )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : Source[FlowEnvelope, NotUsed] = {
 
-        val cSettings = JMSConsumerSettings.create(cf).withDestination(dest).withSessionCount(5)
+        val cSettings = JMSConsumerSettings.create(cf).withDestination(Some(dest)).withSessionCount(5)
 
         val innerSource : Source[FlowEnvelope, NotUsed]= if (withAck) {
           Source.fromGraph(new JmsAckSourceStage(cSettings, system))
@@ -120,10 +120,10 @@ class BridgeActivatorSpec extends LoggingFreeSpec
                 ) match {
                   case (Some(cf1), Some(cf2)) =>
                     sendMessages(cf2, JmsQueue("sampleIn"), 10)
-                    val received = consume(cf1, true, JmsQueue("bridge.data.in"), 10.seconds).take(10).runWith(Sink.seq)
+                    val received = consume(cf1, false, JmsQueue("bridge.data.in"), 10.seconds).take(10).runWith(Sink.seq)
                     Await.result(received, 5.seconds) should have size(10)
 
-                  case _ => fail("Missing one connection factory")
+                  case _ => fail("Missing at least one connection factory")
                 }
 
             }
