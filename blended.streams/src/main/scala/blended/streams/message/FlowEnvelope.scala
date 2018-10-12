@@ -12,6 +12,7 @@ sealed trait FlowEnvelope {
 
   def clearException() : FlowEnvelope
   def withException(t : Throwable) : FlowEnvelope
+  def withRequiresAcknowledge(b : Boolean) : FlowEnvelope
 }
 
 final case class DefaultFlowEnvelope(
@@ -22,6 +23,7 @@ final case class DefaultFlowEnvelope(
 
   override def clearException(): FlowEnvelope = copy(exception = None)
   override def withException(t: Throwable): FlowEnvelope = copy(exception = Some(t))
+  override def withRequiresAcknowledge(b: Boolean): FlowEnvelope = copy(requiresAcknowledge = b)
 
   // For the default we simply do nothing when a downstream consumer calls acknowledge
   override def acknowledge(): Unit = {}
@@ -37,6 +39,7 @@ final case class JmsAckEnvelope(
 ) extends FlowEnvelope {
 
   override def acknowledge(): Unit = session.ack(jmsMessage)
+  override def withRequiresAcknowledge(b: Boolean): FlowEnvelope = copy(requiresAcknowledge = b)
 
   override def clearException(): FlowEnvelope = copy(exception = None)
   override def withException(t: Throwable): FlowEnvelope = copy(exception = Some(t))

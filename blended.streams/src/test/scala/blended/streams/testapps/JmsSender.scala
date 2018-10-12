@@ -19,7 +19,7 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
 
   def consume(withAck: Boolean) : Future[Seq[FlowEnvelope]] = {
 
-    val cSettings = JMSConsumerSettings.create(cf).withDestination(JmsQueue("blended.test")).withSessionCount(5)
+    val cSettings = JMSConsumerSettings.create(cf).withDestination(Some(JmsQueue("blended.test"))).withSessionCount(5)
 
     val innerSource : Source[FlowEnvelope, NotUsed]= if (withAck) {
       Source.fromGraph(new JmsAckSourceStage(cSettings, system))

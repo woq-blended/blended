@@ -9,28 +9,32 @@ import scala.util.{Failure, Success, Try}
 
 object FlowProcessor {
 
-  type IntegrationStep = FlowEnvelope => Try[FlowEnvelope]
+  type IntegrationStep = FlowEnvelope => Try[Seq[FlowEnvelope]]
   type IntegrationFlow = Flow[FlowEnvelope, FlowEnvelope, NotUsed]
 
-  def fromFunction(name: String)(f : IntegrationStep)(implicit log : Logger) : IntegrationFlow = {
+  def fromFunction(name: String)(f: IntegrationStep)(implicit log: Logger): IntegrationFlow = {
 
-    val checkException : FlowEnvelope => FlowEnvelope = { env =>
-      env.exception match {
-        case None => f(env) match {
-          case Success(r) => r
-          case Failure(t) =>
-            log.error(t)(s"Exception in integration step")
-            env.withException(t)
+    val applyFunction: Flow[FlowEnvelope, Seq[FlowEnvelope], NotUsed] = Flow.fromFunction[FlowEnvelope, Seq[FlowEnvelope]] { env: FlowEnvelope =>
+      f(env) match {
+        case Success(l) => l match {
+          case Seq() => l
+          case r => l.take(l.size - 1).map(_.withRequiresAcknowledge(false)) ++ l.takeRight(1).map(_.withRequiresAcknowledge(true))
         }
+
+        case Failure(t) =>
+          log.warn(s"Exception in FlowProcessor for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+          log.trace(t)(s"Exception in FlowProcessor for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+          Seq(env.withException(t))
       }
     }
 
-    Flow.fromFunction(checkException)
+    applyFunction.mapConcat(_.toList)
   }
+
 
   def log(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
     log.info(s"${env.flowMessage}")
-    Success(env)
+    Success(List(env))
   }
 
   def ack(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
@@ -39,7 +43,7 @@ object FlowProcessor {
         Failure(t)
       case None =>
         env.acknowledge()
-        Success(env)
+        Success(List(env))
     }
   }
 }

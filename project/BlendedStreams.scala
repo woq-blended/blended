@@ -11,6 +11,9 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.geronimoJms11Spec,
 
+      Dependencies.scalatest % "test",
+      Dependencies.akkaTestkit % "test",
+      Dependencies.akkaSlf4j % "test",
       Dependencies.activeMqBroker % "test",
       Dependencies.activeMqKahadbStore % "test",
       Dependencies.logbackCore % "test",
