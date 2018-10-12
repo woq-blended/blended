@@ -8,7 +8,7 @@ import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Random, Success}
 
 case class StreamControllerConfig(
 
@@ -20,7 +20,6 @@ case class StreamControllerConfig(
   onFailureOnly : Boolean = true,
   random : Double = 0.2
 )
-
 
 object StreamController {
 
@@ -37,12 +36,32 @@ class StreamController(streamCfg: StreamControllerConfig) extends Actor {
   private[this] val log = Logger[StreamController]
   private[this] implicit val materializer = ActorMaterializer()
   private[this] implicit val eCtxt = context.system.dispatcher
+  private[this] val rnd = new Random()
 
+  private[this] val initialInterval : FiniteDuration = streamCfg.minDelay
   private[this] var interval : FiniteDuration = streamCfg.minDelay
 
   override def preStart(): Unit = self ! StreamController.Start
 
   override def receive: Receive = starting
+
+  private[this] def nextInterval : FiniteDuration = {
+
+    val noise = {
+      val d = rnd.nextDouble().abs
+      (d - d.floor) / (1 / (streamCfg.random * 2)) - streamCfg.random
+    }
+
+    var newIntervalMillis : Double =
+      if (streamCfg.exponential) interval.toMillis * 2 else interval.toMillis + initialInterval.toMillis
+
+    newIntervalMillis = scala.math.min(
+      streamCfg.maxDelay.toMillis,
+      newIntervalMillis + newIntervalMillis * noise
+    )
+
+    newIntervalMillis.toLong.millis
+  }
 
   def starting : Receive = {
     case StreamController.Start =>
@@ -74,14 +93,10 @@ class StreamController(streamCfg: StreamControllerConfig) extends Actor {
 
     case StreamController.StreamTerminated(t) =>
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
-        log.debug(s"Stream [${streamCfg.name}] terminated...scheduling restart in [${interval.toSeconds}s]")
+        log.debug(s"Stream [${streamCfg.name}] terminated...scheduling restart in [${interval}s]")
 
         context.system.scheduler.scheduleOnce(interval, self, StreamController.Start)
-
-        if (interval < streamCfg.maxDelay) {
-          if (streamCfg.exponential) interval *= 2 else interval += interval
-          interval = if (interval <= streamCfg.maxDelay) interval else streamCfg.maxDelay
-        }
+        interval = nextInterval
 
         context.become(starting)
       } else {
