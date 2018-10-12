@@ -113,7 +113,7 @@ object Dependencies {
   //val springAop = spring("aop")
   //val springContext = spring("context")
   //val springContextSupport = spring("context-support")
-  //val springExpression = spring("expression")
+  val springExpression = spring("expression")
   val springCore = spring("core")
   val springJdbc = spring("jdbc")
   // val springJms = spring("jms")

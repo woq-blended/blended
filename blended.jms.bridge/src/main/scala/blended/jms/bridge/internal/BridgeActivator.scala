@@ -3,6 +3,7 @@ package blended.jms.bridge.internal
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import blended.akka.ActorSystemWatching
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.jms.JmsSettings
 import blended.util.logging.Logger
@@ -52,9 +53,12 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
       val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
         case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
-        case h :: Nil => (h.vendor, h.provider.getOrElse(h.vendor))
+        case h :: Nil => (h.vendor, h.provider)
         case h :: _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       }
+
+      val registry = new BridgeProviderRegistry(providerList)
+      registry.providesService[BridgeProviderRegistry]
 
       log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
 
@@ -64,12 +68,10 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
           val bridgeProps = BridgeController.props(
             BridgeControllerConfig(
-              internalVendor = internalVendor,
-              internalProvider = Some(internalProvider),
+              internalCf = cf,
+              registry = registry,
               queuePrefix = queuePrefix,
               headerPrefix = headerPrefix,
-              internalConnectionFactory = cf,
-              jmsProvider = providerList,
               inbound = inboundList
             )
           )

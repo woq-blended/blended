@@ -13,12 +13,10 @@ import scala.concurrent.duration._
 import blended.util.logging.Logger
 import blended.jms.utils.internal.CheckConnection
 
-trait IdAwareConnectionFactory extends ConnectionFactory {
-  val vendor : String
-  val provider : String
+trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
 
-  def id : String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
+  override def id : String = super.id + s"($clientId)"
 }
 
 class BlendedSingleConnectionFactory(

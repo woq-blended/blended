@@ -1,16 +1,17 @@
-package blended.jms.bridge.internal
+package blended.jms.bridge
 
-import blended.util.config.Implicits._
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.JmsDestination
+import blended.jms.utils.{JmsDestination, ProviderAware}
+import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.util.Try
 
 case class BridgeProviderConfig(
   vendor : String,
-  provider : Option[String],
+  provider : String,
   internal: Boolean,
+  inbound : JmsDestination,
   errorDestination : JmsDestination,
   eventDestination : JmsDestination
 ) extends ProviderAware {
@@ -26,14 +27,16 @@ object BridgeProviderConfig {
 
     val errorQueue = resolve(cfg.getString("errorQueue", "blended.error"))
     val eventQueue = resolve(cfg.getString("eventQueue", "blended.event"))
+    val inbound = cfg.getString("inbound")
     val vendor = resolve(cfg.getString("vendor"))
-    val provider = cfg.getStringOption("provider").map(resolve)
+    val provider = resolve(cfg.getString("provider"))
     val internal = cfg.getBoolean("internal", false)
 
     BridgeProviderConfig(
       vendor = vendor,
       provider = provider,
       internal = internal,
+      inbound = JmsDestination.create(inbound).get,
       errorDestination = JmsDestination.create(errorQueue).get,
       eventDestination = JmsDestination.create(eventQueue).get
     )

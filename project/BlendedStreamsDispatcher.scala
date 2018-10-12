@@ -1,11 +1,11 @@
 import sbt._
 import TestLogConfig.autoImport._
 
-object BlendedStreams extends ProjectFactory {
+object BlendedStreamsDispatcher extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(
-    projectName = "blended.streams",
-    description = "Helper objects to work with Streams in blended integration flows.",
+    projectName = "blended.streams.dispatcher",
+    description = "A generic Dispatcher to support common integration routing.",
     deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
@@ -20,7 +20,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.logbackClassic % "test"
     ),
     adaptBundle = b => b.copy(
-      exportPackage = Seq(s"${b.bundleSymbolicName}", s"${b.bundleSymbolicName}.jms", s"${b.bundleSymbolicName}.message")
+      exportPackage = Seq(s"${b.bundleSymbolicName}")
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
@@ -30,7 +30,7 @@ object BlendedStreams extends ProjectFactory {
 
   override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
-    BlendedJmsUtils.project,
+    BlendedStreams.project, 
 
     BlendedTestsupport.project % "test"
   )

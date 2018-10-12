@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import java.io.File
 
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
-import blended.jms.utils.{JmsDestination, JmsDurableTopic, JmsQueue, JmsTopic}
+import blended.jms.utils.{JmsDurableTopic, JmsQueue}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{MockContainerContext, PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -31,7 +31,6 @@ class InboundConfigSpec extends LoggingFreeSpec
           |  name = "test"
           |  vendor = "activemq"
           |  from = "inQueue"
-          |  to = "topic:out"
           |  listener = 4
           |}
         """.stripMargin
@@ -42,7 +41,6 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       inbound.name should be ("test")
       inbound.from should be (JmsQueue("inQueue"))
-      inbound.to should be (JmsTopic("out"))
       inbound.provider should be (empty)
       inbound.listener should be (4)
     }
@@ -67,7 +65,6 @@ class InboundConfigSpec extends LoggingFreeSpec
 
       inbound.name should be ("test")
       inbound.from should be (JmsDurableTopic("de.09999.data.in", "de09999"))
-      inbound.to should be (JmsQueue("bridge.data.in"))
       inbound.provider should be (Some("de_topic"))
       inbound.listener should be (4)
 

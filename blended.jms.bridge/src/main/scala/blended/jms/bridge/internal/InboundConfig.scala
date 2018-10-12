@@ -1,7 +1,7 @@
 package blended.jms.bridge.internal
 
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.utils.{JmsDestination, JmsDurableTopic, JmsQueue, JmsTopic}
+import blended.jms.utils._
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
@@ -28,8 +28,6 @@ object InboundConfig {
 
     val selector = cfg.getStringOption("selector")
 
-    val outDest = JmsDestination.create(resolve(cfg.getString("to"))).get
-
     val persistent = cfg.getString("persistent", "passthrough")
 
     val listener = cfg.getInt("listener", 2)
@@ -40,7 +38,6 @@ object InboundConfig {
       provider = provider,
       from = inDest,
       selector = selector,
-      to = outDest,
       persistent = persistent,
       listener = listener
     )
@@ -53,7 +50,6 @@ case class InboundConfig (
   provider : Option[String],
   from : JmsDestination,
   selector : Option[String],
-  to : JmsDestination,
   persistent : String,
   listener : Int
-) extends ProviderAware
+)
