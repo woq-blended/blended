@@ -55,5 +55,8 @@ trait ConfigDefaultGetter extends ConfigAccessor {
 
     def getConfigMap(key: String, default: Map[String, Config]) : Map[String, Config] =
       configConfigMap(config, key).getOrElse(default)
+
+    def getConfigList(key : String, default: List[Config]) : List[Config] =
+      configConfigList(config, key).getOrElse(default)
   }
 }

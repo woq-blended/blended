@@ -1,67 +1,89 @@
 package blended.streams.dispatcher.internal
 
+import blended.container.context.api.ContainerIdentifierService
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
+import blended.jms.utils.JmsDestination
+import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.util.Try
 
 object ResourceTypeRouterConfig {
 
-  private[this] val defaultVendorPath = "defaultVendor"
-  private[this] val defaultProviderPath = "defaultProvider"
   private[this] val defaultEventVendorPath = "defaultEventVendor"
   private[this] val defaultEventProviderPath = "defaultEventProvider"
-  private[this] val inboundUriPath  = "inboundUri"
-  private[this] val outboundUriPath  = "outboundUri"
-  private[this] val errorUriPath  = "errorUri"
   private[this] val applicationLogHeaderPath = "applicationLogHeader"
   private[this] val resourcetypesPath = "resourcetypes"
 
-  def apply(cfg: Config) : ResourceTypeRouterConfig = {
+  private[dispatcher] def resolveProvider(
+    idSvc : ContainerIdentifierService,
+    registry : BridgeProviderRegistry,
+    cfg : Config,
+    vendorPath : String,
+    providerPath : String
+  ) : Try[Option[BridgeProviderConfig]] = Try {
 
-    val vendor = cfg.getString(defaultVendorPath)
-    val provider = cfg.getString(defaultProviderPath)
+    (cfg.getStringOption(vendorPath), cfg.getStringOption(providerPath)) match {
+      case (Some(v), Some(p)) =>
+        Some(getProvider(
+          registry,
+          idSvc.resolvePropertyString(v).get,
+          idSvc.resolvePropertyString(p).get
+        ).get)
+      case (_,_) =>
+        None
+    }
+  }
 
-    val evtVendor = if (cfg.hasPath(defaultEventVendorPath)) cfg.getString(defaultEventVendorPath) else vendor
-    val evtProvider = if (cfg.hasPath(defaultEventProviderPath)) cfg.getString(defaultEventProviderPath) else provider
+  private[dispatcher] def getProvider(
+    registry : BridgeProviderRegistry,
+    vendor : String,
+    provider : String
+  ) : Try[BridgeProviderConfig] = Try {
+    registry.jmsProvider(vendor, provider) match {
+      case None => throw new Exception(s"Event provider [$vendor:$provider] is not configured in provider registry.")
+      case Some(p) => p
+    }
+  }
 
-    val rTypes = cfg.getObject(resourcetypesPath)
+  def create(
+    idSvc : ContainerIdentifierService,
+    registry: BridgeProviderRegistry,
+    cfg: Config,
+    provider: BridgeProviderRegistry
+  ) : Try[ResourceTypeRouterConfig] = Try {
 
-    val routes = rTypes.keySet().asScala.map { key =>
-      val rtCfg = cfg.getConfig(s"$resourcetypesPath.$key")
-      (key, ResourceTypeConfig(key, vendor, provider, evtVendor, evtProvider, rtCfg))
-    }.toMap
+    val internalProvider = provider.internalProvider.get
+
+    val eventProvider = getProvider(
+      provider,
+      cfg.getString(defaultEventVendorPath, internalProvider.vendor),
+      cfg.getString(defaultEventProviderPath, internalProvider.provider)
+    ).get
+
+    val routes : Map[String, ResourceTypeConfig] =
+      cfg.getConfigMap(resourcetypesPath, Map.empty).map { case (key, value) =>
+        key -> ResourceTypeConfig.create(idSvc, registry, key, internalProvider, eventProvider, value).get
+      }
 
     val logHeader : List[String] = cfg.hasPath(applicationLogHeaderPath) match {
       case true => cfg.getStringList(applicationLogHeaderPath).asScala.toList
       case _ => List.empty
     }
 
-    new ResourceTypeRouterConfig(
-      defaultVendor = vendor,
-      defaultProvider = provider,
-      defaultEventVendor = evtVendor,
-      defaultEventProvider = evtProvider,
-      inboundUri = cfg.getString(inboundUriPath),
-      outboundUri = cfg.getString(outboundUriPath),
-      errorUri = cfg.getString(errorUriPath),
+    ResourceTypeRouterConfig(
+      defaultProvider = internalProvider,
+      defaultEventProvider = eventProvider,
       applicationLogHeader = logHeader,
       resourceTypeConfigs = routes
     )
   }
-
-  def getConfigStringMap(cfg: Config) : Map[String, String] = cfg.entrySet().asScala.map { entry  =>
-    entry.getKey -> cfg.getString(entry.getKey)
-  }.toMap
 }
 
 case class ResourceTypeRouterConfig(
-  defaultVendor : String,
-  defaultProvider: String,
-  defaultEventVendor : String,
-  defaultEventProvider : String,
-  inboundUri : String,
-  outboundUri : String,
-  errorUri : String,
+  defaultProvider : BridgeProviderConfig,
+  defaultEventProvider : BridgeProviderConfig,
   applicationLogHeader : List[String],
   resourceTypeConfigs : Map[String, ResourceTypeConfig]
 )
@@ -72,27 +94,24 @@ object ResourceTypeConfig {
   private[this] val cbePath = "withCBE"
   private[this] val outboundPath = "outbound"
 
-  def apply(
+  def create (
+    idSvc : ContainerIdentifierService,
+    registry: BridgeProviderRegistry,
     resType: String,
-    defaultVendor : String,
-    defaultProvider: String,
-    defaultEventVendor : String,
-    defaultEventProvider: String,
+    defaultProvider: BridgeProviderConfig,
+    defaultEventProvider: BridgeProviderConfig,
     cfg: Config
-  ) : ResourceTypeConfig = {
+  ) : Try[ResourceTypeConfig] = Try {
 
     val outboundRoutes : List[OutboundRouteConfig] = cfg.getConfigList(outboundPath).asScala.map { c =>
-      OutboundRouteConfig(c, defaultVendor, defaultProvider, defaultEventVendor, defaultEventProvider)
+      OutboundRouteConfig.create(idSvc, registry, c, defaultProvider, defaultEventProvider).get
     }.toList
 
     ResourceTypeConfig(
       resourceType = resType,
       withCBE = !cfg.hasPath(cbePath) || cfg.getBoolean(cbePath),
       outbound = outboundRoutes,
-      inboundConfig = cfg.hasPath(inboundPath) match {
-        case true => Some(InboundRouteConfig(cfg.getConfig(inboundPath)))
-        case _ => None
-      }
+      inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(idSvc, c).get)
     )
   }
 }
@@ -120,74 +139,56 @@ object OutboundRouteConfig {
   private[this] val eventProviderPath = "eventProvider"
   private[this] val eventDestinationPath = "eventDestination"
 
-  def apply(
+  def create(
+    idSvc : ContainerIdentifierService,
+    registry: BridgeProviderRegistry,
     cfg: Config,
-    defaultVendor: String,
-    defaultProvider: String,
-    defaultEventVendor : String,
-    defaultEventProvider: String
-  ) : OutboundRouteConfig = OutboundRouteConfig(
+    defaultProvider: BridgeProviderConfig,
+    defaultEventProvider: BridgeProviderConfig
+  ) : Try[OutboundRouteConfig] = Try {
 
-    id = if (cfg.hasPath("id")) cfg.getString("id") else "default",
+    val id = cfg.getString("id", "default")
 
-    bridgeVendor = cfg.hasPath(bridgeVendorPath) match {
-      case false => defaultVendor
-      case _ => cfg.getString(bridgeVendorPath)
-    },
-
-    bridgeProvider = cfg.hasPath(bridgeProviderPath) match {
-      case false => defaultProvider
-      case _ => cfg.getString(bridgeProviderPath)
-    },
-
-    bridgeDestination = cfg.hasPath(bridgeDestinationPath) match {
-      case false => None
-      case _ => Some(cfg.getString(bridgeDestinationPath))
-    },
-
-    eventVendor = if (cfg.hasPath(eventVendorPath)) cfg.getString(eventVendorPath) else defaultEventVendor,
-
-    eventProvider = if (cfg.hasPath(eventProviderPath)) cfg.getString(eventProviderPath) else defaultEventProvider,
-
-    moduleLastOnComplete = cfg.hasPath(moduleLastOnCompletePath) && cfg.getBoolean(moduleLastOnCompletePath),
-
-
-    applicationLogHeader = cfg.hasPath(applicationLogHeaderPath) match {
-      case false => List.empty
-      case _ => cfg.getStringList(applicationLogHeaderPath).asScala.toList
-    },
-
-    outboundHeader  = cfg.hasPath(outboundHeaderPath) match {
-      case true =>
-        cfg.getConfigList(outboundHeaderPath).asScala.map { cfg =>
-          OutboundHeaderConfig(cfg)
-        }.toList
-      case _ => List.empty
-    },
-
-    clearBody = cfg.hasPath(clearBodyPath) && cfg.getBoolean(clearBodyPath),
-
-    autoComplete = !cfg.hasPath(autocompletePath) || cfg.getBoolean(autocompletePath),
-
-    maxRetries = cfg.hasPath(maxRetryPath) match {
-      case false => -1l
-      case true => cfg.getLong(maxRetryPath)
-    },
-
-    timeToLive = cfg.hasPath(timeToLivePath) match {
-      case false => 0l
-      case true => cfg.getLong(timeToLivePath)
+    val bridgeProvider = ResourceTypeRouterConfig.resolveProvider(idSvc, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
+      case Some(p) => p
+      case None => defaultProvider
     }
-  )
+
+    val eventProvider = ResourceTypeRouterConfig.resolveProvider(idSvc, registry, cfg, eventVendorPath, eventProviderPath).get match {
+      case Some(p) => p
+      case None => defaultEventProvider
+    }
+
+    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).get).get)
+    val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
+    val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(List.empty)
+    val outboundHeader  = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(idSvc, c).get)
+    val clearBody = cfg.getBoolean(clearBodyPath, false)
+    val autoComplete = cfg.getBoolean(autocompletePath, true)
+    val maxRetries = cfg.getLong(maxRetryPath, -1L)
+    val timeToLive = cfg.getLong(timeToLivePath, 0L)
+
+    OutboundRouteConfig(
+      id = id,
+      bridgeProvider = bridgeProvider,
+      bridgeDestination = bridgeDestination,
+      eventProvider = eventProvider,
+      applicationLogHeader = applicationLogHeader,
+      outboundHeader = outboundHeader,
+      maxRetries = maxRetries,
+      timeToLive = timeToLive,
+      moduleLastOnComplete = moduleLastOnComplete,
+      clearBody = clearBody,
+      autoComplete = autoComplete
+    )
+  }
 }
 
 case class OutboundRouteConfig(
   id : String,
-  bridgeVendor : String,
-  bridgeProvider: String,
-  bridgeDestination: Option[String],
-  eventVendor: String,
-  eventProvider : String,
+  bridgeProvider: BridgeProviderConfig,
+  bridgeDestination: Option[JmsDestination],
+  eventProvider : BridgeProviderConfig,
   applicationLogHeader : List[String],
   outboundHeader: List[OutboundHeaderConfig],
   maxRetries: Long,
@@ -197,8 +198,8 @@ case class OutboundRouteConfig(
   autoComplete : Boolean
 ) {
   override def toString: String =
-    s"${getClass().getSimpleName()}(id=$id, bridgeVendor=$bridgeVendor, bridgeProvider=$bridgeProvider, " +
-    s"bridgeDestination=$bridgeDestination, eventVendor=$eventVendor, eventProvider=$eventProvider)"
+    s"${getClass().getSimpleName()}(id=$id, bridgeProvider=$bridgeProvider, " +
+    s"bridgeDestination=$bridgeDestination, eventProvider=$eventProvider)"
 }
 
 object InboundRouteConfig {
@@ -206,32 +207,33 @@ object InboundRouteConfig {
   private[this] val inboundUriPath = "inboundUri"
   private[this] val headerPath = "header"
 
-  def apply(cfg: Config) : InboundRouteConfig = {
+  def create(
+    idSvc: ContainerIdentifierService,
+    cfg: Config
+  ) : Try[InboundRouteConfig] = Try {
+
+    val destName = idSvc.resolvePropertyString(cfg.getString(inboundUriPath)).get
 
     InboundRouteConfig(
-      entryUri = cfg.getString(inboundUriPath),
-
-      header = cfg.hasPath(headerPath) match {
-        case false => Map.empty
-        case true => ResourceTypeRouterConfig.getConfigStringMap(cfg.getConfig(headerPath))
-      }
+      entry = JmsDestination.create(destName).get,
+      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).get)
     )
   }
 }
 
-case class InboundRouteConfig(entryUri: String, header : Map[String, String])
+case class InboundRouteConfig(
+  entry: JmsDestination,
+  header : Map[String, String]
+)
 
 object OutboundHeaderConfig {
   private[this] val conditionPath = "condition"
   private[this] val headerPath = "header"
 
-  def apply(cfg: Config) : OutboundHeaderConfig = {
+  def create (idSvc: ContainerIdentifierService, cfg: Config) : Try[OutboundHeaderConfig] = Try {
     new OutboundHeaderConfig(
-      condition = cfg.hasPath(conditionPath) match {
-        case true => Some(cfg.getString(conditionPath))
-        case _ => None
-      },
-      header = ResourceTypeRouterConfig.getConfigStringMap(cfg.getConfig(headerPath))
+      condition = cfg.getStringOption(conditionPath).map(s => idSvc.resolvePropertyString(s).get),
+      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).get)
     )
   }
 }

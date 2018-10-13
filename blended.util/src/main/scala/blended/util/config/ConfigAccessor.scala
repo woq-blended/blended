@@ -26,4 +26,11 @@ trait ConfigAccessor {
     else {
       None
     }
+
+  protected def configConfigList(config : Config, key : String) : Option[List[Config]] =
+    if (config.hasPath(key)) {
+      Some(config.getConfigList(key).asScala.toList)
+    } else {
+      None
+    }
 }

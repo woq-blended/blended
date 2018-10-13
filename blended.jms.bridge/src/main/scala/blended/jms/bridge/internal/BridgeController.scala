@@ -3,12 +3,12 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, Props}
 import akka.stream.scaladsl.Source
-import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
+import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Success}

@@ -30,8 +30,10 @@ object BlendedStreamsDispatcher extends ProjectFactory {
 
   override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
-    BlendedStreams.project, 
+    BlendedStreams.project,
+    BlendedJmsBridge.project,
 
+    BlendedTestsupportPojosr.project % "test",
     BlendedTestsupport.project % "test"
   )
 }
