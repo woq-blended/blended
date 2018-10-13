@@ -4,14 +4,14 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
-import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.duration._
 import scala.concurrent.Await
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   with LoggingFreeSpecLike
@@ -23,7 +23,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   private val msg : FlowEnvelope = {
     val header : Map[String, MsgProperty[_]] = Map("foo" -> "bar")
-    DefaultFlowEnvelope(FlowMessage("Testmessage", header))
+    FlowEnvelope(FlowMessage("Testmessage", header))
   }
 
   val identity : FlowProcessor.IntegrationStep = env => Success(Seq(env))

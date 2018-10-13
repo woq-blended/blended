@@ -4,7 +4,7 @@ import java.io.File
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import blended.jms.utils.{JmsDestination, JmsQueue, JmsTopic}
+import blended.jms.utils.{JmsQueue, JmsTopic}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec

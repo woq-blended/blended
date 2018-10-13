@@ -8,7 +8,7 @@ import akka.stream.KillSwitches
 import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
 import blended.jms.utils.JmsQueue
 import blended.streams.jms._
-import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.util.logging.Logger
 
 import scala.concurrent.Future
@@ -75,7 +75,7 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
     )
 
     val sink = Flow[FlowMessage]
-      .map(m => DefaultFlowEnvelope(m))
+      .map(m => FlowEnvelope(m))
       .viaMat(Flow.fromGraph(new JmsSinkStage(settings)))(Keep.left)
 
     val foo = Source

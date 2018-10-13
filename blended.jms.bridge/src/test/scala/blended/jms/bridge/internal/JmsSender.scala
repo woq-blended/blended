@@ -5,9 +5,9 @@ import java.util.UUID
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Source}
 import blended.jms.utils.JmsQueue
-import blended.streams.{StreamController, StreamControllerConfig}
 import blended.streams.jms._
-import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -33,7 +33,7 @@ object JmsSender extends AbstractStreamRunner("JmsSender") {
     )
 
     val sink = Flow[FlowMessage]
-      .map(m => DefaultFlowEnvelope(m))
+      .map(m => FlowEnvelope(m))
       .viaMat(Flow.fromGraph(new JmsSinkStage(settings)))(Keep.left)
 
     val foo : Source[FlowEnvelope, NotUsed] = Source

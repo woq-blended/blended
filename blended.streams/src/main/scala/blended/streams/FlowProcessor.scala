@@ -3,6 +3,7 @@ package blended.streams
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 
 import scala.util.{Failure, Success, Try}
@@ -22,8 +23,7 @@ object FlowProcessor {
         }
 
         case Failure(t) =>
-          log.warn(s"Exception in FlowProcessor for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
-          log.trace(t)(s"Exception in FlowProcessor for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+          log.warn(s"Exception in FlowProcessor [$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
           Seq(env.withException(t))
       }
     }
@@ -32,8 +32,8 @@ object FlowProcessor {
   }
 
 
-  def log(name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
-    log.info(s"${env.flowMessage}")
+  def log(level: LogLevel, name : String)(implicit log : Logger) : IntegrationFlow = fromFunction(name) { env =>
+    log.log(level, s"$name : ${env.flowMessage}")
     Success(List(env))
   }
 

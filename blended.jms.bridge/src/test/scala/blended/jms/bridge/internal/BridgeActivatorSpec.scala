@@ -11,7 +11,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.FlowProcessor
 import blended.streams.jms._
-import blended.streams.message.{DefaultFlowEnvelope, FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -80,7 +80,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
         )
 
         val sink = Flow[FlowMessage]
-          .map(m => DefaultFlowEnvelope(m))
+          .map(m => FlowEnvelope(m))
           .viaMat(Flow.fromGraph(new JmsSinkStage(settings)))(Keep.left)
 
         val foo = Source

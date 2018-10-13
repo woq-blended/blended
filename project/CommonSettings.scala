@@ -39,7 +39,7 @@ object CommonSettings {
       "-target", "1.8"
     ),
 
-    scalaVersion := "2.12.6",
+    scalaVersion := "2.12.7",
     scalacOptions ++= Seq("-deprecation", "-feature", "-Xlint", "-Ywarn-nullary-override"),
 
     scalariformAutoformat := false,

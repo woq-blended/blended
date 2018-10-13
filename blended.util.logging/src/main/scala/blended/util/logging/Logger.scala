@@ -1,12 +1,19 @@
 package blended.util.logging
 
-import java.util.{ logging => jul }
+import java.util.{logging => jul}
 
 import scala.reflect.ClassTag
-
 import org.slf4j
 
+object LogLevel extends Enumeration {
+
+  type LogLevel = Value
+  val Error, Warn, Info, Debug, Trace = Value
+}
+
 trait Logger extends Serializable {
+
+  import blended.util.logging.LogLevel.LogLevel
 
   def isErrorEnabled: Boolean = false
   def isWarnEnabled: Boolean = false
@@ -25,6 +32,22 @@ trait Logger extends Serializable {
   def info(e: Throwable)(msg: => String): Unit = {}
   def debug(e: Throwable)(msg: => String): Unit = {}
   def trace(e: Throwable)(msg: => String): Unit = {}
+
+  def log(level: LogLevel, msg: => String) : Unit = level match {
+    case LogLevel.Error => error(msg)
+    case LogLevel.Warn => warn(msg)
+    case LogLevel.Info => info(msg)
+    case LogLevel.Debug => debug(msg)
+    case LogLevel.Trace => trace(msg)
+  }
+
+  def log(t: Throwable)(level: LogLevel, msg: => String) : Unit = level match {
+    case LogLevel.Error => error(t)(msg)
+    case LogLevel.Warn => warn(t)(msg)
+    case LogLevel.Info => info(t)(msg)
+    case LogLevel.Debug => debug(t)(msg)
+    case LogLevel.Trace => trace(t)(msg)
+  }
 
 }
 

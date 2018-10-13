@@ -69,7 +69,7 @@ class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) ex
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
                 val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [$id] : $flowMessage")
-                handleMessage.invoke(DefaultFlowEnvelope(flowMessage))
+                handleMessage.invoke(FlowEnvelope(flowMessage))
               }
             })
           case Failure(t) =>

@@ -4,7 +4,8 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsDestination}
-import blended.streams.message.{FlowEnvelope, JmsAckEnvelope}
+import blended.streams
+import blended.streams.message.{AckInfo, FlowEnvelope}
 import blended.util.logging.Logger
 import javax.jms._
 
@@ -27,55 +28,58 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
   override protected def initialAttributes: Attributes =
     ActorAttributes.dispatcher("FixedPool")
 
-
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
 
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
       private[this] val log = Logger(classOf[JmsAckSourceStage].getName())
-      private[this] val inflight : mutable.Map[String, JmsAckEnvelope] = mutable.Map.empty
+      private[this] val inflight : mutable.Map[String, FlowEnvelope] = mutable.Map.empty
       private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
         fail(out, ex)
       }
 
-      private val acknowledge : JmsAckEnvelope => Unit = { env =>
-        log.debug(s"Acknowledging message for session id [${env.session.sessionId}] : ${env.flowMessage}")
-        try {
-          // the acknowlede might not work a message might be in inflight while the previous message has not been
-          // acknowledged. In this case we will have closed the session and created a new one.
-          env.jmsMessage.acknowledge()
-          scheduleOnce(Poll(env.session.sessionId), 10.millis)
-        } catch {
-          case e: JMSException =>
-            log.error(e)(s"Error acknowledging message for session [${env.session.sessionId}] : [${env.flowMessage}]")
-            closeSession(env.session)
-        } finally {
-          inflight -= env.session.sessionId
+      private val acknowledge : FlowEnvelope => Unit = { env =>
+        env.ackInfo.foreach { info =>
+          log.debug(s"Acknowledging message for session id [${info.session.sessionId}] : ${env.flowMessage}")
+          try {
+            // the acknowlede might not work a message might be in inflight while the previous message has not been
+            // acknowledged. In this case we will have closed the session and created a new one.
+            info.jmsMessage.acknowledge()
+            scheduleOnce(Poll(info.session.sessionId), 10.millis)
+          } catch {
+            case e: JMSException =>
+              log.error(e)(s"Error acknowledging message for session [${info.session.sessionId}] : [${env.flowMessage}]")
+              closeSession(info.session)
+          } finally {
+            inflight -= info.session.sessionId
+          }
         }
       }
 
       private[this] def ackQueued(): Unit = {
 
         inflight.foreach { case (sessionId, envelope) =>
-          Option(envelope.session.ackQueue.poll()) match {
-            case Some(action) =>
-              action match {
-                case Right(sessionId) =>
-                  inflight.get(sessionId).foreach(acknowledge)
-                  ackQueued()
+          envelope.ackInfo.foreach { info =>
+            Option(info.session.ackQueue.poll()) match {
+              case Some(action) =>
+                action match {
+                  case Right(sessionId) =>
+                    inflight.get(sessionId).foreach(acknowledge)
+                    ackQueued()
 
-                case Left(t) =>
-                  failStage(t)
-              }
-            case None =>
-              if (System.currentTimeMillis() - envelope.created > jmsSettings.ackTimeout.toMillis) {
-                log.debug(s"Acknowledge timed out for [$sessionId] with message ${envelope.flowMessage}")
-                inflight -= sessionId
-                // Recovering the session, so that unacknowledged messages may be redelivered
-                closeSession(envelope.session)
-              }
+                  case Left(t) =>
+                    failStage(t)
+                }
+              case None =>
+                if (System.currentTimeMillis() - info.created > jmsSettings.ackTimeout.toMillis) {
+                  log.debug(s"Acknowledge timed out for [$sessionId] with message ${envelope.flowMessage}")
+                  inflight -= sessionId
+                  // Recovering the session, so that unacknowledged messages may be redelivered
+                  closeSession(info.session)
+                }
+            }
           }
         }
       }
@@ -91,12 +95,16 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                 val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
-                  val envelope = JmsAckEnvelope(
+
+                  val info = AckInfo(
+                    jmsMessage = message,
+                    session = session
+                  )
+
+                  val envelope = FlowEnvelope(
                     flowMessage = flowMessage,
                     requiresAcknowledge = true,
-                    jmsMessage = message,
-                    session = session,
-                    created = System.currentTimeMillis()
+                    ackInfo = Some(info)
                   )
                   inflight += (session.sessionId -> envelope)
                   handleMessage.invoke(envelope)

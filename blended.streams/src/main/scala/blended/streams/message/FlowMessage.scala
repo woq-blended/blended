@@ -90,20 +90,22 @@ case class BaseFlowMessage(override val header: Map[String, MsgProperty[_]]) ext
   override def body(): Any = NotUsed
 }
 
-case class BinaryFlowMessage(override val header: Map[String, MsgProperty[_]], content: ByteString) extends FlowMessage(header) {
+case class BinaryFlowMessage(content : ByteString, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = content
   def getBytes() : ByteString = content
 }
 
-case class TextFlowMessage(override val header: Map[String, MsgProperty[_]], content: String) extends FlowMessage(header) {
+case class TextFlowMessage(content : String, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = content
   def getText(): String = content
 }
 
 object FlowMessage {
 
+  val noProps = Map.empty[String, MsgProperty[_]]
+
   def apply(props: Map[String, MsgProperty[_]]): FlowMessage = BaseFlowMessage(props)
-  def apply(content : String, props : Map[String, MsgProperty[_]]): FlowMessage= TextFlowMessage(props, content)
-  def apply(content: ByteString, props : Map[String, MsgProperty[_]]):FlowMessage = BinaryFlowMessage(props, content)
+  def apply(content : String, props : Map[String, MsgProperty[_]]): FlowMessage= TextFlowMessage(content, props)
+  def apply(content: ByteString, props : Map[String, MsgProperty[_]]):FlowMessage = BinaryFlowMessage(content, props)
 
 }
