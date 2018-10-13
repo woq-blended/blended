@@ -12,6 +12,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.FlowProcessor
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
+import blended.streams.processor.AckProcessor
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -56,7 +57,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
         ) { () => innerSource }
 
         val jmsFlow = source
-          .via(FlowProcessor.ack("testAck")(log))
+          .via(AckProcessor("testAck")(log))
 
         jmsFlow
       }

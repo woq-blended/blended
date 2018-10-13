@@ -20,7 +20,12 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.logbackClassic % "test"
     ),
     adaptBundle = b => b.copy(
-      exportPackage = Seq(s"${b.bundleSymbolicName}", s"${b.bundleSymbolicName}.jms", s"${b.bundleSymbolicName}.message")
+      exportPackage = Seq(
+        s"${b.bundleSymbolicName}",
+        s"${b.bundleSymbolicName}.jms",
+        s"${b.bundleSymbolicName}.message",
+        s"${b.bundleSymbolicName}.processor"
+      )
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(

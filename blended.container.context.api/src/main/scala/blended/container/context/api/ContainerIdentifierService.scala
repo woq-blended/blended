@@ -25,6 +25,9 @@ trait ContainerIdentifierService {
 
   def resolvePropertyString(value: String, additionalProps: Map[String, String]) : Try[String] =
     Try(ContainerPropertyResolver.resolve(this, value, additionalProps))
+
+  def evaluatePropertyString(value: String, additionalProps: Map[String, Any]) : Try[Any] =
+    Try(ContainerPropertyResolver.evaluate(this, value, additionalProps))
 }
 
 object ContainerIdentifierService {

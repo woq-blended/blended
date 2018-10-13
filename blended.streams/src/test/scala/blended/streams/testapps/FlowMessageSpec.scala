@@ -10,9 +10,7 @@ class FlowMessageSpec extends LoggingFreeSpec
   "A Flow Message should" - {
 
     "Instantiate from a String" in {
-
       val msg : FlowMessage = FlowMessage("Hallo Andreas", FlowMessage.noProps)
-
       msg should be (TextFlowMessage("Hallo Andreas", FlowMessage.noProps))
     }
   }

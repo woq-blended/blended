@@ -1,6 +1,11 @@
 package blended.container.context.api
 
 import blended.util.logging.Logger
+import org.springframework.expression.spel.standard.SpelExpressionParser
+import org.springframework.expression.spel.support.StandardEvaluationContext
+import scala.collection.JavaConverters._
+
+import scala.reflect.ClassTag
 
 object ContainerPropertyResolver {
 
@@ -11,6 +16,8 @@ object ContainerPropertyResolver {
 
   private[this] val startDelim = "$[["
   private[this] val endDelim = "]]"
+
+  private[this] val parser = new SpelExpressionParser()
 
   private[this] def extractRule(line: String) : (String, String, String) = {
     line.lastIndexOf(startDelim) match {
@@ -114,6 +121,21 @@ object ContainerPropertyResolver {
     case n if n < 0 => line
     case n if n >= 0 =>
       val (prefix, rule, suffix) = extractRule(line)
-      resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps) + suffix, additionalProps)
+      resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+  }
+
+  def evaluate(
+    idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
+  ) : AnyRef = {
+
+    val resolved = resolve(idSvc, line, additionalProps.mapValues(_.toString()))
+    val context = new StandardEvaluationContext()
+    context.setRootObject(idSvc)
+    additionalProps.foreach { case (k,v) => context.setVariable(k,v) }
+
+    val exp = parser.parseExpression(resolved)
+    val result = exp.getValue(context)
+
+    result
   }
 }

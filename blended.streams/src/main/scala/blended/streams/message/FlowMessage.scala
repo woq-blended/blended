@@ -7,7 +7,7 @@ import scala.util.Try
 
 sealed trait MsgProperty[T <: Any] {
   def value : T
-  override def toString: String = value.toString()
+  override def toString: String = s"MsgProperty[${value.getClass().getSimpleName()}](${value.toString()})"
 }
 
 case class StringMsgProperty(override val value: String) extends MsgProperty[String]
@@ -67,10 +67,24 @@ object MsgProperty {
   }
 }
 
-sealed abstract class FlowMessage(h: Map[String, MsgProperty[_]]) {
+object FlowMessage {
+
+  type FlowMessageProps = Map[String, MsgProperty[_]]
+
+  val noProps : FlowMessageProps = Map.empty[String, MsgProperty[_]]
+
+  def apply(props: FlowMessageProps): FlowMessage = BaseFlowMessage(props)
+  def apply(content : String, props : FlowMessageProps) : FlowMessage= TextFlowMessage(content, props)
+  def apply(content: ByteString, props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+
+}
+
+import FlowMessage.FlowMessageProps
+
+sealed abstract class FlowMessage(h: FlowMessageProps) {
 
   def body() : Any
-  def header : Map[String, MsgProperty[_]] = h
+  def header : FlowMessageProps = h
 
   def header[T](name : String): Option[T] = header.get(name) match {
     case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
@@ -83,29 +97,39 @@ sealed abstract class FlowMessage(h: Map[String, MsgProperty[_]]) {
     case None => default
   }
 
+  def withHeader(key: String, value: Any) : Try[FlowMessage]
+
+  protected def newHeader(key : String, value: Any) : Try[FlowMessageProps] = Try {
+    h.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
+  }
+
+
   override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
 }
 
 case class BaseFlowMessage(override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = NotUsed
+
+  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value).get)
+  }
 }
 
 case class BinaryFlowMessage(content : ByteString, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = content
   def getBytes() : ByteString = content
+
+  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value).get)
+  }
 }
 
 case class TextFlowMessage(content : String, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
   override def body(): Any = content
   def getText(): String = content
+
+  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value).get)
+  }
 }
 
-object FlowMessage {
-
-  val noProps = Map.empty[String, MsgProperty[_]]
-
-  def apply(props: Map[String, MsgProperty[_]]): FlowMessage = BaseFlowMessage(props)
-  def apply(content : String, props : Map[String, MsgProperty[_]]): FlowMessage= TextFlowMessage(content, props)
-  def apply(content: ByteString, props : Map[String, MsgProperty[_]]):FlowMessage = BinaryFlowMessage(content, props)
-
-}
