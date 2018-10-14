@@ -9,7 +9,6 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.FlowProcessor
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.processor.AckProcessor
@@ -56,10 +55,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
           maxRestarts = 10,
         ) { () => innerSource }
 
-        val jmsFlow = source
-          .via(AckProcessor("testAck")(log))
-
-        jmsFlow
+        source.via(AckProcessor("testAck").flow)
       }
 
 

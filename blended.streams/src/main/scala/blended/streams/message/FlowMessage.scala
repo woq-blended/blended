@@ -76,15 +76,16 @@ object FlowMessage {
   def apply(props: FlowMessageProps): FlowMessage = BaseFlowMessage(props)
   def apply(content : String, props : FlowMessageProps) : FlowMessage= TextFlowMessage(content, props)
   def apply(content: ByteString, props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+  def apply(content: Array[Byte], props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
 
 }
 
 import FlowMessage.FlowMessageProps
 
-sealed abstract class FlowMessage(h: FlowMessageProps) {
+sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def body() : Any
-  def header : FlowMessageProps = h
+  def header : FlowMessageProps = msgHeader
 
   def header[T](name : String): Option[T] = header.get(name) match {
     case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
@@ -97,39 +98,49 @@ sealed abstract class FlowMessage(h: FlowMessageProps) {
     case None => default
   }
 
-  def withHeader(key: String, value: Any) : Try[FlowMessage]
+  def withHeader(key: String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
 
-  protected def newHeader(key : String, value: Any) : Try[FlowMessageProps] = Try {
-    h.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
+  protected def newHeader(key : String, value: Any, overwrite: Boolean) : Try[FlowMessageProps] = Try {
+    if (overwrite) {
+      header.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
+    } else {
+      header
+    }
   }
 
 
   override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
 }
 
-case class BaseFlowMessage(override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
+case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = NotUsed
 
-  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value).get)
+  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value, overwrite).get)
   }
 }
 
-case class BinaryFlowMessage(content : ByteString, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
+object BinaryFlowMessage {
+
+  def apply(bytes: Array[Byte], msgHeader : FlowMessageProps) : BinaryFlowMessage = BinaryFlowMessage(ByteString(bytes), msgHeader)
+
+  //TODO: Initialize from Byte Stream
+}
+
+case class BinaryFlowMessage(content : ByteString, override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = content
   def getBytes() : ByteString = content
 
-  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value).get)
+  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value, overwrite).get)
   }
 }
 
-case class TextFlowMessage(content : String, override val header: Map[String, MsgProperty[_]]) extends FlowMessage(header) {
+case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = content
   def getText(): String = content
 
-  override def withHeader(key: String, value: Any): Try[FlowMessage] = Try {
-    copy(header = newHeader(key, value).get)
+  override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
+    copy(header = newHeader(key, value, overwrite).get)
   }
 }
-

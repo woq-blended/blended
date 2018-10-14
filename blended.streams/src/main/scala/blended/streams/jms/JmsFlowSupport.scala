@@ -72,7 +72,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       case b : BytesMessage => {
         val content : Array[Byte] = new Array[Byte](b.getBodyLength().toInt)
         b.readBytes(content)
-        BinaryFlowMessage(ByteString(content), props)
+        BinaryFlowMessage(content, props)
       }
 
       case _ => FlowMessage(props)

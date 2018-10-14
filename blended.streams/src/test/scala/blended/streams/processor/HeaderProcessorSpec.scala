@@ -35,7 +35,7 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
   val sink = Sink.seq[FlowEnvelope]
 
   val flow : (List[(String, String)], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
-    src.via(HeaderTransformProcessor("t", rules, idSvc).flow).toMat(sink)(Keep.right)
+    src.via(HeaderTransformProcessor(name = "t", rules = rules, overwrite = true, idSvc = idSvc).flow).toMat(sink)(Keep.right)
 
   val result : (List[(String, String)], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
     Await.result(flow(rules, idSvc).run(), 3.seconds)

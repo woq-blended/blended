@@ -10,6 +10,7 @@ import scala.util.Success
 case class HeaderTransformProcessor(
   name : String,
   rules : List[(String, String)],
+  overwrite : Boolean = true,
   idSvc : Option[ContainerIdentifierService] = None
 ) extends FlowProcessor {
 
@@ -26,7 +27,7 @@ case class HeaderTransformProcessor(
             val r = s.evaluatePropertyString(v.toString(), c.header.mapValues(_.value)).get
             r
         }
-        c.withHeader(k,header).get
+        c.withHeader(k,header, overwrite).get
       }
       log.debug(s"Header transformation complete [$name] : $newMsg")
       Success(Seq(env.copy(flowMessage = newMsg)))

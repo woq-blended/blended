@@ -9,7 +9,7 @@ import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, LogProcessor}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.util.{Failure, Success}
@@ -83,10 +83,10 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
               val source :
                 Source[FlowEnvelope, NotUsed] =
                 Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
-                  .via(LogProcessor(LogLevel.Trace, s"$streamId-in")(Logger(s"From [bridge.in.${in.from.asString}]")))
+                  .via(LogProcessor(s"$streamId-in", Logger(s"From [bridge.in.${in.from.asString}]"), LogLevel.Trace).flow)
                   .via(new JmsSinkStage(toSettings)(context.system))
-                  .via(AckProcessor(s"$streamId-ack")(log))
-                  .via(LogProcessor(LogLevel.Trace, s"$streamId-in")(Logger(s"To [bridge.out.${toDest.asString}]")))
+                  .via(AckProcessor(s"$streamId-ack").flow)
+                  .via(LogProcessor(s"$streamId-in", Logger(s"From [bridge.out.${in.from.asString}]"), LogLevel.Trace).flow)
 
               val ctrlConfig = StreamControllerConfig(
                 name = streamId, stream = source
