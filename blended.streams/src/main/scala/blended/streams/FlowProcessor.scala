@@ -12,9 +12,7 @@ object FlowProcessor {
 
   type IntegrationStep = FlowEnvelope => Try[Seq[FlowEnvelope]]
 
-  private val log = Logger[FlowProcessor]
-
-  def fromFunction(name: String)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  def fromFunction(name: String, log: Logger)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     val applyFunction: Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
@@ -46,6 +44,7 @@ object FlowProcessor {
 trait FlowProcessor {
   val name : String
   val f : FlowProcessor.IntegrationStep
+  val log : Logger
 
-  def flow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction(name)(f)
+  def flow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction(name, log)(f)
 }

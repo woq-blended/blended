@@ -46,6 +46,7 @@ object DispatcherExecutor {
     val event = Sink.actorRef[FlowEnvelope](eventCollector, Completed)
 
     val g = DispatcherBuilder(
+      dispatcherId = "bridge.data.in",
       idSvc = idSvc,
       cfg = cfg,
       source = source,

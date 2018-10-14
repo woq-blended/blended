@@ -9,11 +9,10 @@ import scala.util.Success
 
 case class HeaderTransformProcessor(
   name : String,
+  log : Logger,
   rules : List[(String, Option[String], Boolean)],
   idSvc : Option[ContainerIdentifierService] = None
 ) extends FlowProcessor {
-
-  private val log = Logger[HeaderTransformProcessor]
 
   override val f: IntegrationStep = { env =>
 

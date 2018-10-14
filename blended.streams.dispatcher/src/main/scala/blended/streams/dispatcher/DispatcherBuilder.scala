@@ -6,11 +6,23 @@ import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Sink, Source}
 import blended.container.context.api.ContainerIdentifierService
+import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
-import blended.streams.message.FlowEnvelope
-import blended.streams.processor.HeaderTransformProcessor
+import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.processor.{HeaderTransformProcessor, LogProcessor}
+import blended.util.logging.{LogLevel, Logger}
+
+import scala.util.Success
+
+class MissingResourceType(msg: FlowMessage)
+  extends Exception(s"Missing ResourceType in [$msg] ")
+
+class IllegalResourceType(msg : FlowMessage, rt: String)
+  extends Exception(s"Illegal ResourceType [$rt] in [$msg]")
 
 case class DispatcherBuilder(
+
+  dispatcherId : String,
 
   idSvc : ContainerIdentifierService,
 
@@ -30,12 +42,46 @@ case class DispatcherBuilder(
   errorOut : Sink[FlowEnvelope, _]
 ) {
 
-  private val defaultHeader : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
-    HeaderTransformProcessor(
+  private[this] val streamLogger = Logger(s"dispatcher.$dispatcherId")
+  private[this] val logger = Logger[DispatcherBuilder]
+
+  /* The inbound flow simply consumes FlowEnvelopes from the source, adds all configured default headers
+   * and logs the inbound message.
+   *
+   * Finally it checks, whether the Resourcetype passed in with the message is configured in the config.
+  */
+  private val inbound : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    val defaultHeader = HeaderTransformProcessor(
       name = "defaultHeader",
+      log = streamLogger,
       rules = cfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
       idSvc = Some(idSvc)
     ).flow
+
+    val logStart = LogProcessor("logInbound", streamLogger, LogLevel.Info).flow
+
+    val checkResourceType = FlowProcessor.fromFunction("checkResourceType", streamLogger) { env =>
+
+      env.flowMessage.header[String]("ResourceType") match {
+        case None =>
+          val e = new MissingResourceType(env.flowMessage)
+          streamLogger.error(e)(e.getMessage)
+          Success(Seq(env.withException(e)))
+        case Some(rt) =>
+          cfg.resourceTypeConfigs.get(rt) match {
+            case None =>
+              val e = new IllegalResourceType(env.flowMessage, rt)
+              streamLogger.error(e)(e.getMessage)
+              Success(Seq(env.withException(e)))
+            case Some(rtCfg) =>
+              Success(Seq(env))
+          }
+      }
+    }
+
+    Flow.fromGraph(defaultHeader)
+      .via(Flow.fromGraph(logStart))
+      .via(Flow.fromGraph(checkResourceType))
   }
 
   def build() = {
@@ -47,7 +93,7 @@ case class DispatcherBuilder(
       val event : Inlet[FlowEnvelope] = builder.add(eventOut).in
       val error : Inlet[FlowEnvelope] = builder.add(errorOut).in
 
-      val header = builder.add(defaultHeader)
+      val header = builder.add(inbound)
 
       val errorSplit = builder.add(Broadcast[FlowEnvelope](2))
       val toJms = builder.add(Flow[FlowEnvelope].filter(_.exception.isEmpty))

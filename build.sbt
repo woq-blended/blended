@@ -16,8 +16,8 @@ addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned 
 // A convenience to package everything, sign it and push it to maven central
 addCommandAlias("ciRelease", s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
 
-addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
-addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
+addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
+addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 

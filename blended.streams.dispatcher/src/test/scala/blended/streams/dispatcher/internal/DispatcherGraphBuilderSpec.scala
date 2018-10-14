@@ -68,14 +68,14 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
     "add all configured default Headers" in {
 
-      val props : FlowMessageProps = Map("ResourceType" -> "Test")
+      val props : FlowMessageProps = Map("ResourceType" -> "SagTest")
       val good = FlowEnvelope(FlowMessage("Normal", props))
 
       val result = runDispatcher(good, good, good)
 
       result.out should have size(3)
       result.out.head.flowMessage.header[String]("ComponentName") should be (Some("Dispatcher"))
-      result.out.head.flowMessage.header[String]("ResourceType") should be (Some("Test"))
+      result.out.head.flowMessage.header[String]("ResourceType") should be (Some("SagTest"))
     }
   }
 }

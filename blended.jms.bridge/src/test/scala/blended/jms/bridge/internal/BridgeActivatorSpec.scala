@@ -56,7 +56,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
           maxRestarts = 10,
         ) { () => innerSource }
 
-        source.via(AckProcessor("testAck").flow)
+        source.via(AckProcessor("testAck", log).flow)
       }
 
 
