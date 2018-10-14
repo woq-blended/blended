@@ -8,6 +8,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.bridge.internal.BridgeActivator
+import blended.streams.dispatcher.{IllegalResourceType, MissingResourceType}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
@@ -71,11 +72,42 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val props : FlowMessageProps = Map("ResourceType" -> "SagTest")
       val good = FlowEnvelope(FlowMessage("Normal", props))
 
-      val result = runDispatcher(good, good, good)
+      val result = runDispatcher(good)
 
-      result.out should have size(3)
+      result.out should have size(1)
       result.out.head.flowMessage.header[String]("ComponentName") should be (Some("Dispatcher"))
       result.out.head.flowMessage.header[String]("ResourceType") should be (Some("SagTest"))
+    }
+
+    "yield a MissingResourceType exception when the resourcetype is not set in the inbound message" in {
+
+      val msg = FlowEnvelope(FlowMessage("Normal", FlowMessage.noProps))
+
+      val result = runDispatcher(msg)
+
+      result.out should be (empty)
+      result.event should be (empty)
+      result.error should have size(1)
+
+      result.error.head.exception should be (defined)
+
+      assert(result.error.head.exception.forall(t => t.isInstanceOf[MissingResourceType]))
+    }
+
+    "yield an IllegalResourceType exception when the resourcetype given in the message is not configured" in {
+
+      val props : FlowMessageProps = Map("ResourceType" -> "Dummy")
+      val msg = FlowEnvelope(FlowMessage("Normal", props))
+
+      val result = runDispatcher(msg)
+
+      result.out should be (empty)
+      result.event should be (empty)
+      result.error should have size(1)
+
+      result.error.head.exception should be (defined)
+
+      assert(result.error.head.exception.forall(t => t.isInstanceOf[IllegalResourceType]))
     }
   }
 }

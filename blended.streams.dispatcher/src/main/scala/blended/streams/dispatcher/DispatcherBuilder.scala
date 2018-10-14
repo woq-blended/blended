@@ -56,9 +56,9 @@ case class DispatcherBuilder(
       log = streamLogger,
       rules = cfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
       idSvc = Some(idSvc)
-    ).flow
+    ).flow(logger)
 
-    val logStart = LogProcessor("logInbound", streamLogger, LogLevel.Info).flow
+    val logStart = LogProcessor("logInbound", streamLogger, LogLevel.Info).flow(logger)
 
     val checkResourceType = FlowProcessor.fromFunction("checkResourceType", streamLogger) { env =>
 
@@ -84,7 +84,7 @@ case class DispatcherBuilder(
       .via(Flow.fromGraph(checkResourceType))
   }
 
-  def build() = {
+  def build(): RunnableGraph[NotUsed] = {
 
     val g  = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
 

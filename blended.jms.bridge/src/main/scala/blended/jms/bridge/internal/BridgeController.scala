@@ -85,10 +85,10 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
               val source :
                 Source[FlowEnvelope, NotUsed] =
                 Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
-                  .via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow)
+                  .via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
                   .via(new JmsSinkStage(toSettings)(context.system))
-                  .via(AckProcessor(s"$streamId-ack", streamLogger).flow)
-                  .via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow)
+                  .via(AckProcessor(s"$streamId-ack", streamLogger).flow(log))
+                  .via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
 
               val ctrlConfig = StreamControllerConfig(
                 name = streamId, stream = source

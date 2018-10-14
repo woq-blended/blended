@@ -31,19 +31,16 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   val same = new FlowProcessor {
     override val name: String = "identity"
-    override val log: Logger = log
     override val f: IntegrationStep = env => Success(Seq(env))
   }
 
   val multiply = new FlowProcessor {
     override val name: String = "multiply"
-    override val log: Logger = log
     override val f: IntegrationStep = env => Success(1.to(10).map(_ => env))
   }
 
   val faulty = new FlowProcessor {
     override val name: String = "faulty"
-    override val log: Logger = log
     override val f: IntegrationStep = env => Failure(new Exception("Boom"))
   }
 
@@ -52,7 +49,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process a a simple Intgration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(same.flow)
+        .via(same.flow(log))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {
@@ -65,7 +62,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process a a multiplying Intgration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(multiply.flow)
+        .via(multiply.flow(log))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {
@@ -79,7 +76,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process an Exception in an integration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(faulty.flow)
+        .via(faulty.flow(log))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {

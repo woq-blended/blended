@@ -44,7 +44,7 @@ object FlowProcessor {
 trait FlowProcessor {
   val name : String
   val f : FlowProcessor.IntegrationStep
-  val log : Logger
 
-  def flow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.fromFunction(name, log)(f)
+  def flow(log: Logger) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
+    FlowProcessor.fromFunction(name, log)(f)
 }
