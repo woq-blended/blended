@@ -10,6 +10,7 @@ import blended.streams.dispatcher.DispatcherBuilder
 import blended.streams.dispatcher.internal.CollectingActor.Completed
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
+import scala.concurrent.duration._
 
 case class DispatcherResult(
   out : Seq[FlowEnvelope],
@@ -56,9 +57,9 @@ object DispatcherExecutor {
     val foo = g.run(materializer)
 
     DispatcherResult(
-      out = jmsProbe.expectMsgType[List[FlowEnvelope]],
-      error = errorProbe.expectMsgType[List[FlowEnvelope]],
-      event = eventProbe.expectMsgType[List[FlowEnvelope]]
+      out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.minutes),
+      error = errorProbe.expectMsgType[List[FlowEnvelope]](10.minutes),
+      event = eventProbe.expectMsgType[List[FlowEnvelope]](10.minutes)
     )
   }
 }

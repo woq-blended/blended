@@ -71,9 +71,9 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val props : FlowMessageProps = Map("ResourceType" -> "Test")
       val good = FlowEnvelope(FlowMessage("Normal", props))
 
-      val result = runDispatcher(good)
+      val result = runDispatcher(good, good, good)
 
-      result.out should have size(1)
+      result.out should have size(3)
       result.out.head.flowMessage.header[String]("ComponentName") should be (Some("Dispatcher"))
       result.out.head.flowMessage.header[String]("ResourceType") should be (Some("Test"))
     }

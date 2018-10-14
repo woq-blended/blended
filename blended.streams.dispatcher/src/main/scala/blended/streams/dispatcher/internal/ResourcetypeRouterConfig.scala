@@ -69,9 +69,9 @@ object ResourceTypeRouterConfig {
 
     val logHeader : List[String] = cfg.getStringList(applicationLogHeaderPath, List.empty)
 
-    val defaultHeader : List[DefaultHeaderConfig] = cfg.getConfigMap(defaultHeaderPath, Map.empty).map{ case (key, cfg) =>
-      DefaultHeaderConfig.create(idSvc, key, cfg)
-    }.toList
+    val defaultHeader : List[DefaultHeaderConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map{ cfg =>
+      DefaultHeaderConfig.create(idSvc, cfg)
+    }
 
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,
@@ -85,9 +85,10 @@ object ResourceTypeRouterConfig {
 
 object DefaultHeaderConfig {
 
-  def create(idSvc : ContainerIdentifierService, name: String, cfg : Config) : DefaultHeaderConfig = {
+  def create(idSvc : ContainerIdentifierService, cfg : Config) : DefaultHeaderConfig = {
 
-    val expr = cfg.getString("expression")
+    val name = cfg.getString("name")
+    val expr = cfg.getStringOption("expression")
     val overwrite = cfg.getBoolean("overwrite", true)
 
     DefaultHeaderConfig(name, expr, overwrite)
@@ -96,7 +97,7 @@ object DefaultHeaderConfig {
 
 case class DefaultHeaderConfig(
   name : String,
-  value : String,
+  value : Option[String],
   overwrite : Boolean
 )
 

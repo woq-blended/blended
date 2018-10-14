@@ -19,7 +19,9 @@ object FlowProcessor {
     val applyFunction: Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
       val fun = Flow.fromFunction[FlowEnvelope, Seq[FlowEnvelope]] { env: FlowEnvelope =>
-        f(env) match {
+        val start = System.currentTimeMillis()
+
+        val result = f(env) match {
           case Success(l) => l match {
             case Seq() => l
             case r => l.take(l.size - 1).map(_.withRequiresAcknowledge(false)) ++ l.takeRight(1).map(_.withRequiresAcknowledge(true))
@@ -29,6 +31,9 @@ object FlowProcessor {
             log.warn(s"Exception in FlowProcessor [$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
             Seq(env.withException(t))
         }
+
+        log.debug(s"Integration step [$name] completed in [${System.currentTimeMillis() - start}]ms")
+        result
       }
 
       fun.mapConcat(_.toList)

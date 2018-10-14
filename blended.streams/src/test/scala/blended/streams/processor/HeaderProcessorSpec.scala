@@ -34,10 +34,10 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
   val src = Source.single(FlowEnvelope(msg))
   val sink = Sink.seq[FlowEnvelope]
 
-  val flow : (List[(String, String)], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
-    src.via(HeaderTransformProcessor(name = "t", rules = rules, overwrite = true, idSvc = idSvc).flow).toMat(sink)(Keep.right)
+  val flow : (List[(String, Option[String], Boolean)], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
+    src.via(HeaderTransformProcessor(name = "t", rules = rules, idSvc = idSvc).flow).toMat(sink)(Keep.right)
 
-  val result : (List[(String, String)], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
+  val result : (List[(String, Option[String], Boolean)], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
     Await.result(flow(rules, idSvc).run(), 3.seconds)
   }
 
@@ -50,7 +50,7 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
       val ctxt = new StandardEvaluationContext()
 
       val r = result(List(
-        "foo" -> "bar"
+        ("foo", Some("bar"), true)
       ), None)
 
       r should have size (1)
@@ -71,9 +71,9 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
             idSvc.resolvePropertyString("$[[Country]]").get should be ("cc")
 
             val r = result(List(
-              "foo" -> """$[[Country]]""",
-              "foo2" -> """${{#foo}}""",
-              "test" -> "${{42}}"
+              ("foo", Some("""$[[Country]]"""), true),
+              ("foo2", Some("""${{#foo}}"""), true),
+              ("test", Some("${{42}}"), true)
             ), Some(idSvc))
 
             log.info(r.toString())

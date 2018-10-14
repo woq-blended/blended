@@ -1,8 +1,12 @@
 package blended.container.context.api
 
 import blended.util.logging.Logger
+import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
+
+import scala.collection.mutable
+import scala.util.Try
 
 object ContainerPropertyResolver {
 
@@ -18,6 +22,20 @@ object ContainerPropertyResolver {
   private[this] val evalEndDelim = "}}"
 
   private[this] val parser = new SpelExpressionParser()
+
+  private[this] val elCache : mutable.Map[String, Expression] = mutable.Map.empty
+
+  private[this] def parseExpression(exp: String) : Try[Expression] = Try {
+
+    elCache.get(exp) match {
+      case Some(e) => e
+      case None =>
+        val r = parser.parseExpression(exp)
+        elCache += (exp -> r)
+        r
+    }
+  }
+
 
   private[this] def extractVariableElement(line: String, startDelim: String, endDelim: String) : (String, String, String) = {
 
@@ -68,7 +86,7 @@ object ContainerPropertyResolver {
     modifiers.get(modName).map { m => (m, params) }
   }
 
-  private[this] def processRule(idSvc: ContainerIdentifierService, rule: String, additionalProps: Map[String, String]) : String = {
+  private[this] def processRule(idSvc: ContainerIdentifierService, rule: String, additionalProps: Map[String, Any]) : String = {
 
     log.trace(s"Processing rule [$rule]")
 
@@ -103,7 +121,7 @@ object ContainerPropertyResolver {
             )
           )
         ) match {
-          case Some(s) => s
+          case Some(s) => s.toString()
           case None =>
             resolver(idSvc).get(ruleName) match {
               case Some(r) => r(ruleName)
@@ -132,12 +150,12 @@ object ContainerPropertyResolver {
             if (prefix.isEmpty && suffix.isEmpty) {
               evaluate(idSvc, eval, additionalProps)
             } else {
-              resolve(idSvc, prefix + evaluate(idSvc, eval, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+              resolve(idSvc, prefix + evaluate(idSvc, eval, additionalProps) + suffix, additionalProps)
             }
         }
       case n if n >= 0 =>
         val (prefix, rule, suffix) = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
-        resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+        resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps) + suffix, additionalProps)
     }
   }
 
@@ -148,10 +166,13 @@ object ContainerPropertyResolver {
     val context = new StandardEvaluationContext()
     context.setRootObject(idSvc)
 
-    additionalProps.foreach { case (k,v) => context.setVariable(k,v) }
+    additionalProps.foreach { case (k,v) =>
+      log.trace(s"Injecting variable into SpEL context : $k $v ${v.getClass.getName}")
+      context.setVariable(k,v)
+    }
     context.setVariable("idSvc", idSvc)
 
-    val exp = parser.parseExpression(line)
+    val exp = parseExpression(line).get
     val result = exp.getValue(context)
 
     result

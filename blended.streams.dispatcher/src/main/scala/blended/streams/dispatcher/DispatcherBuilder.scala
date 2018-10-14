@@ -31,22 +31,11 @@ case class DispatcherBuilder(
 ) {
 
   private val defaultHeader : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
-
-    val noOverwrite = HeaderTransformProcessor(
-      name = "headerNoOverwrite",
-      rules = cfg.defaultHeader.filter(!_.overwrite).map(h => (h.name, h.value)),
-      overwrite = false,
+    HeaderTransformProcessor(
+      name = "defaultHeader",
+      rules = cfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
       idSvc = Some(idSvc)
     ).flow
-
-    val overwrite = HeaderTransformProcessor(
-      name = "headerNoOverwrite",
-      rules = cfg.defaultHeader.filter(_.overwrite).map(h => (h.name, h.value)),
-      overwrite = true,
-      idSvc = Some(idSvc)
-    ).flow
-
-    Flow.fromGraph(noOverwrite).via(Flow.fromGraph(overwrite))
   }
 
   def build() = {

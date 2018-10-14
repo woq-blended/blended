@@ -105,13 +105,21 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     case None => default
   }
 
-  def withHeader(key: String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
+  def removeHeader(keys: String*) : FlowMessage
+
+  def withHeader(keys : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
+
+  protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filter(k => !keys.contains(k))
 
   protected def newHeader(key : String, value: Any, overwrite: Boolean) : Try[FlowMessageProps] = Try {
     if (overwrite) {
       header.filterKeys(_ != key) + (key -> MsgProperty.lift(value).get)
     } else {
-      header
+      if (header.isDefinedAt(key)) {
+        header
+      } else {
+        header + (key -> MsgProperty.lift(value).get)
+      }
     }
   }
 
@@ -128,6 +136,8 @@ case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMe
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
+
+  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
 }
 
 object BinaryFlowMessage {
@@ -142,12 +152,13 @@ case class BinaryFlowMessage(content : ByteString, override val header: FlowMess
 
   def getBytes() : ByteString = content
 
-
   override def bodySize(): Int = content.size
 
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
+
+  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
 }
 
 case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
@@ -159,4 +170,6 @@ case class TextFlowMessage(content : String, override val header: FlowMessagePro
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
+
+  override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
 }
