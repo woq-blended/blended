@@ -71,9 +71,9 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
             idSvc.resolvePropertyString("$[[Country]]").get should be ("cc")
 
             val r = result(List(
-              "foo" -> """"$[[Country]]"""",
-              "foo2" -> """#foo""",
-              "test" -> "42"
+              "foo" -> """$[[Country]]""",
+              "foo2" -> """${{#foo}}""",
+              "test" -> "${{42}}"
             ), Some(idSvc))
 
             log.info(r.toString())

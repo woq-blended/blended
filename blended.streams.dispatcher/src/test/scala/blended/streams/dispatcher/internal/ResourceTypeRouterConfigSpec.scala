@@ -49,7 +49,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
             val dispatcherCfg = idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
 
-            val cfg = ResourceTypeRouterConfig.create(idSvc, provider, dispatcherCfg, provider).get
+            val cfg = ResourceTypeRouterConfig.create(idSvc, provider, dispatcherCfg).get
 
             cfg.defaultProvider should be (amq)
             cfg.defaultEventProvider should be (sonic75)

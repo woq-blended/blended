@@ -24,8 +24,10 @@ case class HeaderTransformProcessor(
           case None =>
             v
           case Some(s) =>
-            val r = s.evaluatePropertyString(v.toString(), c.header.mapValues(_.value)).get
-            r
+            s.resolvePropertyString(
+              v.toString(),
+              c.header.mapValues(_.value) + ("envelope" -> env)
+            ).get
         }
         c.withHeader(k,header, overwrite).get
       }

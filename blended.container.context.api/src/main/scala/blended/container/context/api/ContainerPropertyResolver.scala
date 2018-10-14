@@ -3,9 +3,6 @@ package blended.container.context.api
 import blended.util.logging.Logger
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
-import scala.collection.JavaConverters._
-
-import scala.reflect.ClassTag
 
 object ContainerPropertyResolver {
 
@@ -14,12 +11,16 @@ object ContainerPropertyResolver {
 
   private[this] val log = Logger[ContainerPropertyResolver.type]
 
-  private[this] val startDelim = "$[["
-  private[this] val endDelim = "]]"
+  private[this] val resolveStartDelim = "$[["
+  private[this] val resolveEndDelim = "]]"
+
+  private[this] val evalStartDelim = "${{"
+  private[this] val evalEndDelim = "}}"
 
   private[this] val parser = new SpelExpressionParser()
 
-  private[this] def extractRule(line: String) : (String, String, String) = {
+  private[this] def extractVariableElement(line: String, startDelim: String, endDelim: String) : (String, String, String) = {
+
     line.lastIndexOf(startDelim) match {
       case -1 => ("", line, "")
       case start => line.indexOf(endDelim, start) match {
@@ -117,23 +118,40 @@ object ContainerPropertyResolver {
     result
   }
 
-  def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, String] = Map.empty) : String = line.indexOf(startDelim) match {
-    case n if n < 0 => line
-    case n if n >= 0 =>
-      val (prefix, rule, suffix) = extractRule(line)
-      resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+  private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+    log.trace(s"Resolving [$line]")
+    // First we check if we have replacements in "Blended Style"
+    line.indexOf(resolveStartDelim) match {
+      case n if n < 0 =>
+        // We don't have any
+        line.indexOf(evalStartDelim) match {
+          case i if i < 0 => line
+          case i if i >= 0 =>
+            val (prefix, eval, suffix) = extractVariableElement(line, evalStartDelim, evalEndDelim)
+
+            if (prefix.isEmpty && suffix.isEmpty) {
+              evaluate(idSvc, eval, additionalProps)
+            } else {
+              resolve(idSvc, prefix + evaluate(idSvc, eval, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+            }
+        }
+      case n if n >= 0 =>
+        val (prefix, rule, suffix) = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
+        resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps.mapValues(_.toString())) + suffix, additionalProps)
+    }
   }
 
-  def evaluate(
+  private[api] def evaluate(
     idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
 
-    val resolved = resolve(idSvc, line, additionalProps.mapValues(_.toString()))
     val context = new StandardEvaluationContext()
     context.setRootObject(idSvc)
-    additionalProps.foreach { case (k,v) => context.setVariable(k,v) }
 
-    val exp = parser.parseExpression(resolved)
+    additionalProps.foreach { case (k,v) => context.setVariable(k,v) }
+    context.setVariable("idSvc", idSvc)
+
+    val exp = parser.parseExpression(line)
     val result = exp.getValue(context)
 
     result

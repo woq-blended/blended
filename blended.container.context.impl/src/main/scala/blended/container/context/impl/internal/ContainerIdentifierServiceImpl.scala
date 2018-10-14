@@ -4,17 +4,22 @@ import java.io.File
 import java.nio.file.Files
 
 import scala.collection.JavaConverters._
-import scala.util.{ Success, Try }
-
-import blended.container.context.api.{ ContainerContext, ContainerIdentifierService }
+import scala.util.{Success, Try}
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
-class ContainerIdentifierServiceImpl(override val containerContext: ContainerContext) extends ContainerIdentifierService {
+import scala.beans.BeanProperty
+
+class ContainerIdentifierServiceImpl(
+  @BeanProperty
+  override val containerContext: ContainerContext
+) extends ContainerIdentifierService {
 
   private[this] val log = Logger[ContainerIdentifierServiceImpl]
 
+  @BeanProperty
   override lazy val uuid : String = {
     val idFile = new File(System.getProperty("blended.home") + "/etc", s"blended.container.context.id")
     val lines = Files.readAllLines(idFile.toPath)
@@ -26,6 +31,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
     }
   }
 
+  @BeanProperty
   override val properties : Map[String,String] = {
 
     val mandatoryPropNames : Seq[String] = Option(System.getProperty(RuntimeConfig.Properties.PROFILE_PROPERTY_KEYS)) match {
@@ -50,7 +56,7 @@ class ContainerIdentifierServiceImpl(override val containerContext: ContainerCon
       throw new RuntimeException(msg)
     }
 
-    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, resolvePropertyString(v)) }
+    val resolve : Map[String, Try[String]] = unresolved.map{ case (k,v) => (k, resolvePropertyString(v).map(_.toString())) }
 
     val resolveErrors = resolve.filter(_._2.isFailure)
 

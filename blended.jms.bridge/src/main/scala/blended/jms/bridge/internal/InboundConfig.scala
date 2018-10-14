@@ -11,7 +11,7 @@ object InboundConfig {
 
   def create(idSvc : ContainerIdentifierService, cfg: Config): Try[InboundConfig] = Try {
 
-    def resolve(value: String) : String = idSvc.resolvePropertyString(value).get
+    def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val name = resolve(cfg.getString("name"))
     val vendor = resolve(cfg.getString("vendor"))

@@ -2,6 +2,7 @@ package blended.streams.message
 
 import akka.NotUsed
 import akka.util.ByteString
+import blended.streams.message.FlowMessage.FlowMessageProps
 
 import scala.util.Try
 
@@ -23,14 +24,18 @@ object MsgProperty {
 
   import scala.language.implicitConversions
 
-  implicit def stringToProp(s: String) : MsgProperty[String] = StringMsgProperty(s)
-  implicit def intToProp(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
-  implicit def longToProp(l : Long) : MsgProperty[Long] = LongMsgProperty(l)
-  implicit def boolToProp(b : Boolean) : MsgProperty[Boolean] = BooleanMsgProperty(b)
-  implicit def byteToProp(b : Byte) : MsgProperty[Byte] = ByteMsgProperty(b)
-  implicit def shortToProp(s : Short) : MsgProperty[Short] = ShortMsgProperty(s)
-  implicit def floatToProp(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
-  implicit def doubleToProp(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
+  object Implicits {
+    implicit def stringToProp(s: String) : MsgProperty[String] = StringMsgProperty(s)
+    implicit def intToProp(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
+    implicit def longToProp(l : Long) : MsgProperty[Long] = LongMsgProperty(l)
+    implicit def boolToProp(b : Boolean) : MsgProperty[Boolean] = BooleanMsgProperty(b)
+    implicit def byteToProp(b : Byte) : MsgProperty[Byte] = ByteMsgProperty(b)
+    implicit def shortToProp(s : Short) : MsgProperty[Short] = ShortMsgProperty(s)
+    implicit def floatToProp(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
+    implicit def doubleToProp(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
+
+    implicit def mapToProps[S <: Any](p : Map[String, S]) : Try[FlowMessageProps] = Try { p.mapValues(v => MsgProperty.lift(v).get) }
+  }
 
   def apply(s : String) : MsgProperty[String] = StringMsgProperty(s)
   def apply(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
@@ -87,6 +92,8 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
   def body() : Any
   def header : FlowMessageProps = msgHeader
 
+  def bodySize() : Int
+
   def header[T](name : String): Option[T] = header.get(name) match {
     case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
     case Some(_) => None
@@ -115,6 +122,9 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = NotUsed
 
+
+  override def bodySize(): Int = 0
+
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
   }
@@ -129,7 +139,11 @@ object BinaryFlowMessage {
 
 case class BinaryFlowMessage(content : ByteString, override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = content
+
   def getBytes() : ByteString = content
+
+
+  override def bodySize(): Int = content.size
 
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)
@@ -139,6 +153,8 @@ case class BinaryFlowMessage(content : ByteString, override val header: FlowMess
 case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = content
   def getText(): String = content
+
+  override def bodySize(): Int = content.length()
 
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
     copy(header = newHeader(key, value, overwrite).get)

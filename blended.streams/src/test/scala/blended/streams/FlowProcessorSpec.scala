@@ -14,6 +14,7 @@ import org.scalatest.Matchers
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import MsgProperty.Implicits._
 
 class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   with LoggingFreeSpecLike

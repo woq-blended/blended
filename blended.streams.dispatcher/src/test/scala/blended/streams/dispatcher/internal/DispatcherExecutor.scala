@@ -5,11 +5,11 @@ import akka.actor.{ActorSystem, Props}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
+import blended.container.context.api.ContainerIdentifierService
 import blended.streams.dispatcher.DispatcherBuilder
 import blended.streams.dispatcher.internal.CollectingActor.Completed
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-import scala.concurrent.duration._
 
 case class DispatcherResult(
   out : Seq[FlowEnvelope],
@@ -21,13 +21,20 @@ object DispatcherExecutor {
 
   private val log = Logger[DispatcherExecutor.type]
 
-  def execute(testMessages : FlowEnvelope*)(implicit system: ActorSystem, materializer: ActorMaterializer) : DispatcherResult = {
+  def execute(
+    system: ActorSystem,
+    idSvc : ContainerIdentifierService,
+    cfg: ResourceTypeRouterConfig,
+    testMessages : FlowEnvelope*
+  ) : DispatcherResult = {
+
+    val materializer = ActorMaterializer()(system)
 
     val source: Source[FlowEnvelope, NotUsed] = Source(testMessages.toList)
 
-    val jmsProbe = TestProbe()
-    val errorProbe = TestProbe()
-    val eventProbe = TestProbe()
+    val jmsProbe = TestProbe()(system)
+    val errorProbe = TestProbe()(system)
+    val eventProbe = TestProbe()(system)
 
     val jmsCollector = system.actorOf(Props(new CollectingActor("out", jmsProbe.ref)))
     val errorCollector = system.actorOf(Props(new CollectingActor("error", errorProbe.ref)))
@@ -38,6 +45,8 @@ object DispatcherExecutor {
     val event = Sink.actorRef[FlowEnvelope](eventCollector, Completed)
 
     val g = DispatcherBuilder(
+      idSvc = idSvc,
+      cfg = cfg,
       source = source,
       jmsOut = out,
       errorOut = error,

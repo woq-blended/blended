@@ -23,7 +23,7 @@ object BridgeProviderConfig {
 
   def create(idSvc: ContainerIdentifierService, cfg: Config) : Try[BridgeProviderConfig] = Try {
 
-    def resolve(value: String) : String = idSvc.resolvePropertyString(value).get
+    def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val errorQueue = resolve(cfg.getString("errorQueue", "blended.error"))
     val eventQueue = resolve(cfg.getString("eventQueue", "blended.event"))

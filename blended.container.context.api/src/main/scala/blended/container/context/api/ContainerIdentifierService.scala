@@ -2,6 +2,8 @@ package blended.container.context.api
 
 import java.util.UUID
 
+import scala.annotation.meta.beanGetter
+import scala.beans.BeanProperty
 import scala.util.Try
 
 class PropertyResolverException(msg: String) extends Exception(msg)
@@ -14,20 +16,24 @@ class PropertyResolverException(msg: String) extends Exception(msg)
  * container meta data.
  */
 trait ContainerIdentifierService {
+  @BeanProperty
   lazy val uuid: String = UUID.randomUUID().toString()
+  @BeanProperty
   val properties: Map[String, String]
+  @BeanProperty
   val containerContext: ContainerContext
 
   /**
    * Try to resolve the properties inside a given String and return a string with the replaced properties values.
    */
-  def resolvePropertyString(value : String) : Try[String] = resolvePropertyString(value, Map.empty)
+  def resolvePropertyString(value : String) : Try[AnyRef] = resolvePropertyString(value, Map.empty)
 
-  def resolvePropertyString(value: String, additionalProps: Map[String, String]) : Try[String] =
-    Try(ContainerPropertyResolver.resolve(this, value, additionalProps))
+  def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
 
-  def evaluatePropertyString(value: String, additionalProps: Map[String, Any]) : Try[Any] =
-    Try(ContainerPropertyResolver.evaluate(this, value, additionalProps))
+    val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
+
+    r
+  }
 }
 
 object ContainerIdentifierService {

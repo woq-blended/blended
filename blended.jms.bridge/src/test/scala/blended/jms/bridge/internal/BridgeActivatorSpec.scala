@@ -21,6 +21,7 @@ import org.scalatest.Matchers
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.{Failure, Success}
+import MsgProperty.Implicits._
 
 
 class BridgeActivatorSpec extends LoggingFreeSpec

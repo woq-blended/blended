@@ -3,6 +3,7 @@ package blended.container.context.api
 import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
+import scala.beans.BeanProperty
 import scala.util.control.NonFatal
 
 
@@ -29,8 +30,11 @@ class PropertyResolverSpec extends FreeSpec
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
 
+    @BeanProperty
     override lazy val uuid: String = "id"
+    @BeanProperty
     override val containerContext: ContainerContext = ctCtxt
+    @BeanProperty
     override val properties: Map[String, String] = Map(
       "foo" -> "bar",
       "bar" -> "test",

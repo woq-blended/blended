@@ -3,6 +3,8 @@ package blended.streams.message
 import blended.jms.utils.JmsAckSession
 import javax.jms.Message
 
+import scala.beans.BeanProperty
+
 case class AckInfo(
   jmsMessage : Message,
   session : JmsAckSession,
@@ -10,9 +12,13 @@ case class AckInfo(
 )
 
 final case class FlowEnvelope(
+  @BeanProperty
   flowMessage : FlowMessage,
+  @BeanProperty
   exception :Option[Throwable] = None,
+  @BeanProperty
   requiresAcknowledge : Boolean = false,
+  @BeanProperty
   ackInfo : Option[AckInfo] = None
 ) {
   def clearException(): FlowEnvelope = copy(exception = None)

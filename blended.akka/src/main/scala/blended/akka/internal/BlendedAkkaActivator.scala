@@ -15,7 +15,7 @@ class BlendedAkkaActivator extends DominoActivator {
     whenServicePresent[ContainerIdentifierService] { svc =>
       val ctConfig = svc.containerContext.getContainerConfig()
 
-      log.debug(s"$ctConfig")
+      log.trace(s"$ctConfig")
 
       try {
         val system : ActorSystem = ActorSystem.create("BlendedActorSystem", ctConfig, classOf[ActorSystem].getClassLoader())

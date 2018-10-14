@@ -45,9 +45,9 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
         }.toList
 
       val inboundList : List[InboundConfig ]=
-        osgiCfg.config.getConfigList("inbound").asScala.map { i =>
+        osgiCfg.config.getConfigList("inbound", List.empty).map { i =>
           InboundConfig.create(osgiCfg.idSvc, i).get
-        }.toList
+        }
 
       val queuePrefix = osgiCfg.config.getString("queuePrefix", "blended.bridge")
 

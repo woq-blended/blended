@@ -14,6 +14,7 @@ object ResourceTypeRouterConfig {
   private[this] val defaultEventVendorPath = "defaultEventVendor"
   private[this] val defaultEventProviderPath = "defaultEventProvider"
   private[this] val applicationLogHeaderPath = "applicationLogHeader"
+  private[this] val defaultHeaderPath = "defaultHeader"
   private[this] val resourcetypesPath = "resourcetypes"
 
   private[dispatcher] def resolveProvider(
@@ -28,8 +29,8 @@ object ResourceTypeRouterConfig {
       case (Some(v), Some(p)) =>
         Some(getProvider(
           registry,
-          idSvc.resolvePropertyString(v).get,
-          idSvc.resolvePropertyString(p).get
+          idSvc.resolvePropertyString(v).map(_.toString()).get,
+          idSvc.resolvePropertyString(p).map(_.toString()).get
         ).get)
       case (_,_) =>
         None
@@ -49,9 +50,8 @@ object ResourceTypeRouterConfig {
 
   def create(
     idSvc : ContainerIdentifierService,
-    registry: BridgeProviderRegistry,
-    cfg: Config,
-    provider: BridgeProviderRegistry
+    provider: BridgeProviderRegistry,
+    cfg: Config
   ) : Try[ResourceTypeRouterConfig] = Try {
 
     val internalProvider = provider.internalProvider.get
@@ -64,27 +64,47 @@ object ResourceTypeRouterConfig {
 
     val routes : Map[String, ResourceTypeConfig] =
       cfg.getConfigMap(resourcetypesPath, Map.empty).map { case (key, value) =>
-        key -> ResourceTypeConfig.create(idSvc, registry, key, internalProvider, eventProvider, value).get
+        key -> ResourceTypeConfig.create(idSvc, provider, key, internalProvider, eventProvider, value).get
       }
 
-    val logHeader : List[String] = cfg.hasPath(applicationLogHeaderPath) match {
-      case true => cfg.getStringList(applicationLogHeaderPath).asScala.toList
-      case _ => List.empty
-    }
+    val logHeader : List[String] = cfg.getStringList(applicationLogHeaderPath, List.empty)
+
+    val defaultHeader : List[DefaultHeaderConfig] = cfg.getConfigMap(defaultHeaderPath, Map.empty).map{ case (key, cfg) =>
+      DefaultHeaderConfig.create(idSvc, key, cfg)
+    }.toList
 
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,
       defaultEventProvider = eventProvider,
       applicationLogHeader = logHeader,
+      defaultHeader = defaultHeader,
       resourceTypeConfigs = routes
     )
   }
 }
 
+object DefaultHeaderConfig {
+
+  def create(idSvc : ContainerIdentifierService, name: String, cfg : Config) : DefaultHeaderConfig = {
+
+    val expr = cfg.getString("expression")
+    val overwrite = cfg.getBoolean("overwrite", true)
+
+    DefaultHeaderConfig(name, expr, overwrite)
+  }
+}
+
+case class DefaultHeaderConfig(
+  name : String,
+  value : String,
+  overwrite : Boolean
+)
+
 case class ResourceTypeRouterConfig(
   defaultProvider : BridgeProviderConfig,
   defaultEventProvider : BridgeProviderConfig,
   applicationLogHeader : List[String],
+  defaultHeader : List[DefaultHeaderConfig],
   resourceTypeConfigs : Map[String, ResourceTypeConfig]
 )
 
@@ -159,7 +179,7 @@ object OutboundRouteConfig {
       case None => defaultEventProvider
     }
 
-    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).get).get)
+    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).map(_.toString()).get).get)
     val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
     val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(List.empty)
     val outboundHeader  = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(idSvc, c).get)
@@ -212,11 +232,11 @@ object InboundRouteConfig {
     cfg: Config
   ) : Try[InboundRouteConfig] = Try {
 
-    val destName = idSvc.resolvePropertyString(cfg.getString(inboundUriPath)).get
+    val destName = idSvc.resolvePropertyString(cfg.getString(inboundUriPath)).map(_.toString()).get
 
     InboundRouteConfig(
       entry = JmsDestination.create(destName).get,
-      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).get)
+      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).map(_.toString()).get)
     )
   }
 }
@@ -232,8 +252,8 @@ object OutboundHeaderConfig {
 
   def create (idSvc: ContainerIdentifierService, cfg: Config) : Try[OutboundHeaderConfig] = Try {
     new OutboundHeaderConfig(
-      condition = cfg.getStringOption(conditionPath).map(s => idSvc.resolvePropertyString(s).get),
-      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).get)
+      condition = cfg.getStringOption(conditionPath).map(s => idSvc.resolvePropertyString(s).map(_.toString()).get),
+      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).map(_.toString()).get)
     )
   }
 }

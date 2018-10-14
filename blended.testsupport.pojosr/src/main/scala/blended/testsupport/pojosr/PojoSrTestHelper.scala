@@ -78,6 +78,14 @@ trait PojoSrTestHelper {
     result
   }
 
+  def mandatoryService[T](sr: BlendedPojoRegistry)(filter: Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : T = {
+
+    waitOnService[T](sr)(filter) match {
+      case Some(s) => s
+      case None => throw new Exception(s"Service of type [${clazz.runtimeClass.getName()}] with filter [$filter] not available. ")
+    }
+  }
+
   def withStartedBundles[T](sr: BlendedPojoRegistry)(
       bundles: Seq[(String, Option[() => BundleActivator])]
   )(f: BlendedPojoRegistry => T): T = {

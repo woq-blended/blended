@@ -1,8 +1,11 @@
 package blended.streams.testapps
 
+import blended.streams.message
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{BaseFlowMessage, BinaryFlowMessage, FlowMessage, TextFlowMessage}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
+import blended.streams.message.MsgProperty.Implicits._
 
 import scala.util.Success
 
@@ -29,10 +32,11 @@ class FlowMessageSpec extends LoggingFreeSpec
     }
 
     "Allow to set and overwrite a property" in {
-      val msg : FlowMessage = FlowMessage(Map("foo" -> "bar"))
+      val props : FlowMessageProps = Map("foo" -> "bar")
+      val msg : FlowMessage = FlowMessage("text", props)
 
-      msg.withHeader("newProp", "test") should be (Success(BaseFlowMessage(Map("foo" -> "bar", "newProp" -> "test"))))
-      msg.withHeader("foo", "newBar") should be (Success(BaseFlowMessage(Map("foo" -> "newBar"))))
+      msg.withHeader("newProp", "test") should be (Success(TextFlowMessage("text", Map("foo" -> "bar", "newProp" -> "test"))))
+      msg.withHeader("foo", "newBar") should be (Success(TextFlowMessage("text", Map("foo" -> "newBar"))))
       msg.withHeader("foo", "noBar", overwrite = false) should be (Success(msg))
     }
   }

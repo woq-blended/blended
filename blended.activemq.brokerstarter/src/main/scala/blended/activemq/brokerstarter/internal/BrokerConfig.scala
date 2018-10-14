@@ -19,7 +19,7 @@ object BrokerConfig {
 
   def create(brokerName : String, idSvc: ContainerIdentifierService, cfg: Config) : Try[BrokerConfig] = Try {
 
-    def resolve(value: String) : String = idSvc.resolvePropertyString(value).get
+    def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val name = resolve(cfg.getString("brokerName", brokerName))
     val provider = resolve(cfg.getString("provider", brokerName))

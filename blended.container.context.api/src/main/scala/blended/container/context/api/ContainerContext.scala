@@ -2,6 +2,8 @@ package blended.container.context.api
 
 import com.typesafe.config.Config
 
+import scala.annotation.meta.beanGetter
+
 trait ContainerContext {
 
   def getContainerDirectory() : String
