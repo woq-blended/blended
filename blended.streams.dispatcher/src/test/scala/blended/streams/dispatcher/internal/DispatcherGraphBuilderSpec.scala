@@ -105,7 +105,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val result = runDispatcher(msg)
 
       result.out should be (empty)
-      result.event should be (empty)
+      result.event should have size(1)
       result.error should have size(1)
 
       result.error.head.exception should be (defined)
@@ -121,7 +121,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val result = runDispatcher(msg)
 
       result.out should be (empty)
-      result.event should be (empty)
+      result.event should have size(1)
       result.error should have size(1)
 
       result.error.head.exception should be (defined)
@@ -137,7 +137,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val result = runDispatcher(msg)
 
       result.out should be (empty)
-      result.event should be (empty)
+      result.event should have size(1)
       result.error should have size(1)
 
       result.error.head.exception should be (defined)
@@ -183,7 +183,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
         HEADER_CBE_ENABLED -> false,
       ), noCbeOut.head) should be (empty)
 
-      result.event should be (empty)
+      result.event should have size(2)
       result.error should be (empty)
 
     }

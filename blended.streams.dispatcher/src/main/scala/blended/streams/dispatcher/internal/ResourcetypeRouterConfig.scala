@@ -3,6 +3,7 @@ package blended.streams.dispatcher.internal
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
+import blended.streams.jms.JmsDeliveryMode
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
@@ -159,6 +160,7 @@ object OutboundRouteConfig {
   private[this] val eventVendorPath = "eventVendor"
   private[this] val eventProviderPath = "eventProvider"
   private[this] val eventDestinationPath = "eventDestination"
+  private[this] val deliveryModePath = "deliveryMode"
 
   def create(
     idSvc : ContainerIdentifierService,
@@ -188,6 +190,7 @@ object OutboundRouteConfig {
     val autoComplete = cfg.getBoolean(autocompletePath, true)
     val maxRetries = cfg.getLong(maxRetryPath, -1L)
     val timeToLive = cfg.getLong(timeToLivePath, 0L)
+    val delMode = cfg.getString(deliveryModePath, JmsDeliveryMode.Persistent.asString)
 
     OutboundRouteConfig(
       id = id,
@@ -200,7 +203,8 @@ object OutboundRouteConfig {
       timeToLive = timeToLive,
       moduleLastOnComplete = moduleLastOnComplete,
       clearBody = clearBody,
-      autoComplete = autoComplete
+      autoComplete = autoComplete,
+      deliveryMode = delMode
     )
   }
 }
@@ -212,6 +216,7 @@ case class OutboundRouteConfig(
   eventProvider : BridgeProviderConfig,
   applicationLogHeader : List[String],
   outboundHeader: List[OutboundHeaderConfig],
+  deliveryMode : String,
   maxRetries: Long,
   timeToLive : Long,
   moduleLastOnComplete: Boolean,

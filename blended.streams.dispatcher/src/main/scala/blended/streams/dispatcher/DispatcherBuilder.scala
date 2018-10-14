@@ -84,6 +84,13 @@ case class DispatcherBuilder(
       .via(Flow.fromGraph(checkResourceType))
   }
 
+  private lazy val outbound : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+
+    Flow.fromGraph(decideCbe)
+      .via(Flow.fromGraph(outboundMsg))
+      .via(Flow.fromGraph(routingDecider))
+  }
+
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val defaultHeader = HeaderTransformProcessor(
     name = "defaultHeader",
@@ -171,6 +178,26 @@ case class DispatcherBuilder(
   }
 
   /*-------------------------------------------------------------------------------------------------*/
+  private lazy val outboundMsg = FlowProcessor.fromFunction("outboundMsg", streamLogger) { env =>
+    Try {
+      Seq(env)
+    }
+  }
+
+  /*-------------------------------------------------------------------------------------------------*/
+  private lazy val routingDecider = FlowProcessor.fromFunction("routingDecider", streamLogger) { env =>
+    Try {
+      Seq(env)
+    }
+  }
+
+  private lazy val transactionEvent = FlowProcessor.fromFunction("startTransaction", streamLogger) { env =>
+    Try {
+      Seq(env)
+    }
+  }
+
+  /*-------------------------------------------------------------------------------------------------*/
   def build(): RunnableGraph[NotUsed] = {
 
     val g  = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
@@ -183,32 +210,35 @@ case class DispatcherBuilder(
 
       // This is where we pick up the messages from the source, populate the headers
       // and perform initial checks if the message can be processed
-      val header = builder.add(inbound)
+      val processInbound = builder.add(inbound)
 
       // The fanout step will produce one envelope per outbound config of the resource
       // sent in the message. The envelope context will contain the config for the outbound
       // branch and the overall resource type config.
-      val fanout = builder.add(fanoutOutbound)
+      val processFanout = builder.add(fanoutOutbound)
 
       // Finally, we define a subflow which processes each fanout messsage in turn,
       // it will generate CBE events, populate the outbound header sections and
       // finally set the external destination
-      val processOutbound = builder.add(decideCbe)
+      val processOutbound = builder.add(outbound)
+
+      // Here we send a copy of the message populated with default headers to the
+      // event output
+      val eventSplit = builder.add(Broadcast[FlowEnvelope](2))
+      val processEvent = builder.add(transactionEvent)
 
       // The error splitter pushes all envelopes that have an exception defined to the error sink
       // and all messages without an exception defined to the normal sink
-      val errorSplit = builder.add(Broadcast[FlowEnvelope](2))
+      val errorFilter = builder.add(Broadcast[FlowEnvelope](2))
       val toJms = builder.add(Flow[FlowEnvelope].filter(_.exception.isEmpty))
       val toError = builder.add(Flow[FlowEnvelope].filter(_.exception.isDefined))
 
       // wire up the steps
-      in ~> header ~> fanout ~> processOutbound ~> errorSplit.in
+      in ~> processInbound ~> eventSplit ~> processFanout ~> processOutbound ~> errorFilter
+                              eventSplit ~> processEvent ~> event
 
-      errorSplit.out(0) ~> toJms ~> jms
-      errorSplit.out(1) ~> toError ~> error
-
-      // TODO : Wire up the event sink
-      Source.empty[FlowEnvelope] ~> event
+      errorFilter ~> toJms ~> jms
+      errorFilter ~> toError ~> error
 
       ClosedShape
     })
