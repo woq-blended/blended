@@ -56,7 +56,7 @@ object MsgProperty {
       case s: java.lang.Short => apply(s)
       case f: java.lang.Float => apply(f)
       case d: java.lang.Double => apply(d)
-      case _ => throw new IllegalArgumentException("Unsupported Msg Property type")
+      case _ => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
     }
   }
 

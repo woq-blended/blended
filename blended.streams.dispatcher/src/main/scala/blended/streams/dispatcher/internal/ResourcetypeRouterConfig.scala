@@ -130,7 +130,7 @@ object ResourceTypeConfig {
 
     ResourceTypeConfig(
       resourceType = resType,
-      withCBE = !cfg.hasPath(cbePath) || cfg.getBoolean(cbePath),
+      withCBE = cfg.getBoolean("withCBE", true),
       outbound = outboundRoutes,
       inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(idSvc, c).get)
     )

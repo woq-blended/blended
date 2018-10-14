@@ -25,7 +25,7 @@ case class HeaderTransformProcessor(
           case None =>
             c.removeHeader(k)
           case Some(v) =>
-            val header = idSvc match {
+            val header = Option(idSvc match {
               case None =>
                 v
               case Some(s) =>
@@ -34,11 +34,18 @@ case class HeaderTransformProcessor(
                   v.toString(),
                   props + ("envelope" -> env)
                 ).get
-            }
-            log.debug(s"Processed Header [$k, $overwrite] : [$header]")
-            c.withHeader(k, header, overwrite).get
-        }
+            })
 
+            // Header might be null if a refernced property does not exist
+            header match {
+              case None =>
+                log.warn(s"Header [$k] resolved to [null]")
+                c
+              case Some(v) =>
+                log.debug(s"Processed Header [$k, $overwrite] : [$v]")
+                c.withHeader(k, v, overwrite).get
+            }
+        }
       }
       log.debug(s"Header transformation complete [$name] : $newMsg")
       Success(Seq(env.copy(flowMessage = newMsg)))
