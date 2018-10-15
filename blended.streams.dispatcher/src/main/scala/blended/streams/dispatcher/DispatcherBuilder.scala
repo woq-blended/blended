@@ -150,28 +150,25 @@ case class DispatcherBuilder(
 
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val checkResourceType = FlowProcessor.fromFunction("checkResourceType", streamLogger) { env =>
-    env.header[String](HEADER_RESOURCETYPE) match {
-      case None =>
-        val e = new MissingResourceType(env.flowMessage)
-        streamLogger.error(e)(e.getMessage)
-        Success(Seq(env.withException(e)))
-      case Some(rt) =>
-        dispatcherCfg.resourceTypeConfigs.get(rt) match {
-          case None =>
-            val e = new IllegalResourceType(env.flowMessage, rt)
-            streamLogger.error(e)(e.getMessage)
-            Success(Seq(env.withException(e)))
-          case Some(rtCfg) =>
-            rtCfg.outbound match {
-              case Nil =>
-                val e = new MissingOutboundRouting(rt)
-                streamLogger.error(e)(e.getMessage)
-                Success(Seq(env.withException(e)))
-              case _ =>
-                Success(Seq(env.setInContext(rtConfigKey, rtCfg)))
-            }
-        }
+    Try {
+      env.header[String](HEADER_RESOURCETYPE) match {
+        case None =>
+          throw new MissingResourceType(env.flowMessage)
+        case Some(rt) =>
+          dispatcherCfg.resourceTypeConfigs.get(rt) match {
+            case None =>
+              throw new IllegalResourceType(env.flowMessage, rt)
+            case Some(rtCfg) =>
+              rtCfg.outbound match {
+                case Nil =>
+                  throw new MissingOutboundRouting(rt)
+                case _ =>
+                  Seq(env.setInContext(rtConfigKey, rtCfg))
+              }
+          }
+      }
     }
+
   }
 
   private def withContextObject[T](key : String, env: FlowEnvelope)(f : T => Seq[FlowEnvelope])(implicit classTag: ClassTag[T]) : Seq[FlowEnvelope] = {

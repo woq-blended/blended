@@ -26,7 +26,8 @@ object FlowProcessor {
             val result = f(env) match {
               case Success(l) => l match {
                 case Seq() => l
-                case r => l.take(l.size - 1).map(_.withRequiresAcknowledge(false)) ++ l.takeRight(1).map(_.withRequiresAcknowledge(true))
+                case r if env.requiresAcknowledge => l.take(l.size - 1).map(_.withRequiresAcknowledge(false)) ++ l.takeRight(1).map(_.withRequiresAcknowledge(true))
+                case l => l
               }
 
               case Failure(t) =>
