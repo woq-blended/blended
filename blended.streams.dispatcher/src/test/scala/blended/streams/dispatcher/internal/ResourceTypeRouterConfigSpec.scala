@@ -42,21 +42,21 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
             }.toList
             val provider = new BridgeProviderRegistry(providerList)
 
-            val amq = ResourceTypeRouterConfig.getProvider(provider, "activemq", "activemq").get
-            val sonic75 = ResourceTypeRouterConfig.getProvider(provider, "sonic75", "central").get
-            val ccQueue = ResourceTypeRouterConfig.getProvider(provider, "sagum", "cc_queue").get
-            val ccTopic = ResourceTypeRouterConfig.getProvider(provider, "sagum", "cc_topic").get
+            val amq = ProviderResolver.getProvider(provider, "activemq", "activemq").get
+            val sonic75 = ProviderResolver.getProvider(provider, "sonic75", "central").get
+            val ccQueue = ProviderResolver.getProvider(provider, "sagum", "cc_queue").get
+            val ccTopic = ProviderResolver.getProvider(provider, "sagum", "cc_topic").get
 
             val dispatcherCfg = idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
 
             val cfg = ResourceTypeRouterConfig.create(idSvc, provider, dispatcherCfg).get
 
             cfg.defaultProvider should be (amq)
-            cfg.defaultEventProvider should be (sonic75)
+            cfg.eventProvider should be (sonic75)
 
-            (cfg.defaultEventProvider.vendor, cfg.defaultEventProvider.provider) should be ("sonic75", "central")
+            (cfg.eventProvider.vendor, cfg.eventProvider.provider) should be ("sonic75", "central")
 
-            cfg.defaultEventProvider.inbound should be (JmsQueue("bridge.data.in"))
+            cfg.eventProvider.inbound should be (JmsQueue("bridge.data.in"))
             cfg.applicationLogHeader.size should be (3)
 
             val sagTest = cfg.resourceTypeConfigs.get("SagTest").get

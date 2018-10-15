@@ -18,16 +18,17 @@ final case class JmsSendParameter(
 )
 
 trait JmsEnvelopeHeader {
-  val jmsHeaderPrefix : JmsSettings => String = settings => settings.headerPrefix + "JMS"
+  val jmsHeaderPrefix : String => String = s => s + "JMS"
 
-  val srcVendorHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcVendor"
-  val srcProviderHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcProvider"
-  val srcDestHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "SrcDestination"
-  val destHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Destination"
-  val corrIdHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "CorrelationId"
-  val priorityHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Priority"
-  val expireHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "Expiration"
-  val deliveryModeHeader : JmsSettings => String = s => jmsHeaderPrefix(s) + "DeliveryMode"
+  val srcVendorHeader : String => String = s => jmsHeaderPrefix(s) + "SrcVendor"
+  val srcProviderHeader : String => String = s => jmsHeaderPrefix(s) + "SrcProvider"
+  val srcDestHeader : String => String = s => jmsHeaderPrefix(s) + "SrcDestination"
+  val destHeader : String => String = s => jmsHeaderPrefix(s) + "Destination"
+  val corrIdHeader : String => String = s => jmsHeaderPrefix(s) + "CorrelationId"
+  val priorityHeader : String => String = s => jmsHeaderPrefix(s) + "Priority"
+  val expireHeader : String => String = s => jmsHeaderPrefix(s) + "Expiration"
+  val deliveryModeHeader : String => String = s => jmsHeaderPrefix(s) + "DeliveryMode"
+  val replyToHeader : String => String = s => jmsHeaderPrefix(s) + "ReplyTo"
 }
 
 object JmsFlowSupport extends JmsEnvelopeHeader {
@@ -37,7 +38,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
   val jms2flowMessage : (JmsSettings, Message) => Try[FlowMessage] = { (settings, msg) => Try {
 
-    expireHeader
+    val prefix = settings.headerPrefix
 
     val props: Map[String, MsgProperty[_]] = {
 
@@ -46,23 +47,26 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       val delMode = new JmsDeliveryMode(msg.getJMSDeliveryMode()).asString
 
       val headers : Map[String, MsgProperty[_]] = Map(
-        srcVendorHeader(settings) -> MsgProperty.lift(settings.connectionFactory.vendor).get,
-        srcProviderHeader(settings) -> MsgProperty.lift(settings.connectionFactory.provider).get,
-        srcDestHeader(settings) -> MsgProperty.lift(dest).get,
-        priorityHeader(settings) -> MsgProperty.lift(msg.getJMSPriority()).get,
-        deliveryModeHeader(settings) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
-        expireHeader(settings) -> MsgProperty.lift(msg.getJMSExpiration()).get,
-        deliveryModeHeader(settings) -> MsgProperty.lift(delMode).get
+        srcVendorHeader(prefix) -> MsgProperty.lift(settings.connectionFactory.vendor).get,
+        srcProviderHeader(prefix) -> MsgProperty.lift(settings.connectionFactory.provider).get,
+        srcDestHeader(prefix) -> MsgProperty.lift(dest).get,
+        priorityHeader(prefix) -> MsgProperty.lift(msg.getJMSPriority()).get,
+        deliveryModeHeader(prefix) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
+        expireHeader(prefix) -> MsgProperty.lift(msg.getJMSExpiration()).get,
+        deliveryModeHeader(prefix) -> MsgProperty.lift(delMode).get
       )
 
       val corrIdMap : Map[String, MsgProperty[_]] =
-        Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(settings) -> MsgProperty.lift(s).get).toMap
+        Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(prefix) -> MsgProperty.lift(s).get).toMap
 
       val props : Map[String, MsgProperty[_]] = msg.getPropertyNames().asScala.map { name =>
         (name.toString -> lift(msg.getObjectProperty(name.toString())).get)
       }.toMap
 
-      props ++ headers ++ corrIdMap
+      val replyToMap : Map[String, MsgProperty[_]] =
+        Option(msg.getJMSReplyTo()).map( d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
+
+      props ++ headers ++ corrIdMap ++ replyToMap
     }
 
     val flowMessge = msg match {

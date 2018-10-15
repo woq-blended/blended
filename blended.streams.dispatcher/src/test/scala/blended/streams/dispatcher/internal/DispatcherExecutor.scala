@@ -48,7 +48,7 @@ object DispatcherExecutor {
     val g = DispatcherBuilder(
       dispatcherId = "bridge.data.in",
       idSvc = idSvc,
-      cfg = cfg,
+      dispatcherCfg = cfg,
       source = source,
       jmsOut = out,
       errorOut = error,

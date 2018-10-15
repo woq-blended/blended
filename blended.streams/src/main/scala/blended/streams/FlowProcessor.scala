@@ -20,6 +20,7 @@ object FlowProcessor {
 
         env.exception match {
           case None =>
+            log.info(s"Starting Integrationstep [${env.id}]:[$name]")
             val start = System.currentTimeMillis()
 
             val result = f(env) match {
@@ -29,13 +30,14 @@ object FlowProcessor {
               }
 
               case Failure(t) =>
-                log.warn(s"Exception in FlowProcessor [$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+                log.warn(t)(s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
                 Seq(env.withException(t))
             }
 
-            log.debug(s"Integration step [$name] completed in [${System.currentTimeMillis() - start}]ms")
+            log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
             result
           case Some(_) =>
+            log.debug(s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")
             Seq(env)
         }
       }

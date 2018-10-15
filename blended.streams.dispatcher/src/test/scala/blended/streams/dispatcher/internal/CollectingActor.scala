@@ -21,10 +21,8 @@ class CollectingActor(name: String, cbActor: ActorRef) extends Actor {
   override def receive: Receive = {
 
     case env: FlowEnvelope =>
-      log.debug(s"Collecting Actor [$name] received envelope [$env]")
       envelopes += env
     case CollectingActor.Completed =>
-      log.debug(s"Collecting Actor [$name] completed with [${envelopes.mkString(",")}]")
       cbActor ! envelopes.toList
   }
 }

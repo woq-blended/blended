@@ -6,14 +6,18 @@ import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Sink, Source}
 import blended.container.context.api.ContainerIdentifierService
+import blended.jms.bridge.BridgeProviderConfig
+import blended.jms.utils.{JmsDestination, JmsQueue}
 import blended.streams.FlowProcessor
-import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeConfig, ResourceTypeRouterConfig}
-import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.processor.{HeaderTransformProcessor, LogProcessor}
+import blended.streams.dispatcher.internal._
+import blended.streams.jms.JmsFlowSupport
+import blended.streams.message.{BaseFlowMessage, FlowEnvelope, FlowMessage}
+import blended.streams.processor.HeaderTransformProcessor
+import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.{LogLevel, Logger}
 
 import scala.reflect.ClassTag
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 class MissingResourceType(msg: FlowMessage)
   extends Exception(s"Missing ResourceType in [$msg] ")
@@ -27,22 +31,35 @@ class MissingOutboundRouting(rt: String)
 class MissingContextObject(key: String, clazz: String)
   extends Exception(s"Missing context object [$key], expected type [$clazz]")
 
+class JmsDestinationMissing(env: FlowEnvelope, outbound : OutboundRouteConfig)
+  extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [${outbound.id}]")
+
 object DispatcherBuilder {
 
-  val resourceTypeHeader = "ResourceType"
-  val rtConfigKey = classOf[ResourceTypeConfig].getSimpleName()
-  val outboundCfgKey = classOf[OutboundRouteConfig].getSimpleName()
+  // Keys to stick objects into the FlowEnvelope context
+  val appHeaderKey : String = "AppLogHeader"
+  val rtConfigKey : String = classOf[ResourceTypeConfig].getSimpleName()
+  val outboundCfgKey : String = classOf[OutboundRouteConfig].getSimpleName()
 
-  // TODO: Move this to the API
-  val HEADER_BRIDGE_VENDOR       = "SIBBridgeVendor"
-  val HEADER_BRIDGE_PROVIDER     = "SIBBridgeProvider"
-  val HEADER_BRIDGE_DEST         = "SIBBridgeDestination"
+  val HEADER_RESOURCETYPE        = "ResourceType"
 
-  val HEADER_CBE_ENABLED         = "SIBCbeEnabled"
+  val HEADER_BRIDGE_VENDOR       : String => String = prefix => prefix + "BridgeVendor"
+  val HEADER_BRIDGE_PROVIDER     : String => String = prefix => prefix + "BridgeProvider"
+  val HEADER_BRIDGE_DEST         : String => String = prefix => prefix + "BridgeDestination"
 
-  val HEADER_EVENT_VENDOR        = "SIBEventVendor"
-  val HEADER_EVENT_PROVIDER      = "SIBEventProvider"
-  val HEADER_EVENT_DEST          = "SIBEventDestination"  
+  val HEADER_CBE_ENABLED         : String => String = prefix => prefix + "CbeEnabled"
+
+  val HEADER_EVENT_VENDOR        : String => String = prefix => prefix + "EventVendor"
+  val HEADER_EVENT_PROVIDER      : String => String = prefix => prefix + "EventProvider"
+  val HEADER_EVENT_DEST          : String => String = prefix => prefix + "EventDestination"
+  val HEADER_OUTBOUND_ID         : String => String = prefix => prefix + "OutboundId"
+
+  val HEADER_BRIDGE_RETRY        : String => String = prefix => prefix + "Retry"
+  val HEADER_BRIDGE_RETRYCOUNT   : String => String = prefix => prefix + "BridgeRetryCount"
+  val HEADER_BRIDGE_MAX_RETRY    : String => String = prefix => prefix + "BridgeMaxRetry"
+  val HEADER_BRIDGE_CLOSE        : String => String = prefix => prefix + "BridgeCloseTA"
+
+  val HEADER_TIMETOLIVE          : String => String = prefix => prefix + "TimeToLive"
 }
 
 case class DispatcherBuilder(
@@ -52,7 +69,7 @@ case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
 
   // The Dispatcher configuration
-  cfg: ResourceTypeRouterConfig,
+  dispatcherCfg: ResourceTypeRouterConfig,
 
   // Inbound messages
   source : Source[FlowEnvelope, _],
@@ -72,6 +89,37 @@ case class DispatcherBuilder(
   private[this] val streamLogger = Logger(s"dispatcher.$dispatcherId")
   private[this] val logger = Logger[DispatcherBuilder]
 
+  private[this] val prefix = dispatcherCfg.headerPrefix
+
+  /*-------------------------------------------------------------------------------------------------*/
+  private lazy val logEnvelope : String => LogLevel => Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = stepName => level =>
+
+    FlowProcessor.fromFunction( stepName, streamLogger) { env =>
+
+      Try {
+
+        val maxRetries = env.headerWithDefault[Long](HEADER_BRIDGE_MAX_RETRY(prefix), -1)
+        val retryCount = env.headerWithDefault[Long](HEADER_BRIDGE_RETRY(prefix), 0L)
+
+        val logHeader : List[String] = env.getFromContext[List[String]](appHeaderKey) match {
+          case Success(l) => l.getOrElse(List.empty)
+          case Failure(_) => dispatcherCfg.applicationLogHeader
+        }
+
+        val headerString : Map[String, String] = logHeader match {
+          case Nil => env.flowMessage.header.mapValues(_.value.toString)
+          case l => l.map { h =>
+            (h -> env.flowMessage.header.get(h).map(_.value.toString()).getOrElse("UNKNOWN"))
+          }.toMap
+        }
+
+        streamLogger.log(level, s"[$retryCount / $maxRetries] : [${env.id}]:[$stepName] : [${headerString.mkString(",")}]")
+
+        Seq(env)
+      }
+    }
+
+  /*-------------------------------------------------------------------------------------------------*/
   /* The inbound flow simply consumes FlowEnvelopes from the source, adds all configured default headers
    * and logs the inbound message.
    *
@@ -80,14 +128,15 @@ case class DispatcherBuilder(
   private lazy val inbound : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     Flow.fromGraph(defaultHeader)
-      .via(Flow.fromGraph(logStart))
+      .via(Flow.fromGraph(logEnvelope("logInbound")(LogLevel.Info)))
       .via(Flow.fromGraph(checkResourceType))
+      .via(Flow.fromGraph(decideCbe))
   }
 
   private lazy val outbound : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
-    Flow.fromGraph(decideCbe)
-      .via(Flow.fromGraph(outboundMsg))
+    Flow.fromGraph(outboundMsg)
+      .via(Flow.fromGraph(logEnvelope("logOutBound")(LogLevel.Info)))
       .via(Flow.fromGraph(routingDecider))
   }
 
@@ -95,22 +144,19 @@ case class DispatcherBuilder(
   private lazy val defaultHeader = HeaderTransformProcessor(
     name = "defaultHeader",
     log = streamLogger,
-    rules = cfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
+    rules = dispatcherCfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
     idSvc = Some(idSvc)
   ).flow(logger)
 
   /*-------------------------------------------------------------------------------------------------*/
-  private lazy val logStart = LogProcessor("logInbound", streamLogger, LogLevel.Info).flow(logger)
-
-  /*-------------------------------------------------------------------------------------------------*/
   private lazy val checkResourceType = FlowProcessor.fromFunction("checkResourceType", streamLogger) { env =>
-    env.flowMessage.header[String](resourceTypeHeader) match {
+    env.header[String](HEADER_RESOURCETYPE) match {
       case None =>
         val e = new MissingResourceType(env.flowMessage)
         streamLogger.error(e)(e.getMessage)
         Success(Seq(env.withException(e)))
       case Some(rt) =>
-        cfg.resourceTypeConfigs.get(rt) match {
+        dispatcherCfg.resourceTypeConfigs.get(rt) match {
           case None =>
             val e = new IllegalResourceType(env.flowMessage, rt)
             streamLogger.error(e)(e.getMessage)
@@ -133,7 +179,7 @@ case class DispatcherBuilder(
     env.getFromContext[T](key).get match {
 
       case None => // Should not be possible
-        val rt = env.flowMessage.header[String](resourceTypeHeader).getOrElse("UNKNOWN")
+        val rt = env.header[String](HEADER_RESOURCETYPE).getOrElse("UNKNOWN")
         val e = new MissingContextObject(key, classTag.runtimeClass.getName())
         streamLogger.error(e)(e.getMessage)
         Seq(env.withException(e))
@@ -148,7 +194,9 @@ case class DispatcherBuilder(
 
     Try {
       withContextObject[ResourceTypeConfig](rtConfigKey, env) { rtCfg: ResourceTypeConfig =>
-        val fanouts = rtCfg.outbound.map { ob => env.setInContext(outboundCfgKey, ob) }
+        val fanouts = rtCfg.outbound.map { ob =>
+          env.setInContext(outboundCfgKey, ob).withHeader(HEADER_OUTBOUND_ID(prefix), ob.id).get
+        }
         fanouts
       }
     }
@@ -159,19 +207,17 @@ case class DispatcherBuilder(
 
     Try {
       withContextObject[ResourceTypeConfig](rtConfigKey, env){ rtCfg : ResourceTypeConfig =>
-        withContextObject[OutboundRouteConfig](outboundCfgKey, env) { cfg: OutboundRouteConfig =>
 
-          if (rtCfg.withCBE) {
-            val newMsg = env.flowMessage
-              .withHeader(HEADER_EVENT_VENDOR, cfg.eventProvider.vendor).get
-              .withHeader(HEADER_EVENT_PROVIDER, cfg.eventProvider.provider).get
-              .withHeader(HEADER_EVENT_DEST, cfg.eventProvider.eventDestination.asString).get
-              .withHeader(HEADER_CBE_ENABLED, true).get
+        if (rtCfg.withCBE) {
+          val newMsg = env.flowMessage
+            .withHeader(HEADER_EVENT_VENDOR(prefix), dispatcherCfg.eventProvider.vendor).get
+            .withHeader(HEADER_EVENT_PROVIDER(prefix), dispatcherCfg.eventProvider.provider).get
+            .withHeader(HEADER_EVENT_DEST(prefix), dispatcherCfg.eventProvider.eventDestination.asString).get
+            .withHeader(HEADER_CBE_ENABLED(prefix), true).get
 
-            Seq(env.copy(flowMessage = newMsg))
-          } else {
-            Seq(env.withHeader(HEADER_CBE_ENABLED, false).get)
-          }
+          Seq(env.copy(flowMessage = newMsg))
+        } else {
+          Seq(env.withHeader(HEADER_CBE_ENABLED(prefix), false).get)
         }
       }
     }
@@ -179,15 +225,91 @@ case class DispatcherBuilder(
 
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val outboundMsg = FlowProcessor.fromFunction("outboundMsg", streamLogger) { env =>
+
+    val useHeaderBlock : OutboundHeaderConfig => Try[Boolean] = { oh =>
+      Try {
+        oh.condition match {
+          // if the block does not have a condition, the header block will be used
+          case None => true
+          case Some(c) =>
+            val use = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value)).map(_.asInstanceOf[Boolean]).get
+
+            if (use) {
+              streamLogger.info(s"Using header for [${env.id}]:[outboundMsg] block with expression [$c]")
+            }
+            use
+        }
+      }
+    }
+
     Try {
-      Seq(env)
+
+      withContextObject[OutboundRouteConfig](outboundCfgKey, env) { outCfg =>
+        var newEnv : FlowEnvelope = env
+          .withHeader(HEADER_BRIDGE_MAX_RETRY(prefix), outCfg.maxRetries).get
+          .withHeader(HEADER_BRIDGE_CLOSE(prefix), outCfg.autoComplete).get
+
+        if (outCfg.timeToLive > 0) {
+          newEnv = newEnv.withHeader(HEADER_TIMETOLIVE(prefix), outCfg.timeToLive).get
+        }
+
+        outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foreach { oh =>
+          oh.header.foreach { case (header, value) =>
+            val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
+            streamLogger.debug(s"Resolved property [$header] to [$resolved]")
+            newEnv = newEnv.withHeader(header, resolved).get
+          }
+        }
+
+        if (outCfg.clearBody) {
+          newEnv = newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
+        }
+
+        Seq(newEnv.setInContext(appHeaderKey, outCfg.applicationLogHeader))
+      }
     }
   }
 
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val routingDecider = FlowProcessor.fromFunction("routingDecider", streamLogger) { env =>
+
     Try {
-      Seq(env)
+      withContextObject[OutboundRouteConfig](outboundCfgKey, env) { outCfg =>
+
+        val provider : BridgeProviderConfig =
+          (env.header[String](HEADER_BRIDGE_VENDOR(prefix)), env.header[String](HEADER_BRIDGE_PROVIDER(prefix))) match {
+            case (Some(v), Some(p)) =>
+              val vendor = idSvc.resolvePropertyString(v).map(_.toString()).get
+              val provider = idSvc.resolvePropertyString(p).map(_.toString()).get
+              ProviderResolver.getProvider(dispatcherCfg.providerRegistry, vendor, provider).get
+
+            case (_, _) => outCfg.bridgeProvider
+          }
+
+        val dest : JmsDestination = env.header[String](HEADER_BRIDGE_DEST(prefix)) match {
+          case Some(d) => JmsDestination.create(idSvc.resolvePropertyString(d).map(_.toString).get).get
+          case None => outCfg.bridgeDestination match {
+            case None => throw new JmsDestinationMissing(env, outCfg)
+            case Some(d) => if (d == JmsQueue("replyTo")) {
+              env.header[String](JmsFlowSupport.replyToHeader(prefix)).map(s => JmsDestination.create(s).get) match {
+                case None => throw new JmsDestinationMissing(env, outCfg)
+                case Some(r) => r
+              }
+            } else {
+              d
+            }
+          }
+        }
+
+        streamLogger.info(s"Routing for [${env.id}] is [${provider.id}:${dest}]")
+
+        Seq(env
+          .withHeader(HEADER_BRIDGE_VENDOR(prefix), provider.vendor).get
+          .withHeader(HEADER_BRIDGE_PROVIDER(prefix), provider.provider).get
+          .withHeader(HEADER_BRIDGE_DEST(prefix), dest.asString).get
+        )
+
+      }
     }
   }
 

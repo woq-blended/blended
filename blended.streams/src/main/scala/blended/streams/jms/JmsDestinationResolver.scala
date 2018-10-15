@@ -39,6 +39,8 @@ class SettingsDestinationResolver(settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
+  private val prefix = settings.headerPrefix
+
   override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
 
     val msg = createJmsMessage(session, env)
@@ -49,7 +51,7 @@ class SettingsDestinationResolver(settings: JmsProducerSettings)
     }
 
     // Always try to get the CorrelationId from the flow Message
-    env.flowMessage.header[String](corrIdHeader(settings)) match {
+    env.flowMessage.header[String](corrIdHeader(prefix)) match {
       case Some(id) => msg.setJMSCorrelationID(id)
       case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
     }
@@ -68,6 +70,7 @@ class MessageDestinationResolver(settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
+  private val prefix = settings.headerPrefix
 
   override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
 
@@ -75,7 +78,7 @@ class MessageDestinationResolver(settings: JmsProducerSettings)
     val msg = createJmsMessage(session, env)
 
     // Get the destination
-    val dest : JmsDestination = flowMsg.header[String](s"$destHeader(settings)") match {
+    val dest : JmsDestination = flowMsg.header[String](s"${destHeader(prefix)}") match {
       case Some(s) => JmsDestination.create(s).get
       case None => settings.jmsDestination match {
         case Some(d) => d
@@ -84,22 +87,22 @@ class MessageDestinationResolver(settings: JmsProducerSettings)
     }
 
     // Always try to get the CorrelationId from the flow Message
-    flowMsg.header[String](corrIdHeader(settings)) match {
+    flowMsg.header[String](corrIdHeader(prefix)) match {
       case Some(id) => msg.setJMSCorrelationID(id)
       case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
     }
 
-    val prio = flowMsg.header[Int](priorityHeader(settings)) match {
+    val prio = flowMsg.header[Int](priorityHeader(prefix)) match {
       case Some(p) => p
       case None => settings.priority
     }
 
-    val timeToLive : Option[FiniteDuration] = flowMsg.header[Long](expireHeader(settings)) match {
+    val timeToLive : Option[FiniteDuration] = flowMsg.header[Long](expireHeader(prefix)) match {
       case Some(l) => Some( (Math.max(1L, l - System.currentTimeMillis())).millis)
       case None => settings.timeToLive
     }
 
-    val delMode : JmsDeliveryMode = flowMsg.header[String](deliveryModeHeader(settings)) match {
+    val delMode : JmsDeliveryMode = flowMsg.header[String](deliveryModeHeader(prefix)) match {
       case Some(s) => JmsDeliveryMode.create(s).get
       case None => settings.deliveryMode
     }

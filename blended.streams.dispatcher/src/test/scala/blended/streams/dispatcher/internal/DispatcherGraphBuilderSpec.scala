@@ -8,6 +8,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.bridge.internal.BridgeActivator
+import blended.jms.utils.JmsQueue
 import blended.streams.dispatcher.{IllegalResourceType, MissingOutboundRouting, MissingResourceType}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
@@ -17,7 +18,7 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContaine
 import blended.testsupport.scalatest.{LoggingFreeSpec, LoggingFreeSpecLike}
 import blended.util.logging.Logger
 import org.scalatest.Matchers
-import blended.streams.dispatcher.DispatcherBuilder._
+import blended.streams.dispatcher.DispatcherBuilder.{HEADER_EVENT_VENDOR, _}
 
 import scala.concurrent.duration._
 
@@ -30,7 +31,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
   private[this] val log = Logger[DispatcherGraphBuilderSpec]
   private val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  def runDispatcher(testMessages: FlowEnvelope*): DispatcherResult = {
+  def withDispatcher(testMessages: FlowEnvelope*)(f : (ResourceTypeRouterConfig, DispatcherResult) => Unit) : DispatcherResult = {
 
     System.setProperty("SIBCountry", "cc")
     System.setProperty("SIBLocation", "09999")
@@ -57,8 +58,11 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
             idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
           ).get
 
-          DispatcherExecutor.execute(system, idSvc, cfg, testMessages:_*)
+          val result = DispatcherExecutor.execute(system, idSvc, cfg, testMessages:_*)
 
+          f(cfg, result)
+
+          result
         } catch {
           case t: Throwable => fail(t)
         }
@@ -68,6 +72,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
   val headerExistsFilter : String => FlowEnvelope => Boolean = key => env => env.flowMessage.header.isDefinedAt(key)
   val headerMissingFilter : String => FlowEnvelope => Boolean = key => env => !env.flowMessage.header.isDefinedAt(key)
+  val headerFilter : String => AnyRef => FlowEnvelope => Boolean = key => value => env => env.header[AnyRef](key) == Some(value)
   def filterEnvelopes(envelopes : Seq[FlowEnvelope])(f : FlowEnvelope => Boolean) : Seq[FlowEnvelope] = envelopes.filter(f)
 
   def verifyHeader(expected: FlowMessageProps, env: FlowEnvelope) : List[(String, MsgProperty[_], Option[MsgProperty[_]])] = {
@@ -91,26 +96,27 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val props : FlowMessageProps = Map("ResourceType" -> "SagTest")
       val good = FlowEnvelope(FlowMessage("Normal", props))
 
-      val result = runDispatcher(good)
-
-      result.out should have size(1)
-      result.out.head.flowMessage.header[String]("ComponentName") should be (Some("Dispatcher"))
-      result.out.head.flowMessage.header[String]("ResourceType") should be (Some("SagTest"))
+      withDispatcher(good) { (cfg, result) =>
+        result.out should have size(1)
+        result.out.head.header[String]("ComponentName") should be (Some("Dispatcher"))
+        result.out.head.header[String]("ResourceType") should be (Some("SagTest"))
+      }
     }
 
     "yield a MissingResourceType exception when the resourcetype is not set in the inbound message" in {
 
       val msg = FlowEnvelope(FlowMessage("Normal", FlowMessage.noProps))
 
-      val result = runDispatcher(msg)
+      withDispatcher(msg) { (cfg, result) =>
+        result.out should be (empty)
+        result.event should have size(1)
+        result.error should have size(1)
 
-      result.out should be (empty)
-      result.event should have size(1)
-      result.error should have size(1)
+        result.error.head.exception should be (defined)
 
-      result.error.head.exception should be (defined)
+        assert(result.error.head.exception.forall(t => t.isInstanceOf[MissingResourceType]))
+      }
 
-      assert(result.error.head.exception.forall(t => t.isInstanceOf[MissingResourceType]))
     }
 
     "yield an IllegalResourceType exception when the resourcetype given in the message is not configured" in {
@@ -118,15 +124,15 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val props : FlowMessageProps = Map("ResourceType" -> "Dummy")
       val msg = FlowEnvelope(FlowMessage("Normal", props))
 
-      val result = runDispatcher(msg)
+      withDispatcher(msg) { (cfg, result) =>
+        result.out should be (empty)
+        result.event should have size(1)
+        result.error should have size(1)
 
-      result.out should be (empty)
-      result.event should have size(1)
-      result.error should have size(1)
+        result.error.head.exception should be (defined)
 
-      result.error.head.exception should be (defined)
-
-      assert(result.error.head.exception.forall(t => t.isInstanceOf[IllegalResourceType]))
+        assert(result.error.head.exception.forall(t => t.isInstanceOf[IllegalResourceType]))
+      }
     }
 
     "yield an MissingOutboundConfig  exception when the resourcetype has no outbound blocks configured" in {
@@ -134,28 +140,43 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val props : FlowMessageProps = Map("ResourceType" -> "NoOutbound")
       val msg = FlowEnvelope(FlowMessage("Normal", props))
 
-      val result = runDispatcher(msg)
+      withDispatcher(msg) { (cfg, result) =>
+        result.out should be (empty)
+        result.event should have size(1)
+        result.error should have size(1)
 
-      result.out should be (empty)
-      result.event should have size(1)
-      result.error should have size(1)
+        result.error.head.exception should be (defined)
 
-      result.error.head.exception should be (defined)
-
-      assert(result.error.head.exception.forall(t => t.isInstanceOf[MissingOutboundRouting]))
+        assert(result.error.head.exception.forall(t => t.isInstanceOf[MissingOutboundRouting]))
+      }
     }
 
     "fanout for all out outbounds" in {
       val props : FlowMessageProps = Map("ResourceType" -> "KPosData")
 
-      val result = runDispatcher(FlowEnvelope(props))
+      withDispatcher(FlowEnvelope(props)) { (cfg, result) =>
+        result.out should have size (2)
 
-      result.out should have size (2)
+        val default = filterEnvelopes(result.out)(headerFilter(HEADER_OUTBOUND_ID(cfg.headerPrefix))("default"))
+        default should have size(1)
 
-      result.out.foreach{ env =>
         verifyHeader(Map(
-          "ResourceType" -> "KPosData"
-        ), env) should be (empty)
+          "ResourceType" -> "KPosData",
+          HEADER_BRIDGE_VENDOR(cfg.headerPrefix) -> "sagum",
+          HEADER_BRIDGE_PROVIDER(cfg.headerPrefix) -> "cc_queue",
+          HEADER_BRIDGE_DEST(cfg.headerPrefix) -> JmsQueue("/Qucc/sib/kpos/data/out").asString
+        ), default.head) should be (empty)
+
+        val vitra = filterEnvelopes(result.out)(headerFilter(HEADER_OUTBOUND_ID(cfg.headerPrefix))("VitraCom"))
+        vitra should have size(1)
+        verifyHeader(Map(
+          "ResourceType" -> "KPosData",
+          HEADER_BRIDGE_VENDOR(cfg.headerPrefix) -> "activemq",
+          HEADER_BRIDGE_PROVIDER(cfg.headerPrefix) -> "activemq",
+          HEADER_BRIDGE_DEST(cfg.headerPrefix) -> JmsQueue("VitracomClientToQueue").asString,
+          HEADER_TIMETOLIVE(cfg.headerPrefix) -> 14400000L
+        ), vitra.head) should be (empty)
+
       }
     }
 
@@ -164,29 +185,73 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       val noCbe: FlowMessageProps = Map("ResourceType" -> "ShopRegister")
       val withCbe : FlowMessageProps = Map("ResourceType" -> "Msg2TopicScaleAssortment")
 
-      val result = runDispatcher(FlowEnvelope(noCbe), FlowEnvelope(withCbe))
+      withDispatcher(FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (cfg, result) =>
+        result.out should have size (2)
 
-      result.out should have size (2)
+        val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(HEADER_EVENT_VENDOR(cfg.headerPrefix)))
+        cbeOut should have size(1)
+        verifyHeader(Map(
+          HEADER_CBE_ENABLED(cfg.headerPrefix) -> true,
+          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "sonic75",
+          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "central",
+          HEADER_EVENT_DEST(cfg.headerPrefix) -> "queue:cc.sib.global.evnt.out"
+        ), cbeOut.head) should be (empty)
 
-      val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(HEADER_EVENT_VENDOR))
-      cbeOut should have size(1)
-      verifyHeader(Map(
-        HEADER_CBE_ENABLED -> true,
-        HEADER_EVENT_VENDOR -> "sonic75",
-        HEADER_EVENT_PROVIDER -> "central",
-        HEADER_EVENT_DEST -> "queue:cc.sib.global.evnt.out"
-      ), cbeOut.head) should be (empty)
+        val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(HEADER_EVENT_VENDOR(cfg.headerPrefix)))
+        noCbeOut should have size (1)
+        verifyHeader(Map(
+          HEADER_CBE_ENABLED(cfg.headerPrefix) -> false,
+        ), noCbeOut.head) should be (empty)
 
-      val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(HEADER_EVENT_VENDOR))
-      noCbeOut should have size (1)
-      verifyHeader(Map(
-        HEADER_CBE_ENABLED -> false,
-      ), noCbeOut.head) should be (empty)
-
-      result.event should have size(2)
-      result.error should be (empty)
-
+        result.event should have size(2)
+        result.error should be (empty)
+      }
     }
 
+    "evaluate conditional expressions to process outbound header" in {
+
+      val propsInstore: FlowMessageProps = Map(
+        "ResourceType" -> "SalesDataFromScale",
+        "DestinationFileName" -> "TestFile",
+        "InStoreCommunication" -> "1"
+      )
+
+      val propsCentral: FlowMessageProps = Map(
+        "ResourceType" -> "SalesDataFromScale",
+        "DestinationFileName" -> "TestFile",
+        "InStoreCommunication" -> "0"
+      )
+
+      withDispatcher(FlowEnvelope(propsInstore), FlowEnvelope(propsCentral)) { (cfg, result) =>
+        result.event should have size(2)
+        result.error should have size(0)
+
+        result.out should have size (2)
+
+        val instore = filterEnvelopes(result.out)(headerFilter("InStoreCommunication")("1"))
+        val central = filterEnvelopes(result.out)(headerFilter("InStoreCommunication")("0"))
+
+        instore should have size (1)
+        verifyHeader(Map(
+          "Description" -> "SalesDataFromScale",
+          "DestinationName" -> "TestFile",
+          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "sonic75",
+          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "central",
+          HEADER_EVENT_DEST(cfg.headerPrefix) -> "queue:cc.sib.global.data.out"
+        ), instore.head)
+
+        central should have size (1)
+        verifyHeader(Map(
+          "Description" -> "SalesDataFromScale",
+          "DestinationName" -> "TestFile",
+          "Filename" -> "TestFile",
+          "DestinationPath" -> "C:/Scale/Inbound/",
+          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "activemq",
+          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "activemq",
+          HEADER_EVENT_DEST(cfg.headerPrefix) -> "XPDinteg_PosClientToQ"
+        ), central.head)
+
+      }
+    }
   }
 }

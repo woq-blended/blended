@@ -1,5 +1,7 @@
 package blended.streams.message
 
+import java.util.UUID
+
 import blended.jms.utils.JmsAckSession
 import blended.streams.message.FlowMessage.FlowMessageProps
 import javax.jms.Message
@@ -27,9 +29,14 @@ final case class FlowEnvelope(
   requiresAcknowledge : Boolean = false,
   @BeanProperty
   ackInfo : Option[AckInfo] = None,
+  @BeanProperty
+  id : String = UUID.randomUUID().toString(),
+  flowContext : Map[String, Any] = Map.empty,
 
-  flowContext : Map[String, Any] = Map.empty
 ) {
+
+  def header[T](key: String): Option[T] = flowMessage.header[T](key)
+  def headerWithDefault[T](key: String, default : T) : T = flowMessage.headerWithDefault[T](key, default)
 
   def withHeader(key: String, value: Any, overwrite: Boolean = true) : Try[FlowEnvelope] = Try {
     copy(flowMessage = flowMessage.withHeader(key, value, overwrite).get)

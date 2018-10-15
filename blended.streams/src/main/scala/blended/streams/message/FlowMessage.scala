@@ -100,7 +100,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     case _ => None
   }
 
-  def headerWithDefault[T <: AnyVal](name: String, default: T) : T = header[T](name) match {
+  def headerWithDefault[T](name: String, default: T) : T = header[T](name) match {
     case Some(v) => v
     case None => default
   }

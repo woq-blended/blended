@@ -137,7 +137,6 @@ object ContainerPropertyResolver {
   }
 
   private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
-    log.trace(s"Resolving [$line]")
     // First we check if we have replacements in "Blended Style"
     line.indexOf(resolveStartDelim) match {
       case n if n < 0 =>
@@ -146,7 +145,6 @@ object ContainerPropertyResolver {
           case i if i < 0 => line
           case i if i >= 0 =>
             val (prefix, eval, suffix) = extractVariableElement(line, evalStartDelim, evalEndDelim)
-
             if (prefix.isEmpty && suffix.isEmpty) {
               evaluate(idSvc, eval, additionalProps)
             } else {
@@ -159,6 +157,7 @@ object ContainerPropertyResolver {
     }
   }
 
+  // TODO : Should this be Option[AnyRef] ??
   private[api] def evaluate(
     idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
@@ -167,14 +166,19 @@ object ContainerPropertyResolver {
     context.setRootObject(idSvc)
 
     additionalProps.foreach { case (k,v) =>
-      log.trace(s"Injecting variable into SpEL context : $k $v ${v.getClass.getName}")
       context.setVariable(k,v)
     }
     context.setVariable("idSvc", idSvc)
 
     val exp = parseExpression(line).get
-    val result = exp.getValue(context)
 
-    result
+    Option(exp.getValue(context)) match {
+      case None =>
+        log.warn(s"Could not resolve expression [${line}], using empty String")
+        ""
+      case Some(r) =>
+        log.debug(s"Evaluated [$line] to [$r][${r.getClass().getName()}]")
+        r
+    }
   }
 }

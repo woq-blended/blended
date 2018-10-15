@@ -54,7 +54,7 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
       ), None)
 
       r should have size (1)
-      r.head.flowMessage.header[String]("foo") should be (Some("bar"))
+      r.head.header[String]("foo") should be (Some("bar"))
     }
 
     "perform the normal resolution of container context properties" in {
@@ -78,9 +78,9 @@ class HeaderProcessorSpec extends TestKit(ActorSystem("header"))
 
             log.info(r.toString())
             r.head.flowMessage.header should have size (3)
-            r.head.flowMessage.header[String]("foo") should be (Some("cc"))
-            r.head.flowMessage.header[String]("foo2") should be (Some("cc"))
-            r.head.flowMessage.header[Int]("test") should be (Some(42))
+            r.head.header[String]("foo") should be (Some("cc"))
+            r.head.header[String]("foo2") should be (Some("cc"))
+            r.head.header[Int]("test") should be (Some(42))
         }
       }
     }
