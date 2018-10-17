@@ -6,11 +6,34 @@ import akka.stream.scaladsl.Flow
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 object FlowProcessor {
 
   type IntegrationStep = FlowEnvelope => Try[Seq[FlowEnvelope]]
+
+  def transform[T](name: String, log: Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T]) : Graph[FlowShape[FlowEnvelope, Try[T]], NotUsed] = {
+
+    Flow.fromFunction[FlowEnvelope, Try[T]] { env =>
+      Try {
+        env.exception match {
+          case None =>
+            log.info(s"Starting function [${env.id}]:[$name]")
+            val start = System.currentTimeMillis()
+            f(env) match {
+              case Success(s) =>
+                s
+              case Failure(t) =>
+                log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
+                throw t
+            }
+          case Some(t) =>
+            throw t
+        }
+      }
+    }
+  }
 
   def fromFunction(name: String, log: Logger)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 

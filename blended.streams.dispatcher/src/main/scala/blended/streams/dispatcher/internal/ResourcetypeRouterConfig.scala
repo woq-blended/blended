@@ -3,6 +3,7 @@ package blended.streams.dispatcher.internal
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
+import blended.streams.dispatcher.internal.worklist.WorklistItem
 import blended.streams.jms.JmsDeliveryMode
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -201,7 +202,7 @@ case class OutboundRouteConfig(
   moduleLastOnComplete: Boolean,
   clearBody : Boolean,
   autoComplete : Boolean
-) {
+) extends WorklistItem {
   override def toString: String =
     s"${getClass().getSimpleName()}(id=$id, bridgeProvider=$bridgeProvider, bridgeDestination=$bridgeDestination)"
 }

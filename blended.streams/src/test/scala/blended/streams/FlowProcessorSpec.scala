@@ -26,7 +26,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   private val msg : FlowEnvelope = {
     val header : FlowMessageProps = Map("foo" -> "bar")
-    FlowEnvelope(FlowMessage("Testmessage", header))
+    FlowEnvelope(FlowMessage("Testmessage", header)).withRequiresAcknowledge(true)
   }
 
   val same = new FlowProcessor {
@@ -68,8 +68,8 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
       Await.result(flow, 1.second) match {
         case r =>
           r.size should be (10)
-          assert(r.take(9).forall(_ === msg))
-          assert(r.last === msg.withRequiresAcknowledge(true))
+          assert(r.take(9).forall(_ === msg.withRequiresAcknowledge(false)))
+          assert(r.last === msg)
       }
     }
 

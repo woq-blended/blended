@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CommonBaseEvents
+xmlns="http://www.ibm.com/AC/commonbaseevent1_0_1"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.ibm.com/AC/commonbaseevent1_0_1 commonbaseevent1_0_1.xsd">
+
+  <CommonBaseEvent
+  creationTime="2014-03-06T08:56:28.760"
+  globalInstanceId="ReportSIBCBEEvent-6b6b0ed8-f350-4ab2-9fe1-473274d3d01b"
+  severity="10"
+  version="1.0.1">
+
+    <extendedDataElements name="TRANSACTION" type="noValue">
+      <values />
+      <children name="TRANSACTION_ID" type="string">
+        <values>1000-20140306-085628758-0</values>
+      </children>
+      <children name="TRANSACTION_STATUS" type="string">
+        <values>TRANSACTION_STARTED</values>
+      </children>
+    </extendedDataElements>
+
+    <extendedDataElements name="resourcetype" type="string">
+      <values>coolResource</values>
+    </extendedDataElements>
+
+    <extendedDataElements name="componentname" type="string">
+      <values>foo</values>
+    </extendedDataElements>
+
+    <extendedDataElements name="routename" type="string">
+      <values>bar</values>
+    </extendedDataElements>
+
+    <sourceComponentId
+    application="SIB-2.0"
+    component="foo"
+    componentIdType="Application"
+    location="RO-1000"
+    locationType="Shop"
+    subComponent="bar"
+    threadId="coolResource"
+    componentType="Route"/>
+
+    <situation categoryName="ReportSituation">
+      <situationType xsi:type="ReportSituation" reasoningScope="INTERNAL">
+        <reportCategory>STATUS</reportCategory>
+      </situationType>
+    </situation>
+  </CommonBaseEvent>
+</CommonBaseEvents>

@@ -98,6 +98,11 @@ case class DispatcherBuilder(
 
       Try {
 
+        val outCfg : Option[OutboundRouteConfig] = env.getFromContext[OutboundRouteConfig](outboundCfgKey) match {
+          case Success(o) => o
+          case Failure(_) => None
+        }
+
         val maxRetries = env.headerWithDefault[Long](HEADER_BRIDGE_MAX_RETRY(prefix), -1)
         val retryCount = env.headerWithDefault[Long](HEADER_BRIDGE_RETRY(prefix), 0L)
 
@@ -113,7 +118,8 @@ case class DispatcherBuilder(
           }.toMap
         }
 
-        streamLogger.log(level, s"[$retryCount / $maxRetries] : [${env.id}]:[$stepName] : [${headerString.mkString(",")}]")
+        val id = s"[${env.id}]:[$stepName]" + outCfg.map(c => s":[${c.id}]").getOrElse("")
+        streamLogger.log(level, s"[$retryCount / $maxRetries] : $id : [${headerString.mkString(",")}]")
 
         Seq(env)
       }
@@ -319,7 +325,7 @@ case class DispatcherBuilder(
   /*-------------------------------------------------------------------------------------------------*/
   def build(): RunnableGraph[NotUsed] = {
 
-    val g  = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
+    RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
 
       // These are the in- and outbounds of the dispatcher flow
       val in : Outlet[FlowEnvelope] = builder.add(source).out
@@ -362,6 +368,5 @@ case class DispatcherBuilder(
       ClosedShape
     })
 
-    g
   }
 }
