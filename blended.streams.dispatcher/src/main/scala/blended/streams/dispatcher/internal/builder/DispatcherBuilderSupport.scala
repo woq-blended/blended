@@ -36,14 +36,24 @@ trait DispatcherBuilderSupport {
 
   val HEADER_TIMETOLIVE          : String = prefix + "TimeToLive"
 
+  /**
+  * Access a typed object in the given envelope and the given key. If an object 
+  * for the key with the propert type is present, the given function will be applied
+  * and the result of the function will be returned. 
+  * If the object is not present in the envelope or has the wrong type, an exception 
+  * will be returned. 
+  */
   def withContextObject[T,R](key : String, env: FlowEnvelope)(f : T => Try[R])(implicit classTag: ClassTag[T]) : Either[FlowEnvelope, R] = {
+  
     env.getFromContext[T](key).get match {
-
+      
+      // The object can't be found for the key with the given type  
       case None => // Should not be possible
         val e = new MissingContextObject(key, classTag.runtimeClass.getName())
         streamLogger.error(e)(e.getMessage)
         Left(env.withException(e))
 
+      // We have found the object, now we try to apply the function 
       case Some(o) =>
         f(o) match {
           case Success(s) => Right(s)
@@ -52,6 +62,11 @@ trait DispatcherBuilderSupport {
     }
   }
 
+  /**
+   * Lookup an object from the envelope context and use it within a function to transform 
+   * the envelope. This is a special case where the result of the given function is also 
+   * a FlowEnvelope, so that wrapping the result in an Either[...] is not required.
+   */
   def withContextObject[T](key : String, env: FlowEnvelope)(f : T => FlowEnvelope)(implicit classTag: ClassTag[T]) : FlowEnvelope = {
 
     env.getFromContext[T](key).get match {

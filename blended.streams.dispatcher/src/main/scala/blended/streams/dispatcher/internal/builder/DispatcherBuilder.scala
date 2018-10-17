@@ -89,10 +89,13 @@ case class DispatcherBuilder(
       // and perform initial checks if the message can be processed
       val processInbound = builder.add(inbound)
 
-      // The fanout step will produce one envelope per outbound config of the resource
+      // The fanout step will produce one envelope per outbound config of the resource type 
       // sent in the message. The envelope context will contain the config for the outbound
       // branch and the overall resource type config.
       // Each envelope will also contain the destination routing.
+      // The step will also emit a WorklistStarted event if the calculation of the 
+      // fanout steps was successfull. 
+      // The step will emit an error envelope if an exception was thrown.
       val processFanout = builder.add(DispatcherFanout(dispatcherCfg, idSvc).build())
 
       // The error splitter pushes all envelopes that have an exception defined to the error sink
