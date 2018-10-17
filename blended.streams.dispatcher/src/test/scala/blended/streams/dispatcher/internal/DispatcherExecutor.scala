@@ -6,16 +6,18 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.dispatcher.DispatcherBuilder
 import blended.streams.dispatcher.internal.CollectingActor.Completed
+import blended.streams.dispatcher.internal.builder.DispatcherBuilder
+import blended.streams.dispatcher.internal.worklist.WorklistStarted
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
+
 import scala.concurrent.duration._
 
 case class DispatcherResult(
   out : Seq[FlowEnvelope],
   error: Seq[FlowEnvelope],
-  event: Seq[FlowEnvelope]
+  worklist: Seq[WorklistStarted]
 )
 
 object DispatcherExecutor {
@@ -35,32 +37,31 @@ object DispatcherExecutor {
 
     val jmsProbe = TestProbe()(system)
     val errorProbe = TestProbe()(system)
-    val eventProbe = TestProbe()(system)
+    val wlProbe = TestProbe()(system)
 
-    val jmsCollector = system.actorOf(Props(new CollectingActor("out", jmsProbe.ref)))
-    val errorCollector = system.actorOf(Props(new CollectingActor("error", errorProbe.ref)))
-    val eventCollector = system.actorOf(Props(new CollectingActor("event", eventProbe.ref)))
+    val jmsCollector = system.actorOf(Props(new CollectingActor[FlowEnvelope]("out", jmsProbe.ref)))
+    val errorCollector = system.actorOf(Props(new CollectingActor[FlowEnvelope]("error", errorProbe.ref)))
+    val eventCollector = system.actorOf(Props(new CollectingActor[WorklistStarted]("event", wlProbe.ref)))
 
     val out = Sink.actorRef[FlowEnvelope](jmsCollector, Completed)
     val error = Sink.actorRef[FlowEnvelope](errorCollector, Completed)
-    val event = Sink.actorRef[FlowEnvelope](eventCollector, Completed)
+    val worklist = Sink.actorRef[WorklistStarted](eventCollector, Completed)
 
-    val g = DispatcherBuilder(
-      dispatcherId = "bridge.data.in",
+    val g = DispatcherBuilder.createWithSources(
       idSvc = idSvc,
       dispatcherCfg = cfg,
       source = source,
-      jmsOut = out,
+      envOut = out,
       errorOut = error,
-      eventOut = event
-    ).build()
+      worklistOut = worklist
+    )
 
     val foo = g.run(materializer)
 
     DispatcherResult(
-      out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.minutes),
-      error = errorProbe.expectMsgType[List[FlowEnvelope]](10.minutes),
-      event = eventProbe.expectMsgType[List[FlowEnvelope]](10.minutes)
+      out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
+      error = errorProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
+      worklist = wlProbe.expectMsgType[List[WorklistStarted]](10.seconds)
     )
   }
 }

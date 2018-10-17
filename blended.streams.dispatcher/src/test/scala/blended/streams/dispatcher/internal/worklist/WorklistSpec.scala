@@ -110,7 +110,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
       }
     }
 
-    "Send a Terminated event with state time out once a worklist item has timed out" in {
+    "Send a Terminated event with state [timeOut] once a worklist item has timed out" in {
 
       val item1 = DummyItem("item1")
       val item2 = DummyItem("item2")

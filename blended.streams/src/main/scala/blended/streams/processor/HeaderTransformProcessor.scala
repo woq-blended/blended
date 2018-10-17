@@ -5,7 +5,7 @@ import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
 import blended.util.logging.Logger
 
-import scala.util.Success
+import scala.util.Try
 
 case class HeaderTransformProcessor(
   name : String,
@@ -16,10 +16,10 @@ case class HeaderTransformProcessor(
 
   override val f: IntegrationStep = { env =>
 
-    log.debug(s"Processing rules [${rules.mkString(",")}]")
+    Try {
+      log.debug(s"Processing rules [${rules.mkString(",")}]")
 
-    try {
-      val newMsg = rules.foldLeft(env.flowMessage){ case (c, (k,value,overwrite)) =>
+      val newMsg = rules.foldLeft(env.flowMessage) { case (c, (k, value, overwrite)) =>
 
         value match {
           case None =>
@@ -29,12 +29,13 @@ case class HeaderTransformProcessor(
               case None =>
                 v
               case Some(s) =>
-                val props : Map[String, Any] = c.header.mapValues(_.value)
+                val props: Map[String, Any] = c.header.mapValues(_.value)
                 s.resolvePropertyString(
                   v.toString(),
                   props + ("envelope" -> env)
                 ).get
-            })
+            }
+            )
 
             // Header might be null if a refernced property does not exist
             header match {
@@ -48,10 +49,8 @@ case class HeaderTransformProcessor(
         }
       }
       log.debug(s"Header transformation complete [$name] : $newMsg")
-      Success(Seq(env.copy(flowMessage = newMsg)))
-    } catch {
-      case t : Throwable =>
-        Success(Seq(env.withException(t)))
+
+      env.copy(flowMessage = newMsg)
     }
   }
 }

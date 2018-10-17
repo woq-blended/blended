@@ -9,6 +9,7 @@ import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 import scala.util.Try
 
 object ResourceTypeRouterConfig {
@@ -100,6 +101,7 @@ object ResourceTypeConfig {
   private[this] val inboundPath = "inbound"
   private[this] val cbePath = "withCBE"
   private[this] val outboundPath = "outbound"
+  private[this] val timeoutPath = "timeout"
 
   def create (
     idSvc : ContainerIdentifierService,
@@ -119,7 +121,8 @@ object ResourceTypeConfig {
       resourceType = resType,
       withCBE = cfg.getBoolean("withCBE", true),
       outbound = outboundRoutes,
-      inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(idSvc, c).get)
+      inboundConfig = cfg.getConfigOption(inboundPath).map(c => InboundRouteConfig.create(idSvc, c).get),
+      timeout = cfg.getLong(timeoutPath, 10L).seconds
     )
   }
 }
@@ -128,7 +131,8 @@ case class ResourceTypeConfig(
   resourceType: String,
   inboundConfig : Option[InboundRouteConfig],
   outbound : List[OutboundRouteConfig],
-  withCBE: Boolean
+  withCBE: Boolean,
+  timeout : FiniteDuration
 )
 
 object OutboundRouteConfig {

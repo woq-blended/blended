@@ -16,13 +16,20 @@ case class AckInfo(
 )
 
 object FlowEnvelope {
+  def apply(msg : FlowMessage) : FlowEnvelope =
+    FlowEnvelope(flowMessage = msg, originalMessage = msg)
 
-  def apply(props : FlowMessageProps) : FlowEnvelope = FlowEnvelope(FlowMessage(props))
+  def apply(props : FlowMessageProps) : FlowEnvelope = {
+    val msg = FlowMessage(props)
+    FlowEnvelope(flowMessage = msg, originalMessage = msg)
+  }
 }
 
-final case class FlowEnvelope(
+final case class FlowEnvelope private[message] (
   @BeanProperty
   flowMessage : FlowMessage,
+  @BeanProperty
+  originalMessage : FlowMessage,
   @BeanProperty
   exception :Option[Throwable] = None,
   @BeanProperty
@@ -32,7 +39,6 @@ final case class FlowEnvelope(
   @BeanProperty
   id : String = UUID.randomUUID().toString(),
   flowContext : Map[String, Any] = Map.empty,
-
 ) {
 
   def header[T](key: String): Option[T] = flowMessage.header[T](key)
@@ -50,6 +56,8 @@ final case class FlowEnvelope(
   def clearException(): FlowEnvelope = copy(exception = None)
   def withException(t: Throwable): FlowEnvelope = copy(exception = Some(t))
   def withRequiresAcknowledge(b: Boolean): FlowEnvelope = copy(requiresAcknowledge = b)
+
+  def withAckInfo(info : Option[AckInfo]) = copy(ackInfo = info)
 
   // For the default we simply do nothing when a downstream consumer calls acknowledge
   def acknowledge(): Unit = ackInfo.foreach { i => i.session.ack(i.jmsMessage) }

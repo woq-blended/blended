@@ -31,12 +31,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
 
   val same = new FlowProcessor {
     override val name: String = "identity"
-    override val f: IntegrationStep = env => Success(Seq(env))
-  }
-
-  val multiply = new FlowProcessor {
-    override val name: String = "multiply"
-    override val f: IntegrationStep = env => Success(1.to(10).map(_ => env))
+    override val f: IntegrationStep = env => Success(env)
   }
 
   val faulty = new FlowProcessor {
@@ -56,20 +51,6 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
         case r =>
           r.size should be(1)
           r.head should be(msg.withRequiresAcknowledge(true))
-      }
-    }
-
-    "process a a multiplying Intgration step correctly" in {
-
-      val flow = Source.single(msg)
-        .via(multiply.flow(log))
-        .runWith(Sink.seq)
-
-      Await.result(flow, 1.second) match {
-        case r =>
-          r.size should be (10)
-          assert(r.take(9).forall(_ === msg.withRequiresAcknowledge(false)))
-          assert(r.last === msg)
       }
     }
 

@@ -9,7 +9,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.JmsQueue
-import blended.streams.dispatcher.{IllegalResourceType, MissingOutboundRouting, MissingResourceType}
+import blended.streams.dispatcher.internal.builder.{DispatcherBuilderSupport, IllegalResourceType, MissingOutboundRouting, MissingResourceType}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
@@ -18,7 +18,6 @@ import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContaine
 import blended.testsupport.scalatest.{LoggingFreeSpec, LoggingFreeSpecLike}
 import blended.util.logging.Logger
 import org.scalatest.Matchers
-import blended.streams.dispatcher.DispatcherBuilder.{HEADER_EVENT_VENDOR, _}
 
 import scala.concurrent.duration._
 
@@ -30,6 +29,11 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
   private[this] val log = Logger[DispatcherGraphBuilderSpec]
   private val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  private implicit val bs : DispatcherBuilderSupport = new DispatcherBuilderSupport {
+    override val prefix: String = "SIB"
+    override val streamLogger: Logger = log
+  }
 
   def withDispatcher(testMessages: FlowEnvelope*)(f : (ResourceTypeRouterConfig, DispatcherResult) => Unit) : DispatcherResult = {
 
@@ -109,7 +113,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
       withDispatcher(msg) { (cfg, result) =>
         result.out should be (empty)
-        result.event should have size(1)
+        result.worklist should be (empty)
         result.error should have size(1)
 
         result.error.head.exception should be (defined)
@@ -126,7 +130,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
       withDispatcher(msg) { (cfg, result) =>
         result.out should be (empty)
-        result.event should have size(1)
+        result.worklist should be (empty)
         result.error should have size(1)
 
         result.error.head.exception should be (defined)
@@ -142,7 +146,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
       withDispatcher(msg) { (cfg, result) =>
         result.out should be (empty)
-        result.event should have size(1)
+        result.worklist should be (empty)
         result.error should have size(1)
 
         result.error.head.exception should be (defined)
@@ -156,25 +160,28 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
 
       withDispatcher(FlowEnvelope(props)) { (cfg, result) =>
         result.out should have size (2)
+        result.worklist should have size(1)
+        result.worklist.head.worklist.id should be(result.out.head.id)
+        result.worklist.head.worklist.items should have size(2)
 
-        val default = filterEnvelopes(result.out)(headerFilter(HEADER_OUTBOUND_ID(cfg.headerPrefix))("default"))
+        val default = filterEnvelopes(result.out)(headerFilter(bs.HEADER_OUTBOUND_ID)("default"))
         default should have size(1)
 
         verifyHeader(Map(
           "ResourceType" -> "KPosData",
-          HEADER_BRIDGE_VENDOR(cfg.headerPrefix) -> "sagum",
-          HEADER_BRIDGE_PROVIDER(cfg.headerPrefix) -> "cc_queue",
-          HEADER_BRIDGE_DEST(cfg.headerPrefix) -> JmsQueue("/Qucc/sib/kpos/data/out").asString
+          bs.HEADER_BRIDGE_VENDOR -> "sagum",
+          bs.HEADER_BRIDGE_PROVIDER -> "cc_queue",
+          bs.HEADER_BRIDGE_DEST -> JmsQueue("/Qucc/sib/kpos/data/out").asString
         ), default.head) should be (empty)
 
-        val vitra = filterEnvelopes(result.out)(headerFilter(HEADER_OUTBOUND_ID(cfg.headerPrefix))("VitraCom"))
+        val vitra = filterEnvelopes(result.out)(headerFilter(bs.HEADER_OUTBOUND_ID)("VitraCom"))
         vitra should have size(1)
         verifyHeader(Map(
           "ResourceType" -> "KPosData",
-          HEADER_BRIDGE_VENDOR(cfg.headerPrefix) -> "activemq",
-          HEADER_BRIDGE_PROVIDER(cfg.headerPrefix) -> "activemq",
-          HEADER_BRIDGE_DEST(cfg.headerPrefix) -> JmsQueue("VitracomClientToQueue").asString,
-          HEADER_TIMETOLIVE(cfg.headerPrefix) -> 14400000L
+          bs.HEADER_BRIDGE_VENDOR -> "activemq",
+          bs.HEADER_BRIDGE_PROVIDER -> "activemq",
+          bs.HEADER_BRIDGE_DEST -> JmsQueue("VitracomClientToQueue").asString,
+          bs.HEADER_TIMETOLIVE -> 14400000L
         ), vitra.head) should be (empty)
 
       }
@@ -188,22 +195,22 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       withDispatcher(FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (cfg, result) =>
         result.out should have size (2)
 
-        val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(HEADER_EVENT_VENDOR(cfg.headerPrefix)))
+        val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(bs.HEADER_EVENT_VENDOR))
         cbeOut should have size(1)
         verifyHeader(Map(
-          HEADER_CBE_ENABLED(cfg.headerPrefix) -> true,
-          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "sonic75",
-          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "central",
-          HEADER_EVENT_DEST(cfg.headerPrefix) -> "queue:cc.sib.global.evnt.out"
+          bs.HEADER_CBE_ENABLED -> true,
+          bs.HEADER_EVENT_VENDOR -> "sonic75",
+          bs.HEADER_EVENT_PROVIDER -> "central",
+          bs.HEADER_EVENT_DEST -> "queue:cc.sib.global.evnt.out"
         ), cbeOut.head) should be (empty)
 
-        val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(HEADER_EVENT_VENDOR(cfg.headerPrefix)))
+        val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(bs.HEADER_EVENT_VENDOR))
         noCbeOut should have size (1)
         verifyHeader(Map(
-          HEADER_CBE_ENABLED(cfg.headerPrefix) -> false,
+          bs.HEADER_CBE_ENABLED -> false,
         ), noCbeOut.head) should be (empty)
 
-        result.event should have size(2)
+        result.worklist should have size(2)
         result.error should be (empty)
       }
     }
@@ -223,7 +230,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
       )
 
       withDispatcher(FlowEnvelope(propsInstore), FlowEnvelope(propsCentral)) { (cfg, result) =>
-        result.event should have size(2)
+        result.worklist should have size(2)
         result.error should have size(0)
 
         result.out should have size (2)
@@ -235,9 +242,9 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
         verifyHeader(Map(
           "Description" -> "SalesDataFromScale",
           "DestinationName" -> "TestFile",
-          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "sonic75",
-          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "central",
-          HEADER_EVENT_DEST(cfg.headerPrefix) -> "queue:cc.sib.global.data.out"
+          bs.HEADER_EVENT_VENDOR -> "sonic75",
+          bs.HEADER_EVENT_PROVIDER -> "central",
+          bs.HEADER_EVENT_DEST -> "queue:cc.sib.global.data.out"
         ), instore.head)
 
         central should have size (1)
@@ -246,9 +253,9 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
           "DestinationName" -> "TestFile",
           "Filename" -> "TestFile",
           "DestinationPath" -> "C:/Scale/Inbound/",
-          HEADER_EVENT_VENDOR(cfg.headerPrefix) -> "activemq",
-          HEADER_EVENT_PROVIDER(cfg.headerPrefix) -> "activemq",
-          HEADER_EVENT_DEST(cfg.headerPrefix) -> "XPDinteg_PosClientToQ"
+          bs.HEADER_EVENT_VENDOR -> "activemq",
+          bs.HEADER_EVENT_PROVIDER -> "activemq",
+          bs.HEADER_EVENT_DEST -> "XPDinteg_PosClientToQ"
         ), central.head)
 
       }

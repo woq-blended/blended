@@ -6,6 +6,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.stage._
 import blended.streams.dispatcher.internal.worklist.WorklistState.WorklistState
+import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -18,6 +19,10 @@ object WorklistState extends Enumeration {
 
 trait WorklistItem {
   def id : String
+}
+
+case class DispatcherWorklistItem(env : FlowEnvelope, outboundId : String) extends WorklistItem {
+  override def id: String = env.id + ":" + outboundId
 }
 
 case class Worklist (
@@ -50,7 +55,7 @@ case class WorklistManager(
   private case class CurrentItemState(
     item : WorklistItem,
     state : WorklistState,
-    created : Long,
+    created : Long
   )
 
   private object CurrentWorklistState {

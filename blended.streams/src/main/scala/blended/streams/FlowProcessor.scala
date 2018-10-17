@@ -11,65 +11,54 @@ import scala.util.{Failure, Success, Try}
 
 object FlowProcessor {
 
-  type IntegrationStep = FlowEnvelope => Try[Seq[FlowEnvelope]]
+  type IntegrationStep = FlowEnvelope => Try[FlowEnvelope]
 
-  def transform[T](name: String, log: Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T]) : Graph[FlowShape[FlowEnvelope, Try[T]], NotUsed] = {
+  def transform[T](name: String, log: Logger)(f : FlowEnvelope => Try[T])(implicit clazz : ClassTag[T])
+    : Graph[FlowShape[FlowEnvelope, Either[FlowEnvelope, T]], NotUsed] = {
 
-    Flow.fromFunction[FlowEnvelope, Try[T]] { env =>
-      Try {
-        env.exception match {
-          case None =>
-            log.info(s"Starting function [${env.id}]:[$name]")
-            val start = System.currentTimeMillis()
-            f(env) match {
-              case Success(s) =>
-                s
-              case Failure(t) =>
-                log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
-                throw t
-            }
-          case Some(t) =>
-            throw t
+    Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, T]] { env =>
+      env.exception match {
+        case None =>
+          log.info(s"Starting function [${env.id}]:[$name]")
+          val start = System.currentTimeMillis()
+          f(env) match {
+            case Success(s) =>
+              log.debug(s"Function [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              Right(s)
+            case Failure(t) =>
+              log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
+              Left(env.withException(t))
+          }
+        case Some(t) =>
+          Left(env)
         }
       }
-    }
   }
 
   def fromFunction(name: String, log: Logger)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
-    val applyFunction: Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env: FlowEnvelope =>
 
-      val fun = Flow.fromFunction[FlowEnvelope, Seq[FlowEnvelope]] { env: FlowEnvelope =>
+      env.exception match {
+        case None =>
+          log.info(s"Starting Integrationstep [${env.id}]:[$name]")
+          val start = System.currentTimeMillis()
 
-        env.exception match {
-          case None =>
-            log.info(s"Starting Integrationstep [${env.id}]:[$name]")
-            val start = System.currentTimeMillis()
+          val result = f(env) match {
+            case Success(s) => s
 
-            val result = f(env) match {
-              case Success(l) => l match {
-                case Seq() => l
-                case r if env.requiresAcknowledge => l.take(l.size - 1).map(_.withRequiresAcknowledge(false)) ++ l.takeRight(1).map(_.withRequiresAcknowledge(true))
-                case l => l
-              }
+            case Failure(t) =>
+              log.warn(t)(s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
+              env.withException(t)
+          }
 
-              case Failure(t) =>
-                log.warn(t)(s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
-                Seq(env.withException(t))
-            }
-
-            log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
-            result
-          case Some(_) =>
-            log.debug(s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")
-            Seq(env)
-        }
+          log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+          result
+        case Some(_) =>
+          log.debug(s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")
+          env
       }
-
-      fun.mapConcat(_.toList)
     }
-
-    applyFunction
   }
 }
 

@@ -101,10 +101,9 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                     session = session
                   )
 
-                  val envelope = FlowEnvelope(
-                    flowMessage = flowMessage,
-                    requiresAcknowledge = true,
-                    ackInfo = Some(info)
+                  val envelope = FlowEnvelope(flowMessage)
+                    .withRequiresAcknowledge(true)
+                    .withAckInfo(Some(info)
                   )
                   inflight += (session.sessionId -> envelope)
                   handleMessage.invoke(envelope)
