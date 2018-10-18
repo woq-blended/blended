@@ -1,9 +1,9 @@
 package blended.streams
 
 import akka.NotUsed
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches}
+import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
@@ -11,9 +11,8 @@ import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Random, Success}
 
 case class StreamControllerConfig(
-
   name : String,
-  stream : Source[FlowEnvelope, NotUsed],
+  source : Source[FlowEnvelope, NotUsed],
   minDelay : FiniteDuration = 5.seconds,
   maxDelay : FiniteDuration = 1.minute,
   exponential : Boolean = true,
@@ -28,13 +27,12 @@ object StreamController {
   case class Abort(t: Throwable)
   case class StreamTerminated(exception : Option[Throwable])
 
-  def props(streamCfg : StreamControllerConfig) : Props = Props(new StreamController(streamCfg))
+  def props(streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props = Props(new StreamController(streamCfg))
 }
 
-class StreamController(streamCfg: StreamControllerConfig) extends Actor {
+class StreamController(streamCfg: StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) extends Actor {
 
   private[this] val log = Logger[StreamController]
-  private[this] implicit val materializer = ActorMaterializer()
   private[this] implicit val eCtxt = context.system.dispatcher
   private[this] val rnd = new Random()
 
@@ -67,7 +65,7 @@ class StreamController(streamCfg: StreamControllerConfig) extends Actor {
     case StreamController.Start =>
       log.debug(s"Initializing StreamController [${streamCfg.name}]")
 
-      val (killswitch, done) = streamCfg.stream
+      val (killswitch, done) = streamCfg.source
         .viaMat(KillSwitches.single)(Keep.right)
         .watchTermination()(Keep.both)
         .toMat(Sink.ignore)(Keep.left)

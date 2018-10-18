@@ -1,15 +1,20 @@
-package blended.streams.dispatcher.internal
+package blended.streams.testsupport
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.stream.Materializer
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
+import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
+import scala.util.{Failure, Success}
 
 object CollectingActor {
-  case object Completed
+  object Completed
+  object GetMessages
 
-  def apply[T](name: String, cbActor : ActorRef)(implicit clazz : ClassTag[T]) : Props =
+  def props[T](name: String, cbActor : ActorRef)(implicit clazz : ClassTag[T]) : Props =
     Props(new CollectingActor[T](name, cbActor))
 }
 
@@ -22,7 +27,12 @@ class CollectingActor[T](name: String, cbActor: ActorRef)(implicit clazz : Class
 
     case msg if msg.getClass() == clazz.runtimeClass =>
       messages += msg.asInstanceOf[T]
+
+    case CollectingActor.GetMessages =>
+      sender() ! messages.toList
+
     case CollectingActor.Completed =>
       cbActor ! messages.toList
   }
+
 }

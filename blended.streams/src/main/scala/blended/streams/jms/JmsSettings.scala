@@ -86,7 +86,7 @@ final case class JMSConsumerSettings(
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
   selector: Option[String] = None,
-  ackTimeout: FiniteDuration = 100.millis,
+  ackTimeout: FiniteDuration = 1.second,
   durableName: Option[String] = None
 ) extends JmsSettings {
 
@@ -129,7 +129,6 @@ final case class JmsProducerSettings(
 
   def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)
 
-
   def withDestination(dest : Option[JmsDestination]) : JmsProducerSettings = copy(jmsDestination = dest)
   def withQueue(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsQueue(name)))
   def withTopic(name: String): JmsProducerSettings = copy(jmsDestination = Some(JmsTopic(name)))
@@ -144,6 +143,10 @@ final case class JmsProducerSettings(
 
   def withHeaderPrefix(p : String) : JmsProducerSettings = copy(headerPrefix = p)
   def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
+
+  override def toString: String = s"{${getClass().getSimpleName()}(cf=${connectionFactory.id}, connTimeout=$connectionTimeout, dest=${jmsDestination}, " +
+    s"headerPrefix=$headerPrefix, priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
+
 }
 
 object JmsProducerSettings {

@@ -30,6 +30,7 @@ object BlendedJmsBridge extends ProjectFactory {
 
     BlendedActivemqBrokerstarter.project % "test",
     BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
+    BlendedTestsupportPojosr.project % "test",
+    BlendedStreamsTestsupport.project % "test"
   )
 }

@@ -1,9 +1,10 @@
 package blended.jms.bridge.internal
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import blended.jms.bridge.BridgeProviderRegistry
+import blended.jms.bridge.{BridgeProviderRegistry, JmsProducerSupport, RestartableJmsSource}
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.jms._
@@ -27,11 +28,11 @@ object BridgeController{
   case class AddConnectionFactory(cf : IdAwareConnectionFactory)
   case class RemoveConnectionFactory(cf : IdAwareConnectionFactory)
 
-  def props(ctrlCfg: BridgeControllerConfig) : Props =
+  def props(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
     Props(new BridgeController(ctrlCfg))
 }
 
-class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
+class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) extends Actor{
 
   private[this] val log = Logger[BridgeController]
 
@@ -80,18 +81,14 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
                 .withDeliveryMode(JmsDeliveryMode.Persistent)
                 .withHeaderPrefix(ctrlCfg.headerPrefix)
 
-              val streamLogger = Logger(s"bridge.in.${in.from.asString}")
+              val name = s"bridge.in.${in.from.asString}"
 
-              val source :
-                Source[FlowEnvelope, NotUsed] =
-                Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
-                  //.via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
-                  .via(new JmsSinkStage(toSettings)(context.system))
-                  .via(AckProcessor(s"$streamId-ack", streamLogger).flow(log))
-                  //.via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
+              val source : Source[FlowEnvelope, NotUsed] =
+                  RestartableJmsSource(name = name, settings = srcSettings, requiresAck = true)
+                    .via(JmsProducerSupport.jmsProducer(name = name, settings = toSettings, autoAck = true, log = Some(Logger(name))))
 
               val ctrlConfig = StreamControllerConfig(
-                name = streamId, stream = source
+                name = streamId, source = source
               )
 
               streams += (streamId -> context.actorOf(StreamController.props(ctrlConfig)))

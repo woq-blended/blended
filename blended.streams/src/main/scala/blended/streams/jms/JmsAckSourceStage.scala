@@ -14,14 +14,14 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : ActorSystem)
+final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log: Logger = Logger[JmsAckSourceStage])(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
   sealed trait TimerEvent
   private case object Ack extends TimerEvent
   private case class Poll(s : String) extends TimerEvent
 
-  private val out = Outlet[FlowEnvelope]("JmsSource.out")
+  private val out = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
 
   override def shape: SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
 
@@ -112,9 +112,11 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
                     handleError.invoke(e)
                 }
 
-              case None => scheduleOnce(Poll(sid), 10.millis)
+              case None =>
+                scheduleOnce(Poll(sid), 10.millis)
             }
-          case (_, _) => scheduleOnce(Poll(sid), 100.millis)
+          case (_, _) =>
+            scheduleOnce(Poll(sid), 100.millis)
         }
       }(ec)
 
@@ -184,7 +186,7 @@ final class JmsAckSourceStage(settings: JMSConsumerSettings, actorSystem : Actor
       }
 
       private[this] def createConsumer(session: JmsAckSession) : Unit = {
-        log.debug(s"Creating message consumer for session [${session.sessionId}]")
+        log.debug(s"Creating message consumer for session [${session.sessionId}] and destination [$dest]")
         session.createConsumer(settings.selector).onComplete {
 
           case Success(c) =>

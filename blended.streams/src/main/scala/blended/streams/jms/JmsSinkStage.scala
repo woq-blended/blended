@@ -7,17 +7,17 @@ import blended.jms.utils.JmsProducerSession
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 import javax.jms.{Connection, MessageProducer}
+import scala.concurrent.duration._
 
 import scala.util.Random
 
-class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorSystem)
+class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger = Logger[JmsSinkStage])(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
-  private val in = Inlet[FlowEnvelope]("JmsSink.in")
-  private val out = Outlet[FlowEnvelope]("JmsSink.out")
-  private[this] val log = Logger[JmsSinkStage]
+  private case class Push(env: FlowEnvelope)
 
-  private var pushEnv: Option[FlowEnvelope] = None
+  private val in = Inlet[FlowEnvelope](s"JmsSink($name.in)")
+  private val out = Outlet[FlowEnvelope](s"JmsSink($name.out)")
 
   override val shape : FlowShape[FlowEnvelope, FlowEnvelope] = FlowShape(in, out)
 
@@ -38,6 +38,20 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
       private[this] val rnd = new Random()
       private[this] var producer : Option[MessageProducer] = None
 
+      override protected def onTimer(timerKey: Any): Unit = {
+        timerKey match {
+          case Push(env) => pushMessage(env)
+        }
+      }
+
+      private def pushMessage(env: FlowEnvelope) : Unit = {
+        if (jmsSessions.size > 0) {
+          push(out, sendMessage(env))
+        } else {
+          scheduleOnce(Push(env), 10.millis)
+        }
+      }
+
       override protected def createSession(connection: Connection): JmsProducerSession = {
         val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
         new JmsProducerSession(
@@ -51,23 +65,20 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
         super.onSessionOpened(jmsSession)
         producer = Some(jmsSession.session.createProducer(null))
-        pushEnv.foreach(sendMessage)
+        log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
       }
 
-      def sendMessage(env: FlowEnvelope): Unit = {
+      def sendMessage(env: FlowEnvelope): FlowEnvelope = {
         // select one sender session randomly
+        log.debug(s"sending message ${env.flowMessage.header.mkString(",")}")
         val idx : Int = rnd.nextInt(jmsSessions.size)
         val key = jmsSessions.keys.takeRight(idx+1).head
         val p = jmsSessions.toIndexedSeq(idx)
         val session = p._2
 
-        log.debug(s"Using session [${session.sessionId}] to send JMS message.")
-
         val outEnvelope : FlowEnvelope = try {
           val sendParams = JmsFlowSupport.envelope2jms(jmsSettings, session.session, env).get
           producer.foreach { p =>
-            log.debug(s"Using JMS send parameter [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
-
             val sendTtl : Long = sendParams.ttl match {
               case Some(l) => if (l.toMillis < 0L) {
                   log.warn(s"The message [${env.flowMessage}] has expired and wont be sent to the JMS destination.")
@@ -78,7 +89,7 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
             if (sendTtl >= 0L) {
               val dest = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
-              log.info(s"Successfuly sent [${env.flowMessage}] to [${sendParams.destination}]@[$id]")
+              log.debug(s"Successfuly sent message with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
             }
           }
           env
@@ -88,15 +99,15 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
             env.withException(t)
         }
 
-        push(out, outEnvelope)
-        // Todo: Is this pull required ?
-        if (!hasBeenPulled(in)) pull(in)
+        outEnvelope
       }
 
       // First simply pass the pull upstream if any
       setHandler(out,
         new OutHandler {
-          override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
+          override def onPull(): Unit = {
+            pull(in)
+          }
         }
       )
 
@@ -108,11 +119,8 @@ class JmsSinkStage(settings : JmsProducerSettings)(implicit actorSystem : ActorS
 
             val env = grab(in)
 
-            if (jmsSessions.size > 0) {
-              sendMessage(env)
-            } else {
-              pushEnv = Some(env)
-            }
+            log.debug(s"Received message from upstream [$env]")
+            pushMessage(env)
           }
         }
       )

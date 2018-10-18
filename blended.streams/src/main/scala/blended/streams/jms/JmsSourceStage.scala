@@ -12,11 +12,9 @@ import javax.jms._
 
 import scala.util.{Failure, Success}
 
-class JmsSourceStage(settings: JMSConsumerSettings, actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+class JmsSourceStage(name : String, settings: JMSConsumerSettings, log : Logger = Logger[JmsSourceStage])(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
-  private[this] val log = Logger[JmsSourceStage]
-
-  private val out = Outlet[FlowEnvelope]("JmsSource.out")
+  private val out = Outlet[FlowEnvelope](s"JmsSource($name.out)")
   override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
   override protected def initialAttributes: Attributes =

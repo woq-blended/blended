@@ -2,6 +2,7 @@ package blended.jms.bridge.internal
 
 import akka.actor.{OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
+import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
@@ -63,6 +64,9 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
       log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
 
       whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=${internalVendor})(provider=${internalProvider}))") { cf =>
+
+        implicit val system = osgiCfg.system
+        implicit val materialzer = ActorMaterializer()
 
         try {
 
