@@ -5,6 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{RestartSource, Source}
 import blended.streams.jms.{JMSConsumerSettings, JmsAckSourceStage, JmsSourceStage}
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 
@@ -13,6 +14,7 @@ object RestartableJmsSource {
   def apply(
     name : String,
     settings : JMSConsumerSettings,
+    log : Logger = Logger[RestartableJmsSource.type],
     requiresAck : Boolean = true,
     minBackoff : FiniteDuration = 2.seconds,
     maxBackoff : FiniteDuration = 10.seconds,
@@ -20,9 +22,9 @@ object RestartableJmsSource {
   )(implicit system : ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
     val innerSource : Source[FlowEnvelope, NotUsed]= if (requiresAck) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings))
+      Source.fromGraph(new JmsAckSourceStage(name, settings, log))
     } else {
-      Source.fromGraph(new JmsSourceStage(name, settings))
+      Source.fromGraph(new JmsSourceStage(name, settings, log))
     }
 
     RestartSource.onFailuresWithBackoff(

@@ -70,7 +70,6 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger = 
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
         // select one sender session randomly
-        log.debug(s"sending message ${env.flowMessage.header.mkString(",")}")
         val idx : Int = rnd.nextInt(jmsSessions.size)
         val key = jmsSessions.keys.takeRight(idx+1).head
         val p = jmsSessions.toIndexedSeq(idx)
@@ -89,7 +88,7 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger = 
             if (sendTtl >= 0L) {
               val dest = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
-              log.debug(s"Successfuly sent message with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
+              log.debug(s"Successfuly sent message to [$dest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
             }
           }
           env
@@ -118,8 +117,6 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger = 
           override def onPush(): Unit = {
 
             val env = grab(in)
-
-            log.debug(s"Received message from upstream [$env]")
             pushMessage(env)
           }
         }

@@ -2,7 +2,7 @@ package blended.streams.dispatcher.internal
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
 import blended.container.context.api.ContainerIdentifierService
@@ -30,9 +30,7 @@ object DispatcherExecutor {
     idSvc : ContainerIdentifierService,
     cfg: ResourceTypeRouterConfig,
     testMessages : FlowEnvelope*
-  ) : DispatcherResult = {
-
-    val materializer = ActorMaterializer()(system)
+  )(implicit materializer : Materializer) : DispatcherResult = {
 
     val source: Source[FlowEnvelope, NotUsed] = Source(testMessages.toList)
 
@@ -48,16 +46,14 @@ object DispatcherExecutor {
     val error = Sink.actorRef[FlowEnvelope](errorCollector, Completed)
     val worklist = Sink.actorRef[WorklistStarted](eventCollector, Completed)
 
-    val g = DispatcherBuilder.createWithSources(
+    DispatcherBuilder.fromSourceAndSinks(
       idSvc = idSvc,
       dispatcherCfg = cfg,
       source = source,
       envOut = out,
       errorOut = error,
       worklistOut = worklist
-    )
-
-    val foo = g.run(materializer)
+    ).run(materializer)
 
     DispatcherResult(
       out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.seconds),

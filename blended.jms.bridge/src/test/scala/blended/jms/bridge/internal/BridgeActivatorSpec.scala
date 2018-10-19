@@ -72,7 +72,7 @@ class BridgeActivatorSpec extends LoggingFreeSpec
           )
           ) { sr =>
 
-            val msgCount = 50
+            val msgCount = 100
             implicit val timeout = 10.seconds
 
             waitOnService[ActorSystem](sr)() match {
@@ -91,10 +91,10 @@ class BridgeActivatorSpec extends LoggingFreeSpec
                   "received",
                   RestartableJmsSource(
                     name = "receiver",
-                    settings = JMSConsumerSettings(cf1).withSessionCount(5).withDestination(Some(JmsQueue("bridge.data.in"))),
+                    settings = JMSConsumerSettings(cf1).withSessionCount(5).withDestination(Some(JmsQueue("bridge.data.in.activemq.external"))),
                     requiresAck = false
                   ),
-                  5.seconds
+                  timeout
                 )
 
                 messages should have size(msgCount)
