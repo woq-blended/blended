@@ -69,7 +69,6 @@ class BrokerControlSupervisor(
             )
         )
 
-
         context.system.actorOf(restartProps, brokerCfg.brokerName)
       }
   }

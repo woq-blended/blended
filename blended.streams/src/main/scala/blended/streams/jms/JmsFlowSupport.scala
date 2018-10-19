@@ -52,9 +52,13 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         srcDestHeader(prefix) -> MsgProperty.lift(dest).get,
         priorityHeader(prefix) -> MsgProperty.lift(msg.getJMSPriority()).get,
         deliveryModeHeader(prefix) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
-        expireHeader(prefix) -> MsgProperty.lift(msg.getJMSExpiration()).get,
         deliveryModeHeader(prefix) -> MsgProperty.lift(delMode).get
       )
+
+      val expireHeaderMap : Map[String, MsgProperty[_]] = msg.getJMSExpiration() match {
+        case 0L => Map.empty
+        case v => Map(expireHeader(prefix) -> MsgProperty.lift(v).get)
+      }
 
       val corrIdMap : Map[String, MsgProperty[_]] =
         Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(prefix) -> MsgProperty.lift(s).get).toMap
@@ -66,7 +70,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       val replyToMap : Map[String, MsgProperty[_]] =
         Option(msg.getJMSReplyTo()).map( d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
 
-      props ++ headers ++ corrIdMap ++ replyToMap
+      props ++ headers ++ expireHeaderMap ++ corrIdMap ++ replyToMap
     }
 
     val flowMessge = msg match {

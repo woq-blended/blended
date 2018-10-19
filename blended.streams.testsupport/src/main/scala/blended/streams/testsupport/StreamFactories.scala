@@ -45,7 +45,9 @@ object StreamFactories {
       Future { Done }
     }
 
-    receiveProbe.expectMsgType[List[T]](timeout + 1.second)
+    val result = receiveProbe.expectMsgType[List[T]](timeout + 1.second)
+
+    result
   }
 
   def sendAndKeepAlive[T](

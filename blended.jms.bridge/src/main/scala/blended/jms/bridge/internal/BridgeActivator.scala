@@ -1,6 +1,6 @@
 package blended.jms.bridge.internal
 
-import akka.actor.{OneForOneStrategy, SupervisorStrategy}
+import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
 import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
@@ -39,8 +39,6 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
-      val headerPrefix = osgiCfg.idSvc.containerContext.getContainerConfig().getString("blended.flow.headerPrefix", JmsSettings.defaultHeaderPrefix)
-
       val providerList = osgiCfg.config.getConfigList("provider").asScala.map { p =>
           BridgeProviderConfig.create(osgiCfg.idSvc, p).get
         }.toList
@@ -63,22 +61,21 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
       log.info(s"Bridge Activator is using [$internalVendor:$internalProvider] as internal JMS Provider.")
 
-      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=${internalVendor})(provider=${internalProvider}))") { cf =>
+      whenAdvancedServicePresent[IdAwareConnectionFactory](s"(&(vendor=$internalVendor)(provider=$internalProvider))") { cf =>
 
-        implicit val system = osgiCfg.system
-        implicit val materialzer = ActorMaterializer()
+        val ctrlConfig = BridgeControllerConfig.create(
+          cfg = osgiCfg.config,
+          internalCf = cf,
+          idSvc = osgiCfg.idSvc
+        )
+
+        ctrlConfig.registry.providesService[BridgeProviderRegistry]
+
+        implicit val system : ActorSystem = osgiCfg.system
+        implicit val materialzer : ActorMaterializer = ActorMaterializer()
 
         try {
-
-          val bridgeProps = BridgeController.props(
-            BridgeControllerConfig(
-              internalCf = cf,
-              registry = registry,
-              queuePrefix = queuePrefix,
-              headerPrefix = headerPrefix,
-              inbound = inboundList
-            )
-          )
+          val bridgeProps = BridgeController.props(ctrlConfig)
 
           val restartProps = BackoffSupervisor.props(
             Backoff.onStop(

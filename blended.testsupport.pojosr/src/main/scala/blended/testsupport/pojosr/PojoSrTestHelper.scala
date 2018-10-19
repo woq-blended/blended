@@ -2,6 +2,7 @@ package blended.testsupport.pojosr
 
 import java.io.File
 
+import blended.util.logging.Logger
 import org.osgi.framework.{BundleActivator, ServiceReference}
 
 import scala.concurrent.duration.FiniteDuration
@@ -90,6 +91,7 @@ trait PojoSrTestHelper {
       bundles: Seq[(String, Option[() => BundleActivator])]
   )(f: BlendedPojoRegistry => T): T = {
 
+    val log = Logger[PojoSrTestHelper]
     var bundleId: Long = 0
 
     bundles match {
@@ -100,6 +102,10 @@ trait PojoSrTestHelper {
           withStartedBundles(sr)(tail)(f)
         } catch {
           case NonFatal(e) => throw e
+        } finally {
+          val bundle = sr.getBundleContext().getBundle(bundleId)
+          log.info(s"Stopping bundle [${bundleId}] : ${bundle.getSymbolicName()}")
+          sr.getBundleContext().getBundle(bundleId).stop()
         }
     }
   }
