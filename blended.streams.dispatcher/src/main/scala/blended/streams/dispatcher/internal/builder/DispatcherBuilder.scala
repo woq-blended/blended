@@ -28,7 +28,7 @@ class JmsDestinationMissing(env: FlowEnvelope, outbound : OutboundRouteConfig)
 
 object DispatcherBuilder {
 
-  def createWithSources(
+  def fromSourceAndSinks(
     idSvc : ContainerIdentifierService,
     dispatcherCfg : ResourceTypeRouterConfig,
     // Inbound messages

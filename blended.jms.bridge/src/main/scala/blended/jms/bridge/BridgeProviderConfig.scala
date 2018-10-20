@@ -12,6 +12,7 @@ case class BridgeProviderConfig(
   provider : String,
   internal: Boolean,
   inbound : JmsDestination,
+  outbound : JmsDestination,
   errorDestination : JmsDestination,
   eventDestination : JmsDestination
 ) extends ProviderAware {
@@ -25,11 +26,15 @@ object BridgeProviderConfig {
 
     def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
-    val errorQueue = resolve(cfg.getString("errorQueue", "blended.error"))
-    val eventQueue = resolve(cfg.getString("eventQueue", "blended.event"))
-    val inbound = cfg.getString("inbound")
     val vendor = resolve(cfg.getString("vendor"))
     val provider = resolve(cfg.getString("provider"))
+
+    val errorQueue = resolve(cfg.getString("errorQueue", "blended.error"))
+    val eventQueue = resolve(cfg.getString("eventQueue", "blended.event"))
+
+    val inbound = s"${cfg.getString("inbound")}"
+    val outbound = s"${cfg.getString("outbound")}"
+
     val internal = cfg.getBoolean("internal", false)
 
     BridgeProviderConfig(
@@ -37,6 +42,7 @@ object BridgeProviderConfig {
       provider = provider,
       internal = internal,
       inbound = JmsDestination.create(inbound).get,
+      outbound = JmsDestination.create(outbound).get,
       errorDestination = JmsDestination.create(errorQueue).get,
       eventDestination = JmsDestination.create(eventQueue).get
     )

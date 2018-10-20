@@ -96,6 +96,7 @@ lazy val blendedSecurityScepStandalone = BlendedSecurityScepStandalone.project
 lazy val blendedJmsBridge = BlendedJmsBridge.project
 lazy val blendedStreams = BlendedStreams.project
 lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
+lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
 
 lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
@@ -155,7 +156,8 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedActivemqClient,
   blendedJmsBridge,
   blendedStreams,
-  blendedStreamsDispatcher
+  blendedStreamsDispatcher,
+  blendedStreamsTestsupport
 )
 
 lazy val root = {

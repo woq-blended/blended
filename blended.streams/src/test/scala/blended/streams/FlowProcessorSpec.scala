@@ -44,7 +44,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process a a simple Intgration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(same.flow(log))
+        .via(same.flow(Some(log)))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {
@@ -57,7 +57,7 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
     "process an Exception in an integration step correctly" in {
 
       val flow = Source.single(msg)
-        .via(faulty.flow(log))
+        .via(faulty.flow(Some(log)))
         .runWith(Sink.seq)
 
       Await.result(flow, 1.second) match {

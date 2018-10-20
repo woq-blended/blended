@@ -1,37 +1,119 @@
 package blended.jms.bridge.internal
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.stream.Materializer
 import akka.stream.scaladsl.Source
-import blended.jms.bridge.BridgeProviderRegistry
+import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
-import blended.jms.utils.IdAwareConnectionFactory
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry, JmsProducerSupport, RestartableJmsSource}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.processor.AckProcessor
 import blended.streams.{StreamController, StreamControllerConfig}
-import blended.util.logging.{LogLevel, Logger}
+import blended.util.logging.Logger
+import com.typesafe.config.Config
 
+import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
+import blended.util.config.Implicits._
+
+private[bridge] object BridgeControllerConfig {
+
+  def create(cfg : Config, internalCf : IdAwareConnectionFactory, idSvc: ContainerIdentifierService) : BridgeControllerConfig = {
+
+    val headerPrefix = idSvc.containerContext.getContainerConfig().getString("blended.flow.headerPrefix", JmsSettings.defaultHeaderPrefix)
+
+    val providerList = cfg.getConfigList("provider").asScala.map { p =>
+      BridgeProviderConfig.create(idSvc, p).get
+    }.toList
+
+    val inboundList : List[InboundConfig ]=
+      cfg.getConfigList("inbound", List.empty).map { i =>
+        InboundConfig.create(idSvc, i).get
+      }
+
+    val queuePrefix = cfg.getString("queuePrefix", "blended.bridge")
+
+    val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
+      case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+      case h :: Nil => (h.vendor, h.provider)
+      case h :: _ => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
+    }
+
+    val registry = new BridgeProviderRegistry(providerList)
+
+    BridgeControllerConfig(
+      internalCf = internalCf,
+      registry = registry,
+      headerPrefix = headerPrefix,
+      inbound = inboundList
+    )
+  }
+}
 
 private[bridge] case class BridgeControllerConfig(
   internalCf : IdAwareConnectionFactory,
   registry : BridgeProviderRegistry,
-  queuePrefix : String,
   headerPrefix : String,
   inbound : List[InboundConfig]
 )
 
 object BridgeController{
 
+  private[this] val log = Logger[BridgeController]
+
   case class AddConnectionFactory(cf : IdAwareConnectionFactory)
   case class RemoveConnectionFactory(cf : IdAwareConnectionFactory)
 
-  def props(ctrlCfg: BridgeControllerConfig) : Props =
+  def props(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
     Props(new BridgeController(ctrlCfg))
+
+  def bridgeStream(
+    ctrlCfg : BridgeControllerConfig,
+    fromCf : IdAwareConnectionFactory,
+    fromDest : JmsDestination,
+    toCf : IdAwareConnectionFactory,
+    toDest : Option[JmsDestination],
+    listener : Int,
+    selector : Option[String] = None
+  )(implicit system: ActorSystem, materializer: Materializer) : StreamControllerConfig = {
+
+    val streamId = s"${fromCf.id}:${fromDest.asString}->${toCf.id}:${toDest.map(_.asString).getOrElse("out")}"
+
+    val srcSettings = JMSConsumerSettings(fromCf)
+      .withHeaderPrefix(ctrlCfg.headerPrefix)
+      .withDestination(Some(fromDest))
+      .withSessionCount(listener)
+      .withSelector(selector)
+
+    val destResolver = toDest match {
+      case Some(d) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
+      case None => s : JmsProducerSettings => new MessageDestinationResolver(s)
+    }
+
+    val toSettings = JmsProducerSettings(toCf)
+      .withDestination(toDest)
+      .withDestinationResolver(destResolver)
+      .withDeliveryMode(JmsDeliveryMode.Persistent)
+      .withHeaderPrefix(ctrlCfg.headerPrefix)
+
+    val bridgeLogger = Logger(streamId)
+
+    // We will stream from the inbound destination to the inbound destination of the internal provider
+    val stream : Source[FlowEnvelope, NotUsed] =
+      RestartableJmsSource(name = streamId, settings = srcSettings, requiresAck = true, log = bridgeLogger)
+        .via(JmsProducerSupport.jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = Some(bridgeLogger)))
+
+    // The stream will be handled by an actor which that can be used to shutdown the stream
+    // and will restart the stream with a backoff strategy on failure
+    StreamControllerConfig(
+      name = streamId, source = stream
+    )
+  }
 }
 
-class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
+class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorSystem, materializer: Materializer) extends Actor{
 
   private[this] val log = Logger[BridgeController]
 
@@ -41,6 +123,44 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
   // Register any required internal streams
 
   private[this] def createInternalStreams() : Unit = {
+  }
+
+  private[this] def createInboundStream(in : InboundConfig, cf : IdAwareConnectionFactory) : Unit = {
+
+    val toDest = JmsDestination.create(
+      ctrlCfg.registry.internalProvider.get.inbound.asString + "." + cf.vendor + "." + cf.provider
+    ).get
+
+    val streamCfg: StreamControllerConfig = BridgeController.bridgeStream(
+      ctrlCfg = ctrlCfg,
+      fromCf = cf,
+      fromDest = in.from,
+      toCf = ctrlCfg.internalCf,
+      toDest = Some(toDest),
+      listener = in.listener,
+      selector = in.selector
+    )
+
+    streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
+  }
+
+  private[this] def createOutboundStream(in: InboundConfig, cf : IdAwareConnectionFactory) : Unit = {
+
+    val fromDest = JmsDestination.create(
+      ctrlCfg.registry.internalProvider.get.outbound.asString + "." + cf.vendor + "." + cf.provider
+    ).get
+
+    val streamCfg: StreamControllerConfig = BridgeController.bridgeStream(
+      ctrlCfg = ctrlCfg,
+      fromCf = ctrlCfg.internalCf,
+      fromDest = fromDest,
+      toCf = cf,
+      toDest = None,
+      listener = in.listener,
+      selector = None
+    )
+
+    streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
 
   override def receive: Receive = {
@@ -56,45 +176,14 @@ class BridgeController(ctrlCfg: BridgeControllerConfig) extends Actor{
             // TODO: Crosscheck provider registry
 
             // Create inbound streams for all matching inbound configs
-            val inProvider : List[InboundConfig] = ctrlCfg.inbound.filter { in =>
+            val inbound : List[InboundConfig] = ctrlCfg.inbound.filter { in =>
               ProviderFilter(in.vendor, in.provider).matches(cf)
             }
 
-            log.debug(s"Creating inbound Streams : [${inProvider.mkString(",")}]")
-
-            inProvider.foreach { in =>
-              val streamId = s"${cf.id}:${in.name}"
-              log.info(s"Creating inbound Stream [$streamId]")
-
-              val srcSettings = JMSConsumerSettings(cf)
-                .withHeaderPrefix(ctrlCfg.headerPrefix)
-                .withDestination(Some(in.from))
-                .withSessionCount(in.listener)
-                .withSelector(in.selector)
-
-              // TODO: Handle exception (should not occurr)
-              val toDest = ctrlCfg.registry.internalProvider.get.inbound
-
-              val toSettings = JmsProducerSettings(ctrlCfg.internalCf)
-                .withDestination(Some(toDest))
-                .withDeliveryMode(JmsDeliveryMode.Persistent)
-                .withHeaderPrefix(ctrlCfg.headerPrefix)
-
-              val streamLogger = Logger(s"bridge.in.${in.from.asString}")
-
-              val source :
-                Source[FlowEnvelope, NotUsed] =
-                Source.fromGraph(new JmsAckSourceStage(srcSettings, context.system))
-                  //.via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
-                  .via(new JmsSinkStage(toSettings)(context.system))
-                  .via(AckProcessor(s"$streamId-ack", streamLogger).flow(log))
-                  //.via(LogProcessor(s"$streamId-in", streamLogger, LogLevel.Trace).flow(log))
-
-              val ctrlConfig = StreamControllerConfig(
-                name = streamId, stream = source
-              )
-
-              streams += (streamId -> context.actorOf(StreamController.props(ctrlConfig)))
+            log.debug(s"Creating Streams for : [${inbound.mkString(",")}]")
+            inbound.foreach { in =>
+              createInboundStream(in, cf)
+              createOutboundStream(in, cf)
             }
           }
 

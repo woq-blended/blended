@@ -140,8 +140,10 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
         )
       } else
         connectionRef.get match {
-          case Some(connection) => Future.successful(connection)
-          case None => Future.failed(new IllegalStateException("BUG: Connection reference not set when connected"))
+          case Some(connection) =>
+            Future.successful(connection)
+          case None =>
+            Future.failed(new IllegalStateException("BUG: Connection reference not set when connected"))
         }
     }
 
