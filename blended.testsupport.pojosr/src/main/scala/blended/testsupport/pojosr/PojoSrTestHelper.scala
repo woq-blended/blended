@@ -44,8 +44,8 @@ trait PojoSrTestHelper {
   }
 
   def withStartedBundle[T](sr: BlendedPojoRegistry)(
-      symbolicName: String,
-      activator: Option[() => BundleActivator] = None
+    symbolicName: String,
+    activator: Option[() => BundleActivator] = None
   )(f: BlendedPojoRegistry => T): T = {
 
     var bundleId: Long = 0
@@ -59,21 +59,20 @@ trait PojoSrTestHelper {
       sr.getBundleContext().getBundle(bundleId).stop()
     }
   }
+  
+  private[this] serviceReferences[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T]) :      Array[ServiceReference[T]] = Option(
+    sr.getServiceReferences(
+      clazz.runtimeClass.getName(), 
+      filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
+    )
+  ).getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
 
   def waitOnService[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T], timeout : FiniteDuration) : Option[T] = {
-
     var result : Option[T] = None
-
     val start = System.currentTimeMillis()
 
     do {
-      val refs : Array[ServiceReference[T]] = Option(sr.getServiceReferences(clazz.runtimeClass.getName(), filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")))
-        .getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
-
-      if (refs.size > 0) {
-        result = Some(sr.getService[T](refs.head))
-      }
-
+      result = serviceReferences[T](sr)(filter).headOption
     } while (System.currentTimeMillis() - start < timeout.toMillis && result.isEmpty)
 
     result
@@ -85,6 +84,23 @@ trait PojoSrTestHelper {
       case Some(s) => s
       case None => throw new Exception(s"Service of type [${clazz.runtimeClass.getName()}] with filter [$filter] not available. ")
     }
+  }
+  
+  // Ensure the specified service is gone from the registry
+  def ensureServiceMissing[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : Try[Unit] = {
+    var result : Option[T] = None
+    val start = System.currentTimeMillis()
+
+    do {
+      val refs : Array[ServiceReference[T]] = serviceReferences(sr)(filter)
+
+      if (refs.nonEmpty) {
+        result = Some(sr.getService[T](refs.head))
+      }
+
+    } while (System.currentTimeMillis() - start < timeout.toMillis && result.isDefined)
+
+    result
   }
 
   def withStartedBundles[T](sr: BlendedPojoRegistry)(

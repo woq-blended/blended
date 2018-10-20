@@ -5,7 +5,12 @@ import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 
+// TODO: Refactor, so that BundleActivator factory is not exposed to test
+// code (special treatment only for the id Service within the trait, so that 
+// a base directory for running a test case can be set).
 trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
+
+  def uuid : String = "simple"
 
   private[this] def idSvcActivator(
     baseDir: String,
@@ -19,7 +24,7 @@ trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
         val ctCtxt = new MockContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid: String = "simple"
+          override lazy val uuid: String = uuid
         }.providesService[ContainerIdentifierService]
       }
     }

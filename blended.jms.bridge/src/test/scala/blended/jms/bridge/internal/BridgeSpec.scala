@@ -34,12 +34,18 @@ class BridgeSpec extends LoggingFreeSpec
 
     "The bridge activator should" - {
 
+      /**
+       * Send messages to a given Jms destination using an actor source. 
+       * The resulting stream will expose a killswitch, so that it stays 
+       * open and the test code needs to tear it down eventually. 
+       */
       def sendMessages(
         cf: IdAwareConnectionFactory,
         dest: JmsDestination,
         msgs : FlowEnvelope*
       )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): KillSwitch = {
 
+        // Create the Jms producer to send the messages 
         val settings: JmsProducerSettings = JmsProducerSettings(
           connectionFactory = cf,
           connectionTimeout = 1.second,
@@ -53,9 +59,12 @@ class BridgeSpec extends LoggingFreeSpec
           log = None
         )
 
+        // Materialize the stream, send the test messages and expose the killswitch 
         StreamFactories.sendAndKeepAlive(toJms, msgs:_*)
       }
 
+      // TODO: This should expose a Future[List[FlowEnvelope]], so that it does not have to 
+      // run sunchronously
       def receiveMessages(cf : IdAwareConnectionFactory, dest : JmsDestination)(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer) : List[FlowEnvelope] = {
 
         StreamFactories.runSourceWithTimeLimit(
@@ -69,8 +78,12 @@ class BridgeSpec extends LoggingFreeSpec
         )
       }
 
-      def withStartedBridge[T](t : FiniteDuration)(f : ActorSystem => BlendedPojoRegistry => T):T = {
+      def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
+      
+      // Convenience method to execute the bridge 
+      def withStartedBridge[T](t : FiniteDuration)(f : ActorSystem => BlendedPojoRegistry => Unit) : Unit= {
         withSimpleBlendedContainer(baseDir) { sr =>
+        
           withStartedBundles(sr)(Seq(
             "blended.akka" -> Some(() => new BlendedAkkaActivator()),
             "blended.activemq.brokerstarter" -> Some(() => new BrokerActivator()),
@@ -82,12 +95,17 @@ class BridgeSpec extends LoggingFreeSpec
 
             f(system)(sr)
           }
+          
+          // Wait until the brokers have been stopped
+          
+          ensureServicesStopped[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
+          ensureServicesStopped[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
         }
       }
 
       def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
-        val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=internal))"))
-        val cf2 = mandatoryService[IdAwareConnectionFactory](sr)(Some("(&(vendor=activemq)(provider=external))"))
+        val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
+        val cf2 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
         (cf1, cf2)
       }
 
