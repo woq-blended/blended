@@ -6,7 +6,7 @@ import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.streams.jms.JmsSettings
+import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
@@ -15,7 +15,6 @@ import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedServi
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import blended.util.config.Implicits._
 
 class BridgeActivator extends DominoActivator with ActorSystemWatching {
 

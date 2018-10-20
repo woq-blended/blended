@@ -4,6 +4,7 @@ import java.util
 
 import org.apache.felix.connect.felix.framework.ServiceRegistry
 import org.apache.felix.connect.felix.framework.util.EventDispatcher
+import org.osgi.framework
 import org.osgi.framework._
 
 import scala.collection.JavaConverters._
@@ -35,6 +36,7 @@ class BlendedPojoBundle(
   config
 ) {
 
+  @throws[BundleException]
   override def start(): Unit = {
 
     if (m_state != Bundle.RESOLVED) {
@@ -58,4 +60,30 @@ class BlendedPojoBundle(
         throw new BundleException("Unable to start bundle", t)
     }
   }
+
+//  @throws[BundleException]
+//  override def stop() {
+//
+//    m_state match {
+//      case Bundle.ACTIVE =>
+//        try
+//        {
+//          m_state = Bundle.STOPPING
+//          dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPING, this))
+//          activator.foreach(f => f().stop(m_context))
+//        } catch {
+//          case ex : Throwable => throw new BundleException("Error while stopping bundle", ex);
+//        } finally {
+//          registry.unregisterServices(this);
+//          dispatcher.removeListeners(m_context);
+//          m_context = null;
+//          m_state = Bundle.RESOLVED;
+//          dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPED, this));
+//        }
+//
+//      case Bundle.RESOLVED =>
+//
+//      case _ => throw new BundleException("Bundle is in wrong state for stop")
+//    }
+//  }
 }
