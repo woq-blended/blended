@@ -179,17 +179,23 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
 
   private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
     log.info(s"Stopping ActiveMQ Broker [${brokerCfg.brokerName}]")
-    try { svcReg.unregister() }
-    catch {
-      case _ : IllegalStateException => // was already unregistered
+    
+    try {
+      broker.stop()
+      broker.waitUntilStopped()
+    } catch {
+      case t : Throwable => 
+        log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
+    } finally {
+        try { 
+          svcReg.unregister() 
+        } catch {
+          case _ : IllegalStateException => // was already unregistered
+        }
+
+      cleanUp = List.empty
     }
-
-    broker.stop()
-    broker.waitUntilStopped()
-
-    cleanUp = List.empty
   }
-
 
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
     log.error(reason)(s"Error starting Active MQ broker [${brokerCfg.brokerName}]")
