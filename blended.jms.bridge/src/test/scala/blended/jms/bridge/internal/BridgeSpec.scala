@@ -56,7 +56,7 @@ class BridgeSpec extends LoggingFreeSpec
         StreamFactories.sendAndKeepAlive(toJms, msgs:_*)
       }
 
-      def receiveMessages(cf : IdAwareConnectionFactory, dest : JmsDestination)(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer):List[FlowEnvelope] = {
+      def receiveMessages(cf : IdAwareConnectionFactory, dest : JmsDestination)(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer) : List[FlowEnvelope] = {
 
         StreamFactories.runSourceWithTimeLimit(
           "received",
@@ -91,33 +91,7 @@ class BridgeSpec extends LoggingFreeSpec
         (cf1, cf2)
       }
 
-//      "process inbound messages" in {
-//
-//        implicit val timeout = 3.seconds
-//
-//        withStartedBridge(timeout) { s => sr =>
-//
-//          val msgCount = 5
-//
-//          val msgs = 1.to(msgCount).map { i =>
-//            val header: Map[String, MsgProperty[_]] = Map("foo" -> "bar", "msgno" -> i)
-//            FlowMessage(s"Message $i", header)
-//          } map(FlowEnvelope.apply)
-//
-//          implicit val system : ActorSystem = s
-//          implicit val materializer : ActorMaterializer = ActorMaterializer()
-//          implicit val ectxt : ExecutionContext = system.dispatcher
-//
-//          val (internal, external) = getConnectionFactories(sr)
-//          val switch = sendMessages(external, JmsQueue("sampleIn"), msgs:_*)
-//          val messages = receiveMessages(internal, JmsQueue(s"bridge.data.in.${external.vendor}.${external.provider}"))
-//
-//          messages should have size (msgCount)
-//          switch.shutdown()
-//        }
-//      }
-
-      "process outbound messages" in {
+      "process in- and outbound messages" in {
 
         implicit val timeout = 5.seconds
 
@@ -140,7 +114,7 @@ class BridgeSpec extends LoggingFreeSpec
 
           val msgs = 1.to(msgCount).map { i =>
             FlowMessage(s"Message $i", FlowMessage.noProps)
-              .withHeader("BlendedJMSDestination", "sampleOut").get
+              .withHeader("BlendedJMSDestination", s"sampleOut.$i").get
           } map { FlowEnvelope.apply }
 
           val streamCfg = BridgeController.bridgeStream(
@@ -156,9 +130,11 @@ class BridgeSpec extends LoggingFreeSpec
           system.actorOf(StreamController.props(streamCfg))
 
           val switch = sendMessages(external, JmsQueue("sampleIn"), msgs:_*)
-          val messages = receiveMessages(external, JmsQueue("sampleOut"))(timeout, system, materializer)
 
-          messages should have size (msgCount)
+          1.to(msgCount).map { i =>
+            val messages = receiveMessages(external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
+            messages should have size (1)
+          }
           switch.shutdown()
         }
       }
