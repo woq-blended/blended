@@ -3,11 +3,8 @@ felix-cache
 *.aux
 *.backup
 *~
-*.pdf
 *.swp
 libs/
-mvn.out
-nohup.out
 3rdparty
 package-lock.json
 .bloop
