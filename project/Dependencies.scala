@@ -32,6 +32,7 @@ object Dependencies {
   val akkaHttpTestkit = akka_Http("http-testkit")
   val akkaOsgi = akka("osgi")
   val akkaParsing = akka_Http("parsing")
+  val akkaPersistence = akka("persistence")
   val akkaStream = akka("stream")
   val akkaStreamTestkit = akka("stream-testkit")
   val akkaTestkit = akka("testkit")
@@ -80,6 +81,8 @@ object Dependencies {
   val junit = "junit" % "junit" % "4.11"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
+  val levelDbJava = "org.iq80.leveldb" % "leveldb" % "0.9"
+  val levelDbJni = "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
   val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"

@@ -9,7 +9,9 @@ object BlendedStreams extends ProjectFactory {
     deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
+      Dependencies.akkaPersistence,
       Dependencies.geronimoJms11Spec,
+      Dependencies.levelDbJava,
 
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",

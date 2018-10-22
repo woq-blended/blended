@@ -10,19 +10,26 @@ import scala.beans.BeanProperty
 import scala.util.Try
 
 case class AckInfo(
+  // TODO: Is dependency to JMS dependency correct
   jmsMessage : Message,
   session : JmsAckSession,
   created : Long = System.currentTimeMillis()
 )
 
 object FlowEnvelope {
-  def apply(msg : FlowMessage) : FlowEnvelope =
-    FlowEnvelope(flowMessage = msg, originalMessage = msg)
 
-  def apply(props : FlowMessageProps) : FlowEnvelope = {
-    val msg = FlowMessage(props)
-    FlowEnvelope(flowMessage = msg, originalMessage = msg)
-  }
+  private def uuid() = UUID.randomUUID().toString()
+
+  def apply(msg : FlowMessage) : FlowEnvelope = apply(msg, uuid())
+  def apply(props: FlowMessageProps) : FlowEnvelope = apply(FlowMessage(props), uuid())
+
+  def apply(props: FlowMessageProps, id : String) : FlowEnvelope = apply(FlowMessage(props), id)
+
+  def apply(msg : FlowMessage, id : String) : FlowEnvelope = FlowEnvelope(
+    flowMessage = msg,
+    originalMessage = msg,
+    id = id
+  )
 }
 
 final case class FlowEnvelope private[message] (
