@@ -1,13 +1,14 @@
-package blended.streams.dispatcher.internal.transaction
+package blended.streams.transaction
 
-import blended.streams.dispatcher.internal.transaction.FlowTransactionState.FlowTransactionState
-import blended.streams.dispatcher.internal.worklist.WorklistItem
 import blended.streams.message.FlowEnvelope
+import blended.streams.transaction
+import blended.streams.transaction.FlowTransactionState.FlowTransactionState
+import blended.streams.worklist.WorklistItem
 
 object TransactionEvent {
 
   def fromEnvelope(envelope: FlowEnvelope, items: WorklistItem*) : TransactionEvent = {
-    TransactionEvent(
+    transaction.TransactionEvent(
       tid = envelope.headerWithDefault("TransactionId", envelope.id),
       envelope = envelope,
       state = FlowTransactionState.Started,

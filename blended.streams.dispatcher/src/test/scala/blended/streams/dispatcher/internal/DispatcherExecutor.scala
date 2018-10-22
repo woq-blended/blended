@@ -7,10 +7,10 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.dispatcher.internal.builder.DispatcherBuilder
-import blended.streams.dispatcher.internal.worklist.WorklistStarted
 import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.CollectingActor
 import blended.streams.testsupport.CollectingActor.Completed
+import blended.streams.worklist.WorklistStarted
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._

@@ -1,4 +1,4 @@
-package blended.streams.dispatcher.internal.worklist
+package blended.streams.worklist
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}

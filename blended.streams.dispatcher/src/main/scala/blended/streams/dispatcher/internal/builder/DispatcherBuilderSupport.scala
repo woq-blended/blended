@@ -2,9 +2,9 @@ package blended.streams.dispatcher.internal.builder
 
 import java.util.UUID
 
-import blended.streams.dispatcher.internal.worklist.{DispatcherWorklistItem, Worklist, WorklistItem}
 import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeConfig}
 import blended.streams.message.FlowEnvelope
+import blended.streams.worklist.{FlowWorklistItem, Worklist, WorklistItem}
 import blended.util.logging.Logger
 
 import scala.reflect.ClassTag
@@ -86,7 +86,7 @@ trait DispatcherBuilderSupport {
 
   def worklistItem(env: FlowEnvelope) : Try[WorklistItem] = Try {
     val id = env.header[String](HEADER_OUTBOUND_ID).get
-    DispatcherWorklistItem(env, id)
+    FlowWorklistItem(env, id)
   }
 
   def worklist(envelopes : FlowEnvelope*) : Try[Worklist] = Try {

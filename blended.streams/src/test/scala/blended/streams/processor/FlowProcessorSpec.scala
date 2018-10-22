@@ -1,11 +1,13 @@
-package blended.streams
+package blended.streams.processor
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
+import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
 import blended.streams.message.FlowMessage.FlowMessageProps
+import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -14,7 +16,6 @@ import org.scalatest.Matchers
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-import MsgProperty.Implicits._
 
 class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   with LoggingFreeSpecLike

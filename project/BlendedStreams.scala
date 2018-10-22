@@ -24,7 +24,9 @@ object BlendedStreams extends ProjectFactory {
         s"${b.bundleSymbolicName}",
         s"${b.bundleSymbolicName}.jms",
         s"${b.bundleSymbolicName}.message",
-        s"${b.bundleSymbolicName}.processor"
+        s"${b.bundleSymbolicName}.processor",
+        s"${b.bundleSymbolicName}.transaction",
+        s"${b.bundleSymbolicName}.worklist"
       )
     )
   ) {

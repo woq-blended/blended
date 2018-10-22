@@ -6,8 +6,8 @@ import akka.stream.{FanOutShape2, Graph}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
-import blended.streams.dispatcher.internal.worklist.{DispatcherWorklistItem, Worklist, WorklistStarted}
 import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
+import blended.streams.worklist.WorklistStarted
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}

@@ -6,13 +6,10 @@ import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Sink, Source}
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
-import blended.streams.dispatcher.internal.worklist._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.worklist.WorklistStarted
 import blended.util.logging.Logger
-
-import scala.util.Try
 
 class MissingResourceType(msg: FlowMessage)
   extends Exception(s"Missing ResourceType in [$msg] ")

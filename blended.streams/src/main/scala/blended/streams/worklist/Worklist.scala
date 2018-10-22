@@ -1,12 +1,12 @@
-package blended.streams.dispatcher.internal.worklist
+package blended.streams.worklist
 
 import java.util.UUID
 
 import akka.stream._
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.stage._
-import blended.streams.dispatcher.internal.worklist.WorklistState.WorklistState
 import blended.streams.message.FlowEnvelope
+import blended.streams.worklist.WorklistState.WorklistState
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -21,7 +21,7 @@ trait WorklistItem {
   def id : String
 }
 
-case class DispatcherWorklistItem(env : FlowEnvelope, outboundId : String) extends WorklistItem {
+case class FlowWorklistItem(env : FlowEnvelope, outboundId : String) extends WorklistItem {
   override def id: String = env.id + ":" + outboundId
 }
 

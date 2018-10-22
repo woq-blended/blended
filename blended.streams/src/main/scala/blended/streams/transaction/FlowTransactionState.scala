@@ -1,4 +1,4 @@
-package blended.streams.dispatcher.internal.transaction
+package blended.streams.transaction
 
 import scala.language.implicitConversions
 

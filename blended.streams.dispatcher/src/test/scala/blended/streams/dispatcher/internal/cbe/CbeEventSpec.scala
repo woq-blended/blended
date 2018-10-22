@@ -2,11 +2,12 @@ package blended.streams.dispatcher.internal.cbe
 
 import java.util.Date
 
-import blended.streams.dispatcher.internal.transaction.{EventSeverity, FlowTransactionState}
+import blended.streams.transaction.{EventSeverity, FlowTransactionState}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.XMLSupport
 import blended.util.logging.Logger
 import org.scalatest.Matchers
+
 import scala.concurrent.duration._
 
 class TransactionEventSpec extends LoggingFreeSpec
