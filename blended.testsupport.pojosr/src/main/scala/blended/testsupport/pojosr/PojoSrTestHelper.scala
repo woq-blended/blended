@@ -122,10 +122,6 @@ trait PojoSrTestHelper {
           withStartedBundles(sr)(tail)(f)
         } catch {
           case NonFatal(e) => throw e
-        } finally {
-          val bundle = sr.getBundleContext().getBundle(bundleId)
-          log.info(s"Stopping bundle [${bundleId}] : ${bundle.getSymbolicName()}")
-          sr.getBundleContext().getBundle(bundleId).stop()
         }
     }
   }

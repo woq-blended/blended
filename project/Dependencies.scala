@@ -33,6 +33,7 @@ object Dependencies {
   val akkaOsgi = akka("osgi")
   val akkaParsing = akka_Http("parsing")
   val akkaStream = akka("stream")
+  val akkaStreamTestkit = akka("stream-testkit")
   val akkaTestkit = akka("testkit")
   val akkaSlf4j = akka("slf4j")
 

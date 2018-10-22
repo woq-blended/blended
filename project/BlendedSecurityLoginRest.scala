@@ -12,6 +12,8 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       Dependencies.scalatest % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
+      Dependencies.akkaTestkit % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.sttp % "test",
       Dependencies.sttpAkka % "test"

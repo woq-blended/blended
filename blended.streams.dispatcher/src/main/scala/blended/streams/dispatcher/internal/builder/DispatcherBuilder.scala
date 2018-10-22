@@ -6,10 +6,13 @@ import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Sink, Source}
 import blended.container.context.api.ContainerIdentifierService
+import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
-import blended.streams.dispatcher.internal.worklist.WorklistStarted
+import blended.streams.dispatcher.internal.worklist._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
+
+import scala.util.Try
 
 class MissingResourceType(msg: FlowMessage)
   extends Exception(s"Missing ResourceType in [$msg] ")
@@ -56,7 +59,7 @@ object DispatcherBuilder {
       val worklist : Inlet[WorklistStarted] = builder.add(worklistOut).in
       val error : Inlet[FlowEnvelope] = builder.add(errorOut).in
 
-      val dispatcher = builder.add(DispatcherBuilder(idSvc, dispatcherCfg)(builderSupport).build())
+      val dispatcher = builder.add(DispatcherBuilder(idSvc, dispatcherCfg)(builderSupport).core())
 
       in ~> dispatcher.in
       dispatcher.out0 ~> out
@@ -81,7 +84,7 @@ case class DispatcherBuilder(
   private lazy val startWorklist = DispatcherFanout(dispatcherCfg, idSvc).build()
 
   /*-------------------------------------------------------------------------------------------------*/
-  def build(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistStarted, FlowEnvelope], NotUsed] = {
+  def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistStarted, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit builder =>
 
@@ -118,4 +121,18 @@ case class DispatcherBuilder(
       )
     }
   }
+
+//  def out(sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed], log: Logger) : Flow[FlowEnvelope, WorklistEvent, NotUsed] = {
+//
+//    sendFlow.via(FlowProcessor.transform[WorklistEvent]("dispatchOut", log) { env =>
+//      Try {
+//
+//        val worklist = builderSupport.worklist(env).get
+//         env.exception match {
+//           case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
+//           case Some(e) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
+//         }
+//      }
+//    })
+//  }
 }
