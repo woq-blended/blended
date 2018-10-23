@@ -1,6 +1,6 @@
 package blended.streams.transaction
 
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, MsgProperty}
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState.WorklistState
 
@@ -11,7 +11,7 @@ sealed trait FlowTransactionEvent {
 
 case class FlowTransactionStarted(
   override val transactionId : String,
-  envelope : Option[FlowEnvelope]
+  creationProperties : Map[String, MsgProperty[_]]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Started
 }

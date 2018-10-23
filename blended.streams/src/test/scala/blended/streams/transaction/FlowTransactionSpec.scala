@@ -1,6 +1,5 @@
 package blended.streams.transaction
 
-import akka.japi.Option
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -19,7 +18,11 @@ class FlowTransactionSpec extends LoggingFreeSpec
   private def sampleTransAction(branchCount : Int) : Try[FlowTransaction] = Try {
 
     val branches = 1.to(branchCount).map(i => main.withHeader(branchHeader, s"$i").get)
-    val t = FlowTransaction(Option.Some(main))
+    val event = FlowTransaction.startEvent(Some(main))
+    val t = FlowTransaction(
+      id = event.transactionId,
+      creationProps = event.creationProperties
+    )
 
     t.updateTransaction(FlowTransactionUpdate(t.tid, WorklistState.Started, branches:_*), branchHeader).get
   }

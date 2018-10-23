@@ -1,33 +1,53 @@
 package blended.streams.transaction.internal
 
-import akka.actor.{Actor, Props}
-import akka.persistence.{PersistentActor, SnapshotOffer}
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionState}
+import akka.Done
+import akka.actor.{Actor, ActorRef, Props}
+import akka.persistence.SnapshotOffer
+import akka.util.Timeout
+import blended.streams.persistence.RestartableActor
+import blended.streams.persistence.RestartableActor.RestartActor
+import blended.streams.transaction.internal.TransactionActor.State
+import blended.streams.transaction.internal.TransactionManager.RestartTransactionActor
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionStarted}
 import blended.util.logging.Logger
 
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success}
+
 object TransactionActor {
+
+  case class State(tid : String)
 
   def props(initialState: FlowTransaction, branchHeader : String) : Props =
     Props(new TransactionActor(initialState, branchHeader))
 }
 
-class TransactionActor(initialState: FlowTransaction, branchHeader : String) extends PersistentActor {
+class TransactionActor(initialState: FlowTransaction, branchHeader : String) extends RestartableActor {
 
+  private val log = Logger[TransactionActor]
   private var state : FlowTransaction = initialState
-  private val id = initialState.tid
+  private var persisted = false
 
   override def persistenceId: String = initialState.tid
 
-  def updateState(evt: FlowTransactionEvent) : Unit =
+  def updateState(evt: FlowTransactionEvent) : Unit = {
     state = state.updateTransaction(evt, branchHeader).get
+    log.trace(s"New state is [$state]")
+  }
 
-  override def receiveRecover: Receive = {
-    case evt : FlowTransactionEvent => updateState(evt)
+  val transactionRecover : Receive = {
+    case evt : FlowTransactionEvent =>
+      log.trace(s"Replaying FlowTransactionEvent [$evt]")
+      updateState(evt)
+      persisted = true
     case SnapshotOffer(_, snapshot : FlowTransaction) => state = snapshot
   }
 
-  override def receiveCommand: Receive = {
-    case e : FlowTransactionEvent => persist(e){ e =>
+  override def receiveRecover: Receive = transactionRecover
+
+  private[this] def processEvent(event : FlowTransactionEvent) = {
+    persist(event){ e =>
       updateState(e)
       context.system.eventStream.publish(state)
       if (state.terminated) {
@@ -35,9 +55,29 @@ class TransactionActor(initialState: FlowTransaction, branchHeader : String) ext
       }
     }
   }
+
+  private val cmdReceive : Receive = {
+
+    case s : FlowTransactionStarted =>
+      if (!persisted) {
+        processEvent(s)
+        persisted = true
+      } else {
+        context.system.eventStream.publish(state)
+      }
+    case e : FlowTransactionEvent =>
+      processEvent(e)
+    case State(_) =>
+      log.trace("Sending state to " + sender().path)
+      sender() ! state
+  }
+
+  override def receiveCommand: Receive = cmdReceive.orElse(restartReceive)
 }
 
 object TransactionManager {
+
+  case class RestartTransactionActor(id: String)
 
   def props(branchHeader : String) : Props = Props(new TransactionManager(branchHeader))
 }
@@ -46,15 +86,51 @@ class TransactionManager(branchHeader: String) extends Actor {
 
   private[this] val log = Logger[TransactionManager]
 
+  private[this] implicit val timeout : Timeout = Timeout(3.seconds)
+  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+
+  private[this] def transactionActor(id : String): Future[ActorRef] = {
+    context.system.actorSelection("/user/" + id ).resolveOne()(100.millis)
+  }
+
+  private[this] def fwdToTransaction(id : String, m : Any)(implicit eCtxt : ExecutionContext) : Unit = {
+    val respondTo : ActorRef = sender()
+
+    transactionActor(id).map { a =>
+      log.debug(s"Forwarding [$m] to [${a.path}]")
+      a.tell(m, respondTo)
+      Done
+    }.onComplete {
+      case Success(_) =>
+      case Failure(t) => log.warn(t)(s"Error forwarding message [$m] to transaction actor [$id]")
+    }
+  }
+
   override def receive: Receive = {
+
     case s : FlowTransactionStarted =>
-      log.debug(s"Received [$s]")
-      if (context.child(s.transactionId).isEmpty) {
-        log.debug(s"Creating new Transaction actor for [${s.transactionId}]")
-        val a = context.actorOf(TransactionActor.props(FlowTransaction(s.envelope), branchHeader), s.transactionId)
-        a ! s
-      }
-    case e : FlowTransactionEvent =>
-      context.child(e.transactionId).foreach(_ ! e)
+      transactionActor(s.transactionId).recoverWith[ActorRef] {
+        case t : Throwable =>
+          log.debug(s"Creating new Transaction actor for [${s.transactionId}]")
+
+          val a = context.system.actorOf(TransactionActor.props(
+            FlowTransaction(
+              id = s.transactionId,
+              creationProps = s.creationProperties
+            ),
+            branchHeader
+          ), s.transactionId)
+
+          a ! s
+          Future(a)
+      } 
+
+    case e : FlowTransactionEvent => fwdToTransaction(e.transactionId, e)
+
+    case RestartTransactionActor(id) => fwdToTransaction(id, RestartActor)
+
+    case state @ TransactionActor.State(tid) => fwdToTransaction(tid, state)
+
+    case m => log.warn(s"Unhandled msg [$m] ")
   }
 }

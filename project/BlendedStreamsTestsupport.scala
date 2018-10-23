@@ -9,7 +9,8 @@ object BlendedStreamsTestsupport extends ProjectFactory {
     deps = Seq(
       Dependencies.akkaTestkit,
       Dependencies.akkaActor,
-      Dependencies.akkaStream
+      Dependencies.akkaStream,
+      Dependencies.akkaPersistence
     )
   )
 

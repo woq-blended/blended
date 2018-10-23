@@ -2,8 +2,7 @@ package blended.streams.transaction
 
 import java.util.UUID
 
-import blended.streams.message.FlowEnvelope
-import blended.streams.transaction
+import blended.streams.message.{FlowEnvelope, MsgProperty}
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
 import blended.streams.worklist.WorklistState.WorklistState
@@ -11,17 +10,36 @@ import blended.util.logging.Logger
 
 import scala.util.Try
 
+object FlowTransaction {
+
+  def apply(env : Option[FlowEnvelope]) : FlowTransaction = {
+    env match {
+      case None => FlowTransaction(id = UUID.randomUUID().toString(), creationProps = Map.empty)
+      case Some(e) => FlowTransaction(id = e.id, creationProps = e.flowMessage.header)
+    }
+  }
+
+  def startEvent(env: Option[FlowEnvelope] = None): FlowTransactionStarted = {
+    val t = apply(env)
+    FlowTransactionStarted(
+      transactionId = t.tid,
+      creationProperties = t.creationProps
+    )
+  }
+}
+
 case class FlowTransaction private [transaction](
-  startedWith : Option[FlowEnvelope],
+  id : String,
+  creationProps : Map[String, MsgProperty[_]],
   worklist : Map[String, WorklistState] = Map.empty,
   state : FlowTransactionState = FlowTransactionState.Started,
 ) {
 
-  val tid : String = startedWith.map(_.id).getOrElse(UUID.randomUUID().toString())
+  val tid : String = id
 
   private[this] val log = Logger[FlowTransaction]
 
-  def terminated = state == FlowTransactionState.Completed || state == FlowTransactionState.Failed
+  def terminated: Boolean = state == FlowTransactionState.Completed || state == FlowTransactionState.Failed
 
   private def worklistState(wl: Map[String, WorklistState]): FlowTransactionState = {
     if (wl.values.exists(v => v == WorklistState.Failed || v == WorklistState.TimeOut)) {
@@ -78,8 +96,4 @@ case class FlowTransaction private [transaction](
   }
 }
 
-object FlowTransaction {
 
-  def startTransaction(env: Option[FlowEnvelope] = None): FlowTransactionStarted =
-    FlowTransactionStarted(env.map(_.id).getOrElse(UUID.randomUUID().toString()), env)
-}
