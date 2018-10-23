@@ -95,13 +95,6 @@ class BridgeSpec extends LoggingFreeSpec
 
             f(system)(sr)
           }
-          
-//          // Wait until the brokers have been stopped
-//
-//          implicit val timeout = 3.seconds
-//          log.info("Waiting for Active MQ brokers to be stopped ")
-//          ensureServiceMissing[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal"))).get
-//          ensureServiceMissing[IdAwareConnectionFactory](sr)(Some(brokerFilter("external"))).get
         }
       }
 
