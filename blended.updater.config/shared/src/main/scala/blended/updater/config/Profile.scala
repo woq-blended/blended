@@ -6,6 +6,7 @@ case class Profile(name: String, version: String, overlays: List[OverlaySet]) {
 
   def toSingle: List[SingleProfile] = overlays.map(o => SingleProfile(name, version, o))
 
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},overlays=${overlays})"
 }
 
 object Profile {
