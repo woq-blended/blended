@@ -98,11 +98,6 @@ class RouteProvider {
           case ServiceWatcherEvent.RemovedService(route, watchContext) => toContext(route, watchContext.ref).foreach(removeContext)
         }
 
-        // Use all contexts that were registered before we came, too
-        log.debug("Registering already present HttpContext's and Route's")
-        services[HttpContext].foreach(addContext)
-        serviceRefs[Route].flatMap(r => toContext(bundleContext.getService(r), r)).foreach(addContext)
-
       }
       override def stop(): Unit = {
         // We unregister all routes
