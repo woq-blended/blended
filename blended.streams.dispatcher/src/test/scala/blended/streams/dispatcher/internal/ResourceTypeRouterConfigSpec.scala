@@ -13,6 +13,7 @@ import org.scalatest.Matchers
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
   with SimplePojosrBlendedContainer
@@ -30,8 +31,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
       withSimpleBlendedContainer(baseDir) { sr =>
 
-        implicit val timeout = 1.second
-        val idSvc = waitOnService[ContainerIdentifierService](sr)(None) match {
+        val idSvc = waitOnService[ContainerIdentifierService](sr)(None)(ClassTag(classOf[ContainerIdentifierService]), 1.second) match {
           case None => fail("Id Service not Available")
           case Some(idSvc) =>
 

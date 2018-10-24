@@ -22,6 +22,7 @@ import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 class DispatcherGraphBuilderSpec extends LoggingFreeSpec
   with LoggingFreeSpecLike
@@ -48,12 +49,21 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
         "blended.jms.bridge" -> Some(() => new BridgeActivator())
       )) { sr =>
 
-        implicit val timeout : FiniteDuration = 3.seconds
-
         try {
-          val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](sr)(None)
-          implicit val system : ActorSystem = mandatoryService[ActorSystem](sr)(None)
-          val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](sr)(None)
+          val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](sr)(None)(
+            clazz = ClassTag(classOf[ContainerIdentifierService]),
+            timeout = 3.seconds
+          )
+
+          implicit val system : ActorSystem = mandatoryService[ActorSystem](sr)(None)(
+            clazz = ClassTag(classOf[ActorSystem]),
+            timeout = 3.seconds
+          )
+
+          val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](sr)(None)(
+            clazz = ClassTag(classOf[BridgeProviderRegistry]),
+            timeout = 3.seconds
+          )
 
           implicit val eCtxt : ExecutionContext = system.dispatcher
           implicit val materializer : ActorMaterializer = ActorMaterializer()
@@ -64,7 +74,7 @@ class DispatcherGraphBuilderSpec extends LoggingFreeSpec
             idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
           ).get
 
-          val result = DispatcherExecutor.execute(system, idSvc, cfg, testMessages:_*)
+          val result = DispatcherExecutor.execute(system, idSvc, cfg, testMessages:_*)(materializer, 10.seconds)
 
           f(cfg, result)
 

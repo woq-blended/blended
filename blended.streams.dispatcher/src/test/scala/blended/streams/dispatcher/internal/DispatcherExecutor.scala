@@ -30,7 +30,7 @@ object DispatcherExecutor {
     idSvc : ContainerIdentifierService,
     cfg: ResourceTypeRouterConfig,
     testMessages : FlowEnvelope*
-  )(implicit materializer : Materializer) : DispatcherResult = {
+  )(implicit materializer : Materializer, timeout: FiniteDuration) : DispatcherResult = {
 
     val source: Source[FlowEnvelope, NotUsed] = Source(testMessages.toList)
 
@@ -56,9 +56,9 @@ object DispatcherExecutor {
     ).run(materializer)
 
     DispatcherResult(
-      out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
-      error = errorProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
-      worklist = wlProbe.expectMsgType[List[WorklistStarted]](10.seconds)
+      out = jmsProbe.expectMsgType[List[FlowEnvelope]](timeout),
+      error = errorProbe.expectMsgType[List[FlowEnvelope]](timeout),
+      worklist = wlProbe.expectMsgType[List[WorklistStarted]](timeout)
     )
   }
 }
