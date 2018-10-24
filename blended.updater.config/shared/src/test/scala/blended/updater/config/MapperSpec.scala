@@ -2,9 +2,9 @@ package blended.updater.config
 
 import scala.util.Success
 
-import blended.testsupport.scalatest.LoggingFreeSpec
+import org.scalatest.FreeSpec
 
-class MapperSpec extends LoggingFreeSpec {
+class MapperSpec extends FreeSpec {
 
   "Mapper maps and unmaps to identity" - {
 
