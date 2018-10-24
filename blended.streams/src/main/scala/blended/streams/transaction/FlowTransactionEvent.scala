@@ -25,7 +25,8 @@ case class FlowTransactionUpdate(
 }
 
 case class FlowTransactionFailed(
-  override val transactionId : String
+  override val transactionId : String,
+  reason : Option[Throwable]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Failed
 }

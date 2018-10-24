@@ -1,8 +1,8 @@
 package blended.streams
 
 import akka.NotUsed
-import akka.stream.{FlowShape, Graph}
-import akka.stream.scaladsl.Flow
+import akka.stream.{FanOutShape2, FlowShape, Graph}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
@@ -60,6 +60,37 @@ object FlowProcessor {
       }
     }
   }
+
+  def splitEither[L,R]() : Graph[FanOutShape2[Either[L,R], L, R], NotUsed] = {
+    GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val branches = b.add(Broadcast[Either[L,R]](2))
+      val isLeft = b.add(Flow[Either[L,R]].filter(_.isLeft).map(_.left.get))
+      val isRight = b.add(Flow[Either[L,R]].filter(_.isRight).map(_.right.get))
+
+      branches ~> isLeft
+      branches ~> isRight
+
+      new FanOutShape2(branches.in, isLeft.out, isRight.out)
+    }
+  }
+
+  def partition[T](p : T => Boolean) : Graph[FanOutShape2[T, T, T], NotUsed] = {
+
+    GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val branches = b.add(Broadcast[T](2))
+      val isTrue = b.add(Flow[T].filter(p))
+      val isFalse  = b.add(Flow[T].filterNot(p))
+
+      branches ~> isTrue
+      branches ~> isFalse
+
+      new FanOutShape2(branches.in, isTrue.out, isFalse.out)
+    }
+  }
 }
 
 trait FlowProcessor {
@@ -71,7 +102,10 @@ trait FlowProcessor {
       name,
       log match {
         case Some(l) => l
-        case None => Logger[FlowProcessor]
+        case None =>
+          val l = Logger[FlowProcessor]
+          l.warn(s"Creating FlowProcessor [$name] with default logger. Normally a flow logger should be used.")
+          l
       }
     )(f)
 }

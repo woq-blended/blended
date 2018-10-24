@@ -1,5 +1,6 @@
 package blended.streams.worklist
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, KillSwitches, Materializer, OverflowStrategy}
@@ -30,9 +31,10 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
   private def withWorklistManager(cooldown: FiniteDuration, events : WorklistEvent*)(f : Seq[WorklistEvent] => Unit) : Unit = {
 
     val source = Source.actorRef(100, OverflowStrategy.dropBuffer)
+
     val sink = Sink.seq[WorklistEvent]
 
-    val mgr = WorklistManager(source, sink)
+    val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist")
 
     val ((actor, killswitch), result) = source
       .viaMat(KillSwitches.single)(Keep.both)
