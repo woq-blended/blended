@@ -3,8 +3,8 @@ package blended.streams.dispatcher.internal
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
-import blended.streams.dispatcher.internal.worklist.WorklistItem
 import blended.streams.jms.JmsDeliveryMode
+import blended.streams.worklist.WorklistItem
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 

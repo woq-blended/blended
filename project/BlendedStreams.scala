@@ -9,7 +9,9 @@ object BlendedStreams extends ProjectFactory {
     deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
+      Dependencies.akkaPersistence,
       Dependencies.geronimoJms11Spec,
+      Dependencies.levelDbJava,
 
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",
@@ -24,12 +26,15 @@ object BlendedStreams extends ProjectFactory {
         s"${b.bundleSymbolicName}",
         s"${b.bundleSymbolicName}.jms",
         s"${b.bundleSymbolicName}.message",
-        s"${b.bundleSymbolicName}.processor"
+        s"${b.bundleSymbolicName}.processor",
+        s"${b.bundleSymbolicName}.transaction",
+        s"${b.bundleSymbolicName}.worklist"
       )
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
-      Test / testlogLogPackages ++= Map("blended" -> "DEBUG")
+      Test / testlogDefaultLevel := "DEBUG", 
+      Test / testlogLogPackages ++= Map("blended" -> "TRACE")
     )
   }
 

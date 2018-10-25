@@ -40,6 +40,7 @@ class BrokerControlSupervisor(
   private[this] val log = Logger[BrokerControlSupervisor]
 
   private case object Start
+  private case object Stop
 
   override def preStart(): Unit = {
     self ! Start
@@ -71,6 +72,9 @@ class BrokerControlSupervisor(
 
         context.system.actorOf(restartProps, brokerCfg.brokerName)
       }
+
+    case Stop =>
+      context.children.foreach(a => context.stop(a))
   }
 }
 
@@ -186,7 +190,8 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
       case t : Throwable => 
         log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
     } finally {
-        try { 
+        try {
+          log.info(s"Removing OSGi service for Activemq Broker [${brokerCfg.brokerName}]")
           svcReg.unregister() 
         } catch {
           case _ : IllegalStateException => // was already unregistered

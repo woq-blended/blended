@@ -10,7 +10,7 @@ import org.osgi.framework.BundleActivator
 // a base directory for running a test case can be set).
 trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
 
-  def uuid : String = "simple"
+  def pojoUuid : String = "simple"
 
   private[this] def idSvcActivator(
     baseDir: String,
@@ -24,7 +24,7 @@ trait SimplePojosrBlendedContainer { this: PojoSrTestHelper =>
         val ctCtxt = new MockContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         new ContainerIdentifierServiceImpl(ctCtxt) {
-          override lazy val uuid: String = uuid
+          override lazy val uuid: String = pojoUuid
         }.providesService[ContainerIdentifierService]
       }
     }

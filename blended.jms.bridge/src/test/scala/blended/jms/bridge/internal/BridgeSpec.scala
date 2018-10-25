@@ -95,11 +95,6 @@ class BridgeSpec extends LoggingFreeSpec
 
             f(system)(sr)
           }
-          
-          // Wait until the brokers have been stopped
-          
-          ensureServicesStopped[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
-          ensureServicesStopped[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
         }
       }
 

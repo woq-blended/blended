@@ -1,11 +1,9 @@
-package blended.streams.testapps
+package blended.streams.message
 
-import blended.streams.message
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.{BaseFlowMessage, BinaryFlowMessage, FlowMessage, TextFlowMessage}
+import blended.streams.message.MsgProperty.Implicits._
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
-import blended.streams.message.MsgProperty.Implicits._
 
 import scala.util.Success
 

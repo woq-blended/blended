@@ -33,6 +33,7 @@ class BrokerActivator
             ), bundleContext.getBundle().getSymbolicName())
 
             onStop {
+              log.info("Stopping configured ActiveMQ brokers ")
               osgiCfg.system.stop(supervisor)
             }
           }
@@ -44,6 +45,7 @@ class BrokerActivator
           ), bundleContext.getBundle().getSymbolicName())
 
           onStop {
+            log.info("Stopping configured ActiveMQ brokers ")
             osgiCfg.system.stop(supervisor)
           }
         }

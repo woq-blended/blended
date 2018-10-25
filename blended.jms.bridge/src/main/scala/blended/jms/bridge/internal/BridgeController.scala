@@ -195,7 +195,6 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       log.info(s"Removing connection factory [${cf.vendor}:${cf.provider}]")
 
       streams.filter{ case (key, stream) => key.startsWith(cf.id) }.foreach { case (id, stream) =>
-
         log.info(s"Stopping stream [$id]")
         stream ! StreamController.Stop
         streams -= id

@@ -4,9 +4,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-import blended.streams.dispatcher.internal.transaction.{EventSeverity, FlowTransactionState}
-import FlowTransactionState._
-import EventSeverity.EventSeverity
+import blended.streams.transaction.EventSeverity.EventSeverity
+import blended.streams.transaction.FlowTransactionState._
+import blended.streams.transaction.{EventSeverity, FlowTransactionState}
 
 import scala.concurrent.duration._
 

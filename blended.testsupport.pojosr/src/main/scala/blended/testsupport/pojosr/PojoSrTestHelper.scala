@@ -7,6 +7,7 @@ import org.osgi.framework.{BundleActivator, ServiceReference}
 
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
+import scala.util.Try
 import scala.util.control.NonFatal
 
 object PojoSrTestHelper {
@@ -59,12 +60,16 @@ trait PojoSrTestHelper {
       sr.getBundleContext().getBundle(bundleId).stop()
     }
   }
-  
-  private[this] serviceReferences[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T]) :      Array[ServiceReference[T]] = Option(
-    sr.getServiceReferences(
-      clazz.runtimeClass.getName(), 
-      filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
-    )
+
+  private[this] def serviceReferences[T]
+    (sr: BlendedPojoRegistry)
+    (filter : Option[String] = None)
+    (implicit clazz: ClassTag[T]) : Array[ServiceReference[T]] =
+
+      Option(sr.getServiceReferences(
+        clazz.runtimeClass.getName(),
+        filter.getOrElse(s"(objectClass=${clazz.runtimeClass.getName()})")
+      )
   ).getOrElse(Array.empty).map(_.asInstanceOf[ServiceReference[T]])
 
   def waitOnService[T](sr: BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz: ClassTag[T], timeout : FiniteDuration) : Option[T] = {
@@ -72,14 +77,13 @@ trait PojoSrTestHelper {
     val start = System.currentTimeMillis()
 
     do {
-      result = serviceReferences[T](sr)(filter).headOption
+      result = serviceReferences[T](sr)(filter).headOption.map(ref => sr.getService(ref))
     } while (System.currentTimeMillis() - start < timeout.toMillis && result.isEmpty)
 
     result
   }
 
   def mandatoryService[T](sr: BlendedPojoRegistry)(filter: Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : T = {
-
     waitOnService[T](sr)(filter) match {
       case Some(s) => s
       case None => throw new Exception(s"Service of type [${clazz.runtimeClass.getName()}] with filter [$filter] not available. ")
@@ -87,20 +91,19 @@ trait PojoSrTestHelper {
   }
   
   // Ensure the specified service is gone from the registry
-  def ensureServiceMissing[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : Try[Unit] = {
+  def ensureServiceMissing[T](sr : BlendedPojoRegistry)(filter : Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : Try[Unit] = Try {
+
     var result : Option[T] = None
     val start = System.currentTimeMillis()
 
     do {
-      val refs : Array[ServiceReference[T]] = serviceReferences(sr)(filter)
-
-      if (refs.nonEmpty) {
-        result = Some(sr.getService[T](refs.head))
-      }
-
+      val ref = serviceReferences[T](sr)(filter).headOption
+      result = ref.map(ref => sr.getService[T](ref))
     } while (System.currentTimeMillis() - start < timeout.toMillis && result.isDefined)
 
-    result
+    if (result.isDefined) {
+      throw new Exception(s"Service of type [${clazz.runtimeClass.getName()}] and filter [$filter] still exists.")
+    }
   }
 
   def withStartedBundles[T](sr: BlendedPojoRegistry)(
@@ -118,10 +121,6 @@ trait PojoSrTestHelper {
           withStartedBundles(sr)(tail)(f)
         } catch {
           case NonFatal(e) => throw e
-        } finally {
-          val bundle = sr.getBundleContext().getBundle(bundleId)
-          log.info(s"Stopping bundle [${bundleId}] : ${bundle.getSymbolicName()}")
-          sr.getBundleContext().getBundle(bundleId).stop()
         }
     }
   }

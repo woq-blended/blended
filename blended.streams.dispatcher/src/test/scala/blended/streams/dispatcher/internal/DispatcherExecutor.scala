@@ -7,10 +7,10 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestProbe
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.dispatcher.internal.builder.DispatcherBuilder
-import blended.streams.dispatcher.internal.worklist.WorklistStarted
 import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.CollectingActor
 import blended.streams.testsupport.CollectingActor.Completed
+import blended.streams.worklist.WorklistStarted
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -30,7 +30,7 @@ object DispatcherExecutor {
     idSvc : ContainerIdentifierService,
     cfg: ResourceTypeRouterConfig,
     testMessages : FlowEnvelope*
-  )(implicit materializer : Materializer) : DispatcherResult = {
+  )(implicit materializer : Materializer, timeout: FiniteDuration) : DispatcherResult = {
 
     val source: Source[FlowEnvelope, NotUsed] = Source(testMessages.toList)
 
@@ -56,9 +56,9 @@ object DispatcherExecutor {
     ).run(materializer)
 
     DispatcherResult(
-      out = jmsProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
-      error = errorProbe.expectMsgType[List[FlowEnvelope]](10.seconds),
-      worklist = wlProbe.expectMsgType[List[WorklistStarted]](10.seconds)
+      out = jmsProbe.expectMsgType[List[FlowEnvelope]](timeout),
+      error = errorProbe.expectMsgType[List[FlowEnvelope]](timeout),
+      worklist = wlProbe.expectMsgType[List[WorklistStarted]](timeout)
     )
   }
 }

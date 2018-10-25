@@ -1,10 +1,10 @@
-package blended.streams.dispatcher.internal.transaction
+package blended.streams.transaction
 
 import scala.language.implicitConversions
 
 object FlowTransactionState extends Enumeration {
   type FlowTransactionState = Value
-  val Started, Completed, Failed = Value
+  val Started, Updated, Completed, Failed = Value
 }
 
 object EventSeverity extends Enumeration {

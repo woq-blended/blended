@@ -6,8 +6,8 @@ import akka.stream.{FanOutShape2, Graph}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
-import blended.streams.dispatcher.internal.worklist.{DispatcherWorklistItem, Worklist, WorklistStarted}
 import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
+import blended.streams.worklist.WorklistStarted
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -84,7 +84,7 @@ case class DispatcherFanout(
 
   private val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistStarted =  envelopes => {
 
-    val id: String = envelopes.head._2.id
+    val worklistId : String = envelopes.head._2.id
 
     val timeout = envelopes.head._2.getFromContext[ResourceTypeConfig](bs.rtConfigKey) match {
       case Success(c) => c.map(_.timeout).getOrElse(10.seconds)
@@ -92,10 +92,7 @@ case class DispatcherFanout(
     }
 
     WorklistStarted(
-      worklist = Worklist(
-        id = id,
-        items = envelopes.map(e => DispatcherWorklistItem(e._2, e._1.id))
-      ),
+      worklist = bs.worklist(envelopes.map(_._2):_*).get,
       timeout = timeout
     )
   }

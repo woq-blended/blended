@@ -1,14 +1,10 @@
 package blended.streams.testsupport
 
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.actor.{Actor, ActorRef, Props}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
-import scala.concurrent.ExecutionContext
 import scala.reflect.ClassTag
-import scala.util.{Failure, Success}
 
 object CollectingActor {
   object Completed
