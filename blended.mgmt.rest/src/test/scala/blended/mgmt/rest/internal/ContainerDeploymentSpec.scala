@@ -105,6 +105,7 @@ class ContainerDeploymentSpec
 
         val response = sttp.sttp.
           multipartBody(sttp.multipartFile("file", emptyPackFile)).
+          auth.basic("tester", "mysecret").
           post(uploadUrl).
           send()
 
@@ -128,6 +129,7 @@ class ContainerDeploymentSpec
 
         val response = sttp.sttp.
           multipartBody(sttp.multipartFile("file", packFile)).
+          auth.basic("tester", "mysecret").
           post(uploadUrl).
           send()
 

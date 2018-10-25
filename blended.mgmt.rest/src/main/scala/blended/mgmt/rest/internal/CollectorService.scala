@@ -2,7 +2,7 @@ package blended.mgmt.rest.internal
 
 import java.io.File
 
-import scala.collection.{ immutable => sci }
+import scala.collection.{immutable => sci}
 import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
@@ -166,7 +166,7 @@ trait CollectorService {
   def rolloutProfileRoute: Route = {
     path("rollout" / "profile") {
       post {
-        requirePermission("profile:update") {
+        requirePermission("rollout") {
           entity(as[RolloutProfile]) { rolloutProfile =>
             // check existence of profile
             getRuntimeConfigs().find(rc => rc.name == rolloutProfile.profileName && rc.version == rolloutProfile.profileVersion) match {
@@ -228,33 +228,35 @@ trait CollectorService {
 
   def uploadDeploymentPackRoute: Route = {
     path("profile" / "upload" / "deploymentpack" / Segment) { repoId =>
-      post {
-        log.debug(s"upload to repo [${repoId}] requested. Checking permissions...")
-        //        requirePermission("profile:update") {
-        //          requirePermission(s"repository:upload:${repoId}") {
-        uploadedFile("file") {
-          case (metadata, file) =>
-            try {
-              processDeploymentPack(repoId, file) match {
-                case Success(profile) =>
-                  complete {
-                    s"""Uploaded profile ${profile._1} ${profile._2}"""
-                  }
-                case Failure(e) =>
-                  log.error(e)(s"Could not process uploaded deployment pack file [${file}]")
-                  complete {
-                    HttpResponse(
-                      StatusCodes.UnprocessableEntity,
-                      entity = s"Could not process the uploaded deployment pack file. Reason: ${e.getMessage()}"
-                    )
+      withSizeLimit(1024 * 1024 * 100) {
+        post {
+          log.debug(s"upload to repo [${repoId}] requested. Checking permissions...")
+          requirePermission("profile:update") {
+            requirePermission(s"repository:upload:${repoId}") {
+              storeUploadedFile("file", _ ⇒ File.createTempFile("profile-upload-deploymentpack", ".tmp")) {
+                case (metadata, file) =>
+                  try {
+                    processDeploymentPack(repoId, file) match {
+                      case Success(profile) =>
+                        complete {
+                          s"""Uploaded profile ${profile._1} ${profile._2}"""
+                        }
+                      case Failure(e) =>
+                        log.error(e)(s"Could not process uploaded deployment pack file [${file}]")
+                        complete {
+                          HttpResponse(
+                            StatusCodes.UnprocessableEntity,
+                            entity = s"Could not process the uploaded deployment pack file. Reason: ${e.getMessage()}"
+                          )
+                        }
+                    }
+                  } finally {
+                    file.delete()
                   }
               }
-            } finally {
-              file.delete()
             }
+          }
         }
-        //          }
-        //        }
       }
     }
   }
