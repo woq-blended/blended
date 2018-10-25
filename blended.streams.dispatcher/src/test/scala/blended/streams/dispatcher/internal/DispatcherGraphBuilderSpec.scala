@@ -9,7 +9,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.JmsQueue
-import blended.streams.StreamAssertions._
+import blended.streams.testsupport.StreamAssertions._
 import blended.streams.dispatcher.internal.builder.{DispatcherBuilderSupport, IllegalResourceType, MissingOutboundRouting, MissingResourceType}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._

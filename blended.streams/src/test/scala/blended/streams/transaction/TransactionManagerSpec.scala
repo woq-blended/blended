@@ -4,7 +4,6 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
-import blended.streams.StreamAssertions
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.transaction.internal.TransactionManager.RestartTransactionActor
 import blended.streams.transaction.internal.{TransactionActor, TransactionManager}
@@ -38,7 +37,7 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
-      t.creationProps.get("foo") should be (Some(MsgProperty.lift("bar").get))
+      t.creationProps.get("foo") should be (Some(MsgProperty("bar")))
 
       system.stop(mgr)
     }
@@ -55,13 +54,13 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
-      StreamAssertions.verifyHeader(t.creationProps, env.flowMessage.header) should be (empty)
+      t.creationProps.get("foo") should be (Some(MsgProperty("bar")))
 
       mgr ! RestartTransactionActor(t.tid)
       val t2 = Await.result(transaction(mgr, t.tid), 3.seconds)
 
       t2.tid should be (env.id)
-      StreamAssertions.verifyHeader(t2.creationProps, env.flowMessage.header) should be (empty)
+      t2.creationProps.get("foo") should be (Some(MsgProperty("bar")))
 
       system.stop(mgr)
     }
@@ -78,7 +77,7 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
-      StreamAssertions.verifyHeader(t.creationProps, env.flowMessage.header) should be (empty)
+      t.creationProps.get("foo") should be (Some(MsgProperty("bar")))
 
       system.stop(mgr)
 
@@ -86,11 +85,9 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       val t2 = Await.result(transaction(mgr2, t.tid), 3.seconds)
 
       t2.tid should be (env.id)
-      StreamAssertions.verifyHeader(t2.creationProps, env.flowMessage.header) should be (empty)
+      t2.creationProps.get("foo") should be (Some(MsgProperty("bar")))
 
       system.stop(mgr2)
     }
   }
-
-
 }

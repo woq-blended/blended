@@ -79,7 +79,7 @@ object DispatcherBuilder {
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
   dispatcherCfg: ResourceTypeRouterConfig
-)(implicit val builderSupport : DispatcherBuilderSupport) {
+)(implicit val bs : DispatcherBuilderSupport) {
 
   private[this] val logger = Logger[DispatcherBuilder]
 
@@ -91,12 +91,12 @@ case class DispatcherBuilder(
       // and perform initial checks if the message can be processed
       val processInbound = builder.add(DispatcherInbound(dispatcherCfg, idSvc))
 
-      // The fanout step will produce one envelope per outbound config of the resource type 
+      // The fanout step will produce one envelope per outbound config of the resource type
       // sent in the message. The envelope context will contain the config for the outbound
       // branch and the overall resource type config.
       // Each envelope will also contain the destination routing.
-      // The step will also emit a WorklistStarted event if the calculation of the 
-      // fanout steps was successfull. 
+      // The step will also emit a WorklistStarted event if the calculation of the
+      // fanout steps was successfull.
       // The step will emit an error envelope if an exception was thrown.
       val processFanout = builder.add(DispatcherFanout(dispatcherCfg, idSvc).build())
 
@@ -124,7 +124,7 @@ case class DispatcherBuilder(
   // If after the oubound flow the envelope is marked with an exception,
   // We will generate a worklist failed event, otherwise we will generate
   // a Worklist completed event with the in bound envelope.
-  def out(sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed])(implicit bs : DispatcherBuilderSupport)
+  def outbound(sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed])
     : Graph[FanOutShape2[FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
@@ -132,7 +132,7 @@ case class DispatcherBuilder(
       val outbound = b.add(sendFlow
         .via(FlowProcessor.transform[WorklistEvent]("dispatchOut", bs.streamLogger) { env =>
           Try {
-            val worklist = builderSupport.worklist(env).get
+            val worklist = bs.worklist(env).get
             env.exception match {
               case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
               case Some(e) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
@@ -154,7 +154,7 @@ case class DispatcherBuilder(
     }
   }
 
-  def worklistEventHandler()(implicit bs: DispatcherBuilderSupport) : Graph[FanOutShape2[WorklistEvent, FlowTransactionEvent, FlowEnvelope], NotUsed] = {
+  def worklistEventHandler() : Graph[FanOutShape2[WorklistEvent, FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
     def eventEnvelope (worklistEvent: WorklistEvent) : FlowEnvelope = {
       worklistEvent.worklist.items match {
@@ -183,7 +183,7 @@ case class DispatcherBuilder(
       val ack = b.add(
         Flow.fromFunction(eventEnvelope)
         .via(FlowProcessor.fromFunction("acknowledge", bs.streamLogger) { env =>
-          if (env.requiresAcknowledge()) {
+          if (env.requiresAcknowledge) {
             env.acknowledge()
           }
           Success(env)
@@ -225,14 +225,14 @@ case class DispatcherBuilder(
 
   def dispatcher(
     sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
-  )(implicit bs: DispatcherBuilderSupport) : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
+  ) : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
       // of course we start with the core
       val callCore = b.add(core())
 
       // we do need a send processor
-      val callSend = b.add(out(sendFlow))
+      val callSend = b.add(outbound(sendFlow))
 
       // We will collect the errors here
       val error = b.add(Merge[FlowEnvelope](3))

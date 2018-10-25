@@ -1,4 +1,4 @@
-package blended.streams
+package blended.streams.testsupport
 
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty

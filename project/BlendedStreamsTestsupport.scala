@@ -15,6 +15,7 @@ object BlendedStreamsTestsupport extends ProjectFactory {
   )
 
   override val project = settings.baseProject.dependsOn(
-    BlendedUtilLogging.project
+    BlendedUtilLogging.project,
+    BlendedStreams.project
   )
 }
