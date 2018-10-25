@@ -1,15 +1,25 @@
 package blended.testsupport.scalatest
 
+import scala.util.control.NonFatal
+
 import blended.util.logging.Logger
-import org.apache.camel.FailedToStartRouteException
 import org.scalatest.Args
 import org.scalatest.FreeSpec
 import org.scalatest.FreeSpecLike
 import org.scalatest.Status
-import org.scalatest.Suite
 
 /**
  * Same as [[org.scalatest.FreeSpecLike]] but log the start and the end of each test case to SLF4j in Debug level.
+ *
+ * If you want also see the last thrown exception of a test case (this is most probably a failed assertion),
+ * you can use [[LoggingFreeSpec.logException]].
+ *
+ * Example:
+ * {{{
+ *   "A failing test (that also appears in log file)" in logException {
+ *     assert(1 == 0)
+ *   }
+ * }}}
  *
  * @see LoggingFreeSpec
  */
@@ -29,10 +39,19 @@ trait LoggingFreeSpecLike extends FreeSpecLike {
     }
   }
 
+  def logException[T](f: => T): T = try {
+    f
+  } catch {
+    case NonFatal(e) =>
+      Logger[this.type].error(e)("Exception caught")
+      throw e
+  }
+
 }
 
 /**
- * Same as [[org.scalatest.FreeSpec]] but log the start and the end of each test case to SLF4j in Debug level.
+ * Same as [[org.scalatest.FreeSpec]] but with mix-in of [LoggingFreeSpecLike]],
+ * which logs the start and the end of each test case.
  *
  * @see LoggingFreeSpecLike
  */
