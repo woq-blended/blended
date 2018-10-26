@@ -18,6 +18,12 @@ class PersistedFieldTest extends FreeSpec {
         PersistedField(fieldId = 1, name = "key", valueString = Some("value"), typeName = TypeName.String)
       )
     ),
+    ("Boolean",
+      Map("key" -> true).asJava,
+      Seq(
+        PersistedField(fieldId = 1, name = "key", valueLong = Some(1), typeName = TypeName.Boolean)
+      )
+    ),
     ("Long",
       Map("key" -> Long.MaxValue).asJava,
       Seq(

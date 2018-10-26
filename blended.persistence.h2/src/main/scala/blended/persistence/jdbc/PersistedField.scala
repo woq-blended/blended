@@ -1,22 +1,22 @@
 package blended.persistence.jdbc
 
-import java.{ util => ju, lang => jl }
+import java.{util => ju, lang => jl}
 import scala.collection.JavaConverters._
 import java.util.regex.Pattern
 import scala.util.Try
 
 /**
- * Represents one field in a persisted data set.
- */
+  * Represents one field in a persisted data set.
+  */
 case class PersistedField(
-  fieldId: Long = 0,
-  baseFieldId: Option[Long] = None,
-  name: String,
-  valueLong: Option[Long] = None,
-  valueDouble: Option[Double] = None,
-  valueString: Option[String] = None,
-  typeName: TypeName
-) {
+                           fieldId: Long = 0,
+                           baseFieldId: Option[Long] = None,
+                           name: String,
+                           valueLong: Option[Long] = None,
+                           valueDouble: Option[Double] = None,
+                           valueString: Option[String] = None,
+                           typeName: TypeName
+                         ) {
 
   val indexedPattern = Pattern.compile("^([\\d]+)$")
 
@@ -37,7 +37,10 @@ object PersistedField {
 
     object nextId {
       private[this] var _nextId: Long = 0L
-      def apply(): Long = { _nextId += 1; _nextId }
+
+      def apply(): Long = {
+        _nextId += 1; _nextId
+      }
     }
 
     def extractValue(key: String, value: Any, parent: Option[PersistedField] = None): Seq[PersistedField] = {
@@ -55,6 +58,8 @@ object PersistedField {
                 extractValue(i.toString(), v, Some(newBase))
             }
           }
+        case value: Boolean =>
+          Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(if (value) 1 else 0), typeName = TypeName.Boolean))
         case value: Long =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Long))
         case value: Int =>
