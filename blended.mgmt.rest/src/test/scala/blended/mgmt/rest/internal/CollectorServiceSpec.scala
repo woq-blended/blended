@@ -2,7 +2,8 @@ package blended.mgmt.rest.internal
 
 import java.io.File
 
-import scala.collection.{ immutable => sci }
+import scala.collection.immutable
+import scala.collection.{immutable => sci}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Try
@@ -13,15 +14,15 @@ import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.DummyBlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
 
 class CollectorServiceSpec
   extends FreeSpec
-  with Matchers
-  with ScalatestRouteTest
-  with CollectorService
-  with DummyBlendedSecurityDirectives
-  with PrickleSupport {
+    with Matchers
+    with ScalatestRouteTest
+    with CollectorService
+    with DummyBlendedSecurityDirectives
+    with PrickleSupport {
 
   val processContainerInfoLatch = TestLatch(1)
   val getCurrentStateLatch = TestLatch(1)
@@ -78,4 +79,34 @@ class CollectorServiceSpec
 
   override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
 
+  "findMissingOverlayConfigs" in {
+
+    // that we want to use
+    val service = new CollectorService with DummyBlendedSecurityDirectives with PrickleSupport {
+      override def getOverlayConfigs(): immutable.Seq[OverlayConfig] = List(OverlayConfig("o1", "1", List(), Map()))
+
+      // unused
+      override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = ???
+
+      override def getCurrentState(): immutable.Seq[RemoteContainerState] = ???
+
+      override def registerRuntimeConfig(rc: RuntimeConfig): Unit = ???
+
+      override def registerOverlayConfig(oc: OverlayConfig): Unit = ???
+
+      override def getRuntimeConfigs(): immutable.Seq[RuntimeConfig] = ???
+
+      override def addUpdateAction(containerId: String, updateAction: UpdateAction): Unit = ???
+
+      override def version: String = ???
+
+      override def installBundle(repoId: String, path: String, file: File, sha1Sum: Option[String]): Try[Unit] = ???
+    }
+
+    assert(service.findMissingOverlayRef(List()) === None)
+    assert(service.findMissingOverlayRef(List(OverlayRef("o1", "1"))) === None)
+    assert(service.findMissingOverlayRef(List(OverlayRef("o1", "2"))) === Some(OverlayRef("o1", "2")))
+    assert(service.findMissingOverlayRef(List(OverlayRef("o2", "1"))) === Some(OverlayRef("o2", "1")))
+
+  }
 }

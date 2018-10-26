@@ -60,11 +60,14 @@ trait CollectorService {
 
   def version: String
 
+  /**
+   * Find [[OverlayRef]]s, that are not already known by the overlay registry.
+   */
   def findMissingOverlayRef(configs: sci.Seq[OverlayRef]): Option[OverlayRef] =
     if (configs.isEmpty) None
     else {
       val ocs = getOverlayConfigs()
-      configs.find(c => !ocs.exists(oc => oc.name == c.name && oc.version == c.name))
+      configs.find(c => !ocs.exists(oc => oc.overlayRef == c))
     }
 
   def versionRoute: Route = {
@@ -176,6 +179,9 @@ trait CollectorService {
                 // check existence of overlays
                 findMissingOverlayRef(rolloutProfile.overlays) match {
                   case Some(r) =>
+                    log.error(s"The rollout request contains an overlay reference [${r}] which is not known. " +
+                      s"You have to register an overlay before using it in a rollout. " +
+                      s"Known overlay configs are: [${getOverlayConfigs().map(c => c.overlayRef)}]")
                     reject(ValidationRejection(s"Unknown overlay ${r.name} ${r.version}"))
                   case None =>
                     // all ok, complete
