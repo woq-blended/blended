@@ -14,15 +14,13 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
   override def country: String = "cc"
   override def location: String = "09999"
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "config").getAbsolutePath()
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
   override def loggerName: String = getClass().getName()
 
   implicit val bs = new DispatcherBuilderSupport {
     override val prefix: String = "App"
     override val streamLogger: Logger = Logger(loggerName)
   }
-
-  System.setProperty(bs.header("Country"), country)
 
   private val amqId = providerId("activemq", "activemq")
   private val sonicId = providerId("sonic75", "central")
@@ -32,7 +30,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "resolve the configured bridge providers correctly" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         cfg.defaultProvider.id should be (amqId)
@@ -43,7 +41,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
     }
 
     "resolve a simple dispatcher element correctly" in {
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val sagTest = cfg.resourceTypeConfigs.get("SagTest").get
@@ -62,7 +60,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate an optional inbound destination correctly" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val dataFromPosClient = cfg.resourceTypeConfigs.get("DataClient").get
@@ -85,7 +83,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate multiple outbound configs destination correctly" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val fanout = cfg.resourceTypeConfigs.get("FanOut").get

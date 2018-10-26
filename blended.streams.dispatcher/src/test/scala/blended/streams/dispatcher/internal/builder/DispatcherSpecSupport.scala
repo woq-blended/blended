@@ -38,10 +38,10 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
     (p, Sink.actorRef[T](actor, Completed))
   }
 
-  def withDispatcherConfig[T]()(f : DispatcherExecContext => T) : T = {
+  def withDispatcherConfig[T](f : DispatcherExecContext => T)(implicit bs : DispatcherBuilderSupport) : T = {
 
-    System.setProperty("SIBCountry", country)
-    System.setProperty("SIBLocation", location)
+    System.setProperty(bs.header("Country"), country)
+    System.setProperty(bs.header("Location"), location)
 
     withSimpleBlendedContainer(baseDir) { sr =>
       withStartedBundles(sr)(Seq(

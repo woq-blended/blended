@@ -21,7 +21,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
   override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   implicit val bs = new DispatcherBuilderSupport {
-    override val prefix: String = "SIB"
+    override val prefix: String = "App"
     override val streamLogger: Logger = Logger(loggerName)
   }
 
@@ -29,7 +29,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
 
     "produce a worklist completed event for successfull completions of the outbound flow" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         // a simple identity outbound flow for testing
         val outbound = Flow.fromGraph(FlowProcessor.fromFunction("out", bs.streamLogger){ env =>
           Success(env)
@@ -37,7 +37,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
 
         val g = DispatcherBuilder(ctxt.idSvc, ctxt.cfg).outbound(outbound)
 
-        fail()
+        pending
 
       }
 

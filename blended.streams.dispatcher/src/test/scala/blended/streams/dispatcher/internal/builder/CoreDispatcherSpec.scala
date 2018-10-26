@@ -34,7 +34,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
   override def loggerName: String = getClass().getName()
 
   implicit val bs = new DispatcherBuilderSupport {
-    override val prefix: String = "SIB"
+    override val prefix: String = "App"
     override val streamLogger: Logger = Logger(loggerName)
   }
 
@@ -115,7 +115,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
       DispatcherResult(rOut, rError, rWorklist)
     }
 
-    withDispatcherConfig(){ ctxt =>
+    withDispatcherConfig{ ctxt =>
 
       implicit val system = ctxt.system
       implicit val materializer = ActorMaterializer()
@@ -190,7 +190,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
     }
 
     "fanout for all out outbounds" in {
-      val props : FlowMessageProps = Map("ResourceType" -> "KPosData")
+      val props : FlowMessageProps = Map("ResourceType" -> "FanOut")
 
       withDispatcher(3.seconds, FlowEnvelope(props)) { (_, result) =>
         result.out should have size 2
@@ -202,29 +202,29 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         default should have size 1
 
         verifyHeader(Map(
-          "ResourceType" -> "KPosData",
+          "ResourceType" -> "FanOut",
           bs.headerBridgeVendor -> "sagum",
           bs.headerBridgeProvider -> "cc_queue",
-          bs.headerBridgeDest -> JmsQueue("/Qucc/sib/kpos/data/out").asString
+          bs.headerBridgeDest -> JmsQueue("/Qucc/data/out").asString
         ), default.head.flowMessage.header) should be (empty)
 
-        val vitra = filterEnvelopes(result.out)(headerFilter(bs.headerOutboundId)("VitraCom"))
-        vitra should have size 1
+        val other = filterEnvelopes(result.out)(headerFilter(bs.headerOutboundId)("OtherApp"))
+        other should have size 1
         verifyHeader(Map(
-          "ResourceType" -> "KPosData",
+          "ResourceType" -> "FanOut",
           bs.headerBridgeVendor -> "activemq",
           bs.headerBridgeProvider -> "activemq",
-          bs.headerBridgeDest -> JmsQueue("VitracomClientToQueue").asString,
+          bs.headerBridgeDest -> JmsQueue("OtherAppToQueue").asString,
           bs.headerTimeToLive -> 14400000L
-        ), vitra.head.flowMessage.header) should be (empty)
+        ), other.head.flowMessage.header) should be (empty)
 
       }
     }
 
     "correctly populate the Cbe headers if CBE is enabled on the resourcetype" in {
 
-      val noCbe: FlowMessageProps = Map("ResourceType" -> "ShopRegister")
-      val withCbe : FlowMessageProps = Map("ResourceType" -> "Msg2TopicScaleAssortment")
+      val noCbe: FlowMessageProps = Map("ResourceType" -> "NoCbe")
+      val withCbe : FlowMessageProps = Map("ResourceType" -> "WithCbe")
 
       withDispatcher(5.seconds, FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (cfg, result) =>
         result.out should have size 2
@@ -235,7 +235,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
           bs.headerCbeEnabled -> true,
           bs.headerEventVendor -> "sonic75",
           bs.headerEventProvider -> "central",
-          bs.headerEventDest -> "queue:cc.sib.global.evnt.out"
+          bs.headerEventDest -> "queue:cc.global.evnt.out"
         ), cbeOut.head.flowMessage.header) should be (empty)
 
         val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(bs.headerEventVendor))
@@ -252,13 +252,13 @@ class CoreDispatcherSpec extends LoggingFreeSpec
     "evaluate conditional expressions to process outbound header" in {
 
       val propsInstore: FlowMessageProps = Map(
-        "ResourceType" -> "SalesDataFromScale",
+        "ResourceType" -> "Condition",
         "DestinationFileName" -> "TestFile",
         "InStoreCommunication" -> "1"
       )
 
       val propsCentral: FlowMessageProps = Map(
-        "ResourceType" -> "SalesDataFromScale",
+        "ResourceType" -> "Condition",
         "DestinationFileName" -> "TestFile",
         "InStoreCommunication" -> "0"
       )
@@ -286,10 +286,10 @@ class CoreDispatcherSpec extends LoggingFreeSpec
           "Description" -> "SalesDataFromScale",
           "DestinationName" -> "TestFile",
           "Filename" -> "TestFile",
-          "DestinationPath" -> "C:/Scale/Inbound/",
+          "DestinationPath" -> "opt/inbound/",
           bs.headerEventVendor -> "activemq",
           bs.headerEventProvider -> "activemq",
-          bs.headerEventDest -> "XPDinteg_PosClientToQ"
+          bs.headerEventDest -> "ClientToQ"
         ), central.head.flowMessage.header)
 
       }

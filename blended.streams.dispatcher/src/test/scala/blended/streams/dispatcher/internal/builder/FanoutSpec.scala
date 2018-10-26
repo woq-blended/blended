@@ -27,7 +27,7 @@ class FanoutSpec extends LoggingFreeSpec
   override def loggerName: String = getClass().getName()
 
   implicit val bs = new DispatcherBuilderSupport {
-    override val prefix: String = "SIB"
+    override val prefix: String = "App"
     override val streamLogger: Logger = Logger(loggerName)
   }
 
@@ -49,19 +49,19 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create one FlowEnvelope per outbound config" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
         val envelope = FlowEnvelope(FlowMessage.noProps)
 
-        performFanout(ctxt, fanout, "KPosData", envelope) match {
+        performFanout(ctxt, fanout, "FanOut", envelope) match {
           case Success(s) =>
             s should have size 2
             assert(s.forall { case (outCfg, env) => env.id == envelope.id})
             val outIds = s.map(_._2.header[String](bs.headerOutboundId).get).distinct
             outIds should have size 2
             outIds should contain ("default")
-            outIds should contain ("VitraCom")
+            outIds should contain ("OtherApp")
           case Failure(t) => fail(t)
         }
       }
@@ -69,7 +69,7 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create a workliststarted event for a configured resourceType" in {
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
@@ -117,7 +117,7 @@ class FanoutSpec extends LoggingFreeSpec
         (envProbe, wlProbe, source.toMat(sinkGraph)(Keep.left))
       }
 
-      withDispatcherConfig() { ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val system = ctxt.system
         implicit val materializer = ActorMaterializer()
         implicit val eCtxt = system.dispatcher
