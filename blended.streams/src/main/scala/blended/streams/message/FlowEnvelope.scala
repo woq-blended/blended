@@ -56,7 +56,7 @@ final case class FlowEnvelope private[message] (
   }
 
   def removeFromContext(key: String) : FlowEnvelope = copy(flowContext = flowContext.filter(_ != key))
-  def setInContext(key: String, o: Any) : FlowEnvelope = copy(flowContext = flowContext.filter(_ != key) + (key -> o))
+  def withContextObject(key: String, o: Any) : FlowEnvelope = copy(flowContext = flowContext.filter(_ != key) + (key -> o))
 
   def getFromContext[T](key: String) : Try[Option[T]] = Try { flowContext.get(key).map(_.asInstanceOf[T]) }
 

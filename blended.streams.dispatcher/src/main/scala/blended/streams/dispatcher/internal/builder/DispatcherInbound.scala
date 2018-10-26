@@ -34,7 +34,7 @@ object DispatcherInbound {
     /*-------------------------------------------------------------------------------------------------*/
     val checkResourceType = FlowProcessor.fromFunction("checkResourceType", bs.streamLogger) { env =>
       Try {
-        env.header[String](bs.HEADER_RESOURCETYPE) match {
+        env.header[String](bs.headerResourceType) match {
           case None =>
             throw new MissingResourceType(env.flowMessage)
           case Some(rt) =>
@@ -46,7 +46,7 @@ object DispatcherInbound {
                   case Nil =>
                     throw new MissingOutboundRouting(rt)
                   case _ =>
-                    env.setInContext(bs.rtConfigKey, rtCfg)
+                    env.withContextObject(bs.rtConfigKey, rtCfg)
                 }
             }
         }
@@ -61,14 +61,14 @@ object DispatcherInbound {
 
           if (rtCfg.withCBE) {
             val newMsg = env.flowMessage
-              .withHeader(bs.HEADER_EVENT_VENDOR, dispatcherCfg.eventProvider.vendor).get
-              .withHeader(bs.HEADER_EVENT_PROVIDER, dispatcherCfg.eventProvider.provider).get
-              .withHeader(bs.HEADER_EVENT_DEST, dispatcherCfg.eventProvider.eventDestination.asString).get
-              .withHeader(bs.HEADER_CBE_ENABLED, true).get
+              .withHeader(bs.headerEventVendor, dispatcherCfg.eventProvider.vendor).get
+              .withHeader(bs.headerEventProvider, dispatcherCfg.eventProvider.provider).get
+              .withHeader(bs.headerEventDest, dispatcherCfg.eventProvider.eventDestination.asString).get
+              .withHeader(bs.headerCbeEnabled, true).get
 
             env.copy(flowMessage = newMsg)
           } else {
-            env.withHeader(bs.HEADER_CBE_ENABLED, false).get
+            env.withHeader(bs.headerCbeEnabled, false).get
           }
         }
       }

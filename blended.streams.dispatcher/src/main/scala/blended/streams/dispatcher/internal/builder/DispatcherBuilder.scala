@@ -2,9 +2,8 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.stream._
-import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.GraphDSL.Implicits._
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
@@ -33,49 +32,6 @@ class MissingContextObject(key: String, clazz: String)
 class JmsDestinationMissing(env: FlowEnvelope, outbound : OutboundRouteConfig)
   extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [${outbound.id}]")
 
-object DispatcherBuilder {
-
-  def fromSourceAndSinks(
-    idSvc : ContainerIdentifierService,
-    dispatcherCfg : ResourceTypeRouterConfig,
-    // Inbound messages
-    source : Source[FlowEnvelope, _],
-
-    // Messages with normal outcome to be disptached via jms
-    envOut : Sink[FlowEnvelope, _],
-
-    // Signal that the worklist for the inbound message has been started
-    worklistOut : Sink[WorklistStarted, _],
-
-    // Any errors go here
-    errorOut : Sink[FlowEnvelope, _]
-  ) : RunnableGraph[NotUsed] = {
-
-    val builderSupport = new DispatcherBuilderSupport {
-      override val prefix: String = dispatcherCfg.headerPrefix
-      override val streamLogger: Logger = Logger("dispatcher." + dispatcherCfg.defaultProvider.inbound.asString)
-    }
-
-    RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
-      // The inbound messages
-      val in : Outlet[FlowEnvelope] = builder.add(source).out
-      val out : Inlet[FlowEnvelope] = builder.add(envOut).in
-      val worklist : Inlet[WorklistStarted] = builder.add(worklistOut).in
-      val error : Inlet[FlowEnvelope] = builder.add(errorOut).in
-
-      val dispatcher = builder.add(DispatcherBuilder(idSvc, dispatcherCfg)(builderSupport).core())
-
-      in ~> dispatcher.in
-      dispatcher.out0 ~> out
-      dispatcher.out1 ~> worklist
-      dispatcher.out2 ~> error
-
-      ClosedShape
-    })
-
-  }
-}
-
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
   dispatcherCfg: ResourceTypeRouterConfig
@@ -83,7 +39,7 @@ case class DispatcherBuilder(
 
   private[this] val logger = Logger[DispatcherBuilder]
 
-  def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistStarted, FlowEnvelope], NotUsed] = {
+  def core(): Graph[FanOutShape3[FlowEnvelope, FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit builder =>
 

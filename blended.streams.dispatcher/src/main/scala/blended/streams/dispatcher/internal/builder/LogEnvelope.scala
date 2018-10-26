@@ -26,8 +26,8 @@ object LogEnvelope {
           case Failure(_) => None
         }
 
-        val maxRetries = env.headerWithDefault[Long](bs.HEADER_BRIDGE_MAX_RETRY, -1)
-        val retryCount = env.headerWithDefault[Long](bs.HEADER_BRIDGE_RETRY, 0L)
+        val maxRetries = env.headerWithDefault[Long](bs.headerBridgeMaxRetry, -1)
+        val retryCount = env.headerWithDefault[Long](bs.headerBridgeRetry, 0L)
 
         val logHeader : List[String] = env.getFromContext[List[String]](bs.appHeaderKey) match {
           case Success(l) => l.getOrElse(List.empty)

@@ -27,7 +27,7 @@ object DispatcherOutbound {
 
           val provider : BridgeProviderConfig =
 
-            (env.header[String](bs.HEADER_BRIDGE_VENDOR), env.header[String](bs.HEADER_BRIDGE_PROVIDER)) match {
+            (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
               case (Some(v), Some(p)) =>
                 val vendor = idSvc.resolvePropertyString(v).map(_.toString()).get
                 val provider = idSvc.resolvePropertyString(p).map(_.toString()).get
@@ -36,7 +36,7 @@ object DispatcherOutbound {
               case (_, _) => outCfg.bridgeProvider
             }
 
-          val dest : JmsDestination = env.header[String](bs.HEADER_BRIDGE_DEST) match {
+          val dest : JmsDestination = env.header[String](bs.headerBridgeDest) match {
             case Some(d) => JmsDestination.create(idSvc.resolvePropertyString(d).map(_.toString).get).get
             case None => outCfg.bridgeDestination match {
               case None => throw new JmsDestinationMissing(env, outCfg)
@@ -54,9 +54,9 @@ object DispatcherOutbound {
           bs.streamLogger.info(s"Routing for [${env.id}] is [${provider.id}:${dest}]")
 
           env
-            .withHeader(bs.HEADER_BRIDGE_VENDOR, provider.vendor).get
-            .withHeader(bs.HEADER_BRIDGE_PROVIDER, provider.provider).get
-            .withHeader(bs.HEADER_BRIDGE_DEST, dest.asString).get
+            .withHeader(bs.headerBridgeVendor, provider.vendor).get
+            .withHeader(bs.headerBridgeProvider, provider.provider).get
+            .withHeader(bs.headerBridgeDest, dest.asString).get
 
         }
       }

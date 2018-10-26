@@ -60,7 +60,7 @@ class BridgeSpec extends LoggingFreeSpec
         )
 
         // Materialize the stream, send the test messages and expose the killswitch 
-        StreamFactories.sendAndKeepAlive(toJms, msgs:_*)
+        StreamFactories.keepAliveFlow(toJms, msgs:_*)
       }
 
       // TODO: This should expose a Future[List[FlowEnvelope]], so that it does not have to 

@@ -50,7 +50,14 @@ object StreamFactories {
     result
   }
 
-  def sendAndKeepAlive[T](
+  def keepAliveSource[T](bufferSize : Int)(implicit system: ActorSystem, materializer: Materializer) : Source[T, (ActorRef, KillSwitch)] = {
+
+    Source
+      .actorRef[T](bufferSize, OverflowStrategy.fail)
+      .viaMat(KillSwitches.single)(Keep.both)
+  }
+
+  def keepAliveFlow[T](
     flow : Flow[T, _, _],
     msgs: T*
   )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : KillSwitch = {

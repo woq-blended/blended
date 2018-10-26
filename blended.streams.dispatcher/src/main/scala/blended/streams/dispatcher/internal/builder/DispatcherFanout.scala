@@ -1,13 +1,13 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.{FanOutShape2, Graph}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
-import blended.streams.worklist.WorklistStarted
+import blended.streams.worklist.{Worklist, WorklistEvent, WorklistStarted}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -18,7 +18,7 @@ case class DispatcherFanout(
 )(implicit bs : DispatcherBuilderSupport) {
 
   /*-------------------------------------------------------------------------------------------------*/
-  private lazy val fanoutOutbound = FlowProcessor.transform[Seq[(OutboundRouteConfig, FlowEnvelope)]]("fanoutOutbound", bs.streamLogger) { env =>
+  private[builder] val funFanoutOutbound : FlowEnvelope => Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = { env =>
 
     Try {
       val fanouts = bs.withContextObject[ResourceTypeConfig, Seq[(OutboundRouteConfig, FlowEnvelope)]](bs.rtConfigKey, env) { rtCfg: ResourceTypeConfig =>
@@ -26,8 +26,8 @@ case class DispatcherFanout(
           rtCfg.outbound.map { ob =>
             val obEnv =
               env
-                .setInContext(bs.outboundCfgKey, ob)
-                .withHeader(bs.HEADER_OUTBOUND_ID, ob.id).get
+                .withContextObject(bs.outboundCfgKey, ob)
+                .withHeader(bs.headerOutboundId, ob.id).get
             (ob, outboundMsg(ob)(obEnv).get)
           }
         }
@@ -36,6 +36,7 @@ case class DispatcherFanout(
       fanouts.right.get
     }
   }
+  private[builder] lazy val fanoutOutbound = FlowProcessor.transform[Seq[(OutboundRouteConfig, FlowEnvelope)]]("fanoutOutbound", bs.streamLogger)(funFanoutOutbound)
 
   /*-------------------------------------------------------------------------------------------------*/
   private lazy val outboundMsg : OutboundRouteConfig => FlowEnvelope => Try[FlowEnvelope] = { outCfg => env =>
@@ -59,11 +60,11 @@ case class DispatcherFanout(
     Try {
 
       var newEnv : FlowEnvelope = env
-        .withHeader(bs.HEADER_BRIDGE_MAX_RETRY, outCfg.maxRetries).get
-        .withHeader(bs.HEADER_BRIDGE_CLOSE, outCfg.autoComplete).get
+        .withHeader(bs.headerBridgeMaxRetry, outCfg.maxRetries).get
+        .withHeader(bs.headerBridgeClose, outCfg.autoComplete).get
 
       if (outCfg.timeToLive > 0) {
-        newEnv = newEnv.withHeader(bs.HEADER_TIMETOLIVE, outCfg.timeToLive).get
+        newEnv = newEnv.withHeader(bs.headerTimeToLive, outCfg.timeToLive).get
       }
 
       outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foreach { oh =>
@@ -78,11 +79,11 @@ case class DispatcherFanout(
         newEnv = newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
       }
 
-      newEnv.setInContext(bs.appHeaderKey, outCfg.applicationLogHeader)
+      newEnv.withContextObject(bs.appHeaderKey, outCfg.applicationLogHeader)
     }
   }
 
-  private val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistStarted =  envelopes => {
+  private[builder] val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistEvent =  envelopes => {
 
     val worklistId : String = envelopes.head._2.id
 
@@ -91,19 +92,23 @@ case class DispatcherFanout(
       case Failure(_) => 10.seconds
     }
 
-    WorklistStarted(
+    val wl = WorklistStarted(
       worklist = bs.worklist(envelopes.map(_._2):_*).get,
       timeout = timeout
     )
+
+    bs.streamLogger.debug(s"Created worklist event [$wl]")
+    wl
   }
 
   private lazy val decideRouting = DispatcherOutbound(dispatcherCfg, idSvc)
 
-  def build() : Graph[FanOutShape2[FlowEnvelope, FlowEnvelope, WorklistStarted], NotUsed] = {
+  def build() : Graph[FanOutShape2[FlowEnvelope, FlowEnvelope, WorklistEvent], NotUsed] = {
     GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
       val fanout = builder.add(fanoutOutbound)
+
       val errorFilter = builder.add(Broadcast[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]](2))
       val withError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].filter(_.isLeft).map(_.left.get))
       val noError = builder.add(Flow[Either[FlowEnvelope, Seq[(OutboundRouteConfig, FlowEnvelope)]]].filter(_.isRight).map(_.right.get))
@@ -114,16 +119,23 @@ case class DispatcherFanout(
       val envelopes = builder.add(Flow[Seq[(OutboundRouteConfig, FlowEnvelope)]].mapConcat(_.toList).map(_._2))
       val worklist = builder.add(Flow[Seq[(OutboundRouteConfig, FlowEnvelope)]].map(toWorklist))
 
+      val wlLog = builder.add(Flow.fromFunction[WorklistEvent, WorklistEvent] { evt =>
+        bs.streamLogger.debug(s"About to send worklist event [$evt]")
+        evt
+      })
+
       val merge = builder.add(Merge[FlowEnvelope](2))
 
       fanout ~> errorFilter ~> withError ~> merge
-                errorFilter ~> noError ~> createWorklist ~> envelopes ~> mapDestination ~> merge
-                                          createWorklist ~> worklist
+                errorFilter ~> noError ~> createWorklist.in
+
+      createWorklist.out(0) ~> envelopes ~> mapDestination ~> merge
+      createWorklist.out(1) ~> worklist ~> wlLog
 
       new FanOutShape2(
         fanout.in,
         merge.out,
-        worklist.out
+        wlLog.out
       )
     }
 

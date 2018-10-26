@@ -11,52 +11,54 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 trait DispatcherBuilderSupport {
-  val prefix : String
+  def prefix : String
   val streamLogger : Logger
+
+  val header : String => String = name => prefix + name
 
   // Keys to stick objects into the FlowEnvelope context
   val appHeaderKey : String = "AppLogHeader"
   val rtConfigKey : String = classOf[ResourceTypeConfig].getSimpleName()
   val outboundCfgKey : String = classOf[OutboundRouteConfig].getSimpleName()
 
-  val HEADER_RESOURCETYPE        = "ResourceType"
+  val headerResourceType         = "ResourceType"
 
-  val HEADER_BRIDGE_VENDOR       : String = prefix + "BridgeVendor"
-  val HEADER_BRIDGE_PROVIDER     : String = prefix + "BridgeProvider"
-  val HEADER_BRIDGE_DEST         : String = prefix + "BridgeDestination"
+  def headerBridgeVendor         : String = header("BridgeVendor")
+  def headerBridgeProvider       : String = header("BridgeProvider")
+  def headerBridgeDest           : String = header("BridgeDestination")
 
-  val HEADER_CBE_ENABLED         : String = prefix + "CbeEnabled"
+  def headerCbeEnabled           : String = header("CbeEnabled")
 
-  val HEADER_EVENT_VENDOR        : String = prefix + "EventVendor"
-  val HEADER_EVENT_PROVIDER      : String = prefix + "EventProvider"
-  val HEADER_EVENT_DEST          : String = prefix + "EventDestination"
-  val HEADER_OUTBOUND_ID         : String = prefix + "OutboundId"
+  def headerEventVendor          : String = header("EventVendor")
+  def headerEventProvider        : String = header("EventProvider")
+  def headerEventDest            : String = header("EventDestination")
+  def headerOutboundId           : String = header("OutboundId")
 
-  val HEADER_BRIDGE_RETRY        : String = prefix + "Retry"
-  val HEADER_BRIDGE_RETRYCOUNT   : String = prefix + "BridgeRetryCount"
-  val HEADER_BRIDGE_MAX_RETRY    : String = prefix + "BridgeMaxRetry"
-  val HEADER_BRIDGE_CLOSE        : String = prefix + "BridgeCloseTA"
+  def headerBridgeRetry          : String = header("Retry")
+  def headerBridgeRetryCount     : String = header("BridgeRetryCount")
+  def headerBridgeMaxRetry       : String = header("BridgeMaxRetry")
+  def headerBridgeClose          : String = header("BridgeCloseTA")
 
-  val HEADER_TIMETOLIVE          : String = prefix + "TimeToLive"
+  def headerTimeToLive           : String = header("TimeToLive")
 
   /**
-  * Access a typed object in the given envelope and the given key. If an object 
+  * Access a typed object in the given envelope and the given key. If an object
   * for the key with the propert type is present, the given function will be applied
-  * and the result of the function will be returned. 
-  * If the object is not present in the envelope or has the wrong type, an exception 
-  * will be returned. 
+  * and the result of the function will be returned.
+  * If the object is not present in the envelope or has the wrong type, an exception
+  * will be returned.
   */
   def withContextObject[T,R](key : String, env: FlowEnvelope)(f : T => Try[R])(implicit classTag: ClassTag[T]) : Either[FlowEnvelope, R] = {
-  
+
     env.getFromContext[T](key).get match {
-      
-      // The object can't be found for the key with the given type  
+
+      // The object can't be found for the key with the given type
       case None => // Should not be possible
         val e = new MissingContextObject(key, classTag.runtimeClass.getName())
         streamLogger.error(e)(e.getMessage)
         Left(env.withException(e))
 
-      // We have found the object, now we try to apply the function 
+      // We have found the object, now we try to apply the function
       case Some(o) =>
         f(o) match {
           case Success(s) => Right(s)
@@ -66,8 +68,8 @@ trait DispatcherBuilderSupport {
   }
 
   /**
-   * Lookup an object from the envelope context and use it within a function to transform 
-   * the envelope. This is a special case where the result of the given function is also 
+   * Lookup an object from the envelope context and use it within a function to transform
+   * the envelope. This is a special case where the result of the given function is also
    * a FlowEnvelope, so that wrapping the result in an Either[...] is not required.
    */
   def withContextObject[T](key : String, env: FlowEnvelope)(f : T => FlowEnvelope)(implicit classTag: ClassTag[T]) : FlowEnvelope = {
@@ -85,7 +87,7 @@ trait DispatcherBuilderSupport {
   }
 
   def worklistItem(env: FlowEnvelope) : Try[WorklistItem] = Try {
-    val id = env.header[String](HEADER_OUTBOUND_ID).get
+    val id = env.header[String](headerOutboundId).get
     FlowWorklistItem(env, id)
   }
 

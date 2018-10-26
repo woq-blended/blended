@@ -36,9 +36,9 @@ sealed trait WorklistEvent {
   def state : WorklistState
 }
 
-case class WorklistStarted(worklist: Worklist, timeout: FiniteDuration = 100.millis, state : WorklistState = WorklistState.Started) extends WorklistEvent
-case class WorklistStepCompleted(worklist: Worklist, state: WorklistState = WorklistState.Completed) extends WorklistEvent
-case class WorklistTerminated(worklist: Worklist, state: WorklistState) extends WorklistEvent
+final case class WorklistStarted(worklist: Worklist, timeout: FiniteDuration = 100.millis, state : WorklistState = WorklistState.Started) extends WorklistEvent
+final case class WorklistStepCompleted(worklist: Worklist, state: WorklistState = WorklistState.Completed) extends WorklistEvent
+final case class WorklistTerminated(worklist: Worklist, state: WorklistState) extends WorklistEvent
 
 object WorklistManager {
 
