@@ -36,7 +36,6 @@ object ContainerPropertyResolver {
     }
   }
 
-
   private[this] def extractVariableElement(line: String, startDelim: String, endDelim: String) : (String, String, String) = {
 
     line.lastIndexOf(startDelim) match {
@@ -177,7 +176,7 @@ object ContainerPropertyResolver {
         log.warn(s"Could not resolve expression [${line}], using empty String")
         ""
       case Some(r) =>
-        log.debug(s"Evaluated [$line] to [$r][${r.getClass().getName()}]")
+        log.trace(s"Evaluated [$line] to [$r][${r.getClass().getName()}]")
         r
     }
   }

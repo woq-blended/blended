@@ -49,8 +49,11 @@ case class DispatcherFanout(
           case Some(c) =>
             val use = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value)).map(_.asInstanceOf[Boolean]).get
 
+            val s = s"using header for [${env.id}]:[outboundMsg] block with expression [$c]"
             if (use) {
-              bs.streamLogger.info(s"Using header for [${env.id}]:[outboundMsg] block with expression [$c]")
+              bs.streamLogger.info(s)
+            } else {
+              bs.streamLogger.info("Not " + s )
             }
             use
         }
@@ -58,7 +61,6 @@ case class DispatcherFanout(
     }
 
     Try {
-
       var newEnv : FlowEnvelope = env
         .withHeader(bs.headerBridgeMaxRetry, outCfg.maxRetries).get
         .withHeader(bs.headerBridgeClose, outCfg.autoComplete).get
@@ -70,7 +72,7 @@ case class DispatcherFanout(
       outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foreach { oh =>
         oh.header.foreach { case (header, value) =>
           val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
-          bs.streamLogger.debug(s"Resolved property [$header] to [$resolved]")
+          bs.streamLogger.trace(s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
           newEnv = newEnv.withHeader(header, resolved).get
         }
       }
@@ -120,7 +122,7 @@ case class DispatcherFanout(
       val worklist = builder.add(Flow[Seq[(OutboundRouteConfig, FlowEnvelope)]].map(toWorklist))
 
       val wlLog = builder.add(Flow.fromFunction[WorklistEvent, WorklistEvent] { evt =>
-        bs.streamLogger.debug(s"About to send worklist event [$evt]")
+        bs.streamLogger.trace(s"About to send worklist event [$evt]")
         evt
       })
 

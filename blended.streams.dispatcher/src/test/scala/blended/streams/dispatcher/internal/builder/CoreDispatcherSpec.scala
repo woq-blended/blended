@@ -77,8 +77,6 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         val worklist : Inlet[WorklistEvent] = builder.add(worklistSink).in
         val error : Inlet[FlowEnvelope] = builder.add(errorSink).in
 
-        val devNull = Inlet[FlowEnvelope]("devNull")
-
         val dispatcher = builder.add(DispatcherBuilder(idSvc, dispatcherCfg)(bs).core())
 
         dispatcher.out0 ~> out

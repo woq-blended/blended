@@ -225,7 +225,9 @@ object InboundRouteConfig {
 
     InboundRouteConfig(
       entry = JmsDestination.create(destName).get,
-      header = cfg.getStringMap(headerPath, Map.empty).mapValues(s => idSvc.resolvePropertyString(s).map(_.toString()).get)
+      // This will be resolved in message context
+      // TODO: generalize resolver concept
+      header = cfg.getStringMap(headerPath, Map.empty) // .mapValues(s => idSvc.resolvePropertyString(s).map(_.toString()).get)
     )
   }
 }

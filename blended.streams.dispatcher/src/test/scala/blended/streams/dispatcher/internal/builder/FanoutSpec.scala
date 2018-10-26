@@ -8,14 +8,12 @@ import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.testsupport.StreamFactories
 import blended.streams.worklist.{WorklistEvent, WorklistState}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -32,7 +30,6 @@ class FanoutSpec extends LoggingFreeSpec
     override val prefix: String = "SIB"
     override val streamLogger: Logger = Logger(loggerName)
   }
-
 
   def performFanout(
     ctxt : DispatcherExecContext,
@@ -111,13 +108,8 @@ class FanoutSpec extends LoggingFreeSpec
           val envOut = b.add(envSink)
           val wlOut = b.add(wlsink)
 
-          val wlLog = b.add(Flow.fromFunction[WorklistEvent, WorklistEvent] { evt =>
-            bs.streamLogger.debug(s"Received worklist event [$evt]")
-            evt
-          })
-
           fanoutGraph.out0 ~> envOut
-          fanoutGraph.out1 ~> wlLog ~> wlOut
+          fanoutGraph.out1 ~>  wlOut
 
           SinkShape(fanoutGraph.in)
         }
@@ -136,14 +128,11 @@ class FanoutSpec extends LoggingFreeSpec
           val envelope = FlowEnvelope(FlowMessage.noProps)
           val rtCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
 
-          val source = StreamFactories.keepAliveSource[FlowEnvelope](1)
+          val source = Source(List(envelope.withContextObject(bs.rtConfigKey, rtCfg)))
 
           val runnable = runnableFanout(source, fanout)
 
-          val (actor, switch) = runnable._3.run()
-          akka.pattern.after(100.millis, system.scheduler)(Future { switch.shutdown() })
-
-          actor ! envelope.withContextObject(bs.rtConfigKey, rtCfg)
+          runnable._3.run()
 
           val envelopes = runnable._1.expectMsgType[List[FlowEnvelope]](1.second)
           val worklists = runnable._2.expectMsgType[List[WorklistEvent]](1.second)

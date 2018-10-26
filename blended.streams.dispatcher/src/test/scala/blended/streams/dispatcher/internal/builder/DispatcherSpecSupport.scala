@@ -5,7 +5,7 @@ import akka.stream.scaladsl.Sink
 import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.BridgeProviderRegistry
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.bridge.internal.BridgeActivator
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.message.FlowEnvelope
@@ -28,6 +28,9 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
   def location : String
   def baseDir : String
   def loggerName : String
+
+  def providerId(vendor: String, provider: String) : String =
+    classOf[BridgeProviderConfig].getSimpleName() + s"($vendor:$provider)"
 
   def collector[T](name : String)(implicit system : ActorSystem, clazz : ClassTag[T]) : (TestProbe, Sink[T, _]) = {
     val p = TestProbe(name)

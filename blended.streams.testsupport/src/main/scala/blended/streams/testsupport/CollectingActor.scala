@@ -19,11 +19,6 @@ class CollectingActor[T](name: String, cbActor: ActorRef)(implicit clazz : Class
   private val log = Logger(getClass().getName())
   private val messages = mutable.Buffer.empty[T]
 
-  def matching(o : Any) : Boolean = {
-    val c1 = clazz.runtimeClass
-    val c2 = o.getClass
-    clazz.runtimeClass.isAssignableFrom(o.getClass())
-  }
 
   override def receive: Receive = {
 
@@ -34,8 +29,8 @@ class CollectingActor[T](name: String, cbActor: ActorRef)(implicit clazz : Class
       log.info(s"Completing Collector [$name] with [${messages.size}] messages to [${cbActor.path}]")
       cbActor ! messages.toList
 
-    case msg if matching(msg) =>
-      log.info(s"Collector [$name] received [$msg]")
+    case msg : T =>
+      log.trace(s"Collector [$name] received [$msg]")
       messages += msg.asInstanceOf[T]
 
     case m => log.error(s"Received unhandled message [$m]")

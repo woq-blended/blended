@@ -23,7 +23,7 @@ object FlowProcessor {
           val start = System.currentTimeMillis()
           f(env) match {
             case Success(s) =>
-              log.debug(s"Function [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              log.info(s"Function [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
               Right(s)
             case Failure(t) =>
               log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
