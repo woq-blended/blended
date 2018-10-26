@@ -200,7 +200,7 @@ trait CollectorService {
                         // Also register all required overlay configs
                         val ocs = getOverlayConfigs()
                         rolloutProfile.overlays.map { o =>
-                          val oc = ocs.find(oc => oc.name == o.name && oc.version == o.version).get
+                          val oc = ocs.find(oc => oc.overlayRef == o).get
                           addUpdateAction(
                             containerId = containerId,
                             updateAction = AddOverlayConfig(
