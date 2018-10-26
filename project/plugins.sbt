@@ -9,6 +9,7 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalajs-bundler" % "0.13.1")
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.9")
 //addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
+addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "1.3.15")
 
 //addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.4")
 // instead we use a binary located uder project/lib containing
