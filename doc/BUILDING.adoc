@@ -1,8 +1,9 @@
-:source-highlighter: pygments
-
+---
+layout: default
+---
 == Build file structure
 
-_Blended_ uses `sbt 1.2.3` to build. Currently we have a bit more than 60 submodules in _Blended_, so that the build
+_Blended_ uses `sbt 1.2.6` to build. Currently we have a bit more than 60 submodules in _Blended_, so that the build
 file structure needs a bit of explanation:
 
 * The main build file ist `build.sbt` in the root directory of the checkout. The build file is augmented with `.scala` files in the `project`-directory.
@@ -13,9 +14,9 @@ file structure needs a bit of explanation:
 
 * A sample scala file would be `BlendedActivemqClient.scala`:
 
-[source,scala]
+[source,scala,linenums]
 ----
-include::project/BlendedActivemqClient.scala[]
+include::../project/BlendedActivemqClient.scala[]
 ----
 
 * All sub module files mix in the trait `ProjectFactory`, which means they have to expose a `val` of type `Project`.
@@ -30,7 +31,7 @@ To complete the example, here is how the sub module above is referenced in the `
 
 [source,scala]
 ----
-include::build.sbt[tags=Building]
+include::../build.sbt[tags=Building]
 ----
 
 === Special cases
@@ -40,4 +41,5 @@ There are more complex project definitions, e.g. when the submodule needs to gen
 == Set up for Automated releases via travis
 
 TODO
+
 

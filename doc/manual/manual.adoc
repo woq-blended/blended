@@ -1,5 +1,8 @@
+---
+layout: default
+leveloffset: +1
+---
 = Blended Manual
-:leveloffset: +1
 :toc:
 
 = Blended Overview (AG)
