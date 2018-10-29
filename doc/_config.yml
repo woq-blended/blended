@@ -1,15 +1,19 @@
-title: Jekyll AsciiDoc Quickstart
-description: The Jekyll AsciiDoc Quickstart project is a leg-up in starting your own website hosted on GitHub with content based in AsciiDoc.
+title: Blended
+description: The website for the Blended project
 plugins:
+- asciidoctor-diagram
 - jekyll-asciidoc
 exclude:
 - LICENSE.adoc
 - README.adoc
 asciidoc:
   require_front_matter_header: true
+keep_files:
+- images
 asciidoctor:
   base_dir: :docdir
   safe: unsafe
   attributes:
     idseparator: _
     icons: font
+    imagesdir: /images

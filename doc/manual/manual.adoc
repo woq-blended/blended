@@ -1,9 +1,8 @@
 ---
 layout: default
-leveloffset: +1
 ---
 = Blended Manual
-:toc:
+:leveloffset: +1
 
 = Blended Overview (AG)
 == Motivation (AG) !!
@@ -26,7 +25,5 @@ leveloffset: +1
 == Unit Testing
 == Integration Testing (AG)
 === Integration Test Framework (AG)
-= Referencecd kau
-== per module description
 
 :leveloffset: -1

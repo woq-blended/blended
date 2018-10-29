@@ -43,3 +43,12 @@ There are more complex project definitions, e.g. when the submodule needs to gen
 TODO
 
 
+[mermaid.cli, test, svg]
+----
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+----
+
