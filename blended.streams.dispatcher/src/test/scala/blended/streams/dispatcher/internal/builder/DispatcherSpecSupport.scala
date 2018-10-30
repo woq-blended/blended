@@ -1,16 +1,11 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.Sink
-import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.bridge.internal.BridgeActivator
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
-import blended.streams.message.FlowEnvelope
-import blended.streams.testsupport.CollectingActor
-import blended.streams.testsupport.CollectingActor.Completed
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 
 import scala.concurrent.duration._
@@ -31,12 +26,6 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
 
   def providerId(vendor: String, provider: String) : String =
     classOf[BridgeProviderConfig].getSimpleName() + s"($vendor:$provider)"
-
-  def collector[T](name : String)(implicit system : ActorSystem, clazz : ClassTag[T]) : (TestProbe, Sink[T, _]) = {
-    val p = TestProbe(name)
-    val actor = system.actorOf(CollectingActor.props[T](name, p.ref))
-    (p, Sink.actorRef[T](actor, Completed))
-  }
 
   def withDispatcherConfig[T](f : DispatcherExecContext => T)(implicit bs : DispatcherBuilderSupport) : T = {
 

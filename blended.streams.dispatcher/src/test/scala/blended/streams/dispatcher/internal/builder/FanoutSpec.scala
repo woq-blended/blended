@@ -5,9 +5,11 @@ import java.io.File
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
+import akka.stream.javadsl.RunnableGraph
+import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.testsupport.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistState}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -97,16 +99,16 @@ class FanoutSpec extends LoggingFreeSpec
         fanout : DispatcherFanout
       )(implicit system : ActorSystem) = {
 
-        val (envProbe, envSink) = collector[FlowEnvelope]("envelopes")
-        val (wlProbe, wlsink) = collector[WorklistEvent]("worklists")
+        val envColl = Collector[FlowEnvelope]("envelopes")
+        val wlColl = Collector[WorklistEvent]("worklists")
 
         val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
           import GraphDSL.Implicits._
 
           val fanoutGraph = b.add(fanout.build())
 
-          val envOut = b.add(envSink)
-          val wlOut = b.add(wlsink)
+          val envOut = b.add(envColl.sink)
+          val wlOut = b.add(wlColl.sink)
 
           fanoutGraph.out0 ~> envOut
           fanoutGraph.out1 ~>  wlOut
@@ -114,7 +116,7 @@ class FanoutSpec extends LoggingFreeSpec
           SinkShape(fanoutGraph.in)
         }
 
-        (envProbe, wlProbe, source.toMat(sinkGraph)(Keep.left))
+        (envColl, wlColl, source.toMat(sinkGraph)(Keep.left))
       }
 
       withDispatcherConfig { ctxt =>
@@ -129,20 +131,23 @@ class FanoutSpec extends LoggingFreeSpec
           val rtCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
 
           val source = Source(List(envelope.withContextObject(bs.rtConfigKey, rtCfg)))
+          val (envColl, wlColl, g) = runnableFanout(source, fanout)
 
-          val runnable = runnableFanout(source, fanout)
+          try {
+            g.run()
 
-          runnable._3.run()
+            val envelopes = envColl.probe.expectMsgType[List[FlowEnvelope]](1.second)
+            val worklists = wlColl.probe.expectMsgType[List[WorklistEvent]](1.second)
 
-          val envelopes = runnable._1.expectMsgType[List[FlowEnvelope]](1.second)
-          val worklists = runnable._2.expectMsgType[List[WorklistEvent]](1.second)
-
-          bs.streamLogger.info(s"Testing resourcetype [$resType]")
-          worklists should have size 1
-          envelopes should have size rtCfg.outbound.size
+            bs.streamLogger.info(s"Testing resourcetype [$resType]")
+            worklists should have size 1
+            envelopes should have size rtCfg.outbound.size
+          } finally  {
+            system.stop(envColl.actor)
+            system.stop(wlColl.actor)
+          }
         }
       }
     }
   }
-
 }

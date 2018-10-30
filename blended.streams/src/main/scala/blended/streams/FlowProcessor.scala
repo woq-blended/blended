@@ -30,6 +30,7 @@ object FlowProcessor {
               Left(env.withException(t))
           }
         case Some(t) =>
+          log.debug(s"Not executing function [${env.id}]:[$name] as envelope has exception [${env.exception.map(_.getMessage()).getOrElse("")}].")
           Left(env)
         }
       }

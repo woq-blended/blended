@@ -85,22 +85,27 @@ case class DispatcherBuilder(
 
     GraphDSL.create() { implicit b =>
 
-      val outbound = b.add(sendFlow
-        .via(FlowProcessor.transform[WorklistEvent]("dispatchOut", bs.streamLogger) { env =>
-          Try {
-            val worklist = bs.worklist(env).get
-            env.exception match {
-              case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
-              case Some(e) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
-            }
+      val outbound = b.add(sendFlow)
+
+      val toWorklist = b.add(Flow.fromFunction[FlowEnvelope, Either[FlowEnvelope, WorklistEvent]]{ env =>
+        try {
+          val worklist = bs.worklist(env).get
+          val event : WorklistEvent = env.exception match {
+            case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
+            case Some(e) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
           }
-        })
-      )
+
+          Right(event)
+        } catch {
+          case t : Throwable => Left(env.withException(t))
+        }
+
+      })
 
       // This error happens if for some reason we cannot create the worklist for the worklist event
       val transformError = b.add(FlowProcessor.splitEither[FlowEnvelope, WorklistEvent]())
 
-      outbound ~> transformError.in
+      outbound ~> toWorklist ~> transformError.in
 
       new FanOutShape2(
         outbound.in,

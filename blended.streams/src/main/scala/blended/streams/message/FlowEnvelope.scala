@@ -20,6 +20,7 @@ object FlowEnvelope {
 
   private def uuid() = UUID.randomUUID().toString()
 
+  def apply() : FlowEnvelope = apply(FlowMessage.noProps)
   def apply(msg : FlowMessage) : FlowEnvelope = apply(msg, uuid())
   def apply(props: FlowMessageProps) : FlowEnvelope = apply(FlowMessage(props), uuid())
 
