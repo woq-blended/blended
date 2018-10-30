@@ -6,7 +6,6 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
-import akka.testkit.TestProbe
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.JmsQueue
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig

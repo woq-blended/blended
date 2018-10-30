@@ -9,12 +9,9 @@ import javax.jms.Message
 import scala.beans.BeanProperty
 import scala.util.Try
 
-case class AckInfo(
-  // TODO: Is dependency to JMS dependency correct
-  jmsMessage : Message,
-  session : JmsAckSession,
-  created : Long = System.currentTimeMillis()
-)
+trait AcknowledgeHandler {
+  def acknowledge : FlowEnvelope => Try[Unit]
+}
 
 object FlowEnvelope {
 
@@ -43,7 +40,7 @@ final case class FlowEnvelope private[message] (
   @BeanProperty
   requiresAcknowledge : Boolean = false,
   @BeanProperty
-  ackInfo : Option[AckInfo] = None,
+  ackHandler : Option[AcknowledgeHandler] = None,
   @BeanProperty
   id : String = UUID.randomUUID().toString(),
   flowContext : Map[String, Any] = Map.empty,
@@ -65,8 +62,8 @@ final case class FlowEnvelope private[message] (
   def withException(t: Throwable): FlowEnvelope = copy(exception = Some(t))
   def withRequiresAcknowledge(b: Boolean): FlowEnvelope = copy(requiresAcknowledge = b)
 
-  def withAckInfo(info : Option[AckInfo]) = copy(ackInfo = info)
+  def withAckHandler(handler : Option[AcknowledgeHandler]) = copy(ackHandler = handler)
 
   // For the default we simply do nothing when a downstream consumer calls acknowledge
-  def acknowledge(): Unit = ackInfo.foreach { i => i.session.ack(i.jmsMessage) }
+  def acknowledge(): Unit = ackHandler.foreach(h => h.acknowledge(this))
 }

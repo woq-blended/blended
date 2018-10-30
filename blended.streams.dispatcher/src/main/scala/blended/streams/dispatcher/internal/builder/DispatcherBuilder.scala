@@ -3,16 +3,15 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Implicits._
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
+import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
 import blended.container.context.api.ContainerIdentifierService
+import blended.jms.bridge.BridgeProviderConfig
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed}
+import blended.streams.transaction.{FlowTransactionCompleted, FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist._
 import blended.util.logging.Logger
-
-import scala.util.{Success, Try}
 
 class MismatchedEnvelopeException(id : String)
   extends Exception(s"Worklist event [$id] couldn't find the corresponding envelope")
@@ -115,47 +114,105 @@ case class DispatcherBuilder(
     }
   }
 
-  def worklistEventHandler() : Graph[FanOutShape2[WorklistEvent, FlowTransactionEvent, FlowEnvelope], NotUsed] = {
-
-    def eventEnvelope (worklistEvent: WorklistEvent) : FlowEnvelope = {
-      worklistEvent.worklist.items match {
-        // Should not happen
-        case Seq() =>
-          FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
-        case s =>
-          s.head match {
-            case flowItem : FlowWorklistItem => flowItem.env
-            // Should not happen
-            case other => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
-          }
-      }
+  private[builder] def eventEnvelopes (worklistEvent: WorklistEvent) : Seq[FlowEnvelope] = {
+    worklistEvent.worklist.items match {
+      // Should not happen
+      case Seq() =>
+        Seq(FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id)))
+      case s =>
+        s.map { item => item match {
+          case flowItem : FlowWorklistItem => flowItem.env
+          // Should not happen
+          case other => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
+        }}
     }
+  }
+
+  private[builder] def isInternalOnly(event: WorklistEvent) : Boolean = {
+
+    val provider : Seq[Option[Boolean]] = eventEnvelopes(event).map { env =>
+      env.header[Boolean](bs.headerAutoComplete)
+    }
+
+    provider.forall(c => c.getOrElse(false))
+  }
+
+  private[builder] def transactionUpdate(event: WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {
+    val transEvent : Option[FlowTransactionEvent] = event match {
+      // The started event will just update the FlowTransaction with a new worklist
+      case started : WorklistStarted =>
+        Some(FlowTransactionUpdate(
+          transactionId = started.worklist.id,
+          updatedState = WorklistState.Started,
+          envelopes = eventEnvelopes(event):_*
+        ))
+      // Worklist Termination does nothing for completed worklists,
+      // for failed worklists it produces a Transaction failed update
+      case term : WorklistTerminated =>
+        if (term.state == WorklistState.Completed) {
+          if (isInternalOnly(event)) {
+            Some(FlowTransactionCompleted(event.worklist.id))
+          } else {
+            None
+          }
+        } else {
+          Some(FlowTransactionFailed(event.worklist.id, term.reason))
+        }
+      // Completed worklist steps do nothing
+      case step : WorklistStepCompleted => None
+    }
+
+    (event, transEvent)
+  }
+
+  private[builder] def acknowledge(event : WorklistEvent): FlowEnvelope = {
+
+    eventEnvelopes(event) match {
+      case Seq() =>
+        FlowEnvelope(FlowMessage.noProps, event.worklist.id).withException(new MismatchedEnvelopeException(event.worklist.id))
+      case h :: _ =>
+        if (h.requiresAcknowledge) {
+          logger.debug(s"Acknowledging envelope [${h.id}]")
+          h.acknowledge()
+        }
+        h
+    }
+  }
+
+  def worklistEventHandler() : Graph[FanOutShape2[WorklistEvent, FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
 
-      val split = b.add(Broadcast[WorklistEvent](2))
-      val wlCompleted = b.add(Flow[WorklistEvent].filter(e => e.state == WorklistState.Completed))
-      val wlTerminated = b.add(Flow[WorklistEvent].filter(e => e.state == WorklistState.TimeOut || e.state == WorklistState.Failed))
+      // The worklist Manager will track currently open worklist events and emit accumulated Worklist Events
+      // The worklist manager will produce Worklist started and Worklist Terminated events
+      val wlManager = b.add(WorklistManager.flow("dispatcher", bs.streamLogger))
 
-      val failTrans = b.add(Flow.fromFunction[WorklistEvent, FlowTransactionEvent]{ evt =>
-        FlowTransactionFailed(transactionId = evt.worklist.id, reason = Some(new Exception("Failed to process worklist")))
-      })
+      // We process the outcome of the worklist manager and transform it into Transaction events
+      val processEvent = b.add(Flow.fromFunction[WorklistEvent, (WorklistEvent, Option[FlowTransactionEvent])](transactionUpdate))
 
-      val ack = b.add(
-        Flow.fromFunction(eventEnvelope)
-        .via(FlowProcessor.fromFunction("acknowledge", bs.streamLogger) { env =>
-          if (env.requiresAcknowledge) {
-            env.acknowledge()
-          }
-          Success(env)
-        })
+      // if processEvent did come back with a TransactionEvent, this will be passed downstream
+      val processFilter = b.add(FlowProcessor.partition[(WorklistEvent, Option[FlowTransactionEvent])](_._2.isDefined))
+
+      val processWithTrans = b.add(Flow[(WorklistEvent, Option[FlowTransactionEvent])]
+        .map(_._2)
+        .map(_.get)
+      )
+
+      // For completed worklist we will acknowledge the envelope and capture exceptions
+      val processSinTrans = b.add(
+        Flow[(WorklistEvent, Option[FlowTransactionEvent])]
+        .map(_._1)
+        .filter(_.state == WorklistState.Completed)
+        .map(acknowledge)
         .filter(_.exception.isDefined)
       )
 
-      split.out(0) ~> wlTerminated ~> failTrans
-      split.out(1) ~> wlCompleted ~> ack
+      wlManager ~> processEvent ~> processFilter.in
 
-      new FanOutShape2(split.in, failTrans.out, ack.out)
+      processFilter.out0 ~> processWithTrans
+      processFilter.out1 ~> processSinTrans
+
+      new FanOutShape2(wlManager.in, processWithTrans.out, processSinTrans.out)
     }
   }
 
@@ -206,15 +263,18 @@ case class DispatcherBuilder(
 
       // the normal outcome of core goes to send
       callCore.out0 ~> callSend.in
-      // events go to the event channel
+      // The worklist started event goes to the event channel
       callCore.out1 ~> event
       // errors go the error channel
       callCore.out2 ~> error
 
       // the normal output of the sendflow are worklist events, so they go to the event channel
       val evtHandler = b.add(worklistEventHandler())
+      callSend.out0 ~> event // Worklist events
 
-      callSend.out0 ~> evtHandler.in // Worklist events
+      // All worklist events will go to the worklist manager, so that we can track worklist completions or failures
+      event ~> evtHandler.in
+
       evtHandler.out0 ~> trans.in(0) // worklist events to FlowTransactions
       evtHandler.out1 ~> error // Error channel - only occurs when envelope matching worklist branch can't be resolved
 

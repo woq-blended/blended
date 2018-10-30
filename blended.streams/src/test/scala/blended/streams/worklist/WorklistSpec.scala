@@ -6,6 +6,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, KillSwitches, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -19,6 +20,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
   with LoggingFreeSpecLike
   with Matchers {
 
+  private val log = Logger[WorklistSpec]
   private implicit val materialzer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private val defaultCooldown = 500.millis
@@ -34,7 +36,7 @@ class WorklistSpec extends TestKit(ActorSystem("Worklist"))
 
     val sink = Sink.seq[WorklistEvent]
 
-    val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist")
+    val mgr : Flow[WorklistEvent, WorklistEvent, NotUsed] = WorklistManager.flow("worklist", log)
 
     val ((actor, killswitch), result) = source
       .viaMat(KillSwitches.single)(Keep.both)

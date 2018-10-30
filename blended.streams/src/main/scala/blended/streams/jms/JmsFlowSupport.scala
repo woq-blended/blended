@@ -1,13 +1,27 @@
 package blended.streams.jms
 
 import akka.util.ByteString
-import blended.jms.utils.JmsDestination
+import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message._
+import blended.util.logging.Logger
 import javax.jms._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
+
+case class JmsAcknowledgeHandler(
+  jmsMessage : Message,
+  session : JmsAckSession,
+  created : Long = System.currentTimeMillis()
+) extends AcknowledgeHandler {
+
+  private val log = Logger[JmsAcknowledgeHandler]
+  override def acknowledge: FlowEnvelope => Try[Unit] = { env => Try {
+    log.debug(s"Acknowledging envelope [${env.id}]")
+    session.ack(jmsMessage)
+  }}
+}
 
 final case class JmsSendParameter(
   message : Message,

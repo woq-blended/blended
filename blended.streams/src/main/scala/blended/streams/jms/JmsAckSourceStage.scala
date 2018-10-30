@@ -4,8 +4,7 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsDestination}
-import blended.streams
-import blended.streams.message.{AckInfo, FlowEnvelope}
+import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 import javax.jms._
 
@@ -40,29 +39,36 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
         fail(out, ex)
       }
 
+      private val ackHandler : FlowEnvelope => Option[JmsAcknowledgeHandler] = { env =>
+        env.ackHandler match {
+          case None => None
+          case Some(h) if h.isInstanceOf[JmsAcknowledgeHandler] => Some(h.asInstanceOf[JmsAcknowledgeHandler])
+          case _ => None
+        }
+
+      }
+
       private val acknowledge : FlowEnvelope => Unit = { env =>
-        env.ackInfo.foreach { info =>
-          log.debug(s"Acknowledging message for session id [${info.session.sessionId}] : ${env.flowMessage}")
-          try {
-            // the acknowlede might not work a message might be in inflight while the previous message has not been
-            // acknowledged. In this case we will have closed the session and created a new one.
-            info.jmsMessage.acknowledge()
-            scheduleOnce(Poll(info.session.sessionId), 10.millis)
-          } catch {
-            case e: JMSException =>
-              log.error(e)(s"Error acknowledging message for session [${info.session.sessionId}] : [${env.flowMessage}]")
-              closeSession(info.session)
-          } finally {
-            inflight -= info.session.sessionId
+        ackHandler(env).foreach { handler =>
+          log.debug(s"Acknowledging message for session id [${handler.session.sessionId}] : ${env.flowMessage}")
+
+          handler.acknowledge(env) match {
+            case Success(_) =>
+              scheduleOnce(Poll(handler.session.sessionId), 10.millis)
+            case Failure(t) =>
+              log.error(t)(s"Error acknowledging message for session [${handler.session.sessionId}] : [${env.flowMessage}]")
+              closeSession(handler.session)
           }
+
+          inflight -= handler.session.sessionId
         }
       }
 
       private[this] def ackQueued(): Unit = {
 
         inflight.foreach { case (sessionId, envelope) =>
-          envelope.ackInfo.foreach { info =>
-            Option(info.session.ackQueue.poll()) match {
+          ackHandler(envelope).foreach { handler =>
+            Option(handler.session.ackQueue.poll()) match {
               case Some(action) =>
                 action match {
                   case Right(sessionId) =>
@@ -73,11 +79,11 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
                     failStage(t)
                 }
               case None =>
-                if (System.currentTimeMillis() - info.created > jmsSettings.ackTimeout.toMillis) {
+                if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
                   log.debug(s"Acknowledge timed out for [$sessionId] with message ${envelope.flowMessage}")
                   inflight -= sessionId
                   // Recovering the session, so that unacknowledged messages may be redelivered
-                  closeSession(info.session)
+                  closeSession(handler.session)
                 }
             }
           }
@@ -96,15 +102,15 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
 
-                  val info = AckInfo(
+                  val handler = JmsAcknowledgeHandler(
                     jmsMessage = message,
                     session = session
                   )
 
                   val envelope = FlowEnvelope(flowMessage)
                     .withRequiresAcknowledge(true)
-                    .withAckInfo(Some(info)
-                  )
+                    .withAckHandler(Some(handler))
+
                   inflight += (session.sessionId -> envelope)
                   handleMessage.invoke(envelope)
                 } catch {

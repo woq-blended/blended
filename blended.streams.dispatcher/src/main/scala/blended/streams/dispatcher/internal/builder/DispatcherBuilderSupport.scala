@@ -33,11 +33,11 @@ trait DispatcherBuilderSupport {
   def headerEventProvider        : String = header("EventProvider")
   def headerEventDest            : String = header("EventDestination")
   def headerOutboundId           : String = header("OutboundId")
+  def headerAutoComplete         : String = header("AutoCompleteStep")
 
   def headerBridgeRetry          : String = header("Retry")
   def headerBridgeRetryCount     : String = header("BridgeRetryCount")
   def headerBridgeMaxRetry       : String = header("BridgeMaxRetry")
-  def headerBridgeClose          : String = header("BridgeCloseTA")
 
   def headerTimeToLive           : String = header("TimeToLive")
 

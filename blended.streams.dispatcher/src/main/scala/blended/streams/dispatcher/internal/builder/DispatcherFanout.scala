@@ -63,7 +63,7 @@ case class DispatcherFanout(
     Try {
       var newEnv : FlowEnvelope = env
         .withHeader(bs.headerBridgeMaxRetry, outCfg.maxRetries).get
-        .withHeader(bs.headerBridgeClose, outCfg.autoComplete).get
+        .withHeader(bs.headerAutoComplete, outCfg.autoComplete).get
 
       if (outCfg.timeToLive > 0) {
         newEnv = newEnv.withHeader(bs.headerTimeToLive, outCfg.timeToLive).get
