@@ -55,6 +55,7 @@ jobs:
     script: sbt -mem 4096 buildSite
     deploy:
       provider: pages
+      local-dir: target/site
       skip-cleanup: true
       github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
       keep-history: false
