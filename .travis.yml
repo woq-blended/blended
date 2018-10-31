@@ -23,10 +23,16 @@ before_cache:
 env:
   global:
     - TEST_ONLINE="true"
+    # PGP_PASS
     - secure: "r048egec7DYp2HXockVYQOQru6FsxYZTABzEmTqZxOIRBpE3/c/km8TrSdKU32te7pZVryTGe2J6DK7xa2U2rHmu9H8Z7ah1a4CZzL0daFP8xZGXJ2aUby8Z++5eoav+CVzqyHWYKZtuB/DEhOlVsvx397rJVRhWIBBQVt5sgxY="
+    # SONATYPE_USERNAME
     - secure: "b3aSUvpBixtHJ7EuxN5d7/sLzU6zXtD3OGyHXIDyfZWSnc55YOju89yZsfmj7Cnx2SqXvAuHIjb/bXwGtJg30f9LaR9EKueawkFpIBHKuPeEsJKoBAw2Uwu+si2Dn5Kb4joZZUwokJic4SnhmU5MmAI5YVdv6fzCyuBhY+zoFbA="
+    # SONATYPE_PASSWORD
     - secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
+    # CODACY_PROJECT_TOKEN
     - secure: "KBQ2ReAGgCp4UXR/W20H3H2yIjqVTaadyoEJaGjwAujJJHp6wd6BdPDdjBVNMYW6J/CH9+HJotZrX6GyPZWrNKms6G5mAH160o5xdgE+WEoAN56mnIBMrff7Di1rDwfLX+XSjcmh+XCsKvgiY230hOXAtZ6ArnqMR6dc1NKu7Ag="
+    # GITHUB_TOKEN
+    - secure: "IbsIzNJNyNYY13wb8lmbZgoJhU03DsddEaWnjEoGN6p97cag6MIIB6XiDm5GrEshmKoK/IuXQBm0t+ur65pUrH9IYbir9zfn4Jzok7cESPXi9BUdJq8D7bkNRTOy98dWK+MWHF5WtNb054i3g1Fxe0k8ynRM/lIbfo/NjmmAW8k="
 
 stages:
   - name: VerifyPublish
@@ -34,6 +40,8 @@ stages:
   - Test
   - name: Deploy
     if: branch = publish AND type = push
+  - name: Site
+    if: branch = streams
 
 jobs:
   include:
@@ -43,3 +51,16 @@ jobs:
     script: sbt ciBuild
   - stage: Deploy
     script: ./runPublish.sh
+  - stage: Site
+    script: sbt -mem 4096 buildSite
+    deploy:
+      provider: pages
+      skip-cleanup: true
+      github-token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+      keep-history: false
+      target-branch: gh-pages
+      email: andreas@wayofquality.de
+      name: Blended Development
+      verbose: true
+      on:
+        branch: streams
