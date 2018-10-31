@@ -3,4 +3,5 @@ jbake.properties
 .asciidoctor
 coverage
 scaladoc
+images
 

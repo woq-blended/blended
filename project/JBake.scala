@@ -28,8 +28,8 @@ object JBake extends AutoPlugin {
     jbakeNodeBinDir := baseDirectory.value / "doc" / "target" / "scala-2.12" / "scalajs-bundler" / "main" / "node_modules" / ".bin",
 
     jbakeAsciidocAttributes := Map(
-      "imagesdir" -> (jbakeOutputDir.value / "images").getAbsolutePath(),
-      "imagesoutdir"-> (jbakeOutputDir.value / "images").getAbsolutePath(),
+      "imagesdir" -> "images",
+      "imagesoutdir"-> "images",
       "mermaid" -> jbakeNodeBinDir.value.getAbsolutePath()
     ),
 

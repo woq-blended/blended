@@ -210,7 +210,7 @@ lazy val root = {
         val state1 = runCommands( state.value, "clean", "cleanCoverage")
         IO.move(coverage, siteContent / "coverage")
 
-        val state2 = runCommands(state1, "coverageOff", "clean", "unidoc")
+        val state2 = runCommands(state1, "coverageOff", "unidoc")
         IO.move(unidoc, siteContent / "scaladoc")
 
         runCommands(state2, "blendedDocs / npmUpdate", "jbakeBuild")
