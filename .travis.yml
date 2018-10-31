@@ -52,7 +52,7 @@ jobs:
   - stage: Deploy
     script: ./runPublish.sh
   - stage: Site
-    script: sbt -mem 4096 buildSite
+    script: sbt buildSite
     deploy:
       provider: pages
       local-dir: target/site
