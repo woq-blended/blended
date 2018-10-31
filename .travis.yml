@@ -15,7 +15,7 @@ cache:
 
 before_install:
   - sudo apt-get update
-  - sudo apt-get graphviz
+  - sudo apt-get install graphviz
 
 before_cache:
   - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
