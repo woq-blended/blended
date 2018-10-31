@@ -1,3 +1,6 @@
 _site
-content/images
+jbake.properties
+.asciidoctor
+coverage
+scaladoc
 

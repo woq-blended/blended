@@ -1,4 +1,5 @@
-import java.io.File
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.util.Properties
 
 import sbt.Keys._
 import sbt._
@@ -11,8 +12,9 @@ object JBake extends AutoPlugin {
   object autoImport {
     val jbakeInputDir = settingKey[File]("The input directory for the site generation.")
     val jbakeOutputDir = settingKey[File]("The directory for the generated site.")
-    val jbakeClearCache = settingKey[Boolean]("Whether to clear the JBake cache before building the site.")
-    val jbakeProperties = settingKey[Map[String, Any]]("Additional properties to configure JBake")
+    val jbakeNodeBinDir = settingKey[File]("The directory where we can find the executables for node modules.")
+
+    val jbakeAsciidocAttributes = settingKey[Map[String, String]]("Asciidoctor attribute to passed to Asciidoctor")
 
     val jbakeBuild = taskKey[Seq[File]]("Run the jbake build step.")
   }
@@ -22,8 +24,14 @@ object JBake extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] = inConfig(Compile)(Seq(
     jbakeInputDir := baseDirectory.value / "doc",
     jbakeOutputDir := target.value / "site",
-    jbakeClearCache := true,
-    jbakeProperties := Map.empty,
+
+    jbakeNodeBinDir := baseDirectory.value / "doc" / "target" / "scala-2.12" / "scalajs-bundler" / "main" / "node_modules" / ".bin",
+
+    jbakeAsciidocAttributes := Map(
+      "imagesdir" -> (jbakeOutputDir.value / "images").getAbsolutePath(),
+      "imagesoutdir"-> (jbakeOutputDir.value / "images").getAbsolutePath(),
+      "mermaid" -> jbakeNodeBinDir.value.getAbsolutePath()
+    ),
 
     jbakeBuild := {
 
@@ -39,7 +47,9 @@ object JBake extends AutoPlugin {
       SiteGenerator(
         jbakeDir = jbakeDir,
         inputDir = jbakeInputDir.value,
-        outputDir = jbakeOutputDir.value
+        outputDir = jbakeOutputDir.value,
+        nodeBinDir = jbakeNodeBinDir.value,
+        attributes = jbakeAsciidocAttributes.value
       )(streams.value.log).bake()
     }
   ))
@@ -48,24 +58,37 @@ object JBake extends AutoPlugin {
 case class SiteGenerator(
   jbakeDir : File,
   inputDir : File,
-  outputDir : File
+  outputDir : File,
+  nodeBinDir : File,
+  attributes : Map[String, String]
 )(implicit log : Logger) {
 
   val jbakeCp = (jbakeDir / "lib").listFiles(new FileFilter{
     override def accept(pathname: File): Boolean = pathname.isDirectory() || (pathname.isFile && pathname.getName().endsWith("jar"))
   }).map(_.getAbsolutePath()).mkString(File.pathSeparator)
 
-
   def bake() : Seq[File] = {
 
+    val props = new Properties()
+    props.load(new FileInputStream(inputDir / "jbake.properties.tpl"))
+
+    val attributeString = attributes.map{ case (k,v) => s"$k=$v" }.mkString(",")
+    props.put("asciidoctor.attributes", attributeString)
+
+    val os = new FileOutputStream(inputDir / "jbake.properties")
+    props.store(os, "Auto generated jbake properties. Perform modifications in [jbake.properties.tpl]")
+
+    val currPath = System.getenv("PATH")
+
     val jBakeOptions = ForkOptions()
+      .withEnvVars(Map("PATH" -> s"${nodeBinDir.getAbsolutePath()}${File.pathSeparator}$currPath"))
 
     log.info("Running jbake")
     val process = Fork.java.fork(jBakeOptions, Seq(
       "-classpath", jbakeCp,
       "org.jbake.launcher.Main",
       inputDir.getAbsolutePath(),
-      outputDir.getAbsolutePath(), 
+      outputDir.getAbsolutePath(),
       "-b"
     ))
 
@@ -75,41 +98,6 @@ case class SiteGenerator(
       throw new Exception(s"JBake ended with return code [$exitVal]")
     }
 
-//    try {
-//      //Orient.instance().startup()
-//      val oven = new Oven(jbakeConfig)
-//      oven.bake()
-//    } catch {
-//      case t : Throwable =>
-//        t.printStackTrace()
-//        log.err(s"Site generation failed : [${t.getMessage()}]")
-//    }
-
-    Seq.empty
+    Seq(outputDir)
   }
 }
-
-//// Dependencies for JBake
-//"org.jbake" % "jbake-core" % "2.6.3",
-//("org.asciidoctor" % "asciidoctorj" % "1.5.7").withExclusions(
-//  Vector(
-//    InclExclRule().withOrganization("com.github.jnr")
-//  )
-//),
-//("org.asciidoctor" % "asciidoctorj-diagram" % "1.5.10").withExclusions(
-//  Vector(
-//    InclExclRule().withOrganization("com.github.jnr")
-//  )
-//),
-//"org.thymeleaf" % "thymeleaf" % "3.0.9.RELEASE",
-//"de.neuland-bfi" % "jade4j" % "1.2.7",
-//"org.codehaus.groovy" % "groovy-templates" % "2.5.3",
-//"org.codehaus.groovy" % "groovy-dateutil" % "2.5.3",
-//"org.freemarker" % "freemarker" % "2.3.28",
-////  ("org.jruby" % "jruby-complete" % "9.2.0.0").withExclusions(
-////    Vector(
-////      InclExclRule().withOrganization("com.github.jnr")
-////    )
-////  ),
-//("com.github.jnr" % "jnr-constants" % "0.9.5").intransitive(),
-////  ("com.github.jnr" % "jnr-posix" % "3.0.12").intransitive()

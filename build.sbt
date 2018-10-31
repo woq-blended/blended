@@ -97,6 +97,7 @@ lazy val blendedJmsBridge = BlendedJmsBridge.project
 lazy val blendedStreams = BlendedStreams.project
 lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
 lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
+lazy val blendedDocs = BlendedDocsJs.project
 
 lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
@@ -157,8 +158,27 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedJmsBridge,
   blendedStreams,
   blendedStreamsDispatcher,
-  blendedStreamsTestsupport
+  blendedStreamsTestsupport,
+  blendedDocs
 )
+
+def runCommandAndRemaining(command: String): State => State = { st: State =>
+  import sbt.complete.Parser
+  @annotation.tailrec
+  def runCommand(command: String, state: State): State = {
+    val nextState = Parser.parse(command, state.combinedParser) match {
+      case Right(cmd) => cmd()
+      case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
+    }
+    nextState.remainingCommands.toList match {
+      case Nil => nextState
+      case head :: tail => runCommand(head.commandLine, nextState.copy(remainingCommands = tail))
+    }
+  }
+  runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
+}
+
+lazy val buildSite = taskKey[Unit]("Build the blended site")
 
 lazy val root = {
   project
@@ -171,6 +191,31 @@ lazy val root = {
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
+    .settings(
+      buildSite := {
+
+        val log = streams.value.log
+
+        def runCommands(initial: State, commands : String*) : State = {
+          commands.foldLeft(initial){ case (s, cmd) =>
+            log.info(s"Executing command [$cmd]")
+            runCommandAndRemaining(cmd)(s)
+          }
+        }
+
+        val siteContent = baseDirectory.value / "doc" / "assets"
+        val unidoc = crossTarget.value / "unidoc"
+        val coverage = crossTarget.value / "scoverage-report"
+
+        val state1 = runCommands( state.value, "clean", "cleanCoverage")
+        IO.move(coverage, siteContent / "coverage")
+
+        val state2 = runCommands(state1, "coverageOff", "clean", "unidoc")
+        IO.move(unidoc, siteContent / "scaladoc")
+
+        runCommands(state2, "blendedDocs / npmUpdate", "jbakeBuild")
+      }
+    )
     .aggregate(aggregates:_*)
 }
 
