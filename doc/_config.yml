@@ -9,6 +9,8 @@ exclude:
 asciidoc:
   require_front_matter_header: true
 keep_files:
+- coverage
+- scaladoc
 - images
 asciidoctor:
   base_dir: :docdir

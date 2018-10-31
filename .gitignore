@@ -8,6 +8,7 @@ libs/
 3rdparty
 package-lock.json
 .bloop
+node_modules 
 
 blended.sslcontext/notes.txt
 

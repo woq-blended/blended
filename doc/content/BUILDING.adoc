@@ -1,6 +1,5 @@
----
-layout: default
----
+:jbake-type: page
+:jbake-status: published
 == Build file structure
 
 _Blended_ uses `sbt 1.2.6` to build. Currently we have a bit more than 60 submodules in _Blended_, so that the build
@@ -16,7 +15,7 @@ file structure needs a bit of explanation:
 
 [source,scala,linenums]
 ----
-include::../project/BlendedActivemqClient.scala[]
+include::../../project/BlendedActivemqClient.scala[]
 ----
 
 * All sub module files mix in the trait `ProjectFactory`, which means they have to expose a `val` of type `Project`.
@@ -31,7 +30,7 @@ To complete the example, here is how the sub module above is referenced in the `
 
 [source,scala]
 ----
-include::../build.sbt[tags=Building]
+include::../../build.sbt[tags=Building]
 ----
 
 === Special cases
@@ -42,8 +41,12 @@ There are more complex project definitions, e.g. when the submodule needs to gen
 
 TODO
 
+[graphviz, sample, svg]
+----
+digraph G {Hello->World}
+----
 
-[mermaid.cli, test, svg]
+[mermaid, test, svg]
 ----
 graph TD;
     A-->B;

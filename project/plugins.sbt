@@ -1,4 +1,7 @@
+import sbt.librarymanagement.InclExclRule
+
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += Resolver.bintrayRepo("jbake", "binary")
 
 addSbtPlugin("org.portable-scala" % "sbt-scalajs-crossproject" % "0.6.0")
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.25")

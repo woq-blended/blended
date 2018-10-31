@@ -170,7 +170,7 @@ lazy val root = {
     .settings(global)
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
-    .enablePlugins(ScalaUnidocPlugin)
+    .enablePlugins(ScalaUnidocPlugin, JBake)
     .aggregate(aggregates:_*)
 }
 
