@@ -1,26 +1,12 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
-
 import blended.jms.utils.{JmsQueue, JmsTopic}
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
-
-  override def country: String = "cc"
-  override def location: String = "09999"
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-  override def loggerName: String = getClass().getName()
-
-  implicit val bs = new DispatcherBuilderSupport {
-    override val prefix: String = "App"
-    override val streamLogger: Logger = Logger(loggerName)
-  }
 
   private val amqId = providerId("activemq", "activemq")
   private val sonicId = providerId("sonic75", "central")

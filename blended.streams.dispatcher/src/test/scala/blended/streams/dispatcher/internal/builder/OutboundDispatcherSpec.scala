@@ -1,7 +1,5 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
@@ -10,24 +8,12 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.Collector
 import blended.streams.worklist.WorklistState.WorklistState
 import blended.streams.worklist.{WorklistEvent, WorklistState, WorklistStepCompleted}
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 class OutboundDispatcherSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport  {
-
-  override def country: String = "cc"
-  override def location: String = "09999"
-  override def loggerName: String = getClass().getName()
-  override def baseDir : String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-
-  implicit val bs : DispatcherBuilderSupport = new DispatcherBuilderSupport {
-    override val prefix: String = "App"
-    override val streamLogger: Logger = Logger(loggerName)
-  }
 
   private def runnableOutbound(
     ctxt : DispatcherExecContext,
@@ -46,7 +32,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
       GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
 
-        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg).outbound(send))
+        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).outbound(send))
         val out = b.add(outColl.sink)
         val err = b.add(errColl.sink)
 
@@ -65,7 +51,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
       implicit val system : ActorSystem = ctxt.system
       implicit val materializer : Materializer = ActorMaterializer()
 
-      val envelope = FlowEnvelope().withHeader(bs.headerOutboundId, "outbound").get
+      val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "outbound").get
 
       val (outColl, errColl, out) = runnableOutbound(ctxt, envelope, send)
 

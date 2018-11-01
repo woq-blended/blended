@@ -27,7 +27,7 @@ case class DispatcherFanout(
             val obEnv =
               env
                 .withContextObject(bs.outboundCfgKey, ob)
-                .withHeader(bs.headerOutboundId, ob.id).get
+                .withHeader(bs.headerBranchId, ob.id).get
             (ob, outboundMsg(ob)(obEnv).get)
           }
         }

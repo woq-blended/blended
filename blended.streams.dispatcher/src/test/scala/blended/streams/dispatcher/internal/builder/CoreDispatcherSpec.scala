@@ -1,41 +1,25 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
-
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
-import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.JmsQueue
-import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.testsupport.{Collector, StreamFactories}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted}
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class CoreDispatcherSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
-
-  override def country: String = "cc"
-  override def location: String = "09999"
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-  override def loggerName: String = getClass().getName()
-
-  implicit val bs : DispatcherBuilderSupport = new DispatcherBuilderSupport {
-    override val prefix: String = "App"
-    override val streamLogger: Logger = Logger(loggerName)
-  }
 
   val defaultTimeout : FiniteDuration = 1.second
 
@@ -51,8 +35,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
   )
 
   def runnableDispatcher (
-    idSvc : ContainerIdentifierService,
-    dispatcherCfg : ResourceTypeRouterConfig,
+    ctxt :DispatcherExecContext,
     bufferSize : Int
   )(implicit system: ActorSystem, materializer: Materializer) : (
     Collector[FlowEnvelope],
@@ -76,7 +59,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in
         val error : Inlet[FlowEnvelope] = builder.add(errCollector.sink).in
 
-        val dispatcher = builder.add(DispatcherBuilder(idSvc, dispatcherCfg)(bs).core())
+        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).core())
 
         dispatcher.out0 ~> out
         dispatcher.out1 ~> worklist
@@ -92,13 +75,12 @@ class CoreDispatcherSpec extends LoggingFreeSpec
   def withDispatcher(timeout : FiniteDuration, testMessages: FlowEnvelope*)(f: (DispatcherExecContext, DispatcherResult) => Unit): DispatcherResult = {
 
     def executeDispatcher(
-      idSvc : ContainerIdentifierService,
-      cfg: ResourceTypeRouterConfig,
+      ctxt : DispatcherExecContext,
       testMessages : FlowEnvelope*
     )(implicit system: ActorSystem, materializer : Materializer, timeout: FiniteDuration) : DispatcherResult = {
 
       val source = StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
-      val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(idSvc, cfg, testMessages.size)
+      val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(ctxt, testMessages.size)
 
       try {
         val (actorRef, killswitch) = g.run()
@@ -129,7 +111,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
       implicit val system : ActorSystem = ctxt.system
       implicit val materializer : Materializer = ActorMaterializer()
 
-      val result = executeDispatcher(ctxt.idSvc, ctxt.cfg, testMessages:_*)(system, materializer, timeout)
+      val result = executeDispatcher(ctxt, testMessages:_*)(system, materializer, timeout)
 
       try {
         f(ctxt, result)
@@ -205,30 +187,30 @@ class CoreDispatcherSpec extends LoggingFreeSpec
     "fanout for all out outbounds" in {
       val props : FlowMessageProps = Map("ResourceType" -> "FanOut")
 
-      withDispatcher(3.seconds, FlowEnvelope(props)) { (_, result) =>
+      withDispatcher(3.seconds, FlowEnvelope(props)) { (ctxt, result) =>
         result.out should have size 2
         result.worklist should have size 1
         result.worklist.head.worklist.id should be(result.out.head.id)
         result.worklist.head.worklist.items should have size 2
 
-        val default = filterEnvelopes(result.out)(headerFilter(bs.headerOutboundId)("default"))
+        val default = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerBranchId)("default"))
         default should have size 1
 
         verifyHeader(Map(
           "ResourceType" -> "FanOut",
-          bs.headerBridgeVendor -> "sagum",
-          bs.headerBridgeProvider -> "cc_queue",
-          bs.headerBridgeDest -> JmsQueue("/Qucc/data/out").asString
+          ctxt.bs.headerBridgeVendor -> "sagum",
+          ctxt.bs.headerBridgeProvider -> "cc_queue",
+          ctxt.bs.headerBridgeDest -> JmsQueue("/Qucc/data/out").asString
         ), default.head.flowMessage.header) should be (empty)
 
-        val other = filterEnvelopes(result.out)(headerFilter(bs.headerOutboundId)("OtherApp"))
+        val other = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerBranchId)("OtherApp"))
         other should have size 1
         verifyHeader(Map(
           "ResourceType" -> "FanOut",
-          bs.headerBridgeVendor -> "activemq",
-          bs.headerBridgeProvider -> "activemq",
-          bs.headerBridgeDest -> JmsQueue("OtherAppToQueue").asString,
-          bs.headerTimeToLive -> 14400000L
+          ctxt.bs.headerBridgeVendor -> "activemq",
+          ctxt.bs.headerBridgeProvider -> "activemq",
+          ctxt.bs.headerBridgeDest -> JmsQueue("OtherAppToQueue").asString,
+          ctxt.bs.headerTimeToLive -> 14400000L
         ), other.head.flowMessage.header) should be (empty)
 
       }
@@ -239,22 +221,22 @@ class CoreDispatcherSpec extends LoggingFreeSpec
       val noCbe: FlowMessageProps = Map("ResourceType" -> "NoCbe")
       val withCbe : FlowMessageProps = Map("ResourceType" -> "WithCbe")
 
-      withDispatcher(5.seconds, FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (cfg, result) =>
+      withDispatcher(5.seconds, FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (ctxt, result) =>
         result.out should have size 2
 
-        val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(bs.headerEventVendor))
+        val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(ctxt.bs.headerEventVendor))
         cbeOut should have size 1
         verifyHeader(Map(
-          bs.headerCbeEnabled -> true,
-          bs.headerEventVendor -> "sonic75",
-          bs.headerEventProvider -> "central",
-          bs.headerEventDest -> "queue:cc.global.evnt.out"
+          ctxt.bs.headerCbeEnabled -> true,
+          ctxt.bs.headerEventVendor -> "sonic75",
+          ctxt.bs.headerEventProvider -> "central",
+          ctxt.bs.headerEventDest -> "queue:cc.global.evnt.out"
         ), cbeOut.head.flowMessage.header) should be (empty)
 
-        val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(bs.headerEventVendor))
+        val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(ctxt.bs.headerEventVendor))
         noCbeOut should have size 1
         verifyHeader(Map(
-          bs.headerCbeEnabled -> false,
+          ctxt.bs.headerCbeEnabled -> false,
         ), noCbeOut.head.flowMessage.header) should be (empty)
 
         result.worklist should have size 2
@@ -276,7 +258,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         "InStoreCommunication" -> "0"
       )
 
-      withDispatcher(5.seconds, FlowEnvelope(propsInstore), FlowEnvelope(propsCentral)) { (cfg, result) =>
+      withDispatcher(5.seconds, FlowEnvelope(propsInstore), FlowEnvelope(propsCentral)) { (ctxt, result) =>
         result.worklist should have size 2
         result.error should be (empty)
 
@@ -289,9 +271,9 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         verifyHeader(Map(
           "Description" -> "SalesDataFromScale",
           "DestinationName" -> "TestFile",
-          bs.headerEventVendor -> "sonic75",
-          bs.headerEventProvider -> "central",
-          bs.headerEventDest -> "queue:cc.sib.global.data.out"
+          ctxt.bs.headerEventVendor -> "sonic75",
+          ctxt.bs.headerEventProvider -> "central",
+          ctxt.bs.headerEventDest -> "queue:cc.sib.global.data.out"
         ), instore.head.flowMessage.header)
 
         central should have size 1
@@ -300,9 +282,9 @@ class CoreDispatcherSpec extends LoggingFreeSpec
           "DestinationName" -> "TestFile",
           "Filename" -> "TestFile",
           "DestinationPath" -> "opt/inbound/",
-          bs.headerEventVendor -> "activemq",
-          bs.headerEventProvider -> "activemq",
-          bs.headerEventDest -> "ClientToQ"
+          ctxt.bs.headerEventVendor -> "activemq",
+          ctxt.bs.headerEventProvider -> "activemq",
+          ctxt.bs.headerEventDest -> "ClientToQ"
         ), central.head.flowMessage.header)
 
       }

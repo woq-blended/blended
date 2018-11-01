@@ -26,7 +26,7 @@ object DispatcherOutbound {
         bs.withContextObject[BridgeProviderConfig](bs.bridgeProviderKey, env) { provider =>
           bs.withContextObject[Option[JmsDestination]](bs.bridgeDestinationKey, env) { dest =>
 
-            val outId = env.header[String](bs.headerOutboundId).getOrElse("default")
+            val outId = env.header[String](bs.headerBranchId).getOrElse("default")
 
             val p = (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
               case (Some(v), Some(p)) =>

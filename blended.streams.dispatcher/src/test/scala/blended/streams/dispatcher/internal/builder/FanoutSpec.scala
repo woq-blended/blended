@@ -1,19 +1,14 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.testsupport.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistState}
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -23,16 +18,6 @@ class FanoutSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
 
-  override def country: String = "cc"
-  override def location: String = "09999"
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-  override def loggerName: String = getClass().getName()
-
-  implicit val bs = new DispatcherBuilderSupport {
-    override val prefix: String = "App"
-    override val streamLogger: Logger = Logger(loggerName)
-  }
-
   def performFanout(
     ctxt : DispatcherExecContext,
     fanout : DispatcherFanout,
@@ -40,10 +25,10 @@ class FanoutSpec extends LoggingFreeSpec
     envelope : FlowEnvelope
   ) : Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = {
     val resTypeCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
-    val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
+    val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
     fanout.funFanoutOutbound(envelope
-      .withHeader(bs.headerResourceType, resType, true).get
-      .withContextObject(bs.rtConfigKey, resTypeCfg)
+      .withHeader(ctxt.bs.headerResourceType, resType, true).get
+      .withContextObject(ctxt.bs.rtConfigKey, resTypeCfg)
     )
   }
 
@@ -53,14 +38,14 @@ class FanoutSpec extends LoggingFreeSpec
 
       withDispatcherConfig { ctxt =>
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
 
         performFanout(ctxt, fanout, "FanOut", envelope) match {
           case Success(s) =>
             s should have size 2
             assert(s.forall { case (outCfg, env) => env.id == envelope.id})
-            val outIds = s.map(_._2.header[String](bs.headerOutboundId).get).distinct
+            val outIds = s.map(_._2.header[String](ctxt.bs.headerBranchId).get).distinct
             outIds should have size 2
             outIds should contain ("default")
             outIds should contain ("OtherApp")
@@ -72,7 +57,7 @@ class FanoutSpec extends LoggingFreeSpec
     "create a workliststarted event for a configured resourceType" in {
 
       withDispatcherConfig { ctxt =>
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -85,7 +70,7 @@ class FanoutSpec extends LoggingFreeSpec
               wl.worklist.id should be (envelope.id)
               wl.worklist.items should have size (rtCfg.outbound.size)
             case Failure(t) =>
-              bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]" )
+              ctxt.bs.streamLogger.error(s"WorklistCreation failed for resource type [$resType]" )
               fail(t)
           }
         }
@@ -124,13 +109,13 @@ class FanoutSpec extends LoggingFreeSpec
         implicit val materializer = ActorMaterializer()
         implicit val eCtxt = system.dispatcher
 
-        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)
+        val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
           val envelope = FlowEnvelope(FlowMessage.noProps)
           val rtCfg = ctxt.cfg.resourceTypeConfigs.get(resType).get
 
-          val source = Source(List(envelope.withContextObject(bs.rtConfigKey, rtCfg)))
+          val source = Source(List(envelope.withContextObject(ctxt.bs.rtConfigKey, rtCfg)))
           val (envColl, wlColl, g) = runnableFanout(source, fanout)
 
           try {
@@ -139,7 +124,7 @@ class FanoutSpec extends LoggingFreeSpec
             val envelopes = envColl.probe.expectMsgType[List[FlowEnvelope]](1.second)
             val worklists = wlColl.probe.expectMsgType[List[WorklistEvent]](1.second)
 
-            bs.streamLogger.info(s"Testing resourcetype [$resType]")
+            ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
             worklists should have size 1
             envelopes should have size rtCfg.outbound.size
           } finally  {

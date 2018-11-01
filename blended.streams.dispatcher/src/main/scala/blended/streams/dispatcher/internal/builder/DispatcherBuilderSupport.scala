@@ -6,12 +6,22 @@ import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeCon
 import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.{FlowWorklistItem, Worklist, WorklistItem}
 import blended.util.logging.Logger
+import com.typesafe.config.Config
+import blended.util.config.Implicits._
 
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 trait DispatcherBuilderSupport {
-  def prefix : String
+
+  def containerConfig : Config
+
+  private val headerCfg = containerConfig.getConfig("blended.flow.header")
+
+  def prefix : String = headerCfg.getString("prefix", "Blended")
+  def headerTransactionId : String = headerCfg.getString("transactionId", "TransactionId")
+  def headerBranchId : String = headerCfg.getString("branchId", prefix + "BranchId")
+
   val streamLogger : Logger
 
   val header : String => String = name => prefix + name
@@ -34,7 +44,6 @@ trait DispatcherBuilderSupport {
   def headerEventVendor          : String = header("EventVendor")
   def headerEventProvider        : String = header("EventProvider")
   def headerEventDest            : String = header("EventDestination")
-  def headerOutboundId           : String = header("OutboundId")
   def headerAutoComplete         : String = header("AutoCompleteStep")
 
   def headerBridgeRetry          : String = header("Retry")
@@ -89,7 +98,7 @@ trait DispatcherBuilderSupport {
   }
 
   def worklistItem(env: FlowEnvelope) : Try[WorklistItem] = Try {
-    val id = env.header[String](headerOutboundId).get
+    val id = env.header[String](headerBranchId).get
     FlowWorklistItem(env, id)
   }
 

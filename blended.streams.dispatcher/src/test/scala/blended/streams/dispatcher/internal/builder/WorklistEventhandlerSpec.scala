@@ -1,6 +1,5 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
@@ -11,9 +10,7 @@ import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.testsupport.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, WorklistStepCompleted}
-import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.Future
@@ -23,16 +20,6 @@ import scala.util.Try
 class WorklistEventhandlerSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
-
-  override def country: String = "cc"
-  override def location: String = "09999"
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
-  override def loggerName: String = getClass().getName()
-
-  implicit val bs : DispatcherBuilderSupport = new DispatcherBuilderSupport {
-    override val prefix: String = "App"
-    override val streamLogger: Logger = Logger(loggerName)
-  }
 
   private def runEventHandler(
     ctxt : DispatcherExecContext
@@ -48,7 +35,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val evtHandler = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg).worklistEventHandler())
+      val evtHandler = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).worklistEventHandler())
       val err = b.add(errColl.sink)
       val trans = b.add(transColl.sink)
 
@@ -75,14 +62,14 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
       val steps = autoComplete.zipWithIndex.map { case (compl, idx) =>
         master
-          .withHeader(bs.headerOutboundId, "step-" + idx).get
-          .withHeader(bs.headerAutoComplete, compl).get
-          .withHeader(bs.headerBridgeVendor, vendor).get
-          .withHeader(bs.headerBridgeProvider,provider).get
-          .withHeader(bs.headerBridgeDest, JmsDestination.create("test").get.asString).get
+          .withHeader(ctxt.bs.headerBranchId, "step-" + idx).get
+          .withHeader(ctxt.bs.headerAutoComplete, compl).get
+          .withHeader(ctxt.bs.headerBridgeVendor, vendor).get
+          .withHeader(ctxt.bs.headerBridgeProvider,provider).get
+          .withHeader(ctxt.bs.headerBridgeDest, JmsDestination.create("test").get.asString).get
       }
 
-      val wl = bs.worklist(steps:_*).get
+      val wl = ctxt.bs.worklist(steps:_*).get
 
       val started = WorklistStarted(worklist = wl, 10.seconds)
 
@@ -105,8 +92,8 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(bs.headerOutboundId, "test").get
-        val wl = bs.worklist(envelope).get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
         val done = WorklistStepCompleted(worklist = wl, state = WorklistState.Completed)
@@ -133,8 +120,8 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(bs.headerOutboundId, "test").get
-        val wl = bs.worklist(envelope).get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
         val done = WorklistStepCompleted(worklist = wl, state = WorklistState.Completed)
@@ -159,8 +146,8 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(bs.headerOutboundId, "test").get
-        val wl = bs.worklist(envelope).get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl)
 
@@ -187,13 +174,13 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope()
-          .withHeader(bs.headerOutboundId, "test").get
+          .withHeader(ctxt.bs.headerBranchId, "test").get
           .withRequiresAcknowledge(true)
           .withAckHandler(Some(new AcknowledgeHandler {
             override def acknowledge: FlowEnvelope => Try[Unit] = _ => Try(ackCount.incrementAndGet())
           }))
 
-        val wl = bs.worklist(envelope).get
+        val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, 10.seconds)
 
