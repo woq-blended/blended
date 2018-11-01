@@ -61,27 +61,33 @@ case class DispatcherFanout(
     }
 
     Try {
-      var newEnv : FlowEnvelope = env
-        .withHeader(bs.headerBridgeMaxRetry, outCfg.maxRetries).get
-        .withHeader(bs.headerAutoComplete, outCfg.autoComplete).get
 
-      if (outCfg.timeToLive > 0) {
-        newEnv = newEnv.withHeader(bs.headerTimeToLive, outCfg.timeToLive).get
-      }
+      outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foldLeft(env) { case (current, oh) =>
+        var newEnv : FlowEnvelope = current
+          .withHeader(bs.headerBridgeMaxRetry, oh.maxRetries).get
+          .withHeader(bs.headerAutoComplete, oh.autoComplete).get
 
-      outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foreach { oh =>
+        if (oh.timeToLive >= 0) {
+          newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).get
+        }
+
         oh.header.foreach { case (header, value) =>
           val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get
           bs.streamLogger.trace(s"[${newEnv.id}]:[${outCfg.id}] - resolved property [$header] to [$resolved]")
           newEnv = newEnv.withHeader(header, resolved).get
         }
-      }
 
-      if (outCfg.clearBody) {
-        newEnv = newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
-      }
+        if (oh.clearBody) {
+          newEnv.copy(flowMessage = BaseFlowMessage(newEnv.flowMessage.header))
+        } else {
+          newEnv
+        }
 
-      newEnv.withContextObject(bs.appHeaderKey, outCfg.applicationLogHeader)
+        newEnv
+          .withContextObject(bs.appHeaderKey, oh.applicationLogHeader)
+          .withContextObject(bs.bridgeProviderKey, oh.bridgeProviderConfig)
+          .withContextObject(bs.bridgeDestinationKey, oh.bridgeDestination)
+      }
     }
   }
 
@@ -121,26 +127,20 @@ case class DispatcherFanout(
       val envelopes = builder.add(Flow[Seq[(OutboundRouteConfig, FlowEnvelope)]].mapConcat(_.toList).map(_._2))
       val worklist = builder.add(Flow[Seq[(OutboundRouteConfig, FlowEnvelope)]].map(toWorklist))
 
-      val wlLog = builder.add(Flow.fromFunction[WorklistEvent, WorklistEvent] { evt =>
-        bs.streamLogger.trace(s"About to send worklist event [$evt]")
-        evt
-      })
-
       val merge = builder.add(Merge[FlowEnvelope](2))
 
       fanout ~> errorFilter ~> withError ~> merge
                 errorFilter ~> noError ~> createWorklist.in
 
       createWorklist.out(0) ~> envelopes ~> mapDestination ~> merge
-      createWorklist.out(1) ~> worklist ~> wlLog
+      createWorklist.out(1) ~> worklist
 
       new FanOutShape2(
         fanout.in,
         merge.out,
-        wlLog.out
+        worklist.out
       )
     }
-
   }
 
 }

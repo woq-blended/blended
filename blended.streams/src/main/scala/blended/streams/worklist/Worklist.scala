@@ -166,7 +166,6 @@ object WorklistManager {
                 existsByState(WorklistState.Started) match {
                   // we still have unprocessed items in this worklist
                   case true =>
-                    activeWorklists.put(wl.id, wl)
                   // Everything that is not started, must have completed, so we are done
                   case false =>
                     sendEvent(wl, WorklistState.Completed)
@@ -187,23 +186,22 @@ object WorklistManager {
 
               val filter: String => Boolean = id => awl.items.isDefinedAt(id)
 
-              val eventIds = event.worklist.items.map(_.id).filter(filter)
-
               val missingEventIds = event.worklist.items.map(_.id).filterNot(filter)
               if (missingEventIds.nonEmpty) {
                 log.warn(s"Event references untracked item ids [${missingEventIds.mkString(",")}] for [$event]")
               }
 
-              val updatedItems: Seq[CurrentItemState] = eventIds.flatMap { id =>
-                awl.items.get(id).toSeq.map(_.copy(state = event.state))
-              }
+              val newEvents : Map[String, CurrentItemState] = event.worklist.items.filter(i => filter(i.id)).map{ i =>
+                val s = awl.items.get(i.id).get
+                val newItem = s.copy(item = i, state = event.state)
+                (newItem.item.id -> newItem)
+              }.toMap
 
               val newAwl = awl.copy(
-                items = mutable.Map(
-                  (awl.items.filterKeys(k => !eventIds.contains(k)) ++ updatedItems.map(i => i.item.id -> i)).toSeq: _*
-                )
+                items = awl.items.filter { case (k,_) => !newEvents.contains(k) } ++ newEvents
               )
 
+              activeWorklists.put(event.worklist.id, newAwl)
               checkWorklist(newAwl)
             }
         }

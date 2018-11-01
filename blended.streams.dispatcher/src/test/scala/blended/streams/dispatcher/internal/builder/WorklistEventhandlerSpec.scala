@@ -6,9 +6,10 @@ import java.util.concurrent.atomic.AtomicInteger
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import akka.stream.{ActorMaterializer, KillSwitches, OverflowStrategy, SinkShape}
+import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.testsupport.Collector
-import blended.streams.transaction.{FlowTransactionCompleted, FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, WorklistStepCompleted}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -64,6 +65,37 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     (actor, killSwitch, transColl, errColl)
   }
 
+  private def run(vendor: String, provider: String, autoComplete : Boolean*)(f : (FlowEnvelope, List[FlowTransactionEvent]) => Unit) =
+    withDispatcherConfig { ctxt =>
+      implicit val eCtxt = ctxt.system.dispatcher
+
+      val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
+
+      val master = FlowEnvelope()
+
+      val steps = autoComplete.zipWithIndex.map { case (compl, idx) =>
+        master
+          .withHeader(bs.headerOutboundId, "step-" + idx).get
+          .withHeader(bs.headerAutoComplete, compl).get
+          .withHeader(bs.headerBridgeVendor, vendor).get
+          .withHeader(bs.headerBridgeProvider,provider).get
+          .withHeader(bs.headerBridgeDest, JmsDestination.create("test").get.asString).get
+      }
+
+      val wl = bs.worklist(steps:_*).get
+
+      val started = WorklistStarted(worklist = wl, 10.seconds)
+
+      // Start a dummy worklist
+      actor ! started
+      actor ! WorklistStepCompleted(wl, WorklistState.Completed)
+
+      akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
+
+      val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
+      f(master, transEvents)
+    }
+
   "The worklist event handler should" - {
 
     "Generate a Transaction update when a new worklist is started" in {
@@ -88,8 +120,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
         transEvents.size should be (1)
 
         val event = transEvents.head.asInstanceOf[FlowTransactionUpdate]
-        event.envelopes should have size(1)
-        event.envelopes.head should be (envelope)
+        event.branchIds should be (Seq("test"))
 
         event.updatedState should be (WorklistState.Started)
         event.transactionId should be (envelope.id)
@@ -146,7 +177,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
       }
     }
 
-    "Acknowledge the inbound envelope if the worklis has been completed in" in {
+    "Acknowledge the inbound envelope if the worklist has been completed in" in {
 
       val ackCount : AtomicInteger = new AtomicInteger(0)
 
@@ -179,62 +210,38 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
       }
     }
 
-    "Generate a transaction completed if the worklist is completed and ALL outbounds are configured with autoComplete" in {
+    "Generate a transaction updated after the worklist has completed for all outbounds which are routed internally and should autocomplete"  in {
 
-      def run(autoComplete : Boolean*)(f : (FlowEnvelope, List[FlowTransactionEvent]) => Unit) =
-        withDispatcherConfig { ctxt =>
-          implicit val eCtxt = ctxt.system.dispatcher
-
-          val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
-
-          val master = FlowEnvelope()
-
-          val steps = autoComplete.zipWithIndex.map { case (compl, idx) =>
-            master
-              .withHeader(bs.headerOutboundId, "step-" + idx).get
-              .withHeader(bs.headerAutoComplete, compl).get
-          }
-
-          val wl = bs.worklist(steps:_*).get
-
-          val started = WorklistStarted(worklist = wl, 10.seconds)
-
-          // Start a dummy worklist
-          actor ! started
-          actor ! WorklistStepCompleted(wl, WorklistState.Completed)
-
-          akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
-
-          val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-          f(master, transEvents)
-        }
-
-      run(true){ (envelope, events) =>
+      run("activemq", "activemq", true){ (envelope, events) =>
         events.size should be (2)
 
-        val event = events.last.asInstanceOf[FlowTransactionCompleted]
-        event.transactionId should be (envelope.id)
+        val event = events.last.asInstanceOf[FlowTransactionUpdate]
+        event.branchIds should be (Seq("step-0"))
+        event.updatedState should be (WorklistState.Completed)
       }
 
-      run(true, true, true){ (envelope, events) =>
+      run("activemq", "activemq", true, true, true){ (envelope, events) =>
         events.size should be (2)
 
-        val event = events.last.asInstanceOf[FlowTransactionCompleted]
-        event.transactionId should be (envelope.id)
+        val event = events.last.asInstanceOf[FlowTransactionUpdate]
+        event.branchIds should have size(3)
+        event.updatedState should be (WorklistState.Completed)
       }
 
-      run(false){ (envelope, events) =>
+      run("activemq", "activemq", false){ (envelope, events) =>
         events.size should be (1)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
         event.transactionId should be (envelope.id)
       }
 
-      run(false, true){ (envelope, events) =>
-        events.size should be (1)
+      run("activemq", "activemq", false, true){ (envelope, events) =>
+        events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
+        event.branchIds should be (Seq("step-1"))
         event.transactionId should be (envelope.id)
+        event.updatedState should be (WorklistState.Completed)
       }
     }
   }

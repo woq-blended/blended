@@ -20,7 +20,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 class CoreDispatcherSpec extends LoggingFreeSpec
@@ -32,12 +32,12 @@ class CoreDispatcherSpec extends LoggingFreeSpec
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
   override def loggerName: String = getClass().getName()
 
-  implicit val bs = new DispatcherBuilderSupport {
+  implicit val bs : DispatcherBuilderSupport = new DispatcherBuilderSupport {
     override val prefix: String = "App"
     override val streamLogger: Logger = Logger(loggerName)
   }
 
-  val defaultTimeout = 1.second
+  val defaultTimeout : FiniteDuration = 1.second
 
   val headerExistsFilter : String => FlowEnvelope => Boolean = key => env => env.flowMessage.header.isDefinedAt(key)
   val headerMissingFilter : String => FlowEnvelope => Boolean = key => env => !env.flowMessage.header.isDefinedAt(key)
@@ -105,11 +105,10 @@ class CoreDispatcherSpec extends LoggingFreeSpec
 
         testMessages.foreach(m => actorRef ! m)
 
-        implicit val eCtxt = system.dispatcher
+        implicit val eCtxt : ExecutionContext = system.dispatcher
         akka.pattern.after(timeout, system.scheduler)(Future {
           killswitch.shutdown()
-        }
-        )
+        })
 
         val rOut = jmsColl.probe.expectMsgType[List[FlowEnvelope]](timeout + 500.millis)
         val rError = errorColl.probe.expectMsgType[List[FlowEnvelope]](timeout + 500.millis)
@@ -127,8 +126,8 @@ class CoreDispatcherSpec extends LoggingFreeSpec
 
     withDispatcherConfig{ ctxt =>
 
-      implicit val system = ctxt.system
-      implicit val materializer = ActorMaterializer()
+      implicit val system : ActorSystem = ctxt.system
+      implicit val materializer : Materializer = ActorMaterializer()
 
       val result = executeDispatcher(ctxt.idSvc, ctxt.cfg, testMessages:_*)(system, materializer, timeout)
 

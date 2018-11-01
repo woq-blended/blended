@@ -18,6 +18,8 @@ trait DispatcherBuilderSupport {
 
   // Keys to stick objects into the FlowEnvelope context
   val appHeaderKey : String = "AppLogHeader"
+  val bridgeProviderKey : String = "BridgeProvider"
+  val bridgeDestinationKey : String = "BridgeDestination"
   val rtConfigKey : String = classOf[ResourceTypeConfig].getSimpleName()
   val outboundCfgKey : String = classOf[OutboundRouteConfig].getSimpleName()
 

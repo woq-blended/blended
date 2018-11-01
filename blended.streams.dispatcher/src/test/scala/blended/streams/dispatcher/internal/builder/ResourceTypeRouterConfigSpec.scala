@@ -52,8 +52,10 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
         sagTest.outbound.foreach { out =>
           out.id should be("default")
-          out.bridgeProvider.id should be(amqId)
-          out.bridgeDestination should be(Some(JmsTopic("SagTest")))
+          out.outboundHeader should have size(1)
+          val ohCfg = out.outboundHeader.head
+          ohCfg.bridgeProviderConfig.id should be(amqId)
+          ohCfg.bridgeDestination should be(Some(JmsTopic("SagTest")))
         }
       }
     }
@@ -75,8 +77,10 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
         dataFromPosClient.outbound should have size (1)
         dataFromPosClient.outbound.foreach { out =>
           out.id should be("default")
-          out.bridgeProvider.id should be(ccQueueId)
-          out.bridgeDestination should be(Some(JmsQueue("/Qucc/data/out")))
+          out.outboundHeader should have size(1)
+          val ohCfg = out.outboundHeader.head
+          ohCfg.bridgeProviderConfig.id should be(ccQueueId)
+          ohCfg.bridgeDestination should be(Some(JmsQueue("/Qucc/data/out")))
         }
       }
     }
@@ -93,11 +97,12 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
         other should have size(1)
         other.foreach { out =>
-          out.timeToLive should be (14400000)
-          out.bridgeDestination should be (Some(JmsQueue("OtherAppToQueue")))
-          out.applicationLogHeader should have size(2)
-          out.applicationLogHeader should contain ("keymetric1")
-          out.applicationLogHeader should contain ("keymetric3")
+          val ohCfg = other.head.outboundHeader.head
+          ohCfg.timeToLive should be (14400000)
+          ohCfg.bridgeDestination should be (Some(JmsQueue("OtherAppToQueue")))
+          ohCfg.applicationLogHeader should have size(2)
+          ohCfg.applicationLogHeader should contain ("keymetric1")
+          ohCfg.applicationLogHeader should contain ("keymetric3")
         }
       }
     }

@@ -19,7 +19,7 @@ case class FlowTransactionStarted(
 case class FlowTransactionUpdate(
   override val transactionId : String,
   updatedState : WorklistState,
-  envelopes : FlowEnvelope*
+  branchIds : String*
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Updated
 }

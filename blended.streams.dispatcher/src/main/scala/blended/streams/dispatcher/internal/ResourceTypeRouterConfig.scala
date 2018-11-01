@@ -137,20 +137,7 @@ case class ResourceTypeConfig(
 
 object OutboundRouteConfig {
 
-  private[this] val applicationLogHeaderPath = "applicationLogHeader"
-  private[this] val bridgeVendorPath = "bridgeVendor"
-  private[this] val bridgeProviderPath = "bridgeProvider"
-  private[this] val bridgeDestinationPath = "bridgeDestination"
-  private[this] val moduleLastOnCompletePath = "moduleLastOnComplete"
   private[this] val outboundHeaderPath = "outboundHeader"
-  private[this] val clearBodyPath = "clearbody"
-  private[this] val autocompletePath = "autoComplete"
-  private[this] val maxRetryPath = "maxRetries"
-  private[this] val timeToLivePath = "timeToLive"
-  private[this] val eventVendorPath = "eventVendor"
-  private[this] val eventProviderPath = "eventProvider"
-  private[this] val eventDestinationPath = "eventDestination"
-  private[this] val deliveryModePath = "deliveryMode"
 
   def create(
     idSvc : ContainerIdentifierService,
@@ -163,52 +150,23 @@ object OutboundRouteConfig {
 
     val id = cfg.getString("id", "default")
 
-    val bridgeProvider = ProviderResolver.providerFromConfig(idSvc, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
-      case Some(p) => p
-      case None => defaultProvider
-    }
-
-    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).map(_.toString()).get).get)
-    val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
-    val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(defaultLogHeader)
-    val outboundHeader  = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(idSvc, c).get)
-    val clearBody = cfg.getBoolean(clearBodyPath, false)
-    val autoComplete = cfg.getBoolean(autocompletePath, true)
-    val maxRetries = cfg.getLong(maxRetryPath, -1L)
-    val timeToLive = cfg.getLong(timeToLivePath, 0L)
-    val delMode = cfg.getString(deliveryModePath, JmsDeliveryMode.Persistent.asString)
+    val outboundHeader  = cfg.getConfigList(outboundHeaderPath, List.empty).map(c => OutboundHeaderConfig.create(
+      idSvc, registry, c, defaultProvider, defaultEventProvider, defaultLogHeader
+    ).get)
 
     OutboundRouteConfig(
       id = id,
-      bridgeProvider = bridgeProvider,
-      bridgeDestination = bridgeDestination,
-      applicationLogHeader = applicationLogHeader,
-      outboundHeader = outboundHeader,
-      maxRetries = maxRetries,
-      timeToLive = timeToLive,
-      moduleLastOnComplete = moduleLastOnComplete,
-      clearBody = clearBody,
-      autoComplete = autoComplete,
-      deliveryMode = delMode
+      outboundHeader = outboundHeader
     )
   }
 }
 
 case class OutboundRouteConfig(
   id : String,
-  bridgeProvider: BridgeProviderConfig,
-  bridgeDestination: Option[JmsDestination],
-  applicationLogHeader : List[String],
   outboundHeader: List[OutboundHeaderConfig],
-  deliveryMode : String,
-  maxRetries: Long,
-  timeToLive : Long,
-  moduleLastOnComplete: Boolean,
-  clearBody : Boolean,
-  autoComplete : Boolean
 ) extends WorklistItem {
   override def toString: String =
-    s"${getClass().getSimpleName()}(id=$id, bridgeProvider=$bridgeProvider, bridgeDestination=$bridgeDestination)"
+    s"${getClass().getSimpleName()}(id=$id)"
 }
 
 object InboundRouteConfig {
@@ -240,16 +198,71 @@ case class InboundRouteConfig(
 object OutboundHeaderConfig {
   private[this] val conditionPath = "condition"
   private[this] val headerPath = "header"
+  private[this] val bridgeVendorPath = "bridgeVendor"
+  private[this] val bridgeProviderPath = "bridgeProvider"
+  private[this] val bridgeDestinationPath = "bridgeDestination"
+  private[this] val autocompletePath = "autoComplete"
+  private[this] val applicationLogHeaderPath = "applicationLogHeader"
+  private[this] val moduleLastOnCompletePath = "moduleLastOnComplete"
+  private[this] val outboundHeaderPath = "outboundHeader"
+  private[this] val clearBodyPath = "clearbody"
+  private[this] val maxRetryPath = "maxRetries"
+  private[this] val timeToLivePath = "timeToLive"
+  private[this] val eventVendorPath = "eventVendor"
+  private[this] val eventProviderPath = "eventProvider"
+  private[this] val eventDestinationPath = "eventDestination"
+  private[this] val deliveryModePath = "deliveryMode"
 
-  def create (idSvc: ContainerIdentifierService, cfg: Config) : Try[OutboundHeaderConfig] = Try {
+  def create (
+    idSvc: ContainerIdentifierService,
+    registry: BridgeProviderRegistry,
+    cfg: Config,
+    defaultProvider: BridgeProviderConfig,
+    defaultEventProvider: BridgeProviderConfig,
+    defaultLogHeader : List[String]
+  ) : Try[OutboundHeaderConfig] = Try {
+
+    val bridgeProvider = ProviderResolver.providerFromConfig(idSvc, registry, cfg, bridgeVendorPath, bridgeProviderPath).get match {
+      case Some(p) => p
+      case None => defaultProvider
+    }
+
+    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).map(_.toString()).get).get)
+    val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
+    val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(defaultLogHeader)
+
+    val clearBody = cfg.getBoolean(clearBodyPath, false)
+    val autoComplete = cfg.getBoolean(autocompletePath, true)
+    val maxRetries = cfg.getLong(maxRetryPath, -1L)
+    val timeToLive = cfg.getLong(timeToLivePath, 0L)
+    val delMode = cfg.getString(deliveryModePath, JmsDeliveryMode.Persistent.asString)
+
     new OutboundHeaderConfig(
+      bridgeProviderConfig = bridgeProvider,
+      bridgeDestination = bridgeDestination,
+      autoComplete = autoComplete,
       condition = cfg.getStringOption(conditionPath),
+      applicationLogHeader = applicationLogHeader,
+      maxRetries = maxRetries,
+      timeToLive = timeToLive,
+      moduleLastOnComplete = moduleLastOnComplete,
+      clearBody = clearBody,
+      deliveryMode = delMode,
       header = cfg.getStringMap(headerPath, Map.empty)
     )
   }
 }
 
 case class OutboundHeaderConfig(
+  bridgeProviderConfig : BridgeProviderConfig,
+  bridgeDestination : Option[JmsDestination],
+  autoComplete : Boolean,
   condition : Option[String],
+  applicationLogHeader : List[String],
+  maxRetries : Long,
+  timeToLive : Long,
+  moduleLastOnComplete : Boolean,
+  clearBody : Boolean,
+  deliveryMode : String,
   header : Map[String, String]
 )

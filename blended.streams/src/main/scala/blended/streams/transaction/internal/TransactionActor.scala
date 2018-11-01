@@ -19,11 +19,11 @@ object TransactionActor {
 
   case class State(tid : String)
 
-  def props(initialState: FlowTransaction, branchHeader : String) : Props =
-    Props(new TransactionActor(initialState, branchHeader))
+  def props(initialState: FlowTransaction) : Props =
+    Props(new TransactionActor(initialState))
 }
 
-class TransactionActor(initialState: FlowTransaction, branchHeader : String) extends RestartableActor {
+class TransactionActor(initialState: FlowTransaction) extends RestartableActor {
 
   private val log = Logger[TransactionActor]
   private var state : FlowTransaction = initialState
@@ -32,7 +32,7 @@ class TransactionActor(initialState: FlowTransaction, branchHeader : String) ext
   override def persistenceId: String = initialState.tid
 
   def updateState(evt: FlowTransactionEvent) : Unit = {
-    state = state.updateTransaction(evt, branchHeader).get
+    state = state.updateTransaction(evt).get
     log.trace(s"New state is [$state]")
   }
 
@@ -117,8 +117,7 @@ class TransactionManager(branchHeader: String) extends Actor {
             FlowTransaction(
               id = s.transactionId,
               creationProps = s.creationProperties
-            ),
-            branchHeader
+            )
           ), s.transactionId)
 
           a ! s

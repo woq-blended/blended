@@ -57,13 +57,8 @@ case class FlowTransaction private [transaction](
     }
   }
 
-  private[this] def itemIds(header : String, env: FlowEnvelope*) : Try[Seq[String]] = Try {
-    env.map(e => e.header[String](header).get)
-  }
-
   def updateTransaction(
-    event : FlowTransactionEvent,
-    subTidHeader : String
+    event : FlowTransactionEvent
   ) : Try[FlowTransaction] = Try {
     event match {
 
@@ -83,7 +78,7 @@ case class FlowTransaction private [transaction](
 
       case updated : FlowTransactionUpdate =>
         // We extract the id's for the transaction parts
-        val updatedItemIds : Seq[String] = itemIds(subTidHeader, updated.envelopes:_*).get
+        val updatedItemIds : Seq[String] = updated.branchIds
 
         val newWorklist : Map[String, WorklistState] =
         // We keep everything that is not in the update

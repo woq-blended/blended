@@ -7,7 +7,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.BridgeProviderConfig
 import blended.jms.utils.{JmsDestination, JmsQueue}
 import blended.streams.FlowProcessor
-import blended.streams.dispatcher.internal.{OutboundRouteConfig, ProviderResolver, ResourceTypeRouterConfig}
+import blended.streams.dispatcher.internal.{ProviderResolver, ResourceTypeRouterConfig}
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.LogLevel
@@ -23,48 +23,47 @@ object DispatcherOutbound {
     val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env =>
 
       Try {
-        bs.withContextObject[OutboundRouteConfig](bs.outboundCfgKey, env) { outCfg =>
+        bs.withContextObject[BridgeProviderConfig](bs.bridgeProviderKey, env) { provider =>
+          bs.withContextObject[Option[JmsDestination]](bs.bridgeDestinationKey, env) { dest =>
 
-          val provider : BridgeProviderConfig =
+            val outId = env.header[String](bs.headerOutboundId).getOrElse("default")
 
-            (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
+            val p = (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
               case (Some(v), Some(p)) =>
                 val vendor = idSvc.resolvePropertyString(v).map(_.toString()).get
                 val provider = idSvc.resolvePropertyString(p).map(_.toString()).get
                 ProviderResolver.getProvider(dispatcherCfg.providerRegistry, vendor, provider).get
-
-              case (_, _) => outCfg.bridgeProvider
+              case (_, _) => provider
             }
 
-          val dest : JmsDestination = env.header[String](bs.headerBridgeDest) match {
-            case Some(d) => JmsDestination.create(idSvc.resolvePropertyString(d).map(_.toString).get).get
-            case None => outCfg.bridgeDestination match {
-              case None => throw new JmsDestinationMissing(env, outCfg)
-              case Some(d) => if (d == JmsQueue("replyTo")) {
+            val mappedDest : JmsDestination = env.header[String](bs.headerBridgeDest) match {
+              case Some(d) => JmsDestination.create(idSvc.resolvePropertyString(d).map(_.toString).get).get
+              case None => dest.getOrElse(JmsQueue("replyTo"))
+            }
+
+            val resolvedDest = mappedDest match {
+              case r@JmsQueue("replyTo") =>
                 env.header[String](JmsFlowSupport.replyToHeader(bs.prefix)).map(s => JmsDestination.create(s).get) match {
-                  case None => throw new JmsDestinationMissing(env, outCfg)
+                  case None => throw new JmsDestinationMissing(env, outId)
                   case Some(r) => r
                 }
-              } else {
-                d
-              }
+              case o => o
             }
+
+            bs.streamLogger.info(s"Routing for [${env.id}] is [${p.id}:$resolvedDest]")
+
+            val r = env
+              .withHeader(bs.headerBridgeVendor, p.vendor).get
+              .withHeader(bs.headerBridgeProvider, p.provider).get
+              .withHeader(bs.headerBridgeDest, resolvedDest.asString).get
+
+            r
           }
-
-          bs.streamLogger.info(s"Routing for [${env.id}] is [${provider.id}:${dest}]")
-
-          env
-            .withHeader(bs.headerBridgeVendor, provider.vendor).get
-            .withHeader(bs.headerBridgeProvider, provider.provider).get
-            .withHeader(bs.headerBridgeDest, dest.asString).get
-
         }
       }
     }
 
-    Flow
-      .fromGraph(Flow.fromGraph(LogEnvelope(dispatcherCfg, "logOutbound", LogLevel.Info)))
-      .via(Flow.fromGraph(routingDecider))
+    Flow.fromGraph(routingDecider).via(Flow.fromGraph(routingDecider))
   }
 
 }

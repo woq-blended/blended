@@ -5,11 +5,10 @@ import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.BridgeProviderConfig
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.{FlowTransactionCompleted, FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist._
 import blended.util.logging.Logger
 
@@ -28,8 +27,8 @@ class MissingOutboundRouting(rt: String)
 class MissingContextObject(key: String, clazz: String)
   extends Exception(s"Missing context object [$key], expected type [$clazz]")
 
-class JmsDestinationMissing(env: FlowEnvelope, outbound : OutboundRouteConfig)
-  extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [${outbound.id}]")
+class JmsDestinationMissing(env: FlowEnvelope, outboundId : String)
+  extends Exception(s"Unable to resolve JMS Destination for [${env.id}] in [$outboundId]")
 
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
@@ -128,14 +127,9 @@ case class DispatcherBuilder(
     }
   }
 
-  private[builder] def isInternalOnly(event: WorklistEvent) : Boolean = {
+  private[builder] def branchIds(envelopes : Seq[FlowEnvelope]) : Seq[String] =
+    envelopes.map(_.header[String](bs.headerOutboundId)).filter(_.isDefined).map(_.get)
 
-    val provider : Seq[Option[Boolean]] = eventEnvelopes(event).map { env =>
-      env.header[Boolean](bs.headerAutoComplete)
-    }
-
-    provider.forall(c => c.getOrElse(false))
-  }
 
   private[builder] def transactionUpdate(event: WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {
     val transEvent : Option[FlowTransactionEvent] = event match {
@@ -144,16 +138,25 @@ case class DispatcherBuilder(
         Some(FlowTransactionUpdate(
           transactionId = started.worklist.id,
           updatedState = WorklistState.Started,
-          envelopes = eventEnvelopes(event):_*
+          branchIds = branchIds(eventEnvelopes(event)):_*
         ))
       // Worklist Termination does nothing for completed worklists,
       // for failed worklists it produces a Transaction failed update
       case term : WorklistTerminated =>
         if (term.state == WorklistState.Completed) {
-          if (isInternalOnly(event)) {
-            Some(FlowTransactionCompleted(event.worklist.id))
-          } else {
+          val envelopes = eventEnvelopes(term)
+            .filter { _.header[Boolean](bs.headerAutoComplete).getOrElse(true) }
+            .filter { env =>
+              (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
+                case (Some(v), Some(p)) => dispatcherCfg.providerRegistry.jmsProvider(v,p).exists(_.internal)
+                case (_,_) => false
+              }
+            }
+
+          if (envelopes.isEmpty) {
             None
+          } else {
+            Some(FlowTransactionUpdate(term.worklist.id, WorklistState.Completed, branchIds(envelopes):_*))
           }
         } else {
           Some(FlowTransactionFailed(event.worklist.id, term.reason))
