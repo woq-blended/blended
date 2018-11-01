@@ -1,17 +1,13 @@
 import java.nio.file.{Files, StandardCopyOption}
 
-import sbt._
-import sbt.Keys._
 import Dependencies._
-
-import com.typesafe.sbt.osgi.OsgiKeys
-import com.typesafe.sbt.packager.universal.UniversalPlugin
-import com.typesafe.sbt.packager.universal.UniversalDeployPlugin
-import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
-import com.typesafe.sbt.SbtNativePackager.autoImport._
-import NativePackagerHelper._
-
 import FilterResources.autoImport._
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import com.typesafe.sbt.SbtNativePackager.autoImport._
+import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
+import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
+import sbt.Keys._
+import sbt._
 
 object BlendedLauncher extends ProjectFactory {
 

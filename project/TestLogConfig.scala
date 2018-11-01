@@ -1,7 +1,7 @@
 import java.nio.file.Files
 
-import sbt._
 import sbt.Keys._
+import sbt._
 
 object TestLogConfig extends AutoPlugin {
 

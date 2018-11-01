@@ -1,9 +1,9 @@
-import sbt._
-import sbt.Keys._
-import com.typesafe.sbt.osgi.SbtOsgi
 import TestLogConfig.autoImport._
-import xerial.sbt.Sonatype
+import com.typesafe.sbt.osgi.SbtOsgi
 import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
+import sbt.Keys._
+import sbt._
+import xerial.sbt.Sonatype
 
 trait ProjectFactory {
   val project: Project

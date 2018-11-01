@@ -1,6 +1,6 @@
-import sbt._
-import sbt.Keys._
 import com.typesafe.sbt.osgi.OsgiKeys._
+import sbt.Keys._
+import sbt._
 
 object BlendedSecurityScep extends ProjectFactory {
   private[this] val embeddedPrefixes : Seq[String] = Seq(

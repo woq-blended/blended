@@ -1,8 +1,7 @@
-import sbt._
-import sbt.Keys._
-import com.typesafe.sbt.packager.universal.UniversalPlugin
-import com.typesafe.sbt.packager.universal.UniversalDeployPlugin
+import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
+import sbt.Keys._
+import sbt._
 import sbt.librarymanagement.InclExclRule
 
 object BlendedSecurityScepStandalone extends ProjectFactory {

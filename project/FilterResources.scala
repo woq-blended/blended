@@ -1,10 +1,11 @@
 import java.nio.file.Files
 
-import sbt._
 import sbt.Keys._
+import sbt._
 import sbt.io.syntax
+
 import scala.util.matching.Regex
-import Regex.quoteReplacement
+import scala.util.matching.Regex.quoteReplacement
 
 object FilterResources extends AutoPlugin {
 

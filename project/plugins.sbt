@@ -1,4 +1,4 @@
-import sbt.librarymanagement.InclExclRule
+
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
 resolvers += Resolver.bintrayRepo("jbake", "binary")

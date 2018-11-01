@@ -1,9 +1,9 @@
 import java.nio.file.Files
 
-import sbt.{Def, File }
 import sbt.Keys._
 import sbt.librarymanagement._
-import ivy._
+import sbt.librarymanagement.ivy._
+import sbt.{Def, File}
 
 object BuildHelper {
 

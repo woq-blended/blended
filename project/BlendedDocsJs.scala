@@ -1,5 +1,5 @@
-import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin
+import sbt._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 

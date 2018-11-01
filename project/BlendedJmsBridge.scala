@@ -1,5 +1,5 @@
-import sbt._
 import TestLogConfig.autoImport._
+import sbt._
 
 object BlendedJmsBridge extends ProjectFactory {
 
