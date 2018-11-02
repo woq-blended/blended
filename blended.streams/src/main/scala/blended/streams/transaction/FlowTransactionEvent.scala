@@ -10,24 +10,45 @@ import com.typesafe.config.Config
 
 import scala.util.Try
 
-object FlowTransactionEvent {
+object FlowHeaderConfig {
 
-  class InvalidTransactionEnvelopeException(msg: String) extends Exception(msg)
-
+  private val prefixPath = "prefix"
   private val transIdPath = "transactionId"
   private val branchIdPath = "branchId"
   private val statePath = "transactionState"
 
-  val event2envelope : Config => FlowTransactionEvent => FlowEnvelope = { cfg => event =>
-
+  def create(cfg: Config): FlowHeaderConfig = {
+    val prefix = cfg.getString(prefixPath)
     val headerTrans = cfg.getString(transIdPath)
     val headerBranch = cfg.getString(branchIdPath)
     val headerState = cfg.getString(statePath)
 
+    FlowHeaderConfig(
+      prefix = prefix,
+      headerTrans = headerTrans,
+      headerBranch = headerBranch,
+      headerState = headerState
+    )
+  }
+}
+
+case class FlowHeaderConfig(
+  prefix : String,
+  headerTrans : String,
+  headerBranch : String,
+  headerState : String
+)
+
+object FlowTransactionEvent {
+
+  class InvalidTransactionEnvelopeException(msg: String) extends Exception(msg)
+
+  val event2envelope : FlowHeaderConfig => FlowTransactionEvent => FlowEnvelope = { cfg => event =>
+
     val basicProps : FlowTransactionEvent => FlowMessageProps = event =>
         Map[String, MsgProperty[_]](
-          headerTrans -> event.transactionId,
-          headerState -> event.state.toString()
+          cfg.headerTrans -> event.transactionId,
+          cfg.headerState -> event.state.toString()
         )
 
     event match {
@@ -52,22 +73,18 @@ object FlowTransactionEvent {
         FlowEnvelope(FlowMessage(
           update.updatedState.toString(),
           Map[String, MsgProperty[_]](
-            headerTrans -> update.transactionId,
-            headerState -> state,
-            headerBranch -> branchIds
+            cfg.headerTrans -> update.transactionId,
+            cfg.headerState -> state,
+            cfg.headerBranch -> branchIds
           )
         ))
     }
   }
 
-  def envelope2event : Config => FlowEnvelope => Try[FlowTransactionEvent] = { cfg => envelope =>
+  def envelope2event : FlowHeaderConfig => FlowEnvelope => Try[FlowTransactionEvent] = { cfg => envelope =>
 
     Try {
-      val headerTrans = cfg.getString(transIdPath)
-      val headerBranch = cfg.getString(branchIdPath)
-      val headerState = cfg.getString(statePath)
-
-      (envelope.header[String](headerTrans), envelope.header[String](headerState)) match {
+      (envelope.header[String](cfg.headerTrans), envelope.header[String](cfg.headerState)) match {
         case (Some(id), Some(state)) => FlowTransactionState.withName(state) match {
           case FlowTransactionState.Started =>
             FlowTransactionStarted(id, envelope.flowMessage.header.filterKeys(k => !k.startsWith("JMS")))
@@ -84,7 +101,7 @@ object FlowTransactionEvent {
 
           case FlowTransactionState.Updated =>
 
-            val branchIds : Seq[String] = envelope.header[String](headerBranch) match {
+            val branchIds : Seq[String] = envelope.header[String](cfg.headerBranch) match {
               case Some(s) => if (s.isEmpty()) Seq() else s.split(",")
               case None => Seq()
             }
@@ -99,7 +116,7 @@ object FlowTransactionEvent {
           case s =>
             throw new InvalidTransactionEnvelopeException(s"Invalid Transaction state in envelope [$s]")
         }
-        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [$headerTrans] and [$headerBranch]")
+        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [${cfg.headerTrans}] and [${cfg.headerBranch}]")
       }
     }
   }

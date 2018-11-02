@@ -1,5 +1,7 @@
 package blended.streams.jms
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
@@ -102,12 +104,23 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
                 log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
                 try {
 
+                  val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {
+                    case None =>
+                      val newId = UUID.randomUUID().toString()
+                      log.debug(s"Created new envelope id [$newId]")
+                      newId
+                    case Some(s) =>
+                      log.debug(s"Reusing transaction id [$s] as envelope id")
+                      s
+                  }
+
                   val handler = JmsAcknowledgeHandler(
                     jmsMessage = message,
                     session = session
                   )
 
-                  val envelope = FlowEnvelope(flowMessage)
+                  val envelope = FlowEnvelope(flowMessage, envelopeId)
+                    .withHeader(settings.headerConfig.headerTrans, envelopeId).get
                     .withRequiresAcknowledge(true)
                     .withAckHandler(Some(handler))
 

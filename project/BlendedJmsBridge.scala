@@ -7,6 +7,8 @@ object BlendedJmsBridge extends ProjectFactory {
     projectName = "blended.jms.bridge",
     description = "A generic JMS bridge to connect the local JMS broker to en external JMS",
     deps = Seq(
+      Dependencies.akkaActor,
+      Dependencies.akkaStream,
       Dependencies.typesafeConfig,
 
       Dependencies.logbackCore % "test",

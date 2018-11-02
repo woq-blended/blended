@@ -2,7 +2,9 @@ package blended.jms.bridge
 
 import scala.util.Try
 
-class BridgeProviderRegistry(provider : List[BridgeProviderConfig]) {
+class BridgeProviderRegistry(
+  provider : List[BridgeProviderConfig]
+) {
 
   def internalProvider : Try[BridgeProviderConfig] = Try {
     provider.find(_.internal) match {

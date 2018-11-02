@@ -1,8 +1,9 @@
 package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
+import blended.streams.transaction.FlowHeaderConfig
 import javax.jms
-import javax.jms.{ConnectionFactory, Session}
+import javax.jms.Session
 
 import scala.concurrent.duration._
 import scala.util.Try
@@ -73,16 +74,16 @@ sealed trait JmsSettings {
   // The number of sessions used by the stage using this configuration
   val sessionCount : Int
 
-  // A prefix used for any Headernames, the infrastructure puts into a FlowMessage
-  val headerPrefix : String
+  // The settings for generated headers
+  val headerConfig : FlowHeaderConfig
 }
 
 final case class JMSConsumerSettings(
   connectionFactory: IdAwareConnectionFactory,
+  headerConfig : FlowHeaderConfig,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
-  headerPrefix : String = JmsSettings.defaultHeaderPrefix,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
   selector: Option[String] = None,
@@ -98,7 +99,6 @@ final case class JMSConsumerSettings(
   def withSessionCount(c : Int): JMSConsumerSettings = copy(sessionCount = c)
   def withBufferSize(s : Int): JMSConsumerSettings = copy(bufferSize = s)
   def withSelector(s : Option[String]): JMSConsumerSettings = copy(selector = s)
-  def withHeaderPrefix(p : String) : JMSConsumerSettings = copy(headerPrefix = p)
   def withAckTimeout(d : FiniteDuration): JMSConsumerSettings = copy(ackTimeout = d)
   def withConnectionTimeout(d : FiniteDuration): JMSConsumerSettings = copy(connectionTimeout = d)
 
@@ -106,15 +106,16 @@ final case class JMSConsumerSettings(
 }
 
 object JMSConsumerSettings {
-  def create(cf: IdAwareConnectionFactory) : JMSConsumerSettings = JMSConsumerSettings(cf)
+  def create(cf: IdAwareConnectionFactory, headerConfig: FlowHeaderConfig) : JMSConsumerSettings =
+    JMSConsumerSettings(cf, headerConfig)
 }
 
 final case class JmsProducerSettings(
+  headerConfig : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
-  headerPrefix : String = JmsSettings.defaultHeaderPrefix,
   // Should we evaluate the mesage for send parameters ?
   destinationResolver  : JmsProducerSettings => JmsDestinationResolver = s => new SettingsDestinationResolver(s),
   // the priority to used as default
@@ -141,15 +142,15 @@ final case class JmsProducerSettings(
   def withTimeToLive(ttl: Option[FiniteDuration]): JmsProducerSettings = copy(timeToLive = ttl)
   def withTimeToLive(ttl: Long, unit: TimeUnit): JmsProducerSettings = copy(timeToLive = Some(Duration(ttl, unit)))
 
-  def withHeaderPrefix(p : String) : JmsProducerSettings = copy(headerPrefix = p)
   def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
 
   override def toString: String = s"{${getClass().getSimpleName()}(cf=${connectionFactory.id}, connTimeout=$connectionTimeout, dest=${jmsDestination}, " +
-    s"headerPrefix=$headerPrefix, priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
+    s"heeaderConfig=$headerConfig, priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
 
 }
 
 object JmsProducerSettings {
 
-  def create(connectionFactory: IdAwareConnectionFactory) = JmsProducerSettings(connectionFactory)
+  def create(connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
+    JmsProducerSettings(connectionFactory = connectionFactory, headerConfig = headerConfig)
 }

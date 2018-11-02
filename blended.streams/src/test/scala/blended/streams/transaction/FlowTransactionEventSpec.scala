@@ -12,13 +12,14 @@ import scala.collection.JavaConverters._
 class FlowTransactionEventSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val cfg = ConfigFactory.parseMap(
+  private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
     Map(
+      "prefix" -> "App",
       "transactionId" -> "AppFlowTransId",
       "transactionState" -> "AppFlowTransState",
       "branchId" -> "AppFlowBranch"
     ).asJava
-  )
+  ))
 
   "A FlowTransactionEvent" - {
 

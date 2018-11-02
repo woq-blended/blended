@@ -39,7 +39,7 @@ class SettingsDestinationResolver(settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
-  private val prefix = settings.headerPrefix
+  private val prefix = settings.headerConfig.prefix
 
   override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
 
@@ -70,7 +70,7 @@ class MessageDestinationResolver(settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
-  private val prefix = settings.headerPrefix
+  private val prefix = settings.headerConfig.prefix
 
   override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
 
@@ -82,7 +82,8 @@ class MessageDestinationResolver(settings: JmsProducerSettings)
       case Some(s) => JmsDestination.create(s).get
       case None => settings.jmsDestination match {
         case Some(d) => d
-        case None => throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
+        case None =>
+          throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
       }
     }
 

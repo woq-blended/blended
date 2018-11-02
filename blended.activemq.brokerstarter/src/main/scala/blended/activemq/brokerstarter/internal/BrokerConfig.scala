@@ -22,13 +22,14 @@ object BrokerConfig {
     def resolve(value: String) : String = idSvc.resolvePropertyString(value).map(_.toString()).get
 
     val name = resolve(cfg.getString("brokerName", brokerName))
+    val vendor = resolve(cfg.getString("vendor", "activemq"))
     val provider = resolve(cfg.getString("provider", brokerName))
     val file = resolve(cfg.getString("file", s"$brokerName.amq"))
     val clientId = resolve(cfg.getString("clientId"))
     val ssl = cfg.getBoolean("withSsl", true)
 
     BrokerConfig(
-      vendor = "activemq",
+      vendor = vendor,
       provider = provider,
       brokerName = name,
       file = file,

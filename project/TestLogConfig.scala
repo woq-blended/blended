@@ -23,7 +23,7 @@ object TestLogConfig extends AutoPlugin {
     testlogLogToFile := false,
     testlogLogToConsole := true,
     testlogFileName := name.value + "-test.log",
-    testlogPattern := "%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger{36} : %msg%n",
+    testlogPattern := "%d{yyyy-MM-dd-HH:mm.ss.SSS} | %8.8r | %-5level [%t] %logger : %msg%n",
     testlogDefaultLevel := "INFO",
     testlogLogPackages := Map.empty,
 

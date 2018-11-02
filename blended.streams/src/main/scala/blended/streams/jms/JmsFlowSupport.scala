@@ -1,6 +1,5 @@
 package blended.streams.jms
 
-import akka.util.ByteString
 import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message._
 import blended.util.logging.Logger
@@ -52,7 +51,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
   val jms2flowMessage : (JmsSettings, Message) => Try[FlowMessage] = { (settings, msg) => Try {
 
-    val prefix = settings.headerPrefix
+    val prefix = settings.headerConfig.prefix
 
     val props: Map[String, MsgProperty[_]] = {
 

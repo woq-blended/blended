@@ -35,7 +35,9 @@ object BlendedStreamsDispatcher extends ProjectFactory {
     BlendedUtilLogging.project,
     BlendedStreams.project,
     BlendedJmsBridge.project,
+    BlendedAkka.project,
 
+    BlendedActivemqBrokerstarter.project % "test",
     BlendedStreamsTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test",
     BlendedTestsupport.project % "test"

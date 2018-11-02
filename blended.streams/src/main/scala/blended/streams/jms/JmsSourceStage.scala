@@ -1,5 +1,6 @@
 package blended.streams.jms
 
+import java.util.UUID
 import java.util.concurrent.Semaphore
 
 import akka.actor.ActorSystem
@@ -12,7 +13,9 @@ import javax.jms._
 
 import scala.util.{Failure, Success}
 
-class JmsSourceStage(name : String, settings: JMSConsumerSettings, log : Logger = Logger[JmsSourceStage])(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
+class JmsSourceStage(
+  name : String, settings: JMSConsumerSettings, log : Logger = Logger[JmsSourceStage]
+)(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out = Outlet[FlowEnvelope](s"JmsSource($name.out)")
   override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
@@ -67,7 +70,22 @@ class JmsSourceStage(name : String, settings: JMSConsumerSettings, log : Logger 
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
                 val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
                 log.debug(s"Message received for [$id] : $flowMessage")
-                handleMessage.invoke(FlowEnvelope(flowMessage))
+
+                val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {
+                  case None =>
+                    val newId = UUID.randomUUID().toString()
+                    log.debug(s"Created new envelope id [$newId]")
+                    newId
+                  case Some(s) =>
+                    log.debug(s"Reusing transaction id [$s] as envelope id")
+                    s
+                }
+
+                handleMessage.invoke(
+                  FlowEnvelope(
+                    flowMessage.withHeader(settings.headerConfig.headerTrans, envelopeId).get, envelopeId
+                  )
+                )
               }
             })
           case Failure(t) =>
