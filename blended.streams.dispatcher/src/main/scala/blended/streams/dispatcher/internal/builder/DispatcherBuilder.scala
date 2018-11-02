@@ -159,7 +159,7 @@ case class DispatcherBuilder(
             Some(FlowTransactionUpdate(term.worklist.id, WorklistState.Completed, branchIds(envelopes):_*))
           }
         } else {
-          Some(FlowTransactionFailed(event.worklist.id, term.reason))
+          Some(FlowTransactionFailed(event.worklist.id, term.reason.map(_.getMessage())))
         }
       // Completed worklist steps do nothing
       case step : WorklistStepCompleted => None
@@ -285,7 +285,7 @@ case class DispatcherBuilder(
       callSend.out1 ~> error
 
       val errHandler = b.add(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
-        FlowTransactionFailed(env.id, env.exception)
+        FlowTransactionFailed(env.id, env.exception.map(_.getMessage()))
       })
 
       // generate and collect transaction failures for exceptions

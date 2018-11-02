@@ -19,14 +19,14 @@ object CbeEvent {
     properties   : Map[String, Object],
     closeProcess : Boolean,
     timeout      : Long
-  ) : TransactionEvent = {
+  ) : CbeTransactionEvent = {
 
     val sev = state match {
       case Failed => EventSeverity.Critical
       case _ => EventSeverity.Information
     }
 
-    new TransactionEvent(
+    new CbeTransactionEvent(
       id = id,
       severity = sev,
       component = component,
@@ -39,7 +39,7 @@ object CbeEvent {
   }
 }
 
-case class TransactionEvent(
+case class CbeTransactionEvent(
   id           : String,
   severity     : EventSeverity,
   component    : CbeComponent,

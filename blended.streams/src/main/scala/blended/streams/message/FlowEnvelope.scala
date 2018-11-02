@@ -2,9 +2,7 @@ package blended.streams.message
 
 import java.util.UUID
 
-import blended.jms.utils.JmsAckSession
 import blended.streams.message.FlowMessage.FlowMessageProps
-import javax.jms.Message
 
 import scala.beans.BeanProperty
 import scala.util.Try
@@ -48,6 +46,10 @@ final case class FlowEnvelope private[message] (
 
   def header[T](key: String): Option[T] = flowMessage.header[T](key)
   def headerWithDefault[T](key: String, default : T) : T = flowMessage.headerWithDefault[T](key, default)
+
+  def withHeaders(header: FlowMessageProps) : Try[FlowEnvelope] = Try {
+    copy(flowMessage = flowMessage.withHeaders(header).get)
+  }
 
   def withHeader(key: String, value: Any, overwrite: Boolean = true) : Try[FlowEnvelope] = Try {
     copy(flowMessage = flowMessage.withHeader(key, value, overwrite).get)

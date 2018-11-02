@@ -107,6 +107,12 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def removeHeader(keys: String*) : FlowMessage
 
+  def withHeaders(header : FlowMessageProps) : Try[FlowMessage] = Try {
+    header.foldLeft(this) { case (current, (key, prop)) =>
+      current.withHeader(key, prop.value).get
+    }
+  }
+
   def withHeader(keys : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
 
   protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filter(k => !keys.contains(k))

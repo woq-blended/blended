@@ -10,10 +10,10 @@ import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
-class TransactionEventSpec extends LoggingFreeSpec
+class CbeTransactionEventSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val log = Logger[TransactionEventSpec]
+  private val log = Logger[CbeTransactionEventSpec]
 
   val headers = Map(
     "foo" -> "bar",
@@ -32,7 +32,7 @@ class TransactionEventSpec extends LoggingFreeSpec
     9999
   )
 
-  private[this] def validateCBE(event : TransactionEvent, xml : String) : XMLSupport = {
+  private[this] def validateCBE(event : CbeTransactionEvent, xml : String) : XMLSupport = {
 
     val component = event.component
 
@@ -53,7 +53,7 @@ class TransactionEventSpec extends LoggingFreeSpec
 
     "be representable as a CBE XML" in {
 
-      val event = TransactionEvent(
+      val event = CbeTransactionEvent(
         id           = "myId",
         severity     = EventSeverity.Information,
         component    = comp,
@@ -69,7 +69,7 @@ class TransactionEventSpec extends LoggingFreeSpec
     }
 
     "populate ModuleLast if the process is to be closed" in {
-      val event = TransactionEvent(
+      val event = CbeTransactionEvent(
         id           = "myId",
         severity     = EventSeverity.Information,
         component    = comp,
