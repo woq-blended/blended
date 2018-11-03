@@ -196,6 +196,8 @@ lazy val root = {
       buildSite := {
 
         val log = streams.value.log
+        val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
+        println(modulesDir.toString())
 
         def runCommands(initial: State, commands : String*) : State = {
           commands.foldLeft(initial){ case (s, cmd) =>
@@ -204,17 +206,28 @@ lazy val root = {
           }
         }
 
-        val siteContent = baseDirectory.value / "doc" / "assets"
-        val unidoc = crossTarget.value / "unidoc"
-        val coverage = crossTarget.value / "scoverage-report"
+//        val siteContent = baseDirectory.value / "doc" / "assets"
+//        val unidoc = crossTarget.value / "unidoc"
+//        val coverage = crossTarget.value / "scoverage-report"
+//
+//        val state1 = runCommands( state.value, "clean", "cleanCoverage")
+//        IO.move(coverage, siteContent / "coverage")
+//
+//        val state2 = runCommands(state1, "coverageOff", "unidoc")
+//        IO.move(unidoc, siteContent / "scaladoc")
 
-        val state1 = runCommands( state.value, "clean", "cleanCoverage")
-        IO.move(coverage, siteContent / "coverage")
+        val state3 = runCommands(state.value, "blendedDocs / fastOptJS::webpack")
 
-        val state2 = runCommands(state1, "coverageOff", "unidoc")
-        IO.move(unidoc, siteContent / "scaladoc")
+        val copyMap : Map[File, File] = Map(
+          modulesDir / "blended-bootstrap.css" -> baseDirectory.value / "doc" / "assets" / "css" / "blended-bootstrap.css"
+        )
 
-        runCommands(state2, "blendedDocs / npmUpdate", "jbakeBuild")
+        copyMap.foreach { case (from, to) =>
+          log.info(s"Copying [$from] to [$to]")
+          IO.copyFile(from, to)
+        }
+
+        runCommands(state3, "jbakeBuild")
       }
     )
     .aggregate(aggregates:_*)
