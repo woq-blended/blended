@@ -13,6 +13,7 @@ object JBake extends AutoPlugin {
     val jbakeInputDir = settingKey[File]("The input directory for the site generation.")
     val jbakeOutputDir = settingKey[File]("The directory for the generated site.")
     val jbakeNodeBinDir = settingKey[File]("The directory where we can find the executables for node modules.")
+    val jbakeMode = settingKey[String]("Run JBake in build or serve mode, default: build")
 
     val jbakeAsciidocAttributes = settingKey[Map[String, String]]("Asciidoctor attribute to passed to Asciidoctor")
 
@@ -22,8 +23,9 @@ object JBake extends AutoPlugin {
   import autoImport._
 
   override def projectSettings: Seq[Def.Setting[_]] = inConfig(Compile)(Seq(
-    jbakeInputDir := baseDirectory.value / "doc",
+    jbakeInputDir := baseDirectory.value,
     jbakeOutputDir := target.value / "site",
+    jbakeMode := "build",
 
     jbakeNodeBinDir := baseDirectory.value / "doc" / "target" / "scala-2.12" / "scalajs-bundler" / "main" / "node_modules" / ".bin",
 
@@ -49,7 +51,8 @@ object JBake extends AutoPlugin {
         inputDir = jbakeInputDir.value,
         outputDir = jbakeOutputDir.value,
         nodeBinDir = jbakeNodeBinDir.value,
-        attributes = jbakeAsciidocAttributes.value
+        attributes = jbakeAsciidocAttributes.value,
+        mode = jbakeMode.value,
       )(streams.value.log).bake()
     }
   ))
@@ -60,6 +63,7 @@ case class SiteGenerator(
   inputDir : File,
   outputDir : File,
   nodeBinDir : File,
+  mode : String,
   attributes : Map[String, String]
 )(implicit log : Logger) {
 
@@ -78,26 +82,32 @@ case class SiteGenerator(
     val os = new FileOutputStream(inputDir / "jbake.properties")
     props.store(os, "Auto generated jbake properties. Perform modifications in [jbake.properties.tpl]")
 
+    IO.copyFile(inputDir / "logback.xml", jbakeDir / "lib" / "logging" / "logback.xml")
+
     val currPath = System.getenv("PATH")
 
     val jBakeOptions = ForkOptions()
       .withEnvVars(Map("PATH" -> s"${nodeBinDir.getAbsolutePath()}${File.pathSeparator}$currPath"))
 
-    log.info("Running jbake")
-    val process = Fork.java.fork(jBakeOptions, Seq(
+    val args : Seq[String] = Seq(
       "-classpath", jbakeCp,
       "org.jbake.launcher.Main",
       inputDir.getAbsolutePath(),
       outputDir.getAbsolutePath(),
       "-b"
-    ))
+    ) ++ (
+      if (mode.equalsIgnoreCase("build")) Seq() else Seq("-s")
+    )
 
-    val exitVal = process.exitValue()
+    log.info("Running jbake with arguments\n" + args.mkString("\n"))
+    val process = Fork.java.fork(jBakeOptions, args)
 
-    if (exitVal != 0) {
-      throw new Exception(s"JBake ended with return code [$exitVal]")
+    process.exitValue() match {
+      case 0 =>
+        IO.touch(outputDir / ".nojekyll")
+        Seq(outputDir)
+      case v =>
+        throw new Exception(s"JBake ended with return code [$v]")
     }
-
-    Seq(outputDir)
   }
 }

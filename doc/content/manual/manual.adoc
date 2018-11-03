@@ -1,6 +1,6 @@
----
-layout: default
----
+type=page
+jbake=published
+~~~~~~
 = Blended Manual
 :leveloffset: +1
 

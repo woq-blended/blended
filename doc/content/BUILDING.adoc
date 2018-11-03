@@ -1,5 +1,6 @@
-:jbake-type: page
-:jbake-status: published
+type=page
+jbake=published
+~~~~~~
 == Build file structure
 
 _Blended_ uses `sbt 1.2.6` to build. Currently we have a bit more than 60 submodules in _Blended_, so that the build
@@ -40,54 +41,6 @@ There are more complex project definitions, e.g. when the submodule needs to gen
 == Set up for Automated releases via travis
 
 TODO
-
-[graphviz, sample, svg]
-----
-digraph G {Hello->World}
-----
-
-[mermaid, test, svg]
-----
-sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->John: Hello John, how are you?
-    loop Healthcheck
-        John->John: Fight against hypochondria
-    end
-    Note right of John: Rational thoughts <br/>prevail...
-    John-->Alice: Great!
-    John->Bob: How about you?
-    Bob-->John: Jolly good!
-----
-
-[plantuml, uml, svg]
-----
-@startuml
-Alice -> Bob: Authentication Request
-
-alt successful case
-
-	Bob -> Alice: Authentication Accepted
-
-else some kind of failure
-
-	Bob -> Alice: Authentication Failure
-	group My own label
-		Alice -> Log : Log attack start
-	    loop 1000 times
-	        Alice -> Bob: DNS Attack
-	    end
-		Alice -> Log : Log attack end
-	end
-
-else Another type of failure
-
-   Bob -> Alice: Please repeat
-
-end
-@enduml
-----
 
 
 

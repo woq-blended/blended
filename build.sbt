@@ -192,6 +192,7 @@ lazy val root = {
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(
+      Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
       buildSite := {
 
         val log = streams.value.log

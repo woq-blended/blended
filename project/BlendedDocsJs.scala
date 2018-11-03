@@ -2,6 +2,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin
 import sbt._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
+import JBake.autoImport._
 
 object BlendedDocsJs extends ProjectFactory {
 
@@ -14,6 +15,7 @@ object BlendedDocsJs extends ProjectFactory {
     override def plugins: Seq[AutoPlugin] = Seq(ScalaJSPlugin, ScalaJSBundlerPlugin)
 
     override def settings: Seq[sbt.Setting[_]] = Seq(
+      Compile / jbakeMode := "serve",
       Compile / npmDependencies ++= Seq(
         "mermaid" -> "^8.0.0-rc.8",
         "mermaid.cli" -> "^0.5.1"

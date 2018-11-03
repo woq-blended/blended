@@ -77,6 +77,7 @@ class TransactionActor(initialState: FlowTransaction) extends RestartableActor {
 
 object TransactionManager {
 
+  // TODO : Review this is only required for testing
   case class RestartTransactionActor(id: String)
 
   def props(branchHeader : String) : Props = Props(new TransactionManager(branchHeader))
@@ -122,7 +123,7 @@ class TransactionManager(branchHeader: String) extends Actor {
 
           a ! s
           Future(a)
-      } 
+      }
 
     case e : FlowTransactionEvent => fwdToTransaction(e.transactionId, e)
 

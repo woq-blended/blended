@@ -6,14 +6,11 @@ db.clear.cache=false
 db.store=memory
 db.path=target/doccache
 
-template.masterindex.file=index.thyme
-template.archive.file=archive.thyme
-template.tag.file=tags.thyme
-template.sitemap.file=sitemap.thyme
-template.post.file=post.thyme
-template.page.file=page.thyme
-template.feed.file=feed.thyme
+render.index=true
+render.archive=false
+render.feed=false
+render.tags=false
+render.sitemap=false
 
 asciidoctor.option.requires=asciidoctor-diagram
 
-asciidoctor.attributes=imagesdir=images,imagesoutdir=images,mermaid=/andreas/projects/blended/core/node_modules/.bin/mmdc

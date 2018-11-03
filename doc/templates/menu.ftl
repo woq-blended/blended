@@ -1,11 +1,5 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-	<body>
-	<div th:fragment="menu">
-	
-	  <!-- Fixed navbar -->
-      <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+	<!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation">
       <div class="container">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -14,13 +8,13 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" th:with="rootpath=(${content.rootpath != null} ? ${content.rootpath} : '')" th:href="${rootpath}">JBake</a>
+          <a class="navbar-brand" href="<#if (content.rootpath)??>${content.rootpath}<#else></#if>">JBake</a>
         </div>
         <div class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li><a th:with="rootpath=(${content.rootpath != null} ? ${content.rootpath} : '')" th:href="${rootpath}+'index.html'">Home</a></li>
-            <li><a th:with="rootpath=(${content.rootpath != null} ? ${content.rootpath} : '')" th:href="${rootpath}+'about.html'">About</a></li>
-            <li><a th:with="rootpath=(${content.rootpath != null} ? ${content.rootpath} : '')" th:href="${rootpath}+${config.feed_file}">Subscribe</a></li>
+            <li><a href="<#if (content.rootpath)??>${content.rootpath}<#else></#if>index.html">Home</a></li>
+            <li><a href="<#if (content.rootpath)??>${content.rootpath}<#else></#if>about.html">About</a></li>
+            <li><a href="<#if (content.rootpath)??>${content.rootpath}<#else></#if>${config.feed_file}">Subscribe</a></li>
             <li class="dropdown">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
               <ul class="dropdown-menu">
@@ -37,7 +31,4 @@
         </div><!--/.nav-collapse -->
       </div>
     </div>
-
-	</div>
-  	</body>
-</html>
+    <div class="container">
