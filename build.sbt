@@ -192,6 +192,7 @@ lazy val root = {
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(
+      Compile / jbakeMode := "serve",
       Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
       buildSite := {
 
@@ -206,15 +207,17 @@ lazy val root = {
           }
         }
 
-//        val siteContent = baseDirectory.value / "doc" / "assets"
-//        val unidoc = crossTarget.value / "unidoc"
-//        val coverage = crossTarget.value / "scoverage-report"
-//
-//        val state1 = runCommands( state.value, "clean", "cleanCoverage")
-//        IO.move(coverage, siteContent / "coverage")
-//
-//        val state2 = runCommands(state1, "coverageOff", "unidoc")
-//        IO.move(unidoc, siteContent / "scaladoc")
+        val siteContent = baseDirectory.value / "doc" / "assets"
+        val unidoc = crossTarget.value / "unidoc"
+        val coverage = crossTarget.value / "scoverage-report"
+
+        if (coverage.exists() && coverage.isDirectory()) {
+          IO.copyDirectory(coverage, siteContent / "coverage")
+        }
+
+        if (unidoc.exists() && unidoc.isDirectory()) {
+          IO.copyDirectory(unidoc, siteContent / "scaladoc")
+        }
 
         val state3 = runCommands(state.value, "blendedDocs / fastOptJS::webpack")
 
@@ -222,7 +225,8 @@ lazy val root = {
           modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
           modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
           modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",
-          modulesDir / "node_modules" / "popper.js" / "dist" / "popper.min.js" -> assetDir / "js" / "popper.min.js"
+          modulesDir / "node_modules" / "perfect-scrollbar" / "dist" / "perfect-scrollbar.js" -> assetDir / "js" / "perfect-scrollbar.js",
+          modulesDir / "node_modules" / "perfect-scrollbar" / "css" / "perfect-scrollbar.css" -> assetDir / "css" / "perfect-scrollbar.css",
         )
 
         copyMap.foreach { case (from, to) =>
@@ -235,5 +239,3 @@ lazy val root = {
     )
     .aggregate(aggregates:_*)
 }
-
-

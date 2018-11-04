@@ -17,8 +17,6 @@ object BlendedDocsJs extends ProjectFactory {
     override def plugins: Seq[AutoPlugin] = Seq(ScalaJSPlugin, ScalaJSBundlerPlugin)
 
     override def settings: Seq[sbt.Setting[_]] = Seq(
-      Compile / jbakeMode := "serve",
-
       Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "docs.webpack.config.js"),
       Compile / fastOptJS / webpackMonitoredDirectories += baseDirectory.value / "scss",
       Compile / fastOptJS / webpackMonitoredFiles / includeFilter := "*.scss",
@@ -34,11 +32,11 @@ object BlendedDocsJs extends ProjectFactory {
       ),
 
       Compile / npmDependencies ++= Seq(
-        "bootstrap" -> "^4.1.3",
-        "jquery" -> "^3.3.1",
-        "popper.js" -> "^1.14.4",
-        "mermaid" -> "^8.0.0-rc.8",
-        "mermaid.cli" -> "^0.5.1"
+        "perfect-scrollbar" -> "1.4.0",
+        "bootstrap" -> "4.1.3",
+        "jquery" -> "3.3.1",
+        "mermaid" -> "8.0.0-rc.8",
+        "mermaid.cli" -> "0.5.1"
       )
     )
   }

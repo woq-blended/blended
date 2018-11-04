@@ -1,5 +1,5 @@
-    </div>
-  </div>
+</div>
+</div>
 </div>
 
     <nav class="navbar navbar-expand-md navbar-fixed-bottom">
@@ -18,14 +18,5 @@
         </li>
       </ul>
     </nav>
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/popper.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <script src="/js/highlight/highlight.min.js"></script>
-    <script>hljs.initHighlightingOnLoad();</script>
-  </body>
+ </body>
 </html>

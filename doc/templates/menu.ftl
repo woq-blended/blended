@@ -7,7 +7,4 @@
   </ul>
 </nav>
 
-<div id="content">
-  <div class="row full-height">
-
-
+<div id="content" class="row">

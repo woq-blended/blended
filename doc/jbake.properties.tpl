@@ -13,7 +13,7 @@ render.tags=false
 render.sitemap=false
 
 site.title=Blended
-site.highlight.theme=idea
+site.highlight.theme=agate
 
 asciidoctor.option.requires=asciidoctor-diagram
 

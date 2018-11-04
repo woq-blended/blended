@@ -22,10 +22,10 @@ html,body {
 #content {
   margin: 0px;
   width: 100%;
-  height: 100%;
   max-width: 100%;
-  padding-top: 60px;
-  padding-bottom: 60px;
+  position: fixed;
+  top: 60px;
+  bottom: 60px;
 }
 
 a.nav-link {
@@ -33,7 +33,7 @@ a.nav-link {
   text-decoration: underline;
 }
 
-.full-height {
-  min-height: 100%;
+.scrollbars {
+  overflow: auto;
+  position: relative;
 }
-
