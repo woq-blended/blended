@@ -12,8 +12,6 @@ cache:
   - "$HOME/.m2"
   - "$HOME/.ivy2"
   - "$HOME/.sbt"
-  # So that we do not have to build the coverage report again in the site stage
-  - "$HOME/target"
 
 before_install:
   - sudo apt-get update

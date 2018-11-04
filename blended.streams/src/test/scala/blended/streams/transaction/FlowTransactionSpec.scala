@@ -3,7 +3,12 @@ package blended.streams.transaction
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpec
+import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
+
+import scala.collection.JavaConverters._
+import FlowTransaction.{envelope2Transaction, transaction2envelope}
+import blended.streams.transaction
 
 import scala.util.Try
 
@@ -27,6 +32,15 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
     t.updateTransaction(FlowTransactionUpdate(t.tid, WorklistState.Started, branches:_*)).get
   }
+
+  private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
+    Map(
+      "prefix" -> "App",
+      "transactionId" -> "AppFlowTransId",
+      "transactionState" -> "AppFlowTransState",
+      "branchId" -> "AppFlowBranch"
+    ).asJava
+  ))
 
   "A FlowTransaction should" - {
 
@@ -103,8 +117,29 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       u.state should be (FlowTransactionState.Completed)
       u.worklist should be (empty)
+    }
 
+    "can be transformed into a FlowEnvelope and vice versa" in {
+
+      def singleTest(t: FlowTransaction): Unit = {
+        val envelope = transaction2envelope(cfg)(t)
+        val t2 = envelope2Transaction(cfg)(envelope)
+
+        t2.tid should be(t.tid)
+        t2.state should be(t.state)
+        assert(t.worklist.forall { case (k, v) => t2.worklist.get(k).get == v })
+      }
+
+      singleTest(FlowTransaction(Some(FlowEnvelope())))
+      singleTest(sampleTransAction(10).get)
+
+      val t = sampleTransAction(10).get
+      t.updateTransaction(FlowTransactionUpdate(t.tid, WorklistState.Completed, "5"))
+      singleTest(t)
+
+      val t2 = sampleTransAction(10).get
+      t.updateTransaction(transaction.FlowTransactionCompleted(t.tid))
+      singleTest(t2)
     }
   }
-
 }

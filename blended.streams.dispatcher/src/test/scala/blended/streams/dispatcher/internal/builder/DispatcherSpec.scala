@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
 import blended.streams.message.FlowEnvelope
-import blended.streams.testsupport.Collector
+import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionState, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -51,7 +51,7 @@ class DispatcherSpec extends LoggingFreeSpec
 
   val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
-  private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : T = {
+  private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
     withDispatcherConfig { ctxt =>
       implicit val eCtxt = ctxt.system.dispatcher
 
@@ -61,7 +61,7 @@ class DispatcherSpec extends LoggingFreeSpec
 
       testMsg(ctxt).foreach(env => actor ! env)
 
-      f(coll.probe.expectMsgType[List[FlowTransactionEvent]])
+      coll.result.map(l => f(l))
     }
   }
 

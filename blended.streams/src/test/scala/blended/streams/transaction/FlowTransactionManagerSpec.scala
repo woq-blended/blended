@@ -5,8 +5,8 @@ import akka.pattern.ask
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
-import blended.streams.transaction.internal.TransactionManager.RestartTransactionActor
-import blended.streams.transaction.internal.{TransactionActor, TransactionManager}
+import blended.streams.transaction.internal.FlowTransactionManager.RestartTransactionActor
+import blended.streams.transaction.internal.{FlowTransactionActor, FlowTransactionManager}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
@@ -14,14 +14,14 @@ import org.scalatest.Matchers
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
+class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
   with LoggingFreeSpecLike
   with Matchers {
 
-  private val log = Logger[TransactionManagerSpec]
+  private val log = Logger[FlowTransactionManagerSpec]
   def transaction(mgr : ActorRef, id : String)(implicit timeout: Timeout) : Future[FlowTransaction] = {
     log.debug(s"Getting transaction state [$id] from [${mgr.path}]")
-    (mgr ? TransactionActor.State(id)).mapTo[FlowTransaction]
+    (mgr ? FlowTransactionActor.State(id)).mapTo[FlowTransaction]
   }
 
   "The transaction manager should" - {
@@ -30,10 +30,10 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
 
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FlowTransaction])
-      val mgr = system.actorOf(TransactionManager.props("branch"))
+      val mgr = system.actorOf(FlowTransactionManager.props())
 
       val env = FlowEnvelope(FlowMessage.noProps).withHeader("foo", "bar").get
-      mgr ! FlowTransaction.startEvent(Some(env))
+      mgr.tell(FlowTransaction.startEvent(Some(env)), probe.ref)
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
@@ -47,10 +47,10 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       implicit val timeout = Timeout(3.seconds)
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FlowTransaction])
-      val mgr = system.actorOf(TransactionManager.props("branch"))
+      val mgr = system.actorOf(FlowTransactionManager.props())
 
       val env = FlowEnvelope(FlowMessage.noProps).withHeader("foo", "bar").get
-      mgr ! FlowTransaction.startEvent(Some(env))
+      mgr.tell(FlowTransaction.startEvent(Some(env)), probe.ref)
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
@@ -70,10 +70,10 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       implicit val timeout = Timeout(3.seconds)
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FlowTransaction])
-      val mgr = system.actorOf(TransactionManager.props("branch"))
+      val mgr = system.actorOf(FlowTransactionManager.props())
 
       val env = FlowEnvelope(FlowMessage.noProps).withHeader("foo", "bar").get
-      mgr ! FlowTransaction.startEvent(Some(env))
+      mgr.tell(FlowTransaction.startEvent(Some(env)), probe.ref)
       val t = probe.expectMsgType[FlowTransaction]
 
       t.tid should be (env.id)
@@ -81,7 +81,7 @@ class TransactionManagerSpec extends TestKit(ActorSystem("transaction"))
 
       system.stop(mgr)
 
-      val mgr2 = system.actorOf(TransactionManager.props("branch"))
+      val mgr2 = system.actorOf(FlowTransactionManager.props())
       val t2 = Await.result(transaction(mgr2, t.tid), 3.seconds)
 
       t2.tid should be (env.id)

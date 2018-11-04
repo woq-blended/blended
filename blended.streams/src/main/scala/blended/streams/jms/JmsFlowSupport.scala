@@ -16,6 +16,7 @@ case class JmsAcknowledgeHandler(
 ) extends AcknowledgeHandler {
 
   private val log = Logger[JmsAcknowledgeHandler]
+
   override def acknowledge: FlowEnvelope => Try[Unit] = { env => Try {
     log.debug(s"Acknowledging envelope [${env.id}]")
     session.ack(jmsMessage)

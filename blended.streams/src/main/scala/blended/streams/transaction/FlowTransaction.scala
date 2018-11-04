@@ -26,6 +26,30 @@ object FlowTransaction {
       creationProperties = t.creationProps
     )
   }
+
+  val transaction2envelope : FlowHeaderConfig => FlowTransaction => FlowEnvelope = { cfg => t =>
+    FlowEnvelope(t.creationProps, t.tid)
+      .withHeader(cfg.headerTrans, t.tid).get
+      .withHeader(cfg.headerState, t.state.toString).get
+      .withHeader(cfg.headerBranch, t.worklist.map { case (k,v) => s"$k=$v" }.mkString(",")).get
+  }
+
+  val envelope2Transaction : FlowHeaderConfig => FlowEnvelope => FlowTransaction = { cfg => env =>
+    val state = env.header[String](cfg.headerState).map(FlowTransactionState.withName).getOrElse(FlowTransactionState.Started)
+    val worklistState : Map[String, WorklistState] = env.header[String](cfg.headerBranch).map { s =>
+      if (s.isEmpty) {
+        Map.empty[String, WorklistState]
+      } else {
+        s.split(",")
+          .map(b => b.split("="))
+          .filter(_.size == 2)
+          .map(b => (b(0), WorklistState.withName(b(1))))
+          .toMap
+      }
+    }.getOrElse(Map.empty[String, WorklistState])
+
+    FlowTransaction(id = env.id, creationProps = env.flowMessage.header, state = state, worklist = worklistState)
+  }
 }
 
 case class FlowTransaction private [transaction](

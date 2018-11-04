@@ -6,7 +6,7 @@ import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.testsupport.Collector
+import blended.streams.processor.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistState}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
@@ -121,12 +121,16 @@ class FanoutSpec extends LoggingFreeSpec
           try {
             g.run()
 
-            val envelopes = envColl.probe.expectMsgType[List[FlowEnvelope]](1.second)
-            val worklists = wlColl.probe.expectMsgType[List[WorklistEvent]](1.second)
+            val result = for{
+              env <- envColl.result
+              wl <- wlColl.result
+            } yield(env, wl)
 
-            ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
-            worklists should have size 1
-            envelopes should have size rtCfg.outbound.size
+            result.map { case (envelopes, worklists) =>
+              ctxt.bs.streamLogger.info(s"Testing resourcetype [$resType]")
+              worklists should have size 1
+              envelopes should have size rtCfg.outbound.size
+            }
           } finally  {
             system.stop(envColl.actor)
             system.stop(wlColl.actor)

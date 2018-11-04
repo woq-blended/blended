@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import akka.stream.{ActorMaterializer, KillSwitches, OverflowStrategy, SinkShape}
 import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
-import blended.streams.testsupport.Collector
+import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, WorklistStepCompleted}
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -24,6 +24,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
   private def runEventHandler(
     ctxt : DispatcherExecContext
   ) = {
+
     implicit val system : ActorSystem = ctxt.system
     implicit val materializer = ActorMaterializer()
 
@@ -79,8 +80,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
       akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
-      val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-      f(master, transEvents)
+      transColl.result.map(t => f(master, t))
     }
 
   "The worklist event handler should" - {
@@ -103,14 +103,15 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
-        val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-        transEvents.size should be (1)
+        transColl.result.map { t =>
+          t.size should be(1)
 
-        val event = transEvents.head.asInstanceOf[FlowTransactionUpdate]
-        event.branchIds should be (Seq("test"))
+          val event = t.head.asInstanceOf[FlowTransactionUpdate]
+          event.branchIds should be(Seq("test"))
 
-        event.updatedState should be (WorklistState.Started)
-        event.transactionId should be (envelope.id)
+          event.updatedState should be(WorklistState.Started)
+          event.transactionId should be(envelope.id)
+        }
       }
     }
 
@@ -132,11 +133,12 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
-        val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-        transEvents.size should be (2)
+        transColl.result.map { t =>
+          t.size should be(2)
 
-        val event = transEvents.last.asInstanceOf[FlowTransactionFailed]
-        event.transactionId should be (envelope.id)
+          val event = t.last.asInstanceOf[FlowTransactionFailed]
+          event.transactionId should be(envelope.id)
+        }
       }
     }
 
@@ -156,11 +158,12 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
-        val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-        transEvents.size should be (2)
+        transColl.result.map { t =>
+          t.size should be(2)
 
-        val event = transEvents.last.asInstanceOf[FlowTransactionFailed]
-        event.transactionId should be (envelope.id)
+          val event = t.last.asInstanceOf[FlowTransactionFailed]
+          event.transactionId should be(envelope.id)
+        }
       }
     }
 
@@ -190,10 +193,10 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
         akka.pattern.after(1.second, ctxt.system.scheduler)( Future { killSwitch.shutdown() } )
 
-        val transEvents = transColl.probe.expectMsgType[List[FlowTransactionEvent]]
-        transEvents.size should be (1)
-
-        ackCount.get() should be (1)
+        transColl.result.map { t =>
+          t.size should be(1)
+          ackCount.get() should be (1)
+        }
       }
     }
 

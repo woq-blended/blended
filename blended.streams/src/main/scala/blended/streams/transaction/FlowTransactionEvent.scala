@@ -55,8 +55,7 @@ object FlowTransactionEvent {
       case started : FlowTransactionStarted =>
         FlowEnvelope(FlowMessage(
           basicProps(started)
-        ))
-        .withHeaders(started.creationProperties.filterKeys(k => !k.startsWith("JMS"))).get
+        )).withHeaders(started.creationProperties.filterKeys(k => !k.startsWith("JMS"))).get
 
       case completed : FlowTransactionCompleted =>
         FlowEnvelope(FlowMessage(basicProps(completed)))
@@ -87,7 +86,8 @@ object FlowTransactionEvent {
       (envelope.header[String](cfg.headerTrans), envelope.header[String](cfg.headerState)) match {
         case (Some(id), Some(state)) => FlowTransactionState.withName(state) match {
           case FlowTransactionState.Started =>
-            FlowTransactionStarted(id, envelope.flowMessage.header.filterKeys(k => !k.startsWith("JMS")))
+            val header = envelope.flowMessage.header.filter{ case (k, v) => !k.startsWith("JMS") }
+            FlowTransactionStarted(id, header)
 
           case FlowTransactionState.Completed =>
             FlowTransactionCompleted(id)

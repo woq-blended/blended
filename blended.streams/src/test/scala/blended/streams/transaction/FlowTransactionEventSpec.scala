@@ -1,15 +1,20 @@
 package blended.streams.transaction
 
-import blended.testsupport.scalatest.LoggingFreeSpec
-import org.scalatest.Matchers
+import akka.actor.ActorSystem
+import akka.serialization.SerializationExtension
+import akka.testkit.TestKit
+import blended.streams.message.FlowEnvelope
 import blended.streams.message.MsgProperty.Implicits._
-import FlowTransactionEvent.{envelope2event, event2envelope}
+import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
 import blended.streams.worklist.WorklistState
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.ConfigFactory
+import org.scalatest.Matchers
 
 import scala.collection.JavaConverters._
 
-class FlowTransactionEventSpec extends LoggingFreeSpec
+class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
+  with LoggingFreeSpecLike
   with Matchers {
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
@@ -76,6 +81,24 @@ class FlowTransactionEventSpec extends LoggingFreeSpec
       singleTest(FlowTransactionUpdate("updated1", WorklistState.Failed))
       singleTest(FlowTransactionUpdate("updated1", WorklistState.TimeOut))
       singleTest(FlowTransactionUpdate("updated2", WorklistState.Completed, "branch-3"))
+    }
+
+    "should (de)serialize correctly" in {
+
+      val serialization = SerializationExtension(system)
+
+      val envelope = FlowEnvelope()
+      val event = FlowTransaction.startEvent(Some(envelope))
+      val xx = FlowTransactionEvent.envelope2event(cfg)(FlowTransactionEvent.event2envelope(cfg)(event)).get
+
+      val serializer = serialization.findSerializerFor(xx)
+
+      val bytes = serializer.toBinary(xx)
+
+      val back = serializer.fromBinary(bytes)
+
+      back should be (xx)
+
     }
   }
 

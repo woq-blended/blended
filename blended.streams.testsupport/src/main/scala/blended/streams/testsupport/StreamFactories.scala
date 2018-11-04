@@ -6,8 +6,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.after
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.testkit.TestProbe
 import akka.{Done, NotUsed}
+import blended.streams.processor.{CollectingActor, Collector}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -19,14 +19,13 @@ object StreamFactories {
     name : String,
     source : Source[T, NotUsed],
     timeout : FiniteDuration
-  )(implicit system : ActorSystem, materializer: ActorMaterializer, clazz : ClassTag[T]) : List[T] = {
+  )(implicit system : ActorSystem, materializer: ActorMaterializer, clazz : ClassTag[T]) : Collector[T] = {
 
     implicit val eCtxt = system.dispatcher
     val stopped = new AtomicBoolean(false)
 
-    val receiveProbe = TestProbe()
-    val receiver = system.actorOf(CollectingActor.props[T](name, receiveProbe.ref))
-    val sink = Sink.actorRef(receiver, CollectingActor.Completed)
+    val collector = Collector[T](name)
+    val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
 
     val (killswitch, done) = source
       .viaMat(KillSwitches.single)(Keep.right)
@@ -45,9 +44,7 @@ object StreamFactories {
       Future { Done }
     }
 
-    val result = receiveProbe.expectMsgType[List[T]](timeout + 1.second)
-
-    result
+    collector
   }
 
   def keepAliveSource[T](bufferSize : Int)(implicit system: ActorSystem, materializer: Materializer) : Source[T, (ActorRef, KillSwitch)] = {

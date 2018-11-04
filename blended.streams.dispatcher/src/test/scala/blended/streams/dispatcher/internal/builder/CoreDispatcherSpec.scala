@@ -8,9 +8,10 @@ import blended.jms.utils.JmsQueue
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
-import blended.streams.testsupport.{Collector, StreamFactories}
-import blended.streams.worklist.{WorklistEvent, WorklistStarted}
+import blended.streams.testsupport.StreamFactories
+import blended.streams.worklist.WorklistEvent
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
@@ -29,20 +30,22 @@ class CoreDispatcherSpec extends LoggingFreeSpec
   def filterEnvelopes(envelopes : Seq[FlowEnvelope])(f : FlowEnvelope => Boolean) : Seq[FlowEnvelope] = envelopes.filter(f)
 
   case class DispatcherResult(
-    out : Seq[FlowEnvelope],
-    error : Seq[FlowEnvelope],
-    worklist: Seq[WorklistEvent]
+    out : List[FlowEnvelope],
+    error : List[FlowEnvelope],
+    worklist: List[WorklistEvent]
   )
 
   def runnableDispatcher (
     ctxt :DispatcherExecContext,
     bufferSize : Int
-  )(implicit system: ActorSystem, materializer: Materializer) : (
+  )(implicit system: ActorSystem) : (
     Collector[FlowEnvelope],
     Collector[WorklistEvent],
     Collector[FlowEnvelope],
     RunnableGraph[(ActorRef, KillSwitch)]
   )= {
+
+    implicit val materializer = ActorMaterializer()
 
     val jmsCollector = Collector[FlowEnvelope]("jms")
     val errCollector = Collector[FlowEnvelope]("error")
@@ -72,12 +75,20 @@ class CoreDispatcherSpec extends LoggingFreeSpec
     (jmsCollector, wlCollector, errCollector, source.toMat(sinkGraph)(Keep.left))
   }
 
-  def withDispatcher(timeout : FiniteDuration, testMessages: FlowEnvelope*)(f: (DispatcherExecContext, DispatcherResult) => Unit): DispatcherResult = {
+  def withDispatcher(
+    timeout : FiniteDuration, testMessages: FlowEnvelope*
+  )(
+    f: (DispatcherExecContext, DispatcherResult) => Unit
+  ) : Future[DispatcherResult] = {
 
     def executeDispatcher(
       ctxt : DispatcherExecContext,
+      timeout : FiniteDuration,
       testMessages : FlowEnvelope*
-    )(implicit system: ActorSystem, materializer : Materializer, timeout: FiniteDuration) : DispatcherResult = {
+    )(implicit system: ActorSystem) : Future[DispatcherResult] = {
+
+      implicit val eCtxt = system.dispatcher
+      implicit val materializer = ActorMaterializer()
 
       val source = StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
       val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(ctxt, testMessages.size)
@@ -92,11 +103,11 @@ class CoreDispatcherSpec extends LoggingFreeSpec
           killswitch.shutdown()
         })
 
-        val rOut = jmsColl.probe.expectMsgType[List[FlowEnvelope]](timeout + 500.millis)
-        val rError = errorColl.probe.expectMsgType[List[FlowEnvelope]](timeout + 500.millis)
-        val rWorklist = wlColl.probe.expectMsgType[List[WorklistStarted]](timeout + 500.millis)
-
-        DispatcherResult(rOut, rError, rWorklist)
+        for {
+          jmsResult <- jmsColl.result
+          errResult <- errorColl.result
+          wlResult <- wlColl.result
+        } yield DispatcherResult(jmsResult, errResult, wlResult)
       } catch {
         case t : Throwable => throw t
       } finally {
@@ -108,17 +119,14 @@ class CoreDispatcherSpec extends LoggingFreeSpec
 
     withDispatcherConfig{ ctxt =>
 
-      implicit val system : ActorSystem = ctxt.system
-      implicit val materializer : Materializer = ActorMaterializer()
+      implicit val system = ctxt.system
+      implicit val eCtxt = system.dispatcher
 
-      val result = executeDispatcher(ctxt, testMessages:_*)(system, materializer, timeout)
-
-      try {
-        f(ctxt, result)
-        result
-      } finally {
-
-      }
+      executeDispatcher(ctxt, timeout, testMessages:_*)
+        .map { r =>
+          f(ctxt, r)
+          r
+        }
     }
   }
 

@@ -12,6 +12,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.StreamController
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamFactories
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
 import blended.testsupport.BlendedTestSupport
@@ -20,7 +21,7 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 
 
@@ -71,7 +72,7 @@ class BridgeSpec extends LoggingFreeSpec
         headerCfg : FlowHeaderConfig,
         cf : IdAwareConnectionFactory,
         dest : JmsDestination
-      )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer) : List[FlowEnvelope] = {
+      )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer) : Collector[FlowEnvelope] = {
 
         StreamFactories.runSourceWithTimeLimit(
           "received",
@@ -132,7 +133,7 @@ class BridgeSpec extends LoggingFreeSpec
             idSvc = idSvc
           )
 
-          val msgCount = 5
+          val msgCount = 2
 
           val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
 
@@ -161,29 +162,33 @@ class BridgeSpec extends LoggingFreeSpec
 
           1.to(msgCount).map { i =>
             val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
-            messages should have size (1)
+            messages.result.map { l =>
+              l should have size(1)
+            }
           }
 
-          val events = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("blended.internal.event"))(1.second, system, materializer)
-            .map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
+          val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("blended.internal.event"))(1.second, system, materializer)
 
-          events should have size(msgCount * 2)
+          val result = collector.result.map { l =>
+            val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
 
-          val (started, updated) = events.partition(_.isInstanceOf[FlowTransactionStarted])
+            envelopes should have size(msgCount * 2)
+            val (started, updated) = envelopes.partition(_.isInstanceOf[FlowTransactionStarted])
 
-          started should have size msgCount
-          updated should have size msgCount
+            started should have size msgCount
+            updated should have size msgCount
 
-          assert(updated.forall(_.isInstanceOf[FlowTransactionUpdate]))
+            assert(updated.forall(_.isInstanceOf[FlowTransactionUpdate]))
 
-          val sIds = started.map(_.transactionId)
-          val uIds = updated.map(_.transactionId)
+            val sIds = started.map(_.transactionId)
+            val uIds = updated.map(_.transactionId)
 
-          assert(sIds.forall(id => uIds.contains(id)))
+            assert(sIds.forall(id => uIds.contains(id)))
+          }
 
+          Await.result(result, 3.seconds)
           switch.shutdown()
         }
       }
   }
 }
-

@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
 import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
 import blended.streams.message.FlowEnvelope
-import blended.streams.testsupport.Collector
+import blended.streams.processor.Collector
 import blended.streams.worklist.WorklistState.WorklistState
 import blended.streams.worklist.{WorklistEvent, WorklistState, WorklistStepCompleted}
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -48,7 +48,9 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
 
   def testOutbound(expectedState: WorklistState, send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
     withDispatcherConfig { ctxt =>
+
       implicit val system : ActorSystem = ctxt.system
+      implicit val eCtx = system.dispatcher
       implicit val materializer : Materializer = ActorMaterializer()
 
       val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "outbound").get
@@ -58,16 +60,20 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
       try {
         out.run()
 
-        val error = errColl.probe.expectMsgType[List[FlowEnvelope]]
-        val events = outColl.probe.expectMsgType[List[WorklistStepCompleted]]
+        val result = for {
+          err <- errColl.result
+          evt <- outColl.result
+        } yield (err, evt)
 
-        error should be (empty)
-        events should have size 1
+        result.map { case (error, events) =>
+          error should be (empty)
+          events should have size 1
 
-        val event = events.head
-        event.worklist.items should have size 1
-        event.worklist.id should be (envelope.id)
-        event.state should be (expectedState)
+          val event = events.head
+          event.worklist.items should have size 1
+          event.worklist.id should be (envelope.id)
+          event.state should be (expectedState)
+        }
       } finally {
         system.stop(outColl.actor)
         system.stop(errColl.actor)
