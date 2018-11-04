@@ -192,7 +192,7 @@ lazy val root = {
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(
-      Compile / jbakeMode := "serve",
+      Compile / jbakeMode := "build",
       Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
       buildSite := {
 
