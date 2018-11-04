@@ -8,9 +8,6 @@
 </nav>
 
 <div id="content">
-  <div class="row">
+  <div class="row full-height">
 
-    <div class="col-md-2 bg-light">
-    </div>
 
-    <div class="col-md-8">

@@ -1,8 +1,10 @@
 <#include "header.ftl">
 <#include "menu.ftl">
 
-<p>${content.body}</p>
+<div class="col-md-2 bg-light">
+</div>
 
-<hr />
+<div class="col-md-8">
+  ${content.body}
 
 <#include "footer.ftl">

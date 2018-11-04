@@ -6,5 +6,5 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/css/blended-asciidoctor.css">
   <link rel="stylesheet" href="/css/blended-bootstrap.css">
-  <link rel="stylesheet" href="/js/highlight/styles/darkula.css">
+  <link rel="stylesheet" href="/js/highlight/styles/${config.site_highlight_theme}.css">
 </head>
