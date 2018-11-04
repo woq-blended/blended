@@ -197,7 +197,7 @@ lazy val root = {
 
         val log = streams.value.log
         val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
-        println(modulesDir.toString())
+        val assetDir = baseDirectory.value / "doc" / "assets"
 
         def runCommands(initial: State, commands : String*) : State = {
           commands.foldLeft(initial){ case (s, cmd) =>
@@ -219,7 +219,10 @@ lazy val root = {
         val state3 = runCommands(state.value, "blendedDocs / fastOptJS::webpack")
 
         val copyMap : Map[File, File] = Map(
-          modulesDir / "blended-bootstrap.css" -> baseDirectory.value / "doc" / "assets" / "css" / "blended-bootstrap.css"
+          modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
+          modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
+          modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",
+          modulesDir / "node_modules" / "popper.js" / "dist" / "popper.min.js" -> assetDir / "js" / "popper.min.js"
         )
 
         copyMap.foreach { case (from, to) =>

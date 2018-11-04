@@ -1,9 +1,8 @@
 <#include "header.ftl">
+<#include "menu.ftl">
 
-	<#include "menu.ftl">
-	
-	<p>${content.body}</p>
+<p>${content.body}</p>
 
-	<hr />
+<hr />
 
 <#include "footer.ftl">

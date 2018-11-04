@@ -1,6 +1,7 @@
 type=page
-jbake=published
+status=published
 ~~~~~~
+
 == Build file structure
 
 _Blended_ uses `sbt 1.2.6` to build. Currently we have a bit more than 60 submodules in _Blended_, so that the build

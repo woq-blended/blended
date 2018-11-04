@@ -12,5 +12,7 @@ render.feed=false
 render.tags=false
 render.sitemap=false
 
+site.title=Blended
+
 asciidoctor.option.requires=asciidoctor-diagram
 

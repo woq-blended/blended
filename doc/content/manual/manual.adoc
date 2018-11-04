@@ -1,6 +1,7 @@
 type=page
-jbake=published
+status=published
 ~~~~~~
+
 = Blended Manual
 :leveloffset: +1
 
