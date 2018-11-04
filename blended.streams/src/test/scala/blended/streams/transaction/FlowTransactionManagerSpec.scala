@@ -10,25 +10,26 @@ import blended.streams.transaction.internal.FlowTransactionManager.RestartTransa
 import blended.streams.transaction.internal.{FlowTransactionActor, FlowTransactionManager}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
   with LoggingFreeSpecLike
-  with Matchers {
+  with Matchers
+  with BeforeAndAfterAll {
 
   private val log = Logger[FlowTransactionManagerSpec]
 
   private val mgr : ActorRef  = system.actorOf(FlowTransactionManager.props())
 
-  def transaction(mgr : ActorRef, id : String)(implicit timeout: Timeout) : Future[FlowTransaction] = {
+  private def transaction(mgr : ActorRef, id : String)(implicit timeout: Timeout) : Future[FlowTransaction] = {
     log.debug(s"Getting transaction state [$id] from [${mgr.path}]")
     (mgr ? FlowTransactionActor.State(id)).mapTo[FlowTransaction]
   }
 
-  def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit): Unit = {
+  private def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit): Unit = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
@@ -44,6 +45,8 @@ class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
     Await.result(result, 3.seconds)
     system.stop(coll.actor)
   }
+
+  override protected def afterAll(): Unit = system.terminate()
 
   "The transaction manager should" - {
 
@@ -100,4 +103,5 @@ class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
       system.stop(mgr2)
     }
   }
+
 }
