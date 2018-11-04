@@ -2,29 +2,32 @@ package blended.streams.transaction
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.testkit.TestKit
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
-import blended.streams.transaction.internal.FlowTransactionStream
+import blended.streams.transaction.internal.{FlowTransactionManager, FlowTransactionStream}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 class FlowTransactionStreamSpec extends TestKit(ActorSystem("stream"))
   with LoggingFreeSpecLike
-  with Matchers {
+  with Matchers
+  with BeforeAndAfterAll {
 
-  implicit val actorSystem = system
-  implicit val eCtxt = system.dispatcher
-  implicit val materializer = ActorMaterializer()
-  implicit val log : Logger = Logger[FlowTransactionStreamSpec]
+  private implicit val actorSystem : ActorSystem = system
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+  private implicit val materializer : Materializer = ActorMaterializer()
+  private implicit val log : Logger = Logger[FlowTransactionStreamSpec]
+
+  private val tMgr = system.actorOf(FlowTransactionManager.props())
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
     Map(
@@ -35,6 +38,9 @@ class FlowTransactionStreamSpec extends TestKit(ActorSystem("stream"))
     ).asJava
   ))
 
+  override protected def afterAll(): Unit = {
+    system.terminate()
+  }
 
   "The FlowTransactionStream should" - {
 
@@ -54,26 +60,25 @@ class FlowTransactionStreamSpec extends TestKit(ActorSystem("stream"))
           val envelope = FlowTransactionEvent.event2envelope(cfg)(event)
           val source = Source.single[FlowEnvelope](envelope)
 
-          val stream : Sink[FlowEnvelope, NotUsed] = new FlowTransactionStream(cfg, good).build()
+          val stream : Sink[FlowEnvelope, NotUsed] = new FlowTransactionStream(cfg, tMgr, good).build()
 
-          val done = source
+          source
             .watchTermination()(Keep.right)
             .toMat(stream)(Keep.left)
             .run()
 
           akka.pattern.after(1.second, system.scheduler)(Future {transColl.actor ! CollectingActor.Completed })
-          transColl.result.map(t => f(t))
+          Await.result(transColl.result.map(t => f(t)), 3.seconds)
         } finally {
           system.stop(transColl.actor)
         }
       }
 
       singleTest(FlowTransaction.startEvent()){ t =>
-        t.size should be (1)
+        t should have size 1
         t.head.worklist should be (empty)
         t.head.state should be (FlowTransactionState.Started)
       }
-
-
     }
-  }}
+  }
+}

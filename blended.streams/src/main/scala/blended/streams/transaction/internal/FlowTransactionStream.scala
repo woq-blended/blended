@@ -1,7 +1,7 @@
 package blended.streams.transaction.internal
 
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransaction, FlowTransactionEvent}
@@ -16,14 +16,13 @@ import scala.util.{Failure, Success, Try}
 
 class FlowTransactionStream(
   cfg : FlowHeaderConfig,
+  tMgr : ActorRef,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
 )(implicit system: ActorSystem, log: Logger) {
 
   private implicit val timeout = Timeout(500.millis)
   private implicit val eCtxt = system.dispatcher
   private implicit val materializer = ActorMaterializer()
-
-  private val tMgr = system.actorOf(FlowTransactionManager.props())
 
   // recreate the FlowTransactionEvent from the inbound envelope
   private val updateEvent : FlowEnvelope => Try[(FlowEnvelope, FlowTransactionEvent)] = { env =>
