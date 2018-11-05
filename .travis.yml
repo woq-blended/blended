@@ -16,6 +16,7 @@ cache:
 before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
+  - openssl aes-256-cbc -K $encrypted_e8464d595ae2_key -iv $encrypted_e8464d595ae2_iv -in .dropbox_uploader.enc -out ~\/.dropbox_uploader -d
 
 before_cache:
   - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
@@ -49,6 +50,8 @@ jobs:
     script: ./verifyPublish.sh
   - stage: Test
     script: sbt test
+    after_failure:
+      - '[ -f ~/.dropbox_uploader ] && ./upload-results.sh $TRAVIS_JOB_NUMBER'
   - stage: Deploy
     script: ./runPublish.sh
   - stage: Site
