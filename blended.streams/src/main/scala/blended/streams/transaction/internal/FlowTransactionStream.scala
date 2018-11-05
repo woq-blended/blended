@@ -20,7 +20,7 @@ class FlowTransactionStream(
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
 )(implicit system: ActorSystem, log: Logger) {
 
-  private implicit val timeout = Timeout(500.millis)
+  private implicit val timeout = Timeout(1.second)
   private implicit val eCtxt = system.dispatcher
   private implicit val materializer = ActorMaterializer()
 
