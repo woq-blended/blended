@@ -51,7 +51,7 @@ jobs:
   - stage: Test
     script: sbt test
     after_failure:
-      - '[ -f ~/.dropbox_uploader ] && ./upload-results.sh $TRAVIS_JOB_NUMBER'
+      - ./upload-results.sh $TRAVIS_JOB_NUMBER'
   - stage: Deploy
     script: ./runPublish.sh
   - stage: Site
