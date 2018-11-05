@@ -2,23 +2,26 @@ package blended.streams.transaction
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.testkit.TestKit
 import akka.util.Timeout
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FlowTransactionManager.RestartTransactionActor
 import blended.streams.transaction.internal.{FlowTransactionActor, FlowTransactionManager}
-import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
+import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
-  with LoggingFreeSpecLike
+class FlowTransactionManagerSpec extends LoggingFreeSpec
   with Matchers
   with BeforeAndAfterAll {
+
+  System.setProperty("testName", "transaction")
+  private val config = ConfigFactory.load()
+  private implicit val system : ActorSystem = ActorSystem.create("transaction", config)
 
   private val log = Logger[FlowTransactionManagerSpec]
 

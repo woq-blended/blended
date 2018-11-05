@@ -17,4 +17,3 @@ site.title=Blended
 site.highlight.theme=agate
 
 asciidoctor.option.requires=asciidoctor-diagram
-
