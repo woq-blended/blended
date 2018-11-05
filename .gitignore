@@ -9,6 +9,7 @@ libs/
 package-lock.json
 .bloop
 node_modules 
+target.tgz
 
 blended.sslcontext/notes.txt
 
