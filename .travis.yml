@@ -49,6 +49,7 @@ jobs:
   - stage: VerifyPublish
     script: ./verifyPublish.sh
   - stage: Test
+    before_script: ./dropbox_uploader.sh list
     script: sbt cleanCoverage unidoc
     after_failure:
       - ./upload-results.sh $TRAVIS_JOB_NUMBER

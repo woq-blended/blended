@@ -211,7 +211,7 @@ lazy val root = {
         val unidoc = crossTarget.value / "unidoc"
         val coverage = crossTarget.value / "scoverage-report"
         
-        val state1 = runCommands(state.value, "cleanCoverage", "unidoc")
+        //val state1 = runCommands(state.value, "cleanCoverage", "unidoc")
 
         if (coverage.exists() && coverage.isDirectory()) {
           IO.copyDirectory(coverage, siteContent / "coverage")
@@ -221,7 +221,7 @@ lazy val root = {
           IO.copyDirectory(unidoc, siteContent / "scaladoc")
         }
 
-        val state3 = runCommands(state1, "blendedDocs / fastOptJS::webpack")
+        val state3 = runCommands(state.value, "blendedDocs / fastOptJS::webpack")
 
         val copyMap : Map[File, File] = Map(
           modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
