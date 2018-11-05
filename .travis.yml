@@ -49,7 +49,7 @@ jobs:
   - stage: VerifyPublish
     script: ./verifyPublish.sh
   - stage: Test
-    script: sbt test
+    script: sbt cleanCoverage unidoc
     after_failure:
       - ./upload-results.sh $TRAVIS_JOB_NUMBER
     after_success:
@@ -57,6 +57,7 @@ jobs:
   - stage: Deploy
     script: ./runPublish.sh
   - stage: Site
+    before_script: ./dropbox_uploader.sh download travis/$1/target target
     script: sbt buildSite
     deploy:
       provider: pages
