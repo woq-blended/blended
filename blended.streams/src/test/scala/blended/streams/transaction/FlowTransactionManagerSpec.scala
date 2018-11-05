@@ -46,7 +46,7 @@ class FlowTransactionManagerSpec extends TestKit(ActorSystem("transaction"))
     system.stop(coll.actor)
   }
 
-  override protected def afterAll(): Unit = system.terminate()
+  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
 
   "The transaction manager should" - {
 

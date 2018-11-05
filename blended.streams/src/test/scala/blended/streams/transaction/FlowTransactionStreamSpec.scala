@@ -38,9 +38,8 @@ class FlowTransactionStreamSpec extends TestKit(ActorSystem("stream"))
     ).asJava
   ))
 
-  override protected def afterAll(): Unit = {
-    system.terminate()
-  }
+  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
+
 
   "The FlowTransactionStream should" - {
 

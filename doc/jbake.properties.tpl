@@ -12,6 +12,7 @@ render.feed=false
 render.tags=false
 render.sitemap=false
 
+site.host=http://woq-blended.github.io/blended
 site.title=Blended
 site.highlight.theme=agate
 

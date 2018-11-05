@@ -9,13 +9,16 @@ import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2e
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.ConfigFactory
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
   with LoggingFreeSpecLike
-  with Matchers {
+  with Matchers
+  with BeforeAndAfterAll {
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
     Map(
@@ -25,6 +28,8 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
       "branchId" -> "AppFlowBranch"
     ).asJava
   ))
+
+  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
 
   "A FlowTransactionEvent" - {
 
