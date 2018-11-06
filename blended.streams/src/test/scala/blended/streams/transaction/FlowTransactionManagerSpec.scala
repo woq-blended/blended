@@ -1,5 +1,7 @@
 package blended.streams.transaction
 
+import java.io.File
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
@@ -7,6 +9,8 @@ import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.FlowTransactionManager.RestartTransactionActor
 import blended.streams.transaction.internal.{FlowTransactionActor, FlowTransactionManager}
+import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
@@ -20,8 +24,9 @@ class FlowTransactionManagerSpec extends LoggingFreeSpec
   with BeforeAndAfterAll {
 
   System.setProperty("testName", "transaction")
-  private val config = ConfigFactory.load()
-  private implicit val system : ActorSystem = ActorSystem.create("transaction", config)
+  val ctxt = new MockContainerContext(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath())
+
+  private implicit val system : ActorSystem = ActorSystem.create("transaction", ctxt.getContainerConfig())
 
   private val log = Logger[FlowTransactionManagerSpec]
 

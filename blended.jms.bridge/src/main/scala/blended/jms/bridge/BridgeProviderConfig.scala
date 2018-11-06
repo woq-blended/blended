@@ -13,11 +13,16 @@ case class BridgeProviderConfig(
   internal: Boolean,
   inbound : JmsDestination,
   outbound : JmsDestination,
-  errorDestination : JmsDestination,
-  eventDestination : JmsDestination
+  errors : JmsDestination,
+  transactions : JmsDestination,
+  cbes : JmsDestination
 ) extends ProviderAware {
+
   override def toString: String =
-    s"${getClass().getSimpleName()}(vendor=$vendor, provider=$provider, internal=$internal, errorQueue=$errorDestination, eventQueue=$eventDestination)"
+    s"${getClass().getSimpleName()}(vendor=$vendor, provider=$provider, internal=$internal, errors=$errors, transactions=$transactions cbe=$cbes)"
+
+  def osgiBrokerFilter : String = s"(&(vendor=$vendor)(provider=$provider))"
+
 }
 
 object BridgeProviderConfig {
@@ -29,8 +34,9 @@ object BridgeProviderConfig {
     val vendor = resolve(cfg.getString("vendor"))
     val provider = resolve(cfg.getString("provider"))
 
-    val errorQueue = resolve(cfg.getString("errorQueue", "blended.error"))
-    val eventQueue = resolve(cfg.getString("eventQueue", "blended.event"))
+    val errorDest = resolve(cfg.getString("errors", "blended.error"))
+    val eventDest = resolve(cfg.getString("transactions", "blended.transaction"))
+    val cbeDest = resolve(cfg.getString("cbes", "blended.cbe"))
 
     val inbound = s"${cfg.getString("inbound")}"
     val outbound = s"${cfg.getString("outbound")}"
@@ -43,8 +49,9 @@ object BridgeProviderConfig {
       internal = internal,
       inbound = JmsDestination.create(inbound).get,
       outbound = JmsDestination.create(outbound).get,
-      errorDestination = JmsDestination.create(errorQueue).get,
-      eventDestination = JmsDestination.create(eventQueue).get
+      errors = JmsDestination.create(errorDest).get,
+      transactions = JmsDestination.create(eventDest).get,
+      cbes = JmsDestination.create(cbeDest).get
     )
   }
 }

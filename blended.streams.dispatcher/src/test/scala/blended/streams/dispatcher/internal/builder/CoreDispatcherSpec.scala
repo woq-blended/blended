@@ -5,12 +5,12 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
 import blended.jms.utils.JmsQueue
+import blended.streams.StreamFactories
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
-import blended.streams.testsupport.StreamFactories
 import blended.streams.worklist.WorklistEvent
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
@@ -21,6 +21,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CoreDispatcherSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
+
+  override def loggerName: String = classOf[CoreDispatcherSpec].getName()
 
   val defaultTimeout : FiniteDuration = 1.second
 
@@ -45,7 +47,8 @@ class CoreDispatcherSpec extends LoggingFreeSpec
     RunnableGraph[(ActorRef, KillSwitch)]
   )= {
 
-    implicit val materializer = ActorMaterializer()
+
+    implicit val materializer : Materializer = ActorMaterializer()
 
     val jmsCollector = Collector[FlowEnvelope]("jms")
     val errCollector = Collector[FlowEnvelope]("error")
@@ -117,10 +120,10 @@ class CoreDispatcherSpec extends LoggingFreeSpec
       }
     }
 
-    withDispatcherConfig{ ctxt =>
+    withDispatcherConfig{ sr => ctxt =>
 
-      implicit val system = ctxt.system
-      implicit val eCtxt = system.dispatcher
+      implicit val system : ActorSystem = ctxt.system
+      implicit val eCtxt : ExecutionContext = system.dispatcher
 
       executeDispatcher(ctxt, timeout, testMessages:_*)
         .map { r =>
@@ -201,7 +204,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
         result.worklist.head.worklist.id should be(result.out.head.id)
         result.worklist.head.worklist.items should have size 2
 
-        val default = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerBranchId)("default"))
+        val default = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("default"))
         default should have size 1
 
         verifyHeader(Map(
@@ -211,7 +214,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
           ctxt.bs.headerBridgeDest -> JmsQueue("/Qucc/data/out").asString
         ), default.head.flowMessage.header) should be (empty)
 
-        val other = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerBranchId)("OtherApp"))
+        val other = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("OtherApp"))
         other should have size 1
         verifyHeader(Map(
           "ResourceType" -> "FanOut",

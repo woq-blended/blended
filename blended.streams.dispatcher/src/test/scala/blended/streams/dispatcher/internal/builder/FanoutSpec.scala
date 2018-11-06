@@ -11,12 +11,14 @@ import blended.streams.worklist.{WorklistEvent, WorklistState}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
-import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 class FanoutSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
+
+
+  override def loggerName: String = classOf[FanoutSpec].getName()
 
   def performFanout(
     ctxt : DispatcherExecContext,
@@ -36,7 +38,7 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create one FlowEnvelope per outbound config" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -45,7 +47,7 @@ class FanoutSpec extends LoggingFreeSpec
           case Success(s) =>
             s should have size 2
             assert(s.forall { case (outCfg, env) => env.id == envelope.id})
-            val outIds = s.map(_._2.header[String](ctxt.bs.headerBranchId).get).distinct
+            val outIds = s.map(_._2.header[String](ctxt.bs.headerConfig.headerBranch).get).distinct
             outIds should have size 2
             outIds should contain ("default")
             outIds should contain ("OtherApp")
@@ -56,7 +58,7 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create a workliststarted event for a configured resourceType" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
@@ -104,7 +106,7 @@ class FanoutSpec extends LoggingFreeSpec
         (envColl, wlColl, source.toMat(sinkGraph)(Keep.left))
       }
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
         implicit val system = ctxt.system
         implicit val materializer = ActorMaterializer()
         implicit val eCtxt = system.dispatcher

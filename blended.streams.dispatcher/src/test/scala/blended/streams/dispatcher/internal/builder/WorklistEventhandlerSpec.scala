@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{GraphDSL, Keep, Source}
-import akka.stream.{ActorMaterializer, KillSwitches, OverflowStrategy, SinkShape}
+import akka.stream._
 import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.processor.Collector
@@ -13,7 +13,7 @@ import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.Try
 
@@ -21,12 +21,14 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
 
+  override def loggerName: String = "event.handler"
+
   private def runEventHandler(
     ctxt : DispatcherExecContext
   ) = {
 
     implicit val system : ActorSystem = ctxt.system
-    implicit val materializer = ActorMaterializer()
+    implicit val materializer : Materializer = ActorMaterializer()
 
     val errColl = Collector[FlowEnvelope]("error")
     val transColl = Collector[FlowTransactionEvent]("transaction")
@@ -54,8 +56,8 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
   }
 
   private def run(vendor: String, provider: String, autoComplete : Boolean*)(f : (FlowEnvelope, List[FlowTransactionEvent]) => Unit) =
-    withDispatcherConfig { ctxt =>
-      implicit val eCtxt = ctxt.system.dispatcher
+    withDispatcherConfig { sr => ctxt =>
+      implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
@@ -63,7 +65,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
       val steps = autoComplete.zipWithIndex.map { case (compl, idx) =>
         master
-          .withHeader(ctxt.bs.headerBranchId, "step-" + idx).get
+          .withHeader(ctxt.bs.headerConfig.headerBranch, "step-" + idx).get
           .withHeader(ctxt.bs.headerAutoComplete, compl).get
           .withHeader(ctxt.bs.headerBridgeVendor, vendor).get
           .withHeader(ctxt.bs.headerBridgeProvider,provider).get
@@ -87,12 +89,12 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
     "Generate a Transaction update when a new worklist is started" in {
 
-      withDispatcherConfig { ctxt =>
-        implicit val eCtxt = ctxt.system.dispatcher
+      withDispatcherConfig { sr => ctxt =>
+        implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
@@ -116,12 +118,12 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     }
 
     "Generate a transaction failed event when the worklist has failed" in {
-      withDispatcherConfig { ctxt =>
-        implicit val eCtxt = ctxt.system.dispatcher
+      withDispatcherConfig { sr => ctxt =>
+        implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl, timeout = 10.seconds)
@@ -143,12 +145,12 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     }
 
     "Generate a transaction failed event when the worklist times out" in {
-      withDispatcherConfig { ctxt =>
-        implicit val eCtxt = ctxt.system.dispatcher
+      withDispatcherConfig { sr => ctxt =>
+        implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
-        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "test").get
+        val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
         val wl = ctxt.bs.worklist(envelope).get
 
         val started = WorklistStarted(worklist = wl)
@@ -171,13 +173,13 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
       val ackCount : AtomicInteger = new AtomicInteger(0)
 
-      withDispatcherConfig { ctxt =>
-        implicit val eCtxt = ctxt.system.dispatcher
+      withDispatcherConfig { sr => ctxt =>
+        implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
 
         val envelope = FlowEnvelope()
-          .withHeader(ctxt.bs.headerBranchId, "test").get
+          .withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
           .withRequiresAcknowledge(true)
           .withAckHandler(Some(new AcknowledgeHandler {
             override def acknowledge: FlowEnvelope => Try[Unit] = _ => Try(ackCount.incrementAndGet())
@@ -214,7 +216,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
         events.size should be (2)
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
-        event.branchIds should have size(3)
+        event.branchIds should have size 3
         event.updatedState should be (WorklistState.Completed)
       }
 
@@ -226,7 +228,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
       }
 
       run("activemq", "activemq", false, true){ (envelope, events) =>
-        events.size should be (2)
+        events should have size 2
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
         event.branchIds should be (Seq("step-1"))

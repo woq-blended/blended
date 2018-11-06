@@ -75,7 +75,7 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
     // wait for all sessions to successfully initialize before invoking the onSession callback.
     // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
     allSessions.foreach(_.foreach{ s =>
-      log.debug(s"Calling Session creation callback for [${s.sessionId}]")
+      log.trace(s"Calling Session creation callback for [${s.sessionId}]")
       onSession.invoke(s)
     })(ec)
   }

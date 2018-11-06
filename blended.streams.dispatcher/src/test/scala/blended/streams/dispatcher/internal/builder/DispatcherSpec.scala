@@ -18,6 +18,8 @@ class DispatcherSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
 
+  override def loggerName: String = classOf[DispatcherSpec].getName()
+
   private def runDispatcher(
     ctxt : DispatcherExecContext,
     send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]
@@ -52,7 +54,7 @@ class DispatcherSpec extends LoggingFreeSpec
   val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
   private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
-    withDispatcherConfig { ctxt =>
+    withDispatcherConfig { sr => ctxt =>
       implicit val eCtxt = ctxt.system.dispatcher
 
       val (actor, killswitch, coll) = runDispatcher(ctxt, goodSend)

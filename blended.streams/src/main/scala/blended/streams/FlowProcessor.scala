@@ -98,15 +98,8 @@ trait FlowProcessor {
   val name : String
   val f : FlowProcessor.IntegrationStep
 
-  def flow(log: Option[Logger]) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
+  def flow(log: Logger) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
     FlowProcessor.fromFunction(
-      name,
-      log match {
-        case Some(l) => l
-        case None =>
-          val l = Logger[FlowProcessor]
-          l.warn(s"Creating FlowProcessor [$name] with default logger. Normally a flow logger should be used.")
-          l
-      }
+      name, log
     )(f)
 }

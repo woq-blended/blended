@@ -10,6 +10,8 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.akkaActor,
       Dependencies.akkaStream,
       Dependencies.geronimoJms11Spec,
+      Dependencies.akkaPersistence,
+      Dependencies.levelDbJava,
 
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",

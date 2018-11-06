@@ -7,6 +7,7 @@ import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
 import blended.streams.worklist.WorklistState.WorklistState
 import com.typesafe.config.Config
+import blended.util.config.Implicits._
 
 import scala.util.Try
 
@@ -18,10 +19,10 @@ object FlowHeaderConfig {
   private val statePath = "transactionState"
 
   def create(cfg: Config): FlowHeaderConfig = {
-    val prefix = cfg.getString(prefixPath)
-    val headerTrans = cfg.getString(transIdPath)
-    val headerBranch = cfg.getString(branchIdPath)
-    val headerState = cfg.getString(statePath)
+    val prefix = cfg.getString(prefixPath, "Blended")
+    val headerTrans = cfg.getString(transIdPath, "TransactionId")
+    val headerBranch = cfg.getString(branchIdPath, "BranchId")
+    val headerState = cfg.getString(statePath, "TransactionState")
 
     FlowHeaderConfig(
       prefix = prefix,

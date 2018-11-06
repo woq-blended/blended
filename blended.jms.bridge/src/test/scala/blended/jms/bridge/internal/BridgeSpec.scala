@@ -7,13 +7,11 @@ import akka.stream._
 import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.{JmsProducerSupport, JmsStreamBuilder, JmsStreamConfig, RestartableJmsSource}
+import blended.jms.bridge.{JmsStreamBuilder, JmsStreamConfig}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.StreamController
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.processor.Collector
-import blended.streams.testsupport.StreamFactories
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojosrBlendedContainer}
@@ -21,69 +19,20 @@ import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 
 class BridgeSpec extends LoggingFreeSpec
   with SimplePojosrBlendedContainer
   with PojoSrTestHelper
-  with Matchers {
+  with Matchers
+  with JmsStreamSupport {
 
   private val log = Logger[BridgeSpec]
   private val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
     "The bridge activator should" - {
-
-      /**
-       * Send messages to a given Jms destination using an actor source.
-       * The resulting stream will expose a killswitch, so that it stays
-       * open and the test code needs to tear it down eventually.
-       */
-      def sendMessages(
-        headerCfg : FlowHeaderConfig,
-        cf: IdAwareConnectionFactory,
-        dest: JmsDestination,
-        msgs : FlowEnvelope*
-      )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): KillSwitch = {
-
-        // Create the Jms producer to send the messages
-        val settings: JmsProducerSettings = JmsProducerSettings(
-          headerConfig = headerCfg,
-          connectionFactory = cf,
-          connectionTimeout = 1.second,
-          jmsDestination = Some(dest)
-        )
-
-        val toJms = JmsProducerSupport.jmsProducer(
-          name = "sender",
-          settings = settings,
-          autoAck = true,
-          log = None
-        )
-
-        // Materialize the stream, send the test messages and expose the killswitch
-        StreamFactories.keepAliveFlow(toJms, msgs:_*)
-      }
-
-      // TODO: This should expose a Future[List[FlowEnvelope]], so that it does not have to
-      // run sunchronously
-      def receiveMessages(
-        headerCfg : FlowHeaderConfig,
-        cf : IdAwareConnectionFactory,
-        dest : JmsDestination
-      )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: ActorMaterializer) : Collector[FlowEnvelope] = {
-
-        StreamFactories.runSourceWithTimeLimit(
-          "received",
-          RestartableJmsSource(
-            name = "receiver",
-            settings = JMSConsumerSettings(connectionFactory = cf, headerConfig = headerCfg).withSessionCount(2).withDestination(Some(dest)),
-            requiresAck = false
-          ),
-          timeout
-        )
-      }
 
       def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
       
@@ -158,7 +107,7 @@ class BridgeSpec extends LoggingFreeSpec
 
           system.actorOf(StreamController.props(streamCfg))
 
-          val switch = sendMessages(ctrlCfg.headerCfg, external, JmsQueue("sampleIn"), msgs:_*)
+          val switch = sendMessages(ctrlCfg.headerCfg, external, JmsQueue("sampleIn"), log, msgs:_*)
 
           1.to(msgCount).map { i =>
             val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
@@ -167,7 +116,7 @@ class BridgeSpec extends LoggingFreeSpec
             }
           }
 
-          val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("blended.internal.event"))(1.second, system, materializer)
+          val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"))(1.second, system, materializer)
 
           val result = collector.result.map { l =>
             val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)

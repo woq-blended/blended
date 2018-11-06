@@ -31,7 +31,8 @@ final case class JmsSendParameter(
   ttl : Option[FiniteDuration]
 )
 
-trait JmsEnvelopeHeader {
+trait
+JmsEnvelopeHeader {
   val jmsHeaderPrefix : String => String = s => s + "JMS"
 
   val srcVendorHeader : String => String = s => jmsHeaderPrefix(s) + "SrcVendor"

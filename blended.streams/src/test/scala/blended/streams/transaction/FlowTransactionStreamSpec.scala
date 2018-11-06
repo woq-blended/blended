@@ -1,46 +1,32 @@
 package blended.streams.transaction
 
+import java.io.File
+
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
+import blended.akka.internal.BlendedAkkaActivator
+import blended.container.context.api.ContainerIdentifierService
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.streams.transaction.internal.{FlowTransactionManager, FlowTransactionStream}
+import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 class FlowTransactionStreamSpec extends LoggingFreeSpec
   with Matchers
-  with BeforeAndAfterAll {
+  with SimplePojosrBlendedContainer
+  with PojoSrTestHelper {
 
   System.setProperty("testName", "stream")
-  private val config = ConfigFactory.load()
-
-  private implicit val system : ActorSystem = ActorSystem.create("stream", config)
-  private implicit val eCtxt : ExecutionContext = system.dispatcher
-  private implicit val materializer : Materializer = ActorMaterializer()
-  private implicit val log : Logger = Logger[FlowTransactionStreamSpec]
-
-  private val tMgr = system.actorOf(FlowTransactionManager.props())
-
-  private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
-    Map(
-      "prefix" -> "App",
-      "transactionId" -> "AppFlowTransId",
-      "transactionState" -> "AppFlowTransState",
-      "branchId" -> "AppFlowBranch"
-    ).asJava
-  ))
-
-  override protected def afterAll(): Unit = Await.result(system.terminate(), 3.seconds)
-
 
   "The FlowTransactionStream should" - {
 
@@ -48,29 +34,52 @@ class FlowTransactionStreamSpec extends LoggingFreeSpec
 
       def singleTest(event : FlowTransactionEvent)(f : List[FlowTransaction] => Unit) : Unit = {
 
-        val transColl = Collector[FlowTransaction]("trans")
+        val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-        try {
-          val good : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { e =>
-            val t = FlowTransaction.envelope2Transaction(cfg)(e)
-            transColl.actor ! t
-            e
+        withSimpleBlendedContainer(baseDir) { sr =>
+          withStartedBundles(sr)(Seq(
+            "blended.akka" -> Some(() => new BlendedAkkaActivator())
+          )) { sr =>
+            implicit val timeout = 1.second
+            val idSvc = mandatoryService[ContainerIdentifierService](sr)(None)
+            implicit val system = mandatoryService[ActorSystem](sr)(None)
+
+            implicit val eCtxt : ExecutionContext = system.dispatcher
+            implicit val materializer : Materializer = ActorMaterializer()
+            implicit val log : Logger = Logger[FlowTransactionStreamSpec]
+
+            val tMgr = system.actorOf(FlowTransactionManager.props())
+
+            val transColl = Collector[FlowTransaction]("trans")
+
+            val cfg : FlowHeaderConfig = FlowHeaderConfig.create(
+              idSvc.getContainerContext().getContainerConfig().getConfig("blended.flow.header")
+            )
+
+            try {
+              val good : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { e =>
+                val t = FlowTransaction.envelope2Transaction(cfg)(e)
+                transColl.actor ! t
+                e
+              }
+
+              val envelope = FlowTransactionEvent.event2envelope(cfg)(event)
+              val source = Source.single[FlowEnvelope](envelope)
+
+              val stream : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = new FlowTransactionStream(cfg, tMgr,log, good).build()
+
+              source
+                .watchTermination()(Keep.right)
+                .viaMat(stream)(Keep.left)
+                .toMat(Sink.ignore)(Keep.left)
+                .run()
+
+              akka.pattern.after(1.second, system.scheduler)(Future {transColl.actor ! CollectingActor.Completed })
+              Await.result(transColl.result.map(t => f(t)), 3.seconds)
+            } finally {
+              system.stop(transColl.actor)
+            }
           }
-
-          val envelope = FlowTransactionEvent.event2envelope(cfg)(event)
-          val source = Source.single[FlowEnvelope](envelope)
-
-          val stream : Sink[FlowEnvelope, NotUsed] = new FlowTransactionStream(cfg, tMgr, good).build()
-
-          source
-            .watchTermination()(Keep.right)
-            .toMat(stream)(Keep.left)
-            .run()
-
-          akka.pattern.after(1.second, system.scheduler)(Future {transColl.actor ! CollectingActor.Completed })
-          Await.result(transColl.result.map(t => f(t)), 3.seconds)
-        } finally {
-          system.stop(transColl.actor)
         }
       }
 

@@ -11,7 +11,7 @@ import scala.concurrent.duration._
 
 import scala.util.Random
 
-class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger = Logger[JmsSinkStage])(implicit actorSystem : ActorSystem)
+class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
   private case class Push(env: FlowEnvelope)

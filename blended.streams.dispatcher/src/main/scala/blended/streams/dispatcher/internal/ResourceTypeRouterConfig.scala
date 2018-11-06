@@ -99,7 +99,6 @@ case class ResourceTypeRouterConfig(
 object ResourceTypeConfig {
 
   private[this] val inboundPath = "inbound"
-  private[this] val cbePath = "withCBE"
   private[this] val outboundPath = "outbound"
   private[this] val timeoutPath = "timeout"
 
@@ -204,13 +203,9 @@ object OutboundHeaderConfig {
   private[this] val autocompletePath = "autoComplete"
   private[this] val applicationLogHeaderPath = "applicationLogHeader"
   private[this] val moduleLastOnCompletePath = "moduleLastOnComplete"
-  private[this] val outboundHeaderPath = "outboundHeader"
   private[this] val clearBodyPath = "clearbody"
   private[this] val maxRetryPath = "maxRetries"
   private[this] val timeToLivePath = "timeToLive"
-  private[this] val eventVendorPath = "eventVendor"
-  private[this] val eventProviderPath = "eventProvider"
-  private[this] val eventDestinationPath = "eventDestination"
   private[this] val deliveryModePath = "deliveryMode"
 
   def create (

@@ -1,13 +1,13 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import akka.stream.{FanOutShape2, Graph}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
-import blended.streams.worklist.{Worklist, WorklistEvent, WorklistStarted}
+import blended.streams.worklist.{WorklistEvent, WorklistStarted}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -27,7 +27,7 @@ case class DispatcherFanout(
             val obEnv =
               env
                 .withContextObject(bs.outboundCfgKey, ob)
-                .withHeader(bs.headerBranchId, ob.id).get
+                .withHeader(bs.headerConfig.headerBranch, ob.id).get
             (ob, outboundMsg(ob)(obEnv).get)
           }
         }
@@ -92,8 +92,6 @@ case class DispatcherFanout(
   }
 
   private[builder] val toWorklist : Seq[(OutboundRouteConfig, FlowEnvelope)] => WorklistEvent =  envelopes => {
-
-    val worklistId : String = envelopes.head._2.id
 
     val timeout = envelopes.head._2.getFromContext[ResourceTypeConfig](bs.rtConfigKey) match {
       case Success(c) => c.map(_.timeout).getOrElse(10.seconds)

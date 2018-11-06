@@ -8,6 +8,8 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport {
 
+  override def loggerName: String = classOf[ResourceTypeRouterConfigSpec].getName()
+
   private val amqId = providerId("activemq", "activemq")
   private val sonicId = providerId("sonic75", "central")
   private val ccQueueId = providerId("sagum", "cc_queue")
@@ -16,7 +18,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "resolve the configured bridge providers correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { src => ctxt =>
         val cfg = ctxt.cfg
 
         cfg.defaultProvider.id should be (amqId)
@@ -27,7 +29,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
     }
 
     "resolve a simple dispatcher element correctly" in {
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
         val cfg = ctxt.cfg
 
         val sagTest = cfg.resourceTypeConfigs.get("SagTest").get
@@ -48,7 +50,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate an optional inbound destination correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
         val cfg = ctxt.cfg
 
         val dataFromPosClient = cfg.resourceTypeConfigs.get("DataClient").get
@@ -73,7 +75,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate multiple outbound configs destination correctly" in {
 
-      withDispatcherConfig { ctxt =>
+      withDispatcherConfig { sr => ctxt =>
         val cfg = ctxt.cfg
 
         val fanout = cfg.resourceTypeConfigs.get("FanOut").get

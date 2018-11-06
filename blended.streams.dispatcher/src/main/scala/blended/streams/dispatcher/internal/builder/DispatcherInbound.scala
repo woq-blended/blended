@@ -27,7 +27,7 @@ object DispatcherInbound {
       log = bs.streamLogger,
       rules = dispatcherCfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
       idSvc = Some(idSvc)
-    ).flow(Some(bs.streamLogger))
+    ).flow(bs.streamLogger)
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Make sure we do have a resourcetype in the message we can process                               */
@@ -63,7 +63,7 @@ object DispatcherInbound {
             val newMsg = env.flowMessage
               .withHeader(bs.headerEventVendor, dispatcherCfg.eventProvider.vendor).get
               .withHeader(bs.headerEventProvider, dispatcherCfg.eventProvider.provider).get
-              .withHeader(bs.headerEventDest, dispatcherCfg.eventProvider.eventDestination.asString).get
+              .withHeader(bs.headerEventDest, dispatcherCfg.eventProvider.transactions.asString).get
               .withHeader(bs.headerCbeEnabled, true).get
 
             env.copy(flowMessage = newMsg)

@@ -127,7 +127,7 @@ object ResourceFilter {
     val files = unfilteredResources.flatMap(filterCandidates)
     val regex = new Regex(pattern)
     val filtered = files.map { case (file, relative) => applyFilter(file, regex, filterTargetDir, relative, props) }
-    log.info("Filtered Resources : " + filtered.mkString(","))
+    log.debug("Filtered Resources : " + filtered.mkString(","))
 
     filtered
   }

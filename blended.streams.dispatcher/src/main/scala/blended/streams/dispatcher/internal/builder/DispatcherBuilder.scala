@@ -128,7 +128,7 @@ case class DispatcherBuilder(
   }
 
   private[builder] def branchIds(envelopes : Seq[FlowEnvelope]) : Seq[String] =
-    envelopes.map(_.header[String](bs.headerBranchId)).filter(_.isDefined).map(_.get)
+    envelopes.map(_.header[String](bs.headerConfig.headerBranch)).filter(_.isDefined).map(_.get)
 
 
   private[builder] def transactionUpdate(event: WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {

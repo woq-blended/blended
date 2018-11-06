@@ -25,7 +25,7 @@ class ProviderFilter(vendor: String, provider: Option[String]) {
         // The provider to search for matches exactly => match
         case Some(p.provider) => true
         // if the provider to search for is a regex => matches if the regex matches
-        case (Some(pattern)) => p.provider.matches(pattern)
+        case Some(pattern) => p.provider.matches(pattern)
       }
 
       // If the vendor does not match, nothing matches

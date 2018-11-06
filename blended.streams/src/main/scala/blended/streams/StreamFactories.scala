@@ -1,15 +1,14 @@
-package blended.streams.testsupport
+package blended.streams
 
 import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.{ActorRef, ActorSystem}
-import akka.pattern.after
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import blended.streams.processor.{CollectingActor, Collector}
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
@@ -19,7 +18,7 @@ object StreamFactories {
     name : String,
     source : Source[T, NotUsed],
     timeout : FiniteDuration
-  )(implicit system : ActorSystem, materializer: ActorMaterializer, clazz : ClassTag[T]) : Collector[T] = {
+  )(implicit system : ActorSystem, materializer: Materializer, clazz : ClassTag[T]) : Collector[T] = {
 
     implicit val eCtxt = system.dispatcher
     val stopped = new AtomicBoolean(false)
@@ -37,7 +36,7 @@ object StreamFactories {
       case _ => stopped.set(true)
     }
 
-    after(timeout, system.scheduler){
+    akka.pattern.after(timeout, system.scheduler){
       if (!stopped.get()) {
         killswitch.shutdown()
       }

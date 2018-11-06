@@ -28,12 +28,12 @@ case class JmsStreamConfig(
 
 class JmsStreamBuilder(
   cfg : JmsStreamConfig
-)(implicit system: ActorSystem, materializer: Materializer) {
+)(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
   private val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
   private val outId = s"${cfg.toCf.vendor}:${cfg.toCf.provider}:${cfg.toDest.map(_.asString).getOrElse("out")}"
-  private val streamId = s"JmsStream($inId->$outId)"
+  private val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
 
   // configure the consumer
   private val srcSettings = JMSConsumerSettings(cfg.fromCf, cfg.headerCfg)
@@ -66,11 +66,11 @@ class JmsStreamBuilder(
         jmsDestination = Some(eventDest)
       )
 
-      val producer = JmsProducerSupport.jmsProducer(
+      val producer = jmsProducer(
         name = "event",
         settings = settings,
         autoAck = false,
-        log = Some(bridgeLogger)
+        log = bridgeLogger
       )
 
       transactionFlow().via(producer).to(Sink.ignore)
@@ -148,10 +148,10 @@ class JmsStreamBuilder(
   private val stream : Source[FlowEnvelope, NotUsed] = {
 
     RestartableJmsSource(
-      name = streamId, settings = srcSettings, requiresAck = true, log = bridgeLogger
+      name = streamId, settings = srcSettings, log = bridgeLogger
     )
-    .via(transactionWiretap(internalCf.get, internalProvider.get.eventDestination))
-    .via(JmsProducerSupport.jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = Some(bridgeLogger)))
+    .via(transactionWiretap(internalCf.get, internalProvider.get.transactions))
+    .via(jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = bridgeLogger))
   }
 
   // The stream will be handled by an actor which that can be used to shutdown the stream

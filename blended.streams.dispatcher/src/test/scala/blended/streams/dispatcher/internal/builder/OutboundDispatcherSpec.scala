@@ -7,13 +7,17 @@ import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.worklist.WorklistState.WorklistState
-import blended.streams.worklist.{WorklistEvent, WorklistState, WorklistStepCompleted}
+import blended.streams.worklist.{WorklistEvent, WorklistState}
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
+
+import scala.concurrent.ExecutionContext
 
 class OutboundDispatcherSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport  {
+
+  override def loggerName: String = classOf[OutboundDispatcherSpec].getName()
 
   private def runnableOutbound(
     ctxt : DispatcherExecContext,
@@ -47,13 +51,13 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
   }
 
   def testOutbound(expectedState: WorklistState, send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
-    withDispatcherConfig { ctxt =>
+    withDispatcherConfig { sr => ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
-      implicit val eCtx = system.dispatcher
+      implicit val eCtxt : ExecutionContext = system.dispatcher
       implicit val materializer : Materializer = ActorMaterializer()
 
-      val envelope = FlowEnvelope().withHeader(ctxt.bs.headerBranchId, "outbound").get
+      val envelope = FlowEnvelope().withHeader(ctxt.bs.headerConfig.headerBranch, "outbound").get
 
       val (outColl, errColl, out) = runnableOutbound(ctxt, envelope, send)
 

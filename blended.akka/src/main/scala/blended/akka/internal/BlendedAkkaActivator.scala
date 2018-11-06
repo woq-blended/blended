@@ -5,7 +5,9 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.util.logging.Logger
 import domino.DominoActivator
 
+import scala.concurrent.Await
 import scala.util.control.NonFatal
+import scala.concurrent.duration._
 
 class BlendedAkkaActivator extends DominoActivator {
 
@@ -22,7 +24,8 @@ class BlendedAkkaActivator extends DominoActivator {
         system.providesService[ActorSystem]
 
         onStop {
-          system.terminate()
+          // TODO: Should we really wait here ?
+          Await.result(system.terminate(), 10.seconds)
         }
       } catch {
         case NonFatal(e) =>

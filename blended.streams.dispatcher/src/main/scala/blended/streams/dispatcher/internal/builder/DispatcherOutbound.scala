@@ -10,7 +10,6 @@ import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.{ProviderResolver, ResourceTypeRouterConfig}
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.FlowEnvelope
-import blended.util.logging.LogLevel
 
 import scala.util.Try
 
@@ -26,7 +25,7 @@ object DispatcherOutbound {
         bs.withContextObject[BridgeProviderConfig](bs.bridgeProviderKey, env) { provider =>
           bs.withContextObject[Option[JmsDestination]](bs.bridgeDestinationKey, env) { dest =>
 
-            val outId = env.header[String](bs.headerBranchId).getOrElse("default")
+            val outId = env.header[String](bs.headerConfig.headerBranch).getOrElse("default")
 
             val p = (env.header[String](bs.headerBridgeVendor), env.header[String](bs.headerBridgeProvider)) match {
               case (Some(v), Some(p)) =>
@@ -43,7 +42,7 @@ object DispatcherOutbound {
 
             val resolvedDest = mappedDest match {
               case r@JmsQueue("replyTo") =>
-                env.header[String](JmsFlowSupport.replyToHeader(bs.prefix)).map(s => JmsDestination.create(s).get) match {
+                env.header[String](JmsFlowSupport.replyToHeader(bs.headerConfig.prefix)).map(s => JmsDestination.create(s).get) match {
                   case None => throw new JmsDestinationMissing(env, outId)
                   case Some(r) => r
                 }
