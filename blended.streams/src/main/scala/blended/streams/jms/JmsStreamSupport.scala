@@ -37,7 +37,7 @@ trait JmsStreamSupport {
     )
 
     val toJms = jmsProducer(
-      name = "sender",
+      name = dest.asString,
       settings = settings,
       autoAck = true,
       log = log
@@ -56,9 +56,9 @@ trait JmsStreamSupport {
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
     StreamFactories.runSourceWithTimeLimit(
-      "received",
+      dest.asString,
       RestartableJmsSource(
-        name = "receiver",
+        name = dest.asString,
         settings = JMSConsumerSettings(connectionFactory = cf, headerConfig = headerCfg).withSessionCount(2).withDestination(Some(dest))
       ),
       timeout

@@ -50,15 +50,17 @@ class TransactionOutboundSpec extends LoggingFreeSpec
             ctxt.bs.streamLogger
           ).build()
 
-          val event = FlowTransaction.startEvent()
-          val envelope = FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(event)
+          val envelopes = Seq(
+            FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent()),
+            FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
+          )
 
           val switch = sendMessages(
             headerCfg = ctxt.bs.headerConfig,
             cf = cf,
             dest = JmsQueue("internal.transactions"),
             log = ctxt.bs.streamLogger,
-            envelope
+            envelopes:_*
           )
 
           val collector = receiveMessages(
@@ -67,11 +69,8 @@ class TransactionOutboundSpec extends LoggingFreeSpec
             dest = JmsQueue("internal.cbes")
           )
 
-          val fut = collector.result.map { l =>
-            l should have size 1
-          }
-
-          Await.result(fut, timeout + 1.second)
+          val cbes = Await.result(collector.result, timeout + 1.second)
+          cbes should have size 1
           switch.shutdown()
         }
       }
