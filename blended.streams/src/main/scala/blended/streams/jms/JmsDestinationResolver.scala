@@ -1,15 +1,54 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage}
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import javax.jms.{JMSException, Message, Session}
+
 import scala.concurrent.duration._
+import scala.util.Try
 
-trait JmsDestinationResolver {
+trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
-  def sendParameter(session: Session, env: FlowEnvelope) : JmsSendParameter
+  def settings : JmsProducerSettings
+
+  def sendParameter(session: Session, env: FlowEnvelope) : Try[JmsSendParameter]
+
+  // Get the destination from the message
+  val destination : FlowMessage => Try[JmsDestination] = { flowMsg => Try {
+    flowMsg.header[String](s"${destHeader(settings.headerConfig.prefix)}") match {
+      case Some(s) => JmsDestination.create(s).get
+      case None => settings.jmsDestination match {
+        case Some(d) => d
+        case None =>
+          throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
+      }
+    }
+  }}
+
+  val priority : FlowMessage => Int  = { flowMsg =>
+    flowMsg.header[Int](priorityHeader(settings.headerConfig.prefix)) match {
+      case Some(p) => p
+      case None => settings.priority
+    }
+  }
+
+  val timeToLive : FlowMessage => Option[FiniteDuration] = { flowMsg =>
+    flowMsg.header[Long](expireHeader(settings.headerConfig.prefix)) match {
+      case Some(l) => Some( (Math.max(1L, l - System.currentTimeMillis())).millis)
+      case None => settings.timeToLive
+    }
+  }
+
+  val deliveryMode : FlowMessage => JmsDeliveryMode = { flowMsg =>
+    flowMsg.header[String](deliveryModeHeader(settings.headerConfig.prefix)) match {
+      case Some(s) => JmsDeliveryMode.create(s).get
+      case None => settings.deliveryMode
+    }
+  }
+
 
   def createJmsMessage(session : Session, env : FlowEnvelope) : Message = {
+    val prefix = settings.headerConfig.prefix
 
     val flowMsg = env.flowMessage
 
@@ -31,29 +70,27 @@ trait JmsDestinationResolver {
       case (k,v) => msg.setObjectProperty(k, v.value)
     }
 
+    // Always try to get the CorrelationId from the flow Message
+    env.flowMessage.header[String](corrIdHeader(prefix)) match {
+      case Some(id) => msg.setJMSCorrelationID(id)
+      case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
+    }
+
     msg
   }
 }
 
-class SettingsDestinationResolver(settings: JmsProducerSettings)
+class SettingsDestinationResolver(override val settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
-  private val prefix = settings.headerConfig.prefix
-
-  override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
+  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
     val msg = createJmsMessage(session, env)
     // Get the destination
     val dest : JmsDestination = settings.jmsDestination match {
       case Some(d) => d
       case None => throw new JMSException(s"Could not resolve JMS destination for [$env]")
-    }
-
-    // Always try to get the CorrelationId from the flow Message
-    env.flowMessage.header[String](corrIdHeader(prefix)) match {
-      case Some(id) => msg.setJMSCorrelationID(id)
-      case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
     }
 
     JmsSendParameter(
@@ -66,56 +103,35 @@ class SettingsDestinationResolver(settings: JmsProducerSettings)
   }
 }
 
-class MessageDestinationResolver(settings: JmsProducerSettings)
+class MessageDestinationResolver(override val settings: JmsProducerSettings)
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
   private val prefix = settings.headerConfig.prefix
 
-  override def sendParameter(session: Session, env: FlowEnvelope): JmsSendParameter = {
+  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
     val flowMsg = env.flowMessage
     val msg = createJmsMessage(session, env)
 
     // Get the destination
-    val dest : JmsDestination = flowMsg.header[String](s"${destHeader(prefix)}") match {
-      case Some(s) => JmsDestination.create(s).get
-      case None => settings.jmsDestination match {
-        case Some(d) => d
-        case None =>
-          throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
-      }
-    }
+    val dest : JmsDestination = destination(flowMsg).get
 
-    // Always try to get the CorrelationId from the flow Message
-    flowMsg.header[String](corrIdHeader(prefix)) match {
-      case Some(id) => msg.setJMSCorrelationID(id)
-      case None => settings.correlationId().foreach(msg.setJMSCorrelationID)
-    }
+    // Get the priority
+    val prio : Int = priority(flowMsg)
 
-    val prio = flowMsg.header[Int](priorityHeader(prefix)) match {
-      case Some(p) => p
-      case None => settings.priority
-    }
+    // Get the TTL
+    val ttl : Option[FiniteDuration] = timeToLive(flowMsg)
 
-    val timeToLive : Option[FiniteDuration] = flowMsg.header[Long](expireHeader(prefix)) match {
-      case Some(l) => Some( (Math.max(1L, l - System.currentTimeMillis())).millis)
-      case None => settings.timeToLive
-    }
-
-    val delMode : JmsDeliveryMode = flowMsg.header[String](deliveryModeHeader(prefix)) match {
-      case Some(s) => JmsDeliveryMode.create(s).get
-      case None => settings.deliveryMode
-    }
+    // Get the delivery mode
+    val delMode : JmsDeliveryMode = deliveryMode(flowMsg)
 
     JmsSendParameter(
       message = msg,
       destination = dest,
       deliveryMode = delMode,
       priority = prio,
-      ttl = timeToLive
+      ttl = ttl
     )
-
   }
-
 }

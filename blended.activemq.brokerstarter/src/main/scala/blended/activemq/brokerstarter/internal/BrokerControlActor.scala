@@ -1,9 +1,11 @@
 package blended.activemq.brokerstarter.internal
 
+import java.lang.management.ManagementFactory
 import java.net.URI
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 
-import akka.actor.{Actor, OneForOneStrategy, Props, SupervisorStrategy}
-import akka.pattern.{Backoff, BackoffSupervisor}
+import akka.actor.{Actor, PoisonPill, Props}
 import blended.akka.OSGIActorConfig
 import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, IdAwareConnectionFactory}
 import blended.util.logging.Logger
@@ -16,7 +18,7 @@ import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFa
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
-import scala.concurrent.duration._
+import scala.concurrent.Future
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
 
@@ -54,27 +56,15 @@ class BrokerControlSupervisor(
 
         log.debug(s"Configuring Broker controller for [$brokerCfg]")
         val controlProps = BrokerControlActor.props(brokerCfg, cfg, sslContext)
-        val restartProps = BackoffSupervisor.props(
-          Backoff.onStop(
-            childProps = controlProps,
-            childName = brokerCfg.brokerName,
-            minBackoff = 10.seconds,
-            maxBackoff = 2.minutes,
-            randomFactor = 0.2,
-            maxNrOfRetries = -1
-          ).withAutoReset(10.seconds)
-            .withSupervisorStrategy(
-              OneForOneStrategy() {
-                case _ : Throwable => SupervisorStrategy.Restart
-              }
-            )
-        )
-
-        context.system.actorOf(restartProps, brokerCfg.brokerName)
+        val actor = context.system.actorOf(controlProps, brokerCfg.brokerName)
+        actor ! BrokerControlActor.StartBroker
       }
 
     case Stop =>
-      context.children.foreach(a => context.stop(a))
+      context.children.foreach { a =>
+        a ! BrokerControlActor.StopBroker
+        a ! PoisonPill
+      }
   }
 }
 
@@ -82,6 +72,9 @@ object BrokerControlActor {
 
   case object StartBroker
   case object StopBroker
+  case class BrokerStarted(uuid : String)
+
+  val debugCnt : AtomicLong = new AtomicLong(0L)
 
   def props(
     brokerCfg : BrokerConfig,
@@ -94,15 +87,13 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
   extends Actor {
 
   private[this] val log = Logger[BrokerControlActor]
+  private[this] var broker : Option[BrokerService] = None
+  private[this] var svcReg : Option[ServiceRegistration[_]] = None
+  private[this] val uuid = UUID.randomUUID().toString()
 
+  override def toString: String = s"BrokerControlActor(${brokerCfg})"
 
-  override def preStart(): Unit = self ! BrokerControlActor.StartBroker
-
-  // Memorize pending cleanup tasks
-  private[this] var cleanUp : List[() => Unit] = List.empty
-
-  private[this] def startBroker() :
-    (BrokerService, ServiceRegistration[BlendedSingleConnectionFactory]) = {
+  private[this] def startBroker() : Unit = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -110,31 +101,45 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     val uri = s"file://$cfgDir/${brokerCfg.file}"
 
     try {
-
       log.info(s"Starting ActiveMQ broker [${brokerCfg.brokerName}] with config file [$uri] ")
-
-      BrokerFactory.setStartDefault(false)
 
       Thread.currentThread().setContextClassLoader(classOf[DefaultBrokerFactory].getClassLoader())
 
+      BrokerFactory.setStartDefault(false)
       val brokerFactory = new XBeanBrokerFactory()
-      brokerFactory.setValidate(false)
 
-      val broker = brokerFactory.createBroker(new URI(uri))
+      val b = brokerFactory.createBroker(new URI(uri))
+      broker = Some(b)
+
       sslCtxt.foreach{ ctxt =>
         val amqSslContext = new org.apache.activemq.broker.SslContext()
         amqSslContext.setSSLContext(ctxt)
-        broker.setSslContext(amqSslContext)
+        b.setSslContext(amqSslContext)
       }
 
-      // TODO: set Datadirectories from Code ?
-      broker.setBrokerName(brokerCfg.brokerName)
-      broker.start()
-      broker.waitUntilStarted()
+      val actor = context.self
 
-      log.info(s"ActiveMQ broker [${brokerCfg.brokerName}] started successfully.")
+      // TODO: set Datadirectories from Code ??
+      val f = Future {
+        b.setBrokerName(brokerCfg.brokerName)
+        b.setStartAsync(false)
+        b.start()
+        b.waitUntilStarted()
+        log.info(s"ActiveMQ broker [${brokerCfg.brokerName}] started successfully.")
+        actor ! BrokerControlActor.BrokerStarted(uuid)
+      }(context.system.dispatcher)
+    } catch {
+      case NonFatal(t) =>
+        log.warn(t)(s"Error starting ActiveMQ broker [${brokerCfg.brokerName}]")
+        throw t
+    } finally {
+      Thread.currentThread().setContextClassLoader(oldLoader)
+    }
+  }
 
-      val registrar = new Object with ServiceProviding {
+  private[this] def registerService(): Unit = {
+    if (svcReg.isEmpty) {
+      new Object with ServiceProviding {
 
         override protected def capsuleContext: CapsuleContext = new SimpleDynamicCapsuleContext()
 
@@ -160,45 +165,37 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
           Some(cfg.bundleContext)
         )
 
-        val svcReg : ServiceRegistration[BlendedSingleConnectionFactory] = cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
+        svcReg = Some(cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "vendor" -> brokerCfg.vendor,
           "provider" -> brokerCfg.provider,
           "brokerName" -> brokerCfg.brokerName
-        ))
+        )))
       }
-
-      cleanUp = List(() => stopBroker(broker, registrar.svcReg))
-
-      (broker, registrar.svcReg)
-
-    } catch {
-      case NonFatal(t) =>
-        log.warn(t)(s"Error starting ActiveMQ broker [${brokerCfg.brokerName}]")
-        throw t
-    } finally {
-      Thread.currentThread().setContextClassLoader(oldLoader)
     }
   }
 
-  private[this] def stopBroker(broker: BrokerService, svcReg: ServiceRegistration[BlendedSingleConnectionFactory]) : Unit = {
-    log.info(s"Stopping ActiveMQ Broker [${brokerCfg.brokerName}]")
-    
-    try {
-      broker.stop()
-      broker.waitUntilStopped()
-    } catch {
-      case t : Throwable => 
-        log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
-    } finally {
+  private[this] def stopBroker() : Unit = {
+
+    broker.foreach { b =>
+      log.info(s"Stopping ActiveMQ Broker [${brokerCfg.brokerName}]")
+      try {
+        b.stop()
+        b.waitUntilStopped()
+      } catch {
+        case t : Throwable =>
+          log.error(t)(s"Error stopping ActiveMQ broker [${brokerCfg.brokerName}]")
+      } finally {
         try {
           log.info(s"Removing OSGi service for Activemq Broker [${brokerCfg.brokerName}]")
-          svcReg.unregister() 
+          svcReg.foreach(_.unregister())
         } catch {
           case _ : IllegalStateException => // was already unregistered
         }
-
-      cleanUp = List.empty
+      }
     }
+
+    broker = None
+    svcReg = None
   }
 
   override def preRestart(reason: Throwable, message: Option[Any]): Unit = {
@@ -206,23 +203,24 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     super.preRestart(reason, message)
   }
 
-  override def postStop(): Unit = cleanUp.foreach(t => t())
-
-  override def receive : Receive = withoutBroker
-
-  def withoutBroker : Receive = {
-    case BrokerControlActor.StartBroker =>
-      val (broker, reg) = startBroker()
-      context.become(withBroker(broker, reg))
-    case BrokerControlActor.StopBroker =>
-      log.debug("Ignoring stop command for ActiveMQ as Broker is already stopped")
+  override def postStop(): Unit = broker.foreach{ b =>
+    b.stop()
+    b.waitUntilStopped()
   }
 
-  def withBroker(broker: BrokerService, reg: ServiceRegistration[BlendedSingleConnectionFactory]) : Receive = {
+  private val jvmId = ManagementFactory.getRuntimeMXBean().getName()
+
+  override def receive : Receive =  {
     case BrokerControlActor.StartBroker =>
-      log.debug("Ignoring start command for ActiveMQ as Broker is already started")
+      log.debug(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      if (broker.isEmpty) { startBroker() }
+    case started : BrokerControlActor.BrokerStarted =>
+      log.debug(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      if (started.uuid == uuid) {
+        broker.foreach{ b => registerService() }
+      }
     case BrokerControlActor.StopBroker =>
-      stopBroker(broker, reg)
-      context.become(withoutBroker)
+      log.debug(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      stopBroker()
   }
 }

@@ -1,9 +1,9 @@
 package blended.jms.utils
 
 import java.lang.management.ManagementFactory
-import javax.jms.{Connection, ConnectionFactory, JMSException}
-import javax.management.ObjectName
 
+import javax.jms.{Connection, ConnectionFactory, JMSException}
+import javax.management.{MBeanInfo, ObjectName}
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import blended.jms.utils.internal._
@@ -52,7 +52,20 @@ class BlendedSingleConnectionFactory(
         val jmxBean = new ConnectionMonitor(vendor, provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
-        jmxServer.registerMBean(jmxBean, objName)
+
+        if (jmxServer.isRegistered(objName)) {
+          try {
+            jmxServer.unregisterMBean(objName)
+          } catch {
+            case t : Throwable =>
+          }
+        }
+
+        try {
+          jmxServer.registerMBean(jmxBean, objName)
+        } catch {
+          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]")
+        }
 
         Some(jmxBean)
       } else {

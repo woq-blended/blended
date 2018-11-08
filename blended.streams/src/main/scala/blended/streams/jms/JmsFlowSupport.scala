@@ -31,8 +31,7 @@ final case class JmsSendParameter(
   ttl : Option[FiniteDuration]
 )
 
-trait
-JmsEnvelopeHeader {
+trait JmsEnvelopeHeader {
   val jmsHeaderPrefix : String => String = s => s + "JMS"
 
   val srcVendorHeader : String => String = s => jmsHeaderPrefix(s) + "SrcVendor"
@@ -107,7 +106,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
   val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) =>  Try {
 
-    settings.destinationResolver(settings).sendParameter(session, flowEnv)
+    settings.destinationResolver(settings).sendParameter(session, flowEnv).get
 
   }
 }

@@ -16,6 +16,8 @@ object PojoSrTestHelper {
 
 trait PojoSrTestHelper {
 
+  private val log = Logger[PojoSrTestHelper]
+
   import PojoSrTestHelper._
 
   def withPojoServiceRegistry[T](f: BlendedPojoRegistry => T) =
@@ -49,14 +51,16 @@ trait PojoSrTestHelper {
     activator: Option[() => BundleActivator] = None
   )(f: BlendedPojoRegistry => T): T = {
 
-    var bundleId: Long = 0
+    var bundleId = 0L
 
     try {
       bundleId = sr.startBundle(symbolicName, activator)
+      log.info(s"Started bundle [$symbolicName] with id [$bundleId]")
       f(sr)
     } catch {
       case NonFatal(e) => throw e
     } finally {
+      log.info(s"Stopping bundle with id [$bundleId]")
       sr.getBundleContext().getBundle(bundleId).stop()
     }
   }
@@ -117,8 +121,9 @@ trait PojoSrTestHelper {
       case Seq() => f(sr)
       case head :: tail =>
         try {
-          bundleId = sr.startBundle(head._1, head._2)
-          withStartedBundles(sr)(tail)(f)
+          withStartedBundle(sr)(
+            head._1, head._2
+          ){ sr => withStartedBundles(sr)(tail)(f) }
         } catch {
           case NonFatal(e) => throw e
         }

@@ -1,5 +1,6 @@
 import TestLogConfig.autoImport._
 import sbt._
+import sbt.Keys._
 
 object BlendedStreamsDispatcher extends ProjectFactory {
 
@@ -26,6 +27,7 @@ object BlendedStreamsDispatcher extends ProjectFactory {
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+      Test / parallelExecution := false,
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "blended" -> "DEBUG"

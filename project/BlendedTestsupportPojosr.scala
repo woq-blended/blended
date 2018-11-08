@@ -12,6 +12,7 @@ object BlendedTestsupportPojosr extends ProjectFactory {
   )
 
   override val project = helper.baseProject.dependsOn(
+    BlendedUtilLogging.project,
     BlendedContainerContextImpl.project,
     BlendedDomino.project
   )

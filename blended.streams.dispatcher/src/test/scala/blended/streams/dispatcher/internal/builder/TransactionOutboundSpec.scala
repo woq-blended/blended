@@ -7,12 +7,14 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.transaction.internal.FlowTransactionManager
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 
+@RequiresForkedJVM
 class TransactionOutboundSpec extends LoggingFreeSpec
   with Matchers
   with DispatcherSpecSupport

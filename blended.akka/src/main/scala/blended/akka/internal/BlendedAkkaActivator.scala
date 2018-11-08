@@ -25,6 +25,7 @@ class BlendedAkkaActivator extends DominoActivator {
 
         onStop {
           // TODO: Should we really wait here ?
+          log.info("Stopping ActorSystem")
           Await.result(system.terminate(), 10.seconds)
         }
       } catch {

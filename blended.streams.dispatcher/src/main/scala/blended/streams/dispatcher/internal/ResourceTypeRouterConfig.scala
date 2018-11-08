@@ -26,9 +26,6 @@ object ResourceTypeRouterConfig {
     cfg: Config
   ) : Try[ResourceTypeRouterConfig] = Try {
 
-    val headerPrefix = idSvc.containerContext.getContainerConfig()
-      .getString("blended.flow.headerPrefix", "Blended")
-
     val internalProvider = provider.internalProvider.get
 
     val eventProvider = ProviderResolver.getProvider(
@@ -53,11 +50,10 @@ object ResourceTypeRouterConfig {
       }
 
     val defaultHeader : List[DefaultHeaderConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map{ cfg =>
-      DefaultHeaderConfig.create(idSvc, cfg)
+      DefaultHeaderConfig.create(cfg)
     }
 
     ResourceTypeRouterConfig(
-      headerPrefix = headerPrefix,
       defaultProvider = internalProvider,
       eventProvider = eventProvider,
       applicationLogHeader = logHeader,
@@ -70,7 +66,7 @@ object ResourceTypeRouterConfig {
 
 object DefaultHeaderConfig {
 
-  def create(idSvc : ContainerIdentifierService, cfg : Config) : DefaultHeaderConfig = {
+  def create(cfg : Config) : DefaultHeaderConfig = {
 
     val name = cfg.getString("name")
     val expr = cfg.getStringOption("expression")
@@ -87,7 +83,6 @@ case class DefaultHeaderConfig(
 )
 
 case class ResourceTypeRouterConfig(
-  headerPrefix : String,
   defaultProvider : BridgeProviderConfig,
   eventProvider : BridgeProviderConfig,
   providerRegistry : BridgeProviderRegistry,

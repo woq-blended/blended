@@ -67,9 +67,14 @@ case class DispatcherFanout(
           .withHeader(bs.headerBridgeMaxRetry, oh.maxRetries).get
           .withHeader(bs.headerAutoComplete, oh.autoComplete).get
 
-        if (oh.timeToLive >= 0) {
+        if (oh.timeToLive >= 0L) {
           newEnv = newEnv.withHeader(bs.headerTimeToLive, oh.timeToLive).get
+        } else {
+          newEnv = newEnv.removeHeader(bs.headerTimeToLive)
         }
+
+        newEnv = newEnv
+          .withHeader(bs.headerDeliveryMode, oh.deliveryMode).get
 
         oh.header.foreach { case (header, value) =>
           val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get

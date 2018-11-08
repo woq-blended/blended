@@ -55,6 +55,8 @@ final case class FlowEnvelope private[message] (
     copy(flowMessage = flowMessage.withHeader(key, value, overwrite).get)
   }
 
+  def removeHeader(keys: String*) : FlowEnvelope = copy(flowMessage.removeHeader(keys:_*))
+
   def removeFromContext(key: String) : FlowEnvelope = copy(flowContext = flowContext.filter(_ != key))
   def withContextObject(key: String, o: Any) : FlowEnvelope = copy(flowContext = flowContext.filter(_ != key) + (key -> o))
 

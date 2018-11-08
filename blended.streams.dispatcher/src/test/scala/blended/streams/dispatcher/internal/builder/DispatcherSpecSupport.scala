@@ -3,7 +3,6 @@ package blended.streams.dispatcher.internal.builder
 import java.io.File
 
 import akka.actor.ActorSystem
-import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.BridgeActivator
@@ -44,7 +43,7 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
     vendor : String, provider : String, timeout: FiniteDuration
   ) : Try[IdAwareConnectionFactory] = {
 
-    implicit val to = timeout
+    implicit val to : FiniteDuration = timeout
     val started = System.currentTimeMillis()
 
     val cf = mandatoryService[IdAwareConnectionFactory](sr)(Some(s"(&(vendor=$vendor)(provider=$provider))"))
@@ -106,7 +105,5 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
       }
     }
   }
-
-
 }
 

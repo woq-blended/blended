@@ -71,6 +71,7 @@ class ProjectSettings(
       Keys.libraryDependencies ++= libDeps,
       Test / javaOptions += ("-DprojectTestOutput=" + (Test / classDirectory).value), 
       Test / fork := true,
+      Test / parallelExecution := false,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
       Test / unmanagedResourceDirectories += baseDirectory.value / "src" / "test" / "binaryResources",
 

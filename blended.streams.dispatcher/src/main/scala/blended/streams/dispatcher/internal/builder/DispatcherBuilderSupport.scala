@@ -21,7 +21,7 @@ trait DispatcherBuilderSupport {
 
   val streamLogger : Logger
 
-  val header : String => String = name => headerCfg + name
+  val header : String => String = name => headerCfg.prefix + name
 
   // Keys to stick objects into the FlowEnvelope context
   val appHeaderKey : String = "AppLogHeader"
@@ -47,6 +47,7 @@ trait DispatcherBuilderSupport {
   def headerBridgeRetryCount     : String = header("BridgeRetryCount")
   def headerBridgeMaxRetry       : String = header("BridgeMaxRetry")
 
+  def headerDeliveryMode         : String = header("DeliveryMode")
   def headerTimeToLive           : String = header("TimeToLive")
 
   /**

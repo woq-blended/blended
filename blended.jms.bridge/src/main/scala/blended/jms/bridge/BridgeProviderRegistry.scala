@@ -10,6 +10,8 @@ class BridgeProviderRegistry(
   provider : List[BridgeProviderConfig]
 ) {
 
+  val allProvider : List[BridgeProviderConfig] = provider
+
   def internalProvider : Try[BridgeProviderConfig] = Try {
     provider.find(_.internal) match {
       case None => throw new NoInternalBridgeProviderException
@@ -26,4 +28,5 @@ class BridgeProviderRegistry(
 
   def jmsProvider(v: String, p: String): Option[BridgeProviderConfig] =
     provider.find(bp => bp.vendor == v && bp.provider == p)
+
 }
