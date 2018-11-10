@@ -69,6 +69,7 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(i
       }
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
+        log.trace(s"Trying to send envelope [$env]")
         // select one sender session randomly
         val idx : Int = rnd.nextInt(jmsSessions.size)
         val key = jmsSessions.keys.takeRight(idx+1).head
