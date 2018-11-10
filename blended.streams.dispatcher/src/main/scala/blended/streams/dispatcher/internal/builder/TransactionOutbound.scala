@@ -2,7 +2,7 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
 import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.IdAwareConnectionFactory
@@ -10,7 +10,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction._
 import blended.streams.transaction.internal.FlowTransactionStream
-import blended.streams.{StreamController, StreamControllerConfig}
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.util.Try
@@ -42,7 +42,7 @@ class TransactionOutbound(
     )
   }
 
-  private val jmsSink : Try[Sink[FlowEnvelope, NotUsed]] = Try {
+  private val jmsSink : Try[Flow[FlowEnvelope, FlowEnvelope, NotUsed]] = Try {
     val sinkSettings = JmsProducerSettings(
       headerConfig = headerConfig,
       connectionFactory = internalCf,
@@ -54,7 +54,7 @@ class TransactionOutbound(
       name = "cbeoutbound",
       settings = sinkSettings,
       log = log
-    ).to(Sink.ignore)
+    )
   }
 
   private val logTransaction : Flow[FlowTransaction, FlowTransaction, NotUsed] =
@@ -81,13 +81,30 @@ class TransactionOutbound(
       val filter = b.add(Flow[FlowTransaction].filter(_.state != FlowTransactionState.Updated))
       val env = b.add(toEnvelope)
       val cbe = b.add(jmsSink.get)
-      val cbeFilter = b.add(Flow[FlowEnvelope].filter{ env =>
+
+      val cbeFilter = b.add(FlowProcessor.partition[FlowEnvelope] { env =>
         env.header[Boolean](bs.headerCbeEnabled).getOrElse(true)
       })
 
-      split.out(1) ~> trans ~> filter ~> logger ~> env ~> cbeFilter ~> cbe
+      val cbeMerge = b.add(Merge[FlowEnvelope](2))
 
-      FlowShape(split.in, split.out(0))
+      split.out(1) ~> trans ~> filter ~> logger ~> env ~> cbeFilter.in
+
+      cbeFilter.out0 ~> cbe ~> cbeMerge.in(0)
+      cbeFilter.out1 ~> cbeMerge.in(1)
+
+      val zip = b.add(Zip[FlowEnvelope, FlowEnvelope]())
+
+      cbeMerge.out ~> zip.in1
+      split.out(0) ~> zip.in0
+
+      val ackEnv = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ case (org, cbe) =>
+        org
+      })
+
+      zip.out ~> ackEnv.in
+
+      FlowShape(split.in, ackEnv.out)
     }
 
     Flow.fromGraph(g)
