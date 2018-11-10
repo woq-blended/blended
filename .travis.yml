@@ -62,7 +62,7 @@ jobs:
     - ./dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
     - tar -xzf target.tgz
     script:
-    - sbt buildSite
+    - sbt jbakeSite
     deploy:
       provider: pages
       local-dir: target/site
