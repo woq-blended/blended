@@ -8,15 +8,13 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionState, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
-class DispatcherSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport {
+class DispatcherSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = classOf[DispatcherSpec].getName()
 
@@ -51,11 +49,11 @@ class DispatcherSpec extends LoggingFreeSpec
     (actor, killswitch, transColl)
   }
 
-  val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
+  private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
   private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
-    withDispatcherConfig { sr => ctxt =>
-      implicit val eCtxt = ctxt.system.dispatcher
+    withDispatcherConfig { ctxt =>
+      implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killswitch, coll) = runDispatcher(ctxt, goodSend)
 
@@ -79,7 +77,7 @@ class DispatcherSpec extends LoggingFreeSpec
       )
 
       runTest(testMsgs){ events =>
-        events should have size (3)
+        events should have size 3
         assert(events.forall(_.state == FlowTransactionState.Failed))
       }
     }
@@ -91,7 +89,7 @@ class DispatcherSpec extends LoggingFreeSpec
       )
 
       runTest(testMsgs){ events =>
-        events should have size(1)
+        events should have size 1
         events.foreach { e =>
           val event = e.asInstanceOf[FlowTransactionUpdate]
           event.state should be (FlowTransactionState.Updated)
@@ -106,11 +104,11 @@ class DispatcherSpec extends LoggingFreeSpec
       )
 
       runTest(testMsgs){ events =>
-        events should have size(2)
+        events should have size 2
 
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
         event.state should be (FlowTransactionState.Updated)
-        event.branchIds should have size(1)
+        event.branchIds should have size 1
       }
     }
   }

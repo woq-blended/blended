@@ -58,12 +58,15 @@
           </amq:policyEntry>
         </amq:policyEntries>
       </amq:policyMap>
+    </amq:destinationPolicy>
 
+    <amq:plugins>
       <amq:redeliveryPlugin>
         <amq:redeliveryPolicyMap>
-          <amq:redeliveryPolicyEntries>
+          <amq:redeliveryPolicyMap>
+            <amq:redeliveryPolicyEntries />
             <amq:defaultEntry>
-              <amq:reliveryPolicy
+              <amq:redeliveryPolicy
                 maximumRedeliveries = "5"
                 initialRedeliveryDelay = "5000"
                 maximumRedeliveryDelay = "120000"
@@ -71,11 +74,10 @@
                 useExponentialBackOff = "true"
               />
             </amq:defaultEntry>
-          </amq:redeliveryPolicyEntries>
+          </amq:redeliveryPolicyMap>
         </amq:redeliveryPolicyMap>
       </amq:redeliveryPlugin>
-
-    </amq:destinationPolicy>
+    </amq:plugins>
 
   </amq:broker>
 

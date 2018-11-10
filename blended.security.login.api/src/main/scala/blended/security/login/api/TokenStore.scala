@@ -69,6 +69,8 @@ trait TokenStore {
     */
   def removeToken(id: String) : Option[Token]
 
+  def removeAllTokens() : Unit
+
   /**
     * Store a given token in the store. If the token already exists, an exception is thrown.
     * @param token The token to be stored

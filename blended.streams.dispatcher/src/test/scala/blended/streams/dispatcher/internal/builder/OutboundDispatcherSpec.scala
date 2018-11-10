@@ -8,14 +8,12 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.worklist.WorklistState.WorklistState
 import blended.streams.worklist.{WorklistEvent, WorklistState}
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
 
-class OutboundDispatcherSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport  {
+class OutboundDispatcherSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = classOf[OutboundDispatcherSpec].getName()
 
@@ -51,7 +49,7 @@ class OutboundDispatcherSpec extends LoggingFreeSpec
   }
 
   def testOutbound(expectedState: WorklistState, send: Flow[FlowEnvelope, FlowEnvelope, NotUsed]) : Unit = {
-    withDispatcherConfig { sr => ctxt =>
+    withDispatcherConfig { ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
       implicit val eCtxt : ExecutionContext = system.dispatcher

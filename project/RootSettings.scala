@@ -1,0 +1,29 @@
+import JBake.autoImport._
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import sbt.Keys._
+import sbt._
+
+object RootSettings {
+
+  private val blendedDocs = BlendedDocsJs.project
+
+  def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
+    Compile / jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
+    Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
+    Compile / jbakeSiteAssets := {
+
+      val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
+      val assetDir = (Compile / jbakeOutputDir).value
+
+      Map(
+        crossTarget.value / "unidoc" -> assetDir / "scaladoc",
+        crossTarget.value / "scoverage-report" -> assetDir / "coverage",
+        modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
+        modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
+        modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",
+        modulesDir / "node_modules" / "perfect-scrollbar" / "dist" / "perfect-scrollbar.js" -> assetDir / "js" / "perfect-scrollbar.js",
+        modulesDir / "node_modules" / "perfect-scrollbar" / "css" / "perfect-scrollbar.css" -> assetDir / "css" / "perfect-scrollbar.css",
+      )
+    }
+  )
+}

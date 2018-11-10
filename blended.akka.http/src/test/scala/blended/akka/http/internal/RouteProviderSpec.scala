@@ -1,12 +1,13 @@
 package blended.akka.http.internal
 
+import java.io.File
+
 import scala.util.Try
-
 import org.scalatest.FreeSpec
-
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import blended.akka.http.HttpContext
 import blended.akka.http.SimpleHttpContext
+import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.PojoSrTestHelper
 import domino.DominoActivator
 
@@ -14,6 +15,8 @@ class RouteProviderSpec
   extends FreeSpec
   with ScalatestRouteTest
   with PojoSrTestHelper {
+
+  override def baseDir: String = new File(System.getProperty(BlendedTestSupport.projectTestOutput)).getAbsolutePath()
 
   val routeProvider = new RouteProvider()
   val route = routeProvider.dynamicRoute
@@ -38,7 +41,7 @@ class RouteProviderSpec
   "Inside a dynamic (OSGi) environment, the RouteProvider should" - {
 
     "handle comming and going HttpContext registrations" in {
-      withPojoServiceRegistry { sr =>
+      withPojoServiceRegistry { sr => Try {
 
         val serviceBundle = new DominoActivator() {
           whenBundleActive {
@@ -88,10 +91,10 @@ class RouteProviderSpec
           Try { routeBundle.stop(bundleContext) }
         }
       }
-    }
+    }}
 
     "handle HttpContext registrations with prefixes containing slashes" in {
-      withPojoServiceRegistry { sr =>
+      withPojoServiceRegistry { sr => Try {
 
         val serviceBundle = new DominoActivator() {
           whenBundleActive {
@@ -141,7 +144,7 @@ class RouteProviderSpec
           Try { routeBundle.stop(bundleContext) }
         }
       }
-    }
+    }}
 
   }
 

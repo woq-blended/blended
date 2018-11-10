@@ -4,46 +4,48 @@ import java.io.File
 
 import blended.security.internal.SecurityActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{ PojoSrTestHelper, SimplePojosrBlendedContainer }
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import javax.security.auth.login.LoginContext
-import org.scalatest.{ DoNotDiscover, FreeSpec }
+import org.osgi.framework.BundleActivator
+import org.scalatest.DoNotDiscover
+
+import scala.concurrent.duration._
 
 @DoNotDiscover
-class LDAPLoginSpec extends FreeSpec
-  with SimplePojosrBlendedContainer
+class LDAPLoginSpec extends SimplePojoContainerSpec
+  with LoggingFreeSpecLike
   with PojoSrTestHelper {
 
   private[this] val user = "andreas"
   private[this] val pwd = "mysecret"
-
   private[this] val log = Logger[LDAPLoginSpec]
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.security" -> new SecurityActivator()
+  )
 
   "the security activator should" - {
 
     "initialise the Login Module correctly" in {
 
-      val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+      val lc : LoginContext = new LoginContext("Test", new PasswordCallbackHandler(user, pwd.toCharArray()))
+      lc.login()
 
-      withSimpleBlendedContainer(baseDir) { sr =>
+      val sub = lc.getSubject()
 
-        withStartedBundle(sr)(symbolicName = "blended.security", activator = Some(() => new SecurityActivator())) { sr =>
+      implicit val timeout = 3.seconds
+      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
 
-          val lc : LoginContext = new LoginContext("Test", new PasswordCallbackHandler(user, pwd.toCharArray()))
-          lc.login()
+      val groups = mgr.permissions(sub)
 
-          val sub = lc.getSubject()
-
-          val ref = sr.getServiceReference(classOf[BlendedPermissionManager].getName())
-          val mgr = sr.getService(ref).asInstanceOf[BlendedPermissionManager]
-
-          val groups = mgr.permissions(sub)
-
-          assert(groups.granted.size == 2)
-          assert(groups.granted.exists(_.permissionClass == "admins"))
-          assert(groups.granted.exists(_.permissionClass == "blended"))
-        }
-      }
+      assert(groups.granted.size == 2)
+      assert(groups.granted.exists(_.permissionClass == "admins"))
+      assert(groups.granted.exists(_.permissionClass == "blended"))
     }
   }
+
 }

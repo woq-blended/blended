@@ -3,23 +3,21 @@ package blended.streams.dispatcher.internal.builder
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import akka.stream._
+import akka.stream.scaladsl.{GraphDSL, Keep, Source}
 import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted, WorklistState, WorklistStepCompleted}
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-class WorklistEventhandlerSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport {
+class WorklistEventhandlerSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = "event.handler"
 
@@ -56,7 +54,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
   }
 
   private def run(vendor: String, provider: String, autoComplete : Boolean*)(f : (FlowEnvelope, List[FlowTransactionEvent]) => Unit) =
-    withDispatcherConfig { sr => ctxt =>
+    withDispatcherConfig { ctxt =>
       implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
       val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -89,7 +87,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
     "Generate a Transaction update when a new worklist is started" in {
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -118,7 +116,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     }
 
     "Generate a transaction failed event when the worklist has failed" in {
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -145,7 +143,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
     }
 
     "Generate a transaction failed event when the worklist times out" in {
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)
@@ -173,7 +171,7 @@ class WorklistEventhandlerSpec extends LoggingFreeSpec
 
       val ackCount : AtomicInteger = new AtomicInteger(0)
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
 
         val (actor, killSwitch, transColl, errColl) = runEventHandler(ctxt)

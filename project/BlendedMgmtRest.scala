@@ -12,6 +12,7 @@ object BlendedMgmtRest extends ProjectFactory {
       Dependencies.akkaHttpCore,
       Dependencies.akkaStream,
 
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.scalatest % "test",
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.sttp % "test",

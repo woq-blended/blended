@@ -3,6 +3,7 @@ package blended.launcher
 import org.scalatest.FreeSpec
 import java.io.File
 import blended.testsupport.TestFile
+import blended.testsupport.BlendedTestSupport.projectTestOutput
 
 class FelixFrameworkTest extends FreeSpec with TestFile {
 
@@ -19,7 +20,7 @@ class FelixFrameworkTest extends FreeSpec with TestFile {
       s"minimal: just the framework version ${v}" in {
 
         val launcherConfig = (
-          "repo = \"" + new File("target/test-osgi").getAbsolutePath() + """"
+          "repo = \"" + new File(projectTestOutput + "/../../test-osgi").getAbsolutePath() + """"
         |frameworkBundle = ${repo}"/org.apache.felix.framework-""" + v + """.jar"
         |startLevel = 10
         |defaultStartLevel = 4

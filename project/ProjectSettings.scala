@@ -1,8 +1,11 @@
+import CommonSettings.hasForkAnnotation
 import TestLogConfig.autoImport._
 import com.typesafe.sbt.osgi.SbtOsgi
 import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 import sbt.Keys._
+import sbt.Tests.{Group, SubProcess}
 import sbt._
+import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype
 
 trait ProjectFactory {
@@ -79,7 +82,42 @@ class ProjectSettings(
       Test / testlogLogToConsole := false,
       Test / testlogLogToFile := true,
 
-      Test / resourceGenerators += (Test / testlogCreateConfig).taskValue
+      Test / resourceGenerators += (Test / testlogCreateConfig).taskValue,
+
+      // inspired by : https://chariotsolutions.com/blog/post/sbt-group-annotated-tests-run-forked-jvms 
+      Test / testGrouping := {
+
+        val log = streams.value.log
+
+        val options = (Test/javaOptions).value.toVector
+
+        val annotatedTestNames : Seq[String] = (Test/compile).value.asInstanceOf[Analysis]
+          .apis.internal.values.filter(hasForkAnnotation).map(_.name()).toSeq
+
+        val (forkedTests, otherTests) = (Test / definedTests).value.partition{ t =>
+          annotatedTestNames.contains(t.name)
+        }
+
+        val combined : Tests.Group = new Group(
+          name = "Combined",
+          tests = otherTests,
+          runPolicy = SubProcess(config = ForkOptions.apply().withRunJVMOptions(options))
+        )
+
+        val forked : Seq[Tests.Group] = forkedTests.map { t =>
+          new Group(
+            name = t.name,
+            tests = Seq(t),
+            runPolicy = SubProcess(config = ForkOptions.apply().withRunJVMOptions(options))
+          )
+        }
+
+        if (forkedTests.nonEmpty) {
+          log.info(s"Forking extra JVM for test [${annotatedTestNames.mkString(",")}]")
+        }
+
+        forked ++ Seq(combined)
+      },
 
     ) ++ osgiSettings ++ (
         // We need to explicitly load the rb settings again to

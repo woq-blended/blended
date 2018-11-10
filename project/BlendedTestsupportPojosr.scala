@@ -7,7 +7,9 @@ object BlendedTestsupportPojosr extends ProjectFactory {
     "A simple Pojo based test container that can be used in unit testing",
     osgi = false,
     deps = Seq(
-      Dependencies.felixConnect
+      Dependencies.scalatest,
+      Dependencies.felixConnect,
+      Dependencies.orgOsgi
     )
   )
 

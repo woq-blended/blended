@@ -120,14 +120,14 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
       val actor = context.self
 
       // TODO: set Datadirectories from Code ??
-      val f = Future {
-        b.setBrokerName(brokerCfg.brokerName)
-        b.setStartAsync(false)
-        b.start()
-        b.waitUntilStarted()
-        log.info(s"ActiveMQ broker [${brokerCfg.brokerName}] started successfully.")
-        actor ! BrokerControlActor.BrokerStarted(uuid)
-      }(context.system.dispatcher)
+      b.setBrokerName(brokerCfg.brokerName)
+      b.setStartAsync(false)
+      b.setSchedulerSupport(true)
+      b.start()
+      b.waitUntilStarted()
+      log.info(s"ActiveMQ broker [${brokerCfg.brokerName}] started successfully.")
+      actor ! BrokerControlActor.BrokerStarted(uuid)
+
     } catch {
       case NonFatal(t) =>
         log.warn(t)(s"Error starting ActiveMQ broker [${brokerCfg.brokerName}]")

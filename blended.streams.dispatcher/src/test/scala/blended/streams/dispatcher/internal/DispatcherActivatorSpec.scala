@@ -6,42 +6,42 @@ import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojosrBlendedContainer}
-import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
+
 import scala.concurrent.duration._
 
-class DispatcherActivatorSpec extends LoggingFreeSpec
+@RequiresForkedJVM
+class DispatcherActivatorSpec extends SimplePojoContainerSpec
   with Matchers
-  with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  private[this] def withDispatcher[T](f : BlendedPojoRegistry => () => T) : T = {
+  System.setProperty("AppCountry", "cc")
+  System.setProperty("AppLocation", "09999")
 
-    System.setProperty("AppCountry", "cc")
-    System.setProperty("AppLocation", "09999")
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-    withSimpleBlendedContainer(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()){sr =>
-      withStartedBundles(sr)(Seq(
-        "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-        "blended.activemq.brokerstarter" -> Some(() => new BrokerActivator()),
-        "blended.jms.bridge" -> Some(() => new BridgeActivator()),
-        "blended.streams.dispatcher" -> Some(() => new DispatcherActivator())
-      )) { sr =>
-        f(sr)()
-      }
-    }
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.activemq.brokerstarter" -> new BrokerActivator(),
+    "blended.jms.bridge" -> new BridgeActivator(),
+    "blended.streams.dispatcher" -> new DispatcherActivator()
+  )
+
+  private[this] def withDispatcher[T](f : () => T) : T = {
+    f()
   }
 
   "The activated dispatcher should" - {
 
     "create the dispatcher" in {
 
-      withDispatcher { sr => () =>
+      withDispatcher { () =>
 
         implicit val timeout = 3.seconds
-        val xx = mandatoryService[IdAwareConnectionFactory](sr)(None)
+        val xx = mandatoryService[IdAwareConnectionFactory](registry)(None)
         pending
       }
     }

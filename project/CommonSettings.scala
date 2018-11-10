@@ -1,11 +1,26 @@
 import com.typesafe.sbt.SbtScalariform.autoImport._
 import sbt.Keys._
+import sbt.Tests.{Group, SubProcess}
 import sbt._
+import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype.SonatypeKeys._
+import xsbti.api.{AnalyzedClass, Projection}
 
 object CommonSettings {
 
   val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
+
+  def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
+
+    val c = clazz.api().classApi()
+
+    c.annotations.exists { ann =>
+      ann.base() match {
+        case proj: Projection if proj.id() == "RequiresForkedJVM" => true
+        case _ => false
+      }
+    }
+  }
 
   def apply() : Seq[Def.Setting[_]] = Seq(
     organization := "de.wayofquality.blended",
@@ -45,5 +60,4 @@ object CommonSettings {
     scalariformAutoformat := false,
     scalariformWithBaseDirectory := true
   )
-
 }

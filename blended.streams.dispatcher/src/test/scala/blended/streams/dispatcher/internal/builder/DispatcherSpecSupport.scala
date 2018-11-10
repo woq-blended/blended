@@ -10,16 +10,20 @@ import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojosrBlendedContainer}
+import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import javax.jms.Connection
+import org.osgi.framework.BundleActivator
 
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTestHelper {
+trait DispatcherSpecSupport extends SimplePojoContainerSpec
+  with LoggingFreeSpecLike
+  with PojoSrTestHelper {
 
   case class DispatcherExecContext(
     cfg : ResourceTypeRouterConfig,
@@ -30,7 +34,14 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
 
   def country: String = "cc"
   def location: String = "09999"
-  def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.jms.bridge" -> new BridgeActivator()
+  )
+
   def loggerName: String
 
   System.setProperty("AppCountry", country)
@@ -67,43 +78,35 @@ trait DispatcherSpecSupport extends SimplePojosrBlendedContainer with PojoSrTest
     }
   }
 
-  def withDispatcherConfig[T](f : BlendedPojoRegistry => DispatcherExecContext => T) : T = {
+  def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = {
 
-    withSimpleBlendedContainer(baseDir) { sr =>
-      withStartedBundles(sr)(Seq(
-        "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-        "blended.jms.bridge" -> Some(() => new BridgeActivator())
-      )) { sr =>
+    val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
+      clazz = ClassTag(classOf[ContainerIdentifierService]),
+      timeout = 3.seconds
+    )
 
-        val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](sr)(None)(
-          clazz = ClassTag(classOf[ContainerIdentifierService]),
-          timeout = 3.seconds
-        )
+    implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
+      clazz = ClassTag(classOf[ActorSystem]),
+      timeout = 3.seconds
+    )
 
-        implicit val system : ActorSystem = mandatoryService[ActorSystem](sr)(None)(
-          clazz = ClassTag(classOf[ActorSystem]),
-          timeout = 3.seconds
-        )
+    val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](registry)(None)(
+      clazz = ClassTag(classOf[BridgeProviderRegistry]),
+      timeout = 3.seconds
+    )
 
-        val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](sr)(None)(
-          clazz = ClassTag(classOf[BridgeProviderRegistry]),
-          timeout = 3.seconds
-        )
+    val cfg = ResourceTypeRouterConfig.create(
+      idSvc,
+      provider,
+      idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
+    ).get
 
-        val cfg = ResourceTypeRouterConfig.create(
-          idSvc,
-          provider,
-          idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
-        ).get
-
-        val bs = new DispatcherBuilderSupport {
-          override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
-          override val streamLogger: Logger = Logger(loggerName)
-        }
-
-        f(sr)(DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs))
-      }
+    val bs = new DispatcherBuilderSupport {
+      override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
+      override val streamLogger: Logger = Logger(loggerName)
     }
+
+    f(DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs))
   }
 }
 

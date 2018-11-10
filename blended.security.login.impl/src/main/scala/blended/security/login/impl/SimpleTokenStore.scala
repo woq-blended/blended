@@ -17,6 +17,7 @@ object TokenStoreMessages {
   case class RemoveToken(id: String)
   case class StoreToken(t :Token)
   case object ListTokens
+  case object RemoveAllTokens
 }
 
 class MemoryTokenStore extends Actor {
@@ -42,6 +43,8 @@ class MemoryTokenStore extends Actor {
       }
 
     case ListTokens => sender() ! tokens.values.toSeq
+
+    case RemoveAllTokens => tokens.clear()
   }
 }
 
@@ -69,6 +72,9 @@ class SimpleTokenStore(
   override def removeToken(user: String): Option[Token] = {
     Await.result((storeActor ? RemoveToken(user)).mapTo[Option[Token]], 3.seconds)
   }
+
+
+  override def removeAllTokens(): Unit = storeActor ! RemoveAllTokens
 
   /**
     * @inheritdoc

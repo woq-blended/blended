@@ -4,13 +4,12 @@ import java.util
 
 import org.apache.felix.connect.felix.framework.ServiceRegistry
 import org.apache.felix.connect.felix.framework.util.EventDispatcher
-import org.osgi.framework
 import org.osgi.framework._
 
 import scala.collection.JavaConverters._
 
 class BlendedPojoBundle(
-  activator : Option[() => BundleActivator],
+  activator : BundleActivator,
   registry: ServiceRegistry,
   dispatcher: EventDispatcher,
   bundles: java.util.Map[java.lang.Long, Bundle],
@@ -50,7 +49,7 @@ class BlendedPojoBundle(
       m_context = new PojoSRBundleContext(this, registry, dispatcher, bundles, config)
       dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STARTING, this))
 
-      activator.foreach { f => f().start(m_context) }
+      activator.start(m_context)
       m_state = Bundle.ACTIVE
       dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STARTED, this))
     } catch {
@@ -70,7 +69,7 @@ class BlendedPojoBundle(
         {
           m_state = Bundle.STOPPING
           dispatcher.fireBundleEvent(new BundleEvent(BundleEvent.STOPPING, this))
-          activator.foreach(f => f().stop(m_context))
+          activator.stop(m_context)
         } catch {
           case ex : Throwable => throw new BundleException("Error while stopping bundle", ex);
         } finally {

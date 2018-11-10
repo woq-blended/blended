@@ -19,6 +19,8 @@ addCommandAlias("ciRelease", s"""; clean; packageBin ; sonatypeOpen "Auto Releas
 addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
 addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")
 
+addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
+
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
 lazy val global = Def.settings(
@@ -162,24 +164,6 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedDocs
 )
 
-def runCommandAndRemaining(command: String): State => State = { st: State =>
-  import sbt.complete.Parser
-  @annotation.tailrec
-  def runCommand(command: String, state: State): State = {
-    val nextState = Parser.parse(command, state.combinedParser) match {
-      case Right(cmd) => cmd()
-      case Left(msg) => throw sys.error(s"Invalid programmatic input:\n$msg")
-    }
-    nextState.remainingCommands.toList match {
-      case Nil => nextState
-      case head :: tail => runCommand(head.commandLine, nextState.copy(remainingCommands = tail))
-    }
-  }
-  runCommand(command, st.copy(remainingCommands = Nil)).copy(remainingCommands = st.remainingCommands)
-}
-
-lazy val buildSite = taskKey[Unit]("Build the blended site")
-
 lazy val root = {
   project
     .in(file("."))
@@ -191,53 +175,6 @@ lazy val root = {
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
-    .settings(
-      Compile / jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"), 
-      Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
-      buildSite := {
-
-        val log = streams.value.log
-        val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
-        val assetDir = baseDirectory.value / "doc" / "assets"
-
-        def runCommands(initial: State, commands : String*) : State = {
-          commands.foldLeft(initial){ case (s, cmd) =>
-            log.info(s"Executing command [$cmd]")
-            runCommandAndRemaining(cmd)(s)
-          }
-        }
-
-        val siteContent = baseDirectory.value / "doc" / "assets"
-        val unidoc = crossTarget.value / "unidoc"
-        val coverage = crossTarget.value / "scoverage-report"
-        
-        //val state1 = runCommands(state.value, "cleanCoverage", "unidoc")
-
-        if (coverage.exists() && coverage.isDirectory()) {
-          IO.copyDirectory(coverage, siteContent / "coverage")
-        }
-
-        if (unidoc.exists() && unidoc.isDirectory()) {
-          IO.copyDirectory(unidoc, siteContent / "scaladoc")
-        }
-
-        val state3 = runCommands(state.value, "blendedDocs / fastOptJS::webpack")
-
-        val copyMap : Map[File, File] = Map(
-          modulesDir / "blended-bootstrap.css" -> assetDir / "css" / "blended-bootstrap.css",
-          modulesDir / "node_modules" / "bootstrap" / "dist" / "js" / "bootstrap.min.js" -> assetDir / "js" / "bootstrap.min.js",
-          modulesDir / "node_modules" / "jquery" / "dist" / "jquery.min.js" -> assetDir / "js" / "jquery.min.js",
-          modulesDir / "node_modules" / "perfect-scrollbar" / "dist" / "perfect-scrollbar.js" -> assetDir / "js" / "perfect-scrollbar.js",
-          modulesDir / "node_modules" / "perfect-scrollbar" / "css" / "perfect-scrollbar.css" -> assetDir / "css" / "perfect-scrollbar.css",
-        )
-
-        copyMap.foreach { case (from, to) =>
-          log.info(s"Copying [$from] to [$to]")
-          IO.copyFile(from, to)
-        }
-
-        runCommands(state3, "jbakeBuild")
-      }
-    )
+    .settings(RootSettings(BlendedDocsJs.project))
     .aggregate(aggregates:_*)
 }

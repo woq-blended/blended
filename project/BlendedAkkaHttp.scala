@@ -30,6 +30,7 @@ object BlendedAkkaHttp extends ProjectFactory {
     BlendedUtil.project,
     BlendedUtilLogging.project,
     BlendedAkka.project,
+    BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test"
   )
 }

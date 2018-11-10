@@ -1,12 +1,10 @@
 package blended.streams.dispatcher.internal.builder
 
 import blended.jms.utils.{JmsQueue, JmsTopic}
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
-class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport {
+class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = classOf[ResourceTypeRouterConfigSpec].getName()
 
@@ -18,29 +16,29 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "resolve the configured bridge providers correctly" in {
 
-      withDispatcherConfig { src => ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         cfg.defaultProvider.id should be (amqId)
         cfg.eventProvider.id should be (sonicId)
         cfg.eventProvider.inbound should be (JmsQueue("bridge.data.in"))
-        cfg.applicationLogHeader.size should be (3)
+        cfg.applicationLogHeader should have size 3
       }
     }
 
     "resolve a simple dispatcher element correctly" in {
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val sagTest = cfg.resourceTypeConfigs.get("SagTest").get
 
         sagTest.withCBE should be(false)
         sagTest.inboundConfig should be(empty)
-        sagTest.outbound should have size (1)
+        sagTest.outbound should have size 1
 
         sagTest.outbound.foreach { out =>
           out.id should be("default")
-          out.outboundHeader should have size(1)
+          out.outboundHeader should have size 1
           val ohCfg = out.outboundHeader.head
           ohCfg.bridgeProviderConfig.id should be(amqId)
           ohCfg.bridgeDestination should be(Some(JmsTopic("SagTest")))
@@ -50,7 +48,7 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate an optional inbound destination correctly" in {
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val dataFromPosClient = cfg.resourceTypeConfigs.get("DataClient").get
@@ -62,10 +60,10 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
           in.header should be(Map("ResourceType" -> "${{#MsgType}}"))
         }
 
-        dataFromPosClient.outbound should have size (1)
+        dataFromPosClient.outbound should have size 1
         dataFromPosClient.outbound.foreach { out =>
           out.id should be("default")
-          out.outboundHeader should have size(1)
+          out.outboundHeader should have size 1
           val ohCfg = out.outboundHeader.head
           ohCfg.bridgeProviderConfig.id should be(ccQueueId)
           ohCfg.bridgeDestination should be(Some(JmsQueue("/Qucc/data/out")))
@@ -75,15 +73,15 @@ class ResourceTypeRouterConfigSpec extends LoggingFreeSpec
 
     "evaluate multiple outbound configs destination correctly" in {
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         val cfg = ctxt.cfg
 
         val fanout = cfg.resourceTypeConfigs.get("FanOut").get
 
-        fanout.outbound should have size(2)
+        fanout.outbound should have size 2
         val other = fanout.outbound.filter(_.id == "OtherApp")
 
-        other should have size(1)
+        other should have size 1
         other.foreach { out =>
           val ohCfg = other.head.outboundHeader.head
           ohCfg.timeToLive should be (14400000)

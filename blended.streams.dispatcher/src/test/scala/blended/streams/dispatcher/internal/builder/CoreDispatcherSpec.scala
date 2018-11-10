@@ -12,15 +12,13 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.worklist.WorklistEvent
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-class CoreDispatcherSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport {
+class CoreDispatcherSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = classOf[CoreDispatcherSpec].getName()
 
@@ -120,7 +118,7 @@ class CoreDispatcherSpec extends LoggingFreeSpec
       }
     }
 
-    withDispatcherConfig{ sr => ctxt =>
+    withDispatcherConfig{ ctxt =>
 
       implicit val system : ActorSystem = ctxt.system
       implicit val eCtxt : ExecutionContext = system.dispatcher

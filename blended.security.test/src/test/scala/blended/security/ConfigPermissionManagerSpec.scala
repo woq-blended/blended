@@ -1,11 +1,12 @@
 package blended.security
 
 import java.io.File
-
 import blended.testsupport.BlendedTestSupport
+import scala.concurrent.duration._
 
 class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
+  private implicit val timeout = 3.seconds
   override val baseDir = new File(BlendedTestSupport.projectTestOutput, "permissions").getAbsolutePath()
 
   "The ConfigPermissionManager" - {
@@ -31,39 +32,34 @@ class ConfigPermissionManagerSpec extends AbstractLoginSpec {
 
     "should map the JAAS groups to permissions" in {
 
-      withSecuredContainer[Unit] { sr =>
+      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
 
-        val mgr = permissionManager(sr)
+      assertPermissions(
+        mgr.permissions(login("andreas", "mysecret").get),
+        BlendedPermission(Some("container"), Map.empty),
+        BlendedPermission(Some("rollout"), Map.empty)
+      )
 
-        assertPermissions(
-          mgr.permissions(login("andreas", "mysecret").get),
-          BlendedPermission(Some("container"), Map.empty),
-          BlendedPermission(Some("rollout"), Map.empty)
-        )
-
-        assertPermissions(
-          mgr.permissions(login("tobias", "secret").get),
-          BlendedPermission(Some("container"), Map.empty),
-          BlendedPermission(Some("rollout"), Map("country" -> List("de")))
-        )
-      }
+      assertPermissions(
+        mgr.permissions(login("tobias", "secret").get),
+        BlendedPermission(Some("container"), Map.empty),
+        BlendedPermission(Some("rollout"), Map("country" -> List("de")))
+      )
     }
 
     "should merge configured permissions correctly" in {
-      withSecuredContainer[Unit] { sr =>
 
-        val mgr = permissionManager(sr)
+      val mgr = mandatoryService[BlendedPermissionManager](registry)(None)
 
-        assertPermissions(
-          mgr.permissions(login("john", "secret").get),
-          BlendedPermission(Some("rollout"), Map("country" -> List("de", "bg")))
-        )
+      assertPermissions(
+        mgr.permissions(login("john", "secret").get),
+        BlendedPermission(Some("rollout"), Map("country" -> List("de", "bg")))
+      )
 
-        assertPermissions(
-          mgr.permissions(login("tommy", "secret").get),
-          BlendedPermission(Some("rollout"), Map.empty)
-        )
-      }
+      assertPermissions(
+        mgr.permissions(login("tommy", "secret").get),
+        BlendedPermission(Some("rollout"), Map.empty)
+      )
     }
   }
 }

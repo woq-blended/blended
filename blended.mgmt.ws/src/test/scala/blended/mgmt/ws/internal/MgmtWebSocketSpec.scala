@@ -6,13 +6,13 @@ import java.security.{KeyFactory, PublicKey}
 import java.util.concurrent.{CompletionStage, TimeUnit}
 
 import akka.actor.ActorSystem
+import akka.actor.Status.Success
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
 import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
+import akka.stream._
 import akka.stream.javadsl.Sink
 import akka.stream.scaladsl.{Keep, Source}
-import akka.stream.{ActorMaterializer, KillSwitches, OverflowStrategy}
-import akka.testkit.TestKit
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.mgmt.rest.internal.MgmtRestActivator
@@ -22,59 +22,63 @@ import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
 import blended.security.login.rest.internal.RestLoginActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
+import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
-import org.scalatest.{FreeSpecLike, Matchers}
-import prickle.{Pickle, Unpickle, Unpickler}
+import org.osgi.framework.BundleActivator
+import org.scalatest.Matchers
+import prickle.{Pickle, Unpickle}
 import sun.misc.BASE64Decoder
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 import scala.util.Try
 
-class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
-  with FreeSpecLike
+class MgmtWebSocketSpec extends SimplePojoContainerSpec
   with Matchers
-  with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  implicit val actorSystem = system
-  implicit val actorMaterializer = ActorMaterializer()
-  implicit val eCtxt = system.dispatcher
-  implicit val backend = AkkaHttpBackend()
+  private implicit val timeout = 3.seconds
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+    "blended.security" -> new SecurityActivator(),
+    "blended.security.login" -> new LoginActivator(),
+    "blended.security.login.rest" -> new RestLoginActivator(),
+    "blended.persistence.h2" -> new H2Activator(),
+    "blended.updater.remote" -> new RemoteUpdaterActivator(),
+    "blended.mgmt.rest" -> new MgmtRestActivator(),
+    "blended.mgmt.ws" -> new MgmtWSActivator()
+  )
 
   // A convenience method to initialize a web sockets client
-  private[this] def wsFlow(token: String) = Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:9995/mgmtws/?token=$token"))
+  private[this] def wsFlow(token: String)(implicit system: ActorSystem) =
+    Http().webSocketClientFlow(WebSocketRequest(s"ws://localhost:9995/mgmtws/?token=$token"))
+
   // Just a source that stays open, so that actual traffic can happen
   private[this] val source = Source.actorRef[TextMessage](1, OverflowStrategy.fail)
 
   // We collect the stream of incoming Container Info's in a sequence
   private[this] val incoming : Sink[Message, CompletionStage[java.util.List[Message]]] = Sink.seq[Message]
 
-  private[this] def withWebSocketServer[T](f : () => T) : T = {
-    withSimpleBlendedContainer(new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()){sr =>
-      withStartedBundles(sr)(Seq(
-        "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-        "blended.akka.http" -> Some(() => new BlendedAkkaHttpActivator()),
-        "blended.security" -> Some(() => new SecurityActivator()),
-        "blended.security.login" -> Some(() => new LoginActivator()),
-        "blended.security.login.rest" -> Some(() => new RestLoginActivator()),
-        "blended.persistence.h2" -> Some(() => new H2Activator()),
-        "blended.updater.remote" -> Some(() => new RemoteUpdaterActivator()),
-        "blended.mgmt.rest" -> Some(() => new MgmtRestActivator()),
-        "blended.mgmt.ws" -> Some(() => new MgmtWSActivator())
-      )) { sr =>
-        f()
-      }
-    }
+  private[this] def withWebSocketServer[T](sr : BlendedPojoRegistry)(f : ActorSystem => Materializer => T)(implicit clazz : ClassTag[T]) : T = {
+    import scala.concurrent.ExecutionContext.Implicits.global
+    val system = mandatoryService[ActorSystem](sr)(None)
+    val materializer = ActorMaterializer()(system)
+    f(system)(materializer)
   }
 
-  private[this] def serverKey : Try[PublicKey] = Try {
+  private[this] def serverKey()(implicit system: ActorSystem, materializer: Materializer) : Try[PublicKey] = Try {
+
+    implicit val backend = AkkaHttpBackend()
 
     val request = sttp.get(uri"http://localhost:9995/login/key")
     val response = request.send()
@@ -93,7 +97,10 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
     kf.generatePublic(x509)
   }
 
-  private[this] def login(user: String, password: String) : Try[Token] = {
+  private[this] def login(user: String, password: String)(implicit system: ActorSystem, materializer: Materializer) : Try[Token] = {
+
+    implicit val backend = AkkaHttpBackend()
+
     val key : PublicKey = serverKey.get
 
     val request = sttp.post(uri"http://localhost:9995/login/").auth.basic(user, password)
@@ -124,7 +131,10 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
   private def countryContainer(country: String) : Seq[ContainerInfo] =
     containers.filter(_.properties.get("country") == Some(country))
 
-  private[this] def postContainer() : Try[Unit] = Try {
+  private[this] def postContainer()(implicit system: ActorSystem, materializer: Materializer) : Try[Unit] = Try {
+
+    implicit val backend = AkkaHttpBackend()
+
     val ctPost = sttp.post(uri"http://localhost:9995/mgmt/container")
       .contentType("application/json")
 
@@ -140,10 +150,30 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
     }.toList
   }
 
+  def wsConnect(user: String, password: String)(implicit system : ActorSystem, materializer: Materializer) : (KillSwitch, CompletionStage[java.util.List[Message]]) = {
+    val token = login(user, password).get
+
+    // We need to set up a kill switch, so that the client can be closed
+    val ((resp, switch), messages) = source
+      .viaMat(wsFlow(token.webToken))(Keep.right)
+      .viaMat(KillSwitches.single)(Keep.both)
+      .toMat(incoming)(Keep.both)
+      .run()
+
+    // Make sure we are connected
+    val connected = Await.result(resp, 3.seconds)
+    connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
+
+    (switch, messages)
+  }
+
   "The Web socket server should" - {
 
     "reject clients without token" in {
-      withWebSocketServer { () =>
+      val fut = withWebSocketServer(registry) { actorSystem => actorMaterializer =>
+        implicit val system : ActorSystem = actorSystem
+        implicit val materializer : Materializer = actorMaterializer
+
         val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/mgmtws/"))
 
         val (resp, closed) = source
@@ -158,7 +188,10 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
     }
 
     "reject clients with a fantasy token" in {
-      withWebSocketServer { () =>
+      withWebSocketServer(registry) { actorSystem => actorMaterializer =>
+        implicit val system : ActorSystem = actorSystem
+        implicit val materializer : Materializer = actorMaterializer
+
         val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/mgmtws/?token=foo"))
 
         val (resp, closed) = source
@@ -173,7 +206,9 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
 
     "accept clients with a real token" in {
 
-      withWebSocketServer { () =>
+      withWebSocketServer(registry) { actorSystem => actorMaterializer =>
+        implicit val system : ActorSystem = actorSystem
+        implicit val materializer : Materializer = actorMaterializer
 
         // login and retrieve the token
         val token = login("bg_test", "secret").get
@@ -192,24 +227,9 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
 
     "receive updates only for granted objects" in {
 
-      def wsConnect(user: String, password: String)= {
-        val token = login(user, password).get
-
-        // We need to set up a kill switch, so that the client can be closed
-        val ((resp, switch), messages) = source
-          .viaMat(wsFlow(token.webToken))(Keep.right)
-          .viaMat(KillSwitches.single)(Keep.both)
-          .toMat(incoming)(Keep.both)
-          .run()
-
-        // Make sure we are connected
-        val connected = Await.result(resp, 3.seconds)
-        connected.response.status should be(AkkaStatusCodes.SwitchingProtocols)
-
-        (switch, messages)
-      }
-
-      withWebSocketServer { () =>
+      withWebSocketServer(registry) { actorSystem => actorMaterializer =>
+        implicit val system : ActorSystem = actorSystem
+        implicit val materializer : Materializer = actorMaterializer
 
         val (switch, messages) = wsConnect("root", "mysecret")
         val (deSwitch, deMessages) = wsConnect("de_test", "secret")
@@ -229,12 +249,11 @@ class MgmtWebSocketSpec extends TestKit(ActorSystem("test"))
         val bgResults = resultContainer(bgMessages.toCompletableFuture.get(3, TimeUnit.SECONDS)).get
 
         assert(results.size == containers.size)
-        assert(deResults.size == countryContainer(("de")).size)
-        assert(deResults.size == countryContainer(("bg")).size)
+        assert(deResults.size == countryContainer("de").size)
+        assert(deResults.size == countryContainer("bg").size)
 
-        assert(deResults.forall(_.properties.get("country") == Some("de")))
-        assert(bgResults.forall(_.properties.get("country") == Some("bg")))
-
+        assert(deResults.forall(_.properties.get("country").contains("de")))
+        assert(bgResults.forall(_.properties.get("country").contains("bg")))
       }
     }
   }

@@ -1,12 +1,17 @@
 package blended.security.ssl.internal
 
-import org.scalatest.FreeSpec
+import java.io.File
 
+import org.scalatest.FreeSpec
 import blended.testsupport.pojosr.PojoSrTestHelper
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
+import blended.testsupport.BlendedTestSupport
+
 class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput).getAbsolutePath()
 
   //  val dateBase = new Date(100, 0, 1).getTime()
   def day(n: Long = 1): Long = TimeUnit.DAYS.toMillis(n)

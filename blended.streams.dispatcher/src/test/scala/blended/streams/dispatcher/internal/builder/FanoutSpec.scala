@@ -8,15 +8,12 @@ import blended.streams.dispatcher.internal.OutboundRouteConfig
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.worklist.{WorklistEvent, WorklistState}
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
 
 import scala.util.{Failure, Success, Try}
 
-class FanoutSpec extends LoggingFreeSpec
-  with Matchers
-  with DispatcherSpecSupport {
-
+class FanoutSpec extends DispatcherSpecSupport
+  with Matchers {
 
   override def loggerName: String = classOf[FanoutSpec].getName()
 
@@ -38,7 +35,7 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create one FlowEnvelope per outbound config" in {
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
 
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
         val envelope = FlowEnvelope(FlowMessage.noProps)
@@ -58,7 +55,7 @@ class FanoutSpec extends LoggingFreeSpec
 
     "create a workliststarted event for a configured resourceType" in {
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         val fanout = DispatcherFanout(ctxt.cfg, ctxt.idSvc)(ctxt.bs)
 
         ctxt.cfg.resourceTypeConfigs.keys.filter(_ != "NoOutbound").foreach { resType =>
@@ -106,7 +103,7 @@ class FanoutSpec extends LoggingFreeSpec
         (envColl, wlColl, source.toMat(sinkGraph)(Keep.left))
       }
 
-      withDispatcherConfig { sr => ctxt =>
+      withDispatcherConfig { ctxt =>
         implicit val system = ctxt.system
         implicit val materializer = ActorMaterializer()
         implicit val eCtxt = system.dispatcher

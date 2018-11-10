@@ -5,14 +5,12 @@ import java.io.File
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.jms.utils.{JmsDurableTopic, JmsQueue}
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{MockContainerContext, PojoSrTestHelper, SimplePojosrBlendedContainer}
+import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
 
 class InboundConfigSpec extends LoggingFreeSpec
-  with SimplePojosrBlendedContainer
-  with PojoSrTestHelper
   with Matchers {
 
   "The inbound config should" - {
@@ -70,6 +68,4 @@ class InboundConfigSpec extends LoggingFreeSpec
 
     }
   }
-
-
 }
