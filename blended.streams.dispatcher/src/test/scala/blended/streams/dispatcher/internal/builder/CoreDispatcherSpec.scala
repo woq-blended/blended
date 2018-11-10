@@ -1,9 +1,11 @@
 package blended.streams.dispatcher.internal.builder
 
+import java.io.File
+
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{GraphDSL, Keep, RunnableGraph, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, RunnableGraph, Source}
 import blended.jms.utils.JmsQueue
 import blended.streams.StreamFactories
 import blended.streams.message.FlowMessage.FlowMessageProps
@@ -12,6 +14,7 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.worklist.WorklistEvent
+import blended.testsupport.BlendedTestSupport
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -132,6 +135,32 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
   }
 
   "The Core Dispatcher should" - {
+
+    "be representable as graphviz graph" in {
+      withDispatcherConfig { ctxt =>
+
+        import net.mikolak.travesty
+        import travesty.OutputFormat
+
+        val builder = DispatcherBuilder(
+          idSvc = ctxt.idSvc,
+          dispatcherCfg = ctxt.cfg
+        )(ctxt.bs)
+
+        val core = builder.core()
+        val event = builder.worklistEventHandler()
+
+        val dummyOut = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+          env
+        }
+
+        val dispatcher = builder.dispatcher(dummyOut)
+
+        travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
+        travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())
+        travesty.toFile(dispatcher, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher.svg").getAbsolutePath())
+      }
+    }
 
     "add all configured default Headers" in {
 

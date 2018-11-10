@@ -20,7 +20,8 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.activeMqBroker % "test",
       Dependencies.activeMqKahadbStore % "test",
       Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.logbackClassic % "test",
+      Dependencies.travesty % "test"
     ),
     adaptBundle = b => b.copy(
       exportPackage = Seq(s"${b.bundleSymbolicName}")

@@ -125,6 +125,8 @@ object Dependencies {
 
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
+  
+  val travesty = "net.mikolak" %% "travesty" % s"0.9.1_${akkaVersion}"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"

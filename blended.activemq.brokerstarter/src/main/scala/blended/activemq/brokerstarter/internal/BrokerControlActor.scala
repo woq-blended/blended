@@ -212,15 +212,15 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
 
   override def receive : Receive =  {
     case BrokerControlActor.StartBroker =>
-      log.debug(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      log.trace(s"Received StartBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (broker.isEmpty) { startBroker() }
     case started : BrokerControlActor.BrokerStarted =>
-      log.debug(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      log.trace(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (started.uuid == uuid) {
-        broker.foreach{ b => registerService() }
+        broker.foreach{ _ => registerService() }
       }
     case BrokerControlActor.StopBroker =>
-      log.debug(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
+      log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       stopBroker()
   }
 }
