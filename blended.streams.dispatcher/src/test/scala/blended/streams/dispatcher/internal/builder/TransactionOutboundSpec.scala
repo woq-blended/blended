@@ -1,23 +1,37 @@
 package blended.streams.dispatcher.internal.builder
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.BrokerActivator
+import blended.container.context.api.ContainerIdentifierService
+import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms.JmsStreamSupport
+import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.processor.Collector
 import blended.streams.transaction.internal.FlowTransactionManager
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionUpdate}
+import blended.streams.worklist.WorklistState
 import blended.testsupport.RequiresForkedJVM
+import blended.util.logging.Logger
+import com.typesafe.config.Config
 import org.osgi.framework.BundleActivator
-import org.scalatest.Matchers
+import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
+import scala.reflect.ClassTag
 
 @RequiresForkedJVM
 class TransactionOutboundSpec extends DispatcherSpecSupport
   with Matchers
-  with JmsStreamSupport {
+  with JmsStreamSupport
+  with BeforeAndAfterAll {
+
+  private implicit val timeout = 3.seconds
 
   System.setProperty("testName", "trans")
   override def loggerName: String = "outbound"
@@ -26,58 +40,115 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     "blended.activemq.brokerstarter" -> new BrokerActivator()
   )
 
+  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
+    clazz = ClassTag(classOf[ContainerIdentifierService]),
+    timeout = 3.seconds
+  )
+
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
+    clazz = ClassTag(classOf[ActorSystem]),
+    timeout = timeout
+  )
+
+  private implicit val materializer : Materializer = ActorMaterializer()
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+
+  private val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](registry)(None)(
+    clazz = ClassTag(classOf[BridgeProviderRegistry]),
+    timeout = timeout
+  )
+
+  private val resttypeCfg = ResourceTypeRouterConfig.create(
+    idSvc,
+    provider,
+    idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
+  ).get
+
+  private implicit val bs = new DispatcherBuilderSupport {
+    override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
+    override val streamLogger: Logger = Logger(loggerName)
+  }
+
+  private val ctxt = DispatcherExecContext(
+    cfg = resttypeCfg,
+    idSvc = idSvc,
+    system = system,
+    bs = bs
+  )
+
+  val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
+  private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
+
+  private val tMgr = system.actorOf(FlowTransactionManager.props())
+
+  override protected def beforeAll(): Unit = {
+    new TransactionOutbound(
+      headerConfig = ctxt.bs.headerConfig,
+      tMgr = tMgr,
+      dispatcherCfg = ctxt.cfg,
+      internalCf = cf,
+      ctxt.bs.streamLogger
+    ).build()
+  }
+
+  def transactionEnvelope(ctxt : DispatcherExecContext, event : FlowTransactionEvent) : FlowEnvelope = {
+    FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(event)
+      .withHeader(ctxt.bs.headerEventVendor, "activemq").get
+      .withHeader(ctxt.bs.headerEventProvider, "activemq").get
+      .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").get.asString).get
+      .withHeader(ctxt.bs.headerConfig.headerTrack, false).get
+  }
+
+  def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
+    (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
+    sendMessages(
+      headerCfg = ctxt.bs.headerConfig,
+      cf = cf,
+      dest = JmsQueue("internal.transactions"),
+      log = ctxt.bs.streamLogger,
+      envelopes: _*
+    )
+  }
+
+  def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
+    headerCfg = ctxt.bs.headerConfig,
+    cf = cf,
+    dest = JmsQueue("cbeOut")
+  )
+
   "The transaction outbound handler should" - {
 
     "send a cbe event if the FlowEnvelope has CBE enabled" in {
 
-      withDispatcherConfig { ctxt =>
-        implicit val timeout : FiniteDuration = 3.seconds
-        implicit val system: ActorSystem = mandatoryService[ActorSystem](registry)(None)
-        implicit val eCtxt: ExecutionContext = system.dispatcher
-        implicit val materializer: Materializer = ActorMaterializer()
-        implicit val bs: DispatcherBuilderSupport = ctxt.bs
+      val envelopes = Seq(
+        transactionEnvelope(ctxt, FlowTransaction.startEvent()),
+        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
+      )
 
-        val (vendor, provider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
-        val cf: IdAwareConnectionFactory = jmsConnectionFactory(registry, ctxt)(vendor, provider, 10.seconds).get
+      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val collector = receiveCbes
 
-        val tMgr = system.actorOf(FlowTransactionManager.props())
+      val cbes = Await.result(collector.result, timeout + 1.second)
+      cbes should have size 1
+      switch.shutdown()
+    }
 
-        new TransactionOutbound(
-          headerConfig = ctxt.bs.headerConfig,
-          tMgr = tMgr,
-          dispatcherCfg = ctxt.cfg,
-          internalCf = cf,
-          ctxt.bs.streamLogger
-        ).build()
+    "do not send Cbes for transaction updates" in {
+      val envelopes = Seq(
+        transactionEnvelope(ctxt, FlowTransactionUpdate(
+          transactionId = UUID.randomUUID().toString(),
+          properties = FlowMessage.noProps,
+          updatedState = WorklistState.Started,
+          branchIds = "foo"
+        ))
+      )
 
-        val envelopes = Seq(
-          FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent())
-            .withHeader(ctxt.bs.headerEventVendor, "activemq").get
-            .withHeader(ctxt.bs.headerEventProvider, "activemq").get
-            .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").get.asString).get
-            .withHeader(ctxt.bs.headerConfig.headerTrack, false).get
-          ,
-          FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
-        )
+      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val collector = receiveCbes
 
-        val switch = sendMessages(
-          headerCfg = ctxt.bs.headerConfig,
-          cf = cf,
-          dest = JmsQueue("internal.transactions"),
-          log = ctxt.bs.streamLogger,
-          envelopes:_*
-        )
-
-        val collector = receiveMessages(
-          headerCfg = ctxt.bs.headerConfig,
-          cf = cf,
-          dest = JmsQueue("cbeOut")
-        )
-
-        val cbes = Await.result(collector.result, timeout + 1.second)
-        cbes should have size 1
-        switch.shutdown()
-      }
+      val cbes = Await.result(collector.result, timeout + 1.second)
+      cbes should have size 0
+      switch.shutdown()
     }
   }
 }

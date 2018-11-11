@@ -113,7 +113,7 @@ class TransactionOutbound(
 
       val trans = b.add(toTrans)
       val logger = b.add(logTransaction)
-      val filter = b.add(Flow[FlowTransaction].filter(_.state != FlowTransactionState.Updated))
+      val stateFilter = b.add(Flow[FlowTransaction].filter(_.state != FlowTransactionState.Updated))
       val env = b.add(toEnvelope)
       val cbe = b.add(jmsSink.get)
 
@@ -123,7 +123,7 @@ class TransactionOutbound(
 
       val cbeMerge = b.add(Merge[FlowEnvelope](2))
 
-      split.out(1) ~> trans ~> filter ~> logger ~> env ~> cbeFilter.in
+      split.out(1) ~> trans ~> stateFilter ~> logger ~> env ~> cbeFilter.in
 
       cbeFilter.out0 ~> cbe ~> cbeMerge.in(0)
       cbeFilter.out1 ~> cbeMerge.in(1)

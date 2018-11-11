@@ -73,21 +73,6 @@ class RunnableDispatcher(
     transform.via(producer).to(Sink.ignore)
   }
 
-  def cbeSend()(implicit system: ActorSystem, materializer: Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-
-    val transform = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-      bs.streamLogger.debug(s"Received cbeEnvelope [$env]")
-      env
-        .withHeader(bs.headerBridgeVendor, env.header[String](bs.headerEventVendor)).get
-        .withHeader(bs.headerBridgeProvider,  env.header[String](bs.headerEventProvider)).get
-        .withHeader(bs.headerBridgeDest, env.header[String](bs.headerEventDest)).get
-        .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
-        .withHeader(bs.headerConfig.headerTrack, false).get
-    }
-
-    transform.via(dispatcherSend())
-  }
-
   def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
 
     implicit val builderSupport = bs
