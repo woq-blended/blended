@@ -7,7 +7,7 @@ import akka.stream._
 import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.{JmsStreamBuilder, JmsStreamConfig}
+import blended.jms.bridge.{JmsStreamBuilder, JmsStreamConfig, TrackTransaction}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.StreamController
 import blended.streams.jms._
@@ -86,6 +86,7 @@ class BridgeSpec extends SimplePojoContainerSpec
         val msgs = 1.to(msgCount).map { i =>
           FlowMessage(s"Message $i", FlowMessage.noProps)
             .withHeader(destHeader, s"sampleOut.$i").get
+            .withHeader(headerCfg.prefix + headerCfg.headerTrack, true).get
         } map { FlowEnvelope.apply }
 
         val cfg : JmsStreamConfig = JmsStreamConfig(
@@ -97,7 +98,7 @@ class BridgeSpec extends SimplePojoContainerSpec
           listener = 3,
           selector = None,
           registry = ctrlCfg.registry,
-          trackTransAction = false
+          trackTransAction = TrackTransaction.Off
         )
 
         val streamCfg = new JmsStreamBuilder(cfg).streamCfg

@@ -27,10 +27,10 @@ class FlowTransactionSpec extends LoggingFreeSpec
     val event = FlowTransaction.startEvent(Some(main))
     val t = FlowTransaction(
       id = event.transactionId,
-      creationProps = event.creationProperties
+      creationProps = event.properties
     )
 
-    t.updateTransaction(FlowTransactionUpdate(t.tid, WorklistState.Started, branches:_*)).get
+    t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Started, branches:_*)).get
   }
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
@@ -66,7 +66,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(10).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, WorklistState.Completed, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5")
       ).get
 
       u.state should be (FlowTransactionState.Updated)
@@ -79,7 +79,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val branches = 1.to(t.worklist.size).map(i => s"$i")
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, WorklistState.Completed, branches:_*)
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, branches:_*)
       ).get
 
       u.state should be (FlowTransactionState.Completed)
@@ -90,7 +90,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(10).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, WorklistState.Failed, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Failed, "5")
       ).get
 
       u.state should be (FlowTransactionState.Failed)
@@ -101,7 +101,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val t = sampleTransAction(10).get
 
       val u = t.updateTransaction(
-        FlowTransactionUpdate(t.tid, WorklistState.TimeOut, "5")
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.TimeOut, "5")
       ).get
 
       u.state should be (FlowTransactionState.Failed)
@@ -113,7 +113,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       val env = FlowEnvelope(FlowMessage.noProps)
       val t = FlowTransaction(Some(env))
 
-      val u = t.updateTransaction(FlowTransactionCompleted(t.tid)).get
+      val u = t.updateTransaction(FlowTransactionCompleted(t.tid, FlowMessage.noProps)).get
 
       u.state should be (FlowTransactionState.Completed)
       u.worklist should be (empty)
@@ -134,11 +134,11 @@ class FlowTransactionSpec extends LoggingFreeSpec
       singleTest(sampleTransAction(10).get)
 
       val t = sampleTransAction(10).get
-      t.updateTransaction(FlowTransactionUpdate(t.tid, WorklistState.Completed, "5"))
+      t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5"))
       singleTest(t)
 
       val t2 = sampleTransAction(10).get
-      t.updateTransaction(transaction.FlowTransactionCompleted(t.tid))
+      t.updateTransaction(transaction.FlowTransactionCompleted(t.tid, FlowMessage.noProps))
       singleTest(t2)
     }
   }

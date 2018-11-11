@@ -50,6 +50,7 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
 
   def headerDeliveryMode         : String = header("DeliveryMode")
   def headerTimeToLive           : String = header("TimeToLive")
+  def headerTrackTransaction     : String = header(headerConfig.headerTrack)
 
   /**
   * Access a typed object in the given envelope and the given key. If an object

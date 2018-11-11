@@ -114,7 +114,7 @@ class FlowTransactionManager() extends Actor {
           val a = context.system.actorOf(FlowTransactionActor.props(
             FlowTransaction(
               id = s.transactionId,
-              creationProps = s.creationProperties
+              creationProps = s.properties
             )
           ), s.transactionId)
 

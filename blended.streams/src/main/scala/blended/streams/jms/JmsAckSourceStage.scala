@@ -101,7 +101,7 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
             Option(c.receive(100)) match {
               case Some(message) =>
                 val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
-                log.debug(s"Message received for [${session.sessionId}] : $flowMessage")
+                log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : $flowMessage")
                 try {
 
                   val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {

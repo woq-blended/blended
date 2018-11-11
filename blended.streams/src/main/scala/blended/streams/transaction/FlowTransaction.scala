@@ -23,7 +23,7 @@ object FlowTransaction {
     val t = apply(env)
     FlowTransactionStarted(
       transactionId = t.tid,
-      creationProperties = t.creationProps
+      properties = t.creationProps
     )
   }
 

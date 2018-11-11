@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.activemq.brokerstarter.BrokerActivator
-import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.transaction.internal.FlowTransactionManager
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent}
@@ -45,13 +45,18 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
         new TransactionOutbound(
           headerConfig = ctxt.bs.headerConfig,
           tMgr = tMgr,
-          registry = ctxt.cfg.providerRegistry,
+          dispatcherCfg = ctxt.cfg,
           internalCf = cf,
           ctxt.bs.streamLogger
         ).build()
 
         val envelopes = Seq(
-          FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent()),
+          FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent())
+            .withHeader(ctxt.bs.headerEventVendor, "activemq").get
+            .withHeader(ctxt.bs.headerEventProvider, "activemq").get
+            .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").get.asString).get
+            .withHeader(ctxt.bs.headerConfig.headerTrack, false).get
+          ,
           FlowTransactionEvent.event2envelope(ctxt.bs.headerConfig)(FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
         )
 
@@ -66,7 +71,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
         val collector = receiveMessages(
           headerCfg = ctxt.bs.headerConfig,
           cf = cf,
-          dest = JmsQueue("internal.cbes")
+          dest = JmsQueue("cbeOut")
         )
 
         val cbes = Await.result(collector.result, timeout + 1.second)

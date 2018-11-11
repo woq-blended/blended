@@ -8,8 +8,9 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
 import blended.streams.jms.{JmsDeliveryMode, JmsEnvelopeHeader}
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
+import blended.streams.transaction._
 import blended.streams.worklist._
 import blended.util.logging.Logger
 
@@ -134,11 +135,21 @@ case class DispatcherBuilder(
 
 
   private[builder] def transactionUpdate(event: WorklistEvent) : (WorklistEvent, Option[FlowTransactionEvent]) = {
+
+    val props : FlowMessageProps = event.worklist.items match {
+      case Seq() => FlowMessage.noProps
+      case h :: _ => h match {
+        case flowItem : FlowWorklistItem => flowItem.env.flowMessage.header
+        case _ => FlowMessage.noProps
+      }
+    }
+
     val transEvent : Option[FlowTransactionEvent] = event match {
       // The started event will just update the FlowTransaction with a new worklist
       case started : WorklistStarted =>
         Some(FlowTransactionUpdate(
           transactionId = started.worklist.id,
+          properties = props,
           updatedState = WorklistState.Started,
           branchIds = branchIds(eventEnvelopes(event)):_*
         ))
@@ -158,10 +169,10 @@ case class DispatcherBuilder(
           if (envelopes.isEmpty) {
             None
           } else {
-            Some(FlowTransactionUpdate(term.worklist.id, WorklistState.Completed, branchIds(envelopes):_*))
+            Some(FlowTransactionUpdate(term.worklist.id, props, WorklistState.Completed, branchIds(envelopes):_*))
           }
         } else {
-          Some(FlowTransactionFailed(event.worklist.id, term.reason.map(_.getMessage())))
+          Some(FlowTransactionFailed(event.worklist.id, props, term.reason.map(_.getMessage())))
         }
       // Completed worklist steps do nothing
       case step : WorklistStepCompleted => None
@@ -247,6 +258,7 @@ case class DispatcherBuilder(
             .withHeader(bs.headerBridgeVendor, vendor).get
             .withHeader(bs.headerBridgeProvider, provider).get
             .withHeader(bs.headerBridgeDest, dest).get
+            .withHeader(bs.headerConfig.headerState, FlowTransactionState.Failed.toString).get
         } catch {
           case t : Throwable =>
             bs.streamLogger.warn(s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")
@@ -257,7 +269,7 @@ case class DispatcherBuilder(
       val sendError = b.add(sendFlow)
 
       val ackError = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
-        bs.streamLogger.debug(s"Acknowledging envelope [${env.id}]")
+        bs.streamLogger.debug(s"Acknowledging error envelope [${env.id}]")
         env.acknowledge()
         env
       }
@@ -270,7 +282,9 @@ case class DispatcherBuilder(
 
     Flow.fromGraph(g)
       .via(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
-        FlowTransactionFailed(env.id, env.exception.map(_.getMessage()))
+        val event = FlowTransactionFailed(env.id, env.flowMessage.header, env.exception.map(_.getMessage()))
+        bs.streamLogger.debug(s"Transaction event : [${event}]")
+        event
       })
   }
 

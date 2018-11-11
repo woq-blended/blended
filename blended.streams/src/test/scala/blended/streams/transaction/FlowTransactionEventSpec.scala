@@ -3,7 +3,7 @@ package blended.streams.transaction
 import akka.actor.ActorSystem
 import akka.serialization.SerializationExtension
 import akka.testkit.TestKit
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
 import blended.streams.worklist.WorklistState
@@ -37,7 +37,7 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
       val started = FlowTransactionStarted(
         transactionId = "started",
-        creationProperties = Map(
+        properties = Map(
           "foo" -> "bar",
           "count" -> 7
         )
@@ -47,12 +47,12 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
       startedTrans.transactionId should be (started.transactionId)
       startedTrans.state should be (started.state)
-      started.asInstanceOf[FlowTransactionStarted].creationProperties should be (started.creationProperties)
+      started.asInstanceOf[FlowTransactionStarted].properties should be (started.properties)
     }
 
     "can be transformed into a FlowEnvelope and vice versa (completed)" in {
 
-      val completed  = FlowTransactionCompleted("completed")
+      val completed  = FlowTransactionCompleted("completed", FlowMessage.noProps)
 
       val completedTrans = envelope2event(cfg)(event2envelope(cfg)(completed)).get
 
@@ -62,7 +62,7 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
     "can be transformed into a FlowEnvelope and vice versa (failed)" in {
 
-      val failed  = FlowTransactionFailed("failed", Some("This did not work"))
+      val failed  = FlowTransactionFailed("failed", FlowMessage.noProps, Some("This did not work"))
 
       val failedTrans = envelope2event(cfg)(event2envelope(cfg)(failed)).get
 
@@ -82,10 +82,10 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
         updatedTrans.asInstanceOf[FlowTransactionUpdate].branchIds should be (updated.branchIds)
       }
 
-      singleTest(FlowTransactionUpdate("updated", WorklistState.Started, "branch-1", "branch-2"))
-      singleTest(FlowTransactionUpdate("updated1", WorklistState.Failed))
-      singleTest(FlowTransactionUpdate("updated1", WorklistState.TimeOut))
-      singleTest(FlowTransactionUpdate("updated2", WorklistState.Completed, "branch-3"))
+      singleTest(FlowTransactionUpdate("updated", FlowMessage.noProps, WorklistState.Started, "branch-1", "branch-2"))
+      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistState.Failed))
+      singleTest(FlowTransactionUpdate("updated1", FlowMessage.noProps, WorklistState.TimeOut))
+      singleTest(FlowTransactionUpdate("updated2", FlowMessage.noProps, WorklistState.Completed, "branch-3"))
     }
 
     "should (de)serialize correctly" in {

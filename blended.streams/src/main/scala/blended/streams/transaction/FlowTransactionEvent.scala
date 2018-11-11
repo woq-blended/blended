@@ -17,18 +17,21 @@ object FlowHeaderConfig {
   private val transIdPath = "transactionId"
   private val branchIdPath = "branchId"
   private val statePath = "transactionState"
+  private val trackTransactionPath = "trackTransaction"
 
   def create(cfg: Config): FlowHeaderConfig = {
     val prefix = cfg.getString(prefixPath, "Blended")
     val headerTrans = cfg.getString(transIdPath, "TransactionId")
     val headerBranch = cfg.getString(branchIdPath, "BranchId")
     val headerState = cfg.getString(statePath, "TransactionState")
+    val headerTrack = cfg.getString(trackTransactionPath, "TrackTransaction")
 
     FlowHeaderConfig(
       prefix = prefix,
       headerTrans = headerTrans,
       headerBranch = headerBranch,
-      headerState = headerState
+      headerState = headerState,
+      headerTrack = headerTrack
     )
   }
 }
@@ -37,7 +40,8 @@ case class FlowHeaderConfig(
   prefix : String,
   headerTrans : String,
   headerBranch : String,
-  headerState : String
+  headerState : String,
+  headerTrack : String
 )
 
 object FlowTransactionEvent {
@@ -47,16 +51,16 @@ object FlowTransactionEvent {
   val event2envelope : FlowHeaderConfig => FlowTransactionEvent => FlowEnvelope = { cfg => event =>
 
     val basicProps : FlowTransactionEvent => FlowMessageProps = event =>
-        Map[String, MsgProperty[_]](
-          cfg.headerTrans -> event.transactionId,
-          cfg.headerState -> event.state.toString()
-        )
+      event.properties ++ Map[String, MsgProperty[_]](
+        cfg.headerTrans -> event.transactionId,
+        cfg.headerState -> event.state.toString()
+      )
 
     event match {
       case started : FlowTransactionStarted =>
         FlowEnvelope(FlowMessage(
           basicProps(started)
-        )).withHeaders(started.creationProperties.filterKeys(k => !k.startsWith("JMS"))).get
+        )).withHeaders(started.properties.filterKeys(k => !k.startsWith("JMS"))).get
 
       case completed : FlowTransactionCompleted =>
         FlowEnvelope(FlowMessage(basicProps(completed)))
@@ -72,7 +76,7 @@ object FlowTransactionEvent {
         val state : String = update.state.toString()
         FlowEnvelope(FlowMessage(
           update.updatedState.toString(),
-          Map[String, MsgProperty[_]](
+          update.properties ++ Map[String, MsgProperty[_]](
             cfg.headerTrans -> update.transactionId,
             cfg.headerState -> state,
             cfg.headerBranch -> branchIds
@@ -91,14 +95,14 @@ object FlowTransactionEvent {
             FlowTransactionStarted(id, header)
 
           case FlowTransactionState.Completed =>
-            FlowTransactionCompleted(id)
+            FlowTransactionCompleted(id, envelope.flowMessage.header)
 
           case FlowTransactionState.Failed =>
             val reason : Option[String] = envelope.flowMessage match {
               case txtMsg : TextFlowMessage => Some(txtMsg.content)
               case _ => None
             }
-            FlowTransactionFailed(id, reason)
+            FlowTransactionFailed(id, envelope.flowMessage.header, reason)
 
           case FlowTransactionState.Updated =>
 
@@ -112,12 +116,12 @@ object FlowTransactionEvent {
               case m => throw new InvalidTransactionEnvelopeException(s"Expected TextFlowMessage for an update envelope, actual [${m.getClass().getName()}]")
             }
 
-            FlowTransactionUpdate(id, updatedState, branchIds:_*)
+            FlowTransactionUpdate(id, envelope.flowMessage.header, updatedState, branchIds:_*)
 
           case s =>
             throw new InvalidTransactionEnvelopeException(s"Invalid Transaction state in envelope [$s]")
         }
-        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [${cfg.headerTrans}] and [${cfg.headerBranch}]")
+        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [${cfg.headerTrans}] and [${cfg.headerState}]")
       }
     }
   }
@@ -125,18 +129,20 @@ object FlowTransactionEvent {
 
 sealed trait FlowTransactionEvent {
   def transactionId : String
+  def properties : FlowMessageProps
   def state : FlowTransactionState
 }
 
 case class FlowTransactionStarted(
   override val transactionId : String,
-  creationProperties : Map[String, MsgProperty[_]]
+  override val properties : Map[String, MsgProperty[_]]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Started
 }
 
 case class FlowTransactionUpdate(
   override val transactionId : String,
+  override val properties : FlowMessageProps,
   updatedState : WorklistState,
   branchIds : String*
 ) extends FlowTransactionEvent {
@@ -145,13 +151,15 @@ case class FlowTransactionUpdate(
 
 case class FlowTransactionFailed(
   override val transactionId : String,
+  override val properties : FlowMessageProps,
   reason : Option[String]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Failed
 }
 
 final case class FlowTransactionCompleted (
-  override val transactionId : String
+  override val transactionId : String,
+  override val properties : FlowMessageProps
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Completed
 }

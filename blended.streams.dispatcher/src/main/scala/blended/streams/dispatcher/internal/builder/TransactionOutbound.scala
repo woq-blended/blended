@@ -4,8 +4,8 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Source, Zip}
 import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
-import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.IdAwareConnectionFactory
+import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction._
@@ -18,13 +18,13 @@ import scala.util.Try
 class TransactionOutbound(
   headerConfig : FlowHeaderConfig,
   tMgr : ActorRef,
-  registry: BridgeProviderRegistry,
+  dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
   log: Logger
 )(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
-  private val config = registry.mandatoryProvider(internalCf.vendor, internalCf.provider)
+  private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
   private val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
     val srcSettings = JMSConsumerSettings(
@@ -43,17 +43,52 @@ class TransactionOutbound(
   }
 
   private val jmsSink : Try[Flow[FlowEnvelope, FlowEnvelope, NotUsed]] = Try {
+
+    val resolver : JmsProducerSettings => JmsDestinationResolver = settings => new DispatcherDestinationResolver(
+      settings = settings,
+      registry = dispatcherCfg.providerRegistry,
+      bs = bs
+    )
+
     val sinkSettings = JmsProducerSettings(
       headerConfig = headerConfig,
       connectionFactory = internalCf,
       jmsDestination = Some(config.get.cbes),
-      deliveryMode = JmsDeliveryMode.Persistent
+      deliveryMode = JmsDeliveryMode.Persistent,
+      destinationResolver = resolver
     )
 
-    jmsProducer(
-      name = "cbeoutbound",
-      settings = sinkSettings,
-      log = log
+    val prepareCbe = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+
+      val v = env.header[String](bs.headerEventVendor) match {
+        case None => dispatcherCfg.eventProvider.vendor
+        case Some(s) => s
+      }
+
+      val p = env.header[String](bs.headerEventProvider) match {
+        case None => dispatcherCfg.eventProvider.provider
+        case Some(s) => s
+      }
+
+      val provider = dispatcherCfg.providerRegistry.jmsProvider(v,p).get
+
+      val result = env
+        .withHeader(bs.headerBridgeVendor, v).get
+        .withHeader(bs.headerBridgeProvider, p).get
+        .withHeader(bs.headerBridgeDest, provider.cbes.asString).get
+        .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
+        .withHeader(bs.headerConfig.headerTrack, false).get
+
+      bs.streamLogger.debug(s"Prepared to send CBE [$result]")
+      result
+    }
+
+    prepareCbe.via(
+      jmsProducer(
+        name = "cbeoutbound",
+        settings = sinkSettings,
+        log = log
+      )
     )
   }
 
@@ -98,7 +133,8 @@ class TransactionOutbound(
       cbeMerge.out ~> zip.in1
       split.out(0) ~> zip.in0
 
-      val ackEnv = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ case (org, cbe) =>
+      val ackEnv = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ case (org, _) =>
+        org.acknowledge()
         org
       })
 

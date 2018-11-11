@@ -76,7 +76,6 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
   private[this] var streams : Map[String, ActorRef] = Map.empty
 
   // Register any required internal streams
-
   private[this] def createInternalStreams() : Unit = {
   }
 
@@ -95,7 +94,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       selector = in.selector,
       registry = ctrlCfg.registry,
       headerCfg = ctrlCfg.headerCfg,
-      trackTransAction = true
+      trackTransAction = TrackTransaction.On
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
@@ -118,7 +117,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       listener = in.listener,
       selector = None,
       registry = ctrlCfg.registry,
-      trackTransAction = true
+      trackTransAction = TrackTransaction.FromMessage
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(outCfg).streamCfg

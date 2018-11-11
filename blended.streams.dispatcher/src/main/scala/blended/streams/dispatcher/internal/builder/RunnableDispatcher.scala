@@ -1,9 +1,9 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.{KillSwitch, KillSwitches, Materializer}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.{KillSwitch, KillSwitches, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
@@ -11,10 +11,10 @@ import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowTransactionEvent
-import javax.jms.Session
+import blended.streams.transaction.internal.FlowTransactionManager
+import blended.util.logging.Logger
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 import scala.util.Try
 
 class RunnableDispatcher(
@@ -26,43 +26,8 @@ class RunnableDispatcher(
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   private val switches : mutable.Map[String, KillSwitch] = mutable.Map.empty
-
-  class DispatcherDestinationResolver(
-    override val settings : JmsProducerSettings,
-    registry : BridgeProviderRegistry,
-    bs : DispatcherBuilderSupport
-  ) extends JmsDestinationResolver with JmsEnvelopeHeader {
-    override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
-
-      val internal = registry.internalProvider.get
-
-      val msg = createJmsMessage(session, env)
-
-      val vendor : String = env.header[String](bs.headerBridgeVendor).get
-      val provider : String = env.header[String](bs.headerBridgeProvider).get
-
-      val dest : JmsDestination = (vendor, provider) match {
-        case (internal.vendor, internal.provider) =>
-          JmsDestination.create(env.header[String](bs.headerBridgeDest).get).get
-        case (v, p) =>
-          val dest = s"${internal.outbound.name}.$v.$p"
-          JmsDestination.create(dest).get
-      }
-
-      val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](bs.headerDeliveryMode).get).get
-      val ttl : Option[FiniteDuration] = env.header[Long](bs.headerTimeToLive).map(_.millis)
-
-      bs.streamLogger.debug(s"Sending envelope [${env.id}] to [$dest]")
-
-      JmsSendParameter(
-        message = msg,
-        destination = dest,
-        deliveryMode = delMode,
-        priority = 4,
-        ttl = ttl
-      )
-    }
-  }
+  private var transMgr : Option[ActorRef] = None
+  private var transStream : Option[KillSwitch] = None
 
   def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
@@ -94,6 +59,7 @@ class RunnableDispatcher(
     )
 
     val transform = Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
+      bs.streamLogger.debug(s"About to send transaction [$t]")
       FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
     }
 
@@ -105,6 +71,34 @@ class RunnableDispatcher(
     )
 
     transform.via(producer).to(Sink.ignore)
+  }
+
+  def cbeSend()(implicit system: ActorSystem, materializer: Materializer) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    val transform = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+      bs.streamLogger.debug(s"Received cbeEnvelope [$env]")
+      env
+        .withHeader(bs.headerBridgeVendor, env.header[String](bs.headerEventVendor)).get
+        .withHeader(bs.headerBridgeProvider,  env.header[String](bs.headerEventProvider)).get
+        .withHeader(bs.headerBridgeDest, env.header[String](bs.headerEventDest)).get
+        .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
+        .withHeader(bs.headerConfig.headerTrack, false).get
+    }
+
+    transform.via(dispatcherSend())
+  }
+
+  def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
+
+    implicit val builderSupport = bs
+
+    new TransactionOutbound(
+      headerConfig = bs.headerConfig,
+      tMgr = tMgr,
+      internalCf = cf,
+      dispatcherCfg = routerCfg,
+      log = Logger(bs.headerConfig.prefix + ".transactions")
+    ).build()
   }
 
   private val builder = DispatcherBuilder(
@@ -140,24 +134,34 @@ class RunnableDispatcher(
 
   def start() : Unit = {
 
-    val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
-      Flow.fromGraph(builder.dispatcher())
+    try {
+      transMgr = Some(system.actorOf(FlowTransactionManager.props()))
 
-    val transSend : Sink[FlowTransactionEvent, NotUsed] = transactionSend()
+      val transStream = Some(transactionStream(transMgr.get).get)
 
-    registry.allProvider.foreach { provider =>
-      val switch = bridgeSource(provider)
-        .viaMat(KillSwitches.single)(Keep.right)
-        .viaMat(dispatcher)(Keep.left)
-        .toMat(transSend)(Keep.left)
-        .run()
+      val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
+        Flow.fromGraph(builder.dispatcher())
 
-      bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
-      switches.put(provider.id, switch)
+      val transSend : Sink[FlowTransactionEvent, NotUsed] = transactionSend()
+
+      registry.allProvider.foreach { provider =>
+        val switch = bridgeSource(provider)
+          .viaMat(KillSwitches.single)(Keep.right)
+          .viaMat(dispatcher)(Keep.left)
+          .toMat(transSend)(Keep.left)
+          .run()
+
+        bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
+        switches.put(provider.id, switch)
+      }
+    } catch {
+      case t : Throwable => bs.streamLogger.error(t)(s"Failed to start dispatcher [${t.getMessage()}]")
     }
   }
 
   def stop() : Unit = {
+    transMgr.foreach(system.stop)
+    transStream.foreach(_.shutdown())
     switches.foreach { case (k, s) => s.shutdown() }
     switches.clear()
   }

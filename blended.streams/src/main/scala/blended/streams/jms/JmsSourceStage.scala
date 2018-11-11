@@ -69,7 +69,7 @@ class JmsSourceStage(
                 backpressure.acquire()
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
                 val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
-                log.debug(s"Message received for [$id] : $flowMessage")
+                log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
 
                 val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {
                   case None =>
