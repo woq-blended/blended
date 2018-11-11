@@ -38,6 +38,8 @@ object Dependencies {
   val akkaTestkit = akka("testkit")
   val akkaSlf4j = akka("slf4j")
 
+  val asciiRender = "com.indvd00m.ascii.render" % "ascii-render" % "1.2.3"
+
   val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.60"
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
 
