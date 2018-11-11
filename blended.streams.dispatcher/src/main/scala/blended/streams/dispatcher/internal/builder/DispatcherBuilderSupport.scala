@@ -3,6 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import java.util.UUID
 
 import blended.streams.dispatcher.internal.{OutboundRouteConfig, ResourceTypeConfig}
+import blended.streams.jms.JmsEnvelopeHeader
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.worklist.{FlowWorklistItem, Worklist, WorklistItem}
@@ -12,7 +13,7 @@ import com.typesafe.config.Config
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-trait DispatcherBuilderSupport {
+trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
 
   def containerConfig : Config
   def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig("blended.flow.header"))
@@ -34,7 +35,7 @@ trait DispatcherBuilderSupport {
 
   def headerBridgeVendor         : String = header("BridgeVendor")
   def headerBridgeProvider       : String = header("BridgeProvider")
-  def headerBridgeDest           : String = header("BridgeDestination")
+  def headerBridgeDest           : String = destHeader(headerConfig.prefix)
 
   def headerCbeEnabled           : String = header("CbeEnabled")
 

@@ -45,7 +45,7 @@ class RunnableDispatcher(
         case (internal.vendor, internal.provider) =>
           JmsDestination.create(env.header[String](bs.headerBridgeDest).get).get
         case (v, p) =>
-          val dest = s"${internal.inbound.name}.$v.$p"
+          val dest = s"${internal.outbound.name}.$v.$p"
           JmsDestination.create(dest).get
       }
 
@@ -109,7 +109,8 @@ class RunnableDispatcher(
 
   private val builder = DispatcherBuilder(
     idSvc = idSvc,
-    dispatcherCfg = routerCfg
+    dispatcherCfg = routerCfg,
+    dispatcherSend()
   )(bs)
 
   def bridgeSource(
@@ -140,7 +141,7 @@ class RunnableDispatcher(
   def start() : Unit = {
 
     val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
-      Flow.fromGraph(builder.dispatcher(dispatcherSend()))
+      Flow.fromGraph(builder.dispatcher())
 
     val transSend : Sink[FlowTransactionEvent, NotUsed] = transactionSend()
 

@@ -17,6 +17,7 @@ class DispatcherSpec extends DispatcherSpecSupport
   with Matchers {
 
   override def loggerName: String = classOf[DispatcherSpec].getName()
+  private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
   private def runDispatcher(
     ctxt : DispatcherExecContext,
@@ -33,7 +34,7 @@ class DispatcherSpec extends DispatcherSpecSupport
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val dispatcher = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).dispatcher(send))
+      val dispatcher = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send)(ctxt.bs).dispatcher())
       val out = b.add(transColl.sink)
 
       dispatcher ~> out
@@ -48,8 +49,6 @@ class DispatcherSpec extends DispatcherSpecSupport
 
     (actor, killswitch, transColl)
   }
-
-  private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
   private def runTest[T](testMsg: DispatcherExecContext => Seq[FlowEnvelope])(f : List[FlowTransactionEvent] => T) : Future[T] = {
     withDispatcherConfig { ctxt =>

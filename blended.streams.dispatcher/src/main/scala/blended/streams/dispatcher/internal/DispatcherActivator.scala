@@ -27,7 +27,7 @@ class DispatcherActivator extends DominoActivator
 
           val bs = new DispatcherBuilderSupport {
             override def containerConfig: Config = cfg.idSvc.containerContext.getContainerConfig()
-            override val streamLogger: Logger = Logger("flow.dispatcher")
+            override val streamLogger: Logger = Logger(headerConfig.prefix + ".dispatcher")
           }
 
           whenAdvancedServicePresent[IdAwareConnectionFactory](internalProvider.osgiBrokerFilter) { cf =>

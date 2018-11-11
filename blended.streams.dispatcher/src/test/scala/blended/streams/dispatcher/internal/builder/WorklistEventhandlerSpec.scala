@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.stream._
-import akka.stream.scaladsl.{GraphDSL, Keep, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Source}
 import blended.jms.utils.JmsDestination
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.streams.processor.Collector
@@ -20,6 +20,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
   with Matchers {
 
   override def loggerName: String = "event.handler"
+  private val goodSend = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
 
   private def runEventHandler(
     ctxt : DispatcherExecContext
@@ -36,7 +37,7 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     val sinkGraph = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val evtHandler = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).worklistEventHandler())
+      val evtHandler = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodSend)(ctxt.bs).worklistEventHandler())
       val err = b.add(errColl.sink)
       val trans = b.add(transColl.sink)
 

@@ -7,6 +7,7 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
+import blended.streams.jms.{JmsDeliveryMode, JmsEnvelopeHeader}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionFailed, FlowTransactionUpdate}
 import blended.streams.worklist._
@@ -32,8 +33,9 @@ class JmsDestinationMissing(env: FlowEnvelope, outboundId : String)
 
 case class DispatcherBuilder(
   idSvc : ContainerIdentifierService,
-  dispatcherCfg: ResourceTypeRouterConfig
-)(implicit val bs : DispatcherBuilderSupport) {
+  dispatcherCfg: ResourceTypeRouterConfig,
+  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
+)(implicit val bs : DispatcherBuilderSupport) extends JmsEnvelopeHeader {
 
   private[this] val logger = Logger[DispatcherBuilder]
 
@@ -78,7 +80,7 @@ case class DispatcherBuilder(
   // If after the oubound flow the envelope is marked with an exception,
   // We will generate a worklist failed event, otherwise we will generate
   // a Worklist completed event with the in bound envelope.
-  def outbound(sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed])
+  def outbound()
     : Graph[FanOutShape2[FlowEnvelope, WorklistEvent, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
@@ -219,6 +221,59 @@ case class DispatcherBuilder(
     }
   }
 
+  def errorHandler() : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] = {
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val sendSplitter = b.add(FlowProcessor.partition[FlowEnvelope]{ env =>
+        dispatcherCfg.handledExceptions.contains(env.exception.map(_.getClass().getName()).getOrElse(""))
+      })
+
+      val merge = b.add(Merge[FlowEnvelope](2))
+
+      val routeError = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+
+        try {
+          val vendor = env.header[String](srcVendorHeader(bs.headerConfig.prefix)).get
+          val provider = env.header[String](srcProviderHeader(bs.headerConfig.prefix)).get
+
+          val errProvider = dispatcherCfg.providerRegistry.jmsProvider(vendor, provider).get
+          val dest = errProvider.errors.asString
+
+          bs.streamLogger.debug(s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
+
+          env
+            .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
+            .withHeader(bs.headerBridgeVendor, vendor).get
+            .withHeader(bs.headerBridgeProvider, provider).get
+            .withHeader(bs.headerBridgeDest, dest).get
+        } catch {
+          case t : Throwable =>
+            bs.streamLogger.warn(s"Failed to resolve error routing for envelope [${env.id}] : [${t.getMessage()}]")
+            env
+        }
+      })
+
+      val sendError = b.add(sendFlow)
+
+      val ackError = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+        bs.streamLogger.debug(s"Acknowledging envelope [${env.id}]")
+        env.acknowledge()
+        env
+      }
+
+      sendSplitter.out0  ~> routeError ~> sendError ~> ackError ~> merge.in(0)
+      sendSplitter.out1 ~> merge.in(1)
+
+      FlowShape(sendSplitter.in, merge.out)
+    }
+
+    Flow.fromGraph(g)
+      .via(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
+        FlowTransactionFailed(env.id, env.exception.map(_.getMessage()))
+      })
+  }
+
   // The dispatcher processes a stream of inbound FlowEnvelopes and generates TransactionEvents to update
   // a monitored FlowTransaction.
   //
@@ -244,16 +299,14 @@ case class DispatcherBuilder(
 
   // 9. The combined transaction events are passed down stream
 
-  def dispatcher(
-    sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
-  ) : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
+  def dispatcher() : Graph[FlowShape[FlowEnvelope, FlowTransactionEvent], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
       // of course we start with the core
       val callCore = b.add(core())
 
       // we do need a send processor
-      val callSend = b.add(outbound(sendFlow))
+      val callSend = b.add(outbound())
 
       // We will collect the errors here
       val error = b.add(Merge[FlowEnvelope](3))
@@ -284,9 +337,7 @@ case class DispatcherBuilder(
       // if envelopes marked with an exception again got to the error channel
       callSend.out1 ~> error
 
-      val errHandler = b.add(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
-        FlowTransactionFailed(env.id, env.exception.map(_.getMessage()))
-      })
+      val errHandler = b.add(errorHandler())
 
       // generate and collect transaction failures for exceptions
       error.out ~> errHandler ~> trans.in(1)

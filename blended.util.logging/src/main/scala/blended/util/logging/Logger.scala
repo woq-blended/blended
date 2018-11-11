@@ -15,6 +15,8 @@ trait Logger extends Serializable {
 
   import blended.util.logging.LogLevel.LogLevel
 
+  def name : String
+
   def isErrorEnabled: Boolean = false
   def isWarnEnabled: Boolean = false
   def isInfoEnabled: Boolean = false
@@ -79,7 +81,7 @@ object Logger {
           new LoggerJul(jul.Logger.getLogger(name))
         } catch {
           case _: NoClassDefFoundError | _: ClassNotFoundException =>
-            new LoggerNoOp()
+            new LoggerNoOp(name)
         }
     }
   }
@@ -88,4 +90,4 @@ object Logger {
 /**
  * A Logger class doing nothing.
  */
-class LoggerNoOp() extends Logger
+class LoggerNoOp(override val name : String) extends Logger

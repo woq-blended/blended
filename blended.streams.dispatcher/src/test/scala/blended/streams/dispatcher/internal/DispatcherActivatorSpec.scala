@@ -2,21 +2,28 @@ package blended.streams.dispatcher.internal
 
 import java.io.File
 
+import akka.stream.ActorMaterializer
 import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
+import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
+import blended.streams.jms.JmsStreamSupport
+import blended.streams.message.FlowEnvelope
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 
 @RequiresForkedJVM
 class DispatcherActivatorSpec extends DispatcherSpecSupport
   with Matchers
-  with PojoSrTestHelper {
+  with PojoSrTestHelper
+  with JmsStreamSupport {
 
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
@@ -42,15 +49,37 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       withDispatcherConfig { ctxt =>
 
+        implicit val system = ctxt.system
+        implicit val materializer = ActorMaterializer()
+
         implicit val eCtxt = ctxt.system.dispatcher
 
-        implicit val timeout = 3.seconds
+        implicit val timeout = 5.seconds
         // make sure we can connect to all connection factories
-        val amq = jmsConnectionFactory(registry, ctxt)("activemq", "activemq", timeout)
-        val sonic = jmsConnectionFactory(registry, ctxt)("sonic75", "central", timeout)
-        val ccQueue = jmsConnectionFactory(registry, ctxt)("sagum", s"${country}_queue", timeout)
+        val amq = jmsConnectionFactory(registry, ctxt)("activemq", "activemq", timeout).get
+        val sonic = jmsConnectionFactory(registry, ctxt)("sonic75", "central", timeout).get
+        val ccQueue = jmsConnectionFactory(registry, ctxt)("sagum", s"${country}_queue", timeout).get
 
-        pending
+        val switch = sendMessages(
+          headerCfg = ctxt.bs.headerConfig,
+          cf = sonic,
+          dest = JmsDestination.create("sonic.data.in").get,
+          log = Logger(loggerName),
+          msgs = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
+        )
+
+        val coll = receiveMessages(
+          headerCfg = ctxt.bs.headerConfig,
+          cf = sonic,
+          dest = JmsDestination.create("global.error").get
+        )
+
+        try {
+          val msgs = Await.result(coll.result, timeout + 1.second)
+          msgs should have size 1
+        } finally {
+          switch.shutdown()
+        }
       }
     }
   }

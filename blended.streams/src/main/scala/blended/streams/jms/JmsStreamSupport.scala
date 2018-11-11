@@ -47,8 +47,6 @@ trait JmsStreamSupport {
     StreamFactories.keepAliveFlow(toJms, msgs:_*)
   }
 
-  // TODO: This should expose a Future[List[FlowEnvelope]], so that it does not have to
-  // run sunchronously
   def receiveMessages(
     headerCfg : FlowHeaderConfig,
     cf : IdAwareConnectionFactory,

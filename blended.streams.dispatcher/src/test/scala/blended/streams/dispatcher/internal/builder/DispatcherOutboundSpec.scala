@@ -12,10 +12,10 @@ import org.scalatest.Matchers
 
 import scala.concurrent.ExecutionContext
 
-class OutboundDispatcherSpec extends DispatcherSpecSupport
+class DispatcherOutboundSpec extends DispatcherSpecSupport
   with Matchers {
 
-  override def loggerName: String = classOf[OutboundDispatcherSpec].getName()
+  override def loggerName: String = classOf[DispatcherOutboundSpec].getName()
 
   private def runnableOutbound(
     ctxt : DispatcherExecContext,
@@ -34,7 +34,7 @@ class OutboundDispatcherSpec extends DispatcherSpecSupport
       GraphDSL.create() { implicit b =>
         import GraphDSL.Implicits._
 
-        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).outbound(send))
+        val outStep = b.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, send)(ctxt.bs).outbound())
         val out = b.add(outColl.sink)
         val err = b.add(errColl.sink)
 

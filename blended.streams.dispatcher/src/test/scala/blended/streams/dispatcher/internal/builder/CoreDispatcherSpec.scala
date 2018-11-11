@@ -24,6 +24,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
   with Matchers {
 
   override def loggerName: String = classOf[CoreDispatcherSpec].getName()
+  val goodFlow = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env => env}
 
   val defaultTimeout : FiniteDuration = 1.second
 
@@ -47,8 +48,6 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
     Collector[FlowEnvelope],
     RunnableGraph[(ActorRef, KillSwitch)]
   )= {
-
-
     implicit val materializer : Materializer = ActorMaterializer()
 
     val jmsCollector = Collector[FlowEnvelope]("jms")
@@ -66,7 +65,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val worklist : Inlet[WorklistEvent] = builder.add(wlCollector.sink).in
         val error : Inlet[FlowEnvelope] = builder.add(errCollector.sink).in
 
-        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg)(ctxt.bs).core())
+        val dispatcher = builder.add(DispatcherBuilder(ctxt.idSvc, ctxt.cfg, goodFlow)(ctxt.bs).core())
 
         dispatcher.out0 ~> out
         dispatcher.out1 ~> worklist
@@ -91,8 +90,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
       testMessages : FlowEnvelope*
     )(implicit system: ActorSystem) : Future[DispatcherResult] = {
 
-      implicit val eCtxt = system.dispatcher
-      implicit val materializer = ActorMaterializer()
+      implicit val eCtxt : ExecutionContext = system.dispatcher
+      implicit val materializer : Materializer = ActorMaterializer()
 
       val source = StreamFactories.keepAliveSource[FlowEnvelope](testMessages.size)
       val (jmsColl, wlColl, errorColl, g) = runnableDispatcher(ctxt, testMessages.size)
@@ -144,7 +143,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
         val builder = DispatcherBuilder(
           idSvc = ctxt.idSvc,
-          dispatcherCfg = ctxt.cfg
+          dispatcherCfg = ctxt.cfg,
+          goodFlow
         )(ctxt.bs)
 
         val core = builder.core()
@@ -154,7 +154,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
           env
         }
 
-        val dispatcher = builder.dispatcher(dummyOut)
+        val dispatcher = builder.dispatcher()
 
         travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
         travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())

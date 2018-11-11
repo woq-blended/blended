@@ -4,6 +4,8 @@ import java.util.{ logging => jul }
 
 class LoggerJul(underlying: jul.Logger) extends Logger {
 
+  override def name: String = underlying.getName()
+
   override def isErrorEnabled: Boolean = underlying.isLoggable(jul.Level.SEVERE)
   override def isWarnEnabled: Boolean = underlying.isLoggable(jul.Level.WARNING)
   override def isInfoEnabled: Boolean = underlying.isLoggable(jul.Level.INFO)

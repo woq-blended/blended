@@ -19,6 +19,7 @@ object ResourceTypeRouterConfig {
   private[this] val applicationLogHeaderPath = "applicationLogHeader"
   private[this] val defaultHeaderPath = "defaultHeader"
   private[this] val resourcetypesPath = "resourcetypes"
+  private[this] val handledExceptionsPath = "handledExceptions"
 
   def create(
     idSvc : ContainerIdentifierService,
@@ -53,13 +54,16 @@ object ResourceTypeRouterConfig {
       DefaultHeaderConfig.create(cfg)
     }
 
+    val handledExceptions : List[String] = cfg.getStringList(handledExceptionsPath, List.empty)
+
     ResourceTypeRouterConfig(
       defaultProvider = internalProvider,
       eventProvider = eventProvider,
       applicationLogHeader = logHeader,
       defaultHeader = defaultHeader,
       resourceTypeConfigs = routes,
-      providerRegistry = provider
+      providerRegistry = provider,
+      handledExceptions = handledExceptions
     )
   }
 }
@@ -88,6 +92,7 @@ case class ResourceTypeRouterConfig(
   providerRegistry : BridgeProviderRegistry,
   applicationLogHeader : List[String],
   defaultHeader : List[DefaultHeaderConfig],
+  handledExceptions : List[String],
   resourceTypeConfigs : Map[String, ResourceTypeConfig]
 )
 

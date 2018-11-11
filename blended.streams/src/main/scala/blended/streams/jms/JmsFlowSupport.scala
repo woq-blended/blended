@@ -8,6 +8,7 @@ import javax.jms._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
+import MsgProperty.Implicits._
 
 case class JmsAcknowledgeHandler(
   jmsMessage : Message,
@@ -57,16 +58,24 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
     val props: Map[String, MsgProperty[_]] = {
 
       val dest = JmsDestination.asString(JmsDestination.create(msg.getJMSDestination()).get)
-
       val delMode = new JmsDeliveryMode(msg.getJMSDeliveryMode()).asString
 
+      val srcVendor : String = Option(msg.getStringProperty(srcVendorHeader(prefix))) match {
+        case None => settings.connectionFactory.vendor
+        case Some(s) => s
+      }
+
+      val srcProvider : String = Option(msg.getStringProperty(srcProviderHeader(prefix))) match {
+        case None => settings.connectionFactory.provider
+        case Some(s) => s
+      }
+
       val headers : Map[String, MsgProperty[_]] = Map(
-        srcVendorHeader(prefix) -> MsgProperty.lift(settings.connectionFactory.vendor).get,
-        srcProviderHeader(prefix) -> MsgProperty.lift(settings.connectionFactory.provider).get,
-        srcDestHeader(prefix) -> MsgProperty.lift(dest).get,
-        priorityHeader(prefix) -> MsgProperty.lift(msg.getJMSPriority()).get,
-        deliveryModeHeader(prefix) -> MsgProperty.lift(msg.getJMSDeliveryMode()).get,
-        deliveryModeHeader(prefix) -> MsgProperty.lift(delMode).get
+        srcVendorHeader(prefix) -> srcVendor,
+        srcProviderHeader(prefix) -> srcProvider,
+        srcDestHeader(prefix) -> dest,
+        priorityHeader(prefix) -> msg.getJMSPriority(),
+        deliveryModeHeader(prefix) -> delMode
       )
 
       val expireHeaderMap : Map[String, MsgProperty[_]] = msg.getJMSExpiration() match {
