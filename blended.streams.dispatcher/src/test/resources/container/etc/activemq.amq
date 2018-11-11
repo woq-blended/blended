@@ -10,7 +10,7 @@
 
   <amq:broker
     brokerName="activemq"
-    useJmx="false"
+    useJmx="true"
     persistent="false"
     offlineDurableSubscriberTimeout="604800000"
     offlineDurableSubscriberTaskSchedule="86400000"
@@ -18,6 +18,10 @@
     dataDirectory="activemq"
     tmpDataDirectory="activemq/tmp"
     >
+
+    <amq:managementContext>
+      <amq:managementContext createConnector="false"/>
+    </amq:managementContext>
 
   </amq:broker>
 

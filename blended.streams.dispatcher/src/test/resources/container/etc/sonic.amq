@@ -10,7 +10,7 @@
 
   <amq:broker
     brokerName="sonic"
-    useJmx="false"
+    useJmx="true"
     persistent="false"
     offlineDurableSubscriberTimeout="604800000"
     offlineDurableSubscriberTaskSchedule="86400000"
@@ -19,6 +19,9 @@
     tmpDataDirectory="sonic/tmp"
     >
 
+    <amq:managementContext>
+      <amq:managementContext createConnector="false"/>
+    </amq:managementContext>
 
   </amq:broker>
 

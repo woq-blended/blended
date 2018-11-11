@@ -148,7 +148,7 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
         val jmsCfg : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
-          brokerCfg.vendor,
+          vendor = brokerCfg.vendor,
           provider = brokerCfg.provider,
           cfg = cfg.config.getConfig("broker").getConfig(brokerCfg.brokerName)
         )

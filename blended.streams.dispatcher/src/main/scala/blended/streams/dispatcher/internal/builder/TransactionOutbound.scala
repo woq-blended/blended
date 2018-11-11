@@ -2,7 +2,7 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Source, Zip}
 import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
 import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.IdAwareConnectionFactory

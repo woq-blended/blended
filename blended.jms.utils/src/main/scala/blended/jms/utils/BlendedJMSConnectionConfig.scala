@@ -37,7 +37,6 @@ object BlendedJMSConnectionConfig {
 
   def fromConfig(stringResolver : String => Try[Any])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
 
-    val prov = cfg.getString("provider", provider)
     val enabled = cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled = cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
     val pingEnabled = cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
@@ -75,7 +74,7 @@ object BlendedJMSConnectionConfig {
     BlendedJMSConnectionConfig(
       vendor = vendor,
       enabled = enabled,
-      provider = prov,
+      provider = provider,
       jmxEnabled = jmxEnabled,
       pingEnabled = pingEnabled,
       pingTolerance = pingTolerance,
