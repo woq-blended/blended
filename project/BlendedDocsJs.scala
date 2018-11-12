@@ -11,7 +11,8 @@ object BlendedDocsJs extends ProjectFactory {
   val helper = new ProjectSettings(
     projectName = "blended.docs",
     description = "Dummy Js project to download npm modules for the doc generator",
-    osgi = false
+    osgi = false,
+    publish = false
   ) {
     override val projectDir: Option[String] = Some("doc")
     override def plugins: Seq[AutoPlugin] = Seq(ScalaJSPlugin, ScalaJSBundlerPlugin)
