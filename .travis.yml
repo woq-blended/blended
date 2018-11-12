@@ -74,4 +74,4 @@ jobs:
       name: Blended Development
       verbose: true
       on:
-        branch: streams
+        branch: master
