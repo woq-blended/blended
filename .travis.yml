@@ -42,7 +42,7 @@ stages:
   - name: Deploy
     if: branch = publish AND type = push
   - name: Site
-    if: branch = streams
+    if: branch = master
 
 jobs:
   include:
