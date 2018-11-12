@@ -1,11 +1,7 @@
 package blended.mgmt.rest.internal
 
 import java.io.File
-import java.util.concurrent.TimeUnit
 
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.Await
-import scala.concurrent.Future
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -13,93 +9,64 @@ import blended.mgmt.repo.WritableArtifactRepo
 import blended.mgmt.repo.internal.ArtifactRepoActivator
 import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
-import blended.testsupport.pojosr.BlendedPojoRegistry
-import blended.testsupport.pojosr.PojoSrTestHelper
-import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
+import blended.updater.config.{OverlayConfig, OverlayConfigCompanion}
 import blended.updater.config.json.PrickleProtocol._
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayConfigCompanion
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
 import com.softwaremill.sttp
 import com.softwaremill.sttp.UriContext
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
+import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
-import prickle.Pickle
-import prickle.Unpickle
-
-import scala.util.Success
+import prickle.{Pickle, Unpickle}
 
 @RequiresForkedJVM
-class CollectorServicePojosrSpec
-  extends LoggingFreeSpec
+class CollectorServicePojosrSpec extends SimplePojoContainerSpec
+  with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper
   with TestFile {
 
-
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+    "blended.security" -> new SecurityActivator(),
+    "blended.mgmt.repo" -> new ArtifactRepoActivator(),
+    "blended.mgmt.rest" -> new MgmtRestActivator(),
+    "blended.updater.remote" -> new RemoteUpdaterActivator(),
+    "blended.persistence.h2" -> new H2Activator()
+  )
 
   private[this] val log = Logger[this.type]
 
   case class Server(serviceRegistry: BlendedPojoRegistry, dir: File)
 
   def withServer(f: Server => Unit): Unit = {
-    import scala.concurrent.ExecutionContext.Implicits.global
-    log.info("Starting and waiting...")
-    val fut = Future {
-      withSimpleBlendedContainer[Unit]() { sr =>
-        log.info(s"Server path: ${baseDir}")
+    log.info(s"Server path: ${baseDir}")
 
-        // cleanup potential left over data from previous runs
-        deleteRecursive(
-          new File(baseDir, "data"),
-          new File(baseDir, "repositories")
-        )
-
-        withStartedBundles(sr)(Seq(
-          "blended.akka" -> new BlendedAkkaActivator(),
-          "blended.akka.http" -> new BlendedAkkaHttpActivator(),
-          "blended.security" -> new SecurityActivator(),
-          "blended.mgmt.repo" -> new ArtifactRepoActivator(),
-          "blended.mgmt.rest" -> new MgmtRestActivator(),
-          "blended.updater.remote" -> new RemoteUpdaterActivator(),
-          "blended.persistence.h2" -> new H2Activator()
-        )) { sr =>
-          var ok = false
-          val waiter = new Thread("Wait for finish") {
-            override def run(): Unit = {
-              Thread.sleep(20000)
-              interrupt()
-            }
+    // cleanup potential left over data from previous runs
+    deleteRecursive(
+      new File(baseDir, "data"),
+      new File(baseDir, "repositories")
+    )
+    // We consume services with a nice domino API
+    new DominoActivator() {
+      whenBundleActive {
+        whenServicePresent[WritableArtifactRepo] { repo =>
+          whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
+            log.info("Test-Server up and running. Starting test case...")
+            f(Server(serviceRegistry = registry, dir = new File(baseDir)))
           }
-          waiter.start()
-          // We consume services with a nice domino API
-          new DominoActivator() {
-            whenBundleActive {
-              whenServicePresent[WritableArtifactRepo] { repo =>
-                whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
-                  log.info("Test-Server up and running. Starting test case...")
-                  f(Server(serviceRegistry = sr, dir = new File(baseDir)))
-                  ok = true
-                }
-              }
-            }
-          }.start(sr.getBundleContext())
-
-          if (!ok) {
-            // Wait for waiter thread
-            log.info("Waiting for timeout...	")
-            waiter.join()
-          }
-
-          Success(ok)
         }
       }
-    }
-    Await.result(fut, FiniteDuration(20, TimeUnit.SECONDS))
+    }.start(registry.getBundleContext())
   }
 
   implicit val sttpBackend = sttp.HttpURLConnectionBackend()
@@ -253,7 +220,5 @@ class CollectorServicePojosrSpec
         assert(new File(server.dir, "repositories/rcs/test.pack.minimal-1.0.0.conf").exists())
       }
     }
-
   }
-
 }
