@@ -15,7 +15,7 @@ import scala.util.Try
 class FlowTransactionSpec extends LoggingFreeSpec
   with Matchers {
 
-  private val branchHeader = "branch"
+  private val branchCount = 10
 
   val main = FlowEnvelope(FlowMessage.noProps)
 
@@ -57,24 +57,24 @@ class FlowTransactionSpec extends LoggingFreeSpec
     }
 
     "a started transaction with n started branches should be in Started state" in {
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
       t.state should be (FlowTransactionState.Started)
-      t.worklist should have size(10)
+      t.worklist should have size branchCount
     }
 
     "a started transaction with c/n branches completed should be in Updated state for c < n" in {
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5")
       ).get
 
       u.state should be (FlowTransactionState.Updated)
-      u.worklist should have size(10)
+      u.worklist should have size branchCount
     }
 
     "a started transaction with all branches completed should be in completed state" in {
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
 
       val branches = 1.to(t.worklist.size).map(i => s"$i")
 
@@ -83,29 +83,29 @@ class FlowTransactionSpec extends LoggingFreeSpec
       ).get
 
       u.state should be (FlowTransactionState.Completed)
-      u.worklist should have size(10)
+      u.worklist should have size branchCount
     }
 
     "a started transaction with one branch having failed should be in failed state" in {
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Failed, "5")
       ).get
 
       u.state should be (FlowTransactionState.Failed)
-      u.worklist should have size(10)
+      u.worklist should have size 10
     }
 
     "a started transaction with one branch having timed out should be in failed state" in {
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
 
       val u = t.updateTransaction(
         FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.TimeOut, "5")
       ).get
 
       u.state should be (FlowTransactionState.Failed)
-      u.worklist should have size(10)
+      u.worklist should have size 10
     }
 
     "complete upon an update with complete regardless of the current worklist" in {
@@ -127,17 +127,17 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
         t2.tid should be(t.tid)
         t2.state should be(t.state)
-        assert(t.worklist.forall { case (k, v) => t2.worklist.get(k).get == v })
+        assert(t.worklist.forall { case (k, v) => t2.worklist(k) == v })
       }
 
       singleTest(FlowTransaction(Some(FlowEnvelope())))
-      singleTest(sampleTransAction(10).get)
+      singleTest(sampleTransAction(branchCount).get)
 
-      val t = sampleTransAction(10).get
+      val t = sampleTransAction(branchCount).get
       t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "5"))
       singleTest(t)
 
-      val t2 = sampleTransAction(10).get
+      val t2 = sampleTransAction(branchCount).get
       t.updateTransaction(transaction.FlowTransactionCompleted(t.tid, FlowMessage.noProps))
       singleTest(t2)
     }

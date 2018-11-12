@@ -15,6 +15,8 @@ import blended.util.logging.Logger
 
 import scala.util.Try
 
+class InvalidBridgeConfigurationException(msg: String) extends Exception(msg)
+
 object TrackTransaction extends Enumeration {
   type TrackTransaction = Value
   val On, Off, FromMessage = Value
@@ -62,6 +64,36 @@ class JmsStreamBuilder(
     .withDeliveryMode(JmsDeliveryMode.Persistent)
 
   private val bridgeLogger = Logger(streamId)
+
+  private val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
+  private val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
+
+  private val internalCf : Try[IdAwareConnectionFactory] = Try {
+
+    if ((cfg.fromCf.vendor, cfg.fromCf.provider) == internalId) {
+      cfg.fromCf
+    } else if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
+      cfg.toCf
+    } else {
+      throw new InvalidBridgeConfigurationException("One leg of the JMS bridge must be internal")
+    }
+  }
+
+  // Decide whether a tracking event should be generated for this bridge step
+  private val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
+
+    val doTrack : Boolean = cfg.trackTransAction match {
+      case TrackTransaction.Off => false
+      case TrackTransaction.On => true
+      case TrackTransaction.FromMessage =>
+        bridgeLogger.debug("Getting tracking mode from message")
+        env.header[Boolean](cfg.headerCfg.prefix + cfg.headerCfg.headerTrack).getOrElse(false)
+    }
+
+    bridgeLogger.debug(s"Tracking for envelope [${env.id}] is [$doTrack]")
+
+    doTrack
+  }
 
   private def transactionSink(internalCf : IdAwareConnectionFactory, eventDest : JmsDestination) :
     Flow[FlowEnvelope, FlowEnvelope, _] = {
@@ -114,21 +146,8 @@ class JmsStreamBuilder(
     Flow.fromGraph(g)
   }
 
-  private val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
-  val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
 
-  private val internalCf : Try[IdAwareConnectionFactory] = Try {
-
-    if ((cfg.fromCf.vendor, cfg.fromCf.provider) == internalId) {
-      cfg.fromCf
-    } else if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
-      cfg.toCf
-    } else {
-      throw new Exception("One leg of the JMS bridge must be internal")
-    }
-  }
-
-  private def transactionFlow() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  private[bridge] val transactionFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     def startTransaction(env: FlowEnvelope) : FlowTransactionEvent = {
       FlowTransactionStarted(env.id, env.flowMessage.header)
@@ -169,15 +188,11 @@ class JmsStreamBuilder(
 
       val split = b.add(Broadcast[FlowEnvelope](2))
       val sink = b.add(transactionSink(internalCf, eventDest))
-      val log = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
-        bridgeLogger.debug(s"Transaction Wiretap [$env]")
-        env
-      })
       val zip = b.add(Zip[FlowEnvelope, FlowEnvelope]())
       val select = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ _._2 })
 
       split.out(1) ~> zip.in1
-      split.out(0) ~> log ~> sink ~> zip.in0
+      split.out(0) ~> sink ~> zip.in0
 
       zip.out ~> select
 
@@ -193,7 +208,7 @@ class JmsStreamBuilder(
     RestartableJmsSource(
       name = streamId, settings = srcSettings, log = bridgeLogger
     )
-    .via(transactionFlow())
+    .via(transactionFlow)
     .via(transactionWiretap(internalCf.get, internalProvider.get.transactions))
     .via(jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = bridgeLogger))
   }

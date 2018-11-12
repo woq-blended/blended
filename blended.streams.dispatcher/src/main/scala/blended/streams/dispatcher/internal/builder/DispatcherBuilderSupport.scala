@@ -19,10 +19,9 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig("blended.flow.header"))
 
   private val headerCfg = headerConfig
+  val header = FlowHeaderConfig.header(headerCfg.prefix)
 
   val streamLogger : Logger
-
-  val header : String => String = name => headerCfg.prefix + name
 
   // Keys to stick objects into the FlowEnvelope context
   val appHeaderKey : String = "AppLogHeader"
@@ -50,7 +49,6 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
 
   def headerDeliveryMode         : String = header("DeliveryMode")
   def headerTimeToLive           : String = header("TimeToLive")
-  def headerTrackTransaction     : String = header(headerConfig.headerTrack)
 
   /**
   * Access a typed object in the given envelope and the given key. If an object

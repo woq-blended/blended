@@ -33,6 +33,7 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
+        "spec" -> "TRACE",
         "blended" -> "DEBUG"
       )
     )

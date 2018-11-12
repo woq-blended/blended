@@ -78,8 +78,7 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
     }
   }
 
-  def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = {
-
+  def createDispatcherExecContext() : DispatcherExecContext = {
     val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
       clazz = ClassTag(classOf[ContainerIdentifierService]),
       timeout = 3.seconds
@@ -106,7 +105,9 @@ trait DispatcherSpecSupport extends SimplePojoContainerSpec
       override val streamLogger: Logger = Logger(loggerName)
     }
 
-    f(DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs))
+    DispatcherExecContext(cfg = cfg, idSvc = idSvc, system = system, bs = bs)
   }
+
+  def withDispatcherConfig[T](f : DispatcherExecContext => T) : T = f(createDispatcherExecContext())
 }
 

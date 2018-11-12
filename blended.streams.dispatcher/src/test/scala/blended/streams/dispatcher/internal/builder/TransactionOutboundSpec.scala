@@ -5,10 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.BrokerActivator
-import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
@@ -16,8 +13,6 @@ import blended.streams.transaction.internal.FlowTransactionManager
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.RequiresForkedJVM
-import blended.util.logging.Logger
-import com.typesafe.config.Config
 import org.osgi.framework.BundleActivator
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
@@ -31,18 +26,13 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   with JmsStreamSupport
   with BeforeAndAfterAll {
 
-  private implicit val timeout = 3.seconds
+  private implicit val timeout : FiniteDuration = 3.seconds
 
   System.setProperty("testName", "trans")
   override def loggerName: String = "outbound"
 
   override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
     "blended.activemq.brokerstarter" -> new BrokerActivator()
-  )
-
-  private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)(
-    clazz = ClassTag(classOf[ContainerIdentifierService]),
-    timeout = 3.seconds
   )
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
@@ -53,28 +43,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
-  private val provider : BridgeProviderRegistry = mandatoryService[BridgeProviderRegistry](registry)(None)(
-    clazz = ClassTag(classOf[BridgeProviderRegistry]),
-    timeout = timeout
-  )
-
-  private val resttypeCfg = ResourceTypeRouterConfig.create(
-    idSvc,
-    provider,
-    idSvc.containerContext.getContainerConfig().getConfig("blended.streams.dispatcher")
-  ).get
-
-  private implicit val bs = new DispatcherBuilderSupport {
-    override def containerConfig: Config = idSvc.getContainerContext().getContainerConfig()
-    override val streamLogger: Logger = Logger(loggerName)
-  }
-
-  private val ctxt = DispatcherExecContext(
-    cfg = resttypeCfg,
-    idSvc = idSvc,
-    system = system,
-    bs = bs
-  )
+  private val ctxt = createDispatcherExecContext()
 
   val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
@@ -82,6 +51,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   private val tMgr = system.actorOf(FlowTransactionManager.props())
 
   override protected def beforeAll(): Unit = {
+    implicit val bs : DispatcherBuilderSupport = ctxt.bs
     new TransactionOutbound(
       headerConfig = ctxt.bs.headerConfig,
       tMgr = tMgr,

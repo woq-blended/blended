@@ -105,8 +105,9 @@ class DispatcherSpec extends DispatcherSpecSupport
       runTest(testMsgs){ events =>
         events should have size 2
 
+        assert(events.forall(_.state == FlowTransactionState.Updated))
+        assert(events.map(_.transactionId).distinct.size == 1)
         val event = events.last.asInstanceOf[FlowTransactionUpdate]
-        event.state should be (FlowTransactionState.Updated)
         event.branchIds should have size 1
       }
     }

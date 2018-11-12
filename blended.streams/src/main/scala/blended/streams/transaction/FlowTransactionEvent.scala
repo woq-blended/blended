@@ -19,6 +19,8 @@ object FlowHeaderConfig {
   private val statePath = "transactionState"
   private val trackTransactionPath = "trackTransaction"
 
+  val header : String => String => String = prefix => name => prefix + name
+
   def create(cfg: Config): FlowHeaderConfig = {
     val prefix = cfg.getString(prefixPath, "Blended")
     val headerTrans = cfg.getString(transIdPath, "TransactionId")
@@ -28,10 +30,10 @@ object FlowHeaderConfig {
 
     FlowHeaderConfig(
       prefix = prefix,
-      headerTrans = headerTrans,
-      headerBranch = headerBranch,
-      headerState = headerState,
-      headerTrack = headerTrack
+      headerTrans = header(prefix)(headerTrans),
+      headerBranch = header(prefix)(headerBranch),
+      headerState = header(headerState)(headerState),
+      headerTrack = header(prefix)(headerTrack)
     )
   }
 }
@@ -60,15 +62,15 @@ object FlowTransactionEvent {
       case started : FlowTransactionStarted =>
         FlowEnvelope(FlowMessage(
           basicProps(started)
-        )).withHeaders(started.properties.filterKeys(k => !k.startsWith("JMS"))).get
+        ), started.transactionId).withHeaders(started.properties.filterKeys(k => !k.startsWith("JMS"))).get
 
       case completed : FlowTransactionCompleted =>
-        FlowEnvelope(FlowMessage(basicProps(completed)))
+        FlowEnvelope(FlowMessage(basicProps(completed)), completed.transactionId)
 
       case failed : FlowTransactionFailed =>
         failed.reason match {
-          case None => FlowEnvelope(FlowMessage(basicProps(failed)))
-          case Some(s) => FlowEnvelope(FlowMessage(s, basicProps(failed)))
+          case None => FlowEnvelope(FlowMessage(basicProps(failed)), failed.transactionId)
+          case Some(s) => FlowEnvelope(FlowMessage(s, basicProps(failed)), failed.transactionId)
         }
 
       case update : FlowTransactionUpdate =>
@@ -81,7 +83,7 @@ object FlowTransactionEvent {
             cfg.headerState -> state,
             cfg.headerBranch -> branchIds
           )
-        ))
+        ), update.transactionId)
     }
   }
 

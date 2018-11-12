@@ -11,6 +11,7 @@ import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
+import blended.streams.transaction.FlowTransactionState
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
@@ -77,6 +78,8 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
           val cbes = Await.result(cbeColl.result, timeout + 1.second)
           errors should have size 1
           cbes should have size 2
+
+          cbes.head.header[String](ctxt.bs.headerConfig.headerState) should be (Some(FlowTransactionState.Started.toString))
         } finally {
           switch.shutdown()
         }

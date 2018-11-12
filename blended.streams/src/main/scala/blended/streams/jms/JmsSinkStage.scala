@@ -65,7 +65,7 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(i
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
         super.onSessionOpened(jmsSession)
         producer = Some(jmsSession.session.createProducer(null))
-        log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
+        log.trace(s"Created anonymous producer for [${jmsSession.sessionId}]")
       }
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
@@ -89,7 +89,7 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(i
             if (sendTtl >= 0L) {
               val dest = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
-              log.info(s"Successfuly sent message to [$dest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
+              log.debug(s"Successfuly sent message to [$dest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
             }
           }
           env

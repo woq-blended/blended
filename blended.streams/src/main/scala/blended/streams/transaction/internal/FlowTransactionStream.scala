@@ -35,7 +35,7 @@ class FlowTransactionStream(
   private val updateEvent : FlowEnvelope => Try[(FlowEnvelope, FlowTransactionEvent)] = { env =>
     Try {
       val event = FlowTransactionEvent.envelope2event(cfg)(env).get
-      log.debug(s"Received transaction event [${event.transactionId}]")
+      log.debug(s"Received transaction event [${event.transactionId}][${event.state}]")
       (env, event)
     }
   }
@@ -43,7 +43,7 @@ class FlowTransactionStream(
   // run the inbound transaction update through the transaction manager
   private val recordTransaction : Try[(FlowEnvelope, FlowTransactionEvent)] => TransactionStreamContext = {
     case Success((env, event)) =>
-      log.debug(s"Recording transaction event [${event.transactionId}]")
+      log.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
       TransactionStreamContext(
         envelope = env,
         trans = Some((tMgr ? event).mapTo[FlowTransaction].map(s => Success(s))),
@@ -71,7 +71,7 @@ class FlowTransactionStream(
   private val sendTransaction : TransactionStreamContext => TransactionStreamContext = { in =>
     val sendEnv = in.sendEnvelope.get.map {
       case Success(s) =>
-        log.debug(s"About to send transaction envelope  [${in.envelope.id}]")
+        log.trace(s"About to send transaction envelope  [${in.envelope.id}]")
         Source.single(s).via(sendFlow).toMat(Sink.head[FlowEnvelope])(Keep.right).run()
         Success(s)
       case Failure(t) => Failure(t)

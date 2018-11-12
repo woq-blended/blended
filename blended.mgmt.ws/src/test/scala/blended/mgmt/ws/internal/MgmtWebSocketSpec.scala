@@ -6,7 +6,6 @@ import java.security.{KeyFactory, PublicKey}
 import java.util.concurrent.{CompletionStage, TimeUnit}
 
 import akka.actor.ActorSystem
-import akka.actor.Status.Success
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
 import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
@@ -34,7 +33,7 @@ import prickle.{Pickle, Unpickle}
 import sun.misc.BASE64Decoder
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -43,7 +42,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper {
 
-  private implicit val timeout = 3.seconds
+  private implicit val timeout : FiniteDuration = 3.seconds
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -70,7 +69,6 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
   private[this] val incoming : Sink[Message, CompletionStage[java.util.List[Message]]] = Sink.seq[Message]
 
   private[this] def withWebSocketServer[T](sr : BlendedPojoRegistry)(f : ActorSystem => Materializer => T)(implicit clazz : ClassTag[T]) : T = {
-    import scala.concurrent.ExecutionContext.Implicits.global
     val system = mandatoryService[ActorSystem](sr)(None)
     val materializer = ActorMaterializer()(system)
     f(system)(materializer)

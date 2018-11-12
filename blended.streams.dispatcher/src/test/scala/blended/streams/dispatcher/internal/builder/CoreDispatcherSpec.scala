@@ -156,9 +156,10 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
         val dispatcher = builder.dispatcher()
 
-        travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
-        travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())
-        travesty.toFile(dispatcher, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher.svg").getAbsolutePath())
+        // TODO: Review for more meaningfull graphs
+//        travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
+//        travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())
+//        travesty.toFile(dispatcher, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher.svg").getAbsolutePath())
       }
     }
 

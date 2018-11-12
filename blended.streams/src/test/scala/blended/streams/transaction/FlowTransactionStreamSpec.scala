@@ -44,7 +44,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
         implicit val eCtxt : ExecutionContext = system.dispatcher
         implicit val materializer : Materializer = ActorMaterializer()
-        implicit val log : Logger = Logger[FlowTransactionStreamSpec]
+        implicit val log : Logger = Logger("spec.flow.stream")
 
         val tMgr = system.actorOf(FlowTransactionManager.props())
 
@@ -53,7 +53,6 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
         val cfg : FlowHeaderConfig = FlowHeaderConfig.create(
           idSvc.getContainerContext().getContainerConfig().getConfig("blended.flow.header")
         )
-
         try {
           val good : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { e =>
             val t = FlowTransaction.envelope2Transaction(cfg)(e)
