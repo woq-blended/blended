@@ -32,7 +32,7 @@ object FlowHeaderConfig {
       prefix = prefix,
       headerTrans = header(prefix)(headerTrans),
       headerBranch = header(prefix)(headerBranch),
-      headerState = header(headerState)(headerState),
+      headerState = header(prefix)(headerState),
       headerTrack = header(prefix)(headerTrack)
     )
   }

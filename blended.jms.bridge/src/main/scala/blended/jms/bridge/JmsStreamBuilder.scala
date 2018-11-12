@@ -2,7 +2,7 @@ package blended.jms.bridge
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{FlowShape, Materializer, SinkShape}
+import akka.stream.{FlowShape, Graph, Materializer, SinkShape}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
 import blended.jms.bridge.TrackTransaction.TrackTransaction
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
@@ -80,7 +80,7 @@ class JmsStreamBuilder(
   }
 
   // Decide whether a tracking event should be generated for this bridge step
-  private val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
+  private[bridge] val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
 
     val doTrack : Boolean = cfg.trackTransAction match {
       case TrackTransaction.Off => false
@@ -95,7 +95,7 @@ class JmsStreamBuilder(
     doTrack
   }
 
-  private def transactionSink(internalCf : IdAwareConnectionFactory, eventDest : JmsDestination) :
+  private[bridge] def transactionSink(internalCf : IdAwareConnectionFactory, eventDest : JmsDestination) :
     Flow[FlowEnvelope, FlowEnvelope, _] = {
 
     val g = GraphDSL.create() { implicit b =>
@@ -115,39 +115,20 @@ class JmsStreamBuilder(
         log = bridgeLogger
       ))
 
-      val trackFilter = b.add(FlowProcessor.partition[FlowEnvelope] { env =>
-
-        val doTrack : Boolean = cfg.trackTransAction match {
-          case TrackTransaction.Off => false
-          case TrackTransaction.On => true
-          case TrackTransaction.FromMessage =>
-            bridgeLogger.debug("Getting tracking mode from message")
-            env.header[Boolean](cfg.headerCfg.prefix + cfg.headerCfg.headerTrack).getOrElse(false)
-        }
-
-        bridgeLogger.debug(s"Tracking for envelope [${env.id}] is [$doTrack]")
-
-        doTrack
-      })
-
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
         bridgeLogger.debug(s"About to send envelope [$env]")
         env.withHeader(cfg.headerCfg.headerTrack, false).get
       })
 
-      val merge = b.add(Merge[FlowEnvelope](2))
-
-      trackFilter.out0 ~> switchOffTracking ~> producer ~> merge.in(0)
-      trackFilter.out1 ~> merge.in(1)
-
-      FlowShape(trackFilter.in, merge.out)
+      switchOffTracking ~> producer
+      FlowShape(switchOffTracking.in, producer.out)
     }
 
     Flow.fromGraph(g)
   }
 
 
-  private[bridge] val transactionFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  private[bridge] val createTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     def startTransaction(env: FlowEnvelope) : FlowTransactionEvent = {
       FlowTransactionStarted(env.id, env.flowMessage.header)
@@ -182,17 +163,18 @@ class JmsStreamBuilder(
     Flow.fromGraph(g)
   }
 
-  def transactionWiretap(internalCf : IdAwareConnectionFactory, eventDest : JmsDestination) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  private[bridge] def transactionWiretap(internalCf : IdAwareConnectionFactory, eventDest : JmsDestination) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     val g = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
       val split = b.add(Broadcast[FlowEnvelope](2))
+      val trans = b.add(createTransaction)
       val sink = b.add(transactionSink(internalCf, eventDest))
       val zip = b.add(Zip[FlowEnvelope, FlowEnvelope]())
       val select = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ _._2 })
 
       split.out(1) ~> zip.in1
-      split.out(0) ~> sink ~> zip.in0
+      split.out(0) ~> trans ~> sink ~> zip.in0
 
       zip.out ~> select
 
@@ -205,11 +187,24 @@ class JmsStreamBuilder(
   // We will stream from the inbound destination to the inbound destination of the internal provider
   private val stream : Source[FlowEnvelope, NotUsed] = {
 
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val trackSplit = b.add(trackFilter)
+      val mergeResult = b.add(Merge[FlowEnvelope](2))
+
+      val wiretap = transactionWiretap(internalCf.get, internalProvider.get.transactions)
+
+      trackSplit.out0 ~> wiretap ~> mergeResult.in(0)
+      trackSplit.out1 ~> mergeResult.in(1)
+
+      FlowShape(trackSplit.in, mergeResult.out)
+    }
+
     RestartableJmsSource(
       name = streamId, settings = srcSettings, log = bridgeLogger
     )
-    .via(transactionFlow)
-    .via(transactionWiretap(internalCf.get, internalProvider.get.transactions))
+    .via(Flow.fromGraph(g))
     .via(jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = bridgeLogger))
   }
 
