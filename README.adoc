@@ -2,6 +2,7 @@
 = Blended - a Scala based Integration framework
 :toc:
 :toc-placement: preamble
+:sbt-version: 1.2.6
 
 ifdef::env-github[]
 image:https://badge.waffle.io/woq-blended/blended.png[Stories in Ready, link=https://waffle.io/woq-blended/blended]
@@ -42,13 +43,13 @@ https://github.com/woq-blended/blended.container[Blended example container and i
 
 == Build from source
 
-We use `sbt 1.2.3` to build blended.
+We use `sbt {sbt-version}` to build blended.
 
 ====
 The build files are *not* compatible with sbt versions 0.13.x as they intensively use the new unified syntax to reference properties.
 ====
 
-As we have some shared modules between Scala and Scala.Js, node and yarn is also required on the developer machine.
+As we have some shared modules between Scala and Scala.Js, `node` and `yarn` is also required on the developer machine.
 
 After cloning the repository, simply navigate to the checkout directory and start sbt with a bit more memory (2GB or more):
 
