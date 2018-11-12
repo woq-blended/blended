@@ -1,10 +1,11 @@
 import java.nio.file.Files
 
-import sbt._
 import sbt.Keys._
+import sbt._
 import sbt.io.syntax
+
 import scala.util.matching.Regex
-import Regex.quoteReplacement
+import scala.util.matching.Regex.quoteReplacement
 
 object FilterResources extends AutoPlugin {
 
@@ -126,7 +127,7 @@ object ResourceFilter {
     val files = unfilteredResources.flatMap(filterCandidates)
     val regex = new Regex(pattern)
     val filtered = files.map { case (file, relative) => applyFilter(file, regex, filterTargetDir, relative, props) }
-    log.info("Filtered Resources : " + filtered.mkString(","))
+    log.debug("Filtered Resources : " + filtered.mkString(","))
 
     filtered
   }

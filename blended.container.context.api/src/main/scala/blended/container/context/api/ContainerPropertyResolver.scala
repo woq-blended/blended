@@ -1,6 +1,12 @@
 package blended.container.context.api
 
 import blended.util.logging.Logger
+import org.springframework.expression.Expression
+import org.springframework.expression.spel.standard.SpelExpressionParser
+import org.springframework.expression.spel.support.StandardEvaluationContext
+
+import scala.collection.mutable
+import scala.util.Try
 
 object ContainerPropertyResolver {
 
@@ -9,10 +15,29 @@ object ContainerPropertyResolver {
 
   private[this] val log = Logger[ContainerPropertyResolver.type]
 
-  private[this] val startDelim = "$[["
-  private[this] val endDelim = "]]"
+  private[this] val resolveStartDelim = "$[["
+  private[this] val resolveEndDelim = "]]"
 
-  private[this] def extractRule(line: String) : (String, String, String) = {
+  private[this] val evalStartDelim = "${{"
+  private[this] val evalEndDelim = "}}"
+
+  private[this] val parser = new SpelExpressionParser()
+
+  private[this] val elCache : mutable.Map[String, Expression] = mutable.Map.empty
+
+  private[this] def parseExpression(exp: String) : Try[Expression] = Try {
+
+    elCache.get(exp) match {
+      case Some(e) => e
+      case None =>
+        val r = parser.parseExpression(exp)
+        elCache += (exp -> r)
+        r
+    }
+  }
+
+  private[this] def extractVariableElement(line: String, startDelim: String, endDelim: String) : (String, String, String) = {
+
     line.lastIndexOf(startDelim) match {
       case -1 => ("", line, "")
       case start => line.indexOf(endDelim, start) match {
@@ -60,7 +85,7 @@ object ContainerPropertyResolver {
     modifiers.get(modName).map { m => (m, params) }
   }
 
-  private[this] def processRule(idSvc: ContainerIdentifierService, rule: String) : String = {
+  private[this] def processRule(idSvc: ContainerIdentifierService, rule: String, additionalProps: Map[String, Any]) : String = {
 
     log.trace(s"Processing rule [$rule]")
 
@@ -87,8 +112,15 @@ object ContainerPropertyResolver {
     var result : String = props.get(ruleName) match {
       case Some(s) => s
       case None =>
-        Option(System.getenv().getOrDefault(ruleName, System.getProperty(ruleName))) match {
-          case Some(s) => s
+        Option(
+          additionalProps.getOrElse(
+            rule,
+            System.getenv().getOrDefault(
+              ruleName, System.getProperty(ruleName)
+            )
+          )
+        ) match {
+          case Some(s) => s.toString()
           case None =>
             resolver(idSvc).get(ruleName) match {
               case Some(r) => r(ruleName)
@@ -103,10 +135,49 @@ object ContainerPropertyResolver {
     result
   }
 
-  def resolve(idSvc: ContainerIdentifierService, line: String) : String = line.indexOf(startDelim) match {
-    case n if n < 0 => line
-    case n if n >= 0 =>
-      val (prefix, rule, suffix) = extractRule(line)
-      resolve(idSvc, prefix + processRule(idSvc, rule) + suffix)
+  private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+    // First we check if we have replacements in "Blended Style"
+    line.indexOf(resolveStartDelim) match {
+      case n if n < 0 =>
+        // We don't have any
+        line.indexOf(evalStartDelim) match {
+          case i if i < 0 => line
+          case i if i >= 0 =>
+            val (prefix, eval, suffix) = extractVariableElement(line, evalStartDelim, evalEndDelim)
+            if (prefix.isEmpty && suffix.isEmpty) {
+              evaluate(idSvc, eval, additionalProps)
+            } else {
+              resolve(idSvc, prefix + evaluate(idSvc, eval, additionalProps) + suffix, additionalProps)
+            }
+        }
+      case n if n >= 0 =>
+        val (prefix, rule, suffix) = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
+        resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps) + suffix, additionalProps)
+    }
+  }
+
+  // TODO : Should this be Option[AnyRef] ??
+  private[api] def evaluate(
+    idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
+  ) : AnyRef = {
+
+    val context = new StandardEvaluationContext()
+    context.setRootObject(idSvc)
+
+    additionalProps.foreach { case (k,v) =>
+      context.setVariable(k,v)
+    }
+    context.setVariable("idSvc", idSvc)
+
+    val exp = parseExpression(line).get
+
+    Option(exp.getValue(context)) match {
+      case None =>
+        log.warn(s"Could not resolve expression [${line}], using empty String")
+        ""
+      case Some(r) =>
+        log.trace(s"Evaluated [$line] to [$r][${r.getClass().getName()}]")
+        r
+    }
   }
 }

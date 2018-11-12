@@ -1,0 +1,645 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:cbe="http://www.ibm.com/AC/commonbaseevent1_0_1"
+  targetNamespace="http://www.ibm.com/AC/commonbaseevent1_0_1" version="1.0.1"
+  elementFormDefault="qualified">
+
+  <xsd:complexType name="CommonBaseEventType">
+		<xsd:sequence>
+			<xsd:element name="contextDataElements" type="cbe:ContextDataElementType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="extendedDataElements" type="cbe:ExtendedDataElementType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="associatedEvents" type="cbe:AssociatedEventType" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="reporterComponentId" type="cbe:ComponentIdentificationType" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="sourceComponentId" type="cbe:ComponentIdentificationType" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="msgDataElement" type="cbe:MsgDataElementType" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="situation" type="cbe:Situation" minOccurs="1" maxOccurs="1" />
+			<xsd:any namespace="##other" minOccurs="0" maxOccurs="unbounded" processContents="skip"/>		
+		</xsd:sequence> 
+		<xsd:attribute name="version" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="16"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="globalInstanceId" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:ID">
+					<xsd:minLength value="32"></xsd:minLength>
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="extensionName" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:Name">
+					<xsd:maxLength value="64" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="localInstanceId" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="128" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="creationTime" type="xsd:dateTime" use="required" />
+		<xsd:attribute name="severity" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:short">
+					<xsd:minInclusive value="0" />
+					<xsd:maxInclusive value="70" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="msg" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="1024" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="priority" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:short">
+					<xsd:minInclusive value="0" />
+					<xsd:maxInclusive value="100" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="sequenceNumber" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:long">
+					<xsd:minInclusive value="0" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<!-- 
+			This attribute has been replaced for version 1.0.1 of the Common Base Event Schema.
+			For version 1.0.1 the attribute categoryName should be filled in with a value that 
+			was assigned to the attribute situationType
+			
+			<xsd:attribute name="situationType" use="optional">
+			<xsd:simpleType>
+			<xsd:restriction base="xsd:string">
+			<xsd:maxLength value="512" />
+			</xsd:restriction>
+			</xsd:simpleType>
+			</xsd:attribute> 
+		-->
+		<xsd:attribute name="repeatCount" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:short">
+					<xsd:minInclusive value="0" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="elapsedTime" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:long">
+					<xsd:minInclusive value="0" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:element name="CommonBaseEvent" type="cbe:CommonBaseEventType" />
+	<xsd:complexType name="ComponentIdentificationType">
+		<xsd:attribute name="component" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="256" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="subComponent" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="512" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="componentIdType" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="32" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="instanceId" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="128" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="application" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="256" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="executionEnvironment" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="256" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="location" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="256" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="locationType" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:Name">
+					<xsd:maxLength value="32" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="processId" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="threadId" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="componentType" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="512" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="MsgDataElementType">
+		<xsd:sequence>
+			<xsd:element name="msgCatalogTokens" minOccurs="0" maxOccurs="unbounded">
+				<xsd:complexType>
+					<xsd:attribute name="value" use="required">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="256" />
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:attribute>
+				</xsd:complexType>
+			</xsd:element>
+			<xsd:group ref="cbe:msgIdGroup" minOccurs="0" maxOccurs="1" />
+			<xsd:group ref="cbe:msgCatalogGroup" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+		<xsd:attribute name="msgLocale" use="optional">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:language">
+					<xsd:maxLength value="11"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+
+	<xsd:group name="msgCatalogGroup">
+		<xsd:sequence>
+			<xsd:element name="msgCatalogId" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="128"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="msgCatalogType" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="32" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="msgCatalog" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="128" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+	<xsd:group name="msgIdGroup">
+		<xsd:sequence>
+			<xsd:element name="msgId" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="256" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="msgIdType" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:Name">
+						<xsd:maxLength value="32" />
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:sequence>
+	</xsd:group>
+	<xsd:complexType name="AssociatedEventType">
+		<xsd:choice>
+			<xsd:element name="associationEngineInfo" type="cbe:AssociationEngineType" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="associationEngine" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:NMTOKEN">
+						<xsd:minLength value="16"></xsd:minLength>
+						<xsd:maxLength value="32"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>			
+		</xsd:choice>
+		<!-- This association would contain a serialized version of the GloballyUniqueId for all the resolvedAssociatedEvent objects -->
+		<xsd:attribute name="resolvedEvents" type="xsd:NMTOKENS" use="required" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="AssociationEngineType">
+		<!-- This id would contain a serialized version of the GloballyUniqueId for all the resolvedAssociatedEvent objects -->
+		<xsd:attribute name="id" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:NMTOKEN">
+					<xsd:minLength value="32"></xsd:minLength>
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="type" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:Name">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="name" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:Name">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:element name="AssociationEngine" type="cbe:AssociationEngineType" />
+
+
+
+	<xsd:complexType name="ExtendedDataElementType">
+		<xsd:sequence>
+			<xsd:choice>
+				<xsd:element name="values" minOccurs="1" maxOccurs="unbounded">
+					<xsd:simpleType>
+						<xsd:restriction base="xsd:string">
+							<xsd:maxLength value="1024"></xsd:maxLength>
+						</xsd:restriction>
+					</xsd:simpleType>
+				</xsd:element>
+				<xsd:element name="hexValue" type="xsd:hexBinary" minOccurs="1" maxOccurs="1" />
+
+			</xsd:choice>
+			<xsd:element name="children" type="cbe:ExtendedDataElementType" minOccurs="0" maxOccurs="unbounded" />
+
+		</xsd:sequence>
+		<xsd:attribute name="name" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="type" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64"></xsd:maxLength>
+					<!-- Added type noValue when only a children is specified.  -->
+					<!-- With a new type noValue, so the value is ignored and only the children is considered. V1.1 Approved -->
+					<xsd:enumeration value="noValue"></xsd:enumeration>
+					<xsd:enumeration value="byte"></xsd:enumeration>
+					<xsd:enumeration value="short"></xsd:enumeration>
+					<xsd:enumeration value="int"></xsd:enumeration>
+					<xsd:enumeration value="long"></xsd:enumeration>
+					<xsd:enumeration value="float"></xsd:enumeration>
+					<xsd:enumeration value="double"></xsd:enumeration>
+					<xsd:enumeration value="string"></xsd:enumeration>
+					<xsd:enumeration value="dateTime"></xsd:enumeration>
+					<xsd:enumeration value="boolean"></xsd:enumeration>
+					<xsd:enumeration value="byteArray"></xsd:enumeration>
+					<xsd:enumeration value="shortArray"></xsd:enumeration>
+					<xsd:enumeration value="intArray"></xsd:enumeration>
+					<xsd:enumeration value="longArray"></xsd:enumeration>
+					<xsd:enumeration value="floatArray"></xsd:enumeration>
+					<xsd:enumeration value="doubleArray"></xsd:enumeration>
+					<xsd:enumeration value="stringArray"></xsd:enumeration>
+					<xsd:enumeration value="dateTimeArray"></xsd:enumeration>
+					<xsd:enumeration value="booleanArray"></xsd:enumeration>
+					<xsd:enumeration value="hexBinary"></xsd:enumeration>
+					<xsd:minLength value="1"></xsd:minLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="ContextDataElementType">
+		<xsd:choice>
+			<xsd:element name="contextValue" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:string">
+						<xsd:maxLength value="1024"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+			<xsd:element name="contextId" minOccurs="1" maxOccurs="1">
+				<xsd:simpleType>
+					<xsd:restriction base="xsd:NMTOKEN">
+						<xsd:minLength value="16"></xsd:minLength>
+						<xsd:maxLength value="32"></xsd:maxLength>
+					</xsd:restriction>
+				</xsd:simpleType>
+			</xsd:element>
+		</xsd:choice>
+		<xsd:attribute name="name" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="type" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+
+	<xsd:complexType name="CommonBaseEventsType">
+		<xsd:sequence>
+			<xsd:element ref="cbe:AssociationEngine" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element ref="cbe:CommonBaseEvent" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+	<xsd:element name="CommonBaseEvents" type="cbe:CommonBaseEventsType" />
+
+	<xsd:complexType name="Situation">
+		<xsd:sequence>
+			<xsd:element name="situationType" type="cbe:SituationType" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+		<xsd:attribute name="categoryName" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:enumeration value="StartSituation" />
+					<xsd:enumeration value="StopSituation" />
+					<xsd:enumeration value="FeatureSituation" />
+					<xsd:enumeration value="DependencySituation" />
+					<xsd:enumeration value="RequestSituation" />
+					<xsd:enumeration value="ConfigureSituation" />
+					<xsd:enumeration value="ConnectSituation" />
+					<xsd:enumeration value="CreateSituation" />
+					<xsd:enumeration value="DestroySituation" />
+					<xsd:enumeration value="ReportSituation" />
+					<xsd:enumeration value="AvailableSituation" />
+					<xsd:enumeration value="OtherSituation" />
+					<xsd:maxLength value="64" />
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="SituationType" abstract="true">
+		<xsd:attribute name="reasoningScope" use="required">
+			<xsd:simpleType>
+				<xsd:restriction base="xsd:string">
+					<xsd:maxLength value="64"></xsd:maxLength>
+				</xsd:restriction>
+			</xsd:simpleType>
+		</xsd:attribute>
+	</xsd:complexType>
+	<xsd:complexType name="StartSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="situationQualifier" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="StopSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="situationQualifier" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ConnectSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="situationDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="RequestSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="situationQualifier" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ConfigureSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="AvailableSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="operationDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="availabilityDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+					<xsd:element name="processingDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="ReportSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="reportCategory" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="CreateSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DestroySituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="successDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="FeatureSituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="featureDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="DependencySituation">
+		<xsd:complexContent>
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:element name="dependencyDisposition" minOccurs="1" maxOccurs="1">
+						<xsd:simpleType>
+							<xsd:restriction base="xsd:string">
+								<xsd:maxLength value="64"></xsd:maxLength>
+							</xsd:restriction>
+						</xsd:simpleType>
+					</xsd:element>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	<xsd:complexType name="OtherSituation">
+		<xsd:complexContent> 
+			<xsd:extension base="cbe:SituationType">
+				<xsd:sequence>
+					<xsd:any namespace="##any" minOccurs="1" maxOccurs="1" processContents="skip"/>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent> 
+	</xsd:complexType> 
+</xsd:schema>

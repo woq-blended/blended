@@ -1,0 +1,6 @@
+=== Dispatcher
+
+* works on the internal JMS provider
+* consumes messages from a dedicated source
+* has an optional event endpoint
+* has an error endpoint where totally dead messages go

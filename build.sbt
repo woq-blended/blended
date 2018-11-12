@@ -16,8 +16,10 @@ addCommandAlias(name = "ciPublish", value="; clean ; packageBin ; publishSigned 
 // A convenience to package everything, sign it and push it to maven central
 addCommandAlias("ciRelease", s"""; clean; packageBin ; sonatypeOpen "Auto Release via Travis ($travisBuildNumber)" ; publishSigned ; sonatypeClose ; sonatypeRelease""")
 
-addCommandAlias("cleanPublish", "; clean ; coverageOff ; publishM2")
-addCommandAlias("cleanCoverage", "; clean ; coverage ; test ; coverageReport ; coverageAggregate ; coverageOff")
+addCommandAlias("cleanPublish", "; coverageOff ; clean ; publishM2")
+addCommandAlias("cleanCoverage", "; coverage ; clean ; test ; coverageReport ; coverageAggregate ; coverageOff")
+
+addCommandAlias(name = "siteComplete", "; cleanCoverage ; unidoc ; jbakeSite")
 
 inThisBuild(BuildHelper.readVersion(file("version.txt")))
 
@@ -88,12 +90,16 @@ lazy val blendedJolokia = BlendedJolokia.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
-lazy val blendedActivemqDefaultbroker = BlendedActivemqDefaultbroker.project
 // tag::Building[]
 lazy val blendedActivemqClient = BlendedActivemqClient.project
 // end::Building[]
 lazy val blendedSecurityScep = BlendedSecurityScep.project
 lazy val blendedSecurityScepStandalone = BlendedSecurityScepStandalone.project
+lazy val blendedJmsBridge = BlendedJmsBridge.project
+lazy val blendedStreams = BlendedStreams.project
+lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
+lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
+lazy val blendedDocs = BlendedDocsJs.project
 
 lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
@@ -150,8 +156,12 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedSamplesCamel,
   blendedSamplesJms,
   blendedAkkaHttpSampleHelloworld,
-  blendedActivemqDefaultbroker,
-  blendedActivemqClient
+  blendedActivemqClient,
+  blendedJmsBridge,
+  blendedStreams,
+  blendedStreamsDispatcher,
+  blendedStreamsTestsupport,
+  blendedDocs
 )
 
 lazy val root = {
@@ -164,8 +174,7 @@ lazy val root = {
     .settings(global)
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
-    .enablePlugins(ScalaUnidocPlugin)
+    .enablePlugins(ScalaUnidocPlugin, JBake)
+    .settings(RootSettings(BlendedDocsJs.project))
     .aggregate(aggregates:_*)
 }
-
-

@@ -9,7 +9,7 @@ import java.{ util => ju }
  * - `null`
  * - [[java.lang.Boolean]]
  * - [[java.lang.Long]]
- * - [[java.land.Double]]
+ * - [[java.lang.Double]]
  * - [[java.util.Collection]]
  * - [[java.util.Map]] (with String keys)
  */

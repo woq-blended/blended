@@ -1,13 +1,12 @@
-import sbt._
 import sbt.Keys._
-import sbt.librarymanagement.InclExclRule
+import sbt._
 
 object Dependencies {
 
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.9"
-  val akkaHttpVersion = "10.1.1"
-  val camelVersion = "2.22.1"
+  val akkaVersion = "2.5.17"
+  val akkaHttpVersion = "10.1.5"
+  val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
   val jolokiaVersion = "1.5.0"
@@ -17,7 +16,7 @@ object Dependencies {
   val scalatestVersion = "3.0.5"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "5.0.7.RELEASE_1"
+  val springVersion = "4.3.11.RELEASE"
 
   private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -33,15 +32,19 @@ object Dependencies {
   val akkaHttpTestkit = akka_Http("http-testkit")
   val akkaOsgi = akka("osgi")
   val akkaParsing = akka_Http("parsing")
+  val akkaPersistence = akka("persistence")
   val akkaStream = akka("stream")
+  val akkaStreamTestkit = akka("stream-testkit")
   val akkaTestkit = akka("testkit")
   val akkaSlf4j = akka("slf4j")
+
+  val asciiRender = "com.indvd00m.ascii.render" % "ascii-render" % "1.2.3"
 
   val bouncyCastleBcprov = "org.bouncycastle" % "bcprov-jdk15on" % "1.60"
   val bouncyCastlePkix = "org.bouncycastle" % "bcpkix-jdk15on" % "1.60"
 
   val camelCore = "org.apache.camel" % "camel-core" % camelVersion
-  val camelJms = ("org.apache.camel" % "camel-jms" % camelVersion).withExclusions(Vector(InclExclRule().withName("geronimo-jms_2.0_spec")))
+  val camelJms = "org.apache.camel" % "camel-jms" % camelVersion
 
   val cmdOption = "de.tototec" % "de.tototec.cmdoption" % "0.6.0"
   val commonsBeanUtils = "commons-beanutils" % "commons-beanutils" % "1.9.3"
@@ -54,11 +57,12 @@ object Dependencies {
   val domino = "com.github.domino-osgi" %% "domino" % dominoVersion
 
   val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
-  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "0.14.0"
-  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "0.16.2"
-  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "0.10.0"
+  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.0.2"
+  val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.0"
+  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.0"
+  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"  
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "6.0.1"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.0"
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
@@ -79,6 +83,8 @@ object Dependencies {
   val junit = "junit" % "junit" % "4.11"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
+  val levelDbJava = "org.iq80.leveldb" % "leveldb" % "0.9"
+  val levelDbJni = "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
   val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
   val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
@@ -108,18 +114,21 @@ object Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
-  private def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
+  private def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
   val springBeans = spring("beans")
   //val springAop = spring("aop")
   //val springContext = spring("context")
   //val springContextSupport = spring("context-support")
-  //val springExpression = spring("expression")
+  val springExpression = spring("expression")
   val springCore = spring("core")
   val springJdbc = spring("jdbc")
   // val springJms = spring("jms")
   val springTx = spring("tx")
+
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
+  
+  val travesty = "net.mikolak" %% "travesty" % s"0.9.1_${akkaVersion}"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"

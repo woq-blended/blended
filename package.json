@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "mermaid": "^8.0.0-rc.8",
+    "mermaid.cli": "^0.5.1",
+    "popper.js": "^1.14.4"
+  }
+}

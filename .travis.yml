@@ -1,6 +1,6 @@
 language: scala
 
-scala: 2.12.6
+scala: 2.12.7
 
 jdk: oraclejdk8
 
@@ -13,15 +13,27 @@ cache:
   - "$HOME/.ivy2"
   - "$HOME/.sbt"
 
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install graphviz
+  - openssl aes-256-cbc -K $encrypted_e8464d595ae2_key -iv $encrypted_e8464d595ae2_iv -in .dropbox_uploader.enc -out $HOME/.dropbox_uploader -d
+
 before_cache:
   - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
 
 env:
   global:
     - TEST_ONLINE="true"
+    # PGP_PASS
     - secure: "r048egec7DYp2HXockVYQOQru6FsxYZTABzEmTqZxOIRBpE3/c/km8TrSdKU32te7pZVryTGe2J6DK7xa2U2rHmu9H8Z7ah1a4CZzL0daFP8xZGXJ2aUby8Z++5eoav+CVzqyHWYKZtuB/DEhOlVsvx397rJVRhWIBBQVt5sgxY="
+    # SONATYPE_USERNAME
     - secure: "b3aSUvpBixtHJ7EuxN5d7/sLzU6zXtD3OGyHXIDyfZWSnc55YOju89yZsfmj7Cnx2SqXvAuHIjb/bXwGtJg30f9LaR9EKueawkFpIBHKuPeEsJKoBAw2Uwu+si2Dn5Kb4joZZUwokJic4SnhmU5MmAI5YVdv6fzCyuBhY+zoFbA="
+    # SONATYPE_PASSWORD
     - secure: "cve0uZoMzRy5nEzkHWBTz651SBsVLvVNVZQDFoQGPaoDCXcICi+kqGKwP/9n4sgFwgvP6mJVZHYt5i9c8KqUmT1j7KtRzGirlqcj23QIUppt5v5XZLilVt6fSlvU97N008Y4xH3IEURhJGqSGhGTFrKxP3dvr9pnXCAQbqIDT0w="
+    # CODACY_PROJECT_TOKEN
+    - secure: "KBQ2ReAGgCp4UXR/W20H3H2yIjqVTaadyoEJaGjwAujJJHp6wd6BdPDdjBVNMYW6J/CH9+HJotZrX6GyPZWrNKms6G5mAH160o5xdgE+WEoAN56mnIBMrff7Di1rDwfLX+XSjcmh+XCsKvgiY230hOXAtZ6ArnqMR6dc1NKu7Ag="
+    # GITHUB_TOKEN
+    - secure: "IbsIzNJNyNYY13wb8lmbZgoJhU03DsddEaWnjEoGN6p97cag6MIIB6XiDm5GrEshmKoK/IuXQBm0t+ur65pUrH9IYbir9zfn4Jzok7cESPXi9BUdJq8D7bkNRTOy98dWK+MWHF5WtNb054i3g1Fxe0k8ynRM/lIbfo/NjmmAW8k="
 
 stages:
   - name: VerifyPublish
@@ -29,12 +41,37 @@ stages:
   - Test
   - name: Deploy
     if: branch = publish AND type = push
+  - name: Site
+    if: branch = streams
 
 jobs:
   include:
   - stage: VerifyPublish
     script: ./verifyPublish.sh
   - stage: Test
-    script: sbt ciBuild
+    before_script: ./dropbox_uploader.sh list
+    script: sbt cleanCoverage unidoc
+    after_failure:
+    - ./upload-results.sh $TRAVIS_BUILD_NUMBER
+    after_success:
+    - ./upload-results.sh $TRAVIS_BUILD_NUMBER
   - stage: Deploy
     script: ./runPublish.sh
+  - stage: Site
+    before_script:
+    - ./dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
+    - tar -xzf target.tgz
+    script:
+    - sbt jbakeSite
+    deploy:
+      provider: pages
+      local-dir: target/site
+      skip-cleanup: true
+      github-token: $GITHUB_TOKEN
+      keep-history: false
+      target-branch: gh-pages
+      email: andreas@wayofquality.de
+      name: Blended Development
+      verbose: true
+      on:
+        branch: streams

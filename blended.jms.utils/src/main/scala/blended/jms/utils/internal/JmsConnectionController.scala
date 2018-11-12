@@ -12,7 +12,6 @@ import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 
 object JmsConnectionController {
-
   def props(holder: ConnectionHolder) = Props(new JmsConnectionController(holder))
 }
 

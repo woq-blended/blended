@@ -18,7 +18,7 @@ class BlendedPojoRegistry(config: Map[String, Any]) extends PojoSR(config.asJava
 
   def startBundle(
     symbolicName: String,
-    activator: Option[() => BundleActivator] = None
+    activator: BundleActivator
   ): Long = {
 
     val url = s"file://$symbolicName"

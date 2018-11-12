@@ -4,6 +4,8 @@ import org.slf4j.{ Logger => Slf4jLogger }
 
 class LoggerSlf4j(underlying: Slf4jLogger) extends Logger {
 
+  override def name: String = underlying.getName()
+
   override def isErrorEnabled: Boolean = underlying.isErrorEnabled()
   override def isWarnEnabled: Boolean = underlying.isWarnEnabled()
   override def isInfoEnabled: Boolean = underlying.isInfoEnabled()

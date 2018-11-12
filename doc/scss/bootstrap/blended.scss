@@ -1,0 +1,40 @@
+@import "../../target/scala-2.12/scalajs-bundler/main/node_modules/bootstrap/scss/bootstrap";
+
+html,body {
+  height: 100%;
+}
+
+.navbar-fixed-top {
+  height: 60px;
+  background-color: $primary;
+  color: white;
+}
+
+.navbar-fixed-bottom{
+  height: 60px;
+  bottom: 0px;
+  width: 100%;
+  position: fixed;
+  background-color: $primary;
+  color: white;
+}
+
+#content {
+  margin: 0px;
+  width: 100%;
+  padding-left: 0px;
+  max-width: 100%;
+  position: fixed;
+  top: 60px;
+  bottom: 60px;
+}
+
+a.nav-link {
+  color: white;
+  text-decoration: underline;
+}
+
+.scrollbars {
+  overflow: auto;
+  position: relative;
+}

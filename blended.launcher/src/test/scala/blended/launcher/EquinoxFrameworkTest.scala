@@ -1,10 +1,13 @@
 package blended.launcher
 
-import org.scalatest.FreeSpec
 import java.io.File
-import blended.testsupport.TestFile
 
-class EquinoxFrameworkTest extends FreeSpec with TestFile {
+import blended.testsupport.TestFile
+import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.testsupport.BlendedTestSupport.projectTestOutput
+
+class EquinoxFrameworkTest extends LoggingFreeSpec
+  with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 
@@ -20,7 +23,7 @@ class EquinoxFrameworkTest extends FreeSpec with TestFile {
 
       s"minimal: just the framework version ${v} " in {
         val launcherConfig = (
-          "repo = \"" + new File("target/test-osgi").getAbsolutePath() + """"
+          "repo = \"" + new File(projectTestOutput + "/../../test-osgi").getAbsolutePath() + """"
         |frameworkBundle = ${repo}"/org.eclipse.osgi-""" + v + """.jar"
         |startLevel = 10
         |defaultStartLevel = 4

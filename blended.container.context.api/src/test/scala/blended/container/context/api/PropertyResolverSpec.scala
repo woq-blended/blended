@@ -3,6 +3,7 @@ package blended.container.context.api
 import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
+import scala.beans.BeanProperty
 import scala.util.control.NonFatal
 
 
@@ -29,8 +30,11 @@ class PropertyResolverSpec extends FreeSpec
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
 
+    @BeanProperty
     override lazy val uuid: String = "id"
+    @BeanProperty
     override val containerContext: ContainerContext = ctCtxt
+    @BeanProperty
     override val properties: Map[String, String] = Map(
       "foo" -> "bar",
       "bar" -> "test",
@@ -88,7 +92,7 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[sysProp]]") should be("test")
     }
 
-    "should apply the paramters if given in the replacement rule" in {
+    "should apply the parameters if given in the replacement rule" in {
       ContainerPropertyResolver.resolve(idSvc, "$[[foo(upper)]]") should be("BAR")
       ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower)]]") should be("bar")
       ContainerPropertyResolver.resolve(idSvc, "$[[FOO(lower,capitalize)]]") should be("Bar")

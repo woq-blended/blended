@@ -104,8 +104,8 @@ trait CamelTestSupport {
   private[CamelTestSupport] def createMessageFromXML(message: String, binary: Boolean)(implicit context: CamelContext) : Option[CamelMessage] = {
     try {
       binary match {
-        case true  => Some(camelMessage(new XMLMessageFactory(context, message).createBinaryMessage()))
-        case false => Some(camelMessage(new XMLMessageFactory(context, message).createTextMessage()))
+        case true  => Some(camelMessage(new XMLMessageFactory(message).createBinaryMessage()))
+        case false => Some(camelMessage(new XMLMessageFactory(message).createTextMessage()))
       }
     } catch {
       case e: Exception => None

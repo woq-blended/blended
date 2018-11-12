@@ -13,9 +13,7 @@ public class XMLMessageFactoryTest {
   @Test
   public void createMessageTest() throws Exception{
 
-    CamelContext ctxt = new DefaultCamelContext();
-
-    Message msg = new XMLMessageFactory(ctxt, FILE).createTextMessage();
+    Message msg = new XMLMessageFactory(FILE).createTextMessage();
     Assert.assertNotNull(msg);
 
     Assert.assertTrue(msg.getHeaders().size() > 0);

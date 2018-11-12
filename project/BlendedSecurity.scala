@@ -1,7 +1,7 @@
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
-import sbtcrossproject.CrossPlugin.autoImport._
-import sbt._
 import sbt.Keys._
+import sbt._
+import sbtcrossproject.CrossPlugin.autoImport._
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 
 private object BlendedSecurityCross {

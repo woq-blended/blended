@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.Await
 import scala.concurrent.Future
-
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -16,10 +15,8 @@ import blended.persistence.h2.internal.H2Activator
 import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.BlendedPojoRegistry
 import blended.testsupport.pojosr.PojoSrTestHelper
-import blended.testsupport.pojosr.SimplePojosrBlendedContainer
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.testsupport.BlendedTestSupport
-import blended.testsupport.TestFile
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.config.OverlayConfig
 import blended.updater.config.OverlayConfigCompanion
@@ -33,12 +30,17 @@ import org.scalatest.Matchers
 import prickle.Pickle
 import prickle.Unpickle
 
+import scala.util.Success
+
+@RequiresForkedJVM
 class CollectorServicePojosrSpec
   extends LoggingFreeSpec
   with Matchers
-  with SimplePojosrBlendedContainer
   with PojoSrTestHelper
   with TestFile {
+
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   private[this] val log = Logger[this.type]
 
@@ -48,24 +50,23 @@ class CollectorServicePojosrSpec
     import scala.concurrent.ExecutionContext.Implicits.global
     log.info("Starting and waiting...")
     val fut = Future {
-      val serverDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsoluteFile()
-      withSimpleBlendedContainer(serverDir.getPath()) { sr =>
-        log.info(s"Server path: ${serverDir}")
+      withSimpleBlendedContainer[Unit]() { sr =>
+        log.info(s"Server path: ${baseDir}")
 
         // cleanup potential left over data from previous runs
         deleteRecursive(
-          new File(serverDir, "data"),
-          new File(serverDir, "repositories")
+          new File(baseDir, "data"),
+          new File(baseDir, "repositories")
         )
 
         withStartedBundles(sr)(Seq(
-          "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-          "blended.akka.http" -> Some(() => new BlendedAkkaHttpActivator()),
-          "blended.security" -> Some(() => new SecurityActivator()),
-          "blended.mgmt.repo" -> Some(() => new ArtifactRepoActivator()),
-          "blended.mgmt.rest" -> Some(() => new MgmtRestActivator()),
-          "blended.updater.remote" -> Some(() => new RemoteUpdaterActivator()),
-          "blended.persistence.h2" -> Some(() => new H2Activator())
+          "blended.akka" -> new BlendedAkkaActivator(),
+          "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+          "blended.security" -> new SecurityActivator(),
+          "blended.mgmt.repo" -> new ArtifactRepoActivator(),
+          "blended.mgmt.rest" -> new MgmtRestActivator(),
+          "blended.updater.remote" -> new RemoteUpdaterActivator(),
+          "blended.persistence.h2" -> new H2Activator()
         )) { sr =>
           var ok = false
           val waiter = new Thread("Wait for finish") {
@@ -81,17 +82,20 @@ class CollectorServicePojosrSpec
               whenServicePresent[WritableArtifactRepo] { repo =>
                 whenAdvancedServicePresent[HttpContext]("(prefix=mgmt)") { httpCtxt =>
                   log.info("Test-Server up and running. Starting test case...")
-                  f(Server(serviceRegistry = sr, dir = serverDir))
+                  f(Server(serviceRegistry = sr, dir = new File(baseDir)))
                   ok = true
                 }
               }
             }
           }.start(sr.getBundleContext())
+
           if (!ok) {
             // Wait for waiter thread
             log.info("Waiting for timeout...	")
             waiter.join()
           }
+
+          Success(ok)
         }
       }
     }

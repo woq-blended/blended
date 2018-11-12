@@ -8,12 +8,20 @@ object BlendedActivemqBrokerstarter extends ProjectFactory {
     deps = Seq(
       Dependencies.camelJms,
       Dependencies.activeMqBroker,
-      Dependencies.activeMqSpring
+      Dependencies.activeMqSpring,
+
+      Dependencies.scalatest % "test",
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test",
+      Dependencies.activeMqKahadbStore
     )
   )
 
   override val project = helper.baseProject.dependsOn(
     BlendedAkka.project,
-    BlendedJmsUtils.project
+    BlendedJmsUtils.project,
+
+    BlendedTestsupport.project % "test",
+    BlendedTestsupportPojosr.project % "test"
   )
 }

@@ -3,10 +3,9 @@ package blended.jms.utils
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.ConnectionFactoryActivator.{CF_JNDI_NAME, DEFAULT_PWD, DEFAULT_USER, USE_JNDI}
 import blended.updater.config.util.ConfigPropertyMapConverter
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
-import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
 
 object BlendedJMSConnectionConfig {
@@ -36,9 +35,8 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  def fromConfig(stringResolver : String => Try[String])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
+  def fromConfig(stringResolver : String => Try[Any])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
 
-    val prov = cfg.getString("provider", provider)
     val enabled = cfg.getBoolean("enabled", defaultConfig.enabled)
     val jmxEnabled = cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
     val pingEnabled = cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
@@ -52,7 +50,7 @@ object BlendedJMSConnectionConfig {
     val clientId = if (cfg.hasPath("clientId"))
       stringResolver(cfg.getString("clientId")) match {
         case Failure(t) => throw t
-        case Success(id) => id
+        case Success(id) => id.toString()
       }
     else
       defaultConfig.clientId
@@ -66,7 +64,7 @@ object BlendedJMSConnectionConfig {
       .mapValues { v =>
           stringResolver(v) match {
             case Failure(t) => throw t
-            case Success(s) => s
+            case Success(s) => s.toString()
           }
       }
 
@@ -76,7 +74,7 @@ object BlendedJMSConnectionConfig {
     BlendedJMSConnectionConfig(
       vendor = vendor,
       enabled = enabled,
-      provider = prov,
+      provider = provider,
       jmxEnabled = jmxEnabled,
       pingEnabled = pingEnabled,
       pingTolerance = pingTolerance,

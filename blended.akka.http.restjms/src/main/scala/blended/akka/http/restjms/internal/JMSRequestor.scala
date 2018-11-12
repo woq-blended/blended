@@ -90,7 +90,7 @@ trait JMSRequestor {
 
     exchange.setPattern(if (opCfg.jmsReply) ExchangePattern.InOut else ExchangePattern.InOnly)
 
-    val msg = new DefaultMessage(camelContext)
+    val msg = new DefaultMessage()
 
     msg.setBody(content)
     opCfg.header.foreach { case (k, v) => msg.setHeader(k, v) }

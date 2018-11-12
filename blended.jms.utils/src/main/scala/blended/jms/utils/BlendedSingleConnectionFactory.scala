@@ -1,9 +1,9 @@
 package blended.jms.utils
 
 import java.lang.management.ManagementFactory
-import javax.jms.{Connection, ConnectionFactory, JMSException}
-import javax.management.ObjectName
 
+import javax.jms.{Connection, ConnectionFactory, JMSException}
+import javax.management.{MBeanInfo, ObjectName}
 import akka.actor.ActorSystem
 import akka.util.Timeout
 import blended.jms.utils.internal._
@@ -13,8 +13,10 @@ import scala.concurrent.duration._
 import blended.util.logging.Logger
 import blended.jms.utils.internal.CheckConnection
 
-trait IdAwareConnectionFactory extends ConnectionFactory {
+trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
+
+  override def id : String = super.id + s"($clientId)"
 }
 
 class BlendedSingleConnectionFactory(
@@ -23,8 +25,8 @@ class BlendedSingleConnectionFactory(
   bundleContext : Option[BundleContext]
 ) extends IdAwareConnectionFactory {
 
-  private[this] val vendor = config.vendor
-  private[this] val provider = config.provider
+  override val vendor = config.vendor
+  override val provider = config.provider
 
   private[this] implicit val eCtxt = system.dispatcher
   private[this] implicit val timeout = Timeout(100.millis)
@@ -50,7 +52,20 @@ class BlendedSingleConnectionFactory(
         val jmxBean = new ConnectionMonitor(vendor, provider, clientId)
 
         val objName = new ObjectName(s"blended:type=ConnectionMonitor,vendor=$vendor,provider=$provider")
-        jmxServer.registerMBean(jmxBean, objName)
+
+        if (jmxServer.isRegistered(objName)) {
+          try {
+            jmxServer.unregisterMBean(objName)
+          } catch {
+            case t : Throwable =>
+          }
+        }
+
+        try {
+          jmxServer.registerMBean(jmxBean, objName)
+        } catch {
+          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]")
+        }
 
         Some(jmxBean)
       } else {
@@ -74,22 +89,24 @@ class BlendedSingleConnectionFactory(
       try {
         holder.getConnection() match {
           case Some(c) => c
-          case None => throw new Exception(s"Error connecting to [$vendor:$provider].")
+          case None => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
         case e: Exception => {
-          val jmsEx = new JMSException("Error getting Connection Factory")
+          val msg = s"Error getting Connection Factory [${e.getMessage()}]"
+          log.error(msg)
+          val jmsEx = new JMSException(msg)
           jmsEx.setLinkedException(e)
           throw jmsEx
         }
       }
     } else {
-      throw new JMSException(s"Connection for provider [$vendor:$provider] is disabled.")
+      throw new JMSException(s"Connection for provider [$id] is disabled.")
     }
   }
 
   override def createConnection(user: String, password: String): Connection = {
-    log.warn("BlendedSingleConnectionFactory.createConnection() called with username and password, which is not supported.\nFalling back to default username and password.")
+    log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
 }

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+  <xs:element name="Body">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="CommonBaseEvent"/>
+      </xs:sequence>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="CommonBaseEvent">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="extendedDataElements" maxOccurs="unbounded"/>
+        <xs:element ref="sourceComponentId"/>
+        <xs:element ref="situation"/>
+      </xs:sequence>
+      <xs:attribute name="creationTime" type="xs:dateTime" use="required"/>
+      <xs:attribute name="globalInstanceId" type="xs:string" use="required"/>
+      <xs:attribute name="msg" type="xs:string" use="required"/>
+      <xs:attribute name="severity" type="xs:byte" use="required"/>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+      <xs:attribute name="extensionName" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="Message">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="Body"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="children">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="values"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="extendedDataElements">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="children" maxOccurs="unbounded"/>
+        <xs:element ref="values"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="situation">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="situationType"/>
+      </xs:sequence>
+      <xs:attribute name="categoryName" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="situationType">
+    <xs:complexType>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+      <xs:attribute name="reasoningScope" type="xs:string" use="required"/>
+      <xs:attribute name="reportCategory" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sourceComponentId">
+    <xs:complexType>
+      <xs:attribute name="component" type="xs:string" use="required"/>
+      <xs:attribute name="componentIdType" type="xs:string" use="required"/>
+      <xs:attribute name="instanceId" type="xs:short" use="required"/>
+      <xs:attribute name="location" type="xs:string" use="required"/>
+      <xs:attribute name="locationType" type="xs:string" use="required"/>
+      <xs:attribute name="subComponent" type="xs:string" use="required"/>
+      <xs:attribute name="threadId" type="xs:boolean" use="required"/>
+      <xs:attribute name="componentType" type="xs:anyURI" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="values" type="xs:string"/>
+</xs:schema>

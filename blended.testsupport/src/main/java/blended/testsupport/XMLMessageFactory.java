@@ -20,14 +20,11 @@ import java.lang.reflect.Constructor;
 public class XMLMessageFactory implements MessageFactory {
 
   private final String resourceName;
-  private final CamelContext camelContext;
 
   private final static Logger LOGGER = LoggerFactory.getLogger(XMLMessageFactory.class);
   private final static DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
-  public XMLMessageFactory(CamelContext context, String fileName) {
-
-    this.camelContext = context;
+  public XMLMessageFactory(String fileName) {
     this.resourceName = fileName;
   }
 
@@ -43,7 +40,7 @@ public class XMLMessageFactory implements MessageFactory {
 
   private Message createMessage(final boolean binary) throws Exception {
 
-    final Message result = new DefaultMessage(camelContext);
+    final Message result = new DefaultMessage();
     LOGGER.debug("Creating message from file [{}]", resourceName);
 
     Document doc = readMessageFile();

@@ -1,0 +1,11 @@
+_site
+jbake.properties
+.asciidoctor
+coverage
+scaladoc
+images
+blended-bootstrap.css
+bootstrap.min.js
+jquery.min.js
+popper.min.js
+perfect-scrollbar.*

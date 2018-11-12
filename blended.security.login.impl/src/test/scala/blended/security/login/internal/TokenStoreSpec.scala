@@ -8,33 +8,36 @@ import blended.security.internal.SecurityActivator
 import blended.security.login.api.{Token, TokenStore}
 import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
-import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojosrBlendedContainer}
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import javax.security.auth.Subject
 import javax.security.auth.login.LoginContext
-import org.scalatest.{FreeSpec, Matchers}
+import org.osgi.framework.BundleActivator
+import org.scalactic.source.Position
+import org.scalatest.{BeforeAndAfter, Matchers}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 import scala.util.Try
 
-class TokenStoreSpec extends FreeSpec
+class TokenStoreSpec extends SimplePojoContainerSpec
   with Matchers
-  with SimplePojosrBlendedContainer
   with PojoSrTestHelper {
 
-  private[this] val baseDir = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
-  def withTokenStore[T](f : TokenStore => T): T = {
-    withSimpleBlendedContainer(baseDir) { sr =>
-      withStartedBundles(sr)(Seq(
-        "blended.akka" -> Some(() => new BlendedAkkaActivator()),
-        "blended.security" -> Some(() => new SecurityActivator()),
-        "blended.security.login" -> Some(() => new LoginActivator())
-      )) { sr =>
-        val ref = sr.getServiceReference(classOf[TokenStore].getName())
-        val store = sr.getService(ref).asInstanceOf[TokenStore]
-        f(store)
-      }
-    }
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.security" -> new SecurityActivator(),
+    "blended.security.login" -> new LoginActivator()
+  )
+
+  private def withTokenStore[T](f : TokenStore => T): T = {
+    implicit val to = 3.seconds
+    val store = mandatoryService[TokenStore](registry)(None)
+    val result = f(store)
+
+    store.removeAllTokens()
+    result
   }
 
   def login(user: String, password : String) : Try[Subject] =  Try {
