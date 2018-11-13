@@ -49,8 +49,11 @@ jobs:
   - stage: VerifyPublish
     script: ./verifyPublish.sh
   - stage: Test
-    before_script: ./dropbox_uploader.sh list
-    script: sbt cleanCoverage unidoc
+    before_script:
+    - ./dropbox_uploader.sh list
+    - git clone https://github.com/woq-blended/akka.git akka ; cd akka ; git checkout osgi ; sbt publishM2
+    script:
+    - sbt cleanCoverage unidoc
     after_failure:
     - ./upload-results.sh $TRAVIS_BUILD_NUMBER
     after_success:
