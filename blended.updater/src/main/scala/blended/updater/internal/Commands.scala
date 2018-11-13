@@ -136,7 +136,6 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     implicit val timeout = Timeout(1, HOURS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      // TODO: support overlays
       ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays)), timeout.duration) match {
         case OperationSucceeded(`reqId`) =>
           "Staged: " + asString
