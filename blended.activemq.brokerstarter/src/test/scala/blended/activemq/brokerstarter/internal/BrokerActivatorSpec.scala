@@ -2,7 +2,6 @@ package blended.activemq.brokerstarter.internal
 
 import java.io.File
 
-import blended.activemq.brokerstarter.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.IdAwareConnectionFactory
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}

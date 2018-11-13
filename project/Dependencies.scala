@@ -4,7 +4,7 @@ import sbt._
 object Dependencies {
 
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.17"
+  val akkaVersion = "2.5.17.1"
   val akkaHttpVersion = "10.1.5"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
@@ -128,10 +128,10 @@ object Dependencies {
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
   
-  val travesty = "net.mikolak" %% "travesty" % s"0.9.1_${akkaVersion}"
+  val travesty = "net.mikolak" %% "travesty" % s"0.9.1_2.5.17"
 
-  val typesafeConfig = "com.typesafe" % "config" % "1.3.1"
-  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.2.4"
+  val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
+  val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
 
   val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
   val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"

@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import blended.activemq.brokerstarter.BrokerActivator
+import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.JmsDestination

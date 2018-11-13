@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream._
-import blended.activemq.brokerstarter.BrokerActivator
+import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope

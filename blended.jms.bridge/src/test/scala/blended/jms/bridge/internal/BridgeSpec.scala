@@ -4,7 +4,7 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.stream._
-import blended.activemq.brokerstarter.BrokerActivator
+import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{JmsStreamBuilder, JmsStreamConfig, TrackTransaction}

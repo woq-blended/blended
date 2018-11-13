@@ -14,6 +14,9 @@ object BlendedActivemqBrokerstarter extends ProjectFactory {
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.activeMqKahadbStore
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BrokerActivator"
     )
   )
 

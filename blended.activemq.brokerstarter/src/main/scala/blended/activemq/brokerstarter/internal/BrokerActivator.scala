@@ -1,6 +1,5 @@
-package blended.activemq.brokerstarter
+package blended.activemq.brokerstarter.internal
 
-import blended.activemq.brokerstarter.internal.{BrokerConfig, BrokerControlSupervisor}
 import blended.akka.ActorSystemWatching
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
