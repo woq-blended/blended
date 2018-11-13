@@ -6,14 +6,14 @@ import java.util.concurrent.TimeUnit
 
 import scala.collection.immutable._
 import scala.concurrent.duration.Duration
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
-import akka.actor.{ Actor, ActorLogging, ActorRef, Cancellable, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
-import blended.updater.config.{ UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _ }
+import blended.updater.config.{UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _}
 import blended.util.logging.Logger
 
 class Updater(
@@ -124,6 +124,7 @@ class Updater(
 
   /**
    * Signals to publish current profile information into the Akka event stream.
+   * Reply: none
    */
   case object PublishProfileInfo
 
@@ -217,6 +218,119 @@ class Updater(
       }
   }
 
+  protected def activateProfile(reqActor: ActorRef, msg: ActivateProfile): Unit = {
+    val ActivateProfile(reqId, name, version, overlays) = msg
+    val profileId = ProfileId(name, version, overlays)
+    log.debug(s"Requested activate profile with id: ${profileId}")
+    profiles.get(profileId) match {
+      case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
+        // write config
+        log.debug(s"About to activate new profile for next startup: ${profileId}")
+        val success = profileActivator(name, version, profileId.overlays)
+        if (success) {
+          reqActor ! OperationSucceeded(reqId)
+          restartFramework()
+        } else {
+          reqActor ! OperationFailed(reqId, "Could not update next startup profile")
+        }
+      case r =>
+        log.debug(s"Could not find staged profile with id ${profileId} but: ${r}")
+        log.trace(s"All known profiles: ${profiles.keySet}")
+        reqActor ! OperationFailed(reqId, "No such staged runtime configuration found")
+    }
+
+  }
+
+  protected def stageProfile(reqActor: ActorRef, msg: StageProfile): Unit = {
+    val StageProfile(reqId, name, version, overlayRefs) = msg
+
+    val profileId = ProfileId(name, version, overlayRefs)
+
+    // try to find the profile, if not found, we report a failure to the reqActor
+    val foundProfile: Option[LocalProfile] = profiles.get(profileId).orElse {
+      Try {
+        val localRuntimeConfig = runtimeConfigs.find(r => r.runtimeConfig.name == name && r.runtimeConfig.version == version) match {
+          case None => sys.error(s"No such runtime config found: ${name}-${version}")
+          case Some(rc) => rc
+        }
+
+        val overlays = overlayRefs.map(ref => ref -> overlayConfigs.find(o => o.overlayRef == ref))
+        overlays.find(v => v._2 == None).map { v =>
+          sys.error(s"No such overlay config found: ${v._1.name}-${v._1.version}")
+        }
+
+        val localOverlays = LocalOverlays(overlays.map(_._2.get), localRuntimeConfig.baseDir)
+
+        LocalProfile(localRuntimeConfig, localOverlays, LocalProfile.Pending(List("Newly staged")))
+
+      } match {
+        case Failure(e) =>
+          reqActor ! OperationFailed(reqId, e.getMessage())
+          None
+        case Success(p) => Some(p)
+      }
+    }
+
+    // we found a profile and inspect it
+    foundProfile.foreach {
+      case profile @ LocalProfile(_, _, LocalProfile.Staged) =>
+        // already staged
+        log.debug(s"Profile [${profile.profileId}] already staged")
+        reqActor ! OperationSucceeded(reqId)
+
+      case profile @ LocalProfile(config, localOverlays, state) =>
+        log.debug(s"About to stage profile [${profile.profileId}] with current state [$state]")
+
+        val validErrors = localOverlays.validate()
+        if (!validErrors.isEmpty) {
+          reqActor ! OperationFailed(reqId, s"Overlay configuration contains ${validErrors.size} errors: ${validErrors.mkString("; ")}")
+        } else {
+          val overlayFiles = localOverlays.materialize()
+          val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
+          log.debug(s"About to save applied overlays config to [${overlayFile}]")
+          ConfigWriter.write(LocalOverlays.toConfig(localOverlays), overlayFile, None)
+
+          if (stagingInProgress.contains(reqId)) {
+            log.error(s"Duplicate id detected. Dropping request [${msg}]")
+          } else {
+            // analyze config
+            overlayFiles match {
+              case Failure(e) =>
+                reqActor ! OperationFailed(reqId, "Overlay configuration contains errors: " + e.getMessage())
+              case Success(generateFiles) =>
+                val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
+                  ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
+                } ++
+                  config.runtimeConfig.resources.map { r =>
+                    ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
+                  }
+
+                val pendingUnpacks = config.runtimeConfig.resources.map { r =>
+                  ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
+                }
+
+                artifacts.foreach { a =>
+                  artifactDownloader ! ArtifactDownloader.Download(a.reqId, a.artifact, a.file)
+                }
+
+                stageInProgress(State(
+                  requestId = reqId,
+                  requestActor = reqActor,
+                  config = config,
+                  artifactsToDownload = artifacts,
+                  pendingArtifactsToUnpack = pendingUnpacks,
+                  artifactsToUnpack = List.empty,
+                  overlays = localOverlays,
+                  issues = List.empty
+                ))
+
+            }
+          }
+        }
+    }
+
+  }
+
   def handleProtocol(msg: Protocol): Unit = msg match {
 
     case GetOverlays(reqId) =>
@@ -269,115 +383,15 @@ class Updater(
         }.take(1)
       }
 
-    case StageProfile(reqId, name, version, overlayRefs) =>
-      val profileId = ProfileId(name, version, overlayRefs)
+    case msg: StageProfile => stageProfile(sender(), msg)
 
-      profiles.get(profileId).orElse {
-        Try {
-          val localRuntimeConfig = runtimeConfigs.find(r => r.runtimeConfig.name == name && r.runtimeConfig.version == version) match {
-            case None => sys.error(s"No such runtime config found: ${name}-${version}")
-            case Some(rc) => rc
-          }
-
-          val overlays = overlayRefs.map(ref => ref -> overlayConfigs.find(o => o.overlayRef == ref))
-          overlays.find(v => v._2 == None).map { v =>
-            sys.error(s"No such overlay config found: ${v._1.name}-${v._1.version}")
-          }
-
-          val localOverlays = LocalOverlays(overlays.map(_._2.get), localRuntimeConfig.baseDir)
-
-          LocalProfile(localRuntimeConfig, localOverlays, LocalProfile.Pending(List("Newly staged")))
-
-        } match {
-          case Failure(e) =>
-            sender() ! OperationFailed(reqId, e.getMessage())
-            None
-          case Success(p) => Some(p)
-        }
-
-      } map {
-        case profile @ LocalProfile(_, _, LocalProfile.Staged) =>
-          // already staged
-          log.debug(s"Profile already staged: ${profile.profileId}")
-          sender() ! OperationSucceeded(reqId)
-
-        case profile @ LocalProfile(config, localOverlays, state) =>
-          log.debug(s"About to stage profile: ${profile.profileId}")
-          val reqActor = sender()
-
-          val validErrors = localOverlays.validate()
-          if (!validErrors.isEmpty) {
-            reqActor ! OperationFailed(reqId, "Overlay configuration contains errors: " + validErrors.mkString("; "))
-          } else {
-            val overlayFiles = localOverlays.materialize()
-            val overlayFile = LocalOverlays.preferredConfigFile(localOverlays.overlayRefs, localOverlays.profileDir)
-            log.debug(s"About to save applied overlays config to: ${overlayFile}")
-            ConfigWriter.write(LocalOverlays.toConfig(localOverlays), overlayFile, None)
-
-            if (stagingInProgress.contains(reqId)) {
-              log.error(s"Duplicate id detected. Dropping request: ${msg}")
-            } else {
-              // analyze config
-              overlayFiles match {
-                case Failure(e) =>
-                  reqActor ! OperationFailed(reqId, "Overlay configuration contains errors: " + e.getMessage())
-                case Success(generateFiles) =>
-                  val artifacts = config.resolvedRuntimeConfig.allBundles.map { b =>
-                    ArtifactInProgress(nextId(), b.artifact, config.bundleLocation(b))
-                  } ++
-                    config.runtimeConfig.resources.map { r =>
-                      ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
-                    }
-
-                  val pendingUnpacks = config.runtimeConfig.resources.map { r =>
-                    ArtifactInProgress(nextId(), r, config.resourceArchiveLocation(r))
-                  }
-
-                  artifacts.foreach { a =>
-                    artifactDownloader ! ArtifactDownloader.Download(a.reqId, a.artifact, a.file)
-                  }
-
-                  stageInProgress(State(
-                    requestId = reqId,
-                    requestActor = reqActor,
-                    config = config,
-                    artifactsToDownload = artifacts,
-                    pendingArtifactsToUnpack = pendingUnpacks,
-                    artifactsToUnpack = List.empty,
-                    overlays = localOverlays,
-                    issues = List.empty
-                  ))
-
-              }
-            }
-          }
-      }
-
-    case ActivateProfile(reqId, name, version, overlays) =>
-      val profileId = ProfileId(name, version, overlays)
-      log.debug(s"Requested activate profile with id: ${profileId}")
-      val requestingActor = sender()
-      profiles.get(profileId) match {
-        case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
-          // write config
-          log.debug(s"About to activate new profile for next startup: ${profileId}")
-          val success = profileActivator(name, version, profileId.overlays)
-          if (success) {
-            requestingActor ! OperationSucceeded(reqId)
-            restartFramework()
-          } else {
-            requestingActor ! OperationFailed(reqId, "Could not update next startup profile")
-          }
-        case r =>
-          log.debug(s"Could not find staged profile with id ${profileId} but: ${r}")
-          log.trace(s"All known profiles: ${profiles.keySet}")
-          requestingActor ! OperationFailed(reqId, "No such staged runtime configuration found")
-      }
+    case msg: ActivateProfile => activateProfile(sender(), msg)
 
     case GetProgress(reqId) =>
+      val reqActor = sender()
       stagingInProgress.get(reqId) match {
-        case Some(state) => sender ! Progress(reqId, state.progress())
-        case None => sender() ! OperationFailed(reqId, "Unknown request ID")
+        case Some(state) => reqActor ! Progress(reqId, state.progress())
+        case None => reqActor ! OperationFailed(reqId, "Unknown request ID")
       }
 
   }
@@ -398,12 +412,17 @@ class Updater(
   override def receive: Actor.Receive = LoggingReceive {
 
     // from event stream
-    case e: UpdateAction => handleUpdateAction(e)
+    case e: UpdateAction =>
+      log.debug(s"Handling UpdateAction message: ${e}")
+      handleUpdateAction(e)
 
     // direct protocol
-    case p: Protocol => handleProtocol(p)
+    case p: Protocol =>
+      log.debug(s"Handling Protocol message: ${p}")
+      handleProtocol(p)
 
     case Scan =>
+      log.debug("Handling Scan mesage")
       overlayConfigs = scanForOverlayConfigs().toSet
       val rcs = scanForRuntimeConfigs()
       runtimeConfigs = rcs.toSet
@@ -413,7 +432,7 @@ class Updater(
       log.debug(s"Profiles (after scan): ${profiles}")
 
     case PublishProfileInfo =>
-      log.debug("About to publish profile infos")
+      log.debug("Handling PublishProfileInfo message")
       val activeProfile = findActiveProfile().map(_.toSingleProfile)
       val singleProfiles = profiles.values.toSeq.map(_.toSingleProfile).map { p =>
         activeProfile match {
@@ -424,11 +443,11 @@ class Updater(
 
       }
       val toSend = Profile.fromSingleProfiles(singleProfiles)
-      log.debug(s"About to publish profile info to event stream: ${toSend}")
+      log.debug(s"Publishing profile info to event stream: ${toSend}")
       context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
     case PublishServiceInfo =>
-      log.debug("About to gather and publish service infos")
+      log.debug("Handling PublishServiceInfo message")
 
       val serviceInfo = ServiceInfo(
         name = context.self.path.toString,
@@ -444,58 +463,65 @@ class Updater(
       log.debug(s"About to publish service info: ${serviceInfo}")
       context.system.eventStream.publish(serviceInfo)
 
-    case msg: ArtifactDownloader.Reply =>
-      val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToDownload.find { bip => bip.reqId == msg.requestId }.map(state -> _).toList
-      }.toList
-      foundProgress match {
-        case Nil =>
-          log.error(s"Unkown download id ${msg.requestId}")
-        case (state, bundleInProgress) :: _ =>
-          val newArtifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
-          msg match {
-            case ArtifactDownloader.DownloadFinished(_) =>
-              stageInProgress(state.copy(
-                artifactsToDownload = newArtifactsToDownload
-              ))
-            case ArtifactDownloader.DownloadFailed(_, error) =>
-              stageInProgress(state.copy(
-                artifactsToDownload = newArtifactsToDownload,
-                issues = s"Download failed for ${bundleInProgress.file} (${error.getClass().getSimpleName()}: ${error})" +: state.issues
-              ))
-          }
-      }
+    case msg: ArtifactDownloader.Reply => handleArtifactDownloaderReply(msg)
 
-    case msg: Unpacker.UnpackReply =>
-      val foundProgress = stagingInProgress.values.flatMap { state =>
-        state.artifactsToUnpack.find { a => a.reqId == msg.reqId }.map(state -> _).toList
-      }.toList
-      foundProgress match {
-        case Nil =>
-          log.error(s"Unkown unpack process ${msg.reqId}")
-        case (state, artifact) :: _ =>
-          val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
-          msg match {
-            case Unpacker.UnpackingFinished(_) =>
-              state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum) match {
-                case Success(file) =>
-                  stageInProgress(state.copy(
-                    artifactsToUnpack = artifactsToUnpack
-                  ))
-                case Failure(e) =>
-                  stageInProgress(state.copy(
-                    artifactsToUnpack = artifactsToUnpack,
-                    issues = s"Could not create unpacked-marker file for resource file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
-                  ))
-              }
-            case Unpacker.UnpackingFailed(_, e) =>
-              stageInProgress(state.copy(
-                artifactsToUnpack = artifactsToUnpack,
-                issues = s"Could not unpack file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
-              ))
-          }
-      }
+    case msg: Unpacker.UnpackReply => handleUnpackerUnpackReply(msg)
   }
+
+  protected def handleArtifactDownloaderReply(msg: ArtifactDownloader.Reply): Unit = {
+    val foundProgress = stagingInProgress.values.flatMap { state =>
+      state.artifactsToDownload.find { bip => bip.reqId == msg.requestId }.map(state -> _).toList
+    }.toList
+    foundProgress match {
+      case Nil =>
+        log.error(s"Unkown download id ${msg.requestId}")
+      case (state, bundleInProgress) :: _ =>
+        val newArtifactsToDownload = state.artifactsToDownload.filter(bundleInProgress != _)
+        msg match {
+          case ArtifactDownloader.DownloadFinished(_) =>
+            stageInProgress(state.copy(
+              artifactsToDownload = newArtifactsToDownload
+            ))
+          case ArtifactDownloader.DownloadFailed(_, error) =>
+            stageInProgress(state.copy(
+              artifactsToDownload = newArtifactsToDownload,
+              issues = s"Download failed for ${bundleInProgress.file} (${error.getClass().getSimpleName()}: ${error})" +: state.issues
+            ))
+        }
+    }
+  }
+
+  protected def handleUnpackerUnpackReply(msg: Unpacker.UnpackReply): Unit = {
+    val foundProgress = stagingInProgress.values.flatMap { state =>
+      state.artifactsToUnpack.find { a => a.reqId == msg.reqId }.map(state -> _).toList
+    }.toList
+    foundProgress match {
+      case Nil =>
+        log.error(s"Unkown unpack process ${msg.reqId}")
+      case (state, artifact) :: _ =>
+        val artifactsToUnpack = state.artifactsToUnpack.filter(artifact != _)
+        msg match {
+          case Unpacker.UnpackingFinished(_) =>
+            state.config.createResourceArchiveTouchFile(artifact.artifact, artifact.artifact.sha1Sum) match {
+              case Success(file) =>
+                stageInProgress(state.copy(
+                  artifactsToUnpack = artifactsToUnpack
+                ))
+              case Failure(e) =>
+                stageInProgress(state.copy(
+                  artifactsToUnpack = artifactsToUnpack,
+                  issues = s"Could not create unpacked-marker file for resource file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
+                ))
+            }
+          case Unpacker.UnpackingFailed(_, e) =>
+            stageInProgress(state.copy(
+              artifactsToUnpack = artifactsToUnpack,
+              issues = s"Could not unpack file ${artifact.file} (${e.getClass().getSimpleName()}: ${e.getMessage()})" +: state.issues
+            ))
+        }
+    }
+  }
+
 }
 
 object Updater {
@@ -519,48 +545,59 @@ object Updater {
 
   /**
    * Get all known profiles.
-   * Reply: [[Result[Set[LocalProfile]]]], OperationFailed
+   * Reply: [[Result[Set[LocalProfile]]]]
    */
   final case class GetProfiles(override val requestId: String) extends Protocol
 
   /**
    * Get all known profile ids.
-   * Reply: Result[Set[ProfileId]], OperationFailed
+   * Reply: Result[Set[ProfileId]]
    */
   final case class GetProfileIds(override val requestId: String) extends Protocol
 
+  /**
+   * Get a progress for the given `requestId`.
+   * Reply: `Result[Progress]`
+   */
   final case class GetProgress(override val requestId: String) extends Protocol
 
+  /**
+   * Register a (new) runtime config.
+   * Reply: [[OperationSucceeded]], [[OperationFailed]]
+   */
   final case class AddRuntimeConfig(override val requestId: String, runtimeConfig: RuntimeConfig) extends Protocol
 
+  /**
+   * Register a (new) overlay config.
+   * Reply: [[OperationSucceeded]], [[OperationFailed]]
+   */
   final case class AddOverlayConfig(override val requestId: String, overlayConfig: OverlayConfig) extends Protocol
 
+  /**
+   * Stage a profile, which is a runtime config with an overlay set.
+   * Reply: [[OperationSucceeded]], [[OperationSucceeded]]
+   */
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
   final case class StageProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
 
   final case class ActivateProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
 
   /**
-   * Scans the profile directory for existing runtime configurations and replaces the internal state of this actor with the result.
+   * Internal message: Scans the profile directory for existing runtime configurations
+   * and replaces the internal state of this actor with the result.
+   * Reply: none
    */
   private final case object Scan
 
+  /**
+   * Stage the next runtime config, or do nothing if there is no next runtime config.
+   */
   final case class StageNextRuntimeConfig(override val requestId: String) extends Protocol
 
   /**
    * Supported Replies by the [[Updater]] actor.
    */
   sealed trait Reply
-
-  //  @deprecated
-  //  final case class RuntimeConfigs(
-  //    requestId: String,
-  //    staged: Seq[LocalRuntimeConfig],
-  //    pending: Seq[LocalRuntimeConfig],
-  //    invalid: Seq[LocalRuntimeConfig])
-  //      extends Reply {
-  //    override def toString(): String = s"${getClass().getSimpleName()}(requestId=${requestId},staged=${staged},pending=${pending},invalid=${invalid})"
-  //  }
 
   final case class Progress(requestId: String, progress: Int) extends Reply
 
@@ -570,6 +607,9 @@ object Updater {
 
   final case class OperationFailed(requestId: String, reason: String) extends Reply
 
+  /**
+   * Create the actor properties.
+   */
   def props(
     baseDir: File,
     profileActivator: ProfileActivator,
