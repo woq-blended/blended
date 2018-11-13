@@ -15,6 +15,9 @@ object BlendedJmsBridge extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.activeMqBroker % "test",
       Dependencies.scalatest % "test"
+    ),
+    adaptBundle = b => b.copy(
+      bundleActivator = s"${b.bundleSymbolicName}.internal.BridgeActivator"
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(

@@ -7,13 +7,11 @@ import akka.pattern.ask
 import akka.util.Timeout
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.processor.{CollectingActor, Collector}
-import blended.streams.transaction.internal.FlowTransactionManager.RestartTransactionActor
-import blended.streams.transaction.internal.{FlowTransactionActor, FlowTransactionManager}
+import blended.streams.transaction.FlowTransactionManager.RestartTransactionActor
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._

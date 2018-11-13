@@ -6,7 +6,6 @@ import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
@@ -42,12 +41,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
           BridgeProviderConfig.create(osgiCfg.idSvc, p).get
         }.toList
 
-      val inboundList : List[InboundConfig ]=
-        osgiCfg.config.getConfigList("inbound", List.empty).map { i =>
-          InboundConfig.create(osgiCfg.idSvc, i).get
-        }
-
-      val queuePrefix = osgiCfg.config.getString("queuePrefix", "blended.bridge")
+      log.info(s"Starting jms bridge with providers [${providerList.map(_.toString()).mkString(",")}]")
 
       val (internalVendor, internalProvider) = providerList.filter(_.internal) match {
         case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")

@@ -10,7 +10,6 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
-import blended.streams.transaction.internal.{FlowTransactionManager, FlowTransactionStream}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.util.logging.Logger

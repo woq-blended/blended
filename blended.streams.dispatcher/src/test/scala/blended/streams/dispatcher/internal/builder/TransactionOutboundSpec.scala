@@ -9,8 +9,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.internal.FlowTransactionManager
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionUpdate}
+import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.RequiresForkedJVM
 import org.osgi.framework.BundleActivator

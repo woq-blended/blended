@@ -1,4 +1,4 @@
-package blended.streams.transaction.internal
+package blended.streams.transaction
 
 import akka.Done
 import akka.actor.{Actor, ActorRef, Props}
@@ -6,9 +6,8 @@ import akka.persistence.SnapshotOffer
 import akka.util.Timeout
 import blended.streams.persistence.RestartableActor
 import blended.streams.persistence.RestartableActor.RestartActor
-import blended.streams.transaction.internal.FlowTransactionActor.State
-import blended.streams.transaction.internal.FlowTransactionManager.RestartTransactionActor
-import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionStarted}
+import blended.streams.transaction.FlowTransactionActor.State
+import blended.streams.transaction.FlowTransactionManager.RestartTransactionActor
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._

@@ -1,13 +1,12 @@
-package blended.streams.transaction.internal
+package blended.streams.transaction
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.Timeout
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowHeaderConfig, FlowTransaction, FlowTransactionEvent}
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._

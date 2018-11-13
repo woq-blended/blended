@@ -10,8 +10,7 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.FlowTransactionEvent
-import blended.streams.transaction.internal.FlowTransactionManager
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager}
 import blended.util.logging.Logger
 
 import scala.collection.mutable

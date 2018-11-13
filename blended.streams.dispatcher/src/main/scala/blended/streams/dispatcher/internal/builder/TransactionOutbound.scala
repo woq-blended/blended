@@ -8,8 +8,7 @@ import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction._
-import blended.streams.transaction.internal.FlowTransactionStream
+import blended.streams.transaction.{FlowTransactionStream, _}
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
