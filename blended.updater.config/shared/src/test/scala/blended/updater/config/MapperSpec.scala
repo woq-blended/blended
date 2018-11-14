@@ -61,12 +61,33 @@ class MapperSpec extends FreeSpec {
       // TODO: cases with bundles and features
     }
 
+    val overlayConfigs = Seq(
+      OverlayConfig(
+        name = "oc",
+        version = "1",
+        generatedConfigs = List(),
+        properties = Map()
+      )
+    )
+
+    "OverlayConfig" in {
+      overlayConfigs.foreach { oc =>
+        assert(unmapOverlayConfig(mapOverlayConfig(oc)) === Success(oc))
+      }
+    }
+
     "RuntimeConfig" in pending
     "RemoteContainerState" in pending
     "ServiceInfo" in pending
     "ContainerInfo" in pending
-    "UpdateAction" in pending
-    "OverlayConfig" in pending
+
+    "UpdateAction" in {
+      overlayConfigs.foreach { oc =>
+       assert(unmapUpdateAction(mapUpdateAction(AddOverlayConfig(oc))) === Success(AddOverlayConfig(oc)))
+      }
+
+    }
+
     "GeneratedConfig" in pending
     "Profile" in pending
     "OverlaySet" in pending

@@ -89,7 +89,7 @@ trait Mapper {
     case AddOverlayConfig(oc) =>
       Map(
         "kind" -> UpdateAction.KindAddOverlayConfig,
-        "overlayConfig" -> mapOverlayConfig(oc)
+        "overlay" -> mapOverlayConfig(oc)
       ).asJava
     case ActivateProfile(profileName, profileVersion, overlays) =>
       Map(
@@ -240,7 +240,7 @@ trait Mapper {
     val oc = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     OverlayConfig(
       name = oc("name").asInstanceOf[String],
-      version = oc("name").asInstanceOf[String],
+      version = oc("version").asInstanceOf[String],
       generatedConfigs = oc("generatedConfigs").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(c => unmapGeneratedConfig(c).get),
       properties = oc("properties").asInstanceOf[java.util.Map[String, String]].asScala.toMap
     )
