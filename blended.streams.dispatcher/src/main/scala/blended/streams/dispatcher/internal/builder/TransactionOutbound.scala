@@ -35,7 +35,7 @@ class TransactionOutbound(
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
 
     RestartableJmsSource(
-      name = "transactionoutbound",
+      name = "transactionOutbound",
       settings = srcSettings,
       log = log
     )
@@ -51,7 +51,16 @@ class TransactionOutbound(
     ).build()
 
     val transactionStream : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-      new FlowTransactionStream(headerConfig, tMgr, log, sendFlow).build()
+      new FlowTransactionStream(
+        cfg = headerConfig,
+        tMgr = tMgr,
+        log = log,
+        // The default for CBE is false here
+        // all messages that have run through the dispatcher will have the correct CBE setting
+        performSend = env => env.header[Boolean](bs.headerCbeEnabled).getOrElse(false),
+        sendFlow
+      ).build()
+
 
     val src : Source[FlowEnvelope, NotUsed] = jmsSource.get.via(transactionStream)
 

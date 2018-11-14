@@ -17,7 +17,8 @@ class FlowTransactionStream(
   cfg : FlowHeaderConfig,
   tMgr : ActorRef,
   log: Logger,
-  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
+  performSend : FlowEnvelope => Boolean,
+  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
 )(implicit system: ActorSystem) {
 
   private case class TransactionStreamContext(
@@ -53,11 +54,14 @@ class FlowTransactionStream(
       throw t
   }
 
-  private val prepareSend : TransactionStreamContext => TransactionStreamContext = { in =>
+  private val logAndPrepareSend : TransactionStreamContext => TransactionStreamContext = { in =>
     val transEnv : Future[Try[FlowEnvelope]] =
       in.trans.get.map {
-        case Success(t) => Success(FlowTransaction.transaction2envelope(cfg)(t))
-        case Failure(t) => Failure(t)
+        case Success(t) =>
+          log.info(t.toString())
+          Success(FlowTransaction.transaction2envelope(cfg)(t))
+        case Failure(t) =>
+          Failure(t)
       }
 
     TransactionStreamContext(
@@ -70,8 +74,10 @@ class FlowTransactionStream(
   private val sendTransaction : TransactionStreamContext => TransactionStreamContext = { in =>
     val sendEnv = in.sendEnvelope.get.map {
       case Success(s) =>
-        log.trace(s"About to send transaction envelope  [${in.envelope.id}]")
-        Source.single(s).via(sendFlow).toMat(Sink.head[FlowEnvelope])(Keep.right).run()
+        if (performSend(s)) {
+          log.trace(s"About to send transaction envelope  [${in.envelope.id}]")
+          Source.single(s).via(sendFlow).toMat(Sink.head[FlowEnvelope])(Keep.right).run()
+        }
         Success(s)
       case Failure(t) => Failure(t)
     }
@@ -104,7 +110,7 @@ class FlowTransactionStream(
   def build(): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     Flow.fromFunction(updateEvent)
       .via(Flow.fromFunction(recordTransaction))
-      .via(Flow.fromFunction(prepareSend))
+      .via(Flow.fromFunction(logAndPrepareSend))
       .via(Flow.fromFunction(sendTransaction))
       .via(Flow.fromFunction(acknowledge))
   }

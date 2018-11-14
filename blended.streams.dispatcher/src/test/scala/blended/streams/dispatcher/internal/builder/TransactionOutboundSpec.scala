@@ -65,7 +65,6 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       .withHeader(ctxt.bs.headerEventVendor, "activemq").get
       .withHeader(ctxt.bs.headerEventProvider, "activemq").get
       .withHeader(ctxt.bs.headerEventDest, JmsDestination.create("cbeOut").get.asString).get
-      .withHeader(ctxt.bs.headerConfig.headerTrack, false).get
   }
 
   def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
@@ -87,11 +86,24 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
   "The transaction outbound handler should" - {
 
-    "send a cbe event if the FlowEnvelope has CBE enabled" in {
+    "do not send a cbe event if the FlowEnvelope doesnẗ have a CBE header" in {
 
       val envelopes = Seq(
         transactionEnvelope(ctxt, FlowTransaction.startEvent()),
-        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
+      )
+
+      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val collector = receiveCbes
+
+      val cbes = Await.result(collector.result, timeout + 1.second)
+      cbes should have size 0
+      switch.shutdown()
+    }
+
+    "send a cbe event if the FlowEnvelope does have a CBE header = true" in {
+
+      val envelopes = Seq(
+        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, true).get
       )
 
       val switch = sendTransactions(ctxt, cf)(envelopes:_*)
@@ -102,6 +114,20 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
       switch.shutdown()
     }
 
+    "do not send a cbe event if the FlowEnvelope does have a CBE header = false" in {
+
+      val envelopes = Seq(
+        transactionEnvelope(ctxt, FlowTransaction.startEvent()).withHeader(ctxt.bs.headerCbeEnabled, false).get
+      )
+
+      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val collector = receiveCbes
+
+      val cbes = Await.result(collector.result, timeout + 1.second)
+      cbes should have size 0
+      switch.shutdown()
+    }
+
     "do not send Cbes for transaction updates" in {
       val envelopes = Seq(
         transactionEnvelope(ctxt, FlowTransactionUpdate(
@@ -109,7 +135,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
           properties = FlowMessage.noProps,
           updatedState = WorklistState.Started,
           branchIds = "foo"
-        ))
+        )).withHeader(ctxt.bs.headerCbeEnabled, true).get
       )
 
       val switch = sendTransactions(ctxt, cf)(envelopes:_*)

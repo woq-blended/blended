@@ -2,11 +2,12 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{KillSwitch, KillSwitches, Materializer}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
+import akka.stream._
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
@@ -24,11 +25,11 @@ class RunnableDispatcher(
   routerCfg : ResourceTypeRouterConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
-  private val switches : mutable.Map[String, KillSwitch] = mutable.Map.empty
+  private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
   private var transMgr : Option[ActorRef] = None
-  private var transStream : Option[KillSwitch] = None
+  private var transStream : Option[ActorRef] = None
 
-  def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  private[builder] def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val sendProducerSettings = JmsProducerSettings(
       headerConfig = bs.headerConfig,
@@ -44,37 +45,43 @@ class RunnableDispatcher(
     )
   }
 
-  def transactionSend()(implicit system : ActorSystem, materializer: Materializer) : Sink[FlowTransactionEvent, NotUsed] = {
+  // Simply stick the transaction event into the transaction destination
+  private[builder] def transactionSend()(implicit system : ActorSystem, materializer: Materializer) :
+    Graph[FlowShape[FlowTransactionEvent, FlowEnvelope], NotUsed] = {
 
-    val internal = registry.internalProvider.get
+    GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
 
-    val transactionSendSettings = JmsProducerSettings(
-      headerConfig = bs.headerConfig,
-      connectionFactory = cf,
-      jmsDestination = Some(internal.transactions),
-      deliveryMode = JmsDeliveryMode.Persistent,
-      priority = 4,
-      timeToLive = None
-    )
+      val internal = registry.internalProvider.get
 
-    val transform = Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
-      bs.streamLogger.debug(s"About to send transaction [$t]")
-      FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
+      val transform = b.add(Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
+        FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
+      })
+
+      val transactionSendSettings = JmsProducerSettings(
+        headerConfig = bs.headerConfig,
+        connectionFactory = cf,
+        jmsDestination = Some(internal.transactions),
+        deliveryMode = JmsDeliveryMode.Persistent,
+        priority = 4,
+        timeToLive = None
+      )
+
+      val producer = b.add(jmsProducer(
+        name = "transactionSend",
+        settings = transactionSendSettings,
+        autoAck = false,
+        log = bs.streamLogger
+      ))
+
+      transform ~> producer
+      FlowShape(transform.in, producer.out)
     }
-
-    val producer = jmsProducer(
-      name = "transactionSend",
-      settings = transactionSendSettings,
-      autoAck = false,
-      log = bs.streamLogger
-    )
-
-    transform.via(producer).to(Sink.ignore)
   }
 
-  def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
+  private[builder] def transactionStream(tMgr : ActorRef) : Try[ActorRef] = Try {
 
-    implicit val builderSupport = bs
+    implicit val builderSupport : DispatcherBuilderSupport = bs
 
     new TransactionOutbound(
       headerConfig = bs.headerConfig,
@@ -85,7 +92,7 @@ class RunnableDispatcher(
     ).build()
   }
 
-  private val builder = DispatcherBuilder(
+  private[builder] val builder = DispatcherBuilder(
     idSvc = idSvc,
     dispatcherCfg = routerCfg,
     dispatcherSend()
@@ -119,24 +126,32 @@ class RunnableDispatcher(
   def start() : Unit = {
 
     try {
+      // We will create the Transaction Manager
       transMgr = Some(system.actorOf(FlowTransactionManager.props()))
 
-      val transStream = Some(transactionStream(transMgr.get).get)
+      // The transaction stream will process the transaction events from the transactions destination
+      transStream = Some(transactionStream(transMgr.get).get)
 
+      // The blueprint for the dispatcher flow
       val dispatcher : Flow[FlowEnvelope, FlowTransactionEvent, NotUsed] =
         Flow.fromGraph(builder.dispatcher())
 
-      val transSend : Sink[FlowTransactionEvent, NotUsed] = transactionSend()
-
+      // Create one dispatcher for each configured provider
       registry.allProvider.foreach { provider =>
-        val switch = bridgeSource(provider)
-          .viaMat(KillSwitches.single)(Keep.right)
-          .viaMat(dispatcher)(Keep.left)
-          .toMat(transSend)(Keep.left)
-          .run()
+
+        // Connect the consumer to a dispatcher
+        val source = bridgeSource(provider).via(dispatcher)
+
+        // Prepare and start the dispatcher
+        val streamCfg = StreamControllerConfig(
+          name = bs.streamLogger.name + "." + provider.vendor + provider.provider,
+          source = source.via(transactionSend())
+        )
+
+        val actor = system.actorOf(StreamController.props(streamCfg = streamCfg))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
-        switches.put(provider.id, switch)
+        startedDispatchers.put(provider.id, actor)
       }
     } catch {
       case t : Throwable => bs.streamLogger.error(t)(s"Failed to start dispatcher [${t.getMessage()}]")
@@ -145,8 +160,8 @@ class RunnableDispatcher(
 
   def stop() : Unit = {
     transMgr.foreach(system.stop)
-    transStream.foreach(_.shutdown())
-    switches.foreach { case (k, s) => s.shutdown() }
-    switches.clear()
+    transStream.foreach(_ ! StreamController.Stop)
+    startedDispatchers.foreach { case (k, d) => d ! StreamController.Stop }
+    startedDispatchers.clear()
   }
 }

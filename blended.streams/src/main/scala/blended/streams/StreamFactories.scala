@@ -20,7 +20,7 @@ object StreamFactories {
     timeout : FiniteDuration
   )(implicit system : ActorSystem, materializer: Materializer, clazz : ClassTag[T]) : Collector[T] = {
 
-    implicit val eCtxt = system.dispatcher
+    implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
 
     val collector = Collector[T](name)

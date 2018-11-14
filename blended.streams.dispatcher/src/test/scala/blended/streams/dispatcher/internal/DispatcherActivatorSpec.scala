@@ -7,7 +7,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
-import blended.jms.utils.JmsDestination
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
@@ -18,8 +18,8 @@ import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 @RequiresForkedJVM
 class DispatcherActivatorSpec extends DispatcherSpecSupport
@@ -30,8 +30,9 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
   System.setProperty("AppCountry", country)
   System.setProperty("AppLocation", location)
 
-  override def loggerName: String = classOf[DispatcherActivatorSpec].getName()
+  implicit val timeout : FiniteDuration = 5.seconds
 
+  override def loggerName: String = classOf[DispatcherActivatorSpec].getName()
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
@@ -41,60 +42,56 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "blended.streams.dispatcher" -> new DispatcherActivator()
   )
 
-  private[this] def withDispatcher[T](f : () => T) : T = {
-    f()
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val materializer : Materializer = ActorMaterializer()
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+
+  private val ctxt : DispatcherExecContext = createDispatcherExecContext()
+
+  // make sure we can connect to all connection factories
+  private val amq = jmsConnectionFactory(registry, ctxt)("activemq", "activemq", timeout).get
+  private val sonic = jmsConnectionFactory(registry, ctxt)("sonic75", "central", timeout).get
+  private val ccQueue = jmsConnectionFactory(registry, ctxt)("sagum", s"${country}_queue", timeout).get
+
+  private def getResults(cf : IdAwareConnectionFactory, dest : JmsDestination*) : Seq[List[FlowEnvelope]] = {
+
+    val collectors = dest.map{ d =>
+      receiveMessages(
+        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d
+      )
+    }
+
+    Await.result(Future.sequence(collectors.map(_.result)), timeout + 1.second)
   }
 
   "The activated dispatcher should" - {
 
-    "create the dispatcher" in {
+    "process inbound messages with a wrong ResourceType" in {
 
-      withDispatcherConfig { ctxt =>
+      val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
-        implicit val system : ActorSystem = ctxt.system
-        implicit val materializer : Materializer = ActorMaterializer()
+      val switch = sendMessages(
+        headerCfg = ctxt.bs.headerConfig,
+        cf = sonic,
+        dest = JmsDestination.create("sonic.data.in").get,
+        log = Logger(loggerName),
+        msgs = env
+      )
 
-        implicit val eCtxt : ExecutionContext = ctxt.system.dispatcher
+      val results = getResults(
+        cf = sonic,
+        JmsDestination.create("global.error").get,
+        JmsDestination.create("cc.global.evnt.out").get
+      )
 
-        implicit val timeout : FiniteDuration = 5.seconds
-        // make sure we can connect to all connection factories
-        val amq = jmsConnectionFactory(registry, ctxt)("activemq", "activemq", timeout).get
-        val sonic = jmsConnectionFactory(registry, ctxt)("sonic75", "central", timeout).get
-        val ccQueue = jmsConnectionFactory(registry, ctxt)("sagum", s"${country}_queue", timeout).get
+      val errors = results(0)
+      val cbes = results(1)
 
-        val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
+      try {
+        errors should have size 1
+        cbes should have size 0
 
-        val switch = sendMessages(
-          headerCfg = ctxt.bs.headerConfig,
-          cf = sonic,
-          dest = JmsDestination.create("sonic.data.in").get,
-          log = Logger(loggerName),
-          msgs = env
-        )
-
-        val errColl = receiveMessages(headerCfg = ctxt.bs.headerConfig, cf = sonic, dest = JmsDestination.create("global.error").get)
-        val cbeColl = receiveMessages(headerCfg = ctxt.bs.headerConfig, cf = sonic, dest = JmsDestination.create("cc.global.evnt.out").get)
-
-        try {
-          val errors = Await.result(errColl.result, timeout + 1.second)
-          val cbes = Await.result(cbeColl.result, timeout + 1.second)
-          errors should have size 1
-          cbes should have size 2
-
-          Seq(cbes.head).map { env =>
-            val t = FlowTransaction.envelope2Transaction(ctxt.bs.headerConfig)(env)
-            t.state should be (FlowTransactionState.Started)
-            t.tid should be (env.id)
-          }
-
-          Seq(cbes.last).map { env =>
-            val t = FlowTransaction.envelope2Transaction(ctxt.bs.headerConfig)(env)
-            t.state should be (FlowTransactionState.Failed)
-            t.tid should be (env.id)
-          }
-        } finally {
-          switch.shutdown()
-        }
+        switch.shutdown()
       }
     }
   }

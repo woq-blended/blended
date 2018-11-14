@@ -145,7 +145,7 @@ class JmsStreamBuilder(
       }
     }
 
-    val g = FlowProcessor.fromFunction("logTransaction", bridgeLogger){ env =>
+    val g = FlowProcessor.fromFunction("createTransaction", bridgeLogger){ env =>
       Try {
         val event : FlowTransactionEvent = if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
           startTransaction(env)
@@ -154,8 +154,6 @@ class JmsStreamBuilder(
         }
 
         bridgeLogger.debug(s"Generated transaction event [$event]")
-        event
-
         FlowTransactionEvent.event2envelope(cfg.headerCfg)(event)
       }
     }

@@ -14,11 +14,12 @@ object  Collector {
   def apply[T](name : String)(implicit system : ActorSystem, clazz : ClassTag[T]) : Collector[T] = {
     val p = Promise[List[T]]
     val actor = system.actorOf(CollectingActor.props[T](name, p))
-    Collector(result = p.future, sink = Sink.actorRef[T](actor, CollectingActor.Completed), actor = actor)
+    Collector(name = name, result = p.future, sink = Sink.actorRef[T](actor, CollectingActor.Completed), actor = actor)
   }
 }
 
 case class Collector[T] (
+  name : String,
   result : Future[List[T]],
   sink : Sink[T, _],
   actor : ActorRef
