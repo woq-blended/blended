@@ -55,6 +55,9 @@ class RemoteUpdater(
                 po.overlays.toSet == oc.toSet))
       case _ => true
     }
+    if(newUpdateActions.size < state.outstandingActions.size) {
+      log.debug(s"Removed some actions: ${state.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
+    }
 
     val newState = state.copy(
       profiles = containerProfiles,
