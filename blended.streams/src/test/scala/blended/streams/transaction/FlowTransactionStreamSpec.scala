@@ -10,7 +10,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
-import blended.testsupport.BlendedTestSupport
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
@@ -19,6 +19,7 @@ import org.scalatest.Matchers
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+@RequiresForkedJVM
 class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   with Matchers
   with PojoSrTestHelper {
@@ -66,7 +67,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
             cfg = cfg,
             tMgr = tMgr,
             log = log,
-            performSend = env => env.header[Boolean](cfg.prefix + "CbeEnabled").getOrElse(false),
+            performSend = env => env.header[Boolean](cfg.prefix + "CbeEnabled").getOrElse(true),
             sendFlow = good
           ).build()
 
