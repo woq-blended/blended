@@ -10,7 +10,9 @@ object BlendedStreamsTestsupport extends ProjectFactory {
       Dependencies.akkaTestkit,
       Dependencies.akkaActor,
       Dependencies.akkaStream,
-      Dependencies.akkaPersistence
+      Dependencies.akkaPersistence,
+      Dependencies.logbackCore,
+      Dependencies.logbackClassic
     )
   )
 

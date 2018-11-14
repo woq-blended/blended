@@ -3,6 +3,7 @@ package blended.streams.dispatcher.internal
 import java.io.File
 
 import akka.actor.ActorSystem
+import akka.stream.scaladsl.{Flow, Keep, Sink}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -11,10 +12,12 @@ import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransaction, FlowTransactionState}
+import blended.streams.testsupport.LoggingEventAppender
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.spi.ILoggingEvent
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -68,6 +71,15 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     "process inbound messages with a wrong ResourceType" in {
 
+      val logSink = Flow[ILoggingEvent]
+        .filter{ event =>
+          event.getLevel() == Level.INFO
+        }
+        .toMat(Sink.seq[ILoggingEvent])(Keep.right)
+
+      val appender = new LoggingEventAppender[Future[Seq[ILoggingEvent]]]("App.transactions")
+      val logEventsFut = appender.attachAndStart(logSink)
+
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
       val switch = sendMessages(
@@ -84,15 +96,22 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
         JmsDestination.create("cc.global.evnt.out").get
       )
 
+      appender.stop()
+      val logEvents = Await.result(logEventsFut, timeout)
+
       val errors = results(0)
       val cbes = results(1)
 
-      try {
-        errors should have size 1
-        cbes should have size 0
+      // TODO: Reconstruct FlowTransaction from String ??
+      logEvents should have size 2
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
+      logEvents.head.getMessage() should endWith ("Started)")
+      logEvents.last.getMessage() should endWith ("Failed)")
 
-        switch.shutdown()
-      }
+      errors should have size 1
+      cbes should have size 0
+
+      switch.shutdown()
     }
   }
 }
