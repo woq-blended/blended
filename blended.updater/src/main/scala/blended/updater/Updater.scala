@@ -203,8 +203,14 @@ class Updater(
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
-      self.ask(StageProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
-        log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
+      val request = StageProfile(nextId(), name, version, overlayRefs)
+      self.ask(request)(timeout).onComplete {
+        case Success(OperationFailed(_, reason)) =>
+          log.error(s"Could not stage profile: ${reason}")
+        case Failure(e) =>
+          log.error(e)(s"Could not complete stage profile [${request}]")
+        case x =>
+          log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
       }
 
     case UAActivateProfile(name, version, overlayRefs) =>
@@ -222,6 +228,7 @@ class Updater(
     val ActivateProfile(reqId, name, version, overlays) = msg
     val profileId = ProfileId(name, version, overlays)
     log.debug(s"Requested activate profile with id: ${profileId}")
+
     profiles.get(profileId) match {
       case Some(LocalProfile(_, _, LocalProfile.Staged)) =>
         // write config
