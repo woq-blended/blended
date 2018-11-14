@@ -10,7 +10,7 @@ class MapperSpec extends FreeSpec {
 
     import Mapper._
 
-    val artifacts = Seq(
+    val artifacts = List(
       Artifact(url = "http://fake/url"),
       Artifact(url = "http://fake/url/with/md5sum", fileName = "artifact.jar"),
       Artifact(url = "http://fake/url/with/md5sum", sha1Sum = "123456"),
@@ -23,7 +23,7 @@ class MapperSpec extends FreeSpec {
       }
     }
 
-    val bundleConfigs = artifacts.flatMap(artifact => Seq(
+    val bundleConfigs = artifacts.flatMap(artifact => List(
       BundleConfig(artifact = artifact, start = false, startLevel = None),
       BundleConfig(artifact = artifact, start = false, startLevel = Some(5)),
       BundleConfig(artifact = artifact, start = true, startLevel = None),
@@ -36,7 +36,7 @@ class MapperSpec extends FreeSpec {
       }
     }
 
-    val featureRefs = Seq(
+    val featureRefs = List(
       FeatureRef(name = "name", version = "1.0.0", url = None),
       FeatureRef(name = "name", version = "1.0.0", url = Some("http://fake/url")),
     )
@@ -47,7 +47,7 @@ class MapperSpec extends FreeSpec {
       }
     }
 
-    val featureConfigs = Seq(None, Some("http://fake.url/")).flatMap { url =>
+    val featureConfigs = List(None, Some("http://fake.url/")).flatMap { url =>
       Seq(List(), List(FeatureRef("a", "1"))).flatMap { features =>
         Seq(List(), bundleConfigs.toList).flatMap { bundles =>
           Seq(FeatureConfig(name = "name", version = "1.0.0", url = url, bundles = bundles, features = features))
@@ -68,6 +68,7 @@ class MapperSpec extends FreeSpec {
         generatedConfigs = List(),
         properties = Map()
       )
+      // TODO: add more
     )
 
     "OverlayConfig" in {
@@ -76,14 +77,35 @@ class MapperSpec extends FreeSpec {
       }
     }
 
-    "RuntimeConfig" in pending
+    val runtimeConfigs = Seq(
+      RuntimeConfig(
+        name = "rc",
+        version = "1",
+        bundles = bundleConfigs,
+        startLevel = 10,
+        defaultStartLevel = 5,
+        properties = Map("p1" -> "k1"),
+        frameworkProperties = Map("fp1" -> "fk1"),
+        systemProperties = Map("sp1" -> "sk1"),
+        features = featureRefs,
+        resources = List(),
+        resolvedFeatures = List()
+      )
+      // TODO: add more
+    )
+
+    "RuntimeConfig" in {
+      runtimeConfigs.foreach { rc =>
+        assert(unmapRuntimeConfig(mapRuntimeConfig(rc)) === Success(rc))
+      }
+    }
     "RemoteContainerState" in pending
     "ServiceInfo" in pending
     "ContainerInfo" in pending
 
     "UpdateAction" in {
       overlayConfigs.foreach { oc =>
-       assert(unmapUpdateAction(mapUpdateAction(AddOverlayConfig(oc))) === Success(AddOverlayConfig(oc)))
+        assert(unmapUpdateAction(mapUpdateAction(AddOverlayConfig(oc))) === Success(AddOverlayConfig(oc)))
       }
 
     }
