@@ -35,6 +35,7 @@ object BlendedUpdaterRemote extends ProjectFactory {
     BlendedLauncher.project,
     BlendedContainerContextApi.project,
     BlendedAkka.project,
-    BlendedTestsupport.project % "test"
+    BlendedTestsupport.project % "test",
+    BlendedPersistenceH2.project % "test"
   )
 }

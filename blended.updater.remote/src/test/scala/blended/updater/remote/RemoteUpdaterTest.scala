@@ -1,108 +1,229 @@
 package blended.updater.remote
 
-import org.scalatest.FreeSpec
-import blended.updater.config._
+import scala.collection.JavaConverters._
 
-class RemoteUpdaterTest extends FreeSpec {
+import blended.persistence.PersistenceService
+import blended.persistence.jdbc.{PersistedClassDao, PersistenceServiceJdbc}
+import blended.testsupport.TestFile
+import blended.testsupport.TestFile.DeleteWhenNoFailure
+import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.updater.config._
+import blended.util.logging.Logger
+import org.h2.jdbcx.{JdbcConnectionPool, JdbcDataSource}
+import org.springframework.jdbc.datasource.DataSourceTransactionManager
+import org.springframework.transaction.PlatformTransactionManager
+
+class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
+
+  private[this] val log = Logger[this.type]
 
   val todoOverlays = List.empty[OverlayConfig]
   val todoOverlayRefs = List.empty[OverlayRef]
 
-  "initial empty state" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    assert(ru.getContainerActions("1") === Seq())
+  case class Context(ru: RemoteUpdater, ps: Option[PersistenceService] = None)
+
+  def withEmptyRemoteUpdate(transient: Boolean)(f: Context => Unit): Unit = {
+    transient match {
+      case true =>
+        val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
+        f(Context(ru))
+      case false =>
+        withTestDir() { dir =>
+
+          val ds0 = new JdbcDataSource();
+          ds0.setURL(s"jdbc:h2:mem:${getClass().getSimpleName()}");
+          ds0.setUser("admin");
+          ds0.setPassword("admin");
+
+          val ds = JdbcConnectionPool.create(ds0)
+
+          val txMgr: PlatformTransactionManager = new DataSourceTransactionManager(ds)
+
+          val dao: PersistedClassDao = new PersistedClassDao(ds)
+          dao.init()
+
+          val persistenceService = new PersistenceServiceJdbc(txMgr, dao)
+
+          val csp = new PersistentContainerStatePersistor(persistenceService)
+
+          val ru = new RemoteUpdater(
+            new FileSystemRuntimeConfigPersistor(dir),
+            csp,
+            new FileSystemOverlayConfigPersistor(dir)
+          )
+          f(Context(ru, Some(persistenceService)))
+
+          ds.dispose()
+
+        }(DeleteWhenNoFailure)
+
+    }
   }
 
-  "adding a runtime config action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-  }
+  val scenarios = Seq("transient" -> true, "JDBC-based" -> false)
+  scenarios.foreach {
+    case (name, transient) =>
 
-  "adding a stage action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = StageProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-  }
+      s"When persistence is ${name}" - {
 
-  "adding a second add runtime config  action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    val action2 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
-    ru.addAction("1", action2)
-    assert(ru.getContainerActions("1") === Seq(action1, action2))
-  }
+        "initial empty state" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            assert(ctx.ru.getContainerActions("1") === Seq())
+          }
+        }
 
-  "adding a second stage action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = StageProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    val action2 = StageProfile("test", "2", todoOverlayRefs)
-    ru.addAction("1", action2)
-    assert(ru.getContainerActions("1") === Seq(action1, action2))
-  }
+        "adding a runtime config action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+          }
+        }
 
-  "not adding a second but identical stage action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = StageProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-  }
+        "adding a stage action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+          }
+        }
 
-  "remove a stage action if container info reports already staged" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = StageProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    val profiles = List(
-      Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Valid)))
-    )
-    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
-    assert(ru.getContainerActions("1") === Seq())
-  }
+        "adding a second add runtime config action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
+            val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            ru.addAction("1", action1)
+            assert(ru.getContainerActions("1") === Seq(action1))
+            val action2 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            ru.addAction("1", action2)
+            assert(ru.getContainerActions("1") === Seq(action1, action2))
+          }
+        }
 
-  "adding a update action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = ActivateProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-  }
+        "adding a second stage action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+            val action2 = StageProfile("test", "2", todoOverlayRefs)
+            ctx.ru.addAction("1", action2)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1, action2))
+          }
+        }
 
-  "adding a second update action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = ActivateProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    val action2 = ActivateProfile("test", "2", todoOverlayRefs)
-    ru.addAction("1", action2)
-    assert(ru.getContainerActions("1") === Seq(action1, action2))
-  }
+        "not adding a second but identical stage action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+          }
+        }
 
-  "not adding a second but identical update action" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = ActivateProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-  }
+        "remove a stage action if container info reports already staged" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+            val profiles = List(
+              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Valid)))
+            )
+            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
+            assert(ctx.ru.getContainerActions("1") === Seq())
+          }
+        }
 
-  "remove an activation action if container info reports already activated" in {
-    val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-    val action1 = ActivateProfile("test", "1", todoOverlayRefs)
-    ru.addAction("1", action1)
-    assert(ru.getContainerActions("1") === Seq(action1))
-    val profiles = List(
-      Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Active)))
-    )
-    ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
-    assert(ru.getContainerActions("1") === Seq())
-  }
+        "adding a update action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+          }
+        }
 
+        "adding a second update action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            val action2 = ActivateProfile("test", "2", todoOverlayRefs)
+            ctx.ru.addAction("1", action2)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1, action2))
+          }
+        }
+
+        "not adding a second but identical update action" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+          }
+        }
+
+        "remove an activation action if container info reports already activated" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            ctx.ru.addAction("1", action1)
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+            val profiles = List(
+              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Active)))
+            )
+            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
+            assert(ctx.ru.getContainerActions("1") === Seq())
+          }
+        }
+
+        "add a runtime config, an overlay and stage as new profile" in {
+          withEmptyRemoteUpdate(transient) { ctx =>
+
+            val conId = "1"
+
+            val action1 = AddRuntimeConfig(RuntimeConfig(
+              name = "rc",
+              version = "1",
+              startLevel = 10,
+              defaultStartLevel = 10
+            ))
+            log.info(s"Add 1. action: ${action1}")
+            ctx.ru.addAction(conId, action1)
+            ctx.ps.map(p => assert(p.findAll("ContainerState").size === 1))
+            assert(ctx.ru.getContainerActions(conId).size === 1)
+
+            val action2 = AddOverlayConfig(OverlayConfig(
+              name = "oc",
+              version = "1"
+            ))
+            log.info(s"Add 2. action: ${action2}")
+            ctx.ru.addAction(conId, action2)
+            ctx.ps.map { p =>
+              assert(p.findAll("ContainerState").size === 1)
+              val state = p.findByExample("ContainerState", Map("containerId" -> conId).asJava)
+              assert(state.size === 1)
+              assert(Mapper.unmapContainerState(state.head).get.outstandingActions.size === 2)
+            }
+            log.info(s"state: ${ctx.ru.getContainerState(conId)}")
+            assert(ctx.ru.getContainerActions(conId).size === 2)
+
+            val action3 = StageProfile(
+              profileName = "rc",
+              profileVersion = "1",
+              overlays = List(OverlayRef("oc", "1"))
+            )
+            log.info(s"Add 3. action: ${action3}")
+            ctx.ps.map { p =>
+              assert(p.findAll("ContainerState").size === 1)
+              assert(p.findByExample("ContainerState", Map("containerId" -> conId).asJava).size === 1)
+            }
+            ctx.ru.addAction(conId, action3)
+
+            assert(ctx.ru.getContainerActions(conId).size === 3)
+
+          }
+        }
+
+      }
+
+  }
 }
