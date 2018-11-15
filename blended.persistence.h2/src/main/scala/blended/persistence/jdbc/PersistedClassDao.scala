@@ -1,8 +1,9 @@
 package blended.persistence.jdbc
 
 import scala.collection.JavaConverters._
-import scala.collection.{ immutable => sci }
+import scala.collection.{immutable => sci}
 import scala.util.Try
+import scala.util.control.NonFatal
 
 import blended.util.logging.Logger
 import javax.sql.DataSource
@@ -11,11 +12,8 @@ import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
 import org.springframework.jdbc.core.RowMapper
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.jdbc.core.namedparam.{MapSqlParameterSource, NamedParameterJdbcTemplate}
 import org.springframework.jdbc.support.GeneratedKeyHolder
-import org.springframework.jdbc.core.namedparam.SqlParameterSource
-import scala.util.control.NonFatal
 
 class PersistedClassDao(dataSource: DataSource) {
 
@@ -69,7 +67,8 @@ class PersistedClassDao(dataSource: DataSource) {
       )
       val sql = s"insert into ${PF.Table} (${pfCols.mkString(",")}) values (${pfCols.map(":" + _).mkString(",")})"
 
-      // we work in-memory, so we expect no performance gain from batch operaton for now
+      // TODO: add batch processing
+      // we work in-memory, so we expect no performance gain from batch operation for now
       persistedClass.fields.foreach { field =>
         val paramSource = new MapSqlParameterSource()
         paramSource.addValue(PF.HolderId, persistedClassId)
@@ -193,34 +192,44 @@ class PersistedClassDao(dataSource: DataSource) {
       queryCriterias ::= s"${fName}.${PF.TypeName} = :${fName}TypeName"
       queryParams.addValue(fName + "TypeName", field.typeName.name)
 
-      // match string value
-      field.valueString match {
-        case Some(v) =>
-          queryCriterias ::= s"${fName}.${PF.ValueString} = :${fName}ValueString"
-          queryParams.addValue(fName + "ValueString", v)
+      // We only match value fields if they belong to the field type
+      field.typeName match {
+        case TypeName.String =>
+          // match string value
+          field.valueString match {
+            case Some(v) =>
+              queryCriterias ::= s"${fName}.${PF.ValueString} = :${fName}ValueString"
+              queryParams.addValue(fName + "ValueString", v)
 
-        case None =>
-          queryCriterias ::= s"${fName}.${PF.ValueString} is null"
-      }
+            case None =>
+              queryCriterias ::= s"${fName}.${PF.ValueString} is null"
+          }
 
-      // match long value
-      field.valueLong match {
-        case Some(v) =>
-          queryCriterias ::= s"${fName}.${PF.ValueLong} = :${fName}ValueLong"
-          queryParams.addValue(fName + "ValueLong", v.longValue())
+        case TypeName.Boolean | TypeName.Long | TypeName.Int | TypeName.Byte =>
+          // match long value
+          field.valueLong match {
+            case Some(v) =>
+              queryCriterias ::= s"${fName}.${PF.ValueLong} = :${fName}ValueLong"
+              queryParams.addValue(fName + "ValueLong", v.longValue())
 
-        case None =>
-          queryCriterias ::= s"${fName}.${PF.ValueLong} is null"
-      }
+            case None =>
+              queryCriterias ::= s"${fName}.${PF.ValueLong} is null"
+          }
 
-      // match double value
-      field.valueDouble match {
-        case Some(v) =>
-          queryCriterias ::= s"${fName}.${PF.ValueDouble} = :${fName}ValueDouble"
-          queryParams.addValue(fName + "ValueDouble", v.doubleValue())
+        case TypeName.Double | TypeName.Float =>
+          // match double value
+          field.valueDouble match {
+            case Some(v) =>
+              queryCriterias ::= s"${fName}.${PF.ValueDouble} = :${fName}ValueDouble"
+              queryParams.addValue(fName + "ValueDouble", v.doubleValue())
 
-        case None =>
-          queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
+            case None =>
+              queryCriterias ::= s"${fName}.${PF.ValueDouble} is null"
+          }
+
+        case _ =>
+        // Array and Object types do not define values,
+        // but have childs with hold the parent id
       }
 
       field.baseFieldId.foreach { baseFieldId =>
@@ -269,7 +278,7 @@ class PersistedClassDao(dataSource: DataSource) {
       val sql = s"delete from ${PC.Table} where ${PC.Id} in (:deleteIds)"
       val paramMap = new MapSqlParameterSource()
       paramMap.addValue("deleteIds", classIds.asJava)
-      log.debug(s"delete query: ${sql}, params: ${paramMap}")
+      log.debug(s"delete query: ${sql}, params: ${paramMap.getValues()}")
       jdbcTemplate.update(sql, paramMap)
     } else {
       0L

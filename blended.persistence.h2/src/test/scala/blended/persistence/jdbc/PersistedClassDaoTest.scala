@@ -28,8 +28,8 @@ class PersistedClassDaoTest extends LoggingFreeSpec {
       val expectedQuery = "select field.c1 " +
         "\nfrom PersistedClass cls, PersistedField field, PersistedField f1 " +
         "\nwhere field.holderId = cls.id and cls.name = :clsName " +
-        "and f1.holderId = field.holderId and f1.name = :f1Name and f1.typeName = :f1TypeName and " +
-        "f1.valueString is null and f1.valueLong = :f1ValueLong and f1.valueDouble is null"
+        "and f1.holderId = field.holderId and f1.name = :f1Name and f1.typeName = :f1TypeName " +
+        "and f1.valueLong = :f1ValueLong"
 
       assert(query === expectedQuery)
 
@@ -57,10 +57,9 @@ class PersistedClassDaoTest extends LoggingFreeSpec {
       val expectedQuery = "select field.c1, field.id " +
         "\nfrom PersistedClass cls, PersistedField field, PersistedField f1, PersistedField f2 " +
         "\nwhere field.holderId = cls.id and cls.name = :clsName " +
-        "and f1.holderId = field.holderId and f1.name = :f1Name and f1.typeName = :f1TypeName and " +
-        "f1.valueString is null and f1.valueLong is null and f1.valueDouble is null " +
+        "and f1.holderId = field.holderId and f1.name = :f1Name and f1.typeName = :f1TypeName " +
         "and f2.holderId = field.holderId and f2.name = :f2Name and f2.typeName = :f2TypeName " +
-        "and f2.valueString = :f2ValueString and f2.valueLong is null and f2.valueDouble is null " +
+        "and f2.valueString = :f2ValueString " +
         "and f2.baseFieldId = f1.fieldId"
 
       assert(query === expectedQuery)
