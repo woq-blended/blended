@@ -141,16 +141,14 @@ trait TestData {
   } yield Profile(name, version, overlays)
   implicit def arbProfile = Arbitrary(profiles)
 
-
-
-  val containerInfos: Gen[ContainerInfo] = for {
+  val containerInfos = for {
     containerId <- arbitrary[String]
     properties <- arbitrary[Map[String, String]]
     serviceInfos <- arbitrary[List[ServiceInfo]]
     profiles <- arbitrary[List[Profile]]
     timestamp <- arbitrary[ju.Date]
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestamp.getTime())
-  implicit def arbContainerInfo: Arbitrary[ContainerInfo] = Arbitrary(containerInfos)
+  implicit def arbContainerInfo = Arbitrary(containerInfos)
 
   val remoteContainerStates = for {
     containerInfo <- arbitrary[ContainerInfo]

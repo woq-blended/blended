@@ -6,7 +6,6 @@ import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
 import org.scalactic.anyvals.PosInt
 import org.scalatest.prop.PropertyChecks
@@ -22,12 +21,9 @@ class MapperSpec extends LoggingFreeSpec with PropertyChecks {
       workers = PosInt.from(Runtime.getRuntime().availableProcessors()).get
     )
 
-    val log = Logger[this.type]
-
     def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef], unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in {
         forAll { d: T =>
-          //          log.info(s"Mapping [${d}]")
           assert(unmap(map(d)) === Success(d))
         }
       }
