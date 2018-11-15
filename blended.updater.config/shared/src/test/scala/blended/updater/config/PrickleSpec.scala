@@ -1,10 +1,16 @@
 package blended.updater.config
 
+import scala.reflect.{ClassTag, classTag}
+import scala.util.Success
+
 import blended.updater.config.json.PrickleProtocol._
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalacheck.Arbitrary
+import org.scalactic.anyvals.PosInt
+import org.scalatest.prop.PropertyChecks
+import org.scalatest.{FreeSpec, Matchers}
 import prickle._
 
-class PrickleSpec extends FreeSpec with Matchers {
+class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
   "Prickle real world test cases" - {
     "1. deserialize a container info" in {
@@ -196,9 +202,46 @@ class PrickleSpec extends FreeSpec with Matchers {
 
       val state2 = Unpickle[RemoteContainerState].fromString(json).get
 
-      state2 should be (state)
+      state2 should be(state)
     }
 
+  }
+
+  "Prickle maps and unmaps to identity" - {
+
+    import TestData._
+
+    implicit val generatorDrivenConfig = PropertyCheckConfiguration(
+      workers = PosInt.from(Runtime.getRuntime().availableProcessors()).get
+    )
+
+    def testMapping[T: ClassTag](implicit
+      arb: Arbitrary[T],
+      u: Unpickler[T],
+      p: Pickler[T]): Unit = {
+      classTag[T].runtimeClass.getSimpleName in {
+        forAll { d: T =>
+          assert(Unpickle[T].fromString(Pickle.intoString(d)) === Success(d))
+        }
+      }
+    }
+
+    testMapping[Artifact]
+    testMapping[BundleConfig]
+    testMapping[FeatureRef]
+    testMapping[FeatureConfig]
+    testMapping[OverlayConfig]
+    testMapping[RuntimeConfig]
+    testMapping[ServiceInfo]
+    testMapping[UpdateAction]
+    testMapping[GeneratedConfig]
+    testMapping[Profile]
+    testMapping[OverlayRef]
+    testMapping[OverlaySet]
+
+    // FIXME: those 2 tests never return
+    //    testMapping(mapContainerInfo, unmapContainerInfo)
+    //    testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
 }
