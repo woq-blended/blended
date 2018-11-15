@@ -1,14 +1,13 @@
 package blended.persistence.jdbc
 
-import java.{ lang => jl, util => ju }
 import java.io.File
+import java.{lang => jl, util => ju}
 
 import scala.collection.JavaConverters._
 
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
-import org.scalactic.source.Position.apply
 import org.scalatest.Matchers
 import org.springframework.transaction.PlatformTransactionManager
 
@@ -174,6 +173,49 @@ class PersistenceServiceJdbcTest
         assert(loaded.size === 1)
         assert(loaded(0).asScala("string") === longString)
       }
+    }
+
+    "example data 1" in {
+
+      val example1 = Map(
+        "containerId" -> "1",
+        "outstandingActions" -> List(
+          Map(
+          "kind" -> "AddRuntimeConfig",
+          "runtimeConfig" -> Map(
+            "resolvedFeatures" -> List().asJava,
+            "startLevel" -> 10,
+            "name" -> "rc",
+            "systemProperties" -> Map().asJava,
+            "bundles" -> List().asJava,
+            "frameworkProperties" -> Map().asJava,
+            "features" -> List().asJava,
+            "defaultStartLevel" -> 10,
+            "version" -> "1",
+            "properties" -> Map().asJava,
+            "resources" -> List().asJava
+          ).asJava
+        ).asJava,
+          Map(
+          "kind" -> "AddOverlayConfig",
+          "overlayConfig" -> Map(
+            "name" -> "oc",
+            "version" -> "1",
+            "generatedConfigs" -> List().asJava,
+            "properties" -> Map().asJava
+          ).asJava
+        ).asJava
+        ).asJava,
+        "profiles" -> List().asJava,
+        "syncTimeStamp" -> null
+      ).asJava
+
+      withTestPersistenceService() { (srv, txMgr) =>
+        val res1 = srv.persist("C1", example1)
+        assert(res1 === example1)
+        assert(srv.findByExample("C1", Map("containerId" -> "1").asJava) === List(example1))
+      }
+
     }
 
   }
