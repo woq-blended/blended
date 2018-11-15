@@ -99,7 +99,9 @@ class RunnableDispatcher(
   )(bs)
 
   def bridgeSource(
-    provider : BridgeProviderConfig
+    internalProvider : BridgeProviderConfig,
+    provider : BridgeProviderConfig,
+    logger : Logger
   ) : Source[FlowEnvelope, NotUsed] = {
 
     // todo : stick into config
@@ -111,7 +113,7 @@ class RunnableDispatcher(
       jmsDestination = if (provider.internal) {
         Some(provider.inbound)
       } else {
-        val dest = s"${provider.inbound.name}.${provider.vendor}.${provider.provider}"
+        val dest = s"${internalProvider.inbound.name}.${provider.vendor}.${provider.provider}"
         Some(JmsDestination.create(dest).get)
       }
     )
@@ -119,13 +121,16 @@ class RunnableDispatcher(
     RestartableJmsSource(
       name = settings.jmsDestination.get.asString,
       settings = settings,
-      log = bs.streamLogger
+      log = logger
     )
   }
 
   def start() : Unit = {
 
     try {
+      // Get the internal provider
+      val internalProvider = registry.internalProvider.get
+
       // We will create the Transaction Manager
       transMgr = Some(system.actorOf(FlowTransactionManager.props()))
 
@@ -139,12 +144,15 @@ class RunnableDispatcher(
       // Create one dispatcher for each configured provider
       registry.allProvider.foreach { provider =>
 
+        // Create a specific logger for each Dispatcher instance
+        val dispLogger = Logger(bs.streamLogger.name + "." + provider.vendor + "." + provider.provider)
+
         // Connect the consumer to a dispatcher
-        val source = bridgeSource(provider).via(dispatcher)
+        val source = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
 
         // Prepare and start the dispatcher
         val streamCfg = StreamControllerConfig(
-          name = bs.streamLogger.name + "." + provider.vendor + provider.provider,
+          name = dispLogger.name,
           source = source.via(transactionSend())
         )
 

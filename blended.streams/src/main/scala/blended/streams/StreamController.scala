@@ -43,6 +43,8 @@ class StreamController(streamCfg: StreamControllerConfig)(implicit system : Acto
 
   override def receive: Receive = starting
 
+  override def toString: String = s"${getClass().getSimpleName()}($streamCfg)"
+
   private[this] def nextInterval : FiniteDuration = {
 
     val noise = {

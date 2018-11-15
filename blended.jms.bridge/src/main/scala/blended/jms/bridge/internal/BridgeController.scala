@@ -102,19 +102,20 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
 
-  private[this] def createOutboundStream(in: InboundConfig, cf : IdAwareConnectionFactory) : Unit = {
+  private[this] def createOutboundStream(cf : IdAwareConnectionFactory) : Unit = {
 
     val fromDest = JmsDestination.create(
       ctrlCfg.registry.internalProvider.get.outbound.asString + "." + cf.vendor + "." + cf.provider
     ).get
 
+    // TODO: Make listener count configurable
     val outCfg = JmsStreamConfig(
       headerCfg = ctrlCfg.headerCfg,
       fromCf = ctrlCfg.internalCf,
       fromDest = fromDest,
       toCf = cf,
       toDest = None,
-      listener = in.listener,
+      listener = 3,
       selector = None,
       registry = ctrlCfg.registry,
       trackTransAction = TrackTransaction.FromMessage
@@ -145,8 +146,9 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
             log.debug(s"Creating Streams for : [${inbound.mkString(",")}]")
             inbound.foreach { in =>
               createInboundStream(in, cf)
-              createOutboundStream(in, cf)
             }
+
+            createOutboundStream(cf)
           }
 
         case Failure(_) =>
