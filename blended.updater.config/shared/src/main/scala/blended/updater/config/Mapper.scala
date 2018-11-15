@@ -141,11 +141,11 @@ trait Mapper {
       "version" -> o.version
     ).asJava
 
-  def unmapRemoteContainerState(state: java.util.Map[String, _ <: AnyRef]): Try[RemoteContainerState] = Try {
-    val s = state.asScala
+  def unmapRemoteContainerState(map: AnyRef): Try[RemoteContainerState] = Try {
+    val m = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     RemoteContainerState(
-      containerInfo = unmapContainerInfo(s("containerInfo")).get,
-      outstandingUpdateActions = s("outstandingUpdateActions").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(a => unmapUpdateAction(a).get)
+      containerInfo = unmapContainerInfo(m("containerInfo")).get,
+      outstandingUpdateActions = m("outstandingUpdateActions").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(a => unmapUpdateAction(a).get)
     )
   }
 

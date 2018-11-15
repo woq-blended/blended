@@ -1,119 +1,54 @@
 package blended.updater.config
 
-import scala.util.Success
+import java.{util => ju}
 
-import org.scalatest.FreeSpec
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Success, Try}
 
-class MapperSpec extends FreeSpec {
+import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.util.logging.Logger
+import org.scalacheck.Arbitrary
+import org.scalactic.anyvals.PosInt
+import org.scalatest.prop.PropertyChecks
+
+class MapperSpec extends LoggingFreeSpec with PropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 
     import Mapper._
+    import TestData._
 
-    val artifacts = List(
-      Artifact(url = "http://fake/url"),
-      Artifact(url = "http://fake/url/with/md5sum", fileName = "artifact.jar"),
-      Artifact(url = "http://fake/url/with/md5sum", sha1Sum = "123456"),
-      Artifact(url = "http://fake/url/with/md5sum", fileName = "artifact.jar", sha1Sum = "123456")
+    implicit val generatorDrivenConfig = PropertyCheckConfiguration(
+      workers = PosInt.from(Runtime.getRuntime().availableProcessors()).get
     )
 
-    "Artifact" in {
-      artifacts.foreach { artifact =>
-        assert(unmapArtifact(mapArtifact(artifact)) === Success(artifact))
-      }
-    }
+    val log = Logger[this.type]
 
-    val bundleConfigs = artifacts.flatMap(artifact => List(
-      BundleConfig(artifact = artifact, start = false, startLevel = None),
-      BundleConfig(artifact = artifact, start = false, startLevel = Some(5)),
-      BundleConfig(artifact = artifact, start = true, startLevel = None),
-      BundleConfig(artifact = artifact, start = true, startLevel = Some(5))
-    ))
-
-    "BundleConfig" in {
-      bundleConfigs.foreach { bundleConfig =>
-        assert(unmapBundleConfig(mapBundleConfig(bundleConfig)) === Success(bundleConfig))
-      }
-    }
-
-    val featureRefs = List(
-      FeatureRef(name = "name", version = "1.0.0", url = None),
-      FeatureRef(name = "name", version = "1.0.0", url = Some("http://fake/url")),
-    )
-
-    "FeatureRef" in {
-      featureRefs.foreach { featureRef =>
-        assert(unmapFeatureRef(mapFeatureRef(featureRef)) === Success(featureRef))
-      }
-    }
-
-    val featureConfigs = List(None, Some("http://fake.url/")).flatMap { url =>
-      Seq(List(), List(FeatureRef("a", "1"))).flatMap { features =>
-        Seq(List(), bundleConfigs.toList).flatMap { bundles =>
-          Seq(FeatureConfig(name = "name", version = "1.0.0", url = url, bundles = bundles, features = features))
+    def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef], unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
+      classTag[T].runtimeClass.getSimpleName in {
+        forAll { d: T =>
+          //          log.info(s"Mapping [${d}]")
+          assert(unmap(map(d)) === Success(d))
         }
       }
     }
-    "FeatureConfig" in {
-      featureConfigs.foreach { featureConfig =>
-        assert(unmapFeatureConfig(mapFeatureConfig(featureConfig)) === Success(featureConfig))
-      }
-      // TODO: cases with bundles and features
-    }
 
-    val overlayConfigs = Seq(
-      OverlayConfig(
-        name = "oc",
-        version = "1",
-        generatedConfigs = List(),
-        properties = Map()
-      )
-      // TODO: add more
-    )
+    testMapping(mapArtifact, unmapArtifact)
+    testMapping(mapBundleConfig, unmapBundleConfig)
+    testMapping(mapFeatureRef, unmapFeatureRef)
+    testMapping(mapFeatureConfig, unmapFeatureConfig)
+    testMapping(mapOverlayConfig, unmapOverlayConfig)
+    testMapping(mapRuntimeConfig, unmapRuntimeConfig)
+    testMapping(mapServiceInfo, unmapServiceInfo)
+    testMapping(mapUpdateAction, unmapUpdateAction)
+    testMapping(mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(mapProfile, unmapProfile)
+    testMapping(mapOverlayRef, unmapOverlayRef)
+    testMapping(mapOverlaySet, unmapOverlaySet)
 
-    "OverlayConfig" in {
-      overlayConfigs.foreach { oc =>
-        assert(unmapOverlayConfig(mapOverlayConfig(oc)) === Success(oc))
-      }
-    }
-
-    val runtimeConfigs = Seq(
-      RuntimeConfig(
-        name = "rc",
-        version = "1",
-        bundles = bundleConfigs,
-        startLevel = 10,
-        defaultStartLevel = 5,
-        properties = Map("p1" -> "k1"),
-        frameworkProperties = Map("fp1" -> "fk1"),
-        systemProperties = Map("sp1" -> "sk1"),
-        features = featureRefs,
-        resources = List(),
-        resolvedFeatures = List()
-      )
-      // TODO: add more
-    )
-
-    "RuntimeConfig" in {
-      runtimeConfigs.foreach { rc =>
-        assert(unmapRuntimeConfig(mapRuntimeConfig(rc)) === Success(rc))
-      }
-    }
-    "RemoteContainerState" in pending
-    "ServiceInfo" in pending
-    "ContainerInfo" in pending
-
-    "UpdateAction" in {
-      overlayConfigs.foreach { oc =>
-        assert(unmapUpdateAction(mapUpdateAction(AddOverlayConfig(oc))) === Success(AddOverlayConfig(oc)))
-      }
-
-    }
-
-    "GeneratedConfig" in pending
-    "Profile" in pending
-    "OverlaySet" in pending
-    "OverlayRef" in pending
+    // FIXME: those 2 tests never return
+    //    testMapping(mapContainerInfo, unmapContainerInfo)
+    //    testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
 }

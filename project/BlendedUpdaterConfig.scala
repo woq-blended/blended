@@ -43,7 +43,8 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       Dependencies.typesafeConfig,
       Dependencies.scalatest % "test",
       Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test"
+      Dependencies.logbackCore % "test",
+      Dependencies.scalacheck % "test"
     ),
     adaptBundle = b => b.copy(
       exportPackage = Seq(
