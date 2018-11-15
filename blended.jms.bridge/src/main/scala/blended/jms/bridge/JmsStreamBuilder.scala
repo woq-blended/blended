@@ -2,15 +2,15 @@ package blended.jms.bridge
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{FlowShape, Graph, Materializer, SinkShape}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Source, Zip}
+import akka.stream.{FlowShape, Graph, Materializer}
 import blended.jms.bridge.TrackTransaction.TrackTransaction
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction._
 import blended.streams.worklist.WorklistState
+import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.util.Try
@@ -44,7 +44,7 @@ class JmsStreamBuilder(
   private val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
 
   // configure the consumer
-  private val srcSettings = JMSConsumerSettings(cfg.fromCf, cfg.headerCfg)
+  private val srcSettings = JMSConsumerSettings(cfg.fromCf)
     .withDestination(Some(cfg.fromDest))
     .withSessionCount(cfg.listener)
     .withSelector(cfg.selector)
@@ -52,12 +52,14 @@ class JmsStreamBuilder(
   // How we resolve the target destination
   private val destResolver = cfg.toDest match {
     case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
-    case None => s : JmsProducerSettings => new MessageDestinationResolver(s)
+    case None => s : JmsProducerSettings => new MessageDestinationResolver(
+      headerConfig = cfg.headerCfg,
+      settings = s
+    )
   }
 
   private val toSettings = JmsProducerSettings(
-    connectionFactory = cfg.toCf,
-    headerConfig = cfg.headerCfg
+    connectionFactory = cfg.toCf
   )
     .withDestination(cfg.toDest)
     .withDestinationResolver(destResolver)
@@ -102,7 +104,6 @@ class JmsStreamBuilder(
       import GraphDSL.Implicits._
 
       val settings = JmsProducerSettings(
-        headerConfig = cfg.headerCfg,
         connectionFactory = internalCf,
         deliveryMode = JmsDeliveryMode.Persistent,
         jmsDestination = Some(eventDest)
@@ -200,7 +201,10 @@ class JmsStreamBuilder(
     }
 
     RestartableJmsSource(
-      name = streamId, settings = srcSettings, log = bridgeLogger
+      name = streamId,
+      settings = srcSettings,
+      headerConfig = cfg.headerCfg,
+      log = bridgeLogger
     )
     .via(Flow.fromGraph(g))
     .via(jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = bridgeLogger))

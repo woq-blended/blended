@@ -11,6 +11,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import akka.pattern.ask
 
+@Deprecated
 object MockAssertion {
 
   def checkAssertions(mock: ActorRef, assertions: MockAssertion*)(implicit timeout: Timeout) : List[Throwable] = {
@@ -19,6 +20,7 @@ object MockAssertion {
   }
 }
 
+@Deprecated
 trait MockAssertion {
   def f : List[CamelMessage] => Try[String]
 }

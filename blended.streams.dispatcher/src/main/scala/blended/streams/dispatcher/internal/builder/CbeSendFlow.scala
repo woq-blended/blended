@@ -35,7 +35,6 @@ class CbeSendFlow(
     )
 
     val sinkSettings = JmsProducerSettings(
-      headerConfig = headerConfig,
       connectionFactory = internalCf,
       jmsDestination = Some(config.get.cbes),
       deliveryMode = JmsDeliveryMode.Persistent,

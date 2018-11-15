@@ -83,7 +83,6 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
       val switch = sendMessages(
-        headerCfg = ctxt.bs.headerConfig,
         cf = sonic,
         dest = JmsDestination.create("sonic.data.in").get,
         log = Logger(loggerName),

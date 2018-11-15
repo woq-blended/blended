@@ -105,7 +105,7 @@ class BridgeSpec extends SimplePojoContainerSpec
 
         system.actorOf(StreamController.props(streamCfg))
 
-        val switch = sendMessages(ctrlCfg.headerCfg, external, JmsQueue("sampleIn"), log, msgs:_*)
+        val switch = sendMessages(external, JmsQueue("sampleIn"), log, msgs:_*)
 
         1.to(msgCount).map { i =>
           val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)

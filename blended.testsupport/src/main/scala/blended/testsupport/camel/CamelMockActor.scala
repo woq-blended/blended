@@ -12,6 +12,7 @@ import org.apache.camel.{Exchange, Processor}
 import scala.collection.convert.Wrappers.JMapWrapper
 import scala.concurrent.duration._
 
+@Deprecated
 object CamelMockActor {
 
   val counter : AtomicInteger = new AtomicInteger(0)

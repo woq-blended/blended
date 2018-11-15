@@ -28,7 +28,6 @@ class TransactionOutbound(
   private [builder] val jmsSource : Try[Source[FlowEnvelope, NotUsed]] = Try {
     val srcSettings = JMSConsumerSettings(
       connectionFactory = internalCf,
-      headerConfig = headerConfig,
     )
       .withSessionCount(3)
       .withDestination(Some(config.get.transactions))
@@ -37,6 +36,7 @@ class TransactionOutbound(
     RestartableJmsSource(
       name = "transactionOutbound",
       settings = srcSettings,
+      headerConfig = headerConfig,
       log = log
     )
   }

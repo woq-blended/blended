@@ -2,21 +2,33 @@ package blended.jms.utils
 
 import java.lang.management.ManagementFactory
 
-import javax.jms.{Connection, ConnectionFactory, JMSException}
-import javax.management.{MBeanInfo, ObjectName}
 import akka.actor.ActorSystem
 import akka.util.Timeout
-import blended.jms.utils.internal._
+import blended.jms.utils.internal.{CheckConnection, _}
+import blended.util.logging.Logger
+import javax.jms.{Connection, ConnectionFactory, JMSException}
+import javax.management.ObjectName
 import org.osgi.framework.BundleContext
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import blended.util.logging.Logger
-import blended.jms.utils.internal.CheckConnection
 
 trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   val clientId : String
-
   override def id : String = super.id + s"($clientId)"
+}
+
+class SimpleIdAwareConnectionFactory(
+  override val vendor : String,
+  override val provider : String,
+  override val clientId : String,
+  cf : ConnectionFactory,
+) extends IdAwareConnectionFactory {
+  override def createConnection(): Connection =
+    cf.createConnection()
+
+  override def createConnection(userName: String, password: String): Connection =
+    cf.createConnection(userName, password)
 }
 
 class BlendedSingleConnectionFactory(
@@ -25,11 +37,11 @@ class BlendedSingleConnectionFactory(
   bundleContext : Option[BundleContext]
 ) extends IdAwareConnectionFactory {
 
-  override val vendor = config.vendor
-  override val provider = config.provider
+  override val vendor : String = config.vendor
+  override val provider : String = config.provider
 
-  private[this] implicit val eCtxt = system.dispatcher
-  private[this] implicit val timeout = Timeout(100.millis)
+  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
+  private[this] implicit val timeout : Timeout = Timeout(100.millis)
   private[this] val log : Logger = Logger[BlendedSingleConnectionFactory]
 
   private[this] val monitorName = s"Monitor-$vendor-$provider"
@@ -37,7 +49,7 @@ class BlendedSingleConnectionFactory(
 
   override val clientId : String = config.clientId
 
-  val holder = new BlendedConnectionHolder(
+  val holder = BlendedConnectionHolder(
     config = config,
     system = system
   )
@@ -57,14 +69,14 @@ class BlendedSingleConnectionFactory(
           try {
             jmxServer.unregisterMBean(objName)
           } catch {
-            case t : Throwable =>
+            case _ : Throwable => // do nothing
           }
         }
 
         try {
           jmxServer.registerMBean(jmxBean, objName)
         } catch {
-          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]")
+          case t : Throwable => log.warn(s"Could not register MBean [${objName.toString}]:[${t.getMessage()}]")
         }
 
         Some(jmxBean)
@@ -92,13 +104,12 @@ class BlendedSingleConnectionFactory(
           case None => throw new Exception(s"Error connecting to [$id].")
         }
       } catch {
-        case e: Exception => {
+        case e: Exception =>
           val msg = s"Error getting Connection Factory [${e.getMessage()}]"
           log.error(msg)
           val jmsEx = new JMSException(msg)
           jmsEx.setLinkedException(e)
           throw jmsEx
-        }
       }
     } else {
       throw new JMSException(s"Connection for provider [$id] is disabled.")

@@ -70,7 +70,6 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
     (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
     sendMessages(
-      headerCfg = ctxt.bs.headerConfig,
       cf = cf,
       dest = JmsQueue("internal.transactions"),
       log = ctxt.bs.streamLogger,

@@ -73,14 +73,10 @@ sealed trait JmsSettings {
 
   // The number of sessions used by the stage using this configuration
   val sessionCount : Int
-
-  // The settings for generated headers
-  val headerConfig : FlowHeaderConfig
 }
 
 final case class JMSConsumerSettings(
   connectionFactory: IdAwareConnectionFactory,
-  headerConfig : FlowHeaderConfig,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
@@ -107,11 +103,10 @@ final case class JMSConsumerSettings(
 
 object JMSConsumerSettings {
   def create(cf: IdAwareConnectionFactory, headerConfig: FlowHeaderConfig) : JMSConsumerSettings =
-    JMSConsumerSettings(cf, headerConfig)
+    JMSConsumerSettings(cf)
 }
 
 final case class JmsProducerSettings(
-  headerConfig : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
@@ -145,12 +140,12 @@ final case class JmsProducerSettings(
   def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
 
   override def toString: String = s"{${getClass().getSimpleName()}(cf=${connectionFactory.id}, connTimeout=$connectionTimeout, dest=${jmsDestination}, " +
-    s"heeaderConfig=$headerConfig, priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
+    s"priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
 
 }
 
 object JmsProducerSettings {
 
   def create(connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
-    JmsProducerSettings(connectionFactory = connectionFactory, headerConfig = headerConfig)
+    JmsProducerSettings(connectionFactory = connectionFactory)
 }

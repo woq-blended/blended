@@ -4,6 +4,7 @@ import blended.jms.bridge.BridgeProviderRegistry
 import blended.jms.utils.JmsDestination
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
+import blended.streams.transaction.FlowHeaderConfig
 import javax.jms.Session
 
 import scala.concurrent.duration._
@@ -13,7 +14,10 @@ class DispatcherDestinationResolver(
   override val settings : JmsProducerSettings,
   registry : BridgeProviderRegistry,
   bs : DispatcherBuilderSupport
-) extends JmsDestinationResolver with JmsEnvelopeHeader {
+) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
+
+  override def headerConfig: FlowHeaderConfig = bs.headerConfig
+
   override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
     val internal = registry.internalProvider.get

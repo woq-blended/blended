@@ -14,7 +14,7 @@ import blended.jms.utils.{ BlendedJMSConnectionConfig, JMSSupport }
 import blended.util.logging.Logger
 import javax.jms._
 
-private [internal] case class PingInfo(
+private[internal] case class PingInfo(
   cfg: BlendedJMSConnectionConfig,
   started : Long,
   pingId : String,
@@ -24,7 +24,8 @@ private [internal] case class PingInfo(
   exception : Option[Throwable]
 )
 
-private [internal] trait PingOperations { this : JMSSupport =>
+//Todo: Migrate to JMS Stream Support
+private[internal] trait PingOperations { this : JMSSupport =>
 
   private val log = Logger[PingOperations]
 
@@ -117,7 +118,7 @@ private [internal] trait PingOperations { this : JMSSupport =>
       case None => PingFailed(new Exception(s"No consumer defined for [${info.cfg.vendor}:${info.cfg.provider}] and pingId [${info.pingId}]"))
       case Some(c) =>
         try {
-          Option(c.receive(100l)) match {
+          Option(c.receive(100L)) match {
             case None => PingPending
             case Some(m) =>
               val id = m.getJMSCorrelationID()
@@ -138,7 +139,7 @@ private [internal] trait PingOperations { this : JMSSupport =>
   }
 }
 
-private [internal] class DefaultPingOperations extends PingOperations with JMSSupport
+private[internal] class DefaultPingOperations extends PingOperations with JMSSupport
 
 object JmsPingPerformer {
   protected val counter : AtomicLong = new AtomicLong(0)

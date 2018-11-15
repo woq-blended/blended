@@ -62,7 +62,6 @@ class FlowTransactionActor(initialState: FlowTransaction) extends RestartableAct
     case e : FlowTransactionEvent =>
       processEvent(sender(), e)
     case State(_) =>
-      log.trace("Sending state to " + sender().path)
       sender() ! state
   }
 
@@ -92,7 +91,6 @@ class FlowTransactionManager() extends Actor {
     val respondTo : ActorRef = sender()
 
     transactionActor(id).map { a =>
-      log.debug(s"Forwarding [$m] to [${a.path}]")
       a.tell(m, respondTo)
       Done
     }.onComplete {

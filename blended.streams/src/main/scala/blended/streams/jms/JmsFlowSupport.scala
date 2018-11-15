@@ -9,6 +9,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
 import MsgProperty.Implicits._
+import blended.streams.transaction.FlowHeaderConfig
 
 case class JmsAcknowledgeHandler(
   jmsMessage : Message,
@@ -51,9 +52,9 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
   import MsgProperty.lift
 
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources
-  val jms2flowMessage : (JmsSettings, Message) => Try[FlowMessage] = { (settings, msg) => Try {
+  val jms2flowMessage : FlowHeaderConfig => JmsSettings => Message => Try[FlowMessage] = headerConfig => settings => msg => Try {
 
-    val prefix = settings.headerConfig.prefix
+    val prefix = headerConfig.prefix
 
     val props: Map[String, MsgProperty[_]] = {
 
@@ -110,7 +111,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
     }
 
     flowMessge
-  }}
+  }
 
 
   val envelope2jms : (JmsProducerSettings, Session, FlowEnvelope) => Try[JmsSendParameter] = (settings, session, flowEnv) =>  Try {

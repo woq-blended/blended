@@ -1,6 +1,5 @@
 package blended.streams.testsupport
 
-import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitch, KillSwitches, Materializer, OverflowStrategy}

@@ -7,6 +7,7 @@ import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message.FlowEnvelope
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 
@@ -15,7 +16,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log: Logger = Logger[JmsAckSourceStage])(implicit system : ActorSystem)
+final class JmsAckSourceStage(
+  name : String,
+  settings: JMSConsumerSettings,
+  headerConfig : FlowHeaderConfig,
+  log: Logger = Logger[JmsAckSourceStage]
+)(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
   sealed trait TimerEvent
@@ -100,11 +106,11 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
             // TODO: Make the receive timeout configurable
             Option(c.receive(100)) match {
               case Some(message) =>
-                val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
+                val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                 log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : $flowMessage")
                 try {
 
-                  val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {
+                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
                     case None =>
                       val newId = UUID.randomUUID().toString()
                       log.debug(s"Created new envelope id [$newId]")
@@ -120,7 +126,7 @@ final class JmsAckSourceStage(name : String, settings: JMSConsumerSettings, log:
                   )
 
                   val envelope = FlowEnvelope(flowMessage, envelopeId)
-                    .withHeader(settings.headerConfig.headerTrans, envelopeId).get
+                    .withHeader(headerConfig.headerTrans, envelopeId).get
                     .withRequiresAcknowledge(true)
                     .withAckHandler(Some(handler))
 

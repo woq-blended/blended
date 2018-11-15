@@ -10,6 +10,7 @@ import blended.util.logging.Logger
 import org.apache.camel.{ CamelContext, Exchange, ExchangePattern, Message }
 import org.apache.camel.impl.DefaultExchange
 
+@Deprecated
 trait CamelTestSupport {
 
   val camelContext : CamelContext

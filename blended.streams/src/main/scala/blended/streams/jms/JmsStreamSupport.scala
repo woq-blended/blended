@@ -21,7 +21,6 @@ trait JmsStreamSupport {
     * open and the test code needs to tear it down eventually.
     */
   def sendMessages(
-    headerCfg : FlowHeaderConfig,
     cf: IdAwareConnectionFactory,
     dest: JmsDestination,
     log: Logger,
@@ -30,7 +29,6 @@ trait JmsStreamSupport {
 
     // Create the Jms producer to send the messages
     val settings: JmsProducerSettings = JmsProducerSettings(
-      headerConfig = headerCfg,
       connectionFactory = cf,
       connectionTimeout = 1.second,
       jmsDestination = Some(dest)
@@ -57,7 +55,11 @@ trait JmsStreamSupport {
       dest.asString,
       RestartableJmsSource(
         name = dest.asString,
-        settings = JMSConsumerSettings(connectionFactory = cf, headerConfig = headerCfg).withSessionCount(2).withDestination(Some(dest))
+        headerConfig = headerCfg,
+        settings =
+          JMSConsumerSettings(connectionFactory = cf)
+            .withSessionCount(2)
+            .withDestination(Some(dest))
       ),
       timeout
     )

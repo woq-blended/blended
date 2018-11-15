@@ -8,13 +8,17 @@ import akka.stream._
 import akka.stream.stage._
 import blended.jms.utils.{JmsConsumerSession, JmsDestination}
 import blended.streams.message._
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 
 import scala.util.{Failure, Success}
 
 class JmsSourceStage(
-  name : String, settings: JMSConsumerSettings, log : Logger = Logger[JmsSourceStage]
+  name : String,
+  settings: JMSConsumerSettings,
+  headerConfig : FlowHeaderConfig,
+  log : Logger = Logger[JmsSourceStage]
 )(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out = Outlet[FlowEnvelope](s"JmsSource($name.out)")
@@ -68,10 +72,10 @@ class JmsSourceStage(
               override def onMessage(message: Message): Unit = {
                 backpressure.acquire()
                 // Use a Default Envelope that simply ignores calls to acknowledge if any
-                val flowMessage = JmsFlowSupport.jms2flowMessage(jmsSettings, message).get
+                val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                 log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
 
-                val envelopeId : String = flowMessage.header[String](settings.headerConfig.headerTrans) match {
+                val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
                   case None =>
                     val newId = UUID.randomUUID().toString()
                     log.debug(s"Created new envelope id [$newId]")
@@ -83,7 +87,7 @@ class JmsSourceStage(
 
                 handleMessage.invoke(
                   FlowEnvelope(
-                    flowMessage.withHeader(settings.headerConfig.headerTrans, envelopeId).get, envelopeId
+                    flowMessage.withHeader(headerConfig.headerTrans, envelopeId).get, envelopeId
                   )
                 )
               }
