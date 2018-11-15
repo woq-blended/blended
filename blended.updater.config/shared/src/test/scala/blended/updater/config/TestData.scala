@@ -16,7 +16,7 @@ trait TestData {
     fileName = Gen.oneOf(Some(fileName), None).sample.flatten,
     sha1Sum = sha1Sum
   )
-  implicit def arbArtifact = Arbitrary(artifacts)
+  implicit def arbArtifact: Arbitrary[Artifact] = Arbitrary(artifacts)
 
   val bundleConfigs = for {
     artifact <- arbitrary[Artifact]
@@ -24,7 +24,7 @@ trait TestData {
     startLevel <- arbitrary[Option[Int]]
   } yield BundleConfig(artifact, start, startLevel)
 
-  implicit def arbBundleConfig = Arbitrary(bundleConfigs)
+  implicit def arbBundleConfig: Arbitrary[BundleConfig] = Arbitrary(bundleConfigs)
 
   val featureRefs = for {
     name <- arbitrary[String]
@@ -44,13 +44,13 @@ trait TestData {
     configFile <- arbitrary[String]
     config <- arbitrary[String]
   } yield GeneratedConfig(configFile, config)
-  implicit def arbGeneratedConfig = Arbitrary(generatedConfigs)
+  implicit def arbGeneratedConfig: Arbitrary[GeneratedConfig] = Arbitrary(generatedConfigs)
 
   val overlayRefs = for {
     name <- arbitrary[String]
     version <- arbitrary[String]
   } yield OverlayRef(name, version)
-  implicit def arbOverlayRef = Arbitrary(overlayRefs)
+  implicit def arbOverlayRef: Arbitrary[OverlayRef] = Arbitrary(overlayRefs)
 
   val overlayConfigs = for {
     name <- arbitrary[String]
@@ -85,7 +85,7 @@ trait TestData {
     resources,
     resolvedFeatures
   )
-  implicit def arbRuntimeConfigs = Arbitrary(runtimeConfigs)
+  implicit def arbRuntimeConfigs: Arbitrary[RuntimeConfig] = Arbitrary(runtimeConfigs)
 
   val addRuntimeConfigs = for {
     runtimeConfig <- arbitrary[RuntimeConfig]
@@ -113,17 +113,17 @@ trait TestData {
     stageProfiles,
     activateProfiles
   )
-  implicit def arbUpdateAction = Arbitrary(updateActions)
+  implicit def arbUpdateAction: Arbitrary[UpdateAction] = Arbitrary(updateActions)
 
   val overlayStates = Gen.oneOf[OverlayState](OverlayState.Active, OverlayState.Valid, OverlayState.Invalid, OverlayState.Pending)
-  implicit def arbOverlayState = Arbitrary(overlayStates)
+  implicit def arbOverlayState: Arbitrary[OverlayState] = Arbitrary(overlayStates)
 
   val overlaySets = for {
     overlays <- arbitrary[List[OverlayRef]]
     state <- arbitrary[OverlayState]
     reason <- arbitrary[Option[String]]
   } yield OverlaySet(overlays, state, reason)
-  implicit def arbOverlaySets = Arbitrary(overlaySets)
+  implicit def arbOverlaySets: Arbitrary[OverlaySet] = Arbitrary(overlaySets)
 
   val serviceInfos = for {
     name <- arbitrary[String]
@@ -132,14 +132,14 @@ trait TestData {
     lifetimeMsec <- arbitrary[Long].filter(_ >= 0)
     props <- arbitrary[Map[String, String]]
   } yield ServiceInfo(name, serviceType, timestamp.getTime(), lifetimeMsec, props)
-  implicit def arbServiceInfo = Arbitrary(serviceInfos)
+  implicit def arbServiceInfo: Arbitrary[ServiceInfo] = Arbitrary(serviceInfos)
 
   val profiles = for {
     name <- arbitrary[String]
     version <- arbitrary[String]
     overlays <- arbitrary[List[OverlaySet]] if !overlays.isEmpty
   } yield Profile(name, version, overlays)
-  implicit def arbProfile = Arbitrary(profiles)
+  implicit def arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
 
   val containerInfos = for {
     containerId <- arbitrary[String]
@@ -148,13 +148,13 @@ trait TestData {
     profiles <- arbitrary[List[Profile]]
     timestamp <- arbitrary[ju.Date]
   } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestamp.getTime())
-  implicit def arbContainerInfo = Arbitrary(containerInfos)
+  implicit def arbContainerInfo: Arbitrary[ContainerInfo] = Arbitrary(containerInfos)
 
   val remoteContainerStates = for {
     containerInfo <- arbitrary[ContainerInfo]
     outstandingUpdateActions <- arbitrary[List[UpdateAction]]
   } yield RemoteContainerState(containerInfo, outstandingUpdateActions)
-  implicit def arbRemoteContainerState = Arbitrary(remoteContainerStates)
+  implicit def arbRemoteContainerState: Arbitrary[RemoteContainerState] = Arbitrary(remoteContainerStates)
 
 }
 
