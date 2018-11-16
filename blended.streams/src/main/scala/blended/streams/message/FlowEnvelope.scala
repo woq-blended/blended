@@ -44,8 +44,8 @@ final case class FlowEnvelope private[message] (
   flowContext : Map[String, Any] = Map.empty,
 ) {
 
-  def header[T](key: String): Option[T] = flowMessage.header[T](key)
-  def headerWithDefault[T](key: String, default : T) : T = flowMessage.headerWithDefault[T](key, default)
+  def header[T](key: String)(implicit m: Manifest[T]): Option[T] = flowMessage.header[T](key)
+  def headerWithDefault[T](key: String, default : T)(implicit m: Manifest[T]) : T = flowMessage.headerWithDefault[T](key, default)
 
   def withHeaders(header: FlowMessageProps) : Try[FlowEnvelope] = Try {
     copy(flowMessage = flowMessage.withHeaders(header).get)

@@ -1,7 +1,6 @@
 package blended.streams.transaction
 
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty, TextFlowMessage}
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
@@ -40,10 +39,10 @@ object FlowHeaderConfig {
 
 case class FlowHeaderConfig(
   prefix : String,
-  headerTrans : String,
-  headerBranch : String,
-  headerState : String,
-  headerTrack : String
+  headerTrans : String = "TransactionId",
+  headerBranch : String = "BranchId",
+  headerState : String = "TransactionState",
+  headerTrack : String = "TrackTransaction"
 )
 
 object FlowTransactionEvent {
@@ -53,10 +52,10 @@ object FlowTransactionEvent {
   val event2envelope : FlowHeaderConfig => FlowTransactionEvent => FlowEnvelope = { cfg => event =>
 
     val basicProps : FlowTransactionEvent => FlowMessageProps = event =>
-      event.properties ++ Map[String, MsgProperty[_]](
+      event.properties ++ FlowMessage.props(
         cfg.headerTrans -> event.transactionId,
         cfg.headerState -> event.state.toString()
-      )
+      ).get
 
     event match {
       case started : FlowTransactionStarted =>
@@ -70,19 +69,20 @@ object FlowTransactionEvent {
       case failed : FlowTransactionFailed =>
         failed.reason match {
           case None => FlowEnvelope(FlowMessage(basicProps(failed)), failed.transactionId)
-          case Some(s) => FlowEnvelope(FlowMessage(s, basicProps(failed)), failed.transactionId)
+          case Some(s) => FlowEnvelope(FlowMessage(s)(basicProps(failed)), failed.transactionId)
         }
 
       case update : FlowTransactionUpdate =>
         val branchIds : String = update.branchIds.mkString(",")
         val state : String = update.state.toString()
         FlowEnvelope(FlowMessage(
-          update.updatedState.toString(),
-          update.properties ++ Map[String, MsgProperty[_]](
+          update.updatedState.toString()
+        )(
+          update.properties ++ FlowMessage.props(
             cfg.headerTrans -> update.transactionId,
             cfg.headerState -> state,
             cfg.headerBranch -> branchIds
-          )
+          ).get
         ), update.transactionId)
     }
   }

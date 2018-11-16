@@ -13,6 +13,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.geronimoJms11Spec,
       Dependencies.levelDbJava,
 
+      Dependencies.scalacheck % "test",
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",
       Dependencies.akkaSlf4j % "test",
@@ -34,9 +35,9 @@ object BlendedStreams extends ProjectFactory {
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
-      Test / testlogDefaultLevel := "DEBUG", 
+      Test / testlogDefaultLevel := "DEBUG",
       Test / testlogLogPackages ++= Map(
-        "App" -> "DEBUG", 
+        "App" -> "DEBUG",
         "spec" -> "TRACE",
         "blended" -> "DEBUG"
       )

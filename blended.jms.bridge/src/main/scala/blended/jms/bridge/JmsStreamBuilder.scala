@@ -88,8 +88,9 @@ class JmsStreamBuilder(
       case TrackTransaction.Off => false
       case TrackTransaction.On => true
       case TrackTransaction.FromMessage =>
-        bridgeLogger.debug("Getting tracking mode from message")
-        env.header[Boolean](cfg.headerCfg.prefix + cfg.headerCfg.headerTrack).getOrElse(false)
+        bridgeLogger.trace(s"Getting tracking mode from message property [${cfg.headerCfg.headerTrack}]")
+        val msgTrack = env.header[Boolean](cfg.headerCfg.headerTrack)
+        msgTrack.getOrElse(false)
     }
 
     bridgeLogger.debug(s"Tracking for envelope [${env.id}] is [$doTrack]")

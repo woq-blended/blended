@@ -25,6 +25,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with Matchers {
 
+  System.setProperty("testName", "header")
   System.setProperty("Country", "cc")
 
   private val log = Logger[HeaderProcessorSpec]
@@ -35,7 +36,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
     "blended.akka" -> new BlendedAkkaActivator()
   )
 
-  private val msg = FlowMessage("Hallo Andreas", FlowMessage.noProps)
+  private val msg = FlowMessage("Hallo Andreas")(FlowMessage.noProps)
   private val src = Source.single(FlowEnvelope(msg))
   private val sink = Sink.seq[FlowEnvelope]
 

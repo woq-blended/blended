@@ -2,16 +2,16 @@ package blended.streams.message
 
 import akka.NotUsed
 import akka.util.ByteString
-import blended.streams.message.FlowMessage.FlowMessageProps
 
 import scala.util.Try
 
-sealed trait MsgProperty[T <: Any] {
+sealed trait MsgProperty[T] {
   def value : T
-  override def toString: String = s"MsgProperty[${value.getClass().getSimpleName()}](${value.toString()})"
+  override def toString: String = s"MsgProperty[${value.getClass().getName()}](${value.toString()})"
 }
 
 case class StringMsgProperty(override val value: String) extends MsgProperty[String]
+
 case class IntMsgProperty(override val value: Int) extends MsgProperty[Int]
 case class LongMsgProperty(override val value: Long) extends MsgProperty[Long]
 case class BooleanMsgProperty(override val value : Boolean) extends MsgProperty[Boolean]
@@ -23,19 +23,6 @@ case class DoubleMsgProperty(override val value: Double) extends MsgProperty[Dou
 object MsgProperty {
 
   import scala.language.implicitConversions
-
-  object Implicits {
-    implicit def stringToProp(s: String) : MsgProperty[String] = StringMsgProperty(s)
-    implicit def intToProp(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
-    implicit def longToProp(l : Long) : MsgProperty[Long] = LongMsgProperty(l)
-    implicit def boolToProp(b : Boolean) : MsgProperty[Boolean] = BooleanMsgProperty(b)
-    implicit def byteToProp(b : Byte) : MsgProperty[Byte] = ByteMsgProperty(b)
-    implicit def shortToProp(s : Short) : MsgProperty[Short] = ShortMsgProperty(s)
-    implicit def floatToProp(f : Float) : MsgProperty[Float] = FloatMsgProperty(f)
-    implicit def doubleToProp(d : Double) : MsgProperty[Double] = DoubleMsgProperty(d)
-
-    implicit def mapToProps[S <: Any](p : Map[String, S]) : Try[FlowMessageProps] = Try { p.mapValues(v => MsgProperty.lift(v).get) }
-  }
 
   def apply(s : String) : MsgProperty[String] = StringMsgProperty(s)
   def apply(i : Int) : MsgProperty[Int] = IntMsgProperty(i)
@@ -49,7 +36,7 @@ object MsgProperty {
   def lift(o : Any) : Try[MsgProperty[_]] = Try {
     o match {
       case s: String => apply(s)
-      case i: Integer => apply(i)
+      case i: java.lang.Integer => apply(i)
       case l: java.lang.Long => apply(l)
       case b: java.lang.Boolean => apply(b)
       case b: java.lang.Byte => apply(b)
@@ -76,16 +63,23 @@ object FlowMessage {
 
   type FlowMessageProps = Map[String, MsgProperty[_]]
 
+  def props(m :(String, Any)*) : Try[FlowMessageProps] = Try {
+    m.map { case (k, v) =>
+      val p : MsgProperty[_] = MsgProperty.lift(v).get
+      k -> p
+    }.toMap
+  }
+
   val noProps : FlowMessageProps = Map.empty[String, MsgProperty[_]]
 
   def apply(props: FlowMessageProps): FlowMessage = BaseFlowMessage(props)
-  def apply(content : String, props : FlowMessageProps) : FlowMessage= TextFlowMessage(content, props)
-  def apply(content: ByteString, props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
-  def apply(content: Array[Byte], props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+  def apply(content : String)(props : FlowMessageProps) : FlowMessage= TextFlowMessage(content, props)
+  def apply(content: ByteString)(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
+  def apply(content: Array[Byte])(props : FlowMessageProps) : FlowMessage = BinaryFlowMessage(content, props)
 
 }
 
-import FlowMessage.FlowMessageProps
+import blended.streams.message.FlowMessage.FlowMessageProps
 
 sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
@@ -94,13 +88,52 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def bodySize() : Int
 
-  def header[T](name : String): Option[T] = header.get(name) match {
-    case Some(v) if v.value.isInstanceOf[T] => Some(v.value.asInstanceOf[T])
-    case Some(_) => None
-    case _ => None
+  def header[T](name : String)(implicit m : Manifest[T]) : Option[T] = {
+
+    def classMatch(v : Any, clazz: Class[_]) : Boolean = {
+
+      val intClasses : Seq[Class[_]] = Seq(classOf[Integer], classOf[Int])
+      val longClasses  : Seq[Class[_]] = Seq(classOf[java.lang.Long], classOf[Long])
+      val shortClasses : Seq[Class[_]] = Seq(classOf[java.lang.Short], classOf[Short])
+      val floatClasses : Seq[Class[_]] = Seq(classOf[java.lang.Float], classOf[Float])
+      val doubleClasses : Seq[Class[_]] = Seq(classOf[java.lang.Double], classOf[Double])
+      val boolClasses : Seq[Class[_]] = Seq(classOf[java.lang.Boolean], classOf[Boolean])
+      val byteClasses : Seq[Class[_]] = Seq(classOf[java.lang.Byte], classOf[Byte])
+
+      val matches : Map[Class[_], Seq[Class[_]]] = Map(
+        classOf[java.lang.Integer] -> intClasses,
+        classOf[Int] -> intClasses,
+        classOf[java.lang.Long] -> longClasses,
+        classOf[Long] -> longClasses,
+        classOf[Short] -> shortClasses,
+        classOf[java.lang.Short] -> shortClasses,
+        classOf[java.lang.Float] -> floatClasses,
+        classOf[Float] -> floatClasses,
+        classOf[java.lang.Double] -> doubleClasses,
+        classOf[Double] -> doubleClasses,
+        classOf[java.lang.Boolean] -> boolClasses,
+        classOf[Boolean] -> boolClasses,
+        classOf[java.lang.Byte] -> byteClasses,
+        classOf[Byte] -> byteClasses
+      )
+
+      if (v.getClass() == clazz) {
+        true
+      } else {
+        matches.get(v.getClass()).exists { clazzes =>
+          clazzes.exists(c => v.getClass().isAssignableFrom(c))
+        }
+      }
+    }
+
+    header.get(name) match {
+      case Some(v) if classMatch(v.value, m.runtimeClass) => Some(v.value.asInstanceOf[T])
+      case Some(_) => None
+      case _ => None
+    }
   }
 
-  def headerWithDefault[T](name: String, default: T) : T = header[T](name) match {
+  def headerWithDefault[T](name: String, default: T)(implicit m : Manifest[T]) : T = header[T](name) match {
     case Some(v) => v
     case None => default
   }

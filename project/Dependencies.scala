@@ -14,6 +14,7 @@ object Dependencies {
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
   val scalatestVersion = "3.0.5"
+  val scalaCheckVersion = "1.14.0"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
   val springVersion = "4.3.11.RELEASE"
@@ -107,6 +108,7 @@ object Dependencies {
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
 
+  val scalacheck = "org.scalacheck" %% "scalacheck" % "1.14.0"
   val scalatest = "org.scalatest" %% "scalatest" % scalatestVersion
   val shapeless = "com.chuusai" %% "shapeless" % "1.2.4"
   val slf4j = "org.slf4j" % "slf4j-api" % slf4jVersion

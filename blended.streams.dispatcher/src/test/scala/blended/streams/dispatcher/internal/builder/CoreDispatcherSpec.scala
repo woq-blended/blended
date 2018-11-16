@@ -1,7 +1,5 @@
 package blended.streams.dispatcher.internal.builder
 
-import java.io.File
-
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
@@ -9,12 +7,10 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Keep, RunnableGraph, Source}
 import blended.jms.utils.JmsQueue
 import blended.streams.StreamFactories
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.worklist.WorklistEvent
-import blended.testsupport.BlendedTestSupport
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -138,8 +134,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
     "be representable as graphviz graph" in {
       withDispatcherConfig { ctxt =>
 
-        import net.mikolak.travesty
-        import travesty.OutputFormat
+
 
         val builder = DispatcherBuilder(
           idSvc = ctxt.idSvc,
@@ -165,8 +160,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     "add all configured default Headers" in {
 
-      val props : FlowMessageProps = Map("ResourceType" -> "SagTest")
-      val good = FlowEnvelope(FlowMessage("Normal", props))
+      val props : FlowMessageProps = FlowMessage.props("ResourceType" -> "SagTest").get
+      val good = FlowEnvelope(FlowMessage("Normal")(props))
 
       withDispatcher(defaultTimeout, good) { (_, result) =>
         result.out should have size 1
@@ -177,7 +172,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     "yield a MissingResourceType exception when the resourcetype is not set in the inbound message" in {
 
-      val msg = FlowEnvelope(FlowMessage("Normal", FlowMessage.noProps))
+      val msg = FlowEnvelope(FlowMessage("Normal")(FlowMessage.noProps))
 
       withDispatcher(defaultTimeout, msg) { (_, result) =>
         result.out should be (empty)
@@ -193,8 +188,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     "yield an IllegalResourceType exception when the resourcetype given in the message is not configured" in {
 
-      val props : FlowMessageProps = Map("ResourceType" -> "Dummy")
-      val msg = FlowEnvelope(FlowMessage("Normal", props))
+      val props : FlowMessageProps = FlowMessage.props("ResourceType" -> "Dummy").get
+      val msg = FlowEnvelope(FlowMessage("Normal")(props))
 
       withDispatcher(defaultTimeout, msg) { (_, result) =>
         result.out should be (empty)
@@ -209,8 +204,8 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     "yield an MissingOutboundConfig  exception when the resourcetype has no outbound blocks configured" in {
 
-      val props : FlowMessageProps = Map("ResourceType" -> "NoOutbound")
-      val msg = FlowEnvelope(FlowMessage("Normal", props))
+      val props : FlowMessageProps = FlowMessage.props("ResourceType" -> "NoOutbound").get
+      val msg = FlowEnvelope(FlowMessage("Normal")(props))
 
       withDispatcher(defaultTimeout, msg) { (_, result) =>
         result.out should be (empty)
@@ -224,7 +219,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
     }
 
     "fanout for all out outbounds" in {
-      val props : FlowMessageProps = Map("ResourceType" -> "FanOut")
+      val props : FlowMessageProps = FlowMessage.props("ResourceType" -> "FanOut").get
 
       withDispatcher(3.seconds, FlowEnvelope(props)) { (ctxt, result) =>
         result.out should have size 2
@@ -235,48 +230,48 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val default = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("default"))
         default should have size 1
 
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           "ResourceType" -> "FanOut",
           ctxt.bs.headerBridgeVendor -> "sagum",
           ctxt.bs.headerBridgeProvider -> "cc_queue",
           ctxt.bs.headerBridgeDest -> JmsQueue("/Qucc/data/out").asString
-        ), default.head.flowMessage.header) should be (empty)
+        ).get, default.head.flowMessage.header) should be (empty)
 
         val other = filterEnvelopes(result.out)(headerFilter(ctxt.bs.headerConfig.headerBranch)("OtherApp"))
         other should have size 1
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           "ResourceType" -> "FanOut",
           ctxt.bs.headerBridgeVendor -> "activemq",
           ctxt.bs.headerBridgeProvider -> "activemq",
           ctxt.bs.headerBridgeDest -> JmsQueue("OtherAppToQueue").asString,
           ctxt.bs.headerTimeToLive -> 14400000L
-        ), other.head.flowMessage.header) should be (empty)
+        ).get, other.head.flowMessage.header) should be (empty)
 
       }
     }
 
     "correctly populate the Cbe headers if CBE is enabled on the resourcetype" in {
 
-      val noCbe: FlowMessageProps = Map("ResourceType" -> "NoCbe")
-      val withCbe : FlowMessageProps = Map("ResourceType" -> "WithCbe")
+      val noCbe: FlowMessageProps = FlowMessage.props("ResourceType" -> "NoCbe").get
+      val withCbe : FlowMessageProps = FlowMessage.props("ResourceType" -> "WithCbe").get
 
       withDispatcher(5.seconds, FlowEnvelope(noCbe), FlowEnvelope(withCbe)) { (ctxt, result) =>
         result.out should have size 2
 
         val cbeOut = filterEnvelopes(result.out)(headerExistsFilter(ctxt.bs.headerEventVendor))
         cbeOut should have size 1
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           ctxt.bs.headerCbeEnabled -> true,
           ctxt.bs.headerEventVendor -> "sonic75",
           ctxt.bs.headerEventProvider -> "central",
           ctxt.bs.headerEventDest -> "queue:cc.global.evnt.out"
-        ), cbeOut.head.flowMessage.header) should be (empty)
+        ).get, cbeOut.head.flowMessage.header) should be (empty)
 
         val noCbeOut = filterEnvelopes(result.out)(headerMissingFilter(ctxt.bs.headerEventVendor))
         noCbeOut should have size 1
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           ctxt.bs.headerCbeEnabled -> false,
-        ), noCbeOut.head.flowMessage.header) should be (empty)
+        ).get, noCbeOut.head.flowMessage.header) should be (empty)
 
         result.worklist should have size 2
         result.error should be (empty)
@@ -285,17 +280,17 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
     "evaluate conditional expressions to process outbound header" in {
 
-      val propsInstore: FlowMessageProps = Map(
+      val propsInstore: FlowMessageProps = FlowMessage.props(
         "ResourceType" -> "Condition",
         "DestinationFileName" -> "TestFile",
         "InStoreCommunication" -> "1"
-      )
+      ).get
 
-      val propsCentral: FlowMessageProps = Map(
+      val propsCentral: FlowMessageProps = FlowMessage.props(
         "ResourceType" -> "Condition",
         "DestinationFileName" -> "TestFile",
         "InStoreCommunication" -> "0"
-      )
+      ).get
 
       withDispatcher(5.seconds, FlowEnvelope(propsInstore), FlowEnvelope(propsCentral)) { (ctxt, result) =>
         result.worklist should have size 2
@@ -307,16 +302,16 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
         val central = filterEnvelopes(result.out)(headerFilter("InStoreCommunication")("0"))
 
         instore should have size 1
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           "Description" -> "SalesDataFromScale",
           "DestinationName" -> "TestFile",
           ctxt.bs.headerEventVendor -> "sonic75",
           ctxt.bs.headerEventProvider -> "central",
           ctxt.bs.headerEventDest -> "queue:cc.sib.global.data.out"
-        ), instore.head.flowMessage.header)
+        ).get, instore.head.flowMessage.header)
 
         central should have size 1
-        verifyHeader(Map(
+        verifyHeader(FlowMessage.props(
           "Description" -> "SalesDataFromScale",
           "DestinationName" -> "TestFile",
           "Filename" -> "TestFile",
@@ -324,7 +319,7 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
           ctxt.bs.headerEventVendor -> "activemq",
           ctxt.bs.headerEventProvider -> "activemq",
           ctxt.bs.headerEventDest -> "ClientToQ"
-        ), central.head.flowMessage.header)
+        ).get, central.head.flowMessage.header)
 
       }
     }

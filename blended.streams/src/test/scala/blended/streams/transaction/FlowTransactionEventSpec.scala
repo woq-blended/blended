@@ -4,7 +4,6 @@ import akka.actor.ActorSystem
 import akka.serialization.SerializationExtension
 import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
-import blended.streams.message.MsgProperty.Implicits._
 import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -37,10 +36,10 @@ class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
 
       val started = FlowTransactionStarted(
         transactionId = "started",
-        properties = Map(
+        properties = FlowMessage.props(
           "foo" -> "bar",
           "count" -> 7
-        )
+        ).get
       )
 
       val startedTrans = envelope2event(cfg)(event2envelope(cfg)(started)).get

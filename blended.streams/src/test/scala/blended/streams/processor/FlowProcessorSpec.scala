@@ -6,9 +6,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
 import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.message.FlowMessage.FlowMessageProps
-import blended.streams.message.MsgProperty.Implicits._
-import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
@@ -26,8 +25,8 @@ class FlowProcessorSpec extends TestKit(ActorSystem("FlowProcessorSpec"))
   private implicit val materializer = ActorMaterializer()
 
   private val msg : FlowEnvelope = {
-    val header : FlowMessageProps = Map("foo" -> "bar")
-    FlowEnvelope(FlowMessage("Testmessage", header)).withRequiresAcknowledge(true)
+    val header : FlowMessageProps = FlowMessage.props("foo" -> "bar").get
+    FlowEnvelope(FlowMessage("Testmessage")(header)).withRequiresAcknowledge(true)
   }
 
   val same = new FlowProcessor {

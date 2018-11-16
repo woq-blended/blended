@@ -84,9 +84,9 @@ class BridgeSpec extends SimplePojoContainerSpec
         val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
 
         val msgs = 1.to(msgCount).map { i =>
-          FlowMessage(s"Message $i", FlowMessage.noProps)
+          FlowMessage(s"Message $i")(FlowMessage.noProps)
             .withHeader(destHeader, s"sampleOut.$i").get
-            .withHeader(headerCfg.prefix + headerCfg.headerTrack, true).get
+            .withHeader(headerCfg.headerTrack, true).get
         } map { FlowEnvelope.apply }
 
         val cfg : JmsStreamConfig = JmsStreamConfig(

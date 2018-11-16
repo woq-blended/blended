@@ -27,7 +27,6 @@ class FlowTransactionActor(initialState: FlowTransaction) extends RestartableAct
 
   private val log = Logger[FlowTransactionActor]
   private var state : FlowTransaction = initialState
-  private var persisted = false
 
   override def persistenceId: String = initialState.tid
 
@@ -41,7 +40,6 @@ class FlowTransactionActor(initialState: FlowTransaction) extends RestartableAct
     case evt : FlowTransactionEvent =>
       log.trace(s"Replaying FlowTransactionEvent [$evt]")
       updateState(evt)
-      persisted = true
     case SnapshotOffer(_, snapshot : FlowTransaction) => state = snapshot
   }
 

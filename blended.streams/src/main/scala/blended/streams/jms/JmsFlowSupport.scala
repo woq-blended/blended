@@ -1,6 +1,7 @@
 package blended.streams.jms
 
 import blended.jms.utils.{JmsAckSession, JmsDestination}
+import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message._
 import blended.util.logging.Logger
 import javax.jms._
@@ -8,7 +9,6 @@ import javax.jms._
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
-import MsgProperty.Implicits._
 import blended.streams.transaction.FlowHeaderConfig
 
 case class JmsAcknowledgeHandler(
@@ -71,13 +71,13 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         case Some(s) => s
       }
 
-      val headers : Map[String, MsgProperty[_]] = Map(
+      val headers : FlowMessageProps = FlowMessage.props(
         srcVendorHeader(prefix) -> srcVendor,
         srcProviderHeader(prefix) -> srcProvider,
         srcDestHeader(prefix) -> dest,
         priorityHeader(prefix) -> msg.getJMSPriority(),
         deliveryModeHeader(prefix) -> delMode
-      )
+      ).get
 
       val expireHeaderMap : Map[String, MsgProperty[_]] = msg.getJMSExpiration() match {
         case 0L => Map.empty

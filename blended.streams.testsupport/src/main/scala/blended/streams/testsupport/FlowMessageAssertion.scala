@@ -7,20 +7,10 @@ import scala.util.Try
 
 object FlowMessageAssertion {
 
-  def checkAssertions(
-    envelopes : Seq[FlowEnvelope],
-    assertions: FlowMessageAssertion*
-  ) : Unit = {
-
-    val errors =
-      assertions.map(a => a.f(envelopes))
-        .filter(_.isFailure)
-        .map(_.failed.get.getMessage())
-        .mkString("\n")
-
-    if (errors.nonEmpty) {
-      throw new Exception(errors)
-    }
+  def checkAssertions(envelopes : FlowEnvelope*)(assertions: FlowMessageAssertion*) : Seq[String] = {
+    assertions.map(a => a.f(envelopes))
+      .filter(_.isFailure)
+      .map(_.failed.get.getMessage())
   }
 }
 
