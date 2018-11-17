@@ -1,6 +1,7 @@
 package blended.streams.testsupport
 
-import blended.streams.message.FlowEnvelope
+import akka.util.ByteString
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage}
 import blended.util.logging.Logger
 
 import scala.util.Try
@@ -54,13 +55,15 @@ class ExpectedBodies(bodies: Any*) extends FlowMessageAssertion {
   override def f: Seq[FlowEnvelope] => Try[String] = l => {
 
     def compareBodies(matchList: Map[Any, Any]) : Try[String] = Try {
-      matchList.filter { case (expected, actual) =>
-        if (expected.isInstanceOf[Array[Byte]] && actual.isInstanceOf[Array[Byte]]) {
-          !expected.asInstanceOf[Array[Byte]].toList.equals(actual.asInstanceOf[Array[Byte]].toList)
-        } else {
-          !expected.equals(actual)
-        }
-      } match {
+      matchList.filter { case (expected, actual) => actual match {
+        case txtMsg: TextFlowMessage => expected.toString().equals(txtMsg.content)
+        case binMsg: BinaryFlowMessage =>
+          expected match {
+            case byteString: ByteString => byteString.equals(binMsg.content)
+            case byteArr: Array[Byte] => ByteString(byteArr).equals(binMsg.content)
+          }
+        case _ => false
+      }} match {
         case s if s.isEmpty => "MockActor has received the correct bodies"
         case e =>
           val msg = e.map { case (b, a) => s"[$b != $a]"} mkString (",")
@@ -69,7 +72,8 @@ class ExpectedBodies(bodies: Any*) extends FlowMessageAssertion {
     }
 
     if (bodies.length == 1) {
-      compareBodies( l.map( m => (bodies(0), m.flowMessage.body())).toMap )
+      val compMap : Map[Any, Any] = l.map { m => (bodies(0),  m.flowMessage.body()) }.toMap
+      compareBodies( compMap )
     }
     else {
       l.size match {

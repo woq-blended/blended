@@ -7,6 +7,8 @@ object BlendedStreamsTestsupport extends ProjectFactory {
     description = "Some classes to make testing for streams a bit easier",
     osgi = false,
     deps = Seq(
+      Dependencies.scalacheck,
+      Dependencies.scalatest,
       Dependencies.akkaTestkit,
       Dependencies.akkaActor,
       Dependencies.akkaStream,
