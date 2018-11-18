@@ -32,7 +32,7 @@ class SimpleIdAwareConnectionFactory(
 }
 
 class BlendedSingleConnectionFactory(
-  config : BlendedJMSConnectionConfig,
+  config : ConnectionConfig,
   system: ActorSystem,
   bundleContext : Option[BundleContext]
 ) extends IdAwareConnectionFactory {

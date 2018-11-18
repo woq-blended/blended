@@ -7,18 +7,16 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, PoisonPill, Props}
 import blended.akka.OSGIActorConfig
-import blended.jms.utils.{BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, IdAwareConnectionFactory}
+import blended.jms.utils.{BlendedSingleConnectionFactory, IdAwareConnectionFactory}
 import blended.util.logging.Logger
 import domino.capsule.{CapsuleContext, SimpleDynamicCapsuleContext}
 import domino.service_providing.ServiceProviding
 import javax.jms.ConnectionFactory
 import javax.net.ssl.SSLContext
-import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.{BrokerFactory, BrokerService, DefaultBrokerFactory}
 import org.apache.activemq.xbean.XBeanBrokerFactory
 import org.osgi.framework.{BundleContext, ServiceRegistration}
 
-import scala.concurrent.Future
 import scala.language.reflectiveCalls
 import scala.util.control.NonFatal
 
@@ -137,7 +135,7 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     }
   }
 
-  private[this] def registerService(): Unit = {
+  private[this] def registerService(brokerCfg : BrokerConfig): Unit = {
     if (svcReg.isEmpty) {
       new Object with ServiceProviding {
 
@@ -147,20 +145,10 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
 
         val url = s"vm://${brokerCfg.brokerName}?create=false"
 
-        val jmsCfg : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(cfg.idSvc.resolvePropertyString)(
-          vendor = brokerCfg.vendor,
-          provider = brokerCfg.provider,
-          cfg = cfg.config.getConfig("broker").getConfig(brokerCfg.brokerName)
-        )
-
-        val props : Map[String,String] = jmsCfg.properties + ("brokerURL" -> url)
+        val jmsCfg = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
 
         val cf = new BlendedSingleConnectionFactory(
-          jmsCfg.copy(
-            properties = props,
-            cfClassName = Some(classOf[ActiveMQConnectionFactory].getName),
-            clientId = brokerCfg.clientId
-          ),
+          jmsCfg,
           cfg.system,
           Some(cfg.bundleContext)
         )
@@ -217,7 +205,7 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
     case started : BrokerControlActor.BrokerStarted =>
       log.trace(s"Received BrokerStarted Event for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")
       if (started.uuid == uuid) {
-        broker.foreach{ _ => registerService() }
+        broker.foreach{ _ => registerService(brokerCfg) }
       }
     case BrokerControlActor.StopBroker =>
       log.trace(s"Received StopBroker Command for [$brokerCfg] [$jvmId][$uuid-${BrokerControlActor.debugCnt.incrementAndGet()}]")

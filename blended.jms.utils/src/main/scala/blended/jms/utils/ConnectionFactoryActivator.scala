@@ -1,18 +1,18 @@
 package blended.jms.utils
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 
-import scala.collection.JavaConverters._
-import scala.util.control.NonFatal
-
-import blended.akka.{ ActorSystemWatching, OSGIActorConfig }
+import blended.akka.{ActorSystemWatching, OSGIActorConfig}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.jms.ConnectionFactory
 
+import scala.collection.JavaConverters._
+import scala.util.control.NonFatal
+
 object ConnectionFactoryActivator {
 
-  type CFEnabled = OSGIActorConfig => BlendedJMSConnectionConfig => Boolean
+  type CFEnabled = OSGIActorConfig => ConnectionConfig => Boolean
 
   val CONNECTION_URLS = "connectionURLs"
   val DEFAULT_USER = "defaultUser"

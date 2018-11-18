@@ -35,61 +35,61 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  def fromConfig(stringResolver : String => Try[Any])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
+  val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
+  val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
+  val pingEnabled : Config => Boolean = cfg => cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
+  val pingTolerance : Config => Int = cfg => cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
+  val pingInterval : Config => Int = cfg => cfg.getInt("pingInterval", defaultConfig.pingInterval)
+  val pingTimeout : Config => Int = cfg => cfg.getInt("pingTimeout", defaultConfig.pingTimeout)
+  val retryInterval : Config => Int = cfg => cfg.getInt("retryInterval", defaultConfig.retryInterval)
+  val minReconnect : Config => Int = cfg => cfg.getInt("minReconnect", defaultConfig.minReconnect)
+  val maxReconnectTimeout : Config => Int = cfg => cfg.getInt("maxReconnectTimeout", defaultConfig.maxReconnectTimeout)
 
-    val enabled = cfg.getBoolean("enabled", defaultConfig.enabled)
-    val jmxEnabled = cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
-    val pingEnabled = cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
-    val pingTolerance = cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
-    val pingInterval = cfg.getInt("pingInterval", defaultConfig.pingInterval)
-    val pingTimeout = cfg.getInt("pingTimeout", defaultConfig.pingTimeout)
-    val retryInterval = cfg.getInt("retryInterval", defaultConfig.retryInterval)
-    val minReconnect = cfg.getInt("minReconnect", defaultConfig.minReconnect)
-    val maxReconnectTimeout = cfg.getInt("maxReconnectTimeout", defaultConfig.maxReconnectTimeout)
+  val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER)
+  val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD)
+  val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.pingDestination)
 
-    val clientId = if (cfg.hasPath("clientId"))
-      stringResolver(cfg.getString("clientId")) match {
-        case Failure(t) => throw t
-        case Success(id) => id.toString()
-      }
-    else
-      defaultConfig.clientId
-
-    val defaultUser = cfg.getStringOption(DEFAULT_USER)
-    val defaultPasswd = cfg.getStringOption(DEFAULT_PWD)
-    val destination = cfg.getString("destination", defaultConfig.pingDestination)
-
-    val properties : Map[String, String] =
-      ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg,"properties", Option(() => defaultConfig.properties))
+  val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
+    ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
       .mapValues { v =>
-          stringResolver(v) match {
-            case Failure(t) => throw t
-            case Success(s) => s.toString()
-          }
+        stringResolver(v) match {
+          case Failure(t) => throw t
+          case Success(s) => s.toString()
+        }
       }
+  }
 
-    val jndiName = cfg.getStringOption(CF_JNDI_NAME)
-    val useJndi = cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
+  val jndiName : Config => Option[String] = cfg => cfg.getStringOption(CF_JNDI_NAME)
+  val useJndi : Config => Boolean = cfg => cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
+
+  val clientId : (String => Try[Any]) => Config => Try[String] = stringResolver => cfg => Try {
+    cfg.getStringOption("clientId") match {
+      case None => defaultConfig.clientId
+      case Some(s) => stringResolver(s).map(_.toString).get
+    }
+  }
+
+  def fromConfig(stringResolver : String => Try[Any])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
-      enabled = enabled,
+      enabled = enabled(cfg),
       provider = provider,
-      jmxEnabled = jmxEnabled,
-      pingEnabled = pingEnabled,
-      pingTolerance = pingTolerance,
-      pingInterval = pingInterval,
-      pingTimeout = pingTimeout,
-      retryInterval = retryInterval,
-      minReconnect = minReconnect,
-      maxReconnectTimeout = maxReconnectTimeout,
-      clientId = clientId,
-      defaultUser = defaultUser,
-      defaultPassword = defaultPasswd,
-      pingDestination = destination,
-      properties = properties,
-      jndiName = jndiName,
-      useJndi = useJndi,
+      jmxEnabled = jmxEnabled(cfg),
+      pingEnabled = pingEnabled(cfg),
+      pingTolerance = pingTolerance(cfg),
+      pingInterval = pingInterval(cfg),
+      pingTimeout = pingTimeout(cfg),
+      retryInterval = retryInterval(cfg),
+      minReconnect = minReconnect(cfg),
+      maxReconnectTimeout = maxReconnectTimeout(cfg),
+      clientId = clientId(stringResolver)(cfg).get,
+      defaultUser = defaultUser(cfg),
+      defaultPassword = defaultPasswd(cfg),
+      pingDestination = destination(cfg),
+      properties = properties(stringResolver)(cfg).get,
+      jndiName = jndiName(cfg),
+      useJndi = useJndi(cfg),
       cfEnabled = None,
       jmsClassloader = defaultConfig.jmsClassloader,
       ctxtClassName = defaultConfig.ctxtClassName,
@@ -99,26 +99,26 @@ object BlendedJMSConnectionConfig {
 }
 
 case class BlendedJMSConnectionConfig(
-  vendor : String,
-  provider : String,
-  enabled : Boolean,
-  jmxEnabled : Boolean,
-  pingEnabled : Boolean,
-  pingTolerance : Int,
-  pingInterval : Int,
-  pingTimeout : Int,
-  retryInterval : Int,
-  minReconnect : Int,
-  maxReconnectTimeout: Int,
-  clientId : String,
-  defaultUser : Option[String],
-  defaultPassword : Option[String],
-  pingDestination : String,
-  properties : Map[String, String],
-  useJndi : Boolean,
-  jndiName : Option[String] = None,
-  cfEnabled : Option[BlendedJMSConnectionConfig => Boolean],
-  cfClassName: Option[String],
-  ctxtClassName : Option[String],
-  jmsClassloader : Option[ClassLoader]
-)
+  override val vendor : String,
+  override val provider : String,
+  override val enabled : Boolean,
+  override val jmxEnabled : Boolean,
+  override val pingEnabled : Boolean,
+  override val pingTolerance : Int,
+  override val pingInterval : Int,
+  override val pingTimeout : Int,
+  override val retryInterval : Int,
+  override val minReconnect : Int,
+  override val maxReconnectTimeout: Int,
+  override val clientId : String,
+  override val defaultUser : Option[String],
+  override val defaultPassword : Option[String],
+  override val pingDestination : String,
+  override val properties : Map[String, String],
+  override val useJndi : Boolean,
+  override val jndiName : Option[String] = None,
+  override val cfEnabled : Option[ConnectionConfig => Boolean],
+  override val cfClassName: Option[String],
+  override val ctxtClassName : Option[String],
+  override val jmsClassloader : Option[ClassLoader]
+) extends ConnectionConfig

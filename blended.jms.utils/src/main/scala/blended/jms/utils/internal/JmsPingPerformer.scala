@@ -3,19 +3,19 @@ package blended.jms.utils.internal
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicLong
 
-import scala.concurrent.{ ExecutionContext, Future }
-import scala.concurrent.duration._
-import scala.util.Try
-import scala.util.control.NonFatal
-
-import akka.actor.{ Actor, ActorLogging, ActorRef, Cancellable, Props }
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.pattern.pipe
-import blended.jms.utils.{ BlendedJMSConnectionConfig, JMSSupport }
+import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig, JMSSupport}
 import blended.util.logging.Logger
 import javax.jms._
 
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
+import scala.util.control.NonFatal
+
 private[internal] case class PingInfo(
-  cfg: BlendedJMSConnectionConfig,
+  cfg: ConnectionConfig,
   started : Long,
   pingId : String,
   session : Option[Session],
@@ -53,7 +53,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
   def createProducer(s: Session, dest: String) : Try[MessageProducer] =
     Try { s.createProducer(destination(s, dest)) }
 
-  def initialisePing(con: Connection, config: BlendedJMSConnectionConfig, pingId: String)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
+  def initialisePing(con: Connection, config: ConnectionConfig, pingId: String)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
 
     val timeOutMillis = config.pingTimeout.millis.toMillis
 
@@ -144,11 +144,11 @@ private[internal] class DefaultPingOperations extends PingOperations with JMSSup
 object JmsPingPerformer {
   protected val counter : AtomicLong = new AtomicLong(0)
 
-  def props(config: BlendedJMSConnectionConfig, con: Connection, operations : PingOperations) =
+  def props(config: ConnectionConfig, con: Connection, operations : PingOperations) : Props =
     Props(new JmsPingPerformer(config, con, operations))
 }
 
-class JmsPingPerformer(config: BlendedJMSConnectionConfig, con: Connection, operations: PingOperations)
+class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: PingOperations)
   extends Actor with ActorLogging {
 
   implicit val eCtxt = context.system.dispatchers.lookup("FixedPool")

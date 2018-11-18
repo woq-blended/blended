@@ -2,14 +2,13 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Zip}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
+import akka.stream.scaladsl.Flow
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowHeaderConfig, FlowTransaction, FlowTransactionState}
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 
 import scala.util.Try

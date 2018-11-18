@@ -5,25 +5,25 @@ import java.util.Date
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-import javax.jms.Connection
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionConfig, ConnectionException}
+import javax.jms.Connection
 
 import scala.concurrent.duration._
 
 object ConnectionStateManager {
 
   def props(
-    config: BlendedJMSConnectionConfig,
+    config: ConnectionConfig,
     monitor: ActorRef,
     holder: ConnectionHolder
   ) : Props =
     Props(new ConnectionStateManager(config, monitor, holder))
 }
 
-class ConnectionStateManager(config: BlendedJMSConnectionConfig, monitor: ActorRef, holder: ConnectionHolder)
+class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder: ConnectionHolder)
   extends Actor with ActorLogging {
 
   type StateReceive = ConnectionState => Receive

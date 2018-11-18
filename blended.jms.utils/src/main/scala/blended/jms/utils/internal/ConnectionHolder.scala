@@ -1,18 +1,18 @@
 package blended.jms.utils.internal
 
-import java.io.{ PrintWriter, StringWriter }
+import java.io.{PrintWriter, StringWriter}
 import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 
-import scala.util.Try
-import scala.util.control.NonFatal
-
 import akka.actor.ActorSystem
-import blended.jms.utils.{ BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionException }
+import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, ConnectionException}
 import blended.util.ReflectionHelper
 import blended.util.logging.Logger
-import javax.jms.{ Connection, ConnectionFactory, ExceptionListener, JMSException }
-import javax.naming.{ Context, InitialContext }
+import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
+import javax.naming.{Context, InitialContext}
+
+import scala.util.Try
+import scala.util.control.NonFatal
 
 trait ConnectionHolder {
   val vendor : String
@@ -25,7 +25,7 @@ trait ConnectionHolder {
 }
 
 case class BlendedConnectionHolder(
-  config : BlendedJMSConnectionConfig,
+  config : ConnectionConfig,
   system : ActorSystem
 ) extends ConnectionHolder {
 
