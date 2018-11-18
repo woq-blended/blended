@@ -4,6 +4,7 @@ import java.io.File
 
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.jms.utils.{JmsDurableTopic, JmsQueue}
+import blended.streams.processor.HeaderProcessorConfig
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.MockContainerContext
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -65,7 +66,29 @@ class InboundConfigSpec extends LoggingFreeSpec
       inbound.from should be (JmsDurableTopic("de.09999.data.in", "de09999"))
       inbound.provider should be (Some("de_topic"))
       inbound.listener should be (4)
+    }
 
+    "initialize with optional headers correctly" in {
+      val cfgString =
+        """
+          |{
+          |  name = "test"
+          |  vendor = "activemq"
+          |  from = "inQueue"
+          |  header : [
+          |    {
+          |      name : "ResourceType"
+          |      expression : "Test"
+          |    }
+          |  ]
+          |}
+        """.stripMargin
+
+      val cfg = ConfigFactory.parseString(cfgString)
+      val inbound = InboundConfig.create(idSvc, cfg).get
+
+      inbound.header should have size 1
+      inbound.header.head should be (HeaderProcessorConfig("ResourceType", Some("Test"), true))
     }
   }
 }

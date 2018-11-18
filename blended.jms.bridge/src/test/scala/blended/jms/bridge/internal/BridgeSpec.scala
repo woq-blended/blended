@@ -18,7 +18,9 @@ import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, Simple
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
+import org.scalacheck.Gen
 import org.scalatest.Matchers
+import org.scalatest.prop.PropertyChecks
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
@@ -28,7 +30,8 @@ class BridgeSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
   with Matchers
-  with JmsStreamSupport {
+  with JmsStreamSupport
+  with PropertyChecks {
 
   private val log = Logger[BridgeSpec]
 
@@ -40,14 +43,45 @@ class BridgeSpec extends SimplePojoContainerSpec
     "blended.jms.bridge" -> new BridgeActivator()
   )
 
+  implicit val timeout = 5.seconds
+
+  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val materializer : ActorMaterializer = ActorMaterializer()
+  private implicit val ectxt : ExecutionContext = system.dispatcher
+
+  private val (internal, external) = getConnectionFactories(registry)
+  private val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
+
+  private val headerCfg : FlowHeaderConfig =
+    FlowHeaderConfig.create(idSvc.containerContext.getContainerConfig().getConfig("blended.flow.header"))
+
+  private val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
+
+  val ctrlCfg : BridgeControllerConfig = BridgeControllerConfig.create(
+    cfg = idSvc.containerContext.getContainerConfig().getConfig("blended.jms.bridge"),
+    internalCf = internal,
+    idSvc = idSvc
+  )
+
+  val cfg : JmsStreamConfig = JmsStreamConfig(
+    inbound = true,
+    headerCfg = ctrlCfg.headerCfg,
+    fromCf = internal,
+    fromDest = JmsDestination.create(s"bridge.data.in.${external.vendor}.${external.provider}").get,
+    toCf = internal,
+    toDest = Some(JmsDestination.create(s"bridge.data.out.${external.vendor}.${external.provider}").get),
+    listener = 3,
+    selector = None,
+    registry = ctrlCfg.registry,
+    trackTransAction = TrackTransaction.Off,
+    subscriberName = None,
+    header = List.empty
+  )
+
+  private val streamCfg = new JmsStreamBuilder(cfg).streamCfg
+  system.actorOf(StreamController.props(streamCfg))
+
   private def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
-
-  private def withStartedBridge[T](t : FiniteDuration)(f : ActorSystem => BlendedPojoRegistry => Unit) : Unit= {
-    implicit val timeout : FiniteDuration = t
-    val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-
-    f(system)(registry)
-  }
 
   private def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
     val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
@@ -57,87 +91,66 @@ class BridgeSpec extends SimplePojoContainerSpec
 
   "The bridge activator should" - {
 
-    "process in- and outbound messages" in {
+    "process normal in- and outbound messages" in {
 
-      implicit val timeout = 5.seconds
+      val msgCount = 2
 
-      withStartedBridge(timeout) { s => sr =>
+      val msgs : Seq[FlowEnvelope] = 1.to(msgCount).map { i =>
+        FlowMessage(s"Message $i")(FlowMessage.noProps)
+          .withHeader(destHeader, s"sampleOut.$i").get
+          .withHeader(headerCfg.headerTrack, true).get
+      } map { FlowEnvelope.apply }
 
-        implicit val system : ActorSystem = s
-        implicit val materializer : ActorMaterializer = ActorMaterializer()
-        implicit val ectxt : ExecutionContext = system.dispatcher
+      val switch = sendMessages(external, JmsQueue("sampleIn"), log, msgs:_*)
 
-        val (internal, external) = getConnectionFactories(sr)
-        val idSvc = mandatoryService[ContainerIdentifierService](sr)(None)
-
-        val headerCfg : FlowHeaderConfig =
-          FlowHeaderConfig.create(idSvc.containerContext.getContainerConfig().getConfig("blended.flow.header"))
-
-        val ctrlCfg : BridgeControllerConfig = BridgeControllerConfig.create(
-          cfg = idSvc.containerContext.getContainerConfig().getConfig("blended.jms.bridge"),
-          internalCf = internal,
-          idSvc = idSvc
-        )
-
-        val msgCount = 2
-
-        val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
-
-        val msgs = 1.to(msgCount).map { i =>
-          FlowMessage(s"Message $i")(FlowMessage.noProps)
-            .withHeader(destHeader, s"sampleOut.$i").get
-            .withHeader(headerCfg.headerTrack, true).get
-        } map { FlowEnvelope.apply }
-
-        val cfg : JmsStreamConfig = JmsStreamConfig(
-          inbound = true,
-          headerCfg = ctrlCfg.headerCfg,
-          fromCf = internal,
-          fromDest = JmsDestination.create(s"bridge.data.in.${external.vendor}.${external.provider}").get,
-          toCf = internal,
-          toDest = Some(JmsDestination.create(s"bridge.data.out.${external.vendor}.${external.provider}").get),
-          listener = 3,
-          selector = None,
-          registry = ctrlCfg.registry,
-          trackTransAction = TrackTransaction.Off,
-          subscriberName = None,
-          header = List.empty
-        )
-
-        val streamCfg = new JmsStreamBuilder(cfg).streamCfg
-
-        system.actorOf(StreamController.props(streamCfg))
-
-        val switch = sendMessages(external, JmsQueue("sampleIn"), log, msgs:_*)
-
-        1.to(msgCount).map { i =>
-          val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
-          messages.result.map { l =>
-            l should have size(1)
-          }
+      1.to(msgCount).map { i =>
+        val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
+        messages.result.map { l =>
+          l should have size(1)
         }
+      }
 
-        val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"))(1.second, system, materializer)
+      val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"))(1.second, system, materializer)
 
-        val result = collector.result.map { l =>
-          val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
+      val result = collector.result.map { l =>
+        val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
 
-          envelopes should have size(msgCount * 2)
-          val (started, updated) = envelopes.partition(_.isInstanceOf[FlowTransactionStarted])
+        envelopes should have size(msgCount * 2)
+        val (started, updated) = envelopes.partition(_.isInstanceOf[FlowTransactionStarted])
 
-          started should have size msgCount
-          updated should have size msgCount
+        started should have size msgCount
+        updated should have size msgCount
 
-          assert(updated.forall(_.isInstanceOf[FlowTransactionUpdate]))
+        assert(updated.forall(_.isInstanceOf[FlowTransactionUpdate]))
 
-          val sIds = started.map(_.transactionId)
-          val uIds = updated.map(_.transactionId)
+        val sIds = started.map(_.transactionId)
+        val uIds = updated.map(_.transactionId)
 
-          assert(sIds.forall(id => uIds.contains(id)))
+        assert(sIds.forall(id => uIds.contains(id)))
+      }
+
+      Await.result(result, 3.seconds)
+      switch.shutdown()
+    }
+
+    "process messages with optional header configs" in {
+
+      forAll { (desc : String) =>
+        whenever(desc.nonEmpty) {
+          val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
+            destHeader -> "SampleHeaderOut",
+            "Description" -> desc,
+            headerCfg.headerTrack -> false
+          ).get))
+
+          val switch = sendMessages(external, JmsQueue("SampleHeaderIn"), log, env)
+          val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"))(1.second, system, materializer)
+          val result = Await.result(coll.result, 1100.millis)
+          switch.shutdown()
+
+          result should have size 1
+          result.head.header[String]("ResourceType") should be (Some(desc))
         }
-
-        Await.result(result, 3.seconds)
-        switch.shutdown()
       }
     }
   }

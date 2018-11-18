@@ -4,6 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Source, Zip}
 import akka.stream.{FlowShape, Graph, Materializer}
+import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.TrackTransaction.TrackTransaction
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
@@ -35,7 +36,8 @@ case class JmsStreamConfig(
   registry : BridgeProviderRegistry,
   headerCfg : FlowHeaderConfig,
   subscriberName : Option[String],
-  header : List[HeaderProcessorConfig]
+  header : List[HeaderProcessorConfig],
+  idSvc : Option[ContainerIdentifierService] = None
 )
 
 class JmsStreamBuilder(
@@ -212,15 +214,20 @@ class JmsStreamBuilder(
       log = bridgeLogger
     )
 
-    val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
-      name = streamId + "-header",
-      log = bridgeLogger,
-      rules = cfg.header
-    ).flow(bridgeLogger)
+    val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound && cfg.header.nonEmpty) {
 
-    val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound) {
+      bridgeLogger.info(s"Creating Stream with header configs [${cfg.header}]")
+
+      val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
+        name = streamId + "-header",
+        log = bridgeLogger,
+        rules = cfg.header,
+        idSvc = cfg.idSvc
+      ).flow(bridgeLogger)
+
       src.via(header)
     } else {
+      bridgeLogger.info(s"Creating Stream without additional header configs")
       src
     }
 

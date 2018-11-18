@@ -46,7 +46,8 @@ private[bridge] object BridgeControllerConfig {
       internalCf = internalCf,
       registry = registry,
       headerCfg = headerCfg,
-      inbound = inboundList
+      inbound = inboundList,
+      idSvc = idSvc
     )
   }
 }
@@ -55,7 +56,8 @@ private[bridge] case class BridgeControllerConfig(
   internalCf : IdAwareConnectionFactory,
   registry : BridgeProviderRegistry,
   headerCfg : FlowHeaderConfig,
-  inbound : List[InboundConfig]
+  inbound : List[InboundConfig],
+  idSvc : ContainerIdentifierService
 )
 
 object BridgeController{
@@ -97,7 +99,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       headerCfg = ctrlCfg.headerCfg,
       trackTransAction = TrackTransaction.On,
       subscriberName = in.subscriberName,
-      header = in.header
+      header = in.header,
+      idSvc = Some(ctrlCfg.idSvc)
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
