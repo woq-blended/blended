@@ -25,7 +25,7 @@ object DispatcherInbound {
     val defaultHeader = HeaderTransformProcessor(
       name = "defaultHeader",
       log = bs.streamLogger,
-      rules = dispatcherCfg.defaultHeader.map(h => (h.name, h.value, h.overwrite)),
+      rules = dispatcherCfg.defaultHeader,
       idSvc = Some(idSvc)
     ).flow(bs.streamLogger)
 

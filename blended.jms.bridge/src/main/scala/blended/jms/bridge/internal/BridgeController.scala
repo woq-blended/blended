@@ -75,17 +75,18 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
   // This is the map of active streams
   private[this] var streams : Map[String, ActorRef] = Map.empty
 
-  // Register any required internal streams
-  private[this] def createInternalStreams() : Unit = {
-  }
+  private[this] def createInboundStream(in : InboundConfig, cf : IdAwareConnectionFactory, internal: Boolean) : Unit = {
 
-  private[this] def createInboundStream(in : InboundConfig, cf : IdAwareConnectionFactory) : Unit = {
-
-    val toDest = JmsDestination.create(
-      ctrlCfg.registry.internalProvider.get.inbound.asString + "." + cf.vendor + "." + cf.provider
-    ).get
+    val toDest = if (internal) {
+      JmsDestination.create(ctrlCfg.registry.internalProvider.get.inbound.asString).get
+    } else {
+      JmsDestination.create(
+        ctrlCfg.registry.internalProvider.get.inbound.asString + "." + cf.vendor + "." + cf.provider
+      ).get
+    }
 
     val inCfg = JmsStreamConfig(
+      inbound = true,
       fromCf = cf,
       fromDest = in.from,
       toCf = ctrlCfg.internalCf,
@@ -94,7 +95,9 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       selector = in.selector,
       registry = ctrlCfg.registry,
       headerCfg = ctrlCfg.headerCfg,
-      trackTransAction = TrackTransaction.On
+      trackTransAction = TrackTransaction.On,
+      subscriberName = in.subscriberName,
+      header = in.header
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
@@ -102,14 +105,19 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
 
-  private[this] def createOutboundStream(cf : IdAwareConnectionFactory) : Unit = {
+  private[this] def createOutboundStream(cf : IdAwareConnectionFactory, internal : Boolean) : Unit = {
 
-    val fromDest = JmsDestination.create(
-      ctrlCfg.registry.internalProvider.get.outbound.asString + "." + cf.vendor + "." + cf.provider
-    ).get
+    val fromDest = if (internal) {
+      JmsDestination.create(ctrlCfg.registry.internalProvider.get.outbound.asString).get
+    } else {
+      JmsDestination.create(
+        ctrlCfg.registry.internalProvider.get.outbound.asString + "." + cf.vendor + "." + cf.provider
+      ).get
+    }
 
     // TODO: Make listener count configurable
     val outCfg = JmsStreamConfig(
+      inbound = false,
       headerCfg = ctrlCfg.headerCfg,
       fromCf = ctrlCfg.internalCf,
       fromDest = fromDest,
@@ -118,7 +126,9 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       listener = 3,
       selector = None,
       registry = ctrlCfg.registry,
-      trackTransAction = TrackTransaction.FromMessage
+      trackTransAction = TrackTransaction.FromMessage,
+      subscriberName = None,
+      header = List.empty
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(outCfg).streamCfg
@@ -132,25 +142,17 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
 
       ctrlCfg.registry.internalProvider match {
         case Success(p) =>
-          if (cf.id == p.id) {
-            log.debug("Adding internal streams")
-            createInternalStreams()
-          } else {
-            // TODO: Crosscheck provider registry
+          val internal = p.vendor == cf.vendor && p.provider == cf.provider
 
-            // Create inbound streams for all matching inbound configs
-            val inbound : List[InboundConfig] = ctrlCfg.inbound.filter { in =>
-              ProviderFilter(in.vendor, in.provider).matches(cf)
-            }
-
-            log.debug(s"Creating Streams for : [${inbound.mkString(",")}]")
-            inbound.foreach { in =>
-              createInboundStream(in, cf)
-            }
-
-            createOutboundStream(cf)
+          // Create inbound streams for all matching inbound configs
+          val inbound : List[InboundConfig] = ctrlCfg.inbound.filter { in =>
+            ProviderFilter(in.vendor, in.provider).matches(cf)
           }
 
+          log.debug(s"Creating Streams for inbound destinations : [${inbound.mkString(",")}]")
+          inbound.foreach { in => createInboundStream(in, cf, internal) }
+
+          createOutboundStream(cf, internal)
         case Failure(_) =>
           log.warn("No internal JMS provider found in config")
       }

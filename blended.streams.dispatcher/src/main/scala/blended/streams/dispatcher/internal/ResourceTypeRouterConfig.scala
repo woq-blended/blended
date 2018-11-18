@@ -4,6 +4,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.JmsDestination
 import blended.streams.jms.JmsDeliveryMode
+import blended.streams.processor.HeaderProcessorConfig
 import blended.streams.worklist.WorklistItem
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
@@ -50,8 +51,8 @@ object ResourceTypeRouterConfig {
         ).get
       }
 
-    val defaultHeader : List[DefaultHeaderConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map{ cfg =>
-      DefaultHeaderConfig.create(cfg)
+    val defaultHeader : List[HeaderProcessorConfig] = cfg.getConfigList(defaultHeaderPath, List.empty).map{ cfg =>
+      HeaderProcessorConfig.create(cfg)
     }
 
     val handledExceptions : List[String] = cfg.getStringList(handledExceptionsPath, List.empty)
@@ -68,30 +69,12 @@ object ResourceTypeRouterConfig {
   }
 }
 
-object DefaultHeaderConfig {
-
-  def create(cfg : Config) : DefaultHeaderConfig = {
-
-    val name = cfg.getString("name")
-    val expr = cfg.getStringOption("expression")
-    val overwrite = cfg.getBoolean("overwrite", true)
-
-    DefaultHeaderConfig(name, expr, overwrite)
-  }
-}
-
-case class DefaultHeaderConfig(
-  name : String,
-  value : Option[String],
-  overwrite : Boolean
-)
-
 case class ResourceTypeRouterConfig(
   defaultProvider : BridgeProviderConfig,
   eventProvider : BridgeProviderConfig,
   providerRegistry : BridgeProviderRegistry,
   applicationLogHeader : List[String],
-  defaultHeader : List[DefaultHeaderConfig],
+  defaultHeader : List[HeaderProcessorConfig],
   handledExceptions : List[String],
   resourceTypeConfigs : Map[String, ResourceTypeConfig]
 )

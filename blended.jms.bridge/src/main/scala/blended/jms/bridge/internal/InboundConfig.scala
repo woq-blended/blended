@@ -2,6 +2,8 @@ package blended.jms.bridge.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils._
+import blended.streams.jms.JmsDeliveryMode
+import blended.streams.processor.HeaderProcessorConfig
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
@@ -27,10 +29,15 @@ object InboundConfig {
     }
 
     val selector = cfg.getStringOption("selector")
+    val persistent = JmsDeliveryMode.create(cfg.getString("persistent", JmsDeliveryMode.Persistent.asString)).get
 
-    val persistent = cfg.getString("persistent", "passthrough")
+    val subscriberName = cfg.getStringOption("subscriberName")
 
     val listener = cfg.getInt("listener", 2)
+
+    val header : List[HeaderProcessorConfig] = cfg.getConfigList("header", List.empty).map{ cfg =>
+      HeaderProcessorConfig.create(cfg)
+    }
 
     InboundConfig(
       name = name,
@@ -39,7 +46,9 @@ object InboundConfig {
       from = inDest,
       selector = selector,
       persistent = persistent,
-      listener = listener
+      subscriberName = subscriberName,
+      listener = listener,
+      header = header
     )
   }
 }
@@ -50,6 +59,8 @@ case class InboundConfig (
   provider : Option[String],
   from : JmsDestination,
   selector : Option[String],
-  persistent : String,
-  listener : Int
+  persistent : JmsDeliveryMode,
+  subscriberName : Option[String],
+  listener : Int,
+  header : List[HeaderProcessorConfig]
 )

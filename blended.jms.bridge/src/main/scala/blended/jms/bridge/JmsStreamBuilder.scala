@@ -8,6 +8,7 @@ import blended.jms.bridge.TrackTransaction.TrackTransaction
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
+import blended.streams.processor.{HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.worklist.WorklistState
 import blended.streams.{FlowProcessor, StreamControllerConfig}
@@ -23,6 +24,7 @@ object TrackTransaction extends Enumeration {
 }
 
 case class JmsStreamConfig(
+  inbound : Boolean,
   fromCf : IdAwareConnectionFactory,
   fromDest : JmsDestination,
   toCf : IdAwareConnectionFactory,
@@ -31,7 +33,9 @@ case class JmsStreamConfig(
   selector : Option[String] = None,
   trackTransAction : TrackTransaction,
   registry : BridgeProviderRegistry,
-  headerCfg : FlowHeaderConfig
+  headerCfg : FlowHeaderConfig,
+  subscriberName : Option[String],
+  header : List[HeaderProcessorConfig]
 )
 
 class JmsStreamBuilder(
@@ -48,6 +52,7 @@ class JmsStreamBuilder(
     .withDestination(Some(cfg.fromDest))
     .withSessionCount(cfg.listener)
     .withSelector(cfg.selector)
+    .withSubScriberName(cfg.subscriberName)
 
   // How we resolve the target destination
   private val destResolver = cfg.toDest match {
@@ -184,7 +189,6 @@ class JmsStreamBuilder(
     Flow.fromGraph(g)
   }
 
-  // We will stream from the inbound destination to the inbound destination of the internal provider
   private val stream : Source[FlowEnvelope, NotUsed] = {
 
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
@@ -201,14 +205,28 @@ class JmsStreamBuilder(
       FlowShape(trackSplit.in, mergeResult.out)
     }
 
-    RestartableJmsSource(
-      name = streamId,
+    val src : Source[FlowEnvelope, NotUsed] = RestartableJmsSource(
+      name = streamId + "-source",
       settings = srcSettings,
       headerConfig = cfg.headerCfg,
       log = bridgeLogger
     )
-    .via(Flow.fromGraph(g))
-    .via(jmsProducer(name = streamId, settings = toSettings, autoAck = true, log = bridgeLogger))
+
+    val header : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = HeaderTransformProcessor(
+      name = streamId + "-header",
+      log = bridgeLogger,
+      rules = cfg.header
+    ).flow(bridgeLogger)
+
+    val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound) {
+      src.via(header)
+    } else {
+      src
+    }
+
+    jmsSource
+      .via(Flow.fromGraph(g))
+      .via(jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true, log = bridgeLogger))
   }
 
   // The stream will be handled by an actor which that can be used to shutdown the stream

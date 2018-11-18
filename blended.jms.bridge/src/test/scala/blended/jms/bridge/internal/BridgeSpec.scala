@@ -90,6 +90,7 @@ class BridgeSpec extends SimplePojoContainerSpec
         } map { FlowEnvelope.apply }
 
         val cfg : JmsStreamConfig = JmsStreamConfig(
+          inbound = true,
           headerCfg = ctrlCfg.headerCfg,
           fromCf = internal,
           fromDest = JmsDestination.create(s"bridge.data.in.${external.vendor}.${external.provider}").get,
@@ -98,7 +99,9 @@ class BridgeSpec extends SimplePojoContainerSpec
           listener = 3,
           selector = None,
           registry = ctrlCfg.registry,
-          trackTransAction = TrackTransaction.Off
+          trackTransAction = TrackTransaction.Off,
+          subscriberName = None,
+          header = List.empty
         )
 
         val streamCfg = new JmsStreamBuilder(cfg).streamCfg

@@ -40,10 +40,10 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
   private val src = Source.single(FlowEnvelope(msg))
   private val sink = Sink.seq[FlowEnvelope]
 
-  private val flow : (List[(String, Option[String], Boolean)], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
+  private val flow : (List[HeaderProcessorConfig], Option[ContainerIdentifierService]) => RunnableGraph[Future[Seq[FlowEnvelope]]] = (rules, idSvc) =>
     src.via(HeaderTransformProcessor(name = "t", log = log, rules = rules, idSvc = idSvc).flow(log)).toMat(sink)(Keep.right)
 
-  private val result : (List[(String, Option[String], Boolean)], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
+  private val result : (List[HeaderProcessorConfig], Option[ContainerIdentifierService]) => Seq[FlowEnvelope] = { (rules, idSvc) =>
 
     implicit val timeout : FiniteDuration = 3.seconds
     implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
@@ -61,7 +61,7 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
       val ctxt = new StandardEvaluationContext()
 
       val r = result(List(
-        ("foo", Some("bar"), true)
+        HeaderProcessorConfig("foo", Some("bar"), true)
       ), None)
 
       r should have size 1
@@ -76,9 +76,9 @@ class HeaderProcessorSpec extends SimplePojoContainerSpec
       idSvc.resolvePropertyString("$[[Country]]").get should be ("cc")
 
       val r = result(List(
-        ("foo", Some("""$[[Country]]"""), true),
-        ("foo2", Some("""${{#foo}}"""), true),
-        ("test", Some("${{42}}"), true)
+        HeaderProcessorConfig("foo", Some("""$[[Country]]"""), true),
+        HeaderProcessorConfig("foo2", Some("""${{#foo}}"""), true),
+        HeaderProcessorConfig("test", Some("${{42}}"), true)
       ), Some(idSvc))
 
       log.info(r.toString())
