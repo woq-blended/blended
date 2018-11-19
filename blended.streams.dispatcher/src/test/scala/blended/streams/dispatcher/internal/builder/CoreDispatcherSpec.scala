@@ -134,8 +134,6 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
     "be representable as graphviz graph" in {
       withDispatcherConfig { ctxt =>
 
-
-
         val builder = DispatcherBuilder(
           idSvc = ctxt.idSvc,
           dispatcherCfg = ctxt.cfg,

@@ -42,7 +42,7 @@ object FlowProcessor {
 
       env.exception match {
         case None =>
-          log.info(s"Starting Integrationstep [${env.id}]:[$name]")
+          log.debug(s"Starting Integrationstep [${env.id}]:[$name]")
           val start = System.currentTimeMillis()
 
           val result = f(env) match {

@@ -4,7 +4,11 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
 import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
-import blended.streams.message.FlowEnvelope
+import blended.jms.bridge.BridgeProviderConfig
+import blended.jms.utils.{JmsDestination, JmsQueue}
+import blended.streams.dispatcher.internal.builder.DispatcherOutbound.DispatcherTarget
+import blended.streams.jms.JmsFlowSupport
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.worklist.WorklistState.WorklistState
 import blended.streams.worklist.{WorklistEvent, WorklistState}
@@ -93,6 +97,96 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
     "produce a worklist failed event after unsuccessfull completions of the outbound flow" in {
       val bad = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env => env.withException(new Exception("Boom !")) }
       testOutbound(WorklistState.Failed, bad)
+    }
+  }
+
+  "The outbound routing decider should" - {
+
+    val provider = BridgeProviderConfig(
+      vendor = "sonic75",
+      provider = "central",
+      internal = false,
+      inbound = JmsDestination.create("in").get,
+      outbound = JmsDestination.create("out").get,
+      errors = JmsDestination.create("error").get,
+      transactions = JmsDestination.create("trans").get,
+      cbes = JmsDestination.create("cbes").get
+    )
+
+    val prefix : DispatcherExecContext => String = ctxt => ctxt.bs.headerConfig.prefix
+    val srcVendorHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcVendorHeader(prefix(ctxt))
+    val srcProviderHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcProviderHeader(prefix(ctxt))
+    val replyToHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.replyToHeader(prefix(ctxt))
+    val srcDestHeader : DispatcherExecContext => String = ctxt => JmsFlowSupport.srcDestHeader(prefix(ctxt))
+
+    "resolve a replyTo destination if no outbound destination is set in resource type router" in {
+
+      withDispatcherConfig { ctxt =>
+
+        val env : FlowEnvelope = FlowEnvelope(
+          FlowMessage(FlowMessage.noProps)
+        )
+          .withHeader(srcVendorHeader(ctxt), "activemq").get
+          .withHeader(srcProviderHeader(ctxt), "activemq").get
+          .withHeader(replyToHeader(ctxt), "response").get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+          .withContextObject(ctxt.bs.bridgeProviderKey, provider)
+          // This will trigger the replyto routing
+          .withContextObject(ctxt.bs.bridgeDestinationKey, None)
+
+        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
+          dispatcherCfg = ctxt.cfg,
+          bs = ctxt.bs
+        )(env).get
+
+        routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
+      }
+    }
+
+    "resolve a replyTo destination if the outbound destination is set to 'replyTo' in the config" in {
+
+      withDispatcherConfig { ctxt =>
+
+        val env : FlowEnvelope = FlowEnvelope(
+          FlowMessage(FlowMessage.noProps)
+        )
+          .withHeader(srcVendorHeader(ctxt), "activemq").get
+          .withHeader(srcProviderHeader(ctxt), "activemq").get
+          .withHeader(replyToHeader(ctxt), "response").get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+          .withContextObject(ctxt.bs.bridgeProviderKey, provider)
+          // This will trigger the replyto routing
+          .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsDestination.create(JmsFlowSupport.replyToQueueName).get))
+
+        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
+          dispatcherCfg = ctxt.cfg,
+          bs = ctxt.bs
+        )(env).get
+
+        routing should be (DispatcherTarget("activemq", "activemq", JmsDestination.create("response").get))
+      }
+    }
+
+    "resolve to the configured target destination" in {
+      withDispatcherConfig { ctxt =>
+
+        val env : FlowEnvelope = FlowEnvelope(
+          FlowMessage(FlowMessage.noProps)
+        )
+          .withHeader(srcVendorHeader(ctxt), "activemq").get
+          .withHeader(srcProviderHeader(ctxt), "activemq").get
+          .withHeader(replyToHeader(ctxt), "response").get
+          .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
+          .withContextObject(ctxt.bs.bridgeProviderKey, provider)
+          .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsDestination.create("centralDest").get))
+
+        val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
+          dispatcherCfg = ctxt.cfg,
+          bs = ctxt.bs
+        )(env).get
+
+        routing should be (DispatcherTarget(provider.vendor, provider.provider, JmsDestination.create("centralDest").get))
+      }
     }
   }
 }

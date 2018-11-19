@@ -97,7 +97,7 @@ class DispatcherSpec extends DispatcherSpecSupport
       }
     }
 
-    "produce a transaction event for the started worklist and one transaction update for each outbound flow that is routed internal" in {
+    "produce a transaction update event for the started worklist and one transaction update for each outbound flow that is routed internal" in {
       val testMsgs : DispatcherExecContext => Seq[FlowEnvelope] = ctxt => Seq(
         FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "FanOut").get,
       )
