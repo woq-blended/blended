@@ -51,7 +51,7 @@ jobs:
   - stage: Test
     before_script:
     - ./dropbox_uploader.sh list
-    - build-akka.sh
+    - ./build-akka.sh
     script:
     - sbt cleanCoverage unidoc
     after_failure:
