@@ -51,7 +51,7 @@ jobs:
   - stage: Test
     before_script:
     - ./dropbox_uploader.sh list
-    - git clone https://github.com/woq-blended/akka.git akka ; cd akka ; git checkout osgi ; sbt publishM2 ; cd ..
+    - build-akka.sh
     script:
     - sbt cleanCoverage unidoc
     after_failure:
