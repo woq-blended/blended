@@ -4,6 +4,7 @@ import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 
 import blended.updater.config.json.PrickleProtocol._
+import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
 import org.scalactic.anyvals.PosInt
 import org.scalatest.prop.PropertyChecks
@@ -11,6 +12,8 @@ import org.scalatest.{FreeSpec, Matchers}
 import prickle._
 
 class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
+
+  private[this] val log = Logger[this.type]
 
   "Prickle real world test cases" - {
     "1. deserialize a container info" in {
@@ -76,7 +79,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       )
 
       val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L)))
-      println("serialized: " + info)
+      log.info("serialized: " + info)
 
       val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
       containerInfos.size should be(1)
@@ -110,7 +113,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
 
       val json = Pickle.intoString(action: UpdateAction)
-      println("json: " + json)
+      log.info("json: " + json)
 
       val action2: UpdateAction = Unpickle[UpdateAction].fromString(json).get
       action2.isInstanceOf[ActivateProfile] should be(true)
@@ -137,7 +140,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(svcInfo)
-      println("json: " + json)
+      log.info("json: " + json)
 
       val svc = Unpickle[ServiceInfo].fromString(json).get
 
@@ -149,7 +152,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
       val json = Pickle.intoString(List(svcInfo))
-      println("json: " + json)
+      log.info("json: " + json)
 
       val svcList = Unpickle[List[ServiceInfo]].fromString(json).get
 
@@ -164,7 +167,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
       val json = Pickle.intoString(info)
-      println("json: " + json)
+      log.info("json: " + json)
 
       val info2 = Unpickle[ContainerInfo].fromString(json).get
 
@@ -179,7 +182,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val resp = ContainerRegistryResponseOK("response", List.empty)
 
       val json = Pickle.intoString(resp)
-      println("json: " + json)
+      log.info("json: " + json)
 
       val resp2 = Unpickle[ContainerRegistryResponseOK].fromString(json).get
       resp2 should be(resp)
@@ -198,7 +201,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       val state = RemoteContainerState(info, List(action))
 
       val json = Pickle.intoString(state)
-      println("json: " + json)
+      log.info("json: " + json)
 
       val state2 = Unpickle[RemoteContainerState].fromString(json).get
 
@@ -232,8 +235,10 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     testMapping[UpdateAction]
     testMapping[GeneratedConfig]
     testMapping[Profile]
+    testMapping[SingleProfile]
     testMapping[OverlayRef]
     testMapping[OverlaySet]
+    testMapping[RolloutProfile]
 
     // FIXME: those 2 tests never return
     // testMapping(mapContainerInfo, unmapContainerInfo)

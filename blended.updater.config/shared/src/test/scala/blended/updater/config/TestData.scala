@@ -141,6 +141,13 @@ trait TestData {
   } yield Profile(name, version, overlays)
   implicit val arbProfile: Arbitrary[Profile] = Arbitrary(profiles)
 
+  val singleProfiles = for {
+    name <- arbitrary[String]
+    version <- arbitrary[String]
+    overlaySet <- arbitrary[OverlaySet]
+  } yield SingleProfile(name, version, overlaySet)
+  implicit val arbSingleProfile: Arbitrary[SingleProfile] = Arbitrary(singleProfiles)
+
   val containerInfos = for {
     containerId <- arbitrary[String]
     properties <- arbitrary[Map[String, String]]
@@ -155,6 +162,14 @@ trait TestData {
     outstandingUpdateActions <- arbitrary[List[UpdateAction]]
   } yield RemoteContainerState(containerInfo, outstandingUpdateActions)
   implicit val arbRemoteContainerState: Arbitrary[RemoteContainerState] = Arbitrary(remoteContainerStates)
+
+  val rolloutProfiles = for {
+    profileName <- arbitrary[String]
+    profileVersion <- arbitrary[String]
+    overlays <- arbitrary[List[OverlayRef]]
+    containerIds <- arbitrary[List[String]]
+  } yield RolloutProfile(profileName, profileVersion, overlays, containerIds)
+  implicit val arbRolloutProfile: Arbitrary[RolloutProfile] = Arbitrary(rolloutProfiles)
 
 }
 
