@@ -31,7 +31,9 @@ class RemoteUpdater(
   }
 
   def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
-    log.debug(s"About to analyze update properties from container info: ${containerInfo}")
+    log.debug(s"About to analyze update properties from container info for container ID [${containerInfo.containerId}]")
+    log.trace(s"ContainerInfo: [${containerInfo}]")
+
     val timeStamp = System.currentTimeMillis()
     val state = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
@@ -55,8 +57,12 @@ class RemoteUpdater(
                 po.overlays.toSet == oc.toSet))
       case _ => true
     }
-    if(newUpdateActions.size < state.outstandingActions.size) {
-      log.debug(s"Removed some actions: ${state.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
+    val diff = newUpdateActions.size - state.outstandingActions.size
+    if(diff < 0) {
+      log.debug(s"Removed ${-diff} actions: ${state.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
+    }
+    if(diff > 0) {
+      log.debug(s"Added ${diff} actions: ${newUpdateActions.filterNot(a => state.outstandingActions.contains(a))}")
     }
 
     val newState = state.copy(

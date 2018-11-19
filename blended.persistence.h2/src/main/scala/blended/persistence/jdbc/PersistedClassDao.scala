@@ -43,7 +43,7 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   def persist(persistedClass: PersistedClass): PersistedClass = {
-    log.debug(s"About to persist class: ${persistedClass}")
+    log.debug(s"About to persist class [${persistedClass.name}:${persistedClass.id}] with ${persistedClass.fields.size} fields")
 
     // persist the holder class
     val persistedClassId = {
@@ -260,9 +260,9 @@ class PersistedClassDao(dataSource: DataSource) {
     )
     val (sql, queryParams) = createByExampleQuery(pClass, pfCols, fields)
 
-    log.debug(s"find request: ${fields}")
-    log.debug(s"Generated query: ${sql}")
-    log.debug(s"parameter map: ${queryParams.getValues}")
+    log.trace(s"find request: ${fields}")
+    log.trace(s"Generated query: ${sql}")
+    log.trace(s"parameter map: ${queryParams.getValues}")
 
     val allFields = jdbcTemplate.query(sql, queryParams, fieldRowMapper())
     inferPersistedClassesFromFields(pClass, allFields.asScala)
@@ -278,7 +278,7 @@ class PersistedClassDao(dataSource: DataSource) {
       val sql = s"delete from ${PC.Table} where ${PC.Id} in (:deleteIds)"
       val paramMap = new MapSqlParameterSource()
       paramMap.addValue("deleteIds", classIds.asJava)
-      log.debug(s"delete query: ${sql}, params: ${paramMap.getValues()}")
+      log.trace(s"delete query: ${sql}, params: ${paramMap.getValues()}")
       jdbcTemplate.update(sql, paramMap)
     } else {
       0L

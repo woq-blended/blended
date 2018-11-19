@@ -13,6 +13,16 @@ import java.io.File
 import scala.util.Try
 import blended.mgmt.repo.WritableArtifactRepo
 
+/**
+ *
+ * @param updater
+ *   The RemoteUpdater which manages which container should run with which profile.
+ * @param remoteContainerStatePersistor
+ *   Used to persist remote container states,
+ *   so we can remember all last seen container states.
+ * @param mgr
+ * @param version
+ */
 class CollectorServiceImpl(
   updater: RemoteUpdater,
   remoteContainerStatePersistor: RemoteContainerStatePersistor,
@@ -36,9 +46,11 @@ class CollectorServiceImpl(
   private[this] var eventStream: Option[EventStream] = None
 
   private[this] var artifactRepos: Map[String, WritableArtifactRepo] = Map()
+
   def addArtifactRepo(repo: WritableArtifactRepo): Unit = {
     artifactRepos += repo.repoId -> repo
   }
+
   def removeArtifactRepo(repo: WritableArtifactRepo): Unit = {
     artifactRepos = artifactRepos.filterKeys(name => name != repo.repoId)
   }
@@ -48,16 +60,19 @@ class CollectorServiceImpl(
   override def processContainerInfo(info: ContainerInfo): ContainerRegistryResponseOK = {
     log.debug(s"Processing container info: ${info}")
 
-    eventStream.foreach { _.publish(UpdateContainerInfo(info)) }
+    eventStream.foreach {
+      _.publish(UpdateContainerInfo(info))
+    }
 
     // next call has side-effect
     val updated = updater.updateContainerState(info)
-    // this we now have updated outstanding actions
+    // we now have updated outstanding actions
     val actions = updated.outstandingActions
 
     val state = RemoteContainerState(info, actions)
     remoteContainerStatePersistor.updateState(state)
 
+    // ...and send these outstanding actions to the remote container
     ContainerRegistryResponseOK(info.containerId, actions)
   }
 

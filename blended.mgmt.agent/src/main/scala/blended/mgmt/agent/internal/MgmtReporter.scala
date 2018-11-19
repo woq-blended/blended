@@ -17,10 +17,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.ActorMaterializerSettings
 import blended.prickle.akka.http.PrickleSupport
-import blended.updater.config.ContainerInfo
-import blended.updater.config.ContainerRegistryResponseOK
-import blended.updater.config.ProfileInfo
-import blended.updater.config.ServiceInfo
+import blended.updater.config._
 import com.typesafe.config.Config
 import blended.util.logging.Logger
 
@@ -140,8 +137,8 @@ trait MgmtReporter extends Actor with PrickleSupport {
       log.debug(s"Reported [${id}] to management node")
       if (!actions.isEmpty) {
         log.info(s"Received ${actions.size} update actions from management node: ${actions}")
-        actions.foreach { action =>
-          log.debug(s"Publishing event: ${action}")
+        actions.foreach { action: UpdateAction =>
+          log.debug(s"Publishing event to event stream: ${action}")
           context.system.eventStream.publish(action)
         }
       }
