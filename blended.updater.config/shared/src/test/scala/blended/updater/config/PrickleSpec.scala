@@ -211,10 +211,6 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     import TestData._
 
-    implicit val generatorDrivenConfig = PropertyCheckConfiguration(
-      workers = PosInt.from(Runtime.getRuntime().availableProcessors()).get
-    )
-
     def testMapping[T: ClassTag](implicit
       arb: Arbitrary[T],
       u: Unpickler[T],
@@ -240,8 +236,8 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     testMapping[OverlaySet]
 
     // FIXME: those 2 tests never return
-    //    testMapping(mapContainerInfo, unmapContainerInfo)
-    //    testMapping(mapRemoteContainerState, unmapRemoteContainerState)
+    // testMapping(mapContainerInfo, unmapContainerInfo)
+    // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
 }

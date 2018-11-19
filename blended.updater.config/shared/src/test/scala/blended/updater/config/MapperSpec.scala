@@ -17,10 +17,6 @@ class MapperSpec extends LoggingFreeSpec with PropertyChecks {
     import Mapper._
     import TestData._
 
-    implicit val generatorDrivenConfig = PropertyCheckConfiguration(
-      workers = PosInt.from(Runtime.getRuntime().availableProcessors()).get
-    )
-
     def testMapping[T: ClassTag](map: T => ju.Map[String, AnyRef], unmap: AnyRef => Try[T])(implicit arb: Arbitrary[T]): Unit = {
       classTag[T].runtimeClass.getSimpleName in {
         forAll { d: T =>
@@ -43,8 +39,8 @@ class MapperSpec extends LoggingFreeSpec with PropertyChecks {
     testMapping(mapOverlaySet, unmapOverlaySet)
 
     // FIXME: those 2 tests never return
-    //    testMapping(mapContainerInfo, unmapContainerInfo)
-    //    testMapping(mapRemoteContainerState, unmapRemoteContainerState)
+    // testMapping(mapContainerInfo, unmapContainerInfo)
+    // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
 }
