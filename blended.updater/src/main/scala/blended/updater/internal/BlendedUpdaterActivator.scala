@@ -53,7 +53,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
             override def apply(
               newName: String,
               newVersion: String,
-              newOverlays: List[OverlayRef]): Boolean = {
+              newOverlays: Set[OverlayRef]): Boolean = {
               // TODO: Error reporting
               updateEnv match {
                 case UpdateEnv(_, _, Some(lookupFile), _, _, _) =>
@@ -64,7 +64,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
                       val newConfig = profileLookup.copy(
                         profileName = newName,
                         profileVersion = newVersion,
-                        overlays = newOverlays.toSeq
+                        overlays = newOverlays.toSet
                       )
                       log.debug(s"About to update profile lookup file: ${lookupFile} with config: ${newConfig}")
                       ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
@@ -88,7 +88,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
               config = UpdaterConfig.fromConfig(cfg.config),
               launchedProfileDir = updateEnv.launchedProfileDir.orNull,
               launchedProfileId = updateEnv.overlays.map { overlayRefs =>
-                ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion, overlayRefs)
+                ProfileId(updateEnv.launchedProfileName, updateEnv.launchedProfileVersion, overlayRefs.toSet)
               }.orNull
             )
           )

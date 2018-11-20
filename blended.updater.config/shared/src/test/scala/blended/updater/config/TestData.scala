@@ -98,13 +98,13 @@ trait TestData {
   val stageProfiles = for {
     profileName <- arbitrary[String]
     profileVersion <- arbitrary[String]
-    overlays <- arbitrary[List[OverlayRef]]
+    overlays <- arbitrary[Set[OverlayRef]]
   } yield StageProfile(profileName, profileVersion, overlays)
 
   val activateProfiles = for {
     profileName <- arbitrary[String]
     profileVersion <- arbitrary[String]
-    overlays <- arbitrary[List[OverlayRef]]
+    overlays <- arbitrary[Set[OverlayRef]]
   } yield ActivateProfile(profileName, profileVersion, overlays)
 
   val updateActions: Gen[UpdateAction] = Gen.oneOf(
@@ -119,7 +119,7 @@ trait TestData {
   implicit val arbOverlayState: Arbitrary[OverlayState] = Arbitrary(overlayStates)
 
   val overlaySets = for {
-    overlays <- arbitrary[List[OverlayRef]]
+    overlays <- arbitrary[Set[OverlayRef]]
     state <- arbitrary[OverlayState]
     reason <- arbitrary[Option[String]]
   } yield OverlaySet(overlays, state, reason)
@@ -128,10 +128,11 @@ trait TestData {
   val serviceInfos = for {
     name <- arbitrary[String]
     serviceType <- arbitrary[String]
-    timestamp <- arbitrary[ju.Date]
+//    timestamp <- arbitrary[ju.Date]
+    timestampMsec <- Gen.choose(10000, Long.MaxValue)
     lifetimeMsec <- Gen.choose(0, Long.MaxValue) // arbitrary[Long].filter(_ >= 0)
     props <- arbitrary[Map[String, String]]
-  } yield ServiceInfo(name, serviceType, timestamp.getTime(), lifetimeMsec, props)
+  } yield ServiceInfo(name, serviceType, timestampMsec, lifetimeMsec, props)
   implicit val arbServiceInfo: Arbitrary[ServiceInfo] = Arbitrary(serviceInfos)
 
   val profiles = for {
@@ -153,8 +154,9 @@ trait TestData {
     properties <- arbitrary[Map[String, String]]
     serviceInfos <- arbitrary[List[ServiceInfo]]
     profiles <- arbitrary[List[Profile]]
-    timestamp <- arbitrary[ju.Date]
-  } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestamp.getTime())
+//    timestamp <- arbitrary[ju.Date]
+    timestampMsec <- Gen.choose(10000, Long.MaxValue)
+  } yield ContainerInfo(containerId, properties, serviceInfos, profiles, timestampMsec)
   implicit val arbContainerInfo: Arbitrary[ContainerInfo] = Arbitrary(containerInfos)
 
   val remoteContainerStates = for {
@@ -166,7 +168,7 @@ trait TestData {
   val rolloutProfiles = for {
     profileName <- arbitrary[String]
     profileVersion <- arbitrary[String]
-    overlays <- arbitrary[List[OverlayRef]]
+    overlays <- arbitrary[Set[OverlayRef]]
     containerIds <- arbitrary[List[String]]
   } yield RolloutProfile(profileName, profileVersion, overlays, containerIds)
   implicit val arbRolloutProfile: Arbitrary[RolloutProfile] = Arbitrary(rolloutProfiles)

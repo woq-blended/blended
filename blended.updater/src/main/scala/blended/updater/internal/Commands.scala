@@ -40,7 +40,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
 
   def showProfiles(): AnyRef = {
     implicit val timeout = Timeout(5, SECONDS)
-    val activeProfile = env.map(env => ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(List.empty)))
+    val activeProfile = env.map(env => ProfileId(env.launchedProfileName, env.launchedProfileVersion, env.overlays.getOrElse(Set.empty).toSet))
     log.debug(s"acitive profile: ${activeProfile}")
 
     val profiles = Await.result(
@@ -136,7 +136,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
     implicit val timeout = Timeout(1, HOURS)
     val reqId = UUID.randomUUID().toString()
     Await.result(
-      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays)), timeout.duration) match {
+      ask(updater, Updater.StageProfile(reqId, rcName, rcVersion, overlays.toSet)), timeout.duration) match {
         case OperationSucceeded(`reqId`) =>
           "Staged: " + asString
         case OperationFailed(`reqId`, reason) =>
@@ -160,7 +160,7 @@ class Commands(updater: ActorRef, env: Option[UpdateEnv])(implicit val actorSyst
         implicit val timeout = Timeout(5, MINUTES)
         val reqId = UUID.randomUUID().toString()
         Await.result(
-          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays)), timeout.duration) match {
+          ask(updater, Updater.ActivateProfile(reqId, name, version, overlays.toSet)), timeout.duration) match {
             case OperationSucceeded(`reqId`) =>
               "Activated: " + asString
             case OperationFailed(`reqId`, reason) =>

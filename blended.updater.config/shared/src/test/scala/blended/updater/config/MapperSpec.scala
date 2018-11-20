@@ -5,12 +5,11 @@ import java.{util => ju}
 import scala.reflect.{ClassTag, classTag}
 import scala.util.{Success, Try}
 
-import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalacheck.Arbitrary
-import org.scalactic.anyvals.PosInt
+import org.scalatest.FreeSpec
 import org.scalatest.prop.PropertyChecks
 
-class MapperSpec extends LoggingFreeSpec with PropertyChecks {
+class MapperSpec extends FreeSpec with PropertyChecks {
 
   "Mapper maps and unmaps to identity" - {
 

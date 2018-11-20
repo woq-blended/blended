@@ -88,14 +88,14 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
       case Some(rc) =>
         // FIXME: support for overlay
         remoteUpdater.addAction(containerId, AddRuntimeConfig(rc))
-        remoteUpdater.addAction(containerId, StageProfile(profileName, profileVersion, List.empty))
+        remoteUpdater.addAction(containerId, StageProfile(profileName, profileVersion, Set.empty))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${profileName}-${profileVersion}")
     }
   }
 
   def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
     // FIXME: support for overlays
-    remoteUpdater.addAction(containerId, ActivateProfile(profileName, profileVersion, List.empty))
+    remoteUpdater.addAction(containerId, ActivateProfile(profileName, profileVersion, Set.empty))
     println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 

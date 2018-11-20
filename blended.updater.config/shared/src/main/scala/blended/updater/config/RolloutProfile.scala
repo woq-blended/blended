@@ -3,7 +3,7 @@ package blended.updater.config
 case class RolloutProfile(
   profileName: String,
   profileVersion: String,
-  overlays: List[OverlayRef],
+  overlays: Set[OverlayRef],
   containerIds: List[String])
 
 object RolloutProfile {

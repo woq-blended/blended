@@ -1,9 +1,6 @@
 package blended.updater.config
 
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 /**
@@ -173,13 +170,13 @@ trait Mapper {
         ActivateProfile(
           profileName = a("profileName").asInstanceOf[String],
           profileVersion = a("profileVersion").asInstanceOf[String],
-          overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(o => unmapOverlayRef(o).get)
+          overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet
         )
       case UpdateAction.KindStageProfile =>
         StageProfile(
           profileName = a("profileName").asInstanceOf[String],
           profileVersion = a("profileVersion").asInstanceOf[String],
-          overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(o => unmapOverlayRef(o).get)
+          overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet
         )
       case kind => sys.error(s"Unsupported update action kind: ${kind}")
     }
@@ -227,7 +224,7 @@ trait Mapper {
   def unmapOverlaySet(map: AnyRef): Try[OverlaySet] = Try {
     val o = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     OverlaySet(
-      overlays = o("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(o => unmapOverlayRef(o).get),
+      overlays = o("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet,
       state = {
         val s = o("state").asInstanceOf[String]
         OverlayState.fromString(s).getOrElse(throw new RuntimeException("Unsupported overlay state: " + s))

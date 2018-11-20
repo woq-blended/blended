@@ -63,7 +63,7 @@ trait CollectorService {
   /**
    * Find [[OverlayRef]]s, that are not already known by the overlay registry.
    */
-  def findMissingOverlayRef(configs: sci.Seq[OverlayRef]): Option[OverlayRef] =
+  def findMissingOverlayRef(configs: Iterable[OverlayRef]): Option[OverlayRef] =
     if (configs.isEmpty) None
     else {
       val ocs = getOverlayConfigs()

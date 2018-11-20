@@ -18,7 +18,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
   private[this] val log = Logger[this.type]
 
   val todoOverlays = List.empty[OverlayConfig]
-  val todoOverlayRefs = List.empty[OverlayRef]
+  val todoOverlayRefs = Set.empty[OverlayRef]
 
   case class Context(ru: RemoteUpdater, ps: Option[PersistenceService] = None)
 
@@ -127,7 +127,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             val profiles = List(
-              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Valid)))
+              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = Set(), state = OverlayState.Valid)))
             )
             ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
             assert(ctx.ru.getContainerActions("1") === Seq())
@@ -168,7 +168,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             val profiles = List(
-              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = List(), state = OverlayState.Active)))
+              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = Set(), state = OverlayState.Active)))
             )
             ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
             assert(ctx.ru.getContainerActions("1") === Seq())
@@ -209,7 +209,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             val action3 = StageProfile(
               profileName = "rc",
               profileVersion = "1",
-              overlays = List(OverlayRef("oc", "1"))
+              overlays = Set(OverlayRef("oc", "1"))
             )
             log.info(s"Add 3. action: ${action3}")
             ctx.ps.map { p =>

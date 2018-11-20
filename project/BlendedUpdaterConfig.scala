@@ -22,7 +22,8 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
       moduleName := "blended.updater.config",
       libraryDependencies ++= Seq(
         "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
-        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
+        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test",
+        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % "test"
       )
     )
   )

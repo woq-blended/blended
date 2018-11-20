@@ -13,11 +13,18 @@ class RemoteUpdater(
 
   type ContainerId = String
 
+  // TODO: review: isn't this redundant with updateContainerState method?
   def addAction(containerId: ContainerId, action: UpdateAction): Unit = {
+    // Logic:
+    // - find previous state
+    // - add new actions
+    // - calc new state
+    // - persist new state
+
     log.debug(s"About to add action [${action}] for container [${containerId}]")
     val state = containerStatePersistor.findContainerState(containerId).getOrElse(ContainerState(containerId = containerId))
     val actions = state.outstandingActions
-    log.debug(s"Found [${actions.size}] outstanding actions for container [${containerId}]")
+    log.debug(s"Found [${actions.size}] old outstanding actions for container [${containerId}]")
     val newActions =
       if (!actions.exists(_ == action)) {
         actions ++ List(action)
@@ -31,6 +38,11 @@ class RemoteUpdater(
   }
 
   def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
+    // Logic:
+    // - find previous state and extract it's profiles
+    // - analyze outstanding actions (filter those with missing dependencies)
+    // - persist filtered actions as new state
+
     log.debug(s"About to analyze update properties from container info for container ID [${containerInfo.containerId}]")
     log.trace(s"ContainerInfo: [${containerInfo}]")
 

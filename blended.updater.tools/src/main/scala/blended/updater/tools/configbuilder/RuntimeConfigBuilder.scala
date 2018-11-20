@@ -260,10 +260,10 @@ object RuntimeConfigBuilder {
     }
 
     // read given overlays configs, e.g. A-1 and B-2
-    val overlayConfigs = options.overlayFiles.toList.map { f =>
+    val overlayConfigs = options.overlayFiles.map { f =>
       val config = ConfigFactory.parseFile(new File(f))
       OverlayConfigCompanion.read(config).get
-    }
+    }.toSet
 
     if (options.writeOverlaysConfig) {
 

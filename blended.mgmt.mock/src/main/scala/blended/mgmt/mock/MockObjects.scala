@@ -47,13 +47,13 @@ object MockObjects {
     1.to(numServices).map(i => serviceInfo()).toList
 
   val noOverlays = OverlaySet(
-    overlays = List.empty[OverlayRef],
+    overlays = Set.empty[OverlayRef],
     state = OverlayState.Valid,
     reason = None
   )
 
   val someOverlays = OverlaySet(
-    overlays = List(
+    overlays = Set(
       OverlayRef(name = "java-medium", version = "1.0"),
       OverlayRef(name = "shop-A", version = "1.0")
     ),
@@ -62,7 +62,7 @@ object MockObjects {
   )
 
   val invalid = OverlaySet(
-    overlays = List(
+    overlays = Set(
       OverlayRef(name = "java-small", version = "1.0"),
       OverlayRef(name = "shop-Q", version = "1.0")
     ),

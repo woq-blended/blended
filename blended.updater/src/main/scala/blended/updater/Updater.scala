@@ -261,12 +261,12 @@ class Updater(
           case Some(rc) => rc
         }
 
-        val overlays = overlayRefs.map(ref => ref -> overlayConfigs.find(o => o.overlayRef == ref))
+        val overlays = overlayRefs.toList.map(ref => ref -> overlayConfigs.find(o => o.overlayRef == ref))
         overlays.find(v => v._2 == None).map { v =>
           sys.error(s"No such overlay config found: ${v._1.name}-${v._1.version}")
         }
 
-        val localOverlays = LocalOverlays(overlays.map(_._2.get), localRuntimeConfig.baseDir)
+        val localOverlays = LocalOverlays(overlays.map(_._2.get).toSet, localRuntimeConfig.baseDir)
 
         LocalProfile(localRuntimeConfig, localOverlays, LocalProfile.Pending(List("Newly staged")))
 
@@ -585,9 +585,9 @@ object Updater {
    * Reply: [[OperationSucceeded]], [[OperationSucceeded]]
    */
   // explicit trigger staging of a config, but idea is to automatically stage not already staged configs when idle
-  final case class StageProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
+  final case class StageProfile(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
 
-  final case class ActivateProfile(override val requestId: String, name: String, version: String, overlays: List[OverlayRef]) extends Protocol
+  final case class ActivateProfile(override val requestId: String, name: String, version: String, overlays: Set[OverlayRef]) extends Protocol
 
   /**
    * Internal message: Scans the profile directory for existing runtime configurations

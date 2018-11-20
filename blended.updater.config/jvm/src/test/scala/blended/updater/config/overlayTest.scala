@@ -127,14 +127,14 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1_1 = OverlayConfig("overlay1", "1")
       val o1_2 = OverlayConfig("overlay1", "2")
       val o2_1 = OverlayConfig("overlay2", "1")
-      val overlays = LocalOverlays(overlays = List(o1_1, o1_2, o2_1), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = Set(o1_1, o1_2, o2_1), profileDir = new File("."))
       overlays.validate() shouldEqual Seq("More than one overlay with name 'overlay1' detected")
     }
 
     "detects overlays with conflicting propetries" in {
       val o1 = OverlayConfig("o1", "1", properties = Map("P1" -> "V1"))
       val o2 = OverlayConfig("o2", "1", properties = Map("P1" -> "V2"))
-      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
       overlays.validate() shouldEqual Seq("Duplicate property definitions detected. Property: P1 Occurences: o1-1, o2-1")
     }
 
@@ -153,7 +153,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
           GeneratedConfigCompanion.create("container/application_overlay.conf", config2)
         )
       )
-      val overlays = LocalOverlays(overlays = List(o1, o2), profileDir = new File("."))
+      val overlays = LocalOverlays(overlays = Set(o1, o2), profileDir = new File("."))
       overlays.validate() should have size 1
       overlays.validate() shouldEqual Seq("Double defined config key found: key")
 
@@ -181,7 +181,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       val o1 = OverlayConfig("overlay1", "1")
       val o2 = OverlayConfig("overlay2", "1")
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         overlays.materializedDir.listFiles() shouldBe null
       }
@@ -203,7 +203,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isSuccess shouldBe true
         val expectedEtcDir = new File(dir, "o1-1/o2-1/container")
         overlays.materializedDir.listFiles() shouldBe Array(expectedEtcDir)
@@ -230,7 +230,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
         )
       )
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         overlays.materialize().isFailure shouldBe true
       }
     }
@@ -257,7 +257,7 @@ class OverlaysTest extends FreeSpec with Matchers with TestFile {
       log.info("overlay config 2: " + o2)
 
       withTestDir() { dir =>
-        val overlays = LocalOverlays(List(o1, o2), dir)
+        val overlays = LocalOverlays(Set(o1, o2), dir)
         val expectedEtcDir = new File(dir, "o1-1/o2-1/container")
         val expectedConfigFile = new File(expectedEtcDir, "application_overlay.conf")
         assert(overlays.materialize().map(_.toSet) === Success(Set(expectedConfigFile)))

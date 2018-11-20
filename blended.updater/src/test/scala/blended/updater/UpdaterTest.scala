@@ -22,7 +22,7 @@ class UpdaterTest
   implicit val deletePolicy = DeleteNever
 
   val dummyProfileActivator = new ProfileActivator {
-    def apply(name: String, version: String, overlays: List[OverlayRef]): Boolean = true
+    def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = true
   }
 
   override def afterAll {
@@ -185,7 +185,7 @@ class UpdaterTest
 
           {
             val stageId = nextId()
-            updater ! Updater.StageProfile(stageId, config.name, config.version, overlays = List.empty)
+            updater ! Updater.StageProfile(stageId, config.name, config.version, overlays = Set.empty)
             expectMsgPF(hint = s"Waiting for: ${Updater.OperationSucceeded(stageId)}") {
               case Updater.OperationSucceeded(`stageId`) => true
             }
@@ -265,7 +265,7 @@ class UpdaterTest
           {
             val stageId = nextId()
             updater ! Updater.StageProfile(stageId, config.name, config.version,
-              overlays = List(OverlayRef(name = "o", version = "1")))
+              overlays = Set(OverlayRef(name = "o", version = "1")))
 
             expectMsgPF(hint = s"Waiting for: ${Updater.OperationSucceeded(stageId)}") {
               case Updater.OperationSucceeded(`stageId`) => true
@@ -318,7 +318,7 @@ class UpdaterTest
             Updater.props(
               installBaseDir,
               new ProfileActivator {
-                def apply(name: String, version: String, overlays: List[OverlayRef]): Boolean = {
+                def apply(name: String, version: String, overlays: Set[OverlayRef]): Boolean = {
                   curNameVersion = Some(name -> version)
                   true
                 }
@@ -370,7 +370,7 @@ class UpdaterTest
 
             {
               val stageId = nextId()
-              updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = List.empty)
+              updater ! Updater.StageProfile(stageId, config.runtimeConfig.name, config.runtimeConfig.version, overlays = Set.empty)
               expectMsgPF(hint = s"waiting for: ${Updater.OperationSucceeded(stageId)}") {
                 case Updater.OperationSucceeded(`stageId`) => true
               }
@@ -400,7 +400,7 @@ class UpdaterTest
               assert(restarted === false)
               assert(curNameVersion === None)
               val reqId = nextId()
-              updater ! Updater.ActivateProfile(reqId, "test-with-3-bundles", "1.0.0", List.empty)
+              updater ! Updater.ActivateProfile(reqId, "test-with-3-bundles", "1.0.0", Set.empty)
               expectMsgPF() {
                 case Updater.OperationSucceeded(`reqId`) => true
               }

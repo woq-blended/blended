@@ -1,9 +1,9 @@
 package blended.updater.config
 
-import blended.testsupport.scalatest.LoggingFreeSpec
+import org.scalatest.FreeSpec
 import org.scalatest.prop.PropertyChecks
 
-class ProfileSpec extends LoggingFreeSpec with PropertyChecks {
+class ProfileSpec extends FreeSpec with PropertyChecks {
 
   import TestData._
 
@@ -16,7 +16,7 @@ class ProfileSpec extends LoggingFreeSpec with PropertyChecks {
   }
 
   "SingleProfile maps to Profile" in {
-    forAll{singles: Seq[SingleProfile] =>
+    forAll { singles: Seq[SingleProfile] =>
       val profiles = Profile.fromSingleProfiles(singles)
       assert(profiles.flatMap(_.toSingle).toSet === singles.toSet)
     }

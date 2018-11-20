@@ -261,7 +261,7 @@ object Launcher {
           knownOverlays.find(ko => ko.overlayRefs.toSet == pl.overlays.toSet) match {
             case None =>
               if (!pl.overlays.isEmpty) {
-                sys.error("Cannot find specified overlay set: " + pl.overlays.sorted.mkString(", "))
+                sys.error("Cannot find specified overlay set: " + pl.overlays.toSeq.sorted.mkString(", "))
               } else {
                 log.error("Cannot find the empty overlay set (aka 'base.conf'). To be compatible with older version, we continue here as no real information is missing")
               }

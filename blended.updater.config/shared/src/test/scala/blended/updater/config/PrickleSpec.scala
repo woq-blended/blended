@@ -4,16 +4,12 @@ import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 
 import blended.updater.config.json.PrickleProtocol._
-import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
-import org.scalactic.anyvals.PosInt
 import org.scalatest.prop.PropertyChecks
 import org.scalatest.{FreeSpec, Matchers}
 import prickle._
 
 class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
-
-  private[this] val log = Logger[this.type]
 
   "Prickle real world test cases" - {
     "1. deserialize a container info" in {
@@ -91,7 +87,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     "an ActivateProfile" in {
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
+      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val json = Pickle.intoString(action)
 
@@ -103,14 +99,14 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       activate.profileName should be(action.profileName)
       activate.profileVersion should be(action.profileVersion)
 
-      activate.overlays should be(List(overlay))
+      activate.overlays should be(Set(overlay))
 
     }
 
     "an ActivateProfile as UpdateAction" in {
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
+      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val json = Pickle.intoString(action: UpdateAction)
       log.info("json: " + json)
@@ -123,7 +119,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       activate.profileName should be(action.profileName)
       activate.profileVersion should be(action.profileVersion)
 
-      activate.overlays should be(List(overlay))
+      activate.overlays should be(Set(overlay))
     }
 
     "a GeneratedConfig" in {
@@ -162,7 +158,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     "a ContainerInfo" in {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List(OverlaySet(List(), OverlayState.Valid, None)))
+      val profile = Profile("myProfile", "1.0", List(OverlaySet(Set(), OverlayState.Valid, None)))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
@@ -191,12 +187,12 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     "a RemoteContainerState" in {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List(OverlaySet(List(), OverlayState.Valid, None)))
+      val profile = Profile("myProfile", "1.0", List(OverlaySet(Set(), OverlayState.Valid, None)))
 
       val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = List(overlay))
+      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val state = RemoteContainerState(info, List(action))
 
@@ -243,6 +239,11 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     // FIXME: those 2 tests never return
     // testMapping(mapContainerInfo, unmapContainerInfo)
     // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
+  }
+
+  // As the test runs also in JS, we cannot use a SLF4J
+  def log = new {
+    def info(msg: => String) = println(msg)
   }
 
 }

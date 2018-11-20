@@ -18,9 +18,9 @@ import com.typesafe.config.ConfigValueFactory
  * @param overlays   Alls involved overlay config.
  * @param profileDir The profile directory.
  */
-final case class LocalOverlays(overlays: List[OverlayConfig], profileDir: File) {
+final case class LocalOverlays(overlays: Set[OverlayConfig], profileDir: File) {
 
-  def overlayRefs: List[OverlayRef] = overlays.map(_.overlayRef)
+  def overlayRefs: Set[OverlayRef] = overlays.map(_.overlayRef).toSet
 
   /**
    * Validate this set of overlays.
@@ -138,7 +138,7 @@ final object LocalOverlays {
       profileDir = profileDir,
       overlays = config.getObjectList("overlays").asScala.map { c =>
         OverlayConfigCompanion.read(c.toConfig()).get
-      }.toList
+      }.toSet
     )
   }
 

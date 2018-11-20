@@ -20,11 +20,11 @@ final case class AddOverlayConfig(
 final case class StageProfile(
   profileName: String,
   profileVersion: String,
-  overlays: List[OverlayRef]
+  overlays: Set[OverlayRef]
 ) extends UpdateAction
 
 final case class ActivateProfile(
   profileName: String,
   profileVersion: String,
-  overlays: List[OverlayRef]
+  overlays: Set[OverlayRef]
 ) extends UpdateAction

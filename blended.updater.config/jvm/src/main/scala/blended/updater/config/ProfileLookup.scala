@@ -24,7 +24,7 @@ case class ProfileLookup(
     profileName: String,
     profileVersion: String,
     profileBaseDir: File,
-    overlays: Seq[OverlayRef]) {
+    overlays: Set[OverlayRef]) {
 
   override def toString(): String = s"${getClass.getSimpleName}(profileName=${profileName}, profileVersion=${profileVersion},profileBaseDir=${profileBaseDir},overlays=${overlays.mkString("[", ",", "]")})"
 
@@ -65,7 +65,7 @@ object ProfileLookup {
       profileName = profileName,
       profileVersion = profileVersion,
       profileBaseDir = profileBaseDir,
-      overlays = overlays
+      overlays = overlays.toSet
     )
   }
 

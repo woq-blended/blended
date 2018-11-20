@@ -66,7 +66,7 @@ class ArtifactDownloader(mvnRepositories: List[String])
                   sender() ! DownloadFailed(reqId, s"Could not download file ${file} from ${url}. Error: ${e.getMessage()}")
               }
             case Failure(e) =>
-              log.error(e)("Could not download file ${file}")
+              log.error(e)(s"Could not download file ${file}")
               sender() ! DownloadFailed(reqId, s"Could not download file ${file}. Error: ${e.getMessage()}")
           }
       }
