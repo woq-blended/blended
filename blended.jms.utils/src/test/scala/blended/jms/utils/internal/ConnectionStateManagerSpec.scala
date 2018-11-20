@@ -71,7 +71,7 @@ class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger")
       val probe = TestProbe()
       val props = ConnectionStateManager.props(
         cfg.copy(
-          minReconnect = 3
+          minReconnect = 3.seconds
         ),
         probe.ref,
         holder

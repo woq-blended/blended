@@ -2,13 +2,12 @@ package blended.jms.utils.internal
 
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionConfig, ConnectionException}
+import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, ConnectionException}
 import javax.jms.Connection
 
 import scala.concurrent.duration._
@@ -44,10 +43,10 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
   // the retry Schedule is the time interval we retry a connection after a failed connect attempt
   // usually that is only a fraction of the ping interval (i.e. 5 seconds)
-  val retrySchedule = config.retryInterval.seconds
+  val retrySchedule : FiniteDuration = config.retryInterval
 
   // The schedule is the interval for the normal connection ping
-  val schedule = Duration(config.pingInterval, TimeUnit.SECONDS)
+  val schedule : FiniteDuration = config.pingInterval
 
   // The ping timer is used to schedule ping messages over the underlying connection to check it's
   // health
@@ -171,7 +170,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     // All good, happily disconnected
     case ConnectionClosed =>
       conn = None
-      checkConnection(config.minReconnect.seconds, true)
+      checkConnection(config.minReconnect, true)
       switchState(
         disconnected(),
         publishEvents(state, s"Connection for provider [$vendor:$provider] successfully closed.")
@@ -247,7 +246,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
     val remaining : Double = s.lastDisconnect match {
       case None => 0
-      case Some(l) => config.minReconnect.seconds.toMillis - (System.currentTimeMillis() - l.getTime())
+      case Some(l) => config.minReconnect.toMillis - (System.currentTimeMillis() - l.getTime())
     }
 
     // if we were ever disconnected from the JMS provider since the container start we will check
@@ -286,10 +285,12 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
     // This only happens if we have configured a maximum reconnect timeout in the config and we ever
     // had a connection since this container was last restarted and we haven't started the timer yet
-    val newState = if (config.maxReconnectTimeout > 0 && state.firstReconnectAttempt.isEmpty && state.lastDisconnect.isDefined) {
+    val newState = if (config.maxReconnectTimeout.isDefined && state.firstReconnectAttempt.isEmpty && state.lastDisconnect.isDefined) {
       events = (s"Starting max reconnect timeout monitor for provider [$vendor:$provider] with [${config.maxReconnectTimeout}]s") :: events
       state.copy(firstReconnectAttempt = Some(lastConnectAttempt))
-    } else state
+    } else {
+      state
+    }
 
     controller ! Connect(lastConnectAttempt, config.clientId)
 
@@ -307,9 +308,14 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
     log.error(e, s"Error connecting to JMS provider [$vendor:$provider].")
 
-    if (config.maxReconnectTimeout > 0 && s.firstReconnectAttempt.isDefined) {
+    if (config.maxReconnectTimeout.isDefined && s.firstReconnectAttempt.isDefined) {
       s.firstReconnectAttempt.foreach { t =>
-        if ((System.currentTimeMillis() - t.getTime()) / 1000l > config.maxReconnectTimeout) {
+
+        val restart : Boolean = config.maxReconnectTimeout.exists{ to =>
+          (System.currentTimeMillis() - t.getTime()).millis > to
+        }
+
+        if (restart) {
           val e = new Exception(s"Unable to reconnect to JMS provider [$vendor:$provider] in [${config.maxReconnectTimeout}]s. Restarting container ...")
           monitor ! RestartContainer(e)
           result = true
@@ -330,7 +336,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     pingTimer = None
 
     // Notify the connection controller of the disconnect
-    controller ! Disconnect(config.minReconnect.seconds)
+    controller ! Disconnect(config.minReconnect)
     switchState(closing(), s.copy(status = CLOSING))
   }
 
@@ -351,7 +357,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
   private[this] def reconnect(s: ConnectionState) : Unit = {
     disconnect(s)
-    checkConnection((config.minReconnect + 1).seconds)
+    checkConnection(config.minReconnect + 1.seconds)
   }
 
   private[this] def ping(c: Connection) : Unit = {

@@ -1,5 +1,7 @@
 package blended.jms.utils
 
+import scala.concurrent.duration.FiniteDuration
+
 trait ConnectionConfig {
 
   val vendor : String
@@ -8,11 +10,11 @@ trait ConnectionConfig {
   val jmxEnabled : Boolean
   val pingEnabled : Boolean
   val pingTolerance : Int
-  val pingInterval : Int
-  val pingTimeout : Int
-  val retryInterval : Int
-  val minReconnect : Int
-  val maxReconnectTimeout: Int
+  val pingInterval : FiniteDuration
+  val pingTimeout : FiniteDuration
+  val retryInterval : FiniteDuration
+  val minReconnect : FiniteDuration
+  val maxReconnectTimeout: Option[FiniteDuration]
   val clientId : String
   val defaultUser : Option[String]
   val defaultPassword : Option[String]

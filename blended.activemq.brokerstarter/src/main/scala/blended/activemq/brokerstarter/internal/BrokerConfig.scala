@@ -6,6 +6,7 @@ import blended.util.config.Implicits._
 import com.typesafe.config.Config
 import org.apache.activemq.ActiveMQConnectionFactory
 
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
 case class BrokerConfig (
@@ -16,12 +17,12 @@ case class BrokerConfig (
   override val pingEnabled : Boolean,
   override val pingTolerance : Int,
   override val pingDestination : String,
-  override val pingInterval : Int,
-  override val pingTimeout : Int,
-  override val minReconnect : Int,
-  override val maxReconnectTimeout : Int,
+  override val pingInterval : FiniteDuration,
+  override val pingTimeout : FiniteDuration,
+  override val minReconnect : FiniteDuration,
+  override val maxReconnectTimeout : Option[FiniteDuration],
   override val properties : Map[String, String],
-  override val retryInterval : Int,
+  override val retryInterval : FiniteDuration,
   brokerName : String,
   file : String,
   withSsl : Boolean,

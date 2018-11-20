@@ -1,8 +1,9 @@
 package blended.util.config
 
 import scala.collection.JavaConverters._
-
 import com.typesafe.config.Config
+
+import scala.concurrent.duration._
 
 trait ConfigDefaultGetter extends ConfigAccessor {
 
@@ -42,6 +43,14 @@ trait ConfigDefaultGetter extends ConfigAccessor {
       } else {
         default
       }
+
+    def getDuration(key: String, default : FiniteDuration) : FiniteDuration = {
+      if (config.hasPath(key)) {
+        config.getDuration(key).toMillis.millis
+      } else {
+        default
+      }
+    }
 
     def getStringList(key: String, default: List[String]): List[String] =
       if (config.hasPath(key)) {

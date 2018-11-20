@@ -1,8 +1,9 @@
 package blended.util.config
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
 import com.typesafe.config.Config
+
+import scala.concurrent.duration._
 
 trait ConfigOptionGetter extends ConfigAccessor {
 
@@ -39,6 +40,13 @@ trait ConfigOptionGetter extends ConfigAccessor {
     def getBooleanOption(key: String): Option[Boolean] =
       if (config.hasPath(key)) {
         Option(config.getBoolean(key))
+      } else {
+        None
+      }
+
+    def getDurationOption(key : String) : Option[FiniteDuration] =
+      if(config.hasPath(key)) {
+        Option(config.getDuration(key).toMillis.millis)
       } else {
         None
       }

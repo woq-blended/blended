@@ -140,7 +140,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 1),
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 1.milli),
           operations = timingOut
         ))(3.seconds), 3.seconds
       )
@@ -170,7 +170,7 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
         execPing(PingExecute(
           count = counter.incrementAndGet(),
           con = con.get,
-          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50),
+          cfg = cfg.copy(clientId = "jmsPing", pingDestination = s"topic:$pingTopic", pingTimeout = 50.millis),
           operations = timingOut
         ))(10.seconds)
       }

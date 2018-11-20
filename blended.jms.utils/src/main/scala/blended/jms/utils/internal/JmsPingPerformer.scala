@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.pattern.pipe
-import blended.jms.utils.{BlendedJMSConnectionConfig, ConnectionConfig, JMSSupport}
+import blended.jms.utils.{ConnectionConfig, JMSSupport}
 import blended.util.logging.Logger
 import javax.jms._
 
@@ -55,7 +55,7 @@ private[internal] trait PingOperations { this : JMSSupport =>
 
   def initialisePing(con: Connection, config: ConnectionConfig, pingId: String)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
 
-    val timeOutMillis = config.pingTimeout.millis.toMillis
+    val timeOutMillis = config.pingTimeout.toMillis
 
     var session : Option[Session] = None
     var consumer : Option[MessageConsumer] = None
@@ -176,7 +176,7 @@ class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: Pi
     case ExecutePing(pingActor, id) =>
       pingId = s"$id-$pingId"
       log.info(s"Executing ping [$pingId] for connection factory [${config.vendor}:${config.provider}]")
-      timer = Some(context.system.scheduler.scheduleOnce(config.pingTimeout.millis, self, Timeout))
+      timer = Some(context.system.scheduler.scheduleOnce(config.pingTimeout, self, Timeout))
       context.become(initializing(pingActor).orElse(timeoutHandler(pingActor)))
       operations.initialisePing(con, config, pingId).pipeTo(self)
   }
