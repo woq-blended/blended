@@ -18,7 +18,11 @@ class ConfigLocator(ctContext: ContainerContext) {
     log.debug(s"Retrieving config from [${file.getAbsolutePath()}]")
 
     if (file.exists && file.isFile && file.canRead) {
-      ConfigFactory.parseFile(file).withFallback(sysProps).withFallback(envProps).resolve()
+      ConfigFactory.parseFile(file)
+        .withFallback(ctContext.getContainerConfig())
+        .withFallback(sysProps)
+        .withFallback(envProps)
+        .resolve()
     } else {
       ConfigFactory.empty()
     }
