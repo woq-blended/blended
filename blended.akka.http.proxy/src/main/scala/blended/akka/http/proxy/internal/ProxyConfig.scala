@@ -60,7 +60,7 @@ case class ProxyTarget(
     ",uri=" + uri +
     ",timeout=" + timeout +
     ",redirectCount=" + redirectCount +
-    ",redirectHeaderPolicy=" + redirectHeaderPolicy.toString()
+    ",redirectHeaderPolicy=" + redirectHeaderPolicy.toString() +
     ")"
 }
 
