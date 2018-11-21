@@ -72,10 +72,10 @@ trait JmsStreamSupport {
     log: Logger
   )(implicit system: ActorSystem, materializer: Materializer): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val f = Flow.fromGraph(new JmsSinkStage(name, settings, log))
+    val f = Flow.fromGraph(new JmsSinkStage(name, settings, log)).named(name)
 
     if (autoAck) {
-      f.via(new AckProcessor(s"ack-$name").flow(log))
+      f.via(new AckProcessor(s"ack-$name").flow(log).named(s"ack-$name"))
     } else {
       f
     }

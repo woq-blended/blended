@@ -33,7 +33,7 @@ object FlowProcessor {
           log.debug(s"Not executing function [${env.id}]:[$name] as envelope has exception [${env.exception.map(_.getMessage()).getOrElse("")}].")
           Left(env)
         }
-      }
+      }.named(name)
   }
 
   def fromFunction(name: String, log: Logger)(f: IntegrationStep) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
@@ -59,7 +59,7 @@ object FlowProcessor {
           log.debug(s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")
           env
       }
-    }
+    }.named(name)
   }
 
   def splitEither[L,R]() : Graph[FanOutShape2[Either[L,R], L, R], NotUsed] = {
@@ -101,5 +101,5 @@ trait FlowProcessor {
   def flow(log: Logger) : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] =
     FlowProcessor.fromFunction(
       name, log
-    )(f)
+    )(f).named(name)
 }

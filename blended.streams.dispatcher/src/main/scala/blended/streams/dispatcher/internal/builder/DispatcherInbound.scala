@@ -27,7 +27,7 @@ object DispatcherInbound {
       log = bs.streamLogger,
       rules = dispatcherCfg.defaultHeader,
       idSvc = Some(idSvc)
-    ).flow(bs.streamLogger)
+    ).flow(bs.streamLogger).named("defaultHeader")
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Make sure we do have a resourcetype in the message we can process                               */

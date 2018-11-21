@@ -1,5 +1,7 @@
 package blended.streams.dispatcher.internal.builder
 
+import java.io.File
+
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
@@ -11,6 +13,9 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.testsupport.StreamAssertions._
 import blended.streams.worklist.WorklistEvent
+import blended.testsupport.BlendedTestSupport
+import net.mikolak.travesty
+import net.mikolak.travesty.OutputFormat
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -142,17 +147,12 @@ class CoreDispatcherSpec extends DispatcherSpecSupport
 
         val core = builder.core()
         val event = builder.worklistEventHandler()
-
-        val dummyOut = Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
-          env
-        }
-
         val dispatcher = builder.dispatcher()
 
         // TODO: Review for more meaningfull graphs
-//        travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
-//        travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())
-//        travesty.toFile(dispatcher, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher.svg").getAbsolutePath())
+        travesty.toFile(core, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_core.svg").getAbsolutePath())
+        travesty.toFile(event, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher_wlEvent.svg").getAbsolutePath())
+        travesty.toFile(dispatcher, OutputFormat.SVG)(new File(BlendedTestSupport.projectTestOutput, "dispatcher.svg").getAbsolutePath())
       }
     }
 
