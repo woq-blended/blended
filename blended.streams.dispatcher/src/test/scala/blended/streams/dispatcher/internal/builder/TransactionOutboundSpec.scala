@@ -12,6 +12,7 @@ import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
 import blended.streams.worklist.WorklistState
 import blended.testsupport.RequiresForkedJVM
+import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
@@ -80,12 +81,13 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
-    dest = JmsQueue("cbeOut")
+    dest = JmsQueue("cbeOut"),
+    Logger(loggerName)
   )
 
   "The transaction outbound handler should" - {
 
-    "do not send a cbe event if the FlowEnvelope doesnẗ have a CBE header" in {
+    "do not send a cbe event if the FlowEnvelope doesn't have a CBE header" in {
 
       val envelopes = Seq(
         transactionEnvelope(ctxt, FlowTransaction.startEvent()),

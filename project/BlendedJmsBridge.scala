@@ -24,7 +24,7 @@ object BlendedJmsBridge extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
       Test / testlogLogPackages ++= Map("" +
         "App" -> "DEBUG",
-        "blended" -> "DEBUG"
+        "blended" -> "TRACE"
       )
     )
   }

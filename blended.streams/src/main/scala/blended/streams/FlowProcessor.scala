@@ -23,7 +23,7 @@ object FlowProcessor {
           val start = System.currentTimeMillis()
           f(env) match {
             case Success(s) =>
-              log.info(s"Function [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              log.debug(s"Function [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
               Right(s)
             case Failure(t) =>
               log.warn(t)(s"Failed to create [${clazz.runtimeClass.getName()}] in [${env.id}]:[$name]")
@@ -46,14 +46,15 @@ object FlowProcessor {
           val start = System.currentTimeMillis()
 
           val result = f(env) match {
-            case Success(s) => s
+            case Success(s) =>
+              log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
+              s
 
             case Failure(t) =>
               log.warn(t)(s"Exception in FlowProcessor [${env.id}]:[$name] for message [${env.flowMessage}] : [${t.getClass().getSimpleName()} - ${t.getMessage()}]")
               env.withException(t)
           }
 
-          log.info(s"Integration step [${env.id}]:[$name] completed in [${System.currentTimeMillis() - start}]ms")
           result
         case Some(_) =>
           log.debug(s"Skipping integration step [${env.id}]:[$name] due to exception caught in flow.")

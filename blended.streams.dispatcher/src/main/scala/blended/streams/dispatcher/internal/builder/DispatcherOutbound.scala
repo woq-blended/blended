@@ -53,7 +53,6 @@ object DispatcherOutbound {
   )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
 
     val dest = resolveDest(bs)(env).get
-    bs.streamLogger.debug(s"Resolved routing destination to [$dest]")
 
     val targetDest : JmsDestination = dest.name match {
       case JmsFlowSupport.replyToQueueName =>
@@ -79,11 +78,12 @@ object DispatcherOutbound {
         }
     }
 
-    bs.streamLogger.debug(s"Resolved routing provider to [$bridgeProvider]")
-
-    DispatcherTarget(
+    val result = DispatcherTarget(
       bridgeProvider.vendor, bridgeProvider.provider, targetDest
     )
+    bs.streamLogger.info(s"Routing for [${env.id}] is [$result]")
+
+    result
   }
 
   def apply(dispatcherCfg: ResourceTypeRouterConfig, idSvc : ContainerIdentifierService)(implicit bs : DispatcherBuilderSupport)
@@ -98,8 +98,9 @@ object DispatcherOutbound {
         .withHeader(bs.headerBridgeVendor, routing.vendor).get
         .withHeader(bs.headerBridgeProvider, routing.provider).get
         .withHeader(bs.headerBridgeDest, routing.dest.asString).get
+        .withHeader(bs.headerConfig.headerTrack, true).get
     }}
 
-    Flow.fromGraph(routingDecider).via(Flow.fromGraph(routingDecider))
+    Flow.fromGraph(routingDecider)
   }
 }

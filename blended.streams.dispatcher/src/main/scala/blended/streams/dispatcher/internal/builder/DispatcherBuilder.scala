@@ -3,7 +3,7 @@ package blended.streams.dispatcher.internal.builder
 import akka.NotUsed
 import akka.stream._
 import akka.stream.scaladsl.GraphDSL.Implicits._
-import akka.stream.scaladsl.{Flow, GraphDSL, Merge}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
@@ -178,6 +178,7 @@ case class DispatcherBuilder(
       case step : WorklistStepCompleted => None
     }
 
+    bs.streamLogger.debug(s"Transaction update for worklist event [${event.worklist.id}] is [$transEvent]")
     (event, transEvent)
   }
 
@@ -201,21 +202,25 @@ case class DispatcherBuilder(
 
       // The worklist Manager will track currently open worklist events and emit accumulated Worklist Events
       // The worklist manager will produce Worklist started and Worklist Terminated events
-      val wlManager = b.add(WorklistManager.flow("dispatcher", bs.streamLogger))
+      val wlManager = b.add(WorklistManager.flow("worklistMgr", bs.streamLogger).named("worklistMgr"))
 
       // We process the outcome of the worklist manager and transform it into Transaction events
       val processEvent = b.add(Flow.fromFunction[WorklistEvent, (WorklistEvent, Option[FlowTransactionEvent])](transactionUpdate))
 
       // if processEvent did come back with a TransactionEvent, this will be passed downstream
-      val processFilter = b.add(FlowProcessor.partition[(WorklistEvent, Option[FlowTransactionEvent])](_._2.isDefined))
+      val branches = b.add(
+        Broadcast[(WorklistEvent, Option[FlowTransactionEvent])](2).named("wlBranch")
+      )
 
-      val processWithTrans = b.add(Flow[(WorklistEvent, Option[FlowTransactionEvent])]
-        .map(_._2)
-        .map(_.get)
+      // This will generate a FlowTransactionEvent if necessary
+      val processTrans = b.add(Flow[(WorklistEvent, Option[FlowTransactionEvent])]
+        .map(_._2).named("selectTrans")
+        .filter(_.isDefined).named("hasUpdate")
+        .map(_.get).named("getTrans")
       )
 
       // For completed worklist we will acknowledge the envelope and capture exceptions
-      val processSinTrans = b.add(
+      val processWorklist = b.add(
         Flow[(WorklistEvent, Option[FlowTransactionEvent])]
         .map(_._1)
         .filter(_.state == WorklistState.Completed)
@@ -223,12 +228,12 @@ case class DispatcherBuilder(
         .filter(_.exception.isDefined)
       )
 
-      wlManager ~> processEvent ~> processFilter.in
+      wlManager ~> processEvent ~> branches
 
-      processFilter.out0 ~> processWithTrans
-      processFilter.out1 ~> processSinTrans
+      branches.out(0) ~> processTrans
+      branches.out(1) ~> processWorklist
 
-      new FanOutShape2(wlManager.in, processWithTrans.out, processSinTrans.out)
+      new FanOutShape2(wlManager.in, processTrans.out, processWorklist.out)
     }
   }
 

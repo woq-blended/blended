@@ -48,7 +48,8 @@ trait JmsStreamSupport {
   def receiveMessages(
     headerCfg : FlowHeaderConfig,
     cf : IdAwareConnectionFactory,
-    dest : JmsDestination
+    dest : JmsDestination,
+    log : Logger
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
     StreamFactories.runSourceWithTimeLimit(
@@ -56,6 +57,7 @@ trait JmsStreamSupport {
       RestartableJmsSource(
         name = dest.asString,
         headerConfig = headerCfg,
+        log = log,
         settings =
           JMSConsumerSettings(connectionFactory = cf)
             .withSessionCount(2)

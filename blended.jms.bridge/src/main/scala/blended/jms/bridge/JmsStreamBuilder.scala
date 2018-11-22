@@ -32,7 +32,7 @@ case class JmsStreamConfig(
   toDest : Option[JmsDestination],
   listener : Int,
   selector : Option[String] = None,
-  trackTransAction : TrackTransaction,
+  trackTransaction : TrackTransaction,
   registry : BridgeProviderRegistry,
   headerCfg : FlowHeaderConfig,
   subscriberName : Option[String],
@@ -91,7 +91,7 @@ class JmsStreamBuilder(
   // Decide whether a tracking event should be generated for this bridge step
   private[bridge] val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
 
-    val doTrack : Boolean = cfg.trackTransAction match {
+    val doTrack : Boolean = cfg.trackTransaction match {
       case TrackTransaction.Off => false
       case TrackTransaction.On => true
       case TrackTransaction.FromMessage =>
@@ -156,14 +156,16 @@ class JmsStreamBuilder(
 
     val g = FlowProcessor.fromFunction("createTransaction", bridgeLogger){ env =>
       Try {
-        val event : FlowTransactionEvent = if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
+        val event : FlowTransactionEvent = if (cfg.inbound) {
           startTransaction(env)
         } else {
           updateTransaction(env)
         }
 
-        bridgeLogger.debug(s"Generated transaction event [$event]")
+        bridgeLogger.debug(s"Generated bridge transaction event [$event]")
         FlowTransactionEvent.event2envelope(cfg.headerCfg)(event)
+          .withHeader(cfg.headerCfg.headerTrackSource, streamId).get
+
       }
     }
 
@@ -236,6 +238,7 @@ class JmsStreamBuilder(
       .via(jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true, log = bridgeLogger))
   }
 
+  bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
   val streamCfg : StreamControllerConfig = StreamControllerConfig(

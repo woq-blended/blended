@@ -97,7 +97,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       selector = in.selector,
       registry = ctrlCfg.registry,
       headerCfg = ctrlCfg.headerCfg,
-      trackTransAction = TrackTransaction.On,
+      trackTransaction = TrackTransaction.On,
       subscriberName = in.subscriberName,
       header = in.header,
       idSvc = Some(ctrlCfg.idSvc)
@@ -129,7 +129,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       listener = 3,
       selector = None,
       registry = ctrlCfg.registry,
-      trackTransAction = TrackTransaction.FromMessage,
+      trackTransaction = TrackTransaction.FromMessage,
       subscriberName = None,
       header = List.empty
     )

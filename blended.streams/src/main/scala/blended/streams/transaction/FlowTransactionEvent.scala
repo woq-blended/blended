@@ -17,6 +17,7 @@ object FlowHeaderConfig {
   private val branchIdPath = "branchId"
   private val statePath = "transactionState"
   private val trackTransactionPath = "trackTransaction"
+  private val trackSourcePath = "trackSource"
 
   val header : String => String => String = prefix => name => prefix + name
 
@@ -26,13 +27,15 @@ object FlowHeaderConfig {
     val headerBranch = cfg.getString(branchIdPath, "BranchId")
     val headerState = cfg.getString(statePath, "TransactionState")
     val headerTrack = cfg.getString(trackTransactionPath, "TrackTransaction")
+    val headerTrackSource = cfg.getString(trackSourcePath, "TrackSource")
 
     FlowHeaderConfig(
       prefix = prefix,
       headerTrans = header(prefix)(headerTrans),
       headerBranch = header(prefix)(headerBranch),
       headerState = header(prefix)(headerState),
-      headerTrack = header(prefix)(headerTrack)
+      headerTrack = header(prefix)(headerTrack),
+      headerTrackSource = header(prefix)(headerTrackSource)
     )
   }
 }
@@ -42,7 +45,8 @@ case class FlowHeaderConfig(
   headerTrans : String = "TransactionId",
   headerBranch : String = "BranchId",
   headerState : String = "TransactionState",
-  headerTrack : String = "TrackTransaction"
+  headerTrack : String = "TrackTransaction",
+  headerTrackSource : String = "TrackSource"
 )
 
 object FlowTransactionEvent {
@@ -133,6 +137,8 @@ sealed trait FlowTransactionEvent {
   def transactionId : String
   def properties : FlowMessageProps
   def state : FlowTransactionState
+
+  override def toString: String = s"${getClass().getSimpleName()}[$state][$transactionId][$properties]"
 }
 
 case class FlowTransactionStarted(
@@ -149,6 +155,8 @@ case class FlowTransactionUpdate(
   branchIds : String*
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Updated
+
+  override def toString: String = super.toString + s",branchIds=[${branchIds.mkString(",")}],updatedState=[$updatedState]"
 }
 
 case class FlowTransactionFailed(

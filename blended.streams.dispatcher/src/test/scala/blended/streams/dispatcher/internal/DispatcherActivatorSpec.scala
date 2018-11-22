@@ -13,6 +13,7 @@ import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.LoggingEventAppender
+import blended.streams.transaction.FlowTransactionState
 import blended.testsupport.pojosr.PojoSrTestHelper
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
@@ -60,7 +61,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
     val collectors = dest.map{ d =>
       receiveMessages(
-        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d
+        headerCfg = ctxt.bs.headerConfig, cf = cf, dest = d, Logger(loggerName)
       )
     }
 
@@ -104,11 +105,55 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       // TODO: Reconstruct FlowTransaction from String ??
       logEvents should have size 2
       assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
-      logEvents.head.getMessage() should endWith ("Started)")
-      logEvents.last.getMessage() should endWith ("Failed)")
+      logEvents.head.getMessage() should startWith (s"FlowTransaction[${FlowTransactionState.Started}]")
+      logEvents.last.getMessage() should startWith (s"FlowTransaction[${FlowTransactionState.Failed}]")
 
       errors should have size 1
       cbes should have size 0
+
+      switch.shutdown()
+    }
+
+    "process inbound messages with a correct ResourceType" in {
+
+      val logSink = Flow[ILoggingEvent]
+        .filter{ event =>
+          event.getLevel() == Level.INFO
+        }
+        .toMat(Sink.seq[ILoggingEvent])(Keep.right)
+
+      val appender = new LoggingEventAppender[Future[Seq[ILoggingEvent]]]("App.transactions")
+      val logEventsFut = appender.attachAndStart(logSink)
+
+      val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
+
+      val switch = sendMessages(
+        cf = sonic,
+        dest = JmsDestination.create("sonic.data.in").get,
+        log = Logger(loggerName),
+        msgs = env
+      )
+
+      val results = getResults(
+        cf = sonic,
+        JmsDestination.create("global.error").get,
+        JmsDestination.create("cc.nocbe").get
+      )
+
+      appender.stop()
+      val logEvents = Await.result(logEventsFut, timeout)
+
+      val errors = results(0)
+      val out = results(1)
+
+      // TODO: Reconstruct FlowTransaction from String ??
+      logEvents should have size 2
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
+      logEvents.head.getMessage() should startWith (s"FlowTransaction[${FlowTransactionState.Started}]")
+      logEvents.last.getMessage() should startWith (s"FlowTransaction[${FlowTransactionState.Completed}]")
+
+      errors should have size 0
+      out should have size 1
 
       switch.shutdown()
     }

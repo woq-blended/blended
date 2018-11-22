@@ -55,10 +55,13 @@ class FlowTransactionStream(
   }
 
   private val logAndPrepareSend : TransactionStreamContext => TransactionStreamContext = { in =>
+
     val transEnv : Future[Try[FlowEnvelope]] =
       in.trans.get.map {
         case Success(t) =>
-          log.info(t.toString())
+          if (t.state == FlowTransactionState.Started || t.terminated) {
+            log.info(t.toString())
+          }
           Success(FlowTransaction.transaction2envelope(cfg)(t))
         case Failure(t) =>
           Failure(t)

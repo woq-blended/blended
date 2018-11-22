@@ -15,7 +15,7 @@ object RestartableJmsSource {
     name : String,
     settings : JMSConsumerSettings,
     headerConfig : FlowHeaderConfig,
-    log : Logger = Logger[RestartableJmsSource.type],
+    log : Logger,
     minBackoff : FiniteDuration = 2.seconds,
     maxBackoff : FiniteDuration = 10.seconds,
     maxRestarts : Long = -1

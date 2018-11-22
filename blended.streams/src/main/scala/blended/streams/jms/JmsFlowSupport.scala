@@ -20,7 +20,7 @@ case class JmsAcknowledgeHandler(
   private val log = Logger[JmsAcknowledgeHandler]
 
   override def acknowledge: FlowEnvelope => Try[Unit] = { env => Try {
-    log.debug(s"Acknowledging envelope [${env.id}]")
+    log.trace(s"Acknowledging envelope [${env.id}]")
     session.ack(jmsMessage)
   }}
 }

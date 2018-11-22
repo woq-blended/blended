@@ -34,7 +34,7 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Test / testlogLogPackages ++= Map(
         "App" -> "DEBUG",
         "spec" -> "TRACE",
-        "blended" -> "DEBUG"
+        "blended" -> "TRACE"
       )
     )
   }

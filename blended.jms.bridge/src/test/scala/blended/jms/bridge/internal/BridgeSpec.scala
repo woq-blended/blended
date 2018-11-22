@@ -13,12 +13,11 @@ import blended.streams.StreamController
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
-import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
-import org.scalacheck.Gen
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
@@ -73,7 +72,7 @@ class BridgeSpec extends SimplePojoContainerSpec
     listener = 3,
     selector = None,
     registry = ctrlCfg.registry,
-    trackTransAction = TrackTransaction.Off,
+    trackTransaction = TrackTransaction.Off,
     subscriberName = None,
     header = List.empty
   )
@@ -104,13 +103,13 @@ class BridgeSpec extends SimplePojoContainerSpec
       val switch = sendMessages(external, JmsQueue("sampleIn"), log, msgs:_*)
 
       1.to(msgCount).map { i =>
-        val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"))(1.second, system, materializer)
+        val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"), log)(1.second, system, materializer)
         messages.result.map { l =>
           l should have size(1)
         }
       }
 
-      val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"))(1.second, system, materializer)
+      val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"), log)(1.second, system, materializer)
 
       val result = collector.result.map { l =>
         val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
@@ -144,7 +143,7 @@ class BridgeSpec extends SimplePojoContainerSpec
           ).get))
 
           val switch = sendMessages(external, JmsQueue("SampleHeaderIn"), log, env)
-          val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"))(1.second, system, materializer)
+          val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"), log)(1.second, system, materializer)
           val result = Await.result(coll.result, 1100.millis)
           switch.shutdown()
 

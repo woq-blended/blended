@@ -74,7 +74,8 @@ class CbeFlowSpec extends DispatcherSpecSupport
   def receiveCbes: Collector[FlowEnvelope] = receiveMessages(
     headerCfg = ctxt.bs.headerConfig,
     cf = cf,
-    dest = JmsQueue("cbeOut")
+    dest = JmsQueue("cbeOut"),
+    Logger(loggerName)
   )
 
   "The CBE Flow should" - {

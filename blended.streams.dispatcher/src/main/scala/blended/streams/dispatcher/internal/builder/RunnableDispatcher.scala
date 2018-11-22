@@ -55,6 +55,7 @@ class RunnableDispatcher(
 
       val transform = b.add(Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
         FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
+          .withHeader(bs.headerConfig.headerTrackSource, bs.streamLogger.name).get
       })
 
       val transactionSendSettings = JmsProducerSettings(

@@ -12,6 +12,9 @@ import scala.util.Try
 
 object FlowTransaction {
 
+  val branchSeparator : String = ","
+  val stateSeparator : String = ":"
+
   def apply(env : Option[FlowEnvelope]) : FlowTransaction = {
     env match {
       case None => FlowTransaction(id = UUID.randomUUID().toString(), creationProps = Map.empty)
@@ -31,22 +34,27 @@ object FlowTransaction {
     FlowEnvelope(t.creationProps, t.tid)
       .withHeader(cfg.headerTrans, t.tid).get
       .withHeader(cfg.headerState, t.state.toString).get
-      .withHeader(cfg.headerBranch, t.worklist.map { case (k,v) => s"$k=$v" }.mkString(",")).get
+      .withHeader(cfg.headerBranch, t.worklist.map { case (k,v) => s"$k=${v.mkString(stateSeparator)}" }.mkString(branchSeparator)).get
   }
 
   val envelope2Transaction : FlowHeaderConfig => FlowEnvelope => FlowTransaction = { cfg => env =>
     val state = env.header[String](cfg.headerState).map(FlowTransactionState.withName).getOrElse(FlowTransactionState.Started)
-    val worklistState : Map[String, WorklistState] = env.header[String](cfg.headerBranch).map { s =>
+    val worklistState : Map[String, List[WorklistState]] = env.header[String](cfg.headerBranch).map { s =>
       if (s.isEmpty) {
-        Map.empty[String, WorklistState]
+        Map.empty[String, List[WorklistState]]
       } else {
-        s.split(",")
-          .map(b => b.split("="))
-          .filter(_.size == 2)
-          .map(b => (b(0), WorklistState.withName(b(1))))
-          .toMap
+
+        val branches : Map[String, List[String]] =
+          s.split(branchSeparator)
+            .map(b => b.split("="))
+            .filter(_.size == 2)
+            .map{ b =>
+              b(0) -> b(1).split(stateSeparator).toList
+            }.toMap
+
+        branches.mapValues(s => s.map(WorklistState.withName))
       }
-    }.getOrElse(Map.empty[String, WorklistState])
+    }.getOrElse(Map.empty[String, List[WorklistState]])
 
     FlowTransaction(id = env.id, creationProps = env.flowMessage.header, state = state, worklist = worklistState)
   }
@@ -55,9 +63,14 @@ object FlowTransaction {
 case class FlowTransaction private [transaction](
   id : String,
   creationProps : Map[String, MsgProperty[_]],
-  worklist : Map[String, WorklistState] = Map.empty,
+  worklist : Map[String, List[WorklistState]] = Map.empty,
   state : FlowTransactionState = FlowTransactionState.Started,
 ) {
+
+  override def toString: String = {
+    val wlString = worklist.mkString(",")
+    s"FlowTransaction[$state][$id][$wlString][$creationProps]"
+  }
 
   val tid : String = id
 
@@ -65,54 +78,80 @@ case class FlowTransaction private [transaction](
 
   def terminated: Boolean = state == FlowTransactionState.Completed || state == FlowTransactionState.Failed
 
-  private def worklistState(wl: Map[String, WorklistState]): FlowTransactionState = {
-    if (wl.values.exists(v => v == WorklistState.Failed || v == WorklistState.TimeOut)) {
-      FlowTransactionState.Failed
-    } else {
-      if (wl.values.exists(_ == WorklistState.Completed)) {
-        if (wl.values.exists(_ == WorklistState.Started)) {
-          FlowTransactionState.Updated
-        } else {
-          FlowTransactionState.Completed
-        }
-      } else {
+  private def worklistState(wl : Map[String, List[WorklistState]]) : List[FlowTransactionState] = {
+    wl.map { case (_,v) =>
+      if (v.contains(WorklistState.Failed) || v.contains(WorklistState.TimeOut)) {
+        FlowTransactionState.Failed
+      } else if (v.contains(WorklistState.Started) && v.contains(WorklistState.Completed)) {
+        FlowTransactionState.Completed
+      } else if (v.contains(WorklistState.Started)) {
         FlowTransactionState.Started
+      } else if (v.contains(WorklistState.Completed)) {
+        FlowTransactionState.Updated
+      } else {
+        state
       }
+    }.toList.distinct
+  }
+
+  private def transactionState(wl : Map[String, List[WorklistState]]): FlowTransactionState = {
+
+    val itemStates : List[FlowTransactionState] = worklistState(wl)
+
+    if (itemStates.contains(FlowTransactionState.Failed)) {
+      FlowTransactionState.Failed
+    } else if (itemStates.size > 1) {
+      FlowTransactionState.Updated
+    } else if (itemStates.equals(List(FlowTransactionState.Updated))) {
+      FlowTransactionState.Updated
+    } else if (itemStates.equals(List(FlowTransactionState.Completed))) {
+      FlowTransactionState.Completed
+    } else {
+      state
     }
   }
 
   def updateTransaction(
     event : FlowTransactionEvent
   ) : Try[FlowTransaction] = Try {
-    event match {
 
-      case started: FlowTransactionStarted =>
-        log.warn(s"Ignoring started event for open transaction [$tid]")
-        this
+    if (event.transactionId == tid) {
+      log.trace(s"Updating transaction with [$event]")
+      event match {
 
-      case completed : FlowTransactionCompleted => copy(
-        state = FlowTransactionState.Completed,
-        worklist = Map.empty
-      )
+        case started: FlowTransactionStarted =>
+          copy(creationProps = started.properties)
+          this
 
-      case failed : FlowTransactionFailed => copy(
-        state = FlowTransactionState.Failed,
-        worklist = Map.empty
-      )
+        case completed : FlowTransactionCompleted => copy(
+          state = FlowTransactionState.Completed,
+          worklist = Map.empty
+        )
 
-      case updated : FlowTransactionUpdate =>
-        // We extract the id's for the transaction parts
-        val updatedItemIds : Seq[String] = updated.branchIds
+        case failed : FlowTransactionFailed => copy(
+          state = FlowTransactionState.Failed,
+          worklist = Map.empty
+        )
 
-        val newWorklist : Map[String, WorklistState] =
-        // We keep everything that is not in the update
-          worklist.filterKeys { id => !updatedItemIds.contains(id) } ++
-            // and add everything from the update list with the new state
-            updatedItemIds.map(id => id -> updated.updatedState).toMap
+        case updated : FlowTransactionUpdate =>
+          // We extract the id's for the transaction parts
+          val updatedItemIds : Map[String, List[WorklistState]] =
+            updated.branchIds
+              .map{ id => id -> List(updated.updatedState) }
+              .map{ case (k, s) =>
+                val oldState : List[WorklistState] = worklist.getOrElse(k, List.empty)
+                k -> (s ::: oldState).distinct
+              }
+              .toMap
 
-        copy(worklist = newWorklist, state = worklistState(newWorklist))
+          // We keep everything that is not in the update
+          val newWorklist : Map[String, List[WorklistState]] =
+            worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
+
+          copy(worklist = newWorklist, state = transactionState(newWorklist))
+      }
+    } else {
+      this
     }
   }
 }
-
-

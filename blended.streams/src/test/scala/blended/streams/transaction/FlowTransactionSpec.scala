@@ -9,6 +9,7 @@ import org.scalatest.Matchers
 import scala.collection.JavaConverters._
 import FlowTransaction.{envelope2Transaction, transaction2envelope}
 import blended.streams.transaction
+import blended.streams.worklist.WorklistState.WorklistState
 
 import scala.util.Try
 
@@ -20,7 +21,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
   val main = FlowEnvelope(FlowMessage.noProps)
 
   // create a sample transaction witn n started branches
-  private def sampleTransAction(branchCount : Int) : Try[FlowTransaction] = Try {
+  private def sampleTransAction(branchCount : Int, state: WorklistState = WorklistState.Started) : Try[FlowTransaction] = Try {
 
     val branches : Seq[String] = 1.to(branchCount).map{ i => s"$i"}
 
@@ -30,7 +31,7 @@ class FlowTransactionSpec extends LoggingFreeSpec
       creationProps = event.properties
     )
 
-    t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Started, branches:_*)).get
+    t.updateTransaction(FlowTransactionUpdate(t.tid, FlowMessage.noProps, state, branches:_*)).get
   }
 
   private val cfg : FlowHeaderConfig = FlowHeaderConfig.create(ConfigFactory.parseMap(
@@ -52,7 +53,6 @@ class FlowTransactionSpec extends LoggingFreeSpec
     }
 
     "reflect the envelope id as transaction id if created with an envelope" in {
-
       FlowTransaction(Some(main)).tid should be (main.id)
     }
 
@@ -71,6 +71,26 @@ class FlowTransactionSpec extends LoggingFreeSpec
 
       u.state should be (FlowTransactionState.Updated)
       u.worklist should have size branchCount
+    }
+
+    "a branch within a started transaction requires a started AND a completion update to complete" in {
+      val t = sampleTransAction(1).get
+      val u = t.updateTransaction(
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Completed, "1")
+      ).get
+
+      u.state should be (FlowTransactionState.Completed)
+      u.worklist should have size 1
+
+      val t2 = sampleTransAction(1, WorklistState.Completed).get
+      t2.state should be (FlowTransactionState.Updated)
+
+      val u2 = t2.updateTransaction(
+        FlowTransactionUpdate(t.tid, FlowMessage.noProps, WorklistState.Started, "1")
+      ).get
+
+      u2.state should be (FlowTransactionState.Completed)
+      u2.worklist should have size 1
     }
 
     "a started transaction with all branches completed should be in completed state" in {

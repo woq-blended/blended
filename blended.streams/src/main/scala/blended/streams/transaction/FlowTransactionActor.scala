@@ -93,7 +93,7 @@ class FlowTransactionManager() extends Actor {
       Done
     }.onComplete {
       case Success(_) =>
-      case Failure(t) => log.warn(t)(s"Error forwarding message [$m] to transaction actor [$id]")
+      case Failure(_) => log.warn(s"Error forwarding message [$m] to transaction actor [$id]")
     }
   }
 
