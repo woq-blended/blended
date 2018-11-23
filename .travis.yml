@@ -45,10 +45,10 @@ stages:
     if: branch = publish AND type = push
 
   - name: Site
-    if: branch = master
+    if: branch = master AND type = push
 
   - name: BuildITest
-    if branch = master AND type = push
+    if: branch = master AND type = push
 
 jobs:
   include:
