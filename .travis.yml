@@ -54,32 +54,33 @@ jobs:
   include:
   # ------ Stage Verify publish
   - stage: VerifyPublish
-    script: ./verifyPublish.sh
+    script: $TRAVIS_BUILD_DIR/scripts/verifyPublish.sh
 
   # ------ Stage Test
   - stage: Test
     before_script:
-    - ./scripts/dropbox_uploader.sh list
-    - ./scripts/build-akka.sh
+    - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
+    - $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
     - sbt cleanCoverage unidoc
     after_failure:
-    - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
+    - $TRAVIS_BUILD_DIR/scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
     after_success:
-    - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
+    - $TRAVIS_BUILD_DIR/scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
 
   # ------ Stage Deploy
   - stage: Deploy
-    script: ./runPublish.sh
+    script: $TRAVIS_BUILD_DIR/scripts/runPublish.sh
 
   # ------ Build the integration test support
   - stage: BuildITest
-    script: ./scripts/buildITest.sh
+    script: $TRAVIS_BUILD_DIR/scripts/buildITest.sh
 
   # ------ Stage Site Deploy
   - stage: Site
     before_script:
-    - ./scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
+    - cd $TRAVIS_BUILD_DIR
+    - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
     - tar -xzf target.tgz
     script:
     - sbt jbakeSite

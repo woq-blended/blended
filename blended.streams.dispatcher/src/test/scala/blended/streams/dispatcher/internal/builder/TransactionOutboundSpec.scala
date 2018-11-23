@@ -138,13 +138,6 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
         branchIds = "foo, bar"
       )).withHeader(ctxt.bs.headerCbeEnabled, true).get
 
-//      val envUpdate = transactionEnvelope(ctxt, FlowTransactionUpdate(
-//        transactionId = UUID.randomUUID().toString(),
-//        properties = FlowMessage.noProps,
-//        updatedState = WorklistState.Completed,
-//        branchIds = "foo"
-//      )).withHeader(ctxt.bs.headerCbeEnabled, true).get
-
       val switch = sendTransactions(ctxt, cf)(envStart)
       val collector = receiveCbes
 

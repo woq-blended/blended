@@ -6,6 +6,6 @@ then
   cd akka 
   git checkout osgi
   sbt publishM2 > akka-sbt.out
-  cd ..
+  cd $TRAVIS_BUILD_DIR
 fi
 
