@@ -38,16 +38,25 @@ env:
 stages:
   - name: VerifyPublish
     if: branch = publish AND type = push
+
   - Test
+
   - name: Deploy
     if: branch = publish AND type = push
+
   - name: Site
     if: branch = master
 
+  - name: BuildITest
+    if branch = master AND type = push
+
 jobs:
   include:
+  # ------ Stage Verify publish
   - stage: VerifyPublish
     script: ./verifyPublish.sh
+
+  # ------ Stage Test
   - stage: Test
     before_script:
     - ./scripts/dropbox_uploader.sh list
@@ -58,8 +67,16 @@ jobs:
     - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
     after_success:
     - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
+
+  # ------ Stage Deploy
   - stage: Deploy
     script: ./runPublish.sh
+
+  # ------ Build the integration test support
+  - stage: BuildITest
+    script: ./scripts/buildITest.sh
+
+  # ------ Stage Site Deploy
   - stage: Site
     before_script:
     - ./scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
