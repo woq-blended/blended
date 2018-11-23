@@ -8,9 +8,10 @@ git clone https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR
 cd $TRAVIS_BUILD_DIR/container
 git checkout master
 docker --version
-
-netstat -anp
 ps -ef | grep docker
+
+mkdir -p $TRAVIS_BUILD_DIR/container/.mvn
+echo "-Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT" > $TRAVIS_BUILD_DIR/container/.mvn/maven.config
 
 mvn clean install -P docker,itest
 

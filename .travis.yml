@@ -35,11 +35,13 @@ install:
 - sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
 
 before_cache:
-  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local
+  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock
 
 env:
   global:
     - TEST_ONLINE="true"
+    - DOCKER_HOST="127.0.0.1"
+    - DOCKER_PORT=2375
     # PGP_PASS
     - secure: "r048egec7DYp2HXockVYQOQru6FsxYZTABzEmTqZxOIRBpE3/c/km8TrSdKU32te7pZVryTGe2J6DK7xa2U2rHmu9H8Z7ah1a4CZzL0daFP8xZGXJ2aUby8Z++5eoav+CVzqyHWYKZtuB/DEhOlVsvx397rJVRhWIBBQVt5sgxY="
     # SONATYPE_USERNAME
@@ -91,7 +93,7 @@ jobs:
     - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
     - $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
-    - sbt cleanCoverage unidoc
+    - sbt clean publishM2 cleanCoverage unidoc
     after_failure:
     - $TRAVIS_BUILD_DIR/scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
     after_success:
