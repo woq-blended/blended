@@ -1,9 +1,9 @@
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.util.Properties
 
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
-import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object JBake extends AutoPlugin {

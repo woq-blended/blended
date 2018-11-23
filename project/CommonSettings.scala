@@ -1,8 +1,6 @@
 import com.typesafe.sbt.SbtScalariform.autoImport._
 import sbt.Keys._
-import sbt.Tests.{Group, SubProcess}
 import sbt._
-import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype.SonatypeKeys._
 import xsbti.api.{AnalyzedClass, Projection}
 

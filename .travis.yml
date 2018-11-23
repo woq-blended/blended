@@ -9,6 +9,9 @@ jdk: oraclejdk8
 addons:
   chrome: stable
 
+services:
+  - docker
+
 script:
 - sbt ciBuild
 
@@ -32,7 +35,7 @@ install:
 - sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
 
 before_cache:
-  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
+  - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local
 
 env:
   global:
@@ -47,6 +50,10 @@ env:
     - secure: "KBQ2ReAGgCp4UXR/W20H3H2yIjqVTaadyoEJaGjwAujJJHp6wd6BdPDdjBVNMYW6J/CH9+HJotZrX6GyPZWrNKms6G5mAH160o5xdgE+WEoAN56mnIBMrff7Di1rDwfLX+XSjcmh+XCsKvgiY230hOXAtZ6ArnqMR6dc1NKu7Ag="
     # GITHUB_TOKEN
     - secure: "IbsIzNJNyNYY13wb8lmbZgoJhU03DsddEaWnjEoGN6p97cag6MIIB6XiDm5GrEshmKoK/IuXQBm0t+ur65pUrH9IYbir9zfn4Jzok7cESPXi9BUdJq8D7bkNRTOy98dWK+MWHF5WtNb054i3g1Fxe0k8ynRM/lIbfo/NjmmAW8k="
+    # DOCKER_USERNAME
+    - secure: "KZskPnjiNor+iXpTQjF/aIlgOjn3mztpkL/WUyEys6Fb0UI2HXK0adzJcSDe46nPxG8En4uSxZ9Sq4oP1CP9MD/sgMPIFZX00r5+nONyDRTYJfFm06YvTyJAMvawGjwqlOdL+nw4DVOH8rJle5R3Uh+caGQiDMV4EMded7lEPdc="
+    # DOCKER_PASSWORD
+    - secure: "TJ3SBlzPl4VeepEc1v9Tp8pSleb9WN+jmUT8+JgZIeyWWHmMtPfuMN3d0SuIrKRSR1ZxOpq2RVopU++kbu1Gb1oafpdSo/gjL+/CTL9bfe4Dua0wmBmmNf+Nl76x+Vl7zZ7qQm6LlDgaExfcNg/7x3dOq8m1ZkEOVrAqB0nzdG4="
 
 stages:
   - name: VerifyPublish
@@ -64,6 +71,9 @@ stages:
     if: branch = master AND type = push
 
   - name: BuildUI
+    if: branch = master AND type = push
+
+  - name: IntegrationTest
     if: branch = master AND type = push
 
 jobs:
@@ -95,6 +105,13 @@ jobs:
   # ------ Build and test the management UI
   - stage: BuildUI
     script: $TRAVIS_BUILD_DIR/scripts/buildUI.sh
+
+  # ------ Stage Docker Images
+  - stage: IntegrationTest
+    before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    script:
+    - $TRAVIS_BUILD_DIR/scripts/itest.sh
 
   # ------ Stage Site Deploy
   - stage: Site

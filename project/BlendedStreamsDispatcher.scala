@@ -1,6 +1,6 @@
 import TestLogConfig.autoImport._
-import sbt._
 import sbt.Keys._
+import sbt._
 
 object BlendedStreamsDispatcher extends ProjectFactory {
 

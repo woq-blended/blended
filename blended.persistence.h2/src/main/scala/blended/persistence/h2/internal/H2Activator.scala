@@ -2,19 +2,16 @@ package blended.persistence.h2.internal
 
 import java.io.File
 
-import scala.util.Failure
-import scala.util.Success
-
 import blended.domino.TypesafeConfigWatching
 import blended.persistence.PersistenceService
-import blended.persistence.jdbc.PersistedClassDao
-import blended.persistence.jdbc.PersistenceServiceJdbc
+import blended.persistence.jdbc.{PersistedClassDao, PersistenceServiceJdbc}
 import blended.util.logging.Logger
 import com.zaxxer.hikari.HikariDataSource
 import domino.DominoActivator
 import org.h2.jdbcx.JdbcDataSource
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
-import blended.util.config.Implicits._
+
+import scala.util.{Failure, Success}
 
 class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 

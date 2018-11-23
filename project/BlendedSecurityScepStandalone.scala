@@ -1,5 +1,5 @@
-import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
+import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
 import sbt.Keys._
 import sbt._
 import sbt.librarymanagement.InclExclRule

@@ -1,10 +1,9 @@
 import org.scalajs.sbtplugin.ScalaJSPlugin
-import sbt._
+import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
+import sbt._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin
-import JBake.autoImport._
-import ScalaJSBundlerPlugin.autoImport._
-import ScalaJSPlugin.autoImport._
+import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object BlendedDocsJs extends ProjectFactory {
 
