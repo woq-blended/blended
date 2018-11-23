@@ -1,8 +1,13 @@
 language: scala
 
+sudo: true
+
 scala: 2.12.7
 
 jdk: oraclejdk8
+
+addons:
+  chrome: stable
 
 script:
 - sbt ciBuild
@@ -17,6 +22,14 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install graphviz
   - openssl aes-256-cbc -K $encrypted_e8464d595ae2_key -iv $encrypted_e8464d595ae2_iv -in .dropbox_uploader.enc -out $HOME/.dropbox_uploader -d
+
+install:
+- wget -N http://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip -P ~/
+- unzip ~/chromedriver_linux64.zip -d ~/
+- sudo mkdir -p /opt
+- sudo mv -f ~/chromedriver /opt
+- sudo chmod +x /opt/chromedriver
+- sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
 
 before_cache:
   - rm -Rf $HOME/.ivy2/.sbt.ivy.lock ; rm -Rf $HOME/.ivy2/local ; rm -Rf $HOME/.m2/repository/de/wayofquality/blended
@@ -50,6 +63,9 @@ stages:
   - name: BuildITest
     if: branch = master AND type = push
 
+  - name: BuildUI
+    if: branch = master AND type = push
+
 jobs:
   include:
   # ------ Stage Verify publish
@@ -75,6 +91,10 @@ jobs:
   # ------ Build the integration test support
   - stage: BuildITest
     script: $TRAVIS_BUILD_DIR/scripts/buildITest.sh
+
+  # ------ Build and test the management UI
+  - stage: BuildUI
+    script: $TRAVIS_BUILD_DIR/scripts/buildUI.sh
 
   # ------ Stage Site Deploy
   - stage: Site
