@@ -8,6 +8,7 @@ import blended.jms.utils.IdAwareConnectionFactory
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
+import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.transaction.{FlowTransactionStream, _}
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
@@ -57,7 +58,12 @@ class TransactionOutbound(
         log = log,
         // The default for CBE is false here
         // all messages that have run through the dispatcher will have the correct CBE setting
-        performSend = env => env.header[Boolean](bs.headerCbeEnabled).getOrElse(false),
+        performSend = { env =>
+          env.header[Boolean](bs.headerCbeEnabled).getOrElse(false) &&
+          FlowTransactionState.withName(
+            env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
+          ) != FlowTransactionState.Updated
+        },
         sendFlow
       ).build()
 

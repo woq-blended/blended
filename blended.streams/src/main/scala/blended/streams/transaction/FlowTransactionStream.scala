@@ -3,8 +3,8 @@ package blended.streams.transaction
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
+import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
 import akka.util.Timeout
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
@@ -64,6 +64,7 @@ class FlowTransactionStream(
           }
           Success(FlowTransaction.transaction2envelope(cfg)(t))
         case Failure(t) =>
+          log.error(t)(t.getMessage())
           Failure(t)
       }
 
@@ -82,7 +83,9 @@ class FlowTransactionStream(
           Source.single(s).via(sendFlow).toMat(Sink.head[FlowEnvelope])(Keep.right).run()
         }
         Success(s)
-      case Failure(t) => Failure(t)
+      case Failure(t) =>
+        log.error(t)(s"Failed to create transaction envelope for [${in.envelope.id}]")
+        Failure(t)
     }
 
     TransactionStreamContext(
@@ -102,19 +105,30 @@ class FlowTransactionStream(
     }
 
     //TODO: review not to block here
-    val result = Await.result(f, 1.second)
-
-    result match {
+    Await.result(f, 1.second) match {
       case Success(r) => r
-      case Failure(t) => in.envelope.withException(t)
+      case Failure(t) =>
+        log.error(t)(t.getMessage)
+        in.envelope.withException(t)
     }
   }
 
   def build(): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
-    Flow.fromFunction(updateEvent)
-      .via(Flow.fromFunction(recordTransaction))
-      .via(Flow.fromFunction(logAndPrepareSend))
-      .via(Flow.fromFunction(sendTransaction))
-      .via(Flow.fromFunction(acknowledge))
+
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
+      val record = b.add(Flow.fromFunction(recordTransaction).named("recordTransaction"))
+      val logTrans = b.add(Flow.fromFunction(logAndPrepareSend).named("logTransaction"))
+      val sendTrans = b.add(Flow.fromFunction(sendTransaction).named("sendTransaction"))
+      val ack = b.add(Flow.fromFunction(acknowledge).named("ackTransaction"))
+
+      update ~> record ~> logTrans ~> sendTrans ~> ack
+
+      FlowShape(update.in, ack.out)
+    }
+
+    Flow.fromGraph(g)
   }
 }

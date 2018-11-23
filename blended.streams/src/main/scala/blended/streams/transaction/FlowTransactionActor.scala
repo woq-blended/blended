@@ -99,25 +99,23 @@ class FlowTransactionManager() extends Actor {
 
   override def receive: Receive = {
 
-    case s : FlowTransactionStarted =>
+    case e : FlowTransactionEvent =>
       val respondTo = sender()
 
-      transactionActor(s.transactionId).recoverWith[ActorRef] {
+      log.trace(s"Recording transaction event [$e]")
+
+      transactionActor(e.transactionId).recoverWith[ActorRef] {
         case t : Throwable =>
-          log.debug(s"Creating new Transaction actor for [${s.transactionId}]")
+          log.debug(s"Creating new Transaction actor for [${e.transactionId}]")
 
           val a = context.system.actorOf(FlowTransactionActor.props(
             FlowTransaction(
-              id = s.transactionId,
-              creationProps = s.properties
+              id = e.transactionId,
+              creationProps = e.properties
             )
-          ), s.transactionId)
-
-          a.tell(s, respondTo)
+          ), e.transactionId)
           Future(a)
-      }
-
-    case e : FlowTransactionEvent => fwdToTransaction(e.transactionId, e)
+      }.map(a => a.tell(e, respondTo))
 
     case RestartTransactionActor(id) => fwdToTransaction(id, RestartActor)
 

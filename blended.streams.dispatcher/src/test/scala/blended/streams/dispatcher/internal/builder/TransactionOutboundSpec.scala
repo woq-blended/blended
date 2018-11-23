@@ -130,16 +130,22 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     }
 
     "do not send Cbes for transaction updates" in {
-      val envelopes = Seq(
-        transactionEnvelope(ctxt, FlowTransactionUpdate(
-          transactionId = UUID.randomUUID().toString(),
-          properties = FlowMessage.noProps,
-          updatedState = WorklistState.Started,
-          branchIds = "foo"
-        )).withHeader(ctxt.bs.headerCbeEnabled, true).get
-      )
 
-      val switch = sendTransactions(ctxt, cf)(envelopes:_*)
+      val envStart = transactionEnvelope(ctxt, FlowTransactionUpdate(
+        transactionId = UUID.randomUUID().toString(),
+        properties = FlowMessage.noProps,
+        updatedState = WorklistState.Completed,
+        branchIds = "foo, bar"
+      )).withHeader(ctxt.bs.headerCbeEnabled, true).get
+
+//      val envUpdate = transactionEnvelope(ctxt, FlowTransactionUpdate(
+//        transactionId = UUID.randomUUID().toString(),
+//        properties = FlowMessage.noProps,
+//        updatedState = WorklistState.Completed,
+//        branchIds = "foo"
+//      )).withHeader(ctxt.bs.headerCbeEnabled, true).get
+
+      val switch = sendTransactions(ctxt, cf)(envStart)
       val collector = receiveCbes
 
       val cbes = Await.result(collector.result, timeout + 1.second)
