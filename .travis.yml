@@ -53,7 +53,7 @@ env:
     # DOCKER_USERNAME
     - secure: "KZskPnjiNor+iXpTQjF/aIlgOjn3mztpkL/WUyEys6Fb0UI2HXK0adzJcSDe46nPxG8En4uSxZ9Sq4oP1CP9MD/sgMPIFZX00r5+nONyDRTYJfFm06YvTyJAMvawGjwqlOdL+nw4DVOH8rJle5R3Uh+caGQiDMV4EMded7lEPdc="
     # DOCKER_PASSWORD
-    - secure: "TJ3SBlzPl4VeepEc1v9Tp8pSleb9WN+jmUT8+JgZIeyWWHmMtPfuMN3d0SuIrKRSR1ZxOpq2RVopU++kbu1Gb1oafpdSo/gjL+/CTL9bfe4Dua0wmBmmNf+Nl76x+Vl7zZ7qQm6LlDgaExfcNg/7x3dOq8m1ZkEOVrAqB0nzdG4="
+    - secure: "r/nYnqfQwO1eGu/5V1eV8enPG/XR0pjmWGV0USmYYEPFQE1qncsUi1Fw1GSbU9o8SClPXOas8CcYJzVEhjcWeEvbQFL6vBCVBvkX2du2qTVbPAJ0YTXmVRHsfe3SrNXnLS+11ZEm6HpuCdx48cL9wA7jiXRNmxOCbVsm5+NgmdA="
 
 stages:
   - name: VerifyPublish
@@ -71,6 +71,9 @@ stages:
     if: branch = master AND type = push
 
   - name: BuildUI
+    if: branch = master AND type = push
+
+  - name: BuildPlugin
     if: branch = master AND type = push
 
   - name: IntegrationTest
@@ -105,6 +108,10 @@ jobs:
   # ------ Build and test the management UI
   - stage: BuildUI
     script: $TRAVIS_BUILD_DIR/scripts/buildUI.sh
+
+  # ------ Build Updater Maven Plugin
+  - stage: BuildPlugin
+    script: $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
