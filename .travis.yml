@@ -50,19 +50,19 @@ jobs:
     script: ./verifyPublish.sh
   - stage: Test
     before_script:
-    - ./dropbox_uploader.sh list
-    - ./build-akka.sh
+    - ./scripts/dropbox_uploader.sh list
+    - ./scripts/build-akka.sh
     script:
     - sbt cleanCoverage unidoc
     after_failure:
-    - ./upload-results.sh $TRAVIS_BUILD_NUMBER
+    - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
     after_success:
-    - ./upload-results.sh $TRAVIS_BUILD_NUMBER
+    - ./scripts/upload-results.sh $TRAVIS_BUILD_NUMBER
   - stage: Deploy
     script: ./runPublish.sh
   - stage: Site
     before_script:
-    - ./dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
+    - ./scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/target.tgz target.tgz
     - tar -xzf target.tgz
     script:
     - sbt jbakeSite
