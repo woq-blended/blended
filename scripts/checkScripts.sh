@@ -3,9 +3,9 @@
 set -x
 
 cd `dirname $0`
-SCRIPTDIR = `pwd`
+SCRIPTDIR = $(pwd)
 
-if [ ! -x ${SCRIPTDIR}/upload-directory.sh ] ; then
+if [ ! -x $SCRIPTDIR/upload-directory.sh ] ; then
   exit 1
 fi
 

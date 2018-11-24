@@ -90,61 +90,61 @@ jobs:
   # ------ Stage Test
   - stage: Test
     before_script:
-    - $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
-    - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
-    - $TRAVIS_BUILD_DIR/scripts/build-akka.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
+    - bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
     - sbt clean publishM2 unidoc cleanCoverage
     after_failure:
-    - $TRAVIS_BUILD_DIR/scripts/upload-results.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
-    - $TRAVIS_BUILD_DIR/scripts/upload-results.sh
-    - $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
+    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Deploy
   - stage: Deploy
     script:
-    - $TRAVIS_BUILD_DIR/scripts/runPublish.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/runPublish.sh
 
   # ------ Build the integration test support
   - stage: BuildITest
     before_script:
-    - $TRAVIS_BUILD_DIR/scripts/download-directory $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
-    - $TRAVIS_BUILD_DIR/scripts/buildITest.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
     after_success:
-    - $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build and test the management UI
   - stage: BuildUI
     before_script:
-    - $TRAVIS_BUILD_DIR/scripts/download-directory $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
-    - $TRAVIS_BUILD_DIR/scripts/buildUI.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
     after_success:
-  - $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build Updater Maven Plugin
   - stage: BuildPlugin
     before_script:
-    - $TRAVIS_BUILD_DIR/scripts/download-directory $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
-    - $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
     after_success:
-    - $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
     before_script:
-    - $TRAVIS_BUILD_DIR/scripts/download-directory $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
-    - $TRAVIS_BUILD_DIR/scripts/itest.sh
+    - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
 
   # ------ Stage Site Deploy
   - stage: Site
     before_script:
     - cd $TRAVIS_BUILD_DIR
-    - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/result.tgz result.tgz
+    - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/result.tgz result.tgz
     - tar -xzf result.tgz
     script:
     - sbt jbakeSite
