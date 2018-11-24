@@ -143,9 +143,7 @@ jobs:
   # ------ Stage Site Deploy
   - stage: Site
     before_script:
-    - cd $TRAVIS_BUILD_DIR
-    - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh download travis/$TRAVIS_BUILD_NUMBER/result.tgz result.tgz
-    - tar -xzf result.tgz
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target/results results
     script:
     - sbt jbakeSite
     deploy:
