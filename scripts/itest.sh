@@ -10,7 +10,9 @@ git checkout master
 docker --version
 ps -ef | grep docker
 
-rm ~/.docker/config.json
+#Avoid non zero return code
+rm -f $HOME/.docker/config.json || true
+
 mkdir -p $TRAVIS_BUILD_DIR/container/.mvn
 echo "-Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT" > $TRAVIS_BUILD_DIR/container/.mvn/maven.config
 
