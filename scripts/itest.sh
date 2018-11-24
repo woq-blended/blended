@@ -2,7 +2,7 @@
 
 set -e
 
-set BLENDED_VERSION=$(cat $TRAVIS_BUILD_DIR/version.txt)
+BLENDED_VERSION=$(cat $TRAVIS_BUILD_DIR/version.txt)
 
 git clone https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
 cd $TRAVIS_BUILD_DIR/container
