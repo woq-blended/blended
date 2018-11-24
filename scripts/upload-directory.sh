@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 set UPLOAD_DIR=$1
 set UPLOAD_FILE=$2
 

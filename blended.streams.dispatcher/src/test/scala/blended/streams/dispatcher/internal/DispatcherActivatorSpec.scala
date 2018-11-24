@@ -97,10 +97,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       )
 
       appender.stop()
-      val logEvents = Await.result(logEventsFut, timeout)
+      val logEvents = Await.result(logEventsFut, timeout + 1.second)
 
-      val errors = results(0)
-      val cbes = results(1)
+      val errors = results.head
+      val cbes = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
       logEvents should have size 2

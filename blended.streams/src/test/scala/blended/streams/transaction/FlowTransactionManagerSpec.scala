@@ -42,7 +42,7 @@ class FlowTransactionManagerSpec extends LoggingFreeSpec
     val coll = Collector[FlowTransaction]("trans")
     mgr.tell(event, coll.actor)
 
-    akka.pattern.after(500.millis, system.scheduler)( Future {
+    akka.pattern.after(2.seconds, system.scheduler)( Future {
       coll.actor ! CollectingActor.Completed
     })
 

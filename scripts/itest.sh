@@ -10,11 +10,13 @@ git checkout master
 docker --version
 ps -ef | grep docker
 
+rm ~/.docker/config.json
 mkdir -p $TRAVIS_BUILD_DIR/container/.mvn
 echo "-Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT" > $TRAVIS_BUILD_DIR/container/.mvn/maven.config
 
 mvn clean install -P docker,itest
 
+echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker push atooni/blended_mgmt:$BLENDED_VERSION
 docker push atooni/blended_node:$BLENDED_VERSION
 

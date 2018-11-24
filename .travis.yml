@@ -90,6 +90,7 @@ jobs:
   # ------ Stage Test
   - stage: Test
     before_script:
+    - $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
     - $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
     - $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
@@ -136,7 +137,6 @@ jobs:
   - stage: IntegrationTest
     before_script:
     - $TRAVIS_BUILD_DIR/scripts/download-directory $HOME/.m2 m2
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
     script:
     - $TRAVIS_BUILD_DIR/scripts/itest.sh
 
