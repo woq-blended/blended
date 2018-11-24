@@ -1,9 +1,9 @@
 #!/bin/bash
 
-SCRIPTDIR = `dirname $0`
+set -x
 
 cd `dirname $0`
-SCRIPTDIR=`pwd`
+SCRIPTDIR = `pwd`
 
 if [ ! -x ${SCRIPTDIR}/upload-directory.sh ] ; then
   exit 1
