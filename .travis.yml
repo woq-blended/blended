@@ -143,7 +143,7 @@ jobs:
   # ------ Stage Site Deploy
   - stage: Site
     before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target/results results
+    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target target
     script:
     - sbt jbakeSite
     deploy:
