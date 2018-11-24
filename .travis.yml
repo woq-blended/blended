@@ -99,7 +99,7 @@ jobs:
     - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
     - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
-    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Deploy
   - stage: Deploy
@@ -113,7 +113,7 @@ jobs:
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
     after_success:
-    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build and test the management UI
   - stage: BuildUI
@@ -122,7 +122,7 @@ jobs:
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
     after_success:
-    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build Updater Maven Plugin
   - stage: BuildPlugin
@@ -131,7 +131,7 @@ jobs:
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
     after_success:
-    - bash $TRAVIS_BUILD_DIR/srcipts/upload-directory.sh $HOME/.m2 m2
+    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
