@@ -2,8 +2,8 @@
 
 set -x
 
-set UPLOAD_DIR=$1
-set UPLOAD_FILE=$2
+UPLOAD_DIR=$1
+UPLOAD_FILE=$2
 
 cd $UPLOAD_DIR
 tar -czf ../$UPLOAD_FILE.tgz .
