@@ -16,9 +16,10 @@ rm -f $HOME/.docker/config.json || true
 mkdir -p $TRAVIS_BUILD_DIR/container/.mvn
 echo "-Ddocker.host=$DOCKER_HOST -Ddocker.port=$DOCKER_PORT" > $TRAVIS_BUILD_DIR/container/.mvn/maven.config
 
-mvn clean install -Dmaven.legacyLocalRepo=true -P docker,itest
+mvn install -Dmaven.legacyLocalRepo=true -P docker,itest
 
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+docker push atooni/blended_apacheds:$BLENDED_VERSION
 docker push atooni/blended_mgmt:$BLENDED_VERSION
 docker push atooni/blended_node:$BLENDED_VERSION
 
