@@ -41,8 +41,14 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
   protected def onSessionOpened(jmsSession: S): Unit = {}
 
+  // Just to identify the Source stage in log statements
+  protected val id : String = { jmsSettings.connectionFactory match {
+    case idAware: IdAwareConnectionFactory => idAware.id
+    case cf => cf.toString()
+  }}
+
   protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
-    log.debug(e)("Failing stage")
+    log.debug(e)(s"Failing stage [$id]")
     failStage(e)
   }
 
@@ -50,12 +56,6 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
     jmsSessions += (session.sessionId -> session)
     onSessionOpened(session)
   }
-
-  // Just to identify the Source stage in log statements
-  protected val id : String = { jmsSettings.connectionFactory match {
-    case idAware: IdAwareConnectionFactory => idAware.id
-    case cf => cf.toString()
-  }}
 
   protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
 

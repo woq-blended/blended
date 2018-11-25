@@ -134,23 +134,22 @@ class BridgeSpec extends SimplePojoContainerSpec
 
     "process messages with optional header configs" in {
 
-      forAll { (desc : String) =>
-        whenever(desc.nonEmpty) {
-          val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
-            destHeader -> "SampleHeaderOut",
-            "Description" -> desc,
-            headerCfg.headerTrack -> false
-          ).get))
+      val desc = "TestDesc"
 
-          val switch = sendMessages(external, JmsQueue("SampleHeaderIn"), log, env)
-          val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"), log)(1.second, system, materializer)
-          val result = Await.result(coll.result, 1100.millis)
-          switch.shutdown()
+      val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
+        destHeader -> "SampleHeaderOut",
+        "Description" -> desc,
+        headerCfg.headerTrack -> false
+      ).get))
 
-          result should have size 1
-          result.head.header[String]("ResourceType") should be (Some(desc))
-        }
-      }
+      val switch = sendMessages(external, JmsQueue("SampleHeaderIn"), log, env)
+      val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"), log)(1.second, system, materializer)
+      val result = Await.result(coll.result, 1100.millis)
+      switch.shutdown()
+      system.stop(coll.actor)
+
+      result should have size 1
+      result.head.header[String]("ResourceType") should be (Some(desc))
     }
   }
 

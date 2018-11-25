@@ -7,10 +7,12 @@ import scala.util.Try
 
 sealed trait MsgProperty[T] {
   def value : T
-  override def toString: String = s"MsgProperty[${value.getClass().getName()}](${value.toString()})"
+  override def toString: String = value.toString
 }
 
-case class StringMsgProperty(override val value: String) extends MsgProperty[String]
+case class StringMsgProperty(override val value: String) extends MsgProperty[String] {
+  override def toString: String = "\"" + super.toString + "\""
+}
 
 case class IntMsgProperty(override val value: Int) extends MsgProperty[Int]
 case class LongMsgProperty(override val value: Long) extends MsgProperty[Long]

@@ -14,6 +14,7 @@ import blended.streams.transaction._
 import blended.streams.worklist.WorklistState
 import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.util.logging.Logger
+import scala.concurrent.duration._
 
 import scala.util.Try
 
@@ -51,6 +52,7 @@ class JmsStreamBuilder(
 
   // configure the consumer
   private val srcSettings = JMSConsumerSettings(cfg.fromCf)
+    .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
     .withDestination(Some(cfg.fromDest))
     .withSessionCount(cfg.listener)
     .withSelector(cfg.selector)
@@ -209,12 +211,13 @@ class JmsStreamBuilder(
       FlowShape(trackSplit.in, mergeResult.out)
     }
 
-    val src : Source[FlowEnvelope, NotUsed] = RestartableJmsSource(
-      name = streamId + "-source",
-      settings = srcSettings,
-      headerConfig = cfg.headerCfg,
-      log = bridgeLogger
-    )
+    val src : Source[FlowEnvelope, NotUsed] =
+      Source.fromGraph(new JmsAckSourceStage(
+        name = streamId + "-source",
+        settings = srcSettings,
+        headerConfig = cfg.headerCfg,
+        log = bridgeLogger
+      ))
 
     val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound && cfg.header.nonEmpty) {
 
@@ -241,7 +244,11 @@ class JmsStreamBuilder(
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
+  // TODO: Make restart parameters configurable
   val streamCfg : StreamControllerConfig = StreamControllerConfig(
-    name = streamId, source = stream
+    name = streamId,
+    source = stream,
+    exponential = false,
+    maxDelay = 30.seconds
   )
 }

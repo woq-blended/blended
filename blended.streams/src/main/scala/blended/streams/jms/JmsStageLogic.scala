@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.Done
 import akka.stream._
-import akka.stream.stage.{AsyncCallback, StageLogging, TimerGraphStageLogic}
+import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
 import blended.jms.utils.JmsSession
 import blended.util.logging.Logger
 
@@ -80,7 +80,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
               // all JMS messages are delivered. This will allow the stage to complete after all pending messages
               // are delivered, thus preventing message loss due to premature stage completion.
               markStopped.invoke(Done)
-              log.debug(s"Successfully closed all sessions for Jms Source stage [$id]")
+              log.debug(s"Successfully closed all sessions for Jms stage [$id]")
             }
           }
         }
