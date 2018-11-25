@@ -13,7 +13,8 @@ fi
 # if it ends on SNAPSHOT, we won't check the git tag and set 
 # the publishCmd to ciPublish
 # If it is not a SNAPSHOT, we will check if the git tag has the 
-# same name as the version to be released. If so, we will set 
+# same name as the version to be released. If so, we will set
+
 # the publishCmd to ciRelease, otherwise we will break the build.
 
 if [[ ISSNAPSHOT -eq 1 ]]; then

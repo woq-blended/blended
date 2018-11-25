@@ -99,7 +99,7 @@ jobs:
     - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
     - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
+    # - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Deploy
   - stage: Deploy
@@ -108,35 +108,35 @@ jobs:
 
   # ------ Build the integration test support
   - stage: BuildITest
-    before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
+    # before_script:
+    # - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
-    after_success:
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
+    # after_success:
+    # - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build and test the management UI
   - stage: BuildUI
-    before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
+    # before_script:
+    # - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
-    after_success:
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
+    # after_success:
+    # - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Build Updater Maven Plugin
   - stage: BuildPlugin
-    before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
+    # before_script:
+    # - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
-    after_success:
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
+    # after_success:
+    # - bash $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $HOME/.m2 m2
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
-    before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
+    # before_script:
+    # - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $HOME/.m2 m2
     script:
     - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
 
