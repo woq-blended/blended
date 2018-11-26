@@ -39,7 +39,6 @@ final class JmsAckSourceStage(
 
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
 
-      private[this] val log = Logger(classOf[JmsAckSourceStage].getName())
       private[this] val inflight : mutable.Map[String, FlowEnvelope] = mutable.Map.empty
       private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
 

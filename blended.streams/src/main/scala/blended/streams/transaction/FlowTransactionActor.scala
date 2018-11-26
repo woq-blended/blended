@@ -48,7 +48,7 @@ class FlowTransactionActor(initialState: FlowTransaction) extends RestartableAct
   private[this] def processEvent(requestor : ActorRef, event : FlowTransactionEvent) = {
     updateState(event) match {
       case Success(s) =>
-        log.debug(s"Sending Transaction state to [${requestor.path}]")
+        log.trace(s"Sending Transaction state to [${requestor.path}]")
         requestor ! s
         persist(event) { e => } // do nothing
       case Failure(exception) =>
