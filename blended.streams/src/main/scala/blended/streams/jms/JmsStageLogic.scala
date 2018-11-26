@@ -15,11 +15,10 @@ import scala.util.control.NonFatal
 abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   settings: T,
   inheritedAttributes: Attributes,
-  shape : Shape
+  shape : Shape,
+  log : Logger
 ) extends TimerGraphStageLogic(shape)
   with JmsConnector[S] {
-
-  private[this] val log = Logger(getClass().getName())
 
   override protected def jmsSettings: T = settings
 

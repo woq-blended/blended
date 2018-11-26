@@ -10,7 +10,7 @@ import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class FlowTransactionStream(
@@ -78,7 +78,7 @@ class FlowTransactionStream(
   }
 
   private val sendTransaction : TransactionStreamContext => TransactionStreamContext = { in =>
-    val sendEnv = in.sendEnvelope.get.map {
+    val sendEnv : Future[Try[FlowEnvelope]] = in.sendEnvelope.get.map {
       case Success(s) =>
         if (performSend(s)) {
           log.trace(s"About to send transaction envelope  [${in.envelope.id}]")
@@ -97,38 +97,38 @@ class FlowTransactionStream(
     )
   }
 
-  private val acknowledge : TransactionStreamContext => FlowEnvelope = { in =>
-
-    val f : Future[Try[FlowEnvelope]] = in.sendEnvelope.get.map {
-      case Success(s) =>
-        in.envelope.acknowledge()
-        Success(s)
-      case Failure(t) => Failure(t)
-    }
-
-    //TODO: review not to block here
-    Await.result(f, 1.second) match {
-      case Success(r) => r
-      case Failure(t) =>
-        log.error(t)(t.getMessage)
-        in.envelope.withException(t)
-    }
-  }
-
   def build(): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
+      val performSend : TransactionStreamContext => Future[FlowEnvelope] = { ctxt =>
+        ctxt.sendEnvelope match {
+          case None =>
+            Future(ctxt.envelope.withException(new IllegalStateException("Send transaction has not been called.")))
+          case Some(s) => s.map {
+            case Success(env) =>
+              log.trace(s"Send flow for transaction [${env.id}] completed successfully.")
+              ctxt.envelope.acknowledge()
+              env
+            case Failure(t) =>
+              ctxt.envelope.withException(t)
+          }
+        }
+      }
+
+      val ack : Flow[TransactionStreamContext, FlowEnvelope, NotUsed] =
+        Flow[TransactionStreamContext].mapAsync[FlowEnvelope](2)(performSend).named("performSend")
+
       val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
       val record = b.add(Flow.fromFunction(recordTransaction).named("recordTransaction"))
       val logTrans = b.add(Flow.fromFunction(logAndPrepareSend).named("logTransaction"))
       val sendTrans = b.add(Flow.fromFunction(sendTransaction).named("sendTransaction"))
-      val ack = b.add(Flow.fromFunction(acknowledge).named("ackTransaction"))
+      val acknowledge = b.add(ack)
 
-      update ~> record ~> logTrans ~> sendTrans ~> ack
+      update ~> record ~> logTrans ~> sendTrans ~> acknowledge
 
-      FlowShape(update.in, ack.out)
+      FlowShape(update.in, acknowledge.out)
     }
 
     Flow.fromGraph(g)

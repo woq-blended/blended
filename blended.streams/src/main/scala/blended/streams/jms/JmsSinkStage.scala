@@ -11,7 +11,9 @@ import scala.concurrent.duration._
 
 import scala.util.Random
 
-class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(implicit actorSystem : ActorSystem)
+class JmsSinkStage(
+  name: String, settings : JmsProducerSettings, log : Logger
+)(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
   private case class Push(env: FlowEnvelope)
@@ -28,7 +30,8 @@ class JmsSinkStage(name: String, settings : JmsProducerSettings, log : Logger)(i
     new JmsStageLogic[JmsProducerSession, JmsProducerSettings](
       settings,
       inheritedAttributes,
-      shape
+      shape,
+      log
     ) with JmsConnector[JmsProducerSession] {
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>

@@ -4,6 +4,7 @@ import akka.stream._
 import akka.stream.stage.OutHandler
 import blended.jms.utils.JmsConsumerSession
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.Logger
 
 import scala.collection.mutable
 
@@ -12,8 +13,9 @@ abstract class SourceStageLogic[S <: JmsConsumerSession](
   shape: SourceShape[FlowEnvelope],
   out: Outlet[FlowEnvelope],
   settings: JMSConsumerSettings,
-  inheritedAttributes: Attributes
-) extends JmsStageLogic[S, JMSConsumerSettings](settings, inheritedAttributes, shape) {
+  inheritedAttributes: Attributes,
+  log : Logger
+) extends JmsStageLogic[S, JMSConsumerSettings](settings, inheritedAttributes, shape, log) {
 
   override protected def jmsSettings: JMSConsumerSettings = settings
 

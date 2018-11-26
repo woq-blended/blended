@@ -30,7 +30,7 @@ class JmsSourceStage(
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 
-    val logic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes) {
+    val logic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes, log) {
 
       private val bufferSize = (settings.bufferSize + 1) * settings.sessionCount
       private val backpressure = new Semaphore(bufferSize)

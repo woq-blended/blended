@@ -37,7 +37,7 @@ final class JmsAckSourceStage(
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
 
-    val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes) {
+    val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes, log) {
 
       private[this] val inflight : mutable.Map[String, FlowEnvelope] = mutable.Map.empty
       private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
@@ -57,13 +57,13 @@ final class JmsAckSourceStage(
 
       private val acknowledge : FlowEnvelope => Unit = { env =>
         ackHandler(env).foreach { handler =>
-          log.debug(s"Acknowledging message for session id [${handler.session.sessionId}] : ${env.flowMessage}")
+          log.debug(s"Acknowledging message for session id [${handler.session.sessionId}] : [$env]")
 
           handler.acknowledge(env) match {
             case Success(_) =>
               scheduleOnce(Poll(handler.session.sessionId), 10.millis)
             case Failure(t) =>
-              log.error(t)(s"Error acknowledging message for session [${handler.session.sessionId}] : [${env.flowMessage}]")
+              log.error(t)(s"Error acknowledging message for session [${handler.session.sessionId}] : [$env]")
               closeSession(handler.session)
           }
 
@@ -87,7 +87,7 @@ final class JmsAckSourceStage(
                 }
               case None =>
                 if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
-                  log.debug(s"Acknowledge timed out for [$sessionId] with message ${envelope.flowMessage}")
+                  log.warn(s"Acknowledge timed out for [$sessionId] with envelope [$envelope]")
                   inflight -= sessionId
                   // Recovering the session, so that unacknowledged messages may be redelivered
                   closeSession(handler.session)

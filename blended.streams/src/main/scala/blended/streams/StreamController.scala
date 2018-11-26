@@ -93,7 +93,10 @@ class StreamController(streamCfg: StreamControllerConfig)(implicit system : Acto
 
     case StreamController.StreamTerminated(t) =>
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
-        log.debug(s"Stream [${streamCfg.name}] terminated...scheduling restart in [$interval]")
+        t.foreach { e =>
+          log.error(e)(e.getMessage)
+        }
+        log.info(s"Stream [${streamCfg.name}] terminated [${t.map(_.getMessage).getOrElse("")}] ...scheduling restart in [$interval]")
 
         context.system.scheduler.scheduleOnce(interval, self, StreamController.Start)
         interval = nextInterval

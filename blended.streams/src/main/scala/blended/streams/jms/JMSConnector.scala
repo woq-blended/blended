@@ -4,13 +4,11 @@ import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 
 import akka.actor.ActorSystem
 import akka.pattern.after
-import akka.stream.stage.{AsyncCallback, GraphStageLogic, StageLogging}
+import akka.stream.stage.{AsyncCallback, GraphStageLogic}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
-import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
-
 
 object JmsConnector {
 
@@ -33,8 +31,6 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
   @volatile protected var jmsConnection: Future[Connection] = _
 
-  private[this] val log = Logger[JmsConnector.type]
-
   protected var jmsSessions : Map[String, S] = Map.empty
 
   protected def jmsSettings: JmsSettings
@@ -48,7 +44,6 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
   }}
 
   protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
-    log.debug(e)(s"Failing stage [$id]")
     failStage(e)
   }
 
@@ -75,7 +70,6 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
     // wait for all sessions to successfully initialize before invoking the onSession callback.
     // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
     allSessions.foreach(_.foreach{ s =>
-      log.trace(s"Calling Session creation callback for [${s.sessionId}]")
       onSession.invoke(s)
     })(ec)
   }
@@ -86,12 +80,9 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
       val toBeCreated = jmsSettings.sessionCount - jmsSessions.size
 
-      log.debug(s"Creating [$toBeCreated] sessions with [$jmsSettings]")
-
       val sessionFutures =
         for (_ <- 0 until toBeCreated) yield Future {
           val s = createSession(connection)
-          log.debug(s"Created session [${s.sessionId}]")
           s
         }
 
@@ -156,7 +147,6 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
   ): Future[Connection] = {
 
     jmsConnection = openConnection(startConnection).map { connection =>
-      log.debug(s"Successfully connected [$id]")
       connection.setExceptionListener(new ExceptionListener {
         override def onException(ex: JMSException) = {
           try {
