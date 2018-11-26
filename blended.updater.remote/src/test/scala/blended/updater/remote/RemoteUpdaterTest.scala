@@ -1,5 +1,7 @@
 package blended.updater.remote
 
+import java.util.UUID
+
 import scala.collection.JavaConverters._
 
 import blended.persistence.PersistenceService
@@ -74,7 +76,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "adding a runtime config action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            val action1 = AddRuntimeConfig(
+              UUID.randomUUID().toString(),
+              RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0)))
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
           }
@@ -82,7 +87,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "adding a stage action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            val action1 = StageProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
           }
@@ -91,10 +99,16 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
         "adding a second add runtime config action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
             val ru = new RemoteUpdater(new TransientRuntimeConfigPersistor(), new TransientContainerStatePersistor(), new TransientOverlayConfigPersistor())
-            val action1 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            val action1 = AddRuntimeConfig(
+              UUID.randomUUID().toString(),
+              RuntimeConfig(name = "test", version = "1", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0)))
+            )
             ru.addAction("1", action1)
             assert(ru.getContainerActions("1") === Seq(action1))
-            val action2 = AddRuntimeConfig(RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0))))
+            val action2 = AddRuntimeConfig(
+              UUID.randomUUID().toString(),
+              RuntimeConfig(name = "test", version = "2", startLevel = 10, defaultStartLevel = 10, bundles = List(BundleConfig(url = "mvn:test:test:1", startLevel = 0)))
+            )
             ru.addAction("1", action2)
             assert(ru.getContainerActions("1") === Seq(action1, action2))
           }
@@ -102,10 +116,16 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "adding a second stage action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            val action1 = StageProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
-            val action2 = StageProfile("test", "2", todoOverlayRefs)
+            val action2 = StageProfile(
+              UUID.randomUUID().toString(),
+              "test", "2", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action2)
             assert(ctx.ru.getContainerActions("1") === Seq(action1, action2))
           }
@@ -113,7 +133,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "not adding a second but identical stage action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            val action1 = StageProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             ctx.ru.addAction("1", action1)
@@ -123,20 +146,26 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "remove a stage action if container info reports already staged" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = StageProfile("test", "1", todoOverlayRefs)
+            val action1 = StageProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             val profiles = List(
-              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = Set(), state = OverlayState.Valid)))
+              Profile(name = "test", version = "1", overlaySet = OverlaySet(overlays = Set(), state = OverlayState.Valid))
             )
-            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
+            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L, Nil))
             assert(ctx.ru.getContainerActions("1") === Seq())
           }
         }
 
         "adding a update action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            val action1 = ActivateProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
           }
@@ -144,9 +173,15 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "adding a second update action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            val action1 = ActivateProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
-            val action2 = ActivateProfile("test", "2", todoOverlayRefs)
+            val action2 = ActivateProfile(
+              UUID.randomUUID().toString(),
+              "test", "2", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action2)
             assert(ctx.ru.getContainerActions("1") === Seq(action1, action2))
           }
@@ -154,7 +189,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "not adding a second but identical update action" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            val action1 = ActivateProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             ctx.ru.addAction("1", action1)
@@ -164,13 +202,16 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
         "remove an activation action if container info reports already activated" in {
           withEmptyRemoteUpdate(transient) { ctx =>
-            val action1 = ActivateProfile("test", "1", todoOverlayRefs)
+            val action1 = ActivateProfile(
+              UUID.randomUUID().toString(),
+              "test", "1", todoOverlayRefs
+            )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
             val profiles = List(
-              Profile(name = "test", version = "1", overlays = List(OverlaySet(overlays = Set(), state = OverlayState.Active)))
+              Profile(name = "test", version = "1", overlaySet = OverlaySet(overlays = Set(), state = OverlayState.Active))
             )
-            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L))
+            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), profiles, 1L, Nil))
             assert(ctx.ru.getContainerActions("1") === Seq())
           }
         }
@@ -180,21 +221,27 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 
             val conId = "1"
 
-            val action1 = AddRuntimeConfig(RuntimeConfig(
-              name = "rc",
-              version = "1",
-              startLevel = 10,
-              defaultStartLevel = 10
-            ))
+            val action1 = AddRuntimeConfig(
+              UUID.randomUUID().toString(),
+              RuntimeConfig(
+                name = "rc",
+                version = "1",
+                startLevel = 10,
+                defaultStartLevel = 10
+              )
+            )
             log.info(s"Add 1. action: ${action1}")
             ctx.ru.addAction(conId, action1)
             ctx.ps.map(p => assert(p.findAll("ContainerState").size === 1))
             assert(ctx.ru.getContainerActions(conId).size === 1)
 
-            val action2 = AddOverlayConfig(OverlayConfig(
-              name = "oc",
-              version = "1"
-            ))
+            val action2 = AddOverlayConfig(
+              UUID.randomUUID().toString(),
+              OverlayConfig(
+                name = "oc",
+                version = "1"
+              )
+            )
             log.info(s"Add 2. action: ${action2}")
             ctx.ru.addAction(conId, action2)
             ctx.ps.map { p =>
@@ -207,6 +254,7 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             assert(ctx.ru.getContainerActions(conId).size === 2)
 
             val action3 = StageProfile(
+              UUID.randomUUID().toString(),
               profileName = "rc",
               profileVersion = "1",
               overlays = Set(OverlayRef("oc", "1"))

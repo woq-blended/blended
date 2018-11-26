@@ -6,7 +6,7 @@ import blended.updater.config.LocalRuntimeConfig
 import blended.updater.config.OverlaySet
 import blended.updater.config.OverlayState
 import blended.updater.config.RuntimeConfig
-import blended.updater.config.SingleProfile
+import blended.updater.config.Profile
 
 object LocalProfile {
 
@@ -29,7 +29,7 @@ case class LocalProfile(config: LocalRuntimeConfig, overlays: LocalOverlays, sta
 
   def bundles: List[BundleConfig] = config.resolvedRuntimeConfig.allBundles
 
-  def toSingleProfile: SingleProfile = {
+  def toSingleProfile: Profile = {
     val (oState, reason) = state match {
       case LocalProfile.Pending(issues) => (OverlayState.Pending, Some(issues.mkString("; ")))
       case LocalProfile.Invalid(issues) => (OverlayState.Invalid, Some(issues.mkString("; ")))
@@ -37,7 +37,7 @@ case class LocalProfile(config: LocalRuntimeConfig, overlays: LocalOverlays, sta
       case LocalProfile.Staged => (OverlayState.Pending, None)
     }
 
-    SingleProfile(
+    Profile(
       config.runtimeConfig.name,
       config.runtimeConfig.version,
       OverlaySet(overlays.overlayRefs, oState, reason)

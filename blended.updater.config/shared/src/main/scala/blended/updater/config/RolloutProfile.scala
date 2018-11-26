@@ -4,17 +4,20 @@ case class RolloutProfile(
   profileName: String,
   profileVersion: String,
   overlays: Set[OverlayRef],
-  containerIds: List[String])
+  containerIds: List[String]
+)
 
 object RolloutProfile {
 
   def apply(
-    profile: SingleProfile,
-    containerIds: List[String]): RolloutProfile =
+    profile: Profile,
+    containerIds: List[String]
+  ): RolloutProfile =
     RolloutProfile(
       profileName = profile.name,
       profileVersion = profile.version,
       overlays = profile.overlaySet.overlays,
-      containerIds = containerIds)
+      containerIds = containerIds
+    )
 
 }

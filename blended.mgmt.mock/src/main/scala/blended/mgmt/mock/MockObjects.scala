@@ -70,11 +70,11 @@ object MockObjects {
     reason = Some("Incorrect artifact checksums")
   )
 
-  lazy val validProfiles =     List(
-      Profile(name = "blended-demo", "1.0", List(noOverlays)),
-      Profile(name = "blended-simple", "1.0", List(noOverlays, someOverlays, invalid)),
-      Profile(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
-    )
+  lazy val validProfiles: List[Profile] = List(
+    ProfileGroup(name = "blended-demo", "1.0", List(noOverlays)),
+    ProfileGroup(name = "blended-simple", "1.0", List(noOverlays, someOverlays, invalid)),
+    ProfileGroup(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
+  ).flatMap(_.toSingle)
 
   def createContainer(numContainers: Integer) = 1.to(numContainers).map { i =>
 
@@ -87,7 +87,8 @@ object MockObjects {
       properties = containerProps(containerCount.incrementAndGet()),
       serviceInfos = pickOne(serviceSeqs),
       profiles = validProfiles,
-      timestampMsec = System.currentTimeMillis()
+      timestampMsec = System.currentTimeMillis(),
+      appliedUpdateActionIds = Nil
     )
   }.toList
 
@@ -103,7 +104,7 @@ object MockObjects {
     Pickle.intoString(result)
   }
 
-  def profilesList(l: List[Profile]) = Pickle.intoString(l)
+  def profilesList(l: List[ProfileGroup]) = Pickle.intoString(l)
 
   // Define some test environments here
 
@@ -140,5 +141,4 @@ object MockObjects {
   }
 
 }
-
 

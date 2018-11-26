@@ -177,28 +177,28 @@ class Updater(
   }
 
   def handleUpdateAction(event: UpdateAction): Unit = event match {
-    case UAAddRuntimeConfig(runtimeConfig) =>
-      log.debug(s"Received add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version}")
+    case UAAddRuntimeConfig(id, runtimeConfig) =>
+      log.debug(s"Received add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
-        log.debug(s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with result: ${x}")
+        log.debug(s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}] with result: ${x}")
       }
 
-    case UAAddOverlayConfig(overlayConfig) =>
-      log.debug(s"Received add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version}")
+    case UAAddOverlayConfig(id, overlayConfig) =>
+      log.debug(s"Received add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(AddOverlayConfig(nextId(), overlayConfig))(timeout).onComplete { x =>
-        log.debug(s"Finished add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with result: ${x}")
+        log.debug(s"Finished add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with ID [${id}] with result: ${x}")
       }
 
-    case UAStageProfile(name, version, overlayRefs) =>
-      log.debug(s"Received stage profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs}")
+    case UAStageProfile(id, name, version, overlayRefs) =>
+      log.debug(s"Received stage profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
@@ -210,17 +210,17 @@ class Updater(
         case Failure(e) =>
           log.error(e)(s"Could not complete stage profile [${request}]")
         case x =>
-          log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
+          log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs}  with ID [${id}] with result: ${x}")
       }
 
-    case UAActivateProfile(name, version, overlayRefs) =>
-      log.debug(s"Received activate profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs}")
+    case UAActivateProfile(id, name, version, overlayRefs) =>
+      log.debug(s"Received activate profile request (via event stream) for ${name}-${version} and overlays: ${overlayRefs} with ID [${id}]")
 
       implicit val ec = context.system.dispatcher
       val timeout = new Timeout(10, TimeUnit.MINUTES)
 
       self.ask(ActivateProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
-        log.debug(s"Finished activation profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with result: ${x}")
+        log.debug(s"Finished activation profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with ID [${id}] with result: ${x}")
       }
   }
 
@@ -441,7 +441,7 @@ class Updater(
     case PublishProfileInfo =>
       log.debug("Handling PublishProfileInfo message")
       val activeProfile = findActiveProfile().map(_.toSingleProfile)
-      val singleProfiles = profiles.values.toSeq.map(_.toSingleProfile).map { p =>
+      val singleProfiles = profiles.values.toList.map(_.toSingleProfile).map { p =>
         activeProfile match {
           case Some(a) if p.name == a.name && p.version == a.version && p.overlays.toSet == a.overlays.toSet =>
             p.copy(overlaySet = p.overlaySet.copy(state = OverlayState.Active))
@@ -449,7 +449,7 @@ class Updater(
         }
 
       }
-      val toSend = Profile.fromSingleProfiles(singleProfiles)
+      val toSend = singleProfiles
       log.debug(s"Publishing profile info to event stream: ${toSend}")
       context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 

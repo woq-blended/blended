@@ -1,19 +1,9 @@
 package blended.updater.config
 
-@deprecated("To be used only be the updater and will be renamed. Use SingleProfile instead.")
-case class Profile(name: String, version: String, overlays: List[OverlaySet]) {
-  require(!overlays.isEmpty, "A Profile must have at least one OverlaySet.")
+case class Profile(name: String, version: String, overlaySet: OverlaySet) {
+  // convenience getters
+  def overlays: Set[OverlayRef] = overlaySet.overlays
+  def state: OverlayState = overlaySet.state
 
-  def toSingle: List[SingleProfile] = overlays.map(o => SingleProfile(name, version, o))
-
-  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},overlays=${overlays})"
-}
-
-object Profile {
-
-  def fromSingleProfiles(singleProfiles: Seq[SingleProfile]): List[Profile] = {
-    val grouped = singleProfiles.groupBy(p => (p.name, p.version))
-    grouped.toList.map { case ((n, v), p) => Profile(n, v, p.toList.map(_.overlaySet)) }
-  }
-
+  override def toString(): String = s"${getClass().getSimpleName()}(name=${name},version=${version},overlaySet=${overlaySet})}"
 }

@@ -26,7 +26,8 @@ class RemoteUpdater(
     val actions = state.outstandingActions
     log.debug(s"Found [${actions.size}] old outstanding actions for container [${containerId}]")
     val newActions =
-      if (!actions.exists(_ == action)) {
+      // we ignore the ID in the existence check
+      if (!actions.exists(_.withId("") == action.withId(""))) {
         actions ++ List(action)
       } else {
         log.debug("A same action was already scheduled")
@@ -40,44 +41,45 @@ class RemoteUpdater(
   def updateContainerState(containerInfo: ContainerInfo): ContainerState = {
     // Logic:
     // - find previous state and extract it's profiles
-    // - analyze outstanding actions (filter those with missing dependencies)
+    // - analyze outstanding actions (filter those with missing dependencies or those known as applied)
     // - persist filtered actions as new state
 
     log.debug(s"About to analyze update properties from container info for container ID [${containerInfo.containerId}]")
     log.trace(s"ContainerInfo: [${containerInfo}]")
 
     val timeStamp = System.currentTimeMillis()
-    val state = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
+    val persistedState = containerStatePersistor.findContainerState(containerInfo.containerId).getOrElse(ContainerState(containerId = containerInfo.containerId))
 
     val containerProfiles = containerInfo.profiles
 
-    val newUpdateActions = state.outstandingActions.filter {
-      // TODO: support for overlays
-      case ActivateProfile(n, v, o) =>
-        !containerProfiles.exists(p =>
-          p.name == n &&
-            p.version == v &&
-            p.overlays.exists(po =>
-              po.state == OverlayState.Active &&
-                po.overlays.toSet == o.toSet))
-      case StageProfile(n, v, oc) =>
-        !containerProfiles.exists(p =>
-          p.name == n &&
-            p.version == v &&
-            p.overlays.exists(po =>
-              Set(OverlayState.Valid, OverlayState.Invalid, OverlayState.Active).exists(_ == po.state) &&
-                po.overlays.toSet == oc.toSet))
-      case _ => true
+    val newUpdateActions = persistedState.outstandingActions
+      // remove those marked as applied
+      .filterNot(a => containerInfo.appliedUpdateActionIds.contains(a.id))
+      // filter some inconsistent actions
+      .filter {
+        // TODO: support for overlays
+        case ActivateProfile(id, n, v, o) =>
+          !containerProfiles.exists(p =>
+            p.name == n &&
+              p.version == v &&
+              p.overlaySet.overlays == o)
+        case StageProfile(id, n, v, oc) =>
+          !containerProfiles.exists(p =>
+            p.name == n &&
+              p.version == v &&
+              p.overlaySet.overlays == oc &&
+              Set(OverlayState.Valid, OverlayState.Invalid, OverlayState.Active).exists(_ == p.overlaySet.state))
+        case _ => true
+      }
+    val diff = newUpdateActions.size - persistedState.outstandingActions.size
+    if (diff < 0) {
+      log.debug(s"Removed ${-diff} actions: ${persistedState.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
     }
-    val diff = newUpdateActions.size - state.outstandingActions.size
-    if(diff < 0) {
-      log.debug(s"Removed ${-diff} actions: ${state.outstandingActions.filterNot(a => newUpdateActions.contains(a))}")
-    }
-    if(diff > 0) {
-      log.debug(s"Added ${diff} actions: ${newUpdateActions.filterNot(a => state.outstandingActions.contains(a))}")
+    if (diff > 0) {
+      log.debug(s"Added ${diff} actions: ${newUpdateActions.filterNot(a => persistedState.outstandingActions.contains(a))}")
     }
 
-    val newState = state.copy(
+    val newState = persistedState.copy(
       profiles = containerProfiles,
       outstandingActions = newUpdateActions,
       syncTimeStamp = Some(timeStamp)

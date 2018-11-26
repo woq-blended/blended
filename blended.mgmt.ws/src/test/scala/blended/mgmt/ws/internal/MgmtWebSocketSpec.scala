@@ -114,7 +114,8 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
     properties = Map("country" -> country),
     List.empty,
     List.empty,
-    System.currentTimeMillis()
+    System.currentTimeMillis(),
+    List.empty
   )
 
   private[this] val containers : Seq[ContainerInfo] = {

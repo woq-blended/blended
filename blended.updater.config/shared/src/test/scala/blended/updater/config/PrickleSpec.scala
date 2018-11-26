@@ -1,5 +1,7 @@
 package blended.updater.config
 
+import java.util.UUID
+
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
 
@@ -74,7 +76,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
         )
       )
 
-      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L)))
+      val info = Pickle.intoString(List(ContainerInfo("c840c57d-a357-4b85-937a-2bb6440417d2", Map(), svcInfos, List(), 1L, Nil)))
       log.info("serialized: " + info)
 
       val containerInfos = Unpickle[List[ContainerInfo]].fromString(info).get
@@ -87,7 +89,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     "an ActivateProfile" in {
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val json = Pickle.intoString(action)
 
@@ -106,7 +108,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     "an ActivateProfile as UpdateAction" in {
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val json = Pickle.intoString(action: UpdateAction)
       log.info("json: " + json)
@@ -158,9 +160,9 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     "a ContainerInfo" in {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List(OverlaySet(Set(), OverlayState.Valid, None)))
+      val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
       val json = Pickle.intoString(info)
       log.info("json: " + json)
@@ -187,12 +189,12 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     "a RemoteContainerState" in {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
-      val profile = Profile("myProfile", "1.0", List(OverlaySet(Set(), OverlayState.Valid, None)))
+      val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
 
-      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L)
+      val info = ContainerInfo("myId", Map("foo" -> "bar"), List(svcInfo), List(profile), 1L, Nil)
 
       val overlay = OverlayRef("myOverlay", "1.0")
-      val action = ActivateProfile(profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
+      val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
 
       val state = RemoteContainerState(info, List(action))
 
@@ -230,8 +232,8 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     testMapping[ServiceInfo]
     testMapping[UpdateAction]
     testMapping[GeneratedConfig]
+    testMapping[ProfileGroup]
     testMapping[Profile]
-    testMapping[SingleProfile]
     testMapping[OverlayRef]
     testMapping[OverlaySet]
     testMapping[RolloutProfile]

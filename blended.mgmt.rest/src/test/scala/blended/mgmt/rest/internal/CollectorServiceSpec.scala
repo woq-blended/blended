@@ -30,7 +30,7 @@ class CollectorServiceSpec
   "The Management collector routes" - {
 
     "should POST /container returns a registry response" in {
-      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L)) ~> collectorRoute ~> check {
+      Post("/container", ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List())) ~> collectorRoute ~> check {
         responseAs[ContainerRegistryResponseOK].id should be("uuid")
       }
       processContainerInfoLatch.isOpen should be(true)
@@ -38,7 +38,7 @@ class CollectorServiceSpec
 
     "should GET /container return container infos" in {
       Get("/container") ~> infoRoute ~> check {
-        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List())))
+        responseAs[Seq[RemoteContainerState]] should be(Seq(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List())))
       }
       getCurrentStateLatch.isOpen should be(true)
     }
@@ -62,7 +62,7 @@ class CollectorServiceSpec
 
   override def getCurrentState(): sci.Seq[RemoteContainerState] = {
     getCurrentStateLatch.countDown()
-    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L), List()))
+    List(RemoteContainerState(ContainerInfo("uuid", Map("foo" -> "bar"), List(), List(), 1L, List()), List()))
   }
 
   override def version: String = "TEST"

@@ -3,8 +3,8 @@ package blended.mgmt.mock.server
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.http.{ HttpHeader, HttpHeaders }
-import blended.updater.config.ContainerInfo
+import com.github.tomakehurst.wiremock.http.{HttpHeader, HttpHeaders}
+import blended.updater.config.{ContainerInfo, ProfileGroup}
 import blended.mgmt.mock.MockObjects
 
 object MgmtMockServer {
@@ -40,7 +40,7 @@ object MgmtMockServer {
     )
 
     stubFor(
-      get(urlEqualTo("/mgmt/profiles")).willReturn(response(profilesList(validProfiles)))
+      get(urlEqualTo("/mgmt/profiles")).willReturn(response(profilesList(ProfileGroup.fromSingleProfiles(validProfiles))))
     )
 
     stubFor(

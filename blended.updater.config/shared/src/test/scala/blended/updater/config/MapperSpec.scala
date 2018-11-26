@@ -33,6 +33,7 @@ class MapperSpec extends FreeSpec with PropertyChecks {
     testMapping(mapServiceInfo, unmapServiceInfo)
     testMapping(mapUpdateAction, unmapUpdateAction)
     testMapping(mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(mapProfileGroup, unmapProfileGroup)
     testMapping(mapProfile, unmapProfile)
     testMapping(mapOverlayRef, unmapOverlayRef)
     testMapping(mapOverlaySet, unmapOverlaySet)

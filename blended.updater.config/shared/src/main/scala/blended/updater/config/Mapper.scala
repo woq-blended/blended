@@ -78,26 +78,30 @@ trait Mapper {
     ).asJava
 
   def mapUpdateAction(a: UpdateAction): java.util.Map[String, AnyRef] = a match {
-    case AddRuntimeConfig(rc) =>
+    case AddRuntimeConfig(id, rc) =>
       Map(
         "kind" -> UpdateAction.KindAddRuntimeConfig,
+        "id" -> id,
         "runtimeConfig" -> mapRuntimeConfig(rc)
       ).asJava
-    case AddOverlayConfig(oc) =>
+    case AddOverlayConfig(id, oc) =>
       Map(
         "kind" -> UpdateAction.KindAddOverlayConfig,
+        "id" ->id,
         "overlay" -> mapOverlayConfig(oc)
       ).asJava
-    case ActivateProfile(profileName, profileVersion, overlays) =>
+    case ActivateProfile(id, profileName, profileVersion, overlays) =>
       Map(
         "kind" -> UpdateAction.KindActivateProfile,
+        "id" -> id,
         "profileName" -> profileName,
         "profileVersion" -> profileVersion,
         "overlays" -> overlays.map(o => mapOverlayRef(o)).asJava
       ).asJava
-    case StageProfile(profileName, profileVersion, overlays) =>
+    case StageProfile(id, profileName, profileVersion, overlays) =>
       Map(
         "kind" -> UpdateAction.KindStageProfile,
+        "id" -> id,
         "profileName" -> profileName,
         "profileVersion" -> profileVersion,
         "overlays" -> overlays.map(o => mapOverlayRef(o)).asJava
@@ -118,12 +122,20 @@ trait Mapper {
       "config" -> c.config
     ).asJava
 
-  def mapProfile(p: Profile): java.util.Map[String, AnyRef] =
+  def mapProfileGroup(p: ProfileGroup): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
       "name" -> p.name,
       "version" -> p.version,
       "overlays" -> p.overlays.map(o => mapOverlaySet(o)).asJava
     ).asJava
+
+  def mapProfile(p: Profile): java.util.Map[String, AnyRef] =
+    Map[String, AnyRef](
+      "name" -> p.name,
+      "version" -> p.version,
+      "overlays" -> mapOverlaySet(p.overlaySet)
+    ).asJava
+
 
   def mapOverlaySet(o: OverlaySet): java.util.Map[String, AnyRef] =
     Map[String, AnyRef](
@@ -160,20 +172,24 @@ trait Mapper {
     a("kind") match {
       case UpdateAction.KindAddRuntimeConfig =>
         AddRuntimeConfig(
+          id = a("id").asInstanceOf[String],
           runtimeConfig = unmapRuntimeConfig(a("runtimeConfig")).get
         )
       case UpdateAction.KindAddOverlayConfig =>
         AddOverlayConfig(
+          id = a("id").asInstanceOf[String],
           overlay = unmapOverlayConfig(a("overlay")).get
         )
       case UpdateAction.KindActivateProfile =>
         ActivateProfile(
+          id = a("id").asInstanceOf[String],
           profileName = a("profileName").asInstanceOf[String],
           profileVersion = a("profileVersion").asInstanceOf[String],
           overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet
         )
       case UpdateAction.KindStageProfile =>
         StageProfile(
+          id = a("id").asInstanceOf[String],
           profileName = a("profileName").asInstanceOf[String],
           profileVersion = a("profileVersion").asInstanceOf[String],
           overlays = a("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.map(o => unmapOverlayRef(o).get).toSet
@@ -189,7 +205,8 @@ trait Mapper {
       properties = ci("properties").asInstanceOf[java.util.Map[String, String]].asScala.toMap,
       serviceInfos = ci("serviceInfos").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(si => unmapServiceInfo(si).get),
       profiles = ci("profiles").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(p => unmapProfile(p).get),
-      timestampMsec = ci("timestampMsec").asInstanceOf[java.lang.Long].longValue()
+      timestampMsec = ci("timestampMsec").asInstanceOf[java.lang.Long].longValue(),
+      appliedUpdateActionIds = Nil
     )
   }
 
@@ -204,12 +221,21 @@ trait Mapper {
     )
   }
 
+  def unmapProfileGroup(map: AnyRef): Try[ProfileGroup] = Try {
+    val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
+    ProfileGroup(
+      name = p("name").asInstanceOf[String],
+      version = p("version").asInstanceOf[String],
+      overlays = p("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(o => unmapOverlaySet(o).get)
+    )
+  }
+
   def unmapProfile(map: AnyRef): Try[Profile] = Try {
     val p = map.asInstanceOf[java.util.Map[String, AnyRef]].asScala
     Profile(
       name = p("name").asInstanceOf[String],
       version = p("version").asInstanceOf[String],
-      overlays = p("overlays").asInstanceOf[java.util.Collection[AnyRef]].asScala.toList.map(o => unmapOverlaySet(o).get)
+      overlaySet = unmapOverlaySet(p("overlays")).get
     )
   }
 

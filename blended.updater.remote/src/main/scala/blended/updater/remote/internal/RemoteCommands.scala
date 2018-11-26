@@ -6,7 +6,7 @@ import java.io.File
 import blended.updater.config._
 import com.typesafe.config.ConfigFactory
 import blended.updater.remote.ContainerState
-import java.util.Date
+import java.util.{Date, UUID}
 
 class RemoteCommands(remoteUpdater: RemoteUpdater) {
 
@@ -26,10 +26,10 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
         |  outstanding actions: ${
       state.outstandingActions.map {
         // TODO: overlays
-        case AddRuntimeConfig(rc) => s"add runtime config ${rc.name}-${rc.version}"
-        case AddOverlayConfig(oc) => s"add overlay config ${oc.name}-${oc.version}"
-        case StageProfile(n, v, o) => s"stage ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
-        case ActivateProfile(n, v, o) => s"activate ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
+        case AddRuntimeConfig(id, rc) => s"add runtime config ${rc.name}-${rc.version}"
+        case AddOverlayConfig(id, oc) => s"add overlay config ${oc.name}-${oc.version}"
+        case StageProfile(id, n, v, o) => s"stage ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
+        case ActivateProfile(id, n, v, o) => s"activate ${n}-${v} with ${o.toList.sorted.mkString(" and ")}"
       }.mkString(", ")
     }
         |  last sync: ${state.syncTimeStamp.map(s => new Date(s)).mkString}""".stripMargin
@@ -87,15 +87,15 @@ class RemoteCommands(remoteUpdater: RemoteUpdater) {
       case None => println(s"Profile '${profileName}-${profileVersion}' not found")
       case Some(rc) =>
         // FIXME: support for overlay
-        remoteUpdater.addAction(containerId, AddRuntimeConfig(rc))
-        remoteUpdater.addAction(containerId, StageProfile(profileName, profileVersion, Set.empty))
+        remoteUpdater.addAction(containerId, AddRuntimeConfig(UUID.randomUUID().toString(), rc))
+        remoteUpdater.addAction(containerId, StageProfile(UUID.randomUUID().toString(), profileName, profileVersion, Set.empty))
         println(s"Scheduled profile staging for container with ID ${containerId}. Config: ${profileName}-${profileVersion}")
     }
   }
 
   def remoteActivate(containerId: String, profileName: String, profileVersion: String): Unit = {
     // FIXME: support for overlays
-    remoteUpdater.addAction(containerId, ActivateProfile(profileName, profileVersion, Set.empty))
+    remoteUpdater.addAction(containerId, ActivateProfile(UUID.randomUUID().toString(), profileName, profileVersion, Set.empty))
     println(s"Scheduled profile activation for container with ID ${containerId}. Profile: ${profileName}-${profileVersion}")
   }
 

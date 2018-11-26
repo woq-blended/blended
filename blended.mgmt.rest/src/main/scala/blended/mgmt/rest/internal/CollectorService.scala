@@ -1,6 +1,7 @@
 package blended.mgmt.rest.internal
 
 import java.io.File
+import java.util.UUID
 
 import scala.collection.{immutable => sci}
 import scala.concurrent.duration._
@@ -193,6 +194,7 @@ trait CollectorService {
                         addUpdateAction(
                           containerId = containerId,
                           updateAction = AddRuntimeConfig(
+                            UUID.randomUUID().toString(),
                             runtimeConfig = rc
                           )
                         )
@@ -204,6 +206,7 @@ trait CollectorService {
                           addUpdateAction(
                             containerId = containerId,
                             updateAction = AddOverlayConfig(
+                              UUID.randomUUID().toString(),
                               overlay = oc
                             )
                           )
@@ -213,6 +216,7 @@ trait CollectorService {
                         addUpdateAction(
                           containerId = containerId,
                           updateAction = StageProfile(
+                            UUID.randomUUID().toString(),
                             profileName = rolloutProfile.profileName,
                             profileVersion = rolloutProfile.profileVersion,
                             overlays = rolloutProfile.overlays
