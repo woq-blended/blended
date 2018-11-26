@@ -2,7 +2,7 @@ package blended.streams.jms
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Flow, RestartSource, Source}
 import akka.stream.{KillSwitch, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.StreamFactories
@@ -54,7 +54,7 @@ trait JmsStreamSupport {
 
     StreamFactories.runSourceWithTimeLimit(
       dest.asString,
-      RestartableJmsSource(
+      restartableConsumer(
         name = dest.asString,
         headerConfig = headerCfg,
         log = log,
@@ -81,5 +81,36 @@ trait JmsStreamSupport {
     } else {
       f
     }
+  }
+
+  def jmsConsumer(
+    name : String,
+    settings : JMSConsumerSettings,
+    headerConfig: FlowHeaderConfig,
+    log: Logger
+  )(implicit system: ActorSystem): Source[FlowEnvelope, NotUsed] = {
+
+    if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
+      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig, log))
+    } else {
+      Source.fromGraph(new JmsSourceStage(name, settings, headerConfig, log))
+    }
+  }
+
+  def restartableConsumer(
+    name : String,
+    settings : JMSConsumerSettings,
+    headerConfig: FlowHeaderConfig,
+    log: Logger
+  )(implicit system: ActorSystem) : Source[FlowEnvelope, NotUsed] = {
+
+    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig, log)
+
+    RestartSource.onFailuresWithBackoff(
+      minBackoff = 2.seconds,
+      maxBackoff = 10.seconds,
+      randomFactor = 0.2,
+      maxRestarts = 10,
+    ) { () => innerSource }
   }
 }

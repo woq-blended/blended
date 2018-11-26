@@ -20,7 +20,7 @@ class TransactionOutbound(
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
   log: Logger
-)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) {
+)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
@@ -33,7 +33,7 @@ class TransactionOutbound(
       .withDestination(Some(config.get.transactions))
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
 
-    RestartableJmsSource(
+    jmsConsumer(
       name = "transactionOutbound",
       settings = srcSettings,
       headerConfig = headerConfig,

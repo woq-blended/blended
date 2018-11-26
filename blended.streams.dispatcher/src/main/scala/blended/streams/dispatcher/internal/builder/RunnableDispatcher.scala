@@ -2,16 +2,16 @@ package blended.streams.dispatcher.internal.builder
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream._
+import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionWiretap}
+import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -116,12 +116,27 @@ class RunnableDispatcher(
       }
     )
 
-    RestartableJmsSource(
+    val source = jmsConsumer(
       name = settings.jmsDestination.get.asString,
       settings = settings,
       headerConfig = bs.headerConfig,
       log = logger
     )
+
+    if (provider.internal) {
+      val startTransaction = new TransactionWiretap(
+        cf = cf,
+        eventDest = provider.transactions,
+        headerCfg = bs.headerConfig,
+        inbound = true,
+        trackSource = "internalDispatcher",
+        log = bs.streamLogger
+      ).flow()
+
+      source.via(startTransaction)
+    } else {
+      source
+    }
   }
 
   def start() : Unit = {

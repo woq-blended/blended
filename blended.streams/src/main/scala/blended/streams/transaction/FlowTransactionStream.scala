@@ -61,6 +61,8 @@ class FlowTransactionStream(
         case Success(t) =>
           if (t.state == FlowTransactionState.Started || t.terminated) {
             log.info(t.toString())
+          } else {
+            log.debug(t.toString())
           }
           Success(FlowTransaction.transaction2envelope(cfg)(t))
         case Failure(t) =>

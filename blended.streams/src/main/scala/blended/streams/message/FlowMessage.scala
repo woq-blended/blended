@@ -171,7 +171,6 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {
   override def body(): Any = NotUsed
 
-
   override def bodySize(): Int = 0
 
   override def withHeader(key: String, value: Any, overwrite: Boolean = true): Try[FlowMessage] = Try {
