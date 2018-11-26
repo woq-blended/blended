@@ -30,7 +30,7 @@ class RemoteUpdater(
       if (!actions.exists(_.withId("") == action.withId(""))) {
         actions ++ List(action)
       } else {
-        log.debug("A same action was already scheduled")
+        log.debug(s"Ignoring action with ID [${action.id}]. A same action was already scheduled")
         actions
       }
     val newState = state.copy(outstandingActions = newActions)

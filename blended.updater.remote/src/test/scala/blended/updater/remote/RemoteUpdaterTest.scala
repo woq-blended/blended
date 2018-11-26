@@ -152,6 +152,10 @@ class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
             )
             ctx.ru.addAction("1", action1)
             assert(ctx.ru.getContainerActions("1") === Seq(action1))
+
+            ctx.ru.updateContainerState(ContainerInfo("1", Map(), List(), List(), 1L, Nil))
+            assert(ctx.ru.getContainerActions("1") === Seq(action1))
+
             val profiles = List(
               Profile(name = "test", version = "1", overlaySet = OverlaySet(overlays = Set(), state = OverlayState.Valid))
             )
