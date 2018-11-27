@@ -96,8 +96,15 @@ trait PojoSrTestHelper {
   }
 
   def stopRegistry(sr: BlendedPojoRegistry): Unit = {
-    val bundles = sr.getBundleContext().getBundles().map{ b => b.getBundleId()}.sorted.reverse
-    bundles.foreach { id => sr.getBundleContext().getBundle(id).stop() }
+    // TODO: review: TR thinks, we don't need to sort here
+    val bundles = sr.getBundleContext().getBundles().map { b => b.getBundleId() }.sorted.reverse
+    bundles.foreach { id =>
+      try {
+        sr.getBundleContext().getBundle(id).stop()
+      } catch {
+        case NonFatal(e) => log.error(e)(s"Could not properly stop bundle ID [${id}]")
+      }
+    }
   }
 
   def withSimpleBlendedContainer[T](
