@@ -48,3 +48,8 @@ final case class ActivateProfile(
   profileVersion: String,
   overlays: Set[OverlayRef]
 ) extends UpdateAction
+
+/**
+  * Message published to the event stream when an update action with the same `id` was applied.
+  */
+case class UpdateActionApplied(id: String, error: Option[String] = None)

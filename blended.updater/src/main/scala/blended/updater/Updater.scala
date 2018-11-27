@@ -9,7 +9,7 @@ import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
-import akka.event.LoggingReceive
+import akka.event.{EventStream, LoggingReceive}
 import akka.pattern.ask
 import akka.routing.BalancingPool
 import akka.util.Timeout
@@ -128,6 +128,12 @@ class Updater(
    */
   case object PublishProfileInfo
 
+  /**
+   * Convenience accessor to event stream, also to better see where the event stream is used.
+   * @return
+   */
+  private[this] def eventStream: EventStream = context.system.eventStream
+
   override def preStart(): Unit = {
     log.info("Initiating initial scanning for profiles")
     self ! Scan
@@ -159,14 +165,14 @@ class Updater(
       log.info("Publishing of service infos and profile infos is disabled")
     }
 
-    context.system.eventStream.subscribe(context.self, classOf[UpdateAction])
+    eventStream.subscribe(context.self, classOf[UpdateAction])
 
     super.preStart()
   }
 
   override def postStop(): Unit = {
 
-    context.system.eventStream.unsubscribe(context.self)
+    eventStream.unsubscribe(context.self)
 
     tickers.foreach { t =>
       log.info(s"Disabling ticker: ${t}")
@@ -174,6 +180,15 @@ class Updater(
     }
     tickers = Nil
     super.postStop()
+  }
+
+  private def publishResultEvent[T](id: String, reply: Try[Any]) = {
+    reply match {
+      case Success(OperationSucceeded(_)) => eventStream.publish(UpdateActionApplied(id))
+      case Success(OperationFailed(_, reason)) => eventStream.publish(UpdateActionApplied(id, Option(reason)))
+      case Failure(e) => eventStream.publish(UpdateActionApplied(id, Option(e.getMessage())))
+      case x => log.warn(s"Skip publish event of unsupported reply: [${x}]")
+    }
   }
 
   def handleUpdateAction(event: UpdateAction): Unit = event match {
@@ -185,6 +200,7 @@ class Updater(
 
       self.ask(AddRuntimeConfig(nextId(), runtimeConfig))(timeout).onComplete { x =>
         log.debug(s"Finished add runtime config request (via event stream) for ${runtimeConfig.name}-${runtimeConfig.version} with ID [${id}] with result: ${x}")
+        publishResultEvent(id, x)
       }
 
     case UAAddOverlayConfig(id, overlayConfig) =>
@@ -195,6 +211,7 @@ class Updater(
 
       self.ask(AddOverlayConfig(nextId(), overlayConfig))(timeout).onComplete { x =>
         log.debug(s"Finished add overlay config request (via event stream) for ${overlayConfig.name}-${overlayConfig.version} with ID [${id}] with result: ${x}")
+        publishResultEvent(id, x)
       }
 
     case UAStageProfile(id, name, version, overlayRefs) =>
@@ -205,12 +222,15 @@ class Updater(
 
       val request = StageProfile(nextId(), name, version, overlayRefs)
       self.ask(request)(timeout).onComplete {
-        case Success(OperationFailed(_, reason)) =>
+        case x @ Success(OperationFailed(_, reason)) =>
           log.error(s"Could not stage profile: ${reason}")
-        case Failure(e) =>
+          publishResultEvent(id, x)
+        case x @ Failure(e) =>
           log.error(e)(s"Could not complete stage profile [${request}]")
+          publishResultEvent(id, x)
         case x =>
           log.debug(s"Finished stage profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs}  with ID [${id}] with result: ${x}")
+          publishResultEvent(id, x)
       }
 
     case UAActivateProfile(id, name, version, overlayRefs) =>
@@ -221,6 +241,7 @@ class Updater(
 
       self.ask(ActivateProfile(nextId(), name, version, overlayRefs))(timeout).onComplete { x =>
         log.debug(s"Finished activation profile request (via event stream) for ${name}-${version} and overlays ${overlayRefs} with ID [${id}] with result: ${x}")
+        publishResultEvent(id, x)
       }
   }
 
@@ -452,7 +473,7 @@ class Updater(
       }
       val toSend = singleProfiles
       log.debug(s"Publishing profile info to event stream: ${toSend}")
-      context.system.eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
+      eventStream.publish(ProfileInfo(System.currentTimeMillis(), toSend))
 
     case PublishServiceInfo =>
       log.debug("Handling PublishServiceInfo message")
@@ -469,7 +490,7 @@ class Updater(
         )
       )
       log.debug(s"About to publish service info: ${serviceInfo}")
-      context.system.eventStream.publish(serviceInfo)
+      eventStream.publish(serviceInfo)
 
     case msg: ArtifactDownloader.Reply => handleArtifactDownloaderReply(msg)
 

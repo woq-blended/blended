@@ -1,5 +1,6 @@
 package blended.mgmt.agent.internal
 
+import scala.collection.immutable.Queue
 import scala.concurrent.duration.DurationLong
 import scala.util.Try
 
@@ -57,6 +58,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
   private[this] var _ticker: Option[Cancellable] = None
   private[this] var _serviceInfos: Map[String, ServiceInfo] = Map()
   private[this] var _lastProfileInfo: ProfileInfo = ProfileInfo(0L, Nil)
+  private[this] var _appliedUpdateActionIds: List[String] = List()
   ////////////////////
 
   private[this] lazy val log = Logger[MgmtReporter]
@@ -67,6 +69,9 @@ trait MgmtReporter extends Actor with PrickleSupport {
   protected def serviceInfos: Map[String, ServiceInfo] = _serviceInfos
 
   protected def profileInfo: ProfileInfo = _lastProfileInfo
+
+  //  protected def appliedUpdateActionIds = _appliedUpdateActionIds
+  //  protected def clearAppliedUpdateActions(ids: List[String]) = _appliedUpdateActionIds = _appliedUpdateActionIds.filter(ids.contains)
 
   override def preStart(): Unit = {
     super.preStart()
@@ -82,6 +87,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
     context.system.eventStream.subscribe(context.self, classOf[ServiceInfo])
     context.system.eventStream.subscribe(context.self, classOf[ProfileInfo])
+    context.system.eventStream.subscribe(context.self, classOf[UpdateActionApplied])
   }
 
   override def postStop(): Unit = {
@@ -98,7 +104,10 @@ trait MgmtReporter extends Actor with PrickleSupport {
     case Tick =>
       config.foreach { config =>
 
-        val info = createContainerInfo
+        // we submit the applied update actions to the mgmt server
+        val appliedUpdateActions = _appliedUpdateActionIds
+
+        val info = createContainerInfo.copy(appliedUpdateActionIds = appliedUpdateActions)
         log.debug(s"Performing report [${info}].")
 
         val entity = Marshal(info).to[MessageEntity]
@@ -114,15 +123,19 @@ trait MgmtReporter extends Actor with PrickleSupport {
         // TODO think about ssl
         val responseFuture = request.flatMap { request =>
           Http(context.system).singleRequest(request)
-        }
+        }.map(r => r -> appliedUpdateActions)
 
         import akka.pattern.pipe
         responseFuture.pipeTo(self)
       }
 
-    case response @ HttpResponse(status, headers, entity, protocol) =>
+    case (response @ HttpResponse(status, headers, entity, protocol), appliedUpdateActionIds: List[String]) =>
       status match {
         case StatusCodes.OK =>
+          // As the server accepted also the list of applied update action IDs
+          // we remove those from the list
+          _appliedUpdateActionIds = _appliedUpdateActionIds.filterNot(appliedUpdateActionIds.contains)
+
           import akka.pattern.pipe
 
           // OK; unmarshal and process
@@ -156,6 +169,10 @@ trait MgmtReporter extends Actor with PrickleSupport {
       } else {
         log.debug(s"Ingnoring profile info with timestamp [${timestamp.underlying()}] which is older than [${_lastProfileInfo.timeStamp.underlying()}]: ${pi}")
       }
+
+    case UpdateActionApplied(id, _) =>
+      _appliedUpdateActionIds ::= id
+
   }
 }
 
