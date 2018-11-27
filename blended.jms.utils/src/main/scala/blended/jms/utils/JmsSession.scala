@@ -1,6 +1,7 @@
 package blended.jms.utils
 
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.atomic.AtomicBoolean
 
 import blended.util.logging.Logger
 import javax.jms._
@@ -67,12 +68,9 @@ class JmsAckSession(
   val ackTimeout : FiniteDuration = 1.second
 ) extends JmsConsumerSession(connection, session, sessionId, jmsDestination) {
 
-  private[this] val log = Logger[JmsAckSession]
-
-  val ackQueue = new ArrayBlockingQueue[Either[Throwable, String]](2)
+  val acknowledged : AtomicBoolean = new AtomicBoolean(false)
 
   def ack(message: Message): Unit = {
-    ackQueue.put(Right(sessionId))
+    acknowledged.set(true)
   }
-
 }

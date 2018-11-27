@@ -14,13 +14,13 @@ import javax.jms._
 import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 final class JmsAckSourceStage(
   name : String,
   settings: JMSConsumerSettings,
   headerConfig : FlowHeaderConfig,
-  log: Logger = Logger[JmsAckSourceStage]
+  log: Logger
 )(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
@@ -43,7 +43,8 @@ final class JmsAckSourceStage(
       private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
-        fail(out, ex)
+        log.error(ex)(ex.getMessage())
+        failStage(ex)
       }
 
       private val ackHandler : FlowEnvelope => Option[JmsAcknowledgeHandler] = { env =>
@@ -52,47 +53,44 @@ final class JmsAckSourceStage(
           case Some(h) if h.isInstanceOf[JmsAcknowledgeHandler] => Some(h.asInstanceOf[JmsAcknowledgeHandler])
           case _ => None
         }
-
       }
 
-      private val acknowledge : FlowEnvelope => Unit = { env =>
-        ackHandler(env).foreach { handler =>
-          log.debug(s"Acknowledging message for session id [${handler.session.sessionId}] : [$env]")
+      // This is to actually perform the acknowledement if one is pending
+      private val acknowledge : JmsAcknowledgeHandler => Try[Unit] = handler => Try {
 
-          handler.acknowledge(env) match {
-            case Success(_) =>
-              scheduleOnce(Poll(handler.session.sessionId), 10.millis)
-            case Failure(t) =>
-              log.error(t)(s"Error acknowledging message for session [${handler.session.sessionId}] : [$env]")
+        val sessionId = handler.session.sessionId
+
+        if (handler.session.acknowledged.get()) {
+          try {
+            handler.jmsMessage.acknowledge()
+            inflight -= sessionId
+            log.trace(s"Acknowledged JMS message for session [$sessionId]")
+            scheduleOnce(Poll(sessionId), 10.millis)
+          } catch {
+            case t: Throwable =>
+              log.error(t)(s"Failed to acknowledge message for sesseion [$sessionId]")
+              inflight -= sessionId
               closeSession(handler.session)
           }
-
-          inflight -= handler.session.sessionId
+        } else {
+          if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
+            log.warn(s"Acknowledge timed out for [$sessionId]")
+            inflight -= sessionId
+            // Recovering the session, so that unacknowledged messages may be redelivered
+            closeSession(handler.session)
+          }
         }
       }
 
+
+      // Regular executed to check if acknowledgements are pending
       private[this] def ackQueued(): Unit = {
 
+        // We check all inflight messages
         inflight.foreach { case (sessionId, envelope) =>
+          // and figure the ackHandler
           ackHandler(envelope).foreach { handler =>
-            Option(handler.session.ackQueue.poll()) match {
-              case Some(action) =>
-                action match {
-                  case Right(sessionId) =>
-                    inflight.get(sessionId).foreach(acknowledge)
-                    ackQueued()
-
-                  case Left(t) =>
-                    failStage(t)
-                }
-              case None =>
-                if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
-                  log.warn(s"Acknowledge timed out for [$sessionId] with envelope [$envelope]")
-                  inflight -= sessionId
-                  // Recovering the session, so that unacknowledged messages may be redelivered
-                  closeSession(handler.session)
-                }
-            }
+            acknowledge(handler).get
           }
         }
       }
@@ -120,8 +118,10 @@ final class JmsAckSourceStage(
                   }
 
                   val handler = JmsAcknowledgeHandler(
+                    id = envelopeId,
                     jmsMessage = message,
-                    session = session
+                    session = session,
+                    log = log
                   )
 
                   val envelope = FlowEnvelope(flowMessage, envelopeId)
@@ -130,6 +130,7 @@ final class JmsAckSourceStage(
                     .withAckHandler(Some(handler))
 
                   inflight += (session.sessionId -> envelope)
+                  log.debug(s"Inflight message count is [${inflight.size}]")
                   handleMessage.invoke(envelope)
                 } catch {
                   case e: JMSException =>
@@ -193,7 +194,8 @@ final class JmsAckSourceStage(
       override protected def onTimer(timerKey: Any): Unit = {
 
         timerKey match {
-          case Ack => ackQueued()
+          case Ack =>
+            ackQueued()
           case p : Poll =>
             poll(p.s)
           case _ =>

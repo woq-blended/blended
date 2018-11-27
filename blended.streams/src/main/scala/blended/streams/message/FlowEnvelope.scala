@@ -8,7 +8,7 @@ import scala.beans.BeanProperty
 import scala.util.Try
 
 trait AcknowledgeHandler {
-  def acknowledge : FlowEnvelope => Try[Unit]
+  def acknowledge() : Try[Unit]
 }
 
 object FlowEnvelope {
@@ -79,5 +79,5 @@ final case class FlowEnvelope private[message] (
   def withAckHandler(handler : Option[AcknowledgeHandler]): FlowEnvelope = copy(ackHandler = handler)
 
   // For the default we simply do nothing when a downstream consumer calls acknowledge
-  def acknowledge(): Unit = ackHandler.foreach(h => h.acknowledge(this))
+  def acknowledge(): Unit = ackHandler.foreach(h => h.acknowledge())
 }

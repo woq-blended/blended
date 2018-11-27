@@ -27,7 +27,6 @@ class JmsSourceStage(
   override protected def initialAttributes: Attributes =
     ActorAttributes.dispatcher("FixedPool")
 
-
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 
     val logic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes, log) {

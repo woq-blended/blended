@@ -12,17 +12,17 @@ import scala.util.Try
 import blended.streams.transaction.FlowHeaderConfig
 
 case class JmsAcknowledgeHandler(
+  id : String,
   jmsMessage : Message,
   session : JmsAckSession,
-  created : Long = System.currentTimeMillis()
+  created : Long = System.currentTimeMillis(),
+  log : Logger
 ) extends AcknowledgeHandler {
 
-  private val log = Logger[JmsAcknowledgeHandler]
-
-  override def acknowledge: FlowEnvelope => Try[Unit] = { env => Try {
-    log.trace(s"Acknowledging envelope [$env]")
+  override def acknowledge() : Try[Unit] = Try {
+    log.trace(s"Scheduling envelope [$id] for acknowledgement.")
     session.ack(jmsMessage)
-  }}
+  }
 }
 
 final case class JmsSendParameter(

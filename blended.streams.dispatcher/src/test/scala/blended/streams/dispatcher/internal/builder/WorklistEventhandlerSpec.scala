@@ -181,7 +181,10 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
           .withHeader(ctxt.bs.headerConfig.headerBranch, "test").get
           .withRequiresAcknowledge(true)
           .withAckHandler(Some(new AcknowledgeHandler {
-            override def acknowledge: FlowEnvelope => Try[Unit] = _ => Try(ackCount.incrementAndGet())
+
+            override def acknowledge(): Try[Unit] = Try {
+              ackCount.incrementAndGet()
+            }
           }))
 
         val wl = ctxt.bs.worklist(envelope).get

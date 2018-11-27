@@ -118,7 +118,7 @@ class FlowTransactionStream(
       }
 
       val ack : Flow[TransactionStreamContext, FlowEnvelope, NotUsed] =
-        Flow[TransactionStreamContext].mapAsync[FlowEnvelope](2)(performSend).named("performSend")
+        Flow[TransactionStreamContext].mapAsync[FlowEnvelope](5)(performSend).named("performSend")
 
       val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
       val record = b.add(Flow.fromFunction(recordTransaction).named("recordTransaction"))

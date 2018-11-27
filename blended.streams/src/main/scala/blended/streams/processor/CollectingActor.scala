@@ -38,7 +38,6 @@ class CollectingActor[T](name: String, promise: Promise[List[T]])(implicit clazz
   private val log = Logger(getClass().getName())
   private val messages = mutable.Buffer.empty[T]
 
-
   override def receive: Receive = {
 
     case CollectingActor.GetMessages =>

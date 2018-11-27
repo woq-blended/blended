@@ -2,8 +2,8 @@ package blended.streams.transaction
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, FlowShape, Materializer}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Zip}
+import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsDeliveryMode, JmsProducerSettings, JmsStreamSupport}
