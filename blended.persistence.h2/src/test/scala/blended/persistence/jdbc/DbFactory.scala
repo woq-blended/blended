@@ -5,10 +5,13 @@ import java.io.File
 import javax.sql.DataSource
 import blended.util.logging.Logger
 
+/**
+ * A H2 Database factory to testing.
+ */
 object DbFactory {
 
   private[this] val log = Logger[DbFactory.type]
-  
+
   def createDataSource(dir: File, name: String): HikariDataSource = {
     new File(dir, name).mkdirs()
     val url = "jdbc:h2:" + dir.getAbsolutePath() + "/" + name

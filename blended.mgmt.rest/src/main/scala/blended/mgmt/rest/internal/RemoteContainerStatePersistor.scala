@@ -11,9 +11,9 @@ import blended.util.logging.Logger
 
 class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
 
-  private[this] val log = Logger[RemoteContainerStatePersistor]
+  import RemoteContainerStatePersistor._
 
-  val pClass = "RemoteContainerState"
+  private[this] val log = Logger[RemoteContainerStatePersistor]
 
   def findAll(): List[RemoteContainerState] = {
     val result = persistenceService.findAll(pClass)
@@ -40,4 +40,8 @@ class RemoteContainerStatePersistor(persistenceService: PersistenceService) {
     log.debug(s"persisted 1 new entry: ${entry}")
   }
 
+}
+
+object RemoteContainerStatePersistor {
+  val pClass = "RemoteContainerState"
 }

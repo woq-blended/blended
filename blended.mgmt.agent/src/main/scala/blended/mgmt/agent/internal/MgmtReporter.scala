@@ -56,7 +56,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
   // MUTABLE
   private[this] var _ticker: Option[Cancellable] = None
   private[this] var _serviceInfos: Map[String, ServiceInfo] = Map()
-  private[this] var _profileInfo: ProfileInfo = ProfileInfo(0L, Nil)
+  private[this] var _lastProfileInfo: ProfileInfo = ProfileInfo(0L, Nil)
   ////////////////////
 
   private[this] lazy val log = Logger[MgmtReporter]
@@ -66,7 +66,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
   protected def serviceInfos: Map[String, ServiceInfo] = _serviceInfos
 
-  protected def profileInfo: ProfileInfo = _profileInfo
+  protected def profileInfo: ProfileInfo = _lastProfileInfo
 
   override def preStart(): Unit = {
     super.preStart()
@@ -150,11 +150,11 @@ trait MgmtReporter extends Actor with PrickleSupport {
 
     // from event stream
     case pi @ ProfileInfo(timestamp, _) =>
-      if (timestamp > _profileInfo.timeStamp) {
+      if (timestamp > _lastProfileInfo.timeStamp) {
         log.debug("Update profile info to: " + pi)
-        _profileInfo = pi
+        _lastProfileInfo = pi
       } else {
-        log.debug(s"Ingnoring profile info with timestamp [${timestamp.underlying()}] which is older than [${_profileInfo.timeStamp.underlying()}]: ${pi}")
+        log.debug(s"Ingnoring profile info with timestamp [${timestamp.underlying()}] which is older than [${_lastProfileInfo.timeStamp.underlying()}]: ${pi}")
       }
   }
 }

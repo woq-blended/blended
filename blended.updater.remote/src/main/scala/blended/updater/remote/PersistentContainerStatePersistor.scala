@@ -7,9 +7,9 @@ import blended.util.logging.Logger
 
 class PersistentContainerStatePersistor(persistenceService: PersistenceService) extends ContainerStatePersistor {
 
-  private[this] val log = Logger[PersistentContainerStatePersistor]
+  import PersistentContainerStatePersistor._
 
-  val pClassName = "ContainerState"
+  private[this] val log = Logger[PersistentContainerStatePersistor]
 
   override def findAllContainerStates(): List[ContainerState] = {
     val state = persistenceService.findAll(pClassName)
@@ -29,4 +29,8 @@ class PersistentContainerStatePersistor(persistenceService: PersistenceService) 
     val entry = persistenceService.persist(pClassName, Mapper.mapContainerState(containerState))
     log.debug(s"persisted 1 new entry: ${entry}")
   }
+}
+
+object PersistentContainerStatePersistor {
+  val pClassName = "ContainerState"
 }

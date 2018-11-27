@@ -420,6 +420,7 @@ class Updater(
 
     // from event stream
     case e: UpdateAction =>
+      log.debug(s"Current profiles [${profiles}]")
       log.debug(s"Handling UpdateAction message: ${e}")
       handleUpdateAction(e)
 

@@ -7,6 +7,10 @@ import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.SimpleTransactionStatus
 
+/**
+ * A dummy platform transaction manager without any transactional behaviour but with logging. Only for testing.
+ * Only for testing purposes.
+ */
 class DummyPlatformTransactionManager extends PlatformTransactionManager {
 
   private[this] val log = Logger[DummyPlatformTransactionManager]
