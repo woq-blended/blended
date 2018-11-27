@@ -3,19 +3,38 @@ package blended.testsupport.pojosr
 import org.osgi.framework.BundleActivator
 import org.scalatest.{BeforeAndAfterAll, FreeSpec}
 
-abstract class SimplePojoContainerSpec extends FreeSpec
-  with BeforeAndAfterAll { this : PojoSrTestHelper =>
+abstract class SimplePojoContainerSpec
+  extends FreeSpec
+  with BeforeAndAfterAll { this: PojoSrTestHelper =>
 
-  def bundles : Seq[(String, BundleActivator)]
-  def mandatoryPropertyNames : List[String] = List.empty
+  /**
+   * Factory for bundles.
+   * A `Seq` of bundle name and activator class.
+   */
+  def bundles: Seq[(String, BundleActivator)]
+
+  def mandatoryPropertyNames: List[String] = List.empty
 
   override protected def afterAll(): Unit = {
-    stopRegistry(registry)
+    _registry.foreach { r =>
+      stopRegistry(r)
+    }
+    // drop registry after stop
+    _registry = None
+    super.afterAll()
   }
 
-  lazy val registry : BlendedPojoRegistry = {
-    bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames).get){ case (current, (name, activator)) =>
-      startBundle(current)(name, activator).get._2
+  private[this] var _registry: Option[BlendedPojoRegistry] = None
+
+  def registry: BlendedPojoRegistry = {
+    _registry.getOrElse {
+      _registry = Some(
+        bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames).get) {
+          case (current, (name, activator)) =>
+            startBundle(current)(name, activator).get._2
+        }
+      )
+      _registry.get
     }
   }
 }
