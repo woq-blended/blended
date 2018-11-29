@@ -15,8 +15,8 @@ import org.scalatest.prop.PropertyChecks
 
 class LoadTest
   extends LoggingFreeSpec
-    with PropertyChecks
-    with DbFactory {
+  with PropertyChecks
+  with DbFactory {
 
   private[this] val log = Logger[this.type]
 
@@ -25,9 +25,9 @@ class LoadTest
     import blended.updater.config.TestData._
 
     def testMapping[T: ClassTag](
-                                  map: T => ju.Map[String, AnyRef],
-                                  unmap: AnyRef => Try[T]
-                                )(implicit arb: Arbitrary[T]): Unit = {
+      map: T => ju.Map[String, AnyRef],
+      unmap: AnyRef => Try[T]
+    )(implicit arb: Arbitrary[T]): Unit = {
       val className = classTag[T].runtimeClass.getSimpleName
       className in logException {
         withTestPersistenceService() { ctx =>
@@ -41,7 +41,7 @@ class LoadTest
               val data = new ju.HashMap[String, AnyRef](map(d))
               data.put(idCol, uuid)
               //              log.info(s"Persisting [${data}] with special field [${idCol}] [${uuid}]")
-              val time = System.currentTimeMillis()
+              //              val time = System.currentTimeMillis()
               ctx.persistenceService.persist(className, data)
               val loaded = ctx.persistenceService.findByExample(className, Map(idCol -> uuid).asJava)
               //              log.info("Now loading...")
@@ -52,7 +52,7 @@ class LoadTest
           } finally {
 
             val endTime = System.currentTimeMillis()
-            log.info(s"Persisting [${count.get()}] entries took [${endTime - startTime}] ms (including time for generating and mapping data)")
+            log.info(s"Persisting [${count.get()}] [${className}] entries took [${endTime - startTime}] ms (including time for generating and mapping data)")
           }
         }
       }
