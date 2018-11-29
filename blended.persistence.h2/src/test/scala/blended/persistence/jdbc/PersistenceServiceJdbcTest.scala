@@ -22,23 +22,9 @@ class PersistenceServiceJdbcTest
    * Use this to run a test against a pre-initialized Persistence Service. The schema is created, but no data is present.
    */
   def withTestPersistenceService(dir: Option[File] = None)(f: (PersistenceServiceJdbc, PlatformTransactionManager) => Unit): Unit = {
-
-    def worker(dir: File): Unit = {
-      DbFactory.withDataSource(dir, "db") { dataSource =>
-        val dao = new PersistedClassDao(dataSource)
-        val txMgr = new DummyPlatformTransactionManager()
-        dao.init()
-        val exp = new PersistenceServiceJdbc(txMgr, dao)
-        f(exp, txMgr)
-      }
-    }
-
-    dir match {
-      case Some(d) => worker(d)
-      case None =>
-        withTestDir(new File("target/tmp")) { dir =>
-          worker(dir)
-        }
+    DbFactory.withTestPersistenceService(dir, deletePolicy) { ctx =>
+      f(ctx.persistenceService, ctx.txManager)
+      //      f(DbFactory.WithTestPersistenceServiceContext.unapply(ctx).get)
     }
   }
 

@@ -1,10 +1,18 @@
 package blended.persistence.jdbc
 
+import java.{util => ju}
+
 import scala.collection.JavaConverters._
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Success, Try}
 
-import org.scalatest.FreeSpec
+import blended.testsupport.scalatest.LoggingFreeSpec
+import org.scalacheck.Arbitrary
+import org.scalatest.prop.PropertyChecks
 
-class PersistedFieldTest extends FreeSpec {
+class PersistedFieldTest
+  extends LoggingFreeSpec
+  with PropertyChecks {
 
   val testData = Seq(
     ("Null",
@@ -153,6 +161,39 @@ class PersistedFieldTest extends FreeSpec {
     ).asJava
 
     assert(PersistedField.toJuMap(PersistedField.extractFieldsWithoutDataId(example1)) === example1)
+
+  }
+
+  "Mapping of 'blended.updater.config' classes" - {
+    import blended.updater.config.TestData._
+
+    def testMapping[T: ClassTag](
+      map: T => ju.Map[String, AnyRef],
+      unmap: AnyRef => Try[T]
+    )(implicit arb: Arbitrary[T]): Unit = {
+      classTag[T].runtimeClass.getSimpleName in {
+        forAll { d: T =>
+          //          val data = map(d)
+          assert(unmap(PersistedField.toJuMap(PersistedField.extractFieldsWithoutDataId(map(d)))) === Success(d))
+        }
+      }
+    }
+
+    import blended.updater.config.Mapper._
+
+    testMapping(mapArtifact, unmapArtifact)
+    testMapping(mapBundleConfig, unmapBundleConfig)
+    testMapping(mapFeatureRef, unmapFeatureRef)
+    testMapping(mapFeatureConfig, unmapFeatureConfig)
+    testMapping(mapOverlayConfig, unmapOverlayConfig)
+    testMapping(mapRuntimeConfig, unmapRuntimeConfig)
+    testMapping(mapServiceInfo, unmapServiceInfo)
+    testMapping(mapUpdateAction, unmapUpdateAction)
+    testMapping(mapGeneratedConfig, unmapGeneratedConfig)
+    testMapping(mapProfileGroup, unmapProfileGroup)
+    testMapping(mapProfile, unmapProfile)
+    testMapping(mapOverlayRef, unmapOverlayRef)
+    testMapping(mapOverlaySet, unmapOverlaySet)
 
   }
 

@@ -19,7 +19,8 @@ object BlendedPersistenceH2 extends ProjectFactory {
       Dependencies.jclOverSlf4j % "test",
       Dependencies.scalatest % "test",
       Dependencies.logbackClassic % "test",
-      Dependencies.lambdaTest % "test"
+      Dependencies.lambdaTest % "test",
+      Dependencies.scalacheck % "test"
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.H2Activator",
@@ -35,6 +36,8 @@ object BlendedPersistenceH2 extends ProjectFactory {
     BlendedPersistence.project,
     BlendedUtilLogging.project,
     BlendedUtil.project,
-    BlendedTestsupport.project % "test"
+    BlendedTestsupport.project % "test",
+    // we want to use the scalacheck data generators in tests
+    BlendedUpdaterConfigJvm.project % "test->test"
   )
 }
