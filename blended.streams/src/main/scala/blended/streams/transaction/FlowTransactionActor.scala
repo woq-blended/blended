@@ -27,14 +27,14 @@ class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: Fl
   private[this] def updateState(state: FlowTransaction, evt: FlowTransactionEvent) : Try[FlowTransaction] = Try {
     val newState : FlowTransaction = state.updateTransaction(evt).get
     log.trace(s"New state is [$newState]")
-    state
+    newState
   }
 
   private[this] def processEvent(requestor : ActorRef, state: FlowTransaction, event : FlowTransactionEvent): Unit = {
     updateState(state, event) match {
       case Success(s) =>
-        log.trace(s"Sending Transaction state to [${requestor.path}]")
-        persistor.persistTransaction(state)
+        persistor.persistTransaction(s)
+        log.trace(s"Sending Transaction state [${s.id}] to [${requestor.path}]")
         requestor ! s
         context.become(handleState(s))
       case Failure(exception) =>
@@ -81,7 +81,7 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
           a.tell(e, respondTo)
 
         case None =>
-          log.debug(s"Restoring transaction actor for [${e.transactionId}]")
+          log.debug(s"Trying to restore transaction actor for [${e.transactionId}]")
 
           restoreTransaction(e.transactionId) match {
             case Some(a) =>
@@ -89,14 +89,14 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
               context.become(handleEvent(cache ++ Map(e.transactionId -> a)))
 
             case None =>
+              log.debug(s"Creating new transaction actor for [${e.transactionId}]")
               val s = FlowTransaction(
                 id = e.transactionId,
-                creationProps = e.properties
+                creationProps = e.properties,
               )
-              persistor.persistTransaction(s)
               val a = context.actorOf(FlowTransactionActor.props(persistor, s))
+              a.tell(e, respondTo)
               context.become(handleEvent(cache ++ Map(e.transactionId -> a)))
-              respondTo ! s
           }
       }
 

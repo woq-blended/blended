@@ -9,6 +9,7 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.persistence.h2.internal.H2Activator
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.FlowEnvelope
@@ -43,6 +44,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
     "blended.jms.bridge" -> new BridgeActivator(),
+    "blended.persistence.h2" -> new H2Activator(),
     "blended.streams.dispatcher" -> new DispatcherActivator()
   )
 

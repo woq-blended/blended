@@ -7,12 +7,13 @@ import java.{util => ju}
 import scala.collection.JavaConverters._
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Try
-
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
+import org.scalatest.DoNotDiscover
 import org.scalatest.prop.PropertyChecks
 
+@DoNotDiscover
 class LoadTest
   extends LoggingFreeSpec
   with PropertyChecks
@@ -24,7 +25,8 @@ class LoadTest
 
     import blended.updater.config.TestData._
 
-    def testMapping[T: ClassTag](
+    def b
+    testMapping[T: ClassTag](
       map: T => ju.Map[String, AnyRef],
       unmap: AnyRef => Try[T]
     )(implicit arb: Arbitrary[T]): Unit = {
