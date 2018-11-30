@@ -11,6 +11,7 @@ object BlendedPrickleAkkaHttp extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.prickle,
       Dependencies.scalatest % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.logbackClassic % "test"
     )

@@ -79,7 +79,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
               // all JMS messages are delivered. This will allow the stage to complete after all pending messages
               // are delivered, thus preventing message loss due to premature stage completion.
               markStopped.invoke(Done)
-              log.debug(s"Successfully closed all sessions for Jms stage [$id]")
+              log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
             }
           }
         }
@@ -89,7 +89,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     if (stopping.compareAndSet(false, true)) {
       val abortSessionFutures = jmsSessions.values.map { s =>
         val f = s.abortSessionAsync()
-        f.failed.foreach(e => log.error(e)(s"Error closing jms session in Jms source stage [$id]"))
+        f.failed.foreach(e => log.error(e)(s"Error closing jms session in Jms source stage [$id][$settings]"))
         f
       }
       Future

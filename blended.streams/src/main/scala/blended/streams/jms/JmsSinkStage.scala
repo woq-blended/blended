@@ -92,7 +92,8 @@ class JmsSinkStage(
             if (sendTtl >= 0L) {
               val dest = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
-              log.debug(s"Successfuly sent message to [$dest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.destination}, ${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]@[$id]")
+              val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
+              log.debug(s"Successfuly sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
             }
           }
           env

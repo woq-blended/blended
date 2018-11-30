@@ -31,7 +31,7 @@ trait LoggingFreeSpecLike extends FreeSpecLike {
     var reported = false
     try {
       val status = super.runTest(testName, args)
-      log.info(s"${if (status.succeeds()) "Finished" else "Failed"} test case: ${testName}")
+      log.info(s"${if (status.succeeds()) "Finished" else "Failed"} test case: ${testName}\n" + ("-" *80))
       reported = true
       status
     } finally {

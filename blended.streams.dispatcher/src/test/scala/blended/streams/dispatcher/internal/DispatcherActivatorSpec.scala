@@ -145,7 +145,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       )
 
       appender.stop()
-      val logEvents = Await.result(logEventsFut, timeout)
+      val logEvents = Await.result(logEventsFut, timeout + 1.second)
 
       val errors = results(0)
       val out = results(1)

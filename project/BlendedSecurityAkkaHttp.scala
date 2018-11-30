@@ -13,6 +13,7 @@ private object BlendedSecurityAkkaHttp extends ProjectFactory {
       Dependencies.slf4j,
       Dependencies.commonsBeanUtils % "test",
       Dependencies.scalatest % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.jclOverSlf4j % "test",
       Dependencies.logbackClassic % "test"

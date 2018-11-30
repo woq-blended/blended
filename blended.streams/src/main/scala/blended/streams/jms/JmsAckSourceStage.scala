@@ -97,11 +97,13 @@ final class JmsAckSourceStage(
 
       private[this] def poll(sid : String) : Future[Unit] = Future {
 
+        log.trace(s"Trying to receive message from [${settings.jmsDestination.map(_.asString)}] in session [${sid}]")
+
         (jmsSessions.get(sid), consumer.get(sid)) match {
           case (Some(session), Some(c)) =>
 
             // TODO: Make the receive timeout configurable
-            Option(c.receive(100)) match {
+            Option(c.receiveNoWait()) match {
               case Some(message) =>
                 val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                 log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : $flowMessage")
@@ -138,9 +140,11 @@ final class JmsAckSourceStage(
                 }
 
               case None =>
+                log.trace(s"No message available for [${session.sessionId}]")
                 scheduleOnce(Poll(sid), 10.millis)
             }
           case (_, _) =>
+            log.trace(s"Session or consumer not available in [$sid]")
             scheduleOnce(Poll(sid), 100.millis)
         }
       }(ec)

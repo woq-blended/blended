@@ -25,8 +25,7 @@ class LoadTest
 
     import blended.updater.config.TestData._
 
-    def b
-    testMapping[T: ClassTag](
+    def testMapping[T: ClassTag](
       map: T => ju.Map[String, AnyRef],
       unmap: AnyRef => Try[T]
     )(implicit arb: Arbitrary[T]): Unit = {

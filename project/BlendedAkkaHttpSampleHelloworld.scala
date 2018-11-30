@@ -13,6 +13,7 @@ object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
       Dependencies.slf4j,
       Dependencies.scalatest % "test",
       Dependencies.slf4jLog4j12 % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test"
     ),
     adaptBundle = b => b.copy(
