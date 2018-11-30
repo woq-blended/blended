@@ -220,7 +220,7 @@ final class JmsAckSourceStage(
             scheduleOnce(Poll(session.sessionId), 100.millis)
 
           case Failure(e) =>
-            fail.invoke(e)
+            failStage(e)
         }
       }
 

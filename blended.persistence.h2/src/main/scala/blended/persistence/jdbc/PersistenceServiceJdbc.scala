@@ -28,7 +28,7 @@ class PersistenceServiceJdbc(
     t
   }
 
-  override def deleteByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Long = {
+  override def deleteByExample(pClass: String, data: ju.Map[String, _ <: Any]): Long = {
     log.debug(s"About to delete by example pClass: ${pClass}, data: ${data}")
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     txTemplate.execute { ts =>
@@ -36,14 +36,14 @@ class PersistenceServiceJdbc(
     }
   }
 
-  override def findAll(pClass: String): Seq[ju.Map[String, _ <: AnyRef]] = {
+  override def findAll(pClass: String): Seq[ju.Map[String, _ <: Any]] = {
     val classes = txTemplateRo.execute { ts =>
       dao.findAll(pClass)
     }
     classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 
-  override def findByExample(pClass: String, data: ju.Map[String, _ <: AnyRef]): Seq[ju.Map[String, _ <: AnyRef]] = {
+  override def findByExample(pClass: String, data: ju.Map[String, _ <: Any]): Seq[ju.Map[String, _ <: Any]] = {
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     val classes = txTemplateRo.execute { ts =>
       dao.findByFields(pClass, fields)
@@ -51,7 +51,7 @@ class PersistenceServiceJdbc(
     classes.map(pc => PersistedField.toJuMap(pc.fields))
   }
 
-  override def persist(pClass: String, data: ju.Map[String, _ <: AnyRef]): ju.Map[String, _ <: AnyRef] = {
+  override def persist(pClass: String, data: ju.Map[String, _ <: Any]): ju.Map[String, _ <: Any] = {
     // TODO check if data already contains id
 
     log.debug(s"About to persist class [${pClass}] with data [${data}]")

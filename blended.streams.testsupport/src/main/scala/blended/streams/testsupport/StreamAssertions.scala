@@ -6,7 +6,7 @@ import blended.streams.message.MsgProperty
 object StreamAssertions {
 
   def verifyHeader(expected: FlowMessageProps, actual: FlowMessageProps)
-    : List[(String, MsgProperty[_], Option[MsgProperty[_]])] = {
+    : List[(String, MsgProperty, Option[MsgProperty])] = {
 
     val broken = expected.filter { p =>
       actual.get(p._1) match {

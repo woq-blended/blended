@@ -58,7 +58,7 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
 
     val prefix = headerConfig.prefix
 
-    val props: Map[String, MsgProperty[_]] = {
+    val props: Map[String, MsgProperty] = {
 
       val dest = JmsDestination.asString(JmsDestination.create(msg.getJMSDestination()).get)
       val delMode = new JmsDeliveryMode(msg.getJMSDeliveryMode()).asString
@@ -81,19 +81,19 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         deliveryModeHeader(prefix) -> delMode
       ).get
 
-      val expireHeaderMap : Map[String, MsgProperty[_]] = msg.getJMSExpiration() match {
+      val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {
         case 0L => Map.empty
         case v => Map(expireHeader(prefix) -> MsgProperty.lift(v).get)
       }
 
-      val corrIdMap : Map[String, MsgProperty[_]] =
+      val corrIdMap : Map[String, MsgProperty] =
         Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(prefix) -> MsgProperty.lift(s).get).toMap
 
-      val props : Map[String, MsgProperty[_]] = msg.getPropertyNames().asScala.map { name =>
+      val props : Map[String, MsgProperty] = msg.getPropertyNames().asScala.map { name =>
         (name.toString -> lift(msg.getObjectProperty(name.toString())).get)
       }.toMap
 
-      val replyToMap : Map[String, MsgProperty[_]] =
+      val replyToMap : Map[String, MsgProperty] =
         Option(msg.getJMSReplyTo()).map( d => replyToHeader(prefix) -> lift(JmsDestination.create(d).get.asString).get).toMap
 
       props ++ headers ++ expireHeaderMap ++ corrIdMap ++ replyToMap

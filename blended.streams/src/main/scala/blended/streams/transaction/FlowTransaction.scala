@@ -47,7 +47,7 @@ object FlowTransaction {
         val branches : Map[String, List[String]] =
           s.split(branchSeparator)
             .map(b => b.split("="))
-            .filter(_.size == 2)
+            .filter(_.length == 2)
             .map{ b =>
               b(0) -> b(1).split(stateSeparator).toList
             }.toMap
@@ -58,13 +58,46 @@ object FlowTransaction {
 
     FlowTransaction(id = env.id, creationProps = env.flowMessage.header, state = state, worklist = worklistState)
   }
+
+  private[transaction] def worklistState(currentState : FlowTransactionState, wl : Map[String, List[WorklistState]]) : List[FlowTransactionState] = {
+    wl.map { case (_,v) =>
+      if (v.contains(WorklistState.Failed) || v.contains(WorklistState.TimeOut)) {
+        FlowTransactionState.Failed
+      } else if (v.contains(WorklistState.Started) && v.contains(WorklistState.Completed)) {
+        FlowTransactionState.Completed
+      } else if (v.contains(WorklistState.Started)) {
+        FlowTransactionState.Started
+      } else if (v.contains(WorklistState.Completed)) {
+        FlowTransactionState.Updated
+      } else {
+        currentState
+      }
+    }.toList.distinct
+  }
+
+  private[transaction] def transactionState(currentState : FlowTransactionState, wl : Map[String, List[WorklistState]]): FlowTransactionState = {
+
+    val itemStates : List[FlowTransactionState] = FlowTransaction.worklistState(currentState, wl)
+
+    if (itemStates.contains(FlowTransactionState.Failed)) {
+      FlowTransactionState.Failed
+    } else if (itemStates.size > 1) {
+      FlowTransactionState.Updated
+    } else if (itemStates.equals(List(FlowTransactionState.Updated))) {
+      FlowTransactionState.Updated
+    } else if (itemStates.equals(List(FlowTransactionState.Completed))) {
+      FlowTransactionState.Completed
+    } else {
+      currentState
+    }
+  }
 }
 
 case class FlowTransaction private [transaction](
   id : String,
-  creationProps : Map[String, MsgProperty[_]],
+  creationProps : Map[String, MsgProperty],
   worklist : Map[String, List[WorklistState]] = Map.empty,
-  state : FlowTransactionState = FlowTransactionState.Started,
+  state : FlowTransactionState = FlowTransactionState.Started
 ) {
 
   override def toString: String = {
@@ -77,39 +110,6 @@ case class FlowTransaction private [transaction](
   private[this] val log = Logger[FlowTransaction]
 
   def terminated: Boolean = state == FlowTransactionState.Completed || state == FlowTransactionState.Failed
-
-  private def worklistState(wl : Map[String, List[WorklistState]]) : List[FlowTransactionState] = {
-    wl.map { case (_,v) =>
-      if (v.contains(WorklistState.Failed) || v.contains(WorklistState.TimeOut)) {
-        FlowTransactionState.Failed
-      } else if (v.contains(WorklistState.Started) && v.contains(WorklistState.Completed)) {
-        FlowTransactionState.Completed
-      } else if (v.contains(WorklistState.Started)) {
-        FlowTransactionState.Started
-      } else if (v.contains(WorklistState.Completed)) {
-        FlowTransactionState.Updated
-      } else {
-        state
-      }
-    }.toList.distinct
-  }
-
-  private def transactionState(wl : Map[String, List[WorklistState]]): FlowTransactionState = {
-
-    val itemStates : List[FlowTransactionState] = worklistState(wl)
-
-    if (itemStates.contains(FlowTransactionState.Failed)) {
-      FlowTransactionState.Failed
-    } else if (itemStates.size > 1) {
-      FlowTransactionState.Updated
-    } else if (itemStates.equals(List(FlowTransactionState.Updated))) {
-      FlowTransactionState.Updated
-    } else if (itemStates.equals(List(FlowTransactionState.Completed))) {
-      FlowTransactionState.Completed
-    } else {
-      state
-    }
-  }
 
   def updateTransaction(
     event : FlowTransactionEvent
@@ -148,7 +148,7 @@ case class FlowTransaction private [transaction](
           val newWorklist : Map[String, List[WorklistState]] =
             worklist.filterKeys { id => !updatedItemIds.contains(id) } ++ updatedItemIds
 
-          copy(worklist = newWorklist, state = transactionState(newWorklist))
+          copy(worklist = newWorklist, state = FlowTransaction.transactionState(state, newWorklist))
       }
     } else {
       this

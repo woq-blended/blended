@@ -17,9 +17,8 @@ import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.concurrent.{Await, ExecutionContext}
 
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   with LoggingFreeSpecLike

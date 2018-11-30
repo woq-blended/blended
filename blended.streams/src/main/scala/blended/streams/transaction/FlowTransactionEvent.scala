@@ -143,7 +143,7 @@ sealed trait FlowTransactionEvent {
 
 case class FlowTransactionStarted(
   override val transactionId : String,
-  override val properties : Map[String, MsgProperty[_]]
+  override val properties : Map[String, MsgProperty]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Started
 }

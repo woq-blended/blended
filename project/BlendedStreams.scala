@@ -49,7 +49,9 @@ object BlendedStreams extends ProjectFactory {
     BlendedUtilLogging.project,
     BlendedJmsUtils.project,
     BlendedAkka.project,
+    BlendedPersistence.project,
 
+    BlendedPersistenceH2.project % "test",
     BlendedTestsupportPojosr.project % "test",
     BlendedTestsupport.project % "test"
   )
