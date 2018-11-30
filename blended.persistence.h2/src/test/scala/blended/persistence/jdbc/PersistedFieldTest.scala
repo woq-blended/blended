@@ -47,6 +47,12 @@ class PersistedFieldTest
       Seq(
         PersistedField(fieldId = 1, name = "key", valueLong = Some(Int.MaxValue), typeName = TypeName.Int)
       )
+    ), (
+      "Short",
+      Map("key" -> Short.MaxValue).asJava,
+      Seq(
+        PersistedField(fieldId = 1, name = "key", valueLong = Some(Short.MaxValue), typeName = TypeName.Short)
+      )
     ),
     ("Double",
       Map("key" -> Double.MaxValue).asJava,

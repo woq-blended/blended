@@ -14,6 +14,9 @@ object TypeName {
   case object Byte extends TypeName {
     override def name = "Byte"
   }
+  case object Short extends TypeName {
+    override def name = "Short"
+  }
   case object Int extends TypeName {
     override def name = "Int"
   }
@@ -42,7 +45,7 @@ object TypeName {
     override def name = "LongString"
   }
 
-  def values: Seq[TypeName] = Seq(String, Long, Int, Byte, Boolean, Double, Float, Array, Object, Null, LongString)
+  def values: Seq[TypeName] = Seq(String, Long, Int, Short, Byte, Boolean, Double, Float, Array, Object, Null, LongString)
 
   def fromString(name: String): Option[TypeName] = values.find(_.name == name)
 

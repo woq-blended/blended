@@ -3,7 +3,6 @@ package blended.persistence.jdbc
 import java.{util => ju, lang => jl}
 import scala.collection.JavaConverters._
 import java.util.regex.Pattern
-import scala.util.Try
 
 /**
   * Represents one field in a persisted data set.
@@ -64,6 +63,8 @@ object PersistedField {
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Long))
         case value: Int =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Int))
+        case value: Short =>
+          Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Short))
         case value: Byte =>
           Seq(PersistedField(fieldId = nextId(), name = key, baseFieldId = baseFieldId, valueLong = Some(value), typeName = TypeName.Byte))
         case value: Double =>
@@ -100,6 +101,7 @@ object PersistedField {
         case TypeName.Null => null
         case TypeName.Boolean => jl.Boolean.valueOf(field.valueLong.map(_ != 0).get)
         case TypeName.Byte => jl.Byte.valueOf(field.valueLong.map(_.toByte).get)
+        case TypeName.Short => jl.Short.valueOf(field.valueLong.map(_.toShort).get)
         case TypeName.Int => jl.Integer.valueOf(field.valueLong.map(_.toInt).get)
         case TypeName.Long => jl.Long.valueOf(field.valueLong.get)
         case TypeName.String => field.valueString.get
