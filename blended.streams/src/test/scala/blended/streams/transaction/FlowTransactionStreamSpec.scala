@@ -8,6 +8,8 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
+import blended.persistence.PersistenceService
+import blended.persistence.h2.internal.H2Activator
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{CollectingActor, Collector}
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -29,7 +31,8 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
-    "blended.akka" -> new BlendedAkkaActivator()
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.persistence.h2" -> new H2Activator()
   )
 
   "The FlowTransactionStream should" - {
@@ -41,12 +44,13 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
         implicit val timeout = 1.second
         val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
         implicit val system = mandatoryService[ActorSystem](registry)(None)
+        val pSvc : PersistenceService = mandatoryService[PersistenceService](registry)(None)
 
         implicit val eCtxt : ExecutionContext = system.dispatcher
         implicit val materializer : Materializer = ActorMaterializer()
         implicit val log : Logger = Logger("spec.flow.stream")
 
-        val tMgr = system.actorOf(FlowTransactionManager.props())
+        val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
 
         val transColl = Collector[FlowTransaction]("trans")
 

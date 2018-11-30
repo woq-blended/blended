@@ -57,7 +57,7 @@ object FlowTransactionGen {
     f <- floatGen
     d <- doubleGen
     str <- Gen.alphaNumStr.map(s => StringMsgProperty(s))
-  } yield Gen.oneOf(i, l, b, by, f, d, str).sample.get
+  } yield Gen.oneOf(i, l, s, b, by, f, d, str).sample.get
 
   private val creationProps : Gen[Map[String, MsgProperty]] = Gen.nonEmptyMap(
     for {

@@ -6,6 +6,8 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.persistence.PersistenceService
+import blended.persistence.h2.internal.H2Activator
 import blended.streams.jms.JmsStreamSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
@@ -32,13 +34,16 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   override def loggerName: String = "outbound"
 
   override def bundles: Seq[(String, BundleActivator)] = super.bundles ++ Seq(
-    "blended.activemq.brokerstarter" -> new BrokerActivator()
+    "blended.activemq.brokerstarter" -> new BrokerActivator(),
+    "blended.persistence.h2" -> new H2Activator()
   )
 
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)(
     clazz = ClassTag(classOf[ActorSystem]),
     timeout = timeout
   )
+
+  private val pSvc = mandatoryService[PersistenceService](registry)(None)
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -48,7 +53,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
   val (internalVendor, internalProvider) = ctxt.cfg.providerRegistry.internalProvider.map(p => (p.vendor, p.provider)).get
   private val cf = jmsConnectionFactory(registry, ctxt)(internalVendor, internalProvider, 3.seconds).get
 
-  private val tMgr = system.actorOf(FlowTransactionManager.props())
+  private val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
 
   override protected def beforeAll(): Unit = {
     implicit val bs : DispatcherBuilderSupport = ctxt.bs

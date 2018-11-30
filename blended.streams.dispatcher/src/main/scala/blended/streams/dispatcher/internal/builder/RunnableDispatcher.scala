@@ -7,6 +7,7 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Source}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
@@ -22,6 +23,7 @@ class RunnableDispatcher(
   cf : IdAwareConnectionFactory,
   bs : DispatcherBuilderSupport,
   idSvc : ContainerIdentifierService,
+  pSvc : PersistenceService,
   routerCfg : ResourceTypeRouterConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
@@ -146,7 +148,7 @@ class RunnableDispatcher(
       val internalProvider = registry.internalProvider.get
 
       // We will create the Transaction Manager
-      transMgr = Some(system.actorOf(FlowTransactionManager.props()))
+      transMgr = Some(system.actorOf(FlowTransactionManager.props(pSvc)))
 
       // The transaction stream will process the transaction events from the transactions destination
       transStream = Some(transactionStream(transMgr.get).get)

@@ -1,125 +1,111 @@
 package blended.streams.transaction
 
-import akka.Done
 import akka.actor.{Actor, ActorRef, Props}
-import akka.persistence.SnapshotOffer
 import akka.util.Timeout
-import blended.streams.persistence.RestartableActor
-import blended.streams.persistence.RestartableActor.RestartActor
-import blended.streams.transaction.FlowTransactionActor.State
-import blended.streams.transaction.FlowTransactionManager.RestartTransactionActor
+import blended.persistence.PersistenceService
+import blended.streams.transaction.FlowTransactionActor.TransactionState
 import blended.util.logging.Logger
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 object FlowTransactionActor {
 
-  case object TransactionProcessingComplete
-  case class State(tid : String)
+  case class TransactionState(tid : String)
 
-  def props(initialState: FlowTransaction) : Props =
-    Props(new FlowTransactionActor(initialState))
+  def props(persistor: FlowTransactionPersistor, initialState: FlowTransaction) : Props =
+    Props(new FlowTransactionActor(persistor, initialState))
 }
 
-class FlowTransactionActor(initialState: FlowTransaction) extends RestartableActor {
+class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: FlowTransaction) extends Actor {
 
   private val log = Logger[FlowTransactionActor]
-  private var state : FlowTransaction = initialState
 
-  override def persistenceId: String = initialState.tid
+  override def receive: Receive = handleState(initialState)
 
-  def updateState(evt: FlowTransactionEvent) : Try[FlowTransaction] = Try {
-    state = state.updateTransaction(evt).get
-    log.trace(s"New state is [$state]")
+  private[this] def updateState(state: FlowTransaction, evt: FlowTransactionEvent) : Try[FlowTransaction] = Try {
+    val newState : FlowTransaction = state.updateTransaction(evt).get
+    log.trace(s"New state is [$newState]")
     state
   }
 
-  val transactionRecover : Receive = {
-    case evt : FlowTransactionEvent =>
-      log.trace(s"Replaying FlowTransactionEvent [$evt]")
-      updateState(evt)
-    case SnapshotOffer(_, snapshot : FlowTransaction) => state = snapshot
-  }
-
-  override def receiveRecover: Receive = transactionRecover
-
-  private[this] def processEvent(requestor : ActorRef, event : FlowTransactionEvent) = {
-    updateState(event) match {
+  private[this] def processEvent(requestor : ActorRef, state: FlowTransaction, event : FlowTransactionEvent): Unit = {
+    updateState(state, event) match {
       case Success(s) =>
         log.trace(s"Sending Transaction state to [${requestor.path}]")
+        persistor.persistTransaction(state)
         requestor ! s
-        persist(event) { e => } // do nothing
+        context.become(handleState(s))
       case Failure(exception) =>
-        log.warn(s"Failed to update transaction [${state.tid}] with event [$event]")
+        log.warn(s"Failed to update transaction [${state.tid}] with event [$event] : ${exception.getMessage}")
     }
   }
 
-  private val cmdReceive : Receive = {
+  private[this] def handleState(state: FlowTransaction): Receive = {
     case e : FlowTransactionEvent =>
-      processEvent(sender(), e)
-    case State(_) =>
+      processEvent(sender(), state, e)
+    case TransactionState(_) =>
       sender() ! state
   }
-
-  override def receiveCommand: Receive = cmdReceive.orElse(restartReceive)
 }
 
 object FlowTransactionManager {
-
-  // TODO : Review this is only required for testing
-  case class RestartTransactionActor(id: String)
-
-  def props() : Props = Props(new FlowTransactionManager())
+  def props(pSvc : PersistenceService) : Props = Props(new FlowTransactionManager(pSvc))
 }
 
-class FlowTransactionManager() extends Actor {
+class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
 
   private[this] val log = Logger[FlowTransactionManager]
 
   private[this] implicit val timeout : Timeout = Timeout(3.seconds)
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+  private[this] val persistor : FlowTransactionPersistor = new FlowTransactionPersistor(pSvc)
 
-  private[this] def transactionActor(id : String): Future[ActorRef] = {
-    context.system.actorSelection("/user/" + id ).resolveOne()(100.millis)
+  override def receive: Receive = handleEvent(Map.empty)
+
+  private val restoreTransaction : String => Option[ActorRef] = tid => persistor.restoreTransaction(tid) match {
+    case Success(s) => Some(context.actorOf(FlowTransactionActor.props(persistor, s)))
+    case Failure(_) => None
   }
 
-  private[this] def fwdToTransaction(id : String, m : Any)(implicit eCtxt : ExecutionContext) : Unit = {
-    val respondTo : ActorRef = sender()
-
-    transactionActor(id).map { a =>
-      a.tell(m, respondTo)
-      Done
-    }.onComplete {
-      case Success(_) =>
-      case Failure(_) => log.warn(s"Error forwarding message [$m] to transaction actor [$id]")
-    }
-  }
-
-  override def receive: Receive = {
+  private[this] def handleEvent(cache: Map[String, ActorRef]): Receive = {
 
     case e : FlowTransactionEvent =>
       val respondTo = sender()
 
       log.trace(s"Recording transaction event [$e]")
 
-      transactionActor(e.transactionId).recoverWith[ActorRef] {
-        case t : Throwable =>
-          log.debug(s"Creating new Transaction actor for [${e.transactionId}]")
+      cache.get(e.transactionId) match {
+        case Some(a) =>
+          a.tell(e, respondTo)
 
-          val a = context.system.actorOf(FlowTransactionActor.props(
-            FlowTransaction(
-              id = e.transactionId,
-              creationProps = e.properties
-            )
-          ), e.transactionId)
-          Future(a)
-      }.map(a => a.tell(e, respondTo))
+        case None =>
+          log.debug(s"Restoring transaction actor for [${e.transactionId}]")
 
-    case RestartTransactionActor(id) => fwdToTransaction(id, RestartActor)
+          restoreTransaction(e.transactionId) match {
+            case Some(a) =>
+              a.tell(e, respondTo)
+              context.become(handleEvent(cache ++ Map(e.transactionId -> a)))
 
-    case state @ FlowTransactionActor.State(tid) => fwdToTransaction(tid, state)
+            case None =>
+              val s = FlowTransaction(
+                id = e.transactionId,
+                creationProps = e.properties
+              )
+              persistor.persistTransaction(s)
+              val a = context.actorOf(FlowTransactionActor.props(persistor, s))
+              context.become(handleEvent(cache ++ Map(e.transactionId -> a)))
+              respondTo ! s
+          }
+      }
+
+    case state @ FlowTransactionActor.TransactionState(tid) =>
+      val respondTo = sender()
+      cache.get(tid) match {
+        case Some(a) => a.tell(state, respondTo)
+        case None => restoreTransaction(state.tid).foreach(_.tell(state, respondTo))
+      }
 
     case m => log.warn(s"Unhandled msg [$m] ")
   }
