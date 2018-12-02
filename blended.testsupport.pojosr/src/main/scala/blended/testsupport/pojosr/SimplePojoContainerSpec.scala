@@ -1,10 +1,10 @@
 package blended.testsupport.pojosr
 
 import org.osgi.framework.BundleActivator
-import org.scalatest.{BeforeAndAfterAll, FreeSpec}
+import org.scalatest.{BeforeAndAfterAll, TestSuite}
 
 abstract class SimplePojoContainerSpec
-  extends FreeSpec
+  extends TestSuite
   with BeforeAndAfterAll { this: PojoSrTestHelper =>
 
   /**

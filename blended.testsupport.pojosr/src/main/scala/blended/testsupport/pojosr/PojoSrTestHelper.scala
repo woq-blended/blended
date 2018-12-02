@@ -44,6 +44,7 @@ trait PojoSrTestHelper {
     mandatoryProperties: Option[String] = None
   ): BundleActivator = {
     new DominoActivator {
+
       mandatoryProperties.foreach(s =>
         System.setProperty("blended.updater.profile.properties.keys", s))
 
