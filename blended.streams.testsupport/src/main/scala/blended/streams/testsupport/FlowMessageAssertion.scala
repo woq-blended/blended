@@ -1,7 +1,7 @@
 package blended.streams.testsupport
 
 import akka.util.ByteString
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage}
+import blended.streams.message._
 import blended.util.logging.Logger
 
 import scala.util.Try
@@ -48,22 +48,26 @@ class MinMessageCount(count : Int) extends FlowMessageAssertion {
 }
 
 object ExpectedBodies {
-  def apply(bodies: Any*): ExpectedBodies = new ExpectedBodies(bodies)
+  def apply(bodies: Option[Any]*): ExpectedBodies = new ExpectedBodies(bodies:_*)
 }
 
-class ExpectedBodies(bodies: Any*) extends FlowMessageAssertion {
+class ExpectedBodies(bodies: Option[Any]*) extends FlowMessageAssertion {
+
+  private val matchBody : FlowMessage => Option[Any] => Boolean = msg => expected =>
+    msg match {
+      case txtMsg : TextFlowMessage => expected.isDefined && expected.forall(_.toString.equals(txtMsg.getText()))
+      case binMsg : BinaryFlowMessage => expected.isDefined && { expected.forall { c => c match {
+        case byteString: ByteString => byteString.equals(binMsg.content)
+        case byteArr: Array[Byte] => ByteString(byteArr).equals(binMsg.content)
+        case _ => false
+      }}}
+      case baseMsg : BaseFlowMessage => expected.isEmpty
+    }
+
   override def f: Seq[FlowEnvelope] => Try[String] = l => {
 
-    def compareBodies(matchList: Map[Any, Any]) : Try[String] = Try {
-      matchList.filter { case (expected, actual) => actual match {
-        case txtMsg: TextFlowMessage => expected.toString().equals(txtMsg.content)
-        case binMsg: BinaryFlowMessage =>
-          expected match {
-            case byteString: ByteString => byteString.equals(binMsg.content)
-            case byteArr: Array[Byte] => ByteString(byteArr).equals(binMsg.content)
-          }
-        case _ => false
-      }} match {
+    def compareBodies(matchList: Map[Option[Any], FlowMessage]) : Try[String] = Try {
+      matchList.filter { case (expected, actual) => matchBody(actual)(expected) } match {
         case s if s.isEmpty => "MockActor has received the correct bodies"
         case e =>
           val msg = e.map { case (b, a) => s"[$b != $a]"} mkString (",")
@@ -72,13 +76,13 @@ class ExpectedBodies(bodies: Any*) extends FlowMessageAssertion {
     }
 
     if (bodies.length == 1) {
-      val compMap : Map[Any, Any] = l.map { m => (bodies(0),  m.flowMessage.body()) }.toMap
+      val compMap : Map[Option[Any], FlowMessage] = l.map { m => (bodies(0),  m.flowMessage ) }.toMap
       compareBodies( compMap )
     }
     else {
       l.size match {
         case n if n == bodies.length =>
-          compareBodies(bodies.toList.zip(l.map { _.flowMessage.body() }).toMap)
+          compareBodies(bodies.toList.zip(l.map { _.flowMessage }).toMap)
         case _ => throw new Exception(s"The number of messages received [${l.size}] does not match the number of bodies [${bodies.length}]")
       }
     }
