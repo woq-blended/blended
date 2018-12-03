@@ -32,8 +32,8 @@ object ResourceTypeRouterConfig {
 
     val eventProvider = ProviderResolver.getProvider(
       provider,
-      cfg.getString(defaultEventVendorPath, internalProvider.vendor),
-      cfg.getString(defaultEventProviderPath, internalProvider.provider)
+      idSvc.resolvePropertyString(cfg.getString(defaultEventVendorPath, internalProvider.vendor)).map(_.toString).get,
+      idSvc.resolvePropertyString(cfg.getString(defaultEventProviderPath, internalProvider.provider)).map(_.toString).get
     ).get
 
     val logHeader : List[String] = cfg.getStringList(applicationLogHeaderPath, List.empty)

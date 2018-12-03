@@ -70,11 +70,13 @@ trait PojoSrTestHelper {
   }
 
   def createSimpleBlendedContainer(
-    mandatoryProperties : List[String] = List.empty
+    mandatoryProperties : List[String] = List.empty,
+    sysProperties : Map[String, String] = Map.empty
   ): Try[BlendedPojoRegistry] = Try {
     System.setProperty("BLENDED_HOME", baseDir)
     System.setProperty("blended.home", baseDir)
     System.setProperty("blended.container.home", baseDir)
+    sysProperties.foreach { case (k,v) => System.setProperty(k, v) }
     startBundle(createRegistry().get)(
       classOf[ContainerIdentifierServiceImpl].getPackage().getName(), idSvcActivator(Some(mandatoryProperties.mkString(",")))
     ).get._2

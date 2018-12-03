@@ -44,7 +44,6 @@ object BrokerConfig {
   private val getAndResolve : (String => Try[Any]) => Config => String => Option[String] = resolve => cfg => propName =>
     cfg.getStringOption(propName).map(s => resolve(s).get).map(_.toString)
 
-
   val name : (String => Try[Any]) => Config => Option[String] = resolve => cfg =>
     getAndResolve(resolve)(cfg)("brokerName")
 

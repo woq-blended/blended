@@ -13,7 +13,15 @@ abstract class SimplePojoContainerSpec
    */
   def bundles: Seq[(String, BundleActivator)]
 
+  /**
+    * Specify, which properties are mandatory for the simulated container.
+    */
   def mandatoryPropertyNames: List[String] = List.empty
+
+  /**
+    * If required, inject additional system properties when firing up the container.
+    */
+  def systemProperties : Map[String, String] = Map.empty
 
   override protected def afterAll(): Unit = {
     _registry.foreach { r =>
@@ -29,7 +37,7 @@ abstract class SimplePojoContainerSpec
   def registry: BlendedPojoRegistry = {
     _registry.getOrElse {
       _registry = Some(
-        bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames).get) {
+        bundles.foldLeft(createSimpleBlendedContainer(mandatoryPropertyNames, systemProperties).get) {
           case (current, (name, activator)) =>
             startBundle(current)(name, activator).get._2
         }
