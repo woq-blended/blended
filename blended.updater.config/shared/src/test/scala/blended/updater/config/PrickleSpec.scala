@@ -4,6 +4,7 @@ import java.util.UUID
 
 import scala.reflect.{ClassTag, classTag}
 import scala.util.Success
+import scala.util.control.NonFatal
 
 import blended.updater.config.json.PrickleProtocol._
 import org.scalacheck.Arbitrary
@@ -13,8 +14,10 @@ import prickle._
 
 class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
+  private[this] val log = org.log4s.getLogger
+
   "Prickle real world test cases" - {
-    "1. deserialize a container info" in {
+    "1. deserialize a container info" in logException {
 
       val svcInfos = List(
         ServiceInfo(
@@ -86,7 +89,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
   }
 
   "Prickle should (de)serialize" - {
-    "an ActivateProfile" in {
+    "an ActivateProfile" in logException {
 
       val overlay = OverlayRef("myOverlay", "1.0")
       val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
@@ -105,7 +108,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     }
 
-    "an ActivateProfile as UpdateAction" in {
+    "an ActivateProfile as UpdateAction" in logException {
 
       val overlay = OverlayRef("myOverlay", "1.0")
       val action = ActivateProfile(UUID.randomUUID().toString(), profileName = "test", profileVersion = "1.0", overlays = Set(overlay))
@@ -124,7 +127,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       activate.overlays should be(Set(overlay))
     }
 
-    "a GeneratedConfig" in {
+    "a GeneratedConfig" in logException {
 
       val cfg = GeneratedConfig("filename", "{ key1: value1 }")
       val json = Pickle.intoString(cfg)
@@ -133,7 +136,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     }
 
-    "a ServiceInfo" in {
+    "a ServiceInfo" in logException {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
@@ -145,7 +148,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       svc should be(svcInfo)
     }
 
-    "a list of ServiceInfo's" in {
+    "a list of ServiceInfo's" in logException {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
 
@@ -157,7 +160,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       svcList should be(List(svcInfo))
     }
 
-    "a ContainerInfo" in {
+    "a ContainerInfo" in logException {
 
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
@@ -176,7 +179,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       info2.profiles should be(List(profile))
     }
 
-    "a ContainerRegistryResponseOK" in {
+    "a ContainerRegistryResponseOK" in logException {
       val resp = ContainerRegistryResponseOK("response", List.empty)
 
       val json = Pickle.intoString(resp)
@@ -187,7 +190,7 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
 
     }
 
-    "a RemoteContainerState" in {
+    "a RemoteContainerState" in logException {
       val svcInfo = ServiceInfo("mySvc", "myType", System.currentTimeMillis(), 1000l, Map("svc" -> "test"))
       val profile = Profile("myProfile", "1.0", OverlaySet(Set(), OverlayState.Valid, None))
 
@@ -216,9 +219,11 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
       arb: Arbitrary[T],
       u: Unpickler[T],
       p: Pickler[T]): Unit = {
-      classTag[T].runtimeClass.getSimpleName in {
+      classTag[T].runtimeClass.getSimpleName in logException {
         forAll { d: T =>
-          assert(Unpickle[T].fromString(Pickle.intoString(d)) === Success(d))
+          val backAndForth = Unpickle[T].fromString(Pickle.intoString(d))
+          // log.info(s"data: [${backAndForth}]")
+          assert(backAndForth === Success(d))
         }
       }
     }
@@ -243,9 +248,12 @@ class PrickleSpec extends FreeSpec with Matchers with PropertyChecks {
     // testMapping(mapRemoteContainerState, unmapRemoteContainerState)
   }
 
-  // As the test runs also in JS, we cannot use a SLF4J
-  def log = new {
-    def info(msg: => String) = println(msg)
+  def logException[T](f: => T): T = try {
+    f
+  } catch {
+    case NonFatal(e) =>
+      log.error(e)("Exception caught")
+      throw e
   }
 
 }

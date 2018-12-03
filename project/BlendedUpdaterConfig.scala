@@ -23,7 +23,8 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
       libraryDependencies ++= Seq(
         "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
         "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test",
-        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % "test"
+        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % "test",
+        "org.log4s" %%% "log4s" % Dependencies.log4s.revision % "test"
       )
     )
   )
@@ -45,7 +46,8 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       Dependencies.scalatest % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
-      Dependencies.scalacheck % "test"
+      Dependencies.scalacheck % "test",
+      Dependencies.log4s % "test"
     ),
     adaptBundle = b => b.copy(
       exportPackage = Seq(

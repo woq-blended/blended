@@ -87,6 +87,8 @@ object Dependencies {
   val levelDbJava = "org.iq80.leveldb" % "leveldb" % "0.9"
   val levelDbJni = "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
   val liquibase = "org.liquibase" % "liquibase-core" % "3.6.1"
+  /** Only for use in test that also runs in JS */
+  val log4s = "org.log4s" %% "log4s" % "1.6.1"
   val logbackCore = "ch.qos.logback" % "logback-core" % "1.2.3"
   val logbackClassic = "ch.qos.logback" % "logback-classic" % "1.2.3"
 
