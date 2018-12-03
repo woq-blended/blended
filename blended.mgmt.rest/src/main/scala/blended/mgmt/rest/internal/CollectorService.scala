@@ -81,8 +81,6 @@ trait CollectorService {
     }
   }
 
-  def jsonReponse = pass // no longer supported
-
   def collectorRoute: Route = {
 
     implicit val timeout = Timeout(1.second)
@@ -102,13 +100,11 @@ trait CollectorService {
   def infoRoute: Route = {
     path("container") {
       get {
-        jsonReponse {
-          complete {
-            log.debug("About to provide container infos")
-            val res = getCurrentState()
-            log.debug(s"Result: ${res}")
-            res
-          }
+        complete {
+          log.debug("About to provide container infos")
+          val res = getCurrentState()
+          log.debug(s"Result: ${res}")
+          res
         }
       }
     }
@@ -117,10 +113,8 @@ trait CollectorService {
   def runtimeConfigRoute: Route = {
     path("runtimeConfig") {
       get {
-        jsonReponse {
-          complete {
-            getRuntimeConfigs()
-          }
+        complete {
+          getRuntimeConfigs()
         }
       } ~
         post {
@@ -137,10 +131,8 @@ trait CollectorService {
   def overlayConfigRoute: Route = {
     path("overlayConfig") {
       get {
-        jsonReponse {
-          complete {
-            getOverlayConfigs()
-          }
+        complete {
+          getOverlayConfigs()
         }
       } ~
         post {
