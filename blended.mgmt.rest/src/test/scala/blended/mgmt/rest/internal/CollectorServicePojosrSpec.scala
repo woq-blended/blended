@@ -1,6 +1,7 @@
 package blended.mgmt.rest.internal
 
 import java.io.File
+import java.util.UUID
 
 import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
@@ -12,7 +13,7 @@ import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
-import blended.updater.config.{OverlayConfig, OverlayConfigCompanion}
+import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
@@ -109,13 +110,13 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
       "POST allows upload of new OverlayConfig" in logException {
         val o1 =
           """name = "jvm-medium"
-          |version = "1"
-          |properties = {
-          |  "blended.launcher.jvm.xms" = "768M"
-          |  "blended.launcher.jvm.xmx" = "768M"
-          |  "amq.systemMemoryLimit" = "500m"
-          |}
-          |""".stripMargin
+            |version = "1"
+            |properties = {
+            |  "blended.launcher.jvm.xms" = "768M"
+            |  "blended.launcher.jvm.xmx" = "768M"
+            |  "amq.systemMemoryLimit" = "500m"
+            |}
+            |""".stripMargin
 
         val oc = OverlayConfigCompanion.read(ConfigFactory.parseString(o1)).get
 
@@ -139,6 +140,46 @@ class CollectorServicePojosrSpec extends SimplePojoContainerSpec
         }
       }
 
+    }
+
+    "ActivateProfile" - {
+      val ci1 = "ci1_ActivateProfile"
+      val ci2 = "ci2_ActivateProfile"
+      def url(containerId: String) = uri"${serverUrl}/container/${containerId}/update"
+
+      val ap = ActivateProfile(
+        id = UUID.randomUUID().toString(),
+        profileName = "p",
+        profileVersion = "1",
+        overlays = Set.empty
+      )
+
+      "POST with missing credentials fails with 401 Unauthorized" in logException {
+        withServer { server =>
+          val responsePost = sttp.sttp
+            .post(url(ci1))
+            .body(Pickle.intoString(ap))
+            .header(sttp.HeaderNames.ContentType, sttp.MediaTypes.Json)
+            .send()
+          assert(responsePost.code === 401)
+          assert(responsePost.statusText === "Unauthorized")
+        }
+      }
+
+      "POST an valid ActivateProfile action succeeds" in logException {
+
+        withServer { server =>
+          val responsePost = sttp.sttp
+            .post(url(ci1))
+            .body(Pickle.intoString[UpdateAction](ap))
+            .header(sttp.HeaderNames.ContentType, sttp.MediaTypes.Json)
+            .auth.basic("tester", "mysecret")
+            .send()
+          log.info(s"Response: ${responsePost}")
+          assert(responsePost.code === 200)
+          assert(responsePost.unsafeBody === "\"Added UpdateAction to ci1_ActivateProfile\"")
+        }
+      }
     }
 
     "Upload deployment pack" - {
