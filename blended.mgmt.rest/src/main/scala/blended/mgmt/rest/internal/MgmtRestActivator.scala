@@ -1,7 +1,7 @@
 package blended.mgmt.rest.internal
 
 import blended.akka.ActorSystemWatching
-import blended.akka.http.{ HttpContext, SimpleHttpContext }
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.persistence.PersistenceService
 import blended.security.BlendedPermissionManager
 import blended.updater.remote.RemoteUpdater
@@ -43,11 +43,12 @@ class MgmtRestActivator extends DominoActivator with ActorSystemWatching {
             collectorService.removeArtifactRepo(service)
             collectorService.addArtifactRepo(service)
         }
-        
+
+        // TODO: remove; it looks like to be redundant to the above watch code
         // initially get all services of this type
-        val repos = services[WritableArtifactRepo]
-        log.debug(s"Initially starting with repos: ${repos}")
-        repos.foreach { s => collectorService.addArtifactRepo(s) }
+        //        val repos = services[WritableArtifactRepo]
+        //        log.debug(s"Initially starting with repos: ${repos}")
+        //        repos.foreach { s => collectorService.addArtifactRepo(s) }
 
         whenActorSystemAvailable { cfg =>
           log.debug("Setting optional event stream to collector service")
