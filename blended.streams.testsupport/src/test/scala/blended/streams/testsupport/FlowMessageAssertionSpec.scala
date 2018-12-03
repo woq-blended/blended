@@ -14,7 +14,7 @@ class FlowMessageAssertionSpec extends LoggingFreeSpec
       val env = FlowEnvelope(FlowMessage("Hello Blended!")(FlowMessage.noProps))
 
       val result = FlowMessageAssertion.checkAssertions(env)(
-        ExpectedBodies("Hello Blended!")
+        ExpectedBodies(Some("Hello Blended!"))
       )
 
       result should be (empty)

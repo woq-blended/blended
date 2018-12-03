@@ -9,6 +9,7 @@ import blended.security.login.api.{Token, TokenStore}
 import blended.security.login.impl.LoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.security.auth.Subject
 import javax.security.auth.login.LoginContext
 import org.osgi.framework.BundleActivator
@@ -20,6 +21,7 @@ import scala.concurrent.duration._
 import scala.util.Try
 
 class TokenStoreSpec extends SimplePojoContainerSpec
+  with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper {
 

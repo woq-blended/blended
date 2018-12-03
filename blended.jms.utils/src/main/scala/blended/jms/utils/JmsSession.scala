@@ -1,9 +1,7 @@
 package blended.jms.utils
 
-import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
-import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.duration._
@@ -27,10 +25,10 @@ abstract class JmsSession {
 }
 
 case class JmsProducerSession(
-  val connection: Connection,
-  val session: Session,
+  connection: Connection,
+  session: Session,
   override val sessionId : String,
-  val jmsDestination: Option[JmsDestination]
+  jmsDestination: Option[JmsDestination]
 ) extends JmsSession
 
 class JmsConsumerSession(

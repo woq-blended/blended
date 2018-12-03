@@ -6,7 +6,7 @@ import akka.stream.scaladsl.{Flow, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
-import blended.streams.StreamFactories
+import blended.streams.{StreamController, StreamControllerConfig, StreamFactories}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
@@ -78,7 +78,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         acknowledgeMode = AcknowledgeMode.ClientAcknowledge
       )
 
-      val consumer : Source[FlowEnvelope, NotUsed] = jmsConsumer(
+      val consumer : Source[FlowEnvelope, NotUsed] = restartableConsumer(
         name = "test",
         settings = settings,
         headerConfig = FlowHeaderConfig(prefix = "Spec"),

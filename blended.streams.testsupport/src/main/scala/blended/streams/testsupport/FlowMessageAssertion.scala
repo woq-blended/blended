@@ -53,21 +53,24 @@ object ExpectedBodies {
 
 class ExpectedBodies(bodies: Option[Any]*) extends FlowMessageAssertion {
 
-  private val matchBody : FlowMessage => Option[Any] => Boolean = msg => expected =>
+  private val unmatched : FlowMessage => Option[Any] => Boolean = msg => expected =>
     msg match {
-      case txtMsg : TextFlowMessage => expected.isDefined && expected.forall(_.toString.equals(txtMsg.getText()))
+      case txtMsg : TextFlowMessage =>
+        expected.isEmpty && expected.forall(e => !e.toString.equals(txtMsg.content))
+
       case binMsg : BinaryFlowMessage => expected.isDefined && { expected.forall { c => c match {
-        case byteString: ByteString => byteString.equals(binMsg.content)
-        case byteArr: Array[Byte] => ByteString(byteArr).equals(binMsg.content)
-        case _ => false
+        case byteString: ByteString => !byteString.equals(binMsg.content)
+        case byteArr: Array[Byte] => !ByteString(byteArr).equals(binMsg.content)
+        case _ => true
       }}}
-      case baseMsg : BaseFlowMessage => expected.isEmpty
+
+      case baseMsg : BaseFlowMessage => expected.isDefined
     }
 
   override def f: Seq[FlowEnvelope] => Try[String] = l => {
 
     def compareBodies(matchList: Map[Option[Any], FlowMessage]) : Try[String] = Try {
-      matchList.filter { case (expected, actual) => matchBody(actual)(expected) } match {
+      matchList.filter { case (expected, actual) => unmatched(actual)(expected) } match {
         case s if s.isEmpty => "MockActor has received the correct bodies"
         case e =>
           val msg = e.map { case (b, a) => s"[$b != $a]"} mkString (",")

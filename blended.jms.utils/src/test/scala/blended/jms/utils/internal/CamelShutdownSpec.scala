@@ -40,7 +40,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         properties = Map( "brokerURL" -> amqCf().getBrokerURL())
       )
 
-      val cf = new BlendedSingleConnectionFactory(cfg, system, None)
+      val cf = new BlendedSingleConnectionFactory(cfg, None)
 
       val exceptionHandler : Exception => Unit = { e =>
 

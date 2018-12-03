@@ -69,9 +69,8 @@ abstract class ConnectionFactoryActivator extends DominoActivator with ActorSyst
                 ctxtClassName = ctxtClass,
                 jmsClassloader = factoryClassLoader
               ),
-              system = osgiCfg.system,
               bundleContext = Some(osgiCfg.bundleContext)
-            )
+            )(system = osgiCfg.system)
 
             singleCf.providesService[ConnectionFactory, IdAwareConnectionFactory](
               "vendor" -> cfVendor,

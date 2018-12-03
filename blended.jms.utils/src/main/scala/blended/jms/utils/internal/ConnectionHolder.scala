@@ -5,7 +5,7 @@ import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, ConnectionException}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionConfig, ConnectionException}
 import blended.util.ReflectionHelper
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
@@ -14,28 +14,90 @@ import javax.naming.{Context, InitialContext}
 import scala.util.Try
 import scala.util.control.NonFatal
 
-trait ConnectionHolder {
-  val vendor : String
-  val provider : String
-  def getConnection() : Option[BlendedJMSConnection]
+abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: ActorSystem) {
 
-  def connect() : Connection
-
-  def close() : Try[Unit]
-}
-
-case class BlendedConnectionHolder(
-  config : ConnectionConfig,
-  system : ActorSystem
-) extends ConnectionHolder {
-
-  override val vendor : String = config.vendor
-  override val provider : String = config.provider
+  val vendor : String = config.vendor
+  val provider : String = config.provider
 
   private[this] val log = Logger[ConnectionHolder]
   private[this] var conn : Option[BlendedJMSConnection] = None
-
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
+
+  def getConnectionFactory() : ConnectionFactory
+
+  def getConnection() : Option[BlendedJMSConnection] = {
+    log.trace(s"Underlying connection is established : [${conn.isDefined}]")
+    conn
+  }
+
+  @throws[JMSException]
+  def connect() : Connection = {
+    conn match {
+      case Some(c) => c
+      case None =>
+
+        if (!connecting.getAndSet(true)) {
+          try {
+            log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
+
+            val cf : ConnectionFactory = getConnectionFactory()
+
+            val c = config.defaultUser match {
+              case None => cf.createConnection()
+              case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
+            }
+
+            try {
+              c.setClientID(config.clientId)
+
+              c.setExceptionListener(new ExceptionListener {
+                override def onException(e: JMSException): Unit = {
+                  log.warn(s"Exception encountered in connection for provider [$vendor:$provider] : ${e.getMessage()}")
+                  system.eventStream.publish(ConnectionException(vendor, provider, e))
+                }
+              })
+            } catch {
+              case NonFatal(e) =>
+                log.error(s"Error setting client Id [${config.clientId}]...Closing Connection...")
+                c.close()
+                throw e
+            }
+
+            c.start()
+
+            log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
+            val wrappedConnection = new BlendedJMSConnection(c)
+            conn = Some(wrappedConnection)
+
+            wrappedConnection
+          } catch {
+            case e : JMSException =>
+              log.warn(s"Error creating connection [$vendor:$provider] : [${e.getMessage()}] ")
+              throw e
+          } finally {
+            connecting.set(false)
+          }
+
+        } else {
+          throw new JMSException(s"Connection Factory for provider [$provider] is still connecting.")
+        }
+    }
+  }
+
+  def close() : Try[Unit] = Try {
+    log.info(s"Closing underlying connection for provider [$provider]")
+    conn.foreach { c =>
+      c.connection.close()
+    }
+    conn = None
+  }
+}
+
+class JndiConnectionHolder(
+  config : ConnectionConfig
+)(implicit system: ActorSystem) extends ConnectionHolder(config) {
+
+  private[this] val log : Logger = Logger[JndiConnectionHolder]
 
   private[this] val initialContextEnv : util.Hashtable[String, Object] = {
     val envMap = new util.Hashtable[String, Object]()
@@ -52,7 +114,7 @@ case class BlendedConnectionHolder(
     envMap
   }
 
-  private[this] def lookupConnectionFactory() : ConnectionFactory = {
+  override def getConnectionFactory(): ConnectionFactory = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -64,7 +126,7 @@ case class BlendedConnectionHolder(
         case (Some(n), Some(c)) => (n,c)
         case (_, _) =>
           throw new JMSException(s"Context Factory class and JNDI name have to be defined for JNDI lookup [$vendor:$provider].")
-       }
+      }
 
       config.jmsClassloader.foreach(Thread.currentThread().setContextClassLoader)
 
@@ -87,8 +149,15 @@ case class BlendedConnectionHolder(
       Thread.currentThread().setContextClassLoader(oldLoader)
     }
   }
+}
 
-  private[this] def createConnectionFactory() : ConnectionFactory = {
+class ReflectionConfigHolder(
+  config: ConnectionConfig
+)(implicit system: ActorSystem) extends ConnectionHolder(config) {
+
+  private[this] val log : Logger = Logger[ReflectionConfigHolder]
+
+  override def getConnectionFactory(): ConnectionFactory = {
 
     val oldLoader = Thread.currentThread().getContextClassLoader()
 
@@ -118,66 +187,11 @@ case class BlendedConnectionHolder(
       Thread.currentThread().setContextClassLoader(oldLoader)
     }
   }
+}
 
-  def getConnection() : Option[BlendedJMSConnection] = conn
-
-  @throws[JMSException]
-  def connect() : Connection = conn match {
-    case Some(c) => c
-    case None =>
-
-      if (!connecting.getAndSet(true)) {
-        try {
-          log.info(s"Creating underlying connection for provider [$vendor:$provider] with client id [${config.clientId}]")
-
-          val cf : ConnectionFactory = if (config.useJndi) lookupConnectionFactory() else createConnectionFactory()
-
-          val c = config.defaultUser match {
-            case None => cf.createConnection()
-            case Some(user) => cf.createConnection(user, config.defaultPassword.getOrElse(null))
-          }
-
-          try {
-            c.setClientID(config.clientId)
-
-            c.setExceptionListener(new ExceptionListener {
-              override def onException(e: JMSException): Unit = {
-                log.warn(s"Exception encountered in connection for provider [$vendor:$provider] : ${e.getMessage()}")
-                system.eventStream.publish(ConnectionException(vendor, provider, e))
-              }
-            })
-          } catch {
-            case NonFatal(e) =>
-              log.error(s"Error setting client Id [${config.clientId}]...Closing Connection...")
-              c.close()
-              throw e
-          }
-
-          c.start()
-
-          log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
-          val wrappedConnection = new BlendedJMSConnection(c)
-          conn = Some(wrappedConnection)
-
-          wrappedConnection
-        } catch {
-          case e : JMSException =>
-            log.warn(s"Error creating connection [$vendor:$provider] : [${e.getMessage()}] ")
-            throw e
-        } finally {
-          connecting.set(false)
-        }
-
-      } else {
-        throw new JMSException(s"Connection Factory for provider [$provider] is still connecting.")
-      }
-  }
-
-  def close() : Try[Unit] = Try {
-    log.info(s"Closing underlying connection for provider [$provider]")
-    conn.foreach { c =>
-      c.connection.close()
-    }
-    conn = None
-  }
+class FactoryConfigHolder(
+  config: ConnectionConfig,
+  cf : ConnectionFactory
+)(implicit system: ActorSystem) extends ConnectionHolder(config) {
+  override def getConnectionFactory(): ConnectionFactory = cf
 }

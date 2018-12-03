@@ -18,24 +18,10 @@ trait IdAwareConnectionFactory extends ConnectionFactory with ProviderAware {
   override def id : String = super.id + s"($clientId)"
 }
 
-class SimpleIdAwareConnectionFactory(
-  override val vendor : String,
-  override val provider : String,
-  override val clientId : String,
-  cf : ConnectionFactory,
-) extends IdAwareConnectionFactory {
-  override def createConnection(): Connection =
-    cf.createConnection()
-
-  override def createConnection(userName: String, password: String): Connection =
-    cf.createConnection(userName, password)
-}
-
 class BlendedSingleConnectionFactory(
   config : ConnectionConfig,
-  system: ActorSystem,
   bundleContext : Option[BundleContext]
-) extends IdAwareConnectionFactory {
+)(implicit system: ActorSystem) extends IdAwareConnectionFactory {
 
   override val vendor : String = config.vendor
   override val provider : String = config.provider
@@ -49,10 +35,13 @@ class BlendedSingleConnectionFactory(
 
   override val clientId : String = config.clientId
 
-  val holder = BlendedConnectionHolder(
-    config = config,
-    system = system
-  )
+  protected def createHolder(cfg : ConnectionConfig) : ConnectionHolder = if (config.useJndi) {
+    new JndiConnectionHolder(cfg)(system)
+  } else {
+    new ReflectionConfigHolder(cfg)(system)
+  }
+
+  private val holder = createHolder(config)
 
   private[this] lazy val cfEnabled : Boolean = config.enabled && config.cfEnabled.forall(f => f(config))
 
@@ -120,4 +109,20 @@ class BlendedSingleConnectionFactory(
     log.warn(s"BlendedSingleConnectionFactory.createConnection() for [$id]called with username and password, which is not supported.\nFalling back to default username and password.")
     createConnection()
   }
+}
+
+class SimpleIdAwareConnectionFactory(
+  override val vendor : String,
+  override val provider : String,
+  override val clientId : String,
+  cf : ConnectionFactory,
+)(implicit system: ActorSystem) extends BlendedSingleConnectionFactory(
+  BlendedJMSConnectionConfig.defaultConfig.copy(
+    vendor = vendor,
+    provider = provider,
+    clientId = clientId
+  ), None
+) {
+
+  override protected def createHolder(cfg: ConnectionConfig) : ConnectionHolder = new FactoryConfigHolder(cfg, cf)
 }

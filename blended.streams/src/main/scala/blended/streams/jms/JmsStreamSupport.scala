@@ -3,9 +3,9 @@ package blended.streams.jms
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, RestartSource, Source}
-import akka.stream.{KillSwitch, Materializer}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.StreamFactories
+import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsDurableTopic}
+import blended.streams.{StreamController, StreamControllerConfig, StreamFactories}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.streams.transaction.FlowHeaderConfig
@@ -52,6 +52,12 @@ trait JmsStreamSupport {
     log : Logger
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
+    val listener : Int = if (dest.isInstanceOf[JmsDurableTopic]) {
+      1
+    } else {
+      2
+    }
+
     StreamFactories.runSourceWithTimeLimit(
       dest.asString,
       restartableConsumer(
@@ -60,7 +66,7 @@ trait JmsStreamSupport {
         log = log,
         settings =
           JMSConsumerSettings(connectionFactory = cf)
-            .withSessionCount(2)
+            .withSessionCount(listener)
             .withDestination(Some(dest))
       ),
       timeout
@@ -104,11 +110,13 @@ trait JmsStreamSupport {
     log: Logger
   )(implicit system: ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
+    implicit val materializer : Materializer = ActorMaterializer()
+
     val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig, log)
 
-    RestartSource.onFailuresWithBackoff(
+    RestartSource.withBackoff(
       minBackoff = 2.seconds,
-      maxBackoff = 10.seconds,
+      maxBackoff = 2.seconds,
       randomFactor = 0.2,
       maxRestarts = 10,
     ) { () => innerSource }

@@ -1,6 +1,7 @@
 package blended.jms.utils.internal
 
-import blended.jms.utils.BlendedJMSConnection
+import akka.actor.ActorSystem
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig}
 import javax.jms._
 
 import scala.util.Try
@@ -33,9 +34,13 @@ class DummyConnection extends Connection {
   override def createDurableConnectionConsumer(topic: Topic, s: String, s1: String, serverSessionPool: ServerSessionPool, i: Int): ConnectionConsumer = ???
 }
 
-class DummyHolder(f : () => Connection) extends ConnectionHolder {
+class DummyHolder(f : () => Connection)(implicit system: ActorSystem)
+  extends ConnectionHolder(BlendedJMSConnectionConfig.defaultConfig) {
+
   override val vendor: String = "dummy"
   override val provider: String = "dummy"
+
+  override def getConnectionFactory(): ConnectionFactory = ???
 
   private[this] var conn : Option[BlendedJMSConnection] = None
 

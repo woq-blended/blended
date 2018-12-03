@@ -22,6 +22,7 @@ import blended.security.login.impl.LoginActivator
 import blended.security.login.rest.internal.RestLoginActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.remote.internal.RemoteUpdaterActivator
@@ -39,6 +40,7 @@ import scala.reflect.ClassTag
 import scala.util.Try
 
 class MgmtWebSocketSpec extends SimplePojoContainerSpec
+  with LoggingFreeSpecLike
   with Matchers
   with PojoSrTestHelper {
 

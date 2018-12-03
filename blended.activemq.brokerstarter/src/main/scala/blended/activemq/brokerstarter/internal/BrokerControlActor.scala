@@ -148,10 +148,9 @@ class BrokerControlActor(brokerCfg: BrokerConfig, cfg: OSGIActorConfig, sslCtxt:
         val jmsCfg = brokerCfg.copy(properties = brokerCfg.properties + ("brokerURL" -> url))
 
         val cf = new BlendedSingleConnectionFactory(
-          jmsCfg,
-          cfg.system,
-          Some(cfg.bundleContext)
-        )
+          config = jmsCfg,
+          bundleContext = Some(cfg.bundleContext)
+        )(system = cfg.system)
 
         svcReg = Some(cf.providesService[ConnectionFactory, IdAwareConnectionFactory](Map(
           "vendor" -> brokerCfg.vendor,

@@ -104,7 +104,9 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
       if (status.get == Connecting) { // `TimedOut` can be set at any point. So we have to check whether to continue.
         connectionRef.set(Some(connection))
-        if (startConnection) connection.start()
+        if (startConnection) {
+          connection.start()
+        }
       }
 
       // ... and close if the connection is not to be used, don't return the connection
