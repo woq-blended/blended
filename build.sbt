@@ -1,9 +1,9 @@
 import sbt._
 
-// this is required to use proper values in osgi manifest require capability
-val initSystemEarly: Unit = Option(System.getProperty("java.version"))
-  .map(v => v.split("[.]", 3).take(2).mkString("."))
-  .foreach(v => System.setProperty("java.version", v))
+//// this is required to use proper values in osgi manifest require capability
+//val initSystemEarly: Unit = Option(System.getProperty("java.version"))
+//  .map(v => v.split("[.]", 3).take(2).mkString("."))
+//  .foreach(v => System.setProperty("java.version", v))
 
 val travisBuildNumber = sys.env.getOrElse("TRAVIS_BUILD_NUMBER", "Not on Travis")
 
