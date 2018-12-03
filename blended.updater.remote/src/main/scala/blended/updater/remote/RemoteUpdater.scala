@@ -57,13 +57,18 @@ class RemoteUpdater(
       .filterNot(a => containerInfo.appliedUpdateActionIds.contains(a.id))
       // filter some inconsistent actions
       .filter {
+        // TODO: why do we filter here? Performance?
         // TODO: support for overlays
         case ActivateProfile(id, n, v, o) =>
+          // exclude already active activate request
+          // FIXME: is this correct, e.g. if a previous action activates another profile?
           !containerProfiles.exists(p =>
             p.name == n &&
               p.version == v &&
-              p.overlaySet.overlays == o)
+              p.overlaySet.overlays == o &&
+              p.state == OverlayState.Active)
         case StageProfile(id, n, v, oc) =>
+          // exclude already staged stage request
           !containerProfiles.exists(p =>
             p.name == n &&
               p.version == v &&
