@@ -130,7 +130,7 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
   }
 
-  "Live Tests - you need to have internet access - enable with env variabe TEST_ONLINE=true" - {
+  "Live Tests - you need to have internet access - enable with env variable TEST_ONLINE=true" - {
 
     def whenOnline(test: => Unit): Unit = System.getenv("TEST_ONLINE") match {
       case null | "false" | "0" => pending
@@ -160,7 +160,6 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
         assert(handled === true)
         assert(entityAs[String].contains("SBuild - the magic free but powerful build tool"))
       }
-
     }
 
      "live test against http://heise.de with redirectCount 0" in whenOnline {

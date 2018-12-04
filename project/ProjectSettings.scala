@@ -1,4 +1,3 @@
-import CommonSettings.hasForkAnnotation
 import de.wayofquality.sbt.testlogconfig.TestLogConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import com.typesafe.sbt.osgi.SbtOsgi
@@ -8,6 +7,7 @@ import sbt.Tests.{Group, SubProcess}
 import sbt._
 import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype
+import xsbti.api.{AnalyzedClass, Projection}
 
 trait ProjectFactory {
   val project: Project
@@ -63,6 +63,18 @@ class ProjectSettings(
   def bundle: BlendedBundle = adaptBundle(defaultBundle)
 
   def sbtBundle: Option[BlendedBundle] = if (osgi) Some(bundle) else None
+
+  private def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
+
+    val c = clazz.api().classApi()
+
+    c.annotations.exists { ann =>
+      ann.base() match {
+        case proj: Projection if proj.id() == "RequiresForkedJVM" => true
+        case _ => false
+      }
+    }
+  }
 
   def defaultSettings: Seq[Setting[_]] = CommonSettings() ++ {
 

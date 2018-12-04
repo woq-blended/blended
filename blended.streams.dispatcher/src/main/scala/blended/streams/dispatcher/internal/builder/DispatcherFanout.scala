@@ -20,22 +20,27 @@ case class DispatcherFanout(
   /*-------------------------------------------------------------------------------------------------*/
   private[builder] val funFanoutOutbound : FlowEnvelope => Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = { env =>
 
-    Try {
-      val fanouts = bs.withContextObject[ResourceTypeConfig, Seq[(OutboundRouteConfig, FlowEnvelope)]](bs.rtConfigKey, env) { rtCfg: ResourceTypeConfig =>
-        Try {
-          rtCfg.outbound.map { ob =>
-            val obEnv =
-              env
-                .withContextObject(bs.outboundCfgKey, ob)
-                .withHeader(bs.headerConfig.headerBranch, ob.id).get
-            (ob, outboundMsg(ob)(obEnv).get)
-          }
+    bs.withContextObject[ResourceTypeConfig, Seq[(OutboundRouteConfig, FlowEnvelope)]](bs.rtConfigKey, env) { rtCfg: ResourceTypeConfig =>
+      Try {
+        rtCfg.outbound.map { ob =>
+          val obEnv =
+            env
+              .withContextObject(bs.outboundCfgKey, ob)
+              .withHeader(bs.headerConfig.headerBranch, ob.id).get
+          (ob, outboundMsg(ob)(obEnv).get)
         }
       }
-
-      fanouts.right.get
+    } match {
+      case Right(s) => Success(s)
+      case Left(t) =>
+        bs.streamLogger.error(s"Exception in fan out step [${env.id}]")
+        t.exception.foreach { e =>
+          bs.streamLogger.error(e)(e.getMessage())
+        }
+        Failure(t.exception.getOrElse(new Exception("Undexpected exception")))
     }
   }
+
   private[builder] lazy val fanoutOutbound = FlowProcessor.transform[Seq[(OutboundRouteConfig, FlowEnvelope)]]("fanoutOutbound", bs.streamLogger)(funFanoutOutbound)
 
   /*-------------------------------------------------------------------------------------------------*/

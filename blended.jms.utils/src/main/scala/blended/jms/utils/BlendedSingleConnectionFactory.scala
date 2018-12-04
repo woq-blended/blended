@@ -124,6 +124,6 @@ class SimpleIdAwareConnectionFactory(
     pingEnabled = false
   ), None
 ) {
-
+  override def toString: String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
   override protected def createHolder(cfg: ConnectionConfig) : ConnectionHolder = new FactoryConfigHolder(cfg, cf)
 }

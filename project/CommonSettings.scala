@@ -8,18 +8,6 @@ object CommonSettings {
 
   val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
-  def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
-
-    val c = clazz.api().classApi()
-
-    c.annotations.exists { ann =>
-      ann.base() match {
-        case proj: Projection if proj.id() == "RequiresForkedJVM" => true
-        case _ => false
-      }
-    }
-  }
-
   def apply() : Seq[Def.Setting[_]] = Seq(
     organization := "de.wayofquality.blended",
     homepage := Some(url("https://github.com/woq-blended/blended")),
