@@ -120,7 +120,8 @@ class SimpleIdAwareConnectionFactory(
   BlendedJMSConnectionConfig.defaultConfig.copy(
     vendor = vendor,
     provider = provider,
-    clientId = clientId
+    clientId = clientId,
+    pingEnabled = false
   ), None
 ) {
 

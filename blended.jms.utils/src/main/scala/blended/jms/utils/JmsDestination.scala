@@ -44,8 +44,8 @@ object JmsDestination {
   def asString(jmsDest: JmsDestination) : String = {
     jmsDest match {
       case q : JmsQueue => q.name
-      case t : JmsTopic => s"topic${destSeparator}${t.name}"
-      case dt : JmsDurableTopic => s"topic${destSeparator}:${dt.subscriberName}:${dt.name}"
+      case t : JmsTopic => s"${TOPICTAG}${destSeparator}${t.name}"
+      case dt : JmsDurableTopic => s"${TOPICTAG}${destSeparator}:${dt.subscriberName}${destSeparator}${dt.name}"
     }
   }
 }
@@ -53,21 +53,17 @@ object JmsDestination {
 sealed trait  JmsDestination {
   val name : String
   val create : Session => Destination
-  val asString : String
+  val asString : String = JmsDestination.asString(this)
 }
 
 final case class JmsTopic(override val name : String) extends JmsDestination {
-
   override val create: Session => Destination = session => session.createTopic(name)
-  override val asString: String = s"${JmsDestination.TOPICTAG}${JmsDestination.destSeparator}$name"
 }
 
 final case class JmsDurableTopic(override val name : String, subscriberName : String) extends JmsDestination {
   override val create: Session => Destination = session => session.createTopic(name)
-  override val asString: String = s"${JmsDestination.TOPICTAG}:${JmsDestination.destSeparator}$subscriberName${JmsDestination.destSeparator}:$name"
 }
 
 final case class JmsQueue(override val name : String) extends JmsDestination {
   override val create: Session => Destination = session => session.createQueue(name)
-  override val asString: String = s"${JmsDestination.QUEUETAG}${JmsDestination.destSeparator}$name"
 }

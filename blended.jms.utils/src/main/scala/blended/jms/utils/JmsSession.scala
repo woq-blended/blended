@@ -49,6 +49,12 @@ class JmsConsumerSession(
         case (Some(expr), t: JmsDurableTopic) =>
           session.createDurableSubscriber(t.create(session).asInstanceOf[Topic], t.subscriberName, expr, false)
 
+        case (None, t: JmsTopic) =>
+          session.createConsumer(t.create(session))
+
+        case (Some(expr), t: JmsTopic) =>
+          session.createConsumer(t.create(session), expr, false)
+
         case (Some(expr), q) =>
           session.createConsumer(q.create(session).asInstanceOf[Queue], expr)
 

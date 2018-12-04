@@ -4,7 +4,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, RestartSource, Source}
 import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsDurableTopic}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsDurableTopic, JmsQueue}
 import blended.streams.{StreamController, StreamControllerConfig, StreamFactories}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, Collector}
@@ -52,10 +52,10 @@ trait JmsStreamSupport {
     log : Logger
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
-    val listener : Int = if (dest.isInstanceOf[JmsDurableTopic]) {
-      1
-    } else {
+    val listener : Int = if (dest.isInstanceOf[JmsQueue]) {
       2
+    } else {
+      1
     }
 
     StreamFactories.runSourceWithTimeLimit(

@@ -11,8 +11,6 @@ import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 
-import scala.collection.mutable
-import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -25,7 +23,7 @@ final class JmsAckSourceStage(
   extends GraphStage[SourceShape[FlowEnvelope]] {
 
   sealed trait TimerEvent
-  private case object Ack extends TimerEvent
+  private case class Ack(s : String) extends TimerEvent
   private case class Poll(s : String) extends TimerEvent
 
   private val out = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
@@ -39,8 +37,28 @@ final class JmsAckSourceStage(
 
     val logic = new SourceStageLogic[JmsAckSession](shape, out, settings, inheritedAttributes, log) {
 
-      private[this] val inflight : mutable.Map[String, FlowEnvelope] = mutable.Map.empty
-      private[this] val consumer : mutable.Map[String, MessageConsumer] = mutable.Map.empty
+      private[this] var inflight : Map[String, FlowEnvelope] = Map.empty
+      private[this] var consumer : Map[String, MessageConsumer] = Map.empty
+
+      private[this] def addInflight(s : String, env: FlowEnvelope) : Unit = {
+        inflight = inflight + (s -> env)
+        log.debug(s"Inflight message count is [${inflight.size}]")
+      }
+
+      private[this] def removeInflight(s : String) : Unit = {
+        inflight = inflight.filterKeys(_!= s)
+        log.debug(s"Inflight message of [$id] count is [${inflight.size}]")
+      }
+
+      private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
+        consumer = consumer + (s -> c)
+        log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+      }
+
+      private[this] def removeConsumer(s : String) : Unit = {
+        consumer = consumer.filterKeys(_ != s)
+        log.debug(s"Consumer count of [$id] is [${consumer.size}]")
+      }
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
         log.error(ex)(ex.getMessage())
@@ -63,39 +81,36 @@ final class JmsAckSourceStage(
         if (handler.session.acknowledged.get()) {
           try {
             handler.jmsMessage.acknowledge()
-            inflight -= sessionId
             log.trace(s"Acknowledged JMS message for session [$sessionId]")
+            removeInflight(sessionId)
             scheduleOnce(Poll(sessionId), 10.millis)
           } catch {
             case t: Throwable =>
               log.error(t)(s"Failed to acknowledge message for sesseion [$sessionId]")
-              inflight -= sessionId
+              removeInflight(sessionId)
               closeSession(handler.session)
           }
         } else {
           if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
             log.warn(s"Acknowledge timed out for [$sessionId]")
-            inflight -= sessionId
+            removeInflight(sessionId)
             // Recovering the session, so that unacknowledged messages may be redelivered
             closeSession(handler.session)
+          } else {
+            scheduleOnce(Ack(sessionId), 10.millis)
           }
         }
       }
 
-
-      // Regular executed to check if acknowledgements are pending
-      private[this] def ackQueued(): Unit = {
-
-        // We check all inflight messages
-        inflight.foreach { case (sessionId, envelope) =>
-          // and figure the ackHandler
-          ackHandler(envelope).foreach { handler =>
+      private[this] def ackQueued(s : String): Unit = {
+        inflight.get(s).foreach { env =>
+          ackHandler(env).foreach { handler =>
             acknowledge(handler).get
           }
         }
       }
 
-      private[this] def poll(sid : String) : Future[Unit] = Future {
+      private[this] def poll(sid : String) : Unit = {
 
         log.trace(s"Trying to receive message from [${settings.jmsDestination.map(_.asString)}] in session [${sid}]")
 
@@ -131,9 +146,9 @@ final class JmsAckSourceStage(
                     .withRequiresAcknowledge(true)
                     .withAckHandler(Some(handler))
 
-                  inflight += (session.sessionId -> envelope)
-                  log.debug(s"Inflight message count is [${inflight.size}]")
+                  addInflight(session.sessionId, envelope)
                   handleMessage.invoke(envelope)
+                  scheduleOnce(Ack(sid), 10.millis)
                 } catch {
                   case e: JMSException =>
                     handleError.invoke(e)
@@ -141,23 +156,12 @@ final class JmsAckSourceStage(
 
               case None =>
                 log.trace(s"No message available for [${session.sessionId}]")
-                scheduleOnce(Poll(sid), 10.millis)
+                scheduleOnce(Poll(sid), 100.millis)
             }
           case (_, _) =>
             log.trace(s"Session or consumer not available in [$sid]")
             scheduleOnce(Poll(sid), 100.millis)
         }
-      }(ec)
-
-      override def preStart(): Unit = {
-        super.preStart()
-        schedulePeriodically(Ack, 10.millis)
-      }
-
-      override def postStop(): Unit = {
-        super.postStop()
-        cancelTimer(Poll)
-        cancelTimer(Ack)
       }
 
       override protected def createSession(connection: Connection): JmsAckSession = {
@@ -183,7 +187,7 @@ final class JmsAckSourceStage(
         try {
           log.debug(s"Closing session [${session.sessionId}]")
           session.closeSessionAsync().onComplete { _ =>
-            consumer -= session.sessionId
+            removeConsumer(session.sessionId)
             jmsSessions -= session.sessionId
             onSessionClosed()
           }
@@ -198,8 +202,8 @@ final class JmsAckSourceStage(
       override protected def onTimer(timerKey: Any): Unit = {
 
         timerKey match {
-          case Ack =>
-            ackQueued()
+          case Ack(s) =>
+            ackQueued(s)
           case p : Poll =>
             poll(p.s)
           case _ =>
@@ -220,7 +224,7 @@ final class JmsAckSourceStage(
         session.createConsumer(settings.selector).onComplete {
 
           case Success(c) =>
-            consumer += (session.sessionId -> c)
+            addConsumer(session.sessionId, c)
             scheduleOnce(Poll(session.sessionId), 100.millis)
 
           case Failure(e) =>
