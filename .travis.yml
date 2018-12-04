@@ -61,6 +61,8 @@ stages:
   - name: VerifyPublish
     if: branch = publish AND type = push
 
+  - Prerequisites
+
   - Test
 
   - name: Deploy
@@ -86,6 +88,10 @@ jobs:
   # ------ Stage Verify publish
   - stage: VerifyPublish
     script: $TRAVIS_BUILD_DIR/scripts/verifyPublish.sh
+
+  # ------ Stage Prerequisites
+  - stage: Prerequisites
+    script: bash -e ${TRAVIS_BUILD_DIR}/scripts/build-prerequisites.sh
 
   # ------ Stage Test
   - stage: Test
