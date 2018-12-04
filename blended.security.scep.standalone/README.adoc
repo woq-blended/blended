@@ -28,7 +28,7 @@ Download and unpack the binary distribution file `{binpack}`.
 
 <1> The configuration file`application.conf` in the central place to configure the application.
 <2> The keystore file is automatically created and consecutively updated by the application.
-<3> The`lib` directory contains required libries (JAR files).
+<3> The `lib` directory contains required libries (JAR files).
 <4> The log file contains verbose runtime information.
 <5> This Documentation.
 <6> The application JAR file, containing the main application.
