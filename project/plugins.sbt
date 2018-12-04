@@ -25,3 +25,5 @@ libraryDependencies ++= Seq(
 addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.0.0")
 addSbtPlugin("org.scalariform" % "sbt-scalariform" % "1.8.2")
 addSbtPlugin("net.bzzt" % "sbt-reproducible-builds" % "0.16")
+
+addSbtPlugin("de.wayofquality" % "sbt-testlogconfig" % "0.1.0-SNAPSHOT")

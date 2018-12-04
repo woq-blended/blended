@@ -1,4 +1,4 @@
-import TestLogConfig.autoImport._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt.Keys._
 import sbt._
 

@@ -1,5 +1,6 @@
 import CommonSettings.hasForkAnnotation
-import TestLogConfig.autoImport._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import com.typesafe.sbt.osgi.SbtOsgi
 import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 import sbt.Keys._
