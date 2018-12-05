@@ -2,11 +2,12 @@
 
 publishLocal() {
   cd "${TRAVIS_BUILD_DIR}"
-  local REPO="https://github.com/woq-blended/$0.git"
+  local REPO="https://github.com/woq-blended/$1.git"
+  local REPODIR="${TRAVIS_BUILD_DIR}/$1"
   echo "Cloning ${REPO}..."
   git clone --branch master --depth 1 \
-    "$REPO" "${TRAVIS_BUILD_DIR}/$0"
-  cd "${TRAVIS_BUILD_DIR}/$0"
+    "$REPO" "$REPODIR"
+  cd "$REPODIR"
   echo "Building and (local) publishing ${REPO}..."
   sbt publishLocal
   cd "${TRAVIS_BUILD_DIR}"
