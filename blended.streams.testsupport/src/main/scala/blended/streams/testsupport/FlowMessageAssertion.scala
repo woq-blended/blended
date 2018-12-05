@@ -56,7 +56,8 @@ class ExpectedBodies(bodies: Option[Any]*) extends FlowMessageAssertion {
   private val unmatched : FlowMessage => Option[Any] => Boolean = msg => expected =>
     msg match {
       case txtMsg : TextFlowMessage =>
-        expected.isEmpty && expected.forall(e => !e.toString.equals(txtMsg.content))
+        !expected.isInstanceOf[Option[String]] || expected.isEmpty ||
+        expected.forall(e => !e.toString.equals(txtMsg.content))
 
       case binMsg : BinaryFlowMessage => expected.isDefined && { expected.forall { c => c match {
         case byteString: ByteString => !byteString.equals(binMsg.content)

@@ -54,7 +54,7 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
         val tMgr = system.actorOf(FlowTransactionManager.props(pSvc))
 
-        val transColl = Collector[FlowTransaction]("trans")
+        val transColl = Collector[FlowTransaction]("trans")(_ => {})
 
         val cfg : FlowHeaderConfig = FlowHeaderConfig.create(
           idSvc.getContainerContext().getContainerConfig().getConfig("blended.flow.header")

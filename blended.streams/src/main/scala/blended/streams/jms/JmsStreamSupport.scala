@@ -58,19 +58,22 @@ trait JmsStreamSupport {
       1
     }
 
+    val collected : FlowEnvelope => Unit = env => env.acknowledge()
+
     StreamFactories.runSourceWithTimeLimit(
       dest.asString,
-      restartableConsumer(
+      jmsConsumer(
         name = dest.asString,
         headerConfig = headerCfg,
         log = log,
         settings =
           JMSConsumerSettings(connectionFactory = cf)
+            .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
             .withSessionCount(listener)
             .withDestination(Some(dest))
       ),
       timeout
-    )
+    )(collected)
   }
 
   def jmsProducer(

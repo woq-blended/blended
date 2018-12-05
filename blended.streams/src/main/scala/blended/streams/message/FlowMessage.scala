@@ -155,7 +155,6 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-
   override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
 }
 

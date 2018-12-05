@@ -18,12 +18,12 @@ object StreamFactories {
     name : String,
     source : Source[T, NotUsed],
     timeout : FiniteDuration
-  )(implicit system : ActorSystem, materializer: Materializer, clazz : ClassTag[T]) : Collector[T] = {
+  )(collected : T => Unit)(implicit system : ActorSystem, materializer: Materializer, clazz : ClassTag[T]) : Collector[T] = {
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
     val stopped = new AtomicBoolean(false)
 
-    val collector = Collector[T](name)
+    val collector = Collector[T](name)(collected)
     val sink = Sink.actorRef(collector.actor, CollectingActor.Completed)
 
     val (killswitch, done) = source

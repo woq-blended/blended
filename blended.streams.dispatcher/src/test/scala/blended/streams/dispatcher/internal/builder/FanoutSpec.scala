@@ -83,8 +83,8 @@ class FanoutSpec extends DispatcherSpecSupport
         fanout : DispatcherFanout
       )(implicit system : ActorSystem) = {
 
-        val envColl = Collector[FlowEnvelope]("envelopes")
-        val wlColl = Collector[WorklistEvent]("worklists")
+        val envColl = Collector[FlowEnvelope]("envelopes")(_.acknowledge())
+        val wlColl = Collector[WorklistEvent]("worklists")(_ => {})
 
         val sinkGraph : Graph[SinkShape[FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
           import GraphDSL.Implicits._

@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
-import blended.jms.utils.{JmsConsumerSession, JmsDestination}
+import blended.jms.utils.{JmsAckSession, JmsConsumerSession, JmsDestination}
 import blended.streams.message._
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
@@ -57,9 +57,26 @@ class JmsSourceStage(
       }
 
       override protected def pushMessage(msg: FlowEnvelope): Unit = {
+        log.trace("Pushing message downstream")
         push(out, msg)
         backpressure.release()
       }
+
+      private[this] def closeSession(session: JmsConsumerSession) : Unit = {
+
+        try {
+          log.debug(s"Closing session [${session.sessionId}]")
+          session.closeSessionAsync().onComplete { _ =>
+            jmsSessions -= session.sessionId
+            onSessionClosed()
+          }
+        } catch {
+          case _ : Throwable =>
+            log.error(s"Error closing session with id [${session.sessionId}]")
+        }
+      }
+
+      private[this] def onSessionClosed() : Unit = initSessionAsync()
 
       override protected def onSessionOpened(jmsSession: JmsConsumerSession): Unit = {
 
@@ -67,32 +84,40 @@ class JmsSourceStage(
 
         jmsSession.createConsumer(settings.selector).onComplete {
           case Success(consumer) =>
-            consumer.setMessageListener(new MessageListener {
-              override def onMessage(message: Message): Unit = {
-                backpressure.acquire()
-                // Use a Default Envelope that simply ignores calls to acknowledge if any
-                val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
-                log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
+            try {
+              consumer.setMessageListener(new MessageListener {
+                override def onMessage(message: Message): Unit = {
+                  backpressure.acquire()
+                  // Use a Default Envelope that simply ignores calls to acknowledge if any
+                  val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
+                  log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
 
-                val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
-                  case None =>
-                    val newId = UUID.randomUUID().toString()
-                    log.debug(s"Created new envelope id [$newId]")
-                    newId
-                  case Some(s) =>
-                    log.debug(s"Reusing transaction id [$s] as envelope id")
-                    s
-                }
+                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
+                    case None =>
+                      val newId = UUID.randomUUID().toString()
+                      log.debug(s"Created new envelope id [$newId]")
+                      newId
+                    case Some(s) =>
+                      log.debug(s"Reusing transaction id [$s] as envelope id")
+                      s
+                  }
 
-                handleMessage.invoke(
-                  FlowEnvelope(
-                    flowMessage.withHeader(headerConfig.headerTrans, envelopeId).get, envelopeId
+                  handleMessage.invoke(
+                    FlowEnvelope(
+                      flowMessage.withHeader(headerConfig.headerTrans, envelopeId).get, envelopeId
+                    )
                   )
-                )
-              }
-            })
+                }
+              })
+            } catch {
+              case jmse : JMSException =>
+                log.warn(jmse)(s"Error setting up message listener [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
+                closeSession(jmsSession)
+            }
+
           case Failure(t) =>
-            fail.invoke(t)
+            log.warn(t)(s"Error setting up consumer [${settings.jmsDestination}] in [${jmsSession.sessionId}]")
+            closeSession(jmsSession)
         }
       }
     }

@@ -29,8 +29,8 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
     implicit val system : ActorSystem = ctxt.system
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val errColl = Collector[FlowEnvelope]("error")
-    val transColl = Collector[FlowTransactionEvent]("transaction")
+    val errColl = Collector[FlowEnvelope]("error")(_.acknowledge())
+    val transColl = Collector[FlowTransactionEvent]("transaction")(_ => {})
 
     val source = Source.actorRef[WorklistEvent](10, OverflowStrategy.fail)
 

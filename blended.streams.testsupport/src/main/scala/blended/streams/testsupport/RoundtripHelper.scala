@@ -75,6 +75,7 @@ case class RoundtripHelper(
     }
 
     log.info(s"Finishing test case [$name]")
+    collectors.values.foreach(c => system.stop(c.actor))
 
     msgs.filter(_._2.nonEmpty)
   }

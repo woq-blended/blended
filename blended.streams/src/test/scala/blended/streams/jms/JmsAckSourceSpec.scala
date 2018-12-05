@@ -98,7 +98,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         name = "ackConsumer",
         source = consumer,
         timeout = 5.seconds
-      )
+      )(e => e.acknowledge())
 
       val result = Await.result(coll.result, 11.seconds).map{ env => env.header[Int]("msgNo").get }
       result should have size (envelopes.size)

@@ -51,7 +51,7 @@ class FlowTransactionManagerSpec extends SimplePojoContainerSpec
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    val coll = Collector[FlowTransaction]("trans")
+    val coll = Collector[FlowTransaction]("trans")( _ => {} )
     mgr.tell(event, coll.actor)
 
     akka.pattern.after(2.seconds, system.scheduler)( Future {
