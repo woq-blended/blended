@@ -35,7 +35,7 @@ trait LoggingFreeSpecLike extends FreeSpecLike {
       reported = true
       status
     } finally {
-      if (!reported) log.info(s"Finished test case: ${testName}" + ("-" *80))
+      if (!reported) log.info(s"Finished test case: ${testName}\n" + ("-" *80))
     }
   }
 
