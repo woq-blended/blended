@@ -62,6 +62,7 @@ object JBake extends AutoPlugin {
     },
 
     jbakeSite := {
+      // Assest from blended docs
       val site = jbakeBuild.dependsOn(BlendedDocsJs.project/Compile/fastOptJS/webpack).value
 
       val log = streams.value.log
