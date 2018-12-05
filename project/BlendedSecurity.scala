@@ -3,6 +3,7 @@ import sbt.Keys._
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
+import scoverage.ScoverageKeys.coverageEnabled
 
 private object BlendedSecurityCross {
 
@@ -27,8 +28,9 @@ object BlendedSecurityJs extends ProjectFactory {
         )
       )
     )
-    .settings(CommonSettings())
-    .settings(PublishConfig.doPublish)
+      .settings(CommonSettings())
+      .settings(PublishConfig.doPublish)
+      .settings(Seq(coverageEnabled := false))
   }
 }
 
