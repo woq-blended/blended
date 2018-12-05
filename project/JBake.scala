@@ -1,3 +1,5 @@
+package de.wayofquality.sbt.jbake
+
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.util.Properties
 
@@ -14,11 +16,11 @@ object JBake extends AutoPlugin {
   object autoImport {
     val jbakeInputDir = settingKey[File]("The input directory for the site generation.")
     val jbakeOutputDir = settingKey[File]("The directory for the generated site.")
-    val jbakeNodeBinDir = settingKey[File]("The directory where we can find the executables for node modules.")
     val jbakeMode = settingKey[String]("Run JBake in build or serve mode, default: build")
 
-    val jbakeAsciidocAttributes = settingKey[Map[String, String]]("Asciidoctor attribute to passed to Asciidoctor")
-    val jbakeSiteAssets = settingKey[Map[File, File]]("Assets to be included in the site")
+    val jbakeAsciidocAttributes = taskKey[Map[String, String]]("Asciidoctor attribute to passed to Asciidoctor")
+    val jbakeNodeBinDir = taskKey[Option[File]]("The directory where we can find the executables for node modules. (Needed, when using e.g. mermaid)")
+    val jbakeSiteAssets = taskKey[Map[File, File]]("Assets to be included in the site")
 
     val jbakeBuild = taskKey[Seq[File]]("Run the jbake build step.")
     val jbakeSite = taskKey[Seq[File]]("Build the complete site")
@@ -32,12 +34,13 @@ object JBake extends AutoPlugin {
     jbakeMode := "build",
     jbakeSiteAssets := Map.empty,
 
-    jbakeNodeBinDir := baseDirectory.value / "doc" / "target" / "scala-2.12" / "scalajs-bundler" / "main" / "node_modules" / ".bin",
+//    jbakeNodeBinDir := baseDirectory.value / "doc" / "target" / "scala-2.12" / "scalajs-bundler" / "main" / "node_modules" / ".bin",
 
     jbakeAsciidocAttributes := Map(
       "imagesdir" -> "images",
-      "imagesoutdir"-> "images",
-      "mermaid" -> jbakeNodeBinDir.value.getAbsolutePath()
+      "imagesoutdir"-> "images"
+    ) ++ jbakeNodeBinDir.value.map(nd =>
+      "mermaid" -> nd.getAbsolutePath()
     ),
 
     jbakeBuild := {
@@ -63,17 +66,19 @@ object JBake extends AutoPlugin {
 
     jbakeSite := {
       // Assest from blended docs
-      val site = jbakeBuild.dependsOn(BlendedDocsJs.project/Compile/fastOptJS/webpack).value
+       val site = jbakeBuild
+//         .dependsOn(BlendedDocsJs.project/Compile/fastOptJS/webpack)
+         .value
 
       val log = streams.value.log
 
       jbakeSiteAssets.value.foreach { case (from, to) =>
         if (from.exists()) {
           if (from.isDirectory()) {
-            log.info(s"Copying directory from [$from] to [$to]")
+            log.info(s"Copying site asset directory from [$from] to [$to]")
             IO.copyDirectory(from, to)
           } else {
-            log.info(s"Copying file from [$from] to [$to]")
+            log.info(s"Copying site asset file from [$from] to [$to]")
             IO.copyFile(from, to)
           }
         }
@@ -88,7 +93,7 @@ case class SiteGenerator(
   jbakeDir : File,
   inputDir : File,
   outputDir : File,
-  nodeBinDir : File,
+  nodeBinDir : Option[File],
   mode : String,
   attributes : Map[String, String]
 )(implicit log : Logger) {
@@ -113,7 +118,7 @@ case class SiteGenerator(
     val currPath = System.getenv("PATH")
 
     val jBakeOptions = ForkOptions()
-      .withEnvVars(Map("PATH" -> s"${nodeBinDir.getAbsolutePath()}${File.pathSeparator}$currPath"))
+      .withEnvVars(Map() ++ nodeBinDir.map(nd => "PATH" -> s"${nd.getAbsolutePath()}${File.pathSeparator}$currPath"))
 
     val args : Seq[String] = Seq(
       "-classpath", jbakeCp,

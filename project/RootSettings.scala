@@ -1,7 +1,8 @@
-import JBake.autoImport._
+import de.wayofquality.sbt.jbake.JBake.autoImport._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import sbt.Keys._
 import sbt._
+import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object RootSettings {
 
@@ -10,7 +11,14 @@ object RootSettings {
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
     Compile / jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
     Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
+    Compile / jbakeNodeBinDir := {
+      (BlendedDocsJs.project/Compile/fastOptJS/webpack).value
+      val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
+      Some(modulesDir / "node_modules" / ".bin")
+    },
+
     Compile / jbakeSiteAssets := {
+      (BlendedDocsJs.project/Compile/fastOptJS/webpack).value
 
       val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
       val assetDir = (Compile / jbakeOutputDir).value
