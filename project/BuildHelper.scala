@@ -14,8 +14,8 @@ object BuildHelper {
   def deleteRecursive(f : File) : Unit = {
     if (f.isDirectory()) {
       f.listFiles().foreach(deleteRecursive)
-      f.delete()
     }
+    f.delete()
   }
 
   def resolveModuleFile(mid : ModuleID, targetPath: File) : Vector[File] = {
