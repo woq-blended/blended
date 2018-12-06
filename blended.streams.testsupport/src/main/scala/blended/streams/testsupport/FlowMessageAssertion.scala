@@ -28,7 +28,7 @@ class ExpectedMessageCount(count : Int) extends FlowMessageAssertion {
     if (l.lengthCompare(count) == 0) {
       s"MockActor has [${l.size}] messages."
     } else {
-      throw new Exception(s"MockActor has [${l.size}] messages, but expected [$count] messages")
+      throw new Exception(s"Collector has [${l.size}] messages, but expected [$count] messages")
     }
   }
 }
@@ -42,7 +42,7 @@ class MinMessageCount(count : Int) extends FlowMessageAssertion {
     if (l.size >= count) {
       s"MockActor has [${l.size}] messages"
     } else {
-      throw new Exception(s"MockActor has [${l.size}] messages, but expected at least [$count] messages")
+      throw new Exception(s"Collector has [${l.size}] messages, but expected at least [$count] messages")
     }
   }
 }
@@ -72,7 +72,7 @@ class ExpectedBodies(bodies: Option[Any]*) extends FlowMessageAssertion {
 
     def compareBodies(matchList: Map[Option[Any], FlowMessage]) : Try[String] = Try {
       matchList.filter { case (expected, actual) => unmatched(actual)(expected) } match {
-        case s if s.isEmpty => "MockActor has received the correct bodies"
+        case s if s.isEmpty => "Collector has received the correct bodies"
         case e =>
           val msg = e.map { case (b, a) => s"[$b != ${a.body()}]"} mkString (",")
           throw new Exception(s"Unexpected Bodies: $msg")
@@ -138,7 +138,7 @@ class ExpectedHeaders(headers : Map[String, Any]*) extends FlowMessageAssertion 
     def compareHeaders(matchList: Map[FlowEnvelope, Map[String, Any]]) : Try[String] = Try {
 
       matchList.filter { case (m, header) => misMatchedHeaders(m, header).nonEmpty } match {
-        case e if e.isEmpty => s"MockActor has received the correct headers"
+        case e if e.isEmpty => s"Collector has received the correct headers"
         case mismatch =>
           val msg = mismatch.map { case (m, h) =>
             val headerMsg = misMatchedHeaders(m, h).mkString(",")

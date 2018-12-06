@@ -43,7 +43,7 @@ class PersistedClassDao(dataSource: DataSource) {
   }
 
   def persist(persistedClass: PersistedClass): PersistedClass = {
-    log.debug(s"About to persist class [${persistedClass.name}:${persistedClass.id}] with ${persistedClass.fields.size} fields")
+    log.trace(s"About to persist class [${persistedClass.name}:${persistedClass.id}] with ${persistedClass.fields.size} fields")
 
     // persist the holder class
     val persistedClassId = {
@@ -272,7 +272,7 @@ class PersistedClassDao(dataSource: DataSource) {
     val cols = Seq(PF.HolderId)
     val (sql, queryParams) = createByExampleQuery(pClass, cols, fields)
     val classIds = jdbcTemplate.queryForList(sql, queryParams, classOf[java.lang.Long]).asScala.toList.distinct
-    log.debug(s"Found ${classIds.size} class entries to be deleted. Ids: ${classIds}")
+    log.trace(s"Found ${classIds.size} class entries to be deleted. Ids: ${classIds}")
 
     if (classIds.size > 0) {
       val sql = s"delete from ${PC.Table} where ${PC.Id} in (:deleteIds)"

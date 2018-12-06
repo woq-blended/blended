@@ -52,7 +52,9 @@ case class DispatcherFanout(
           // if the block does not have a condition, the header block will be used
           case None => true
           case Some(c) =>
-            val use = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value)).map(_.asInstanceOf[Boolean]).get
+            val resolve = idSvc.resolvePropertyString(c, env.flowMessage.header.mapValues(_.value))
+            bs.streamLogger.debug(s"Resolved condition to [$resolve][${resolve.map(_.getClass().getName())}]")
+            val use = resolve.map(_.asInstanceOf[Boolean]).get
 
             val s = s"using header for [${env.id}]:[outboundMsg] block with expression [$c]"
             if (use) {

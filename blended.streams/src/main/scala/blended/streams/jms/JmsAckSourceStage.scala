@@ -155,7 +155,7 @@ final class JmsAckSourceStage(
             }
           } catch {
             case e: JMSException =>
-              log.error(e)(s"Error receiving message : [${e.getMessage()}]")
+              log.warn(s"Error receiving message : [${e.getMessage()}]")
               closeSession(session)
           }
 

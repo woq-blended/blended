@@ -29,7 +29,7 @@ class PersistenceServiceJdbc(
   }
 
   override def deleteByExample(pClass: String, data: ju.Map[String, _ <: Any]): Long = {
-    log.debug(s"About to delete by example pClass: ${pClass}, data: ${data}")
+    log.trace(s"About to delete by example pClass: ${pClass}, data: ${data}")
     val fields = PersistedField.extractFieldsWithoutDataId(data)
     txTemplate.execute { ts =>
       dao.deleteByFields(pClass, fields)
@@ -54,14 +54,14 @@ class PersistenceServiceJdbc(
   override def persist(pClass: String, data: ju.Map[String, _ <: Any]): ju.Map[String, _ <: Any] = {
     // TODO check if data already contains id
 
-    log.debug(s"About to persist class [${pClass}] with data [${data}]")
+    log.trace(s"About to persist class [${pClass}] with data [${data}]")
 
     val unpersisted = PersistedClass(
       id = None,
       name = pClass,
       fields = PersistedField.extractFieldsWithoutDataId(data)
     )
-    log.debug(s"About to persist [${unpersisted}]")
+    log.trace(s"About to persist [${unpersisted}]")
 
     val persisted = txTemplate.execute { ts =>
       dao.persist(unpersisted)
