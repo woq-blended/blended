@@ -117,47 +117,48 @@ final class JmsAckSourceStage(
         (jmsSessions.get(sid), consumer.get(sid)) match {
           case (Some(session), Some(c)) =>
 
+          try {
             // TODO: Make the receive timeout configurable
             Option(c.receiveNoWait()) match {
               case Some(message) =>
                 val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                 log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : $flowMessage")
-                try {
 
-                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
-                    case None =>
-                      val newId = UUID.randomUUID().toString()
-                      log.debug(s"Created new envelope id [$newId]")
-                      newId
-                    case Some(s) =>
-                      log.debug(s"Reusing transaction id [$s] as envelope id")
-                      s
-                  }
-
-                  val handler = JmsAcknowledgeHandler(
-                    id = envelopeId,
-                    jmsMessage = message,
-                    session = session,
-                    log = log
-                  )
-
-                  val envelope = FlowEnvelope(flowMessage, envelopeId)
-                    .withHeader(headerConfig.headerTrans, envelopeId).get
-                    .withRequiresAcknowledge(true)
-                    .withAckHandler(Some(handler))
-
-                  addInflight(session.sessionId, envelope)
-                  handleMessage.invoke(envelope)
-                  scheduleOnce(Ack(sid), 10.millis)
-                } catch {
-                  case e: JMSException =>
-                    handleError.invoke(e)
+                val envelopeId: String = flowMessage.header[String](headerConfig.headerTrans) match {
+                  case None =>
+                    val newId = UUID.randomUUID().toString()
+                    log.debug(s"Created new envelope id [$newId]")
+                    newId
+                  case Some(s) =>
+                    log.debug(s"Reusing transaction id [$s] as envelope id")
+                    s
                 }
 
+                val handler = JmsAcknowledgeHandler(
+                  id = envelopeId,
+                  jmsMessage = message,
+                  session = session,
+                  log = log
+                )
+
+                val envelope = FlowEnvelope(flowMessage, envelopeId)
+                  .withHeader(headerConfig.headerTrans, envelopeId).get
+                  .withRequiresAcknowledge(true)
+                  .withAckHandler(Some(handler))
+
+                addInflight(session.sessionId, envelope)
+                handleMessage.invoke(envelope)
+                scheduleOnce(Ack(sid), 10.millis)
               case None =>
                 log.trace(s"No message available for [${session.sessionId}]")
                 scheduleOnce(Poll(sid), 100.millis)
             }
+          } catch {
+            case e: JMSException =>
+              log.error(e)(s"Error receiving message : [${e.getMessage()}]")
+              closeSession(session)
+          }
+
           case (_, _) =>
             log.trace(s"Session or consumer not available in [$sid]")
             scheduleOnce(Poll(sid), 100.millis)
