@@ -1,6 +1,6 @@
 language: scala
 
-sudo: true
+# sudo: true
 
 scala: 2.12.7
 
