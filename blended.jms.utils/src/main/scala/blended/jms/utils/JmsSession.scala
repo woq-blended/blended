@@ -74,6 +74,8 @@ class JmsAckSession(
 
   val acknowledged : AtomicBoolean = new AtomicBoolean(false)
 
+  def resetAck() : Unit = acknowledged.set(false)
+
   def ack(message: Message): Unit = {
     acknowledged.set(true)
   }

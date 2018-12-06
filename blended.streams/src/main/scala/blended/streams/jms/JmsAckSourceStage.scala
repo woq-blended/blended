@@ -146,6 +146,7 @@ final class JmsAckSourceStage(
                   .withRequiresAcknowledge(true)
                   .withAckHandler(Some(handler))
 
+                session.resetAck()
                 addInflight(session.sessionId, envelope)
                 handleMessage.invoke(envelope)
                 scheduleOnce(Ack(sid), 10.millis)

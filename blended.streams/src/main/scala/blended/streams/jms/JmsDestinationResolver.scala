@@ -3,6 +3,7 @@ package blended.streams.jms
 import blended.jms.utils.JmsDestination
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
+import blended.util.logging.Logger
 import javax.jms.{JMSException, Message, Session}
 
 import scala.concurrent.duration._
@@ -46,6 +47,8 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 trait FlowHeaderConfigAware extends JmsDestinationResolver {
   this: JmsEnvelopeHeader =>
 
+  val log : Logger = Logger[JmsDestinationResolver]
+
   def headerConfig: FlowHeaderConfig
 
   override def correlationId(env: FlowEnvelope): Option[String] = {
@@ -58,7 +61,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   // Get the destination from the message
   val destination: FlowMessage => Try[JmsDestination] = { flowMsg =>
     Try {
-      flowMsg.header[String](s"${destHeader(headerConfig.prefix)}") match {
+      val d = flowMsg.header[String](s"${destHeader(headerConfig.prefix)}") match {
         case Some(s) => JmsDestination.create(s).get
         case None => settings.jmsDestination match {
           case Some(d) => d
@@ -66,6 +69,9 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
             throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
         }
       }
+
+      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTrans)}] to [${d.asString}]")
+      d
     }
   }
 

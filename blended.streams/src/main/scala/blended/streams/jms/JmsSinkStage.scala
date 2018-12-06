@@ -72,7 +72,7 @@ class JmsSinkStage(
       }
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
-        log.trace(s"Trying to send envelope [$env]")
+        log.trace(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
         val idx : Int = rnd.nextInt(jmsSessions.size)
         val key = jmsSessions.keys.takeRight(idx+1).head
@@ -84,7 +84,7 @@ class JmsSinkStage(
           producer.foreach { p =>
             val sendTtl : Long = sendParams.ttl match {
               case Some(l) => if (l.toMillis < 0L) {
-                  log.warn(s"The message [${env.flowMessage}] has expired and wont be sent to the JMS destination.")
+                  log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
                 }
                 l.toMillis
               case None => 0L
@@ -99,7 +99,7 @@ class JmsSinkStage(
           env
         } catch {
           case t : Throwable =>
-            log.error(t)(s"Error sending message to [${jmsSettings.jmsDestination}] JMS [$env] in [${session.sessionId}]")
+            log.error(t)(s"Error sending message [${env.id}] to [${jmsSettings.jmsDestination}] in [${session.sessionId}]")
             env.withException(t)
         }
 
