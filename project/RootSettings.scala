@@ -6,19 +6,17 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object RootSettings {
 
-  private val blendedDocs = BlendedDocsJs.project
-
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
     Compile / jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
     Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
     Compile / jbakeNodeBinDir := {
-      (BlendedDocsJs.project/Compile/fastOptJS/webpack).value
+      (blendedDocs/Compile/fastOptJS/webpack).value
       val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
       Some(modulesDir / "node_modules" / ".bin")
     },
 
     Compile / jbakeSiteAssets := {
-      (BlendedDocsJs.project/Compile/fastOptJS/webpack).value
+      (blendedDocs/Compile/fastOptJS/webpack).value
 
       val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
       val assetDir = (Compile / jbakeOutputDir).value

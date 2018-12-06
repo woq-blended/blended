@@ -91,6 +91,7 @@ lazy val blendedJolokia = BlendedJolokia.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
+// Referenced in adoc file: doc/content/BUILDING.adoc
 // tag::Building[]
 lazy val blendedActivemqClient = BlendedActivemqClient.project
 // end::Building[]
@@ -102,7 +103,7 @@ lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
 lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
 lazy val blendedDocs = BlendedDocsJs.project
 
-lazy val aggregates : Seq[ProjectReference] = Seq(
+lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
   blendedSecurityBoot,
   blendedContainerContextApi,
@@ -110,9 +111,7 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedUtil,
   blendedTestsupport,
   blendedAkka,
-  blendedSecurityJs,
   blendedSecurityJvm,
-  blendedUpdaterConfigJs,
   blendedUpdaterConfigJvm,
   blendedLauncher,
   blendedMgmtBase,
@@ -161,7 +160,12 @@ lazy val aggregates : Seq[ProjectReference] = Seq(
   blendedJmsBridge,
   blendedStreams,
   blendedStreamsDispatcher,
-  blendedStreamsTestsupport,
+  blendedStreamsTestsupport
+)
+
+lazy val jsProjects : Seq[ProjectReference] = Seq(
+  blendedSecurityJs,
+  blendedUpdaterConfigJs,
   blendedDocs
 )
 
@@ -170,13 +174,13 @@ lazy val root = {
     .in(file("."))
     .settings(
       name := "blended",
-      unidocProjectFilter.in(ScalaUnidoc, unidoc) :=
-        inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs, blendedDocs)
+      // exclude JS projects from scaladoc
+      unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(jsProjects:_*)
     )
     .settings(global)
     .settings(CommonSettings())
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(RootSettings(BlendedDocsJs.project))
-    .aggregate(aggregates:_*)
+    .aggregate((jvmProjects ++ jsProjects):_*)
 }
