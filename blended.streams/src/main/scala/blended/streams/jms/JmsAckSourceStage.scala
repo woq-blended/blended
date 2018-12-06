@@ -122,7 +122,7 @@ final class JmsAckSourceStage(
             Option(c.receiveNoWait()) match {
               case Some(message) =>
                 val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
-                log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : $flowMessage")
+                log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : ${flowMessage.header.mkString(",")}")
 
                 val envelopeId: String = flowMessage.header[String](headerConfig.headerTrans) match {
                   case None =>

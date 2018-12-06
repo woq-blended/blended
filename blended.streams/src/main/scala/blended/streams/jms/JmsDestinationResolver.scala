@@ -61,13 +61,22 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   // Get the destination from the message
   val destination: FlowMessage => Try[JmsDestination] = { flowMsg =>
     Try {
+
+      val id : String = flowMsg.header[String](headerConfig.headerTrans).getOrElse("UNKNOWN")
+
+      log.trace(s"Trying to resolve destination for [$id] from header [${destHeader(headerConfig.prefix)}]")
+
       val d = flowMsg.header[String](s"${destHeader(headerConfig.prefix)}") match {
-        case Some(s) => JmsDestination.create(s).get
-        case None => settings.jmsDestination match {
-          case Some(d) => d
-          case None =>
-            throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
-        }
+        case Some(s) =>
+          JmsDestination.create(s).get
+
+        case None =>
+          log.trace(s"Trying to resolve destination for [$id] from settings.")
+          settings.jmsDestination match {
+            case Some(d) => d
+            case None =>
+              throw new JMSException(s"Could not resolve JMS destination for [$flowMsg]")
+          }
       }
 
       log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTrans)}] to [${d.asString}]")
