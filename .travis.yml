@@ -128,13 +128,13 @@ jobs:
     - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
 
   # ------ Stage Docker Images
-  - stage: IntegrationTest
-    script:
-    - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
-    after_failure:
-    - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
-    after_success:
-    - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+  # - stage: IntegrationTest
+  #   script:
+  #   - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
+  #   after_failure:
+  #   - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+  #   after_success:
+  #   - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
 
     # ------ Stage Site Deploy
   - stage: Site
