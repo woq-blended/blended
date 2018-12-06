@@ -74,7 +74,7 @@ class ExpectedBodies(bodies: Option[Any]*) extends FlowMessageAssertion {
       matchList.filter { case (expected, actual) => unmatched(actual)(expected) } match {
         case s if s.isEmpty => "MockActor has received the correct bodies"
         case e =>
-          val msg = e.map { case (b, a) => s"[$b != $a]"} mkString (",")
+          val msg = e.map { case (b, a) => s"[$b != ${a.body()}]"} mkString (",")
           throw new Exception(s"Unexpected Bodies: $msg")
       }
     }
