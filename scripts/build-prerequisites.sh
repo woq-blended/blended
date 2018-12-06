@@ -15,3 +15,4 @@ publishLocal() {
 
 publishLocal "sbt-testlogconfig"
 publishLocal "sbt-jbake"
+publishLocal "sbt-filterresources"

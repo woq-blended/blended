@@ -1,4 +1,5 @@
-import FilterResources.autoImport._
+import de.wayofquality.sbt.filterresources.FilterResources
+import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 import sbt._
 
 object BlendedFile extends ProjectFactory {
