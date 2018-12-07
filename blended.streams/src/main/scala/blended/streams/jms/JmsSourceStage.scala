@@ -82,7 +82,7 @@ class JmsSourceStage(
 
         log.debug(s"Creating JMS consumer in [$id] for destination [$dest]")
 
-        jmsSession.createConsumer(settings.selector).onComplete {
+        jmsSession.createConsumer(settings.selector) match {
           case Success(consumer) =>
             try {
               consumer.setMessageListener(new MessageListener {
