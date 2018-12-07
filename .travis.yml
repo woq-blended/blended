@@ -2,7 +2,7 @@ language: scala
 
 # sudo: true
 
-scala: 2.12.7
+scala: 2.12.8
 
 jdk: oraclejdk8
 
@@ -98,7 +98,7 @@ jobs:
     before_script:
     - bash $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
     - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
-    - bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
+    #- bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
     - sbt clean publishM2 unidoc cleanCoverage
     after_failure:

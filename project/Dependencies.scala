@@ -4,7 +4,7 @@ import sbt._
 object Dependencies {
 
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.17.1"
+  val akkaVersion = "2.5.19"
   val akkaHttpVersion = "10.1.5"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
