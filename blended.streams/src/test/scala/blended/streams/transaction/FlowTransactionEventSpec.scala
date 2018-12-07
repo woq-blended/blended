@@ -6,6 +6,7 @@ import akka.testkit.TestKit
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowTransactionEvent.{envelope2event, event2envelope}
 import blended.streams.worklist.WorklistState
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import com.typesafe.config.ConfigFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -14,6 +15,7 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+@RequiresForkedJVM
 class FlowTransactionEventSpec extends TestKit(ActorSystem("event"))
   with LoggingFreeSpecLike
   with Matchers

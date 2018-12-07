@@ -10,6 +10,7 @@ import blended.streams.{StreamController, StreamControllerConfig, StreamFactorie
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -20,6 +21,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 
+@RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   with LoggingFreeSpecLike
   with Matchers

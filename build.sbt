@@ -170,7 +170,8 @@ lazy val root = {
     .in(file("."))
     .settings(
       name := "blended",
-      unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs)
+      unidocProjectFilter.in(ScalaUnidoc, unidoc) :=
+        inAnyProject -- inProjects(blendedSecurityJs, blendedUpdaterConfigJs, blendedDocs)
     )
     .settings(global)
     .settings(CommonSettings())

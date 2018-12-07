@@ -10,7 +10,7 @@ import blended.persistence.PersistenceService
 import blended.persistence.h2.internal.H2Activator
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
 import blended.streams.processor.{CollectingActor, Collector}
-import blended.testsupport.BlendedTestSupport
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
@@ -20,6 +20,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
+@RequiresForkedJVM
 class FlowTransactionManagerSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with Matchers
