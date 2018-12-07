@@ -188,11 +188,10 @@ final class JmsAckSourceStage(
 
         try {
           log.debug(s"Closing session [${session.sessionId}]")
-          session.closeSessionAsync().onComplete { _ =>
-            removeConsumer(session.sessionId)
-            jmsSessions -= session.sessionId
-            onSessionClosed()
-          }
+          session.closeSession()
+          removeConsumer(session.sessionId)
+          jmsSessions -= session.sessionId
+          onSessionClosed()
         } catch {
           case _ : Throwable =>
             log.error(s"Error closing session with id [${session.sessionId}]")
