@@ -22,9 +22,9 @@ case class JolokiaExecResult(
 ) extends JolokiaObject
 
 object JolokiaReadResult {
-  def apply(jsValue: JsValue): JolokiaReadResult = {
+  def apply(objectName: String, jsValue: JsValue): JolokiaReadResult = {
     new JolokiaReadResult(
-      jsValue.extract[String]("value" / "ObjectName" / "objectName"),
+      objectName = objectName,
       jsValue.extract[Map[String, JsValue]]("value")
     )
   }

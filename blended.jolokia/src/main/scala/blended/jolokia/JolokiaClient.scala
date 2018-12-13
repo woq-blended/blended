@@ -19,24 +19,24 @@ class JolokiaClient(address : JolokiaAddress) {
   private[this] implicit val backend = HttpURLConnectionBackend()
   private[this] val log = Logger[JolokiaClient]
 
-  def version : Try[JolokiaVersion] = performGet("version").map(JolokiaVersion(_))
+  def version : Try[JolokiaVersion] = performGet("version")(JolokiaVersion(_))
 
   def search(searchDef : MBeanSearchDef) : Try[JolokiaSearchResult] = {
     val op : String = URI.create(s"search/${searchDef.jmxDomain}:${searchDef.pattern}*".replaceAll("\"", "%22")).toString
-    performGet(op).map(JolokiaSearchResult(_))
+    performGet(op)(JolokiaSearchResult(_))
   }
 
   def read(name: String) : Try[JolokiaReadResult] = {
     val op : String = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
-    performGet(op).map(JolokiaReadResult(_))
+    performGet(op)(v => JolokiaReadResult(name, v))
   }
 
   def exec(execDef: OperationExecDef) : Try[JolokiaExecResult] = {
     val op : String = s"exec/${execDef.pattern}"
-    performGet(op).map(JolokiaExecResult(_))
+    performGet(op)(JolokiaExecResult(_))
   }
 
-  private def performGet(operation : String) : Try[JsValue] = Try {
+  private def performGet[T <: JolokiaObject](operation : String)(f : JsValue => T) : Try[T] = Try {
     log.trace(s"performing Jolokia Get [$operation]")
 
     val uri = Uri(new URI(s"${address.jolokiaUrl}/$operation"))
@@ -55,7 +55,10 @@ class JolokiaClient(address : JolokiaAddress) {
       case StatusCodes.Ok =>
         response.body match {
           case Left(e) => throw new Exception(e)
-          case Right(json) => json.parseJson
+          case Right(json) =>
+            val result = f(json.parseJson)
+            log.debug(s"Parsed Jolokia result is [$result]")
+            result
         }
       case c => throw new Exception(s"Jolokia failed with status code [$c]")
     }
