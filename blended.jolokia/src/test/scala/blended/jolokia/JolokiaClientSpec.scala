@@ -1,111 +1,64 @@
 package blended.jolokia
 
-import akka.actor.Props
-import akka.testkit.{TestProbe, TestActorRef}
-import akka.util.Timeout
 import blended.jolokia.model._
 import blended.jolokia.protocol._
-import blended.testsupport.TestActorSys
 import org.scalatest.{Matchers, WordSpec}
-
-import scala.concurrent.duration._
-import scala.util.Failure
-
-class JolokiaJVM extends JolokiaClient with JolokiaAddress {
-  override val jolokiaUrl = "http://localhost:7777/jolokia"
-}
-
-class JolokiaFake extends JolokiaClient with JolokiaAddress {
-  override val jolokiaUrl = "http://localhost:43888/jolokia"
-}
 
 class JolokiaClientSpec extends WordSpec
   with Matchers {
 
-  implicit val timeout = new Timeout(3.seconds)
+  val good = new JolokiaClient(JolokiaAddress(
+    jolokiaUrl = "http://localhost:7777/jolokia"
+  ))
+
+  val bad = new JolokiaClient(JolokiaAddress(
+    jolokiaUrl = "http://localhost:43888/jolokia"
+  ))
 
   "The Jolokia client" should {
 
-    "Connect to Jolokia" in TestActorSys { testkit =>
-
-      implicit val system = testkit.system
-      val probe = TestProbe()
-
-      val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia.tell(GetJolokiaVersion, probe.ref)
-      probe.expectMsgAnyClassOf(classOf[JolokiaVersion])
+    "Connect to Jolokia" in {
+      good.version.get
     }
 
-    "Allow to search for MBeans by domain only" in TestActorSys { testkit =>
-      implicit val system = testkit.system
-      val probe = TestProbe()
+    "Allow to search for MBeans by domain only" in {
+      val result : JolokiaSearchResult = good.search(new MBeanSearchDef {
+        override def jmxDomain: String = "java.lang"
+      }).get
 
-      val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia.tell(SearchJolokia(new MBeanSearchDef {
-        override def jmxDomain = "java.lang"
-      }), probe.ref)
-
-      probe.fishForMessage() {
-        case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
-        case _ => false
-      }
+      assert(result.mbeanNames.nonEmpty)
     }
 
-    "Allow to search for MBeans by domain and properties" in TestActorSys { testkit =>
-      implicit val system = testkit.system
-      val probe = TestProbe()
+    "Allow to search for MBeans by domain and properties" in {
 
-      val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia.tell(SearchJolokia(new MBeanSearchDef {
-        override def jmxDomain = "java.lang"
-        override def searchProperties = Map( "type" -> "Memory" )
-      }), probe.ref)
+      val result : JolokiaSearchResult = good.search(new MBeanSearchDef {
+        override def jmxDomain: String = "java.lang"
+        override def searchProperties : Map[String, String] = Map( "type" -> "Memory" )
+      }).get
 
-      probe.fishForMessage() {
-        case JolokiaSearchResult(mbeanNames) => mbeanNames.size > 0
-        case _ => false
-      }
+      assert(result.mbeanNames.nonEmpty)
     }
 
-    "Allow to read a specific MBean" in TestActorSys { testkit =>
-      implicit val system = testkit.system
-      val probe = TestProbe()
-
-      val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia.tell(ReadJolokiaMBean("java.lang:type=Memory"), probe.ref)
-
-      probe.fishForMessage() {
-        case JolokiaReadResult(objName, _) => objName == "java.lang:type=Memory"
-        case _ => false
-      }
+    "Allow to read a specific MBean" in {
+      good.read("java.lang:type=Memory").get
     }
 
-    "Allow to execute a given operation on a MBean" in TestActorSys { testkit =>
-      implicit val system = testkit.system
-      val probe = TestProbe()
+    "Allow to execute a given operation on a MBean" in {
 
-      val jolokia = TestActorRef(Props[JolokiaJVM])
-      jolokia.tell(ExecJolokiaOperation(new OperationExecDef {
-        override def objectName = "java.lang:type=Threading"
-        override def operationName = "dumpAllThreads"
-        override def parameters = List("true", "true")
-      }), probe.ref)
+      val result : JolokiaExecResult = good.exec(new OperationExecDef {
+        override def objectName : String = "java.lang:type=Threading"
+        override def operationName: String = "dumpAllThreads"
+        override def parameters : List[String] = List("true", "true")
+      }).get
 
-      probe.fishForMessage() {
-        case JolokiaExecResult(objName, operation, _) => objName == "java.lang:type=Threading" && operation == "dumpAllThreads"
-        case _ => false
-      }
+      assert(result.objectName == "java.lang:type=Threading" )
+      assert(result.operationName == "dumpAllThreads" )
     }
     
-    "Respond with a failure if the rest call fails" in TestActorSys { testkit =>
-      implicit val system = testkit.system
-      val probe = TestProbe()
+    "Respond with a failure if the rest call fails" in {
 
-      val jolokia = TestActorRef(Props[JolokiaFake])
-      jolokia.tell(GetJolokiaVersion, probe.ref)
-
-      probe.fishForMessage() {
-        case Failure(error) => true
+      intercept[Exception]{
+        bad.version.get
       }
     }
   }

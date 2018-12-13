@@ -2,113 +2,61 @@ package blended.jolokia
 
 import java.net.URI
 
-import scala.util.Failure
-import scala.util.Success
-
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.event.LoggingReceive
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpMethods
-import akka.http.scaladsl.model.HttpRequest
-import akka.http.scaladsl.model.MediaTypes
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.http.scaladsl.unmarshalling.Unmarshaller
-import akka.stream.ActorMaterializer
-import akka.stream.ActorMaterializerSettings
-import blended.jolokia.model.JolokiaExecResult
-import blended.jolokia.model.JolokiaReadResult
-import blended.jolokia.model.JolokiaSearchResult
-import blended.jolokia.model.JolokiaVersion
-import blended.jolokia.protocol.ExecJolokiaOperation
-import blended.jolokia.protocol.GetJolokiaVersion
-import blended.jolokia.protocol.ReadJolokiaMBean
-import blended.jolokia.protocol.SearchJolokia
-import spray.json.JsValue
-import spray.json.enrichString
-import akka.http.scaladsl.model.HttpHeader
-import akka.http.scaladsl.model.headers.RawHeader
+import blended.jolokia.model.{JolokiaExecResult, JolokiaReadResult, JolokiaSearchResult, JolokiaVersion}
+import blended.jolokia.protocol.{MBeanSearchDef, OperationExecDef}
 import blended.util.logging.Logger
+import com.softwaremill.sttp._
+import spray.json._
 
-trait JolokiaAddress {
-  val jolokiaUrl = "http://127.0.0.1:7777/jolokia"
-  val user: Option[String] = None
-  val password: Option[String] = None
-}
+import scala.util._
 
-class JolokiaClient extends Actor with ActorLogging { this: JolokiaAddress =>
+case class JolokiaAddress(
+  jolokiaUrl : String = "http://127.0.0.1:7777/jolokia",
+  user: Option[String] = None,
+  password: Option[String] = None
+)
 
+class JolokiaClient(address : JolokiaAddress) {
+
+  private[this] implicit val backend = HttpURLConnectionBackend()
   private[this] val log = Logger[JolokiaClient]
 
-  implicit val eCtxt = context.dispatcher
+  def version : Try[JolokiaVersion] = performGet("version").map(JolokiaVersion(_))
 
-  def receive = LoggingReceive {
-    case GetJolokiaVersion => jolokiaGet(sender, "version") { JolokiaVersion(_) }
-    case SearchJolokia(searchDef) =>
-      val request = URI.create(s"search/${searchDef.jmxDomain}:${searchDef.pattern}*".replaceAll("\"", "%22")).toString
-      log.debug(s"Jolokia search request is [$request]")
-      jolokiaGet(sender, request) { JolokiaSearchResult(_) }
-    case ReadJolokiaMBean(name) =>
-      val request = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
-      log.debug(s"Jolokia read request is [$request")
-      jolokiaGet(sender, request) { JolokiaReadResult(_) }
-    case ExecJolokiaOperation(execDef) =>
-      val request = s"exec/${execDef.pattern}"
-      log.debug(s"Jolokia exec request is [$request].")
-      jolokiaGet(sender, request) { JolokiaExecResult(_) }
+  def search(searchDef : MBeanSearchDef) : Try[JolokiaSearchResult] = {
+    val op : String = URI.create(s"search/${searchDef.jmxDomain}:${searchDef.pattern}*".replaceAll("\"", "%22")).toString
+    performGet(op).map(JolokiaSearchResult(_))
   }
 
-  private def jolokiaGet[T](requestor: ActorRef, operation: String)(extract: JsValue => T): Unit = {
-    log.trace("jolokiaGet from " + requestor + ", operation: " + operation)
+  def read(name: String) : Try[JolokiaReadResult] = {
+    val op : String = "read/" + URI.create(name.replaceAll("\"", "%22")).toString
+    performGet(op).map(JolokiaReadResult(_))
+  }
 
-    implicit val mat: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
+  def exec(execDef: OperationExecDef) : Try[JolokiaExecResult] = {
+    val op : String = s"exec/${execDef.pattern}"
+    performGet(op).map(JolokiaExecResult(_))
+  }
 
-    val rawRequest = HttpRequest(
-      uri = s"$jolokiaUrl/$operation",
-      method = HttpMethods.GET
-    )
-    val request = (user, password) match {
-      case (Some(u), Some(p)) => rawRequest.addCredentials(BasicHttpCredentials(u, p))
-      case _ => rawRequest.addHeader(RawHeader("X-Blended", "jolokia"))
+  private def performGet(operation : String) : Try[JsValue] = Try {
+    log.trace(s"performing Jolokia Get [$operation]")
+
+    val httpClient = (address.user, address.password) match {
+      case (Some(u), Some(p)) => sttp.auth.basic(u, p)
+      case (_, _) => sttp.header("X-Blended", "jolokia")
     }
 
-    log.trace("request: " + request)
+    val request = httpClient.get(Uri(new URI(s"${address.jolokiaUrl}/$operation")))
 
-    val response = Http(context.system).singleRequest(request)
+    val response = request.send()
 
-    response.onComplete {
-      case Success(result) =>
-        log.trace("response: " + result)
-        result.status match {
-          case StatusCodes.OK =>
-            implicit val unm = Unmarshaller
-              .stringUnmarshaller
-              //              .forContentTypes(MediaTypes.`application/json`)
-              .map(_.parseJson)
-            log.trace("About to unmarshal entity: " + result.entity)
-            val parsed = Unmarshal(result.entity).to[JsValue]
-            parsed.onComplete {
-              case Success(parsed) =>
-                log.debug(s"\n${parsed.prettyPrint}")
-                requestor ! extract(parsed)
-              case failure =>
-                log.error(failure.failed.get)("Could not unmarshal entity")
-                requestor ! failure
-            }
-
-          case sc =>
-            log.debug("response: " + result)
-            result.discardEntityBytes()
-            requestor ! Failure(new RuntimeException("HTTP result code " + sc))
+    response.code match {
+      case StatusCodes.Ok =>
+        response.body match {
+          case Left(e) => throw new Exception(e)
+          case Right(json) => json.parseJson
         }
-
-      case failure =>
-        log.debug("response failure: " + failure)
-        requestor ! failure
+      case c => throw new Exception(s"Jolokia failed with status code [$c]")
     }
   }
 }
-

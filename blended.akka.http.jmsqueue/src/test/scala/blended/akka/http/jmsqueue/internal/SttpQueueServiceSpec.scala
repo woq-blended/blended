@@ -7,7 +7,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import blended.activemq.brokerstarter.internal.BrokerActivator
-import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.akka.http.HttpContext
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
@@ -18,10 +18,9 @@ import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
+import com.softwaremill.sttp._
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{FiniteDuration, _}

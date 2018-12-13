@@ -9,13 +9,11 @@ object BlendedJolokia extends ProjectFactory {
       Dependencies.sprayJson,
       Dependencies.jsonLenses,
       Dependencies.slf4j,
-      Dependencies.akkaHttp,
-      Dependencies.akkaStream,
-      Dependencies.akkaSlf4j % "test",
+      Dependencies.sttp,
       Dependencies.jolokiaJvmAgent % "runtime",
       Dependencies.scalatest % "test",
-      Dependencies.mockitoAll % "test",
-      Dependencies.slf4jLog4j12 % "test"
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test"
     ),
     adaptBundle = b => b.copy(
       exportPackage = Seq(
@@ -29,8 +27,8 @@ object BlendedJolokia extends ProjectFactory {
       Test / Keys.javaOptions += {
         val jarFile = Keys.dependencyClasspathAsJars.in(Test).value
           .map(_.data).find(f => f.getName().startsWith("jolokia-jvm-")).get
-        println(s"Using Jolokia agent from: ${jarFile}")
-        s"-javaagent:${jarFile}=port=7777,host=localhost"
+        println(s"Using Jolokia agent from: $jarFile")
+        s"-javaagent:$jarFile=port=7777,host=localhost"
       }
     )
   }
