@@ -2,8 +2,6 @@ package blended.jolokia
 
 import java.net.URI
 
-import blended.jolokia.model.{JolokiaExecResult, JolokiaReadResult, JolokiaSearchResult, JolokiaVersion}
-import blended.jolokia.protocol.{MBeanSearchDef, OperationExecDef}
 import blended.util.logging.Logger
 import com.softwaremill.sttp._
 import spray.json._
@@ -41,14 +39,17 @@ class JolokiaClient(address : JolokiaAddress) {
   private def performGet(operation : String) : Try[JsValue] = Try {
     log.trace(s"performing Jolokia Get [$operation]")
 
-    val httpClient = (address.user, address.password) match {
-      case (Some(u), Some(p)) => sttp.auth.basic(u, p)
-      case (_, _) => sttp.header("X-Blended", "jolokia")
+    val uri = Uri(new URI(s"${address.jolokiaUrl}/$operation"))
+
+    val request = (address.user, address.password) match {
+      case (Some(u), Some(p)) => sttp.get(uri).auth.basic(u, p)
+      case (_,_) => sttp.get(uri).header("X-Blended", "jolokia")
     }
 
-    val request = httpClient.get(Uri(new URI(s"${address.jolokiaUrl}/$operation")))
-
+    log.debug(s"Executing Jolokia Request [$request]")
     val response = request.send()
+
+    log.debug(s"Jolokia response is [$response]")
 
     response.code match {
       case StatusCodes.Ok =>

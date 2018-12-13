@@ -17,9 +17,7 @@ object BlendedJolokia extends ProjectFactory {
     ),
     adaptBundle = b => b.copy(
       exportPackage = Seq(
-        s"${b.bundleSymbolicName}",
-        s"${b.bundleSymbolicName}.model",
-        s"${b.bundleSymbolicName}.protocol"
+        s"${b.bundleSymbolicName}"
       )
     )
   ) {
