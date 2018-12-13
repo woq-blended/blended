@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:amq="http://activemq.apache.org/schema/core"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+         http://www.springframework.org/schema/beans classpath:/org/springframework/beans/factory/xml/spring-beans-3.2.xsd
+         http://activemq.apache.org/schema/core classpath:/activemq.xsd
+       ">
+
+  <amq:broker
+    brokerName="blended"
+    useJmx="true"
+    persistent="false"
+    offlineDurableSubscriberTimeout="604800000"
+    offlineDurableSubscriberTaskSchedule="86400000"
+    advisorySupport="true"
+    dataDirectory="blended"
+    tmpDataDirectory="blended/tmp"
+    >
+
+    <amq:managementContext>
+      <amq:managementContext createConnector="false"/>
+    </amq:managementContext>
+
+  </amq:broker>
+
+</beans>

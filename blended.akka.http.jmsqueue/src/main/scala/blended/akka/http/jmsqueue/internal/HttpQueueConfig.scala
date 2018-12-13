@@ -9,7 +9,7 @@ object HttpQueueConfig {
 
   val queuesPath = "queues"
 
-  def fromConfig(cfg: Config) = {
+  def fromConfig(cfg: Config): HttpQueueConfig = {
     val queues : Map[(String, String), ProviderQueueConfig]= cfg.hasPath(queuesPath) match {
       case false => Map.empty
       case true =>
