@@ -10,10 +10,13 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
       Dependencies.jms11Spec,
       Dependencies.akkaSlf4j % "test",
       Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test",
+      Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.logbackClassic % "test",
+      Dependencies.activeMqBroker % "test",
+      Dependencies.activeMqKahadbStore % "test"
     )
   )
 
@@ -23,6 +26,9 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
     BlendedAkka.project,
     BlendedAkkaHttp.project,
     BlendedUtil.project,
+    
+    BlendedStreams.project % "test",
+    BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test"
   )
 }

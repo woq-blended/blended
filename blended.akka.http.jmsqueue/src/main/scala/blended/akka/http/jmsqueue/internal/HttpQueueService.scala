@@ -29,7 +29,7 @@ trait HttpQueueService {
 
   private[this] def messageToResponse(result: ReceiveResult) : HttpResponse = {
 
-    result.msg match {
+    val response = result.msg match {
       case Failure(_) =>
         HttpResponse(StatusCodes.InternalServerError)
       case Success(msg) =>
@@ -59,6 +59,9 @@ trait HttpQueueService {
             HttpResponse(StatusCodes.InternalServerError)
         }
     }
+
+    log.debug(s"Http Response is [$response]")
+    response
   }
 
   private[this] def performReceive(
