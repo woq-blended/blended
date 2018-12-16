@@ -13,7 +13,6 @@ import blended.util.logging.Logger
 
 import scala.util.Try
 
-// Simply
 class CbeSendFlow(
   headerConfig : FlowHeaderConfig,
   dispatcherCfg : ResourceTypeRouterConfig,
@@ -24,7 +23,6 @@ class CbeSendFlow(
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
 
-  //TODO: Refactor
   private[builder] val cbeSink : Try[Flow[FlowEnvelope, FlowEnvelope, NotUsed]] = Try {
 
     val resolver : JmsProducerSettings => JmsDestinationResolver = settings => new DispatcherDestinationResolver(
@@ -61,7 +59,7 @@ class CbeSendFlow(
         .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
         .withHeader(bs.headerConfig.headerTrack, false).get
 
-      bs.streamLogger.debug(s"Prepared to send CBE [$result]")
+      bs.streamLogger.debug(s"Prepared to send CBE for envelope [${env.id}]")
       result
     }
 

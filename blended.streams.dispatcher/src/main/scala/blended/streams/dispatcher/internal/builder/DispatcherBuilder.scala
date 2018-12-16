@@ -93,7 +93,7 @@ case class DispatcherBuilder(
           val worklist = bs.worklist(env).get
           val event : WorklistEvent = env.exception match {
             case None => WorklistStepCompleted(worklist = worklist, state = WorklistState.Completed)
-            case Some(e) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
+            case Some(_) => WorklistStepCompleted(worklist = worklist, state = WorklistState.Failed)
           }
 
           Right(event)
@@ -122,11 +122,11 @@ case class DispatcherBuilder(
       case Seq() =>
         Seq(FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id)))
       case s =>
-        s.map { item => item match {
+        s.map {
           case flowItem : FlowWorklistItem => flowItem.env
           // Should not happen
-          case other => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
-        }}
+          case _ => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
+        }
     }
   }
 
@@ -241,12 +241,6 @@ case class DispatcherBuilder(
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val sendSplitter = b.add(FlowProcessor.partition[FlowEnvelope]{ env =>
-        dispatcherCfg.handledExceptions.contains(env.exception.map(_.getClass().getName()).getOrElse(""))
-      })
-
-      val merge = b.add(Merge[FlowEnvelope](2))
-
       val routeError = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
 
         try {
@@ -273,22 +267,21 @@ case class DispatcherBuilder(
 
       val sendError = b.add(sendFlow)
 
-      val ackError = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+      val ackError = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
         bs.streamLogger.debug(s"Acknowledging error envelope [${env.id}]")
         env.acknowledge()
         env
-      }
+      })
 
-      sendSplitter.out0  ~> routeError ~> sendError ~> ackError ~> merge.in(0)
-      sendSplitter.out1 ~> merge.in(1)
+      routeError ~> sendError ~> ackError
 
-      FlowShape(sendSplitter.in, merge.out)
+      FlowShape(routeError.in, ackError.out)
     }
 
     Flow.fromGraph(g)
       .via(Flow.fromFunction[FlowEnvelope, FlowTransactionEvent] { env =>
         val event = FlowTransactionFailed(env.id, env.flowMessage.header, env.exception.map(_.getMessage()))
-        bs.streamLogger.debug(s"Transaction event : [${event}]")
+        bs.streamLogger.debug(s"Transaction event : [$event]")
         event
       })
   }

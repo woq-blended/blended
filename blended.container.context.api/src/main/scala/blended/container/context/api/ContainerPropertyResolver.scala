@@ -1,5 +1,7 @@
 package blended.container.context.api
 
+import java.util.regex.{Matcher, Pattern}
+
 import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
@@ -10,16 +12,35 @@ import scala.util.Try
 
 object ContainerPropertyResolver {
 
+  private case class ExtractedElement(
+    prefix : String,
+    pattern: String,
+    postfix : String,
+    modifier : String = ""
+  )
+
   type Resolver = String => String
   type Modifier = (String, String) => String
 
   private[this] val log = Logger[ContainerPropertyResolver.type]
 
-  private[this] val resolveStartDelim = "$[["
-  private[this] val resolveEndDelim = "]]"
+  private[this] val resolveStartChar = "["
+  private[this] val resolveEndChar = "]"
+  private[this] val evalStartChar = "{"
+  private[this] val evalEndChar = "}"
 
-  private[this] val evalStartDelim = "${{"
-  private[this] val evalEndDelim = "}}"
+  private[this] val startDelim : String => String => Pattern = { s => e =>
+    val buf : StringBuffer = new StringBuffer()
+    buf.append("(\\$\\" + s + ")")                             // Match a modifier if any
+    buf.append("([^\\" + s + "]*)(\\" + s + ")")
+    Pattern.compile(buf.toString)
+  }
+
+  private[this] val resolveStartDelim : Pattern = startDelim(resolveStartChar)(resolveEndChar)
+  private[this] val resolveEndDelim : String = s"$resolveEndChar$resolveEndChar"
+
+  private[this] val evalStartDelim : Pattern = startDelim(evalStartChar)(evalEndChar)
+  private[this] val evalEndDelim : String = s"$evalEndChar$evalEndChar"
 
   private[this] val parser = new SpelExpressionParser()
 
@@ -36,14 +57,46 @@ object ContainerPropertyResolver {
     }
   }
 
-  private[this] def extractVariableElement(line: String, startDelim: String, endDelim: String) : (String, String, String) = {
+  private[this] def lastIndexOfPattern(current: Int, next: Int, s : String, p : Pattern) : Int = {
 
-    line.lastIndexOf(startDelim) match {
-      case -1 => ("", line, "")
-      case start => line.indexOf(endDelim, start) match {
-        case -1 => throw new PropertyResolverException(s"Error decoding replacement pattern [$line] : missing end delimiter [$endDelim]")
-        case end => (line.substring(0, start), line.substring(start + startDelim.length, end), line.substring(end + endDelim.length))
-      }
+    val m : Matcher = p.matcher(s)
+
+    if (m.find(Math.max(next, 0))) {
+      lastIndexOfPattern(m.start(), m.start() + m.group(0).length, s, p)
+    } else {
+      current
+    }
+  }
+
+  private[this] def extractVariableElement(
+    line: String,
+    startDelim: Pattern,
+    endDelim: String
+  ) : ExtractedElement = {
+
+    val idx : Int = lastIndexOfPattern(-1, -1, line, startDelim)
+
+    idx match {
+      case -1 =>
+        ExtractedElement("", line, "")
+      case start =>
+        line.indexOf(endDelim, start) match {
+          case -1 => throw new PropertyResolverException(s"Error decoding replacement pattern [$line] : missing end delimiter [$endDelim]")
+          case end =>
+
+            val subline = line.substring(start, end + endDelim.length)
+            val subMatcher : Matcher = startDelim.matcher(subline)
+            subMatcher.find()
+
+            val patternStart = start + subMatcher.group(0).length
+
+            ExtractedElement(
+              prefix = line.substring(0, start),
+              line.substring(patternStart, end),
+              postfix = line.substring(end + endDelim.length),
+              modifier = subMatcher.group(2)
+            )
+        }
     }
   }
 
@@ -137,22 +190,32 @@ object ContainerPropertyResolver {
 
   private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
-    line.indexOf(resolveStartDelim) match {
-      case n if n < 0 =>
-        // We don't have any
-        line.indexOf(evalStartDelim) match {
-          case i if i < 0 => line
-          case i if i >= 0 =>
-            val (prefix, eval, suffix) = extractVariableElement(line, evalStartDelim, evalEndDelim)
-            if (prefix.isEmpty && suffix.isEmpty) {
-              evaluate(idSvc, eval, additionalProps)
-            } else {
-              resolve(idSvc, prefix + evaluate(idSvc, eval, additionalProps) + suffix, additionalProps)
-            }
-        }
-      case n if n >= 0 =>
-        val (prefix, rule, suffix) = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
-        resolve(idSvc, prefix + processRule(idSvc, rule, additionalProps) + suffix, additionalProps)
+
+    /** TODO: Map the modifier to installable services
+     * delayed : do not evaluate the inner expression any further
+     * encrypted : resolve an encrypted value */
+    if (lastIndexOfPattern(-1, -1, line, resolveStartDelim) != -1) {
+      val e = extractVariableElement(line, resolveStartDelim, resolveEndDelim)
+      e.modifier match {
+        case "delayed" =>
+          resolve(idSvc, e.prefix) + e.pattern + resolve(idSvc, e.postfix)
+        case _ =>
+          // First we resolve the inner expression to resolve any nested expressions
+          val inner = resolve(idSvc, e.pattern, additionalProps).toString
+          // then we resolve the entire line with the inner expression resolved
+          resolve(idSvc, e.prefix + processRule(idSvc, inner, additionalProps) + e.postfix, additionalProps)
+      }
+    } else {
+      lastIndexOfPattern(-1, -1, line, evalStartDelim) match {
+        case i if i < 0 => line
+        case i if i >= 0 =>
+          val e = extractVariableElement(line, evalStartDelim, evalEndDelim)
+          if (e.prefix.isEmpty && e.postfix.isEmpty) {
+            evaluate(idSvc, e.pattern, additionalProps)
+          } else {
+            resolve(idSvc, e.prefix + evaluate(idSvc, e.pattern, additionalProps) + e.postfix, additionalProps)
+          }
+      }
     }
   }
 

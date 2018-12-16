@@ -20,18 +20,25 @@ trait JmsStreamSupport {
     * The resulting stream will expose a killswitch, so that it stays
     * open and the test code needs to tear it down eventually.
     */
+
   def sendMessages(
     cf: IdAwareConnectionFactory,
     dest: JmsDestination,
     log: Logger,
+    priority : Int,
+    deliveryMode : JmsDeliveryMode,
+    timeToLive : Option[FiniteDuration],
     msgs : FlowEnvelope*
-  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): KillSwitch = {
+  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : KillSwitch = {
 
     // Create the Jms producer to send the messages
     val settings: JmsProducerSettings = JmsProducerSettings(
       connectionFactory = cf,
       connectionTimeout = 1.second,
-      jmsDestination = Some(dest)
+      jmsDestination = Some(dest),
+      priority = priority,
+      deliveryMode = deliveryMode,
+      timeToLive = timeToLive
     )
 
     val toJms = jmsProducer(
@@ -43,6 +50,25 @@ trait JmsStreamSupport {
 
     // Materialize the stream, send the test messages and expose the killswitch
     StreamFactories.keepAliveFlow(toJms, msgs:_*)
+
+  }
+
+  def sendMessages(
+    cf: IdAwareConnectionFactory,
+    dest: JmsDestination,
+    log: Logger,
+    msgs : FlowEnvelope*
+  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): KillSwitch = {
+
+    sendMessages(
+      cf = cf,
+      dest = dest,
+      log = log,
+      priority = 4,
+      deliveryMode = JmsDeliveryMode.NonPersistent,
+      timeToLive = None,
+      msgs = msgs:_*
+    )
   }
 
   def receiveMessages(
@@ -86,7 +112,7 @@ trait JmsStreamSupport {
     val f = Flow.fromGraph(new JmsSinkStage(name, settings, log)).named(name)
 
     if (autoAck) {
-      f.via(new AckProcessor(s"ack-$name").flow(log).named(s"ack-$name"))
+      f.via(new AckProcessor(s"ack-$name").flow.named(s"ack-$name"))
     } else {
       f
     }

@@ -6,7 +6,6 @@ import org.scalatest.{FreeSpec, Matchers}
 import scala.beans.BeanProperty
 import scala.util.control.NonFatal
 
-
 //noinspection NotImplementedCode
 class PropertyResolverSpec extends FreeSpec
   with Matchers {
@@ -56,7 +55,6 @@ class PropertyResolverSpec extends FreeSpec
     }
 
     "should throw an Exception when the end delimiter is missing" in {
-
       try {
         ContainerPropertyResolver.resolve(idSvc, "$[[foo")
         fail()
@@ -67,12 +65,8 @@ class PropertyResolverSpec extends FreeSpec
     }
 
     "should throw an exception when the property can't be resolved" in {
-      try {
+      intercept[PropertyResolverException] {
         ContainerPropertyResolver.resolve(idSvc, "$[[noprop]]")
-        fail()
-      } catch {
-        case _ : PropertyResolverException =>
-        case _ : Throwable => fail()
       }
     }
 
@@ -102,6 +96,39 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[version(replace:\\.:_)]]") should be ("2_2_0")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeA(replace:A:1)(replace:B:2))]]") should be ("1")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
+    }
+
+    "should allow to delay the property resolution" in {
+      ContainerPropertyResolver.resolve(idSvc, line = "$[[foo(lower)]]$[delayed[${{#foo}}]]") should be ("bar${{#foo}}")
+      ContainerPropertyResolver.resolve(idSvc, line = "$[delayed[${{#foo}}]]") should be ("${{#foo}}")
+    }
+
+    "should allow to resolve a spring expression" in {
+      ContainerPropertyResolver.resolve(
+        idSvc,
+        line = "${{#foo}}",
+        additionalProps = Map(
+          "myProperty" -> "Blended"
+        )
+      ) should be ("")
+
+      ContainerPropertyResolver.resolve(
+        idSvc,
+        line = "${{#myProperty}}",
+        additionalProps = Map(
+          "myProperty" -> "Blended"
+        )
+      ) should be ("Blended")
+    }
+
+    "should allow to nest lookups and expressions" in {
+      ContainerPropertyResolver.resolve(
+        idSvc,
+        line = "$[[${{#myProperty}}]]",
+        additionalProps = Map(
+          "myProperty" -> "foo"
+        )
+      ) should be ("bar")
     }
   }
 

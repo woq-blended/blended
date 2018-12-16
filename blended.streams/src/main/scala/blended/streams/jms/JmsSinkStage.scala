@@ -3,12 +3,12 @@ package blended.streams.jms
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
-import blended.jms.utils.JmsProducerSession
+import blended.jms.utils.{JmsDestination, JmsProducerSession}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-import javax.jms.{Connection, MessageProducer}
-import scala.concurrent.duration._
+import javax.jms.{Connection, Destination, MessageProducer}
 
+import scala.concurrent.duration._
 import scala.util.Random
 
 class JmsSinkStage(
@@ -72,6 +72,9 @@ class JmsSinkStage(
       }
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
+
+        var jmsDest : Option[JmsDestination] = None
+
         log.trace(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
         val idx : Int = rnd.nextInt(jmsSessions.size)
@@ -90,7 +93,8 @@ class JmsSinkStage(
               case None => 0L
             }
             if (sendTtl >= 0L) {
-              val dest = sendParams.destination.create(session.session)
+              jmsDest = Some(sendParams.destination)
+              val dest : Destination = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
               val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
               log.debug(s"Successfuly sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
@@ -99,7 +103,7 @@ class JmsSinkStage(
           env
         } catch {
           case t : Throwable =>
-            log.error(t)(s"Error sending message [${env.id}] to [${jmsSettings.jmsDestination}] in [${session.sessionId}]")
+            log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
             env.withException(t)
         }
 
@@ -120,7 +124,6 @@ class JmsSinkStage(
         new InHandler {
 
           override def onPush(): Unit = {
-
             val env = grab(in)
             pushMessage(env)
           }

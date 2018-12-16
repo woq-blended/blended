@@ -1,7 +1,5 @@
 package blended.jms.utils
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import javax.jms._
 
 import scala.concurrent.duration._
@@ -64,6 +62,11 @@ class JmsConsumerSession(
   }
 }
 
+object JmsAckState extends Enumeration {
+  type JmsAckState = Value
+  val Pending, Acknowledged, Denied = Value
+}
+
 class JmsAckSession(
   override val connection: Connection,
   override val session: Session,
@@ -72,11 +75,18 @@ class JmsAckSession(
   val ackTimeout : FiniteDuration = 1.second
 ) extends JmsConsumerSession(connection, session, sessionId, jmsDestination) {
 
-  val acknowledged : AtomicBoolean = new AtomicBoolean(false)
+  var ackState : JmsAckState.JmsAckState  = JmsAckState.Pending
 
-  def resetAck() : Unit = acknowledged.set(false)
+  def resetAck() : Unit = synchronized {
+    ackState = JmsAckState.Pending
+  }
 
-  def ack(message: Message): Unit = {
-    acknowledged.set(true)
+  def deny(message : Message) : Unit = synchronized {
+    ackState = JmsAckState.Denied
+
+  }
+
+  def ack(message: Message): Unit = synchronized {
+    ackState = JmsAckState.Acknowledged
   }
 }

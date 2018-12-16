@@ -136,6 +136,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
+          idSvc = ctxt.idSvc,
           bs = ctxt.bs
         )(env).get
 
@@ -160,6 +161,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
+          idSvc = ctxt.idSvc,
           bs = ctxt.bs
         )(env).get
 
@@ -182,6 +184,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
+          idSvc = ctxt.idSvc,
           bs = ctxt.bs
         )(env).get
 

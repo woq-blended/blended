@@ -1,18 +1,23 @@
 package blended.streams.processor
 
-import blended.streams.FlowProcessor
-import blended.streams.FlowProcessor.IntegrationStep
+import akka.NotUsed
+import akka.stream.scaladsl.Flow
+import blended.streams.message.FlowEnvelope
 
-import scala.util.Try
+class AckProcessor(val name : String) {
 
-case class AckProcessor(name : String) extends FlowProcessor {
+  override def toString() : String = {
+    s"${getClass().getSimpleName()}($name)"
+  }
 
-  override val f: IntegrationStep = { env =>
-    Try {
-      if (env.exception.isEmpty && env.requiresAcknowledge) {
+  val flow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+    if (env.requiresAcknowledge) {
+      if (env.exception.isEmpty) {
         env.acknowledge()
+      } else {
+        env.deny()
       }
-      env
     }
+    env
   }
 }

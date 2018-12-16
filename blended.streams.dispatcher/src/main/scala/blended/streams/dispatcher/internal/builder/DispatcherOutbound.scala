@@ -49,6 +49,7 @@ object DispatcherOutbound {
 
   private[builder] def outboundRouting(
     dispatcherCfg : ResourceTypeRouterConfig,
+    idSvc : ContainerIdentifierService,
     bs : DispatcherBuilderSupport
   )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
 
@@ -92,7 +93,7 @@ object DispatcherOutbound {
     /*-------------------------------------------------------------------------------------------------*/
     val routingDecider = FlowProcessor.fromFunction("routingDecider", bs.streamLogger) { env => Try {
 
-      val routing = outboundRouting(dispatcherCfg, bs)(env).get
+      val routing = outboundRouting(dispatcherCfg, idSvc, bs)(env).get
 
       env
         .withHeader(bs.headerBridgeVendor, routing.vendor).get

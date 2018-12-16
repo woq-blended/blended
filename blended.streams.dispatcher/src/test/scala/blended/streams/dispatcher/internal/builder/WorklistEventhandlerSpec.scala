@@ -182,6 +182,8 @@ class WorklistEventhandlerSpec extends DispatcherSpecSupport
           .withRequiresAcknowledge(true)
           .withAckHandler(Some(new AcknowledgeHandler {
 
+            override def deny(): Try[Unit] = Try {}
+
             override def acknowledge(): Try[Unit] = Try {
               ackCount.incrementAndGet()
             }

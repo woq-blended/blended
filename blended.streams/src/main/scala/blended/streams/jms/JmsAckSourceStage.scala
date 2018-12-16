@@ -5,7 +5,7 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import blended.jms.utils.{JmsAckSession, JmsDestination}
+import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
@@ -74,38 +74,42 @@ final class JmsAckSourceStage(
       }
 
       // This is to actually perform the acknowledement if one is pending
-      private val acknowledge : JmsAcknowledgeHandler => Try[Unit] = handler => Try {
+      private val acknowledge : FlowEnvelope => JmsAcknowledgeHandler => Try[Unit] = env => handler => Try {
 
         val sessionId = handler.session.sessionId
 
-        if (handler.session.acknowledged.get()) {
-          try {
-            handler.jmsMessage.acknowledge()
-            log.trace(s"Acknowledged JMS message for session [$sessionId]")
-            removeInflight(sessionId)
-            scheduleOnce(Poll(sessionId), 10.millis)
-          } catch {
-            case t: Throwable =>
-              log.error(t)(s"Failed to acknowledge message for sesseion [$sessionId]")
+        handler.session.ackState match {
+
+          case JmsAckState.Acknowledged =>
+            try {
+              handler.jmsMessage.acknowledge()
+              log.trace(s"Acknowledged envelope [${env.id}] message for session [$sessionId]")
               removeInflight(sessionId)
-              closeSession(handler.session)
-          }
-        } else {
-          if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
-            log.warn(s"Acknowledge timed out for [$sessionId]")
-            removeInflight(sessionId)
-            // Recovering the session, so that unacknowledged messages may be redelivered
+              scheduleOnce(Poll(sessionId), 10.millis)
+            } catch {
+              case t: Throwable =>
+                log.error(t)(s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
+                closeSession(handler.session)
+            }
+
+          case JmsAckState.Denied =>
+            log.trace(s"Denying message [${env.id}] for session [$sessionId]")
             closeSession(handler.session)
-          } else {
-            scheduleOnce(Ack(sessionId), 10.millis)
-          }
+
+          case JmsAckState.Pending =>
+            if (System.currentTimeMillis() - handler.created > jmsSettings.ackTimeout.toMillis) {
+              log.warn(s"Acknowledge timed out for message [${env.id}] in session [$sessionId]")
+              closeSession(handler.session)
+            } else {
+              scheduleOnce(Ack(sessionId), 10.millis)
+            }
         }
       }
 
       private[this] def ackQueued(s : String): Unit = {
         inflight.get(s).foreach { env =>
           ackHandler(env).foreach { handler =>
-            acknowledge(handler).get
+            acknowledge(env)(handler).get
           }
         }
       }
@@ -188,6 +192,7 @@ final class JmsAckSourceStage(
 
         try {
           log.debug(s"Closing session [${session.sessionId}]")
+          removeInflight(session.sessionId)
           session.closeSession()
           removeConsumer(session.sessionId)
           jmsSessions -= session.sessionId
