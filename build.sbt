@@ -102,6 +102,7 @@ lazy val blendedStreams = BlendedStreams.project
 lazy val blendedStreamsDispatcher = BlendedStreamsDispatcher.project
 lazy val blendedStreamsTestsupport = BlendedStreamsTestsupport.project
 lazy val blendedDocs = BlendedDocsJs.project
+lazy val blendedDependencies = BlendedDependencies.project
 
 lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedUtilLogging,
@@ -182,6 +183,6 @@ lazy val root = {
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(RootSettings(BlendedDocsJs.project))
-    .settings(ExportDependencies.settings)
-    .aggregate((jvmProjects ++ jsProjects):_*)
+    // .settings(ExportDependencies.settings)
+    .aggregate((jvmProjects ++ jsProjects ++ Seq[ProjectReference](BlendedDependencies.project)):_*)
 }
