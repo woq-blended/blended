@@ -1,6 +1,5 @@
 import java.nio.file.{Files, StandardCopyOption}
 
-import Dependencies._
 import de.wayofquality.sbt.filterresources.FilterResources
 import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
@@ -8,6 +7,8 @@ import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
 import sbt.Keys._
 import sbt._
+import blended.sbt.Dependencies
+import blended.sbt.Dependencies._
 
 object BlendedLauncher extends ProjectFactory {
 

@@ -1,5 +1,6 @@
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt._
+import blended.sbt.Dependencies
 
 object BlendedStreams extends ProjectFactory {
 

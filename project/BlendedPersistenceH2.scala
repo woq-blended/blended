@@ -1,4 +1,5 @@
 import sbt._
+import blended.sbt.Dependencies
 
 object BlendedPersistenceH2 extends ProjectFactory {
 

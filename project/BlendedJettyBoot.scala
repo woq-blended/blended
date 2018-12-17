@@ -1,6 +1,7 @@
 import com.typesafe.sbt.osgi.OsgiKeys
 import sbt.Keys._
 import sbt._
+import blended.sbt.Dependencies
 
 object BlendedJettyBoot extends ProjectFactory {
 

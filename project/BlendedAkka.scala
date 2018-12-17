@@ -1,5 +1,6 @@
 import sbt._
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import blended.sbt.Dependencies
 
 object BlendedAkka extends ProjectFactory {
 

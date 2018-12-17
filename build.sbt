@@ -182,5 +182,6 @@ lazy val root = {
     .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(RootSettings(BlendedDocsJs.project))
+    .settings(ExportDependencies.settings)
     .aggregate((jvmProjects ++ jsProjects):_*)
 }

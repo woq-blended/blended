@@ -4,6 +4,7 @@ import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys.coverageEnabled
+import blended.sbt.Dependencies
 
 private object BlendedUpdaterConfigCross {
 

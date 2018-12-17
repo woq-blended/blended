@@ -1,7 +1,9 @@
+package blended.sbt
+
 import sbt.Keys._
 import sbt._
 
-object Dependencies {
+trait Dependencies {
 
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.19"
@@ -141,3 +143,4 @@ object Dependencies {
 
 }
 
+object Dependencies extends Dependencies

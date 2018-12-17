@@ -1,4 +1,5 @@
 import sbt._
+import blended.sbt.Dependencies
 
 object BlendedUpdater extends ProjectFactory {
 

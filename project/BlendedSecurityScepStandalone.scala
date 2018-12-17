@@ -3,6 +3,7 @@ import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlug
 import sbt.Keys._
 import sbt._
 import sbt.librarymanagement.InclExclRule
+import blended.sbt.Dependencies
 
 object BlendedSecurityScepStandalone extends ProjectFactory {
 

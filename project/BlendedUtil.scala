@@ -1,3 +1,5 @@
+import blended.sbt.Dependencies
+
 object BlendedUtil extends ProjectFactory {
 
   private[this] val helper = new ProjectSettings(

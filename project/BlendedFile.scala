@@ -2,6 +2,7 @@ import de.wayofquality.sbt.filterresources.FilterResources
 import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 import sbt._
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import blended.sbt.Dependencies
 
 object BlendedFile extends ProjectFactory {
 
