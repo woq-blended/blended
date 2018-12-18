@@ -1,10 +1,10 @@
 package blended.sbt
 
-import sbt.Keys._
 import sbt._
 
 trait Dependencies {
 
+  // Versions
   val activeMqVersion = "5.15.6"
   val akkaVersion = "2.5.19"
   val akkaHttpVersion = "10.1.5"
@@ -15,14 +15,15 @@ trait Dependencies {
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
+  val scalaVersion = "2.12.8"
   val scalatestVersion = "3.0.5"
   val scalaCheckVersion = "1.14.0"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
   val springVersion = "4.3.11.RELEASE"
 
-  private[this] def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
-  private[this] def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
+  protected def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
+  protected def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
 
   val activeMqBroker = "org.apache.activemq" % "activemq-broker" % activeMqVersion
   val activeMqClient = "org.apache.activemq" % "activemq-client" % activeMqVersion
@@ -72,9 +73,10 @@ trait Dependencies {
   val h2 = "com.h2database" % "h2" % "1.4.197"
   val hikaricp = "com.zaxxer" % "HikariCP" % "3.1.0"
 
+  protected def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
+
   val jcip = "net.jcip" % "jcip-annotations" % "1.0"
   val jclOverSlf4j = "org.slf4j" % "jcl-over-slf4j" % slf4jVersion
-  private def jettyOsgi(n: String) = "org.eclipse.jetty.osgi" % s"jetty-$n" % jettyVersion
   val jettyOsgiBoot = jettyOsgi("osgi-boot")
   val jjwt = "io.jsonwebtoken" % "jjwt" % "0.7.0"
   val jms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
@@ -106,8 +108,8 @@ trait Dependencies {
   val prickle = "com.github.benhutchison" %% "prickle" % prickleVersion
 
   // SCALA
-  val scalaLibrary = Def.setting("org.scala-lang" % "scala-library" % scalaVersion.value)
-  val scalaReflect = Def.setting("org.scala-lang" % "scala-reflect" % scalaVersion.value)
+  val scalaLibrary = "org.scala-lang" % "scala-library" % scalaVersion
+  val scalaReflect = "org.scala-lang" % "scala-reflect" % scalaVersion
   val scalaParser = "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1"
   val scalaXml = "org.scala-lang.modules" %% "scala-xml" % "1.1.0"
 
@@ -119,7 +121,8 @@ trait Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
-  private def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
+  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
+
   val springBeans = spring("beans")
   //val springAop = spring("aop")
   //val springContext = spring("context")
