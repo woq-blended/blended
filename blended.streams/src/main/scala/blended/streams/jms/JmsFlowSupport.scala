@@ -92,7 +92,11 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
       }
 
       val corrIdMap : Map[String, MsgProperty] =
-        Option(msg.getJMSCorrelationID()).map( s => corrIdHeader(prefix) -> MsgProperty.lift(s).get).toMap
+        Option(msg.getJMSCorrelationID()).map { s => Map(
+            corrIdHeader(prefix) -> MsgProperty(s),
+            "JMSCorrelationID" -> MsgProperty(s)
+          )
+        }.getOrElse(Map.empty)
 
       val props : Map[String, MsgProperty] = msg.getPropertyNames().asScala.map { name =>
         (name.toString -> lift(msg.getObjectProperty(name.toString())).get)
