@@ -157,7 +157,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
           .withContextObject(ctxt.bs.bridgeProviderKey, provider)
           // This will trigger the replyto routing
-          .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsDestination.create(JmsFlowSupport.replyToQueueName).get))
+          .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsFlowSupport.replyToQueueName))
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,
@@ -180,7 +180,7 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
           .withHeader(replyToHeader(ctxt), "response").get
           .withHeader(srcDestHeader(ctxt), JmsDestination.create("Dummy").get.asString).get
           .withContextObject(ctxt.bs.bridgeProviderKey, provider)
-          .withContextObject(ctxt.bs.bridgeDestinationKey, Some(JmsDestination.create("centralDest").get))
+          .withContextObject(ctxt.bs.bridgeDestinationKey, Some("centralDest"))
 
         val routing : DispatcherTarget = DispatcherOutbound.outboundRouting(
           dispatcherCfg = ctxt.cfg,

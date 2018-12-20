@@ -205,7 +205,7 @@ object OutboundHeaderConfig {
       case None => defaultProvider
     }
 
-    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => JmsDestination.create(idSvc.resolvePropertyString(s).map(_.toString()).get).get)
+    val bridgeDestination = cfg.getStringOption(bridgeDestinationPath).map(s => idSvc.resolvePropertyString(s).get).map(_.toString())
     val moduleLastOnComplete = cfg.getBoolean(moduleLastOnCompletePath, false)
     val applicationLogHeader = cfg.getStringListOption(applicationLogHeaderPath).getOrElse(defaultLogHeader)
 
@@ -233,7 +233,7 @@ object OutboundHeaderConfig {
 
 case class OutboundHeaderConfig(
   bridgeProviderConfig : BridgeProviderConfig,
-  bridgeDestination : Option[JmsDestination],
+  bridgeDestination : Option[String],
   autoComplete : Boolean,
   condition : Option[String],
   applicationLogHeader : List[String],

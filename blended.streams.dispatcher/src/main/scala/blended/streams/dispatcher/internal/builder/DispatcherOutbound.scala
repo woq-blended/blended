@@ -35,17 +35,25 @@ object DispatcherOutbound {
     }
   }
 
-  val resolveDest : DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = { bs => env => Try {
+  val resolveDest : ContainerIdentifierService => DispatcherBuilderSupport => FlowEnvelope => Try[JmsDestination] = {
+    idSvc => bs => env => Try {
 
-    env.getFromContext[Option[JmsDestination]](bs.bridgeDestinationKey).get match {
+    env.getFromContext[Option[String]](bs.bridgeDestinationKey).get match {
       case None => throw new Exception(s"Failed to resolve context object [${bs.bridgeDestinationKey}]")
       case Some(ctxtDest) => ctxtDest match {
         case None => JmsDestination.create(JmsFlowSupport.replyToQueueName).get
-        case Some(d) => d
+        case Some(d) =>
+
+          val name : String = idSvc.resolvePropertyString(
+            value = d,
+            additionalProps = env.flowMessage.header.mapValues(_.value)
+          ).map(_.toString()).get
+
+          JmsDestination.create(name).get
+          
       }
     }
   }}
-
 
   private[builder] def outboundRouting(
     dispatcherCfg : ResourceTypeRouterConfig,
@@ -53,7 +61,7 @@ object DispatcherOutbound {
     bs : DispatcherBuilderSupport
   )(env: FlowEnvelope) : Try[DispatcherTarget] = Try {
 
-    val dest = resolveDest(bs)(env).get
+    val dest : JmsDestination = resolveDest(idSvc)(bs)(env).get
 
     val targetDest : JmsDestination = dest.name match {
       case JmsFlowSupport.replyToQueueName =>
@@ -69,9 +77,17 @@ object DispatcherOutbound {
     val bridgeProvider : BridgeProviderConfig = dest.name match {
       // For the replyto destination we have to respond to the src provider
       case JmsFlowSupport.replyToQueueName =>
-        val v = env.header[String](bs.srcVendorHeader(bs.headerConfig.prefix))
-        val p = env.header[String](bs.srcProviderHeader(bs.headerConfig.prefix))
+
+        val v : Option[String] = env.header[String](bs.srcVendorHeader(bs.headerConfig.prefix)).map{ s =>
+          idSvc.resolvePropertyString(s).map(_.toString()).get
+        }
+
+        val p : Option[String] = env.header[String](bs.srcProviderHeader(bs.headerConfig.prefix)).map{ s =>
+          idSvc.resolvePropertyString(s).map(_.toString()).get
+        }
+
         resolveProvider(dispatcherCfg.providerRegistry,v,p).get
+
       case _ =>
         env.getFromContext[BridgeProviderConfig](bs.bridgeProviderKey).get match {
           case None => throw new Exception(s"Failed to resolve context object [${bs.bridgeProviderKey}]")

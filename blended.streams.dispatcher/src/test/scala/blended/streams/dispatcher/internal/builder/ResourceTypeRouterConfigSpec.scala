@@ -41,7 +41,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
           out.outboundHeader should have size 1
           val ohCfg = out.outboundHeader.head
           ohCfg.bridgeProviderConfig.id should be(amqId)
-          ohCfg.bridgeDestination should be(Some(JmsTopic("SagTest")))
+          ohCfg.bridgeDestination should be(Some("topic:SagTest"))
         }
       }
     }
@@ -66,7 +66,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
           out.outboundHeader should have size 1
           val ohCfg = out.outboundHeader.head
           ohCfg.bridgeProviderConfig.id should be(ccQueueId)
-          ohCfg.bridgeDestination should be(Some(JmsQueue("/Qucc/data/out")))
+          ohCfg.bridgeDestination should be(Some("queue:/Qucc/data/out"))
         }
       }
     }
@@ -85,7 +85,7 @@ class ResourceTypeRouterConfigSpec extends DispatcherSpecSupport
         other.foreach { out =>
           val ohCfg = other.head.outboundHeader.head
           ohCfg.timeToLive should be (14400000)
-          ohCfg.bridgeDestination should be (Some(JmsQueue("OtherAppToQueue")))
+          ohCfg.bridgeDestination should be (Some("OtherAppToQueue"))
           ohCfg.applicationLogHeader should have size(2)
           ohCfg.applicationLogHeader should contain ("keymetric1")
           ohCfg.applicationLogHeader should contain ("keymetric3")
