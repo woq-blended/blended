@@ -1,55 +1,59 @@
 package blended.file
-import java.io.{File, FileInputStream}
-import javax.jms.{ConnectionFactory, Message, Session}
+import java.io.File
 
-import blended.jms.utils.{JMSMessageFactory, JMSSupport}
+import akka.actor.ActorSystem
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.util.ByteString
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.jms.{JmsDeliveryMode, JmsProducerSettings, JmsStreamSupport}
+import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty}
+import blended.util.logging.Logger
+
+import scala.concurrent.ExecutionContext
+import scala.io.Source
+import scala.util.{Success, Try}
 
 class JMSFilePollHandler(
-  cf: ConnectionFactory,
+  cf: IdAwareConnectionFactory,
   dest: String,
   deliveryMode: Int,
   priority: Int,
   ttl: Long,
   props: Map[String, String]
-) extends FilePollHandler with JMSSupport with JMSMessageFactory[(FileProcessCmd, File)] {
+) extends FilePollHandler with JmsStreamSupport {
 
-  override def createMessage(session: Session, content: (FileProcessCmd, File)) : Message = {
+  private val log : Logger = Logger[JMSFilePollHandler]
 
-    val buffer : Array[Byte] = new Array[Byte](4096)
-    val is = new FileInputStream(content._2)
+  private def createEnvelope(cmd : FileProcessCmd, file : File) : FlowEnvelope = {
 
-    val result = session.createBytesMessage()
+    val body : ByteString = ByteString(Source.fromFile(file).mkString)
+    val header : Map[String, MsgProperty] = props.mapValues(v => MsgProperty(v))
 
-    try {
-      var cnt = 0
-      do {
-        cnt = is.read(buffer)
-        if (cnt > 0) result.writeBytes(buffer, 0, cnt)
-      } while(cnt >= 0)
-    } finally {
-      is.close()
-    }
-
-    props.foreach{ case (k,v) =>
-      result.setStringProperty(k, v)
-    }
-
-    result.setStringProperty("BlendedFileName", content._1.f.getName())
-    result.setStringProperty("BlendedFilePath", content._1.f.getAbsolutePath())
-
-    result
+    FlowEnvelope(FlowMessage(body)(header))
+      .withHeader("BlendedFileName", file.getName()).get
+      .withHeader("BlendedFilePath", file.getAbsolutePath()).get
   }
 
-  override def processFile(cmd: FileProcessCmd, f: File): Unit = {
+  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Try[Unit] = Try {
 
-    sendMessage(
-      cf = cf,
-      destName = dest,
-      content = (cmd, f),
-      msgFactory = this,
-      deliveryMode = deliveryMode,
-      priority = priority,
-      ttl = ttl
-    ).foreach{t => throw t}
+    implicit val materializer : Materializer = ActorMaterializer()
+    implicit val eCtxt : ExecutionContext = system.dispatcher
+
+    val env : FlowEnvelope = createEnvelope(cmd, f)
+
+    val settings : JmsProducerSettings = JmsProducerSettings(
+      connectionFactory = cf,
+      jmsDestination = Some(JmsDestination.create(dest).get),
+      deliveryMode = JmsDeliveryMode.Persistent
+    )
+
+    sendMessages(
+      producerSettings = settings,
+      log = log,
+      env
+    ) match {
+      case Success(s) => s.shutdown()
+      case f => f
+    }
   }
 }

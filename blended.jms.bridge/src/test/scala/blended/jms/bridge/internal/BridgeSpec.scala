@@ -100,7 +100,12 @@ class BridgeSpec extends SimplePojoContainerSpec
           .withHeader(headerCfg.headerTrack, true).get
       } map { FlowEnvelope.apply }
 
-      val switch = sendMessages(external, JmsQueue("sampleIn"), log, msgs:_*)
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = external,
+        jmsDestination = Some(JmsQueue("sampleIn"))
+      )
+
+      val switch = sendMessages(pSettings, log, msgs:_*).get
 
       1.to(msgCount).map { i =>
         val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"), log)(1.second, system, materializer)
@@ -142,7 +147,13 @@ class BridgeSpec extends SimplePojoContainerSpec
         headerCfg.headerTrack -> false
       ).get))
 
-      val switch = sendMessages(external, JmsQueue("SampleHeaderIn"), log, env)
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = external,
+        jmsDestination = Some(JmsQueue("SampleHeaderIn"))
+      )
+
+      val switch = sendMessages(pSettings, log, env).get
+
       val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"), log)(1.second, system, materializer)
       val result = Await.result(coll.result, 1100.millis)
       switch.shutdown()

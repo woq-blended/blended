@@ -8,7 +8,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
-import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 case class FileProcessCmd(f: File, cfg: FilePollConfig, handler: FilePollHandler)
 case class FileProcessed(cmd: FileProcessCmd, success: Boolean)
@@ -29,30 +29,33 @@ class FileProcessActor extends Actor with ActorLogging {
 
   def initiated(requestor: ActorRef, tempFile: File, cmd: FileProcessCmd) : Receive = {
     case result : FileCmdResult => if (result.success) {
-      try {
-        cmd.handler.processFile(cmd, tempFile)
-        requestor ! FileProcessed(cmd, success = true)
 
-        val archiveCmd = cmd.cfg.backup match {
-          case None =>
-            DeleteFile(tempFile)
-          case Some(d) =>
-            val backupDir = new File(d)
-            if (!backupDir.exists()) {
-              backupDir.mkdirs()
-            }
-            val backupFileName = cmd.f.getName + "-" + sdf.format(new Date())
-            RenameFile(tempFile, new File(d, backupFileName))
-        }
+      cmd.handler.processFile(cmd, tempFile)(context.system) match {
+        case Success(_) =>
+          cmd.handler.processFile(cmd, tempFile)(context.system)
+          requestor ! FileProcessed(cmd, success = true)
 
-        context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
-        context.become(cleanUp(requestor, cmd, success = true))
-      } catch {
-        case NonFatal(_) =>
+          val archiveCmd = cmd.cfg.backup match {
+            case None =>
+              DeleteFile(tempFile)
+            case Some(d) =>
+              val backupDir = new File(d)
+              if (!backupDir.exists()) {
+                backupDir.mkdirs()
+              }
+              val backupFileName = cmd.f.getName + "-" + sdf.format(new Date())
+              RenameFile(tempFile, new File(d, backupFileName))
+          }
+
+          context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
+          context.become(cleanUp(requestor, cmd, success = true))
+
+        case Failure(e) =>
           context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
           context.become(cleanUp(requestor, cmd, success = false))
-
       }
+
+
     } else {
       log.warning(s"File [${cmd.f.getAbsolutePath}] can't be accessed yet - processing delayed.")
       context.become(cleanUp(requestor, cmd, success = false))

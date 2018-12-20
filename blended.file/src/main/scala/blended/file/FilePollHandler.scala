@@ -2,8 +2,11 @@ package blended.file
 
 import java.io.File
 
+import akka.actor.ActorSystem
+
+import scala.util.Try
+
 trait FilePollHandler {
 
-  @throws[Throwable]
-  def processFile(cmd : FileProcessCmd, f : File) : Unit
+  def processFile(cmd : FileProcessCmd, f : File)(implicit system: ActorSystem) : Try[Unit]
 }

@@ -5,7 +5,7 @@ package sib.itest.streams
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.jms.JmsStreamSupport
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
@@ -53,8 +53,12 @@ case class RoundtripHelper(
       }
     }.toMap
 
+    val pSettings: JmsProducerSettings = JmsProducerSettings(
+      connectionFactory = inbound._1,
+      jmsDestination = Some(inbound._2)
+    )
     // Send the inbound messages
-    sendMessages(inbound._1, inbound._2, log, testMsgs:_*)
+    sendMessages(pSettings, log, testMsgs:_*)
 
     // Wait for all outcomes
 

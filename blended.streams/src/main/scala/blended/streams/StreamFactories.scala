@@ -52,22 +52,4 @@ object StreamFactories {
       .actorRef[T](bufferSize, OverflowStrategy.fail)
       .viaMat(KillSwitches.single)(Keep.both)
   }
-
-  def keepAliveFlow[T](
-    flow : Flow[T, _, _],
-    msgs: T*
-  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : KillSwitch = {
-
-    val source = Source.actorRef[T](msgs.size, OverflowStrategy.fail)
-
-    val (actor : ActorRef, killswitch : KillSwitch) = source
-      .viaMat(flow)(Keep.left)
-      .viaMat(KillSwitches.single)(Keep.both)
-      .toMat(Sink.ignore)(Keep.left)
-      .run()
-
-    msgs.foreach(m => actor ! m)
-
-    killswitch
-  }
 }

@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Keep, Sink}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
-import blended.streams.jms.JmsStreamSupport
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
@@ -81,12 +81,12 @@ class HttpQueueServiceSpec extends FreeSpec
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
-      sendMessages(
-        cf = cf,
-        dest = JmsQueue("Queue1"),
-        log = log,
-        msgs = Seq(env):_*
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = cf,
+        jmsDestination = Some(JmsQueue("Queue1"))
       )
+
+      sendMessages(pSettings, log, env)
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response
@@ -107,12 +107,12 @@ class HttpQueueServiceSpec extends FreeSpec
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
-      sendMessages(
-        cf = cf,
-        dest = JmsQueue("Queue1"),
-        log = log,
-        msgs = Seq(env):_*
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = cf,
+        jmsDestination = Some(JmsQueue("Queue1"))
       )
+
+      sendMessages(pSettings, log, env)
 
       Get(s"/activemq/Queue1") ~> route ~> check {
         val r = response

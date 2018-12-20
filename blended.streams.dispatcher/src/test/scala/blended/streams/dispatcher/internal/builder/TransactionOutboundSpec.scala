@@ -8,7 +8,7 @@ import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.persistence.PersistenceService
 import blended.persistence.h2.internal.H2Activator
-import blended.streams.jms.JmsStreamSupport
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowTransaction, FlowTransactionEvent, FlowTransactionManager, FlowTransactionUpdate}
@@ -75,12 +75,17 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
   def sendTransactions(ctxt: DispatcherExecContext, cf : IdAwareConnectionFactory)(envelopes: FlowEnvelope*)
     (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
+
+    val pSettings : JmsProducerSettings = JmsProducerSettings(
+      connectionFactory = cf,
+      jmsDestination = Some(JmsQueue("internal.transactions"))
+    )
+
     sendMessages(
-      cf = cf,
-      dest = JmsQueue("internal.transactions"),
+      pSettings,
       log = ctxt.bs.streamLogger,
       envelopes: _*
-    )
+    ).get
   }
 
   def receiveCbes: Collector[FlowEnvelope] = receiveMessages(

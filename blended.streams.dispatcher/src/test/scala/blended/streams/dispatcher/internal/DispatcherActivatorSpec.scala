@@ -8,10 +8,10 @@ import akka.stream.{ActorMaterializer, Materializer}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.bridge.internal.BridgeActivator
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.persistence.h2.internal.H2Activator
 import blended.streams.dispatcher.internal.builder.DispatcherSpecSupport
-import blended.streams.jms.JmsStreamSupport
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.testsupport.LoggingEventAppender
 import blended.streams.transaction.FlowTransactionState
@@ -85,12 +85,12 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
-      val switch = sendMessages(
-        cf = sonic,
-        dest = JmsDestination.create("sonic.data.in").get,
-        log = Logger(loggerName),
-        msgs = env
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = sonic,
+        jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
+
+      val switch = sendMessages(pSettings, Logger(loggerName), env).get
 
       val results = getResults(
         cf = sonic,
@@ -131,12 +131,12 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
 
-      val switch = sendMessages(
-        cf = sonic,
-        dest = JmsDestination.create("sonic.data.in").get,
-        log = Logger(loggerName),
-        msgs = env
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = sonic,
+        jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
+
+      val switch = sendMessages(pSettings, Logger(loggerName), env).get
 
       val results = getResults(
         cf = sonic,

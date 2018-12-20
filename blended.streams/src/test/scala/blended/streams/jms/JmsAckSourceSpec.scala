@@ -20,6 +20,7 @@ import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.{Failure, Success}
 
 @RequiresForkedJVM
 class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
@@ -58,7 +59,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   val log : Logger = Logger[JmsAckSourceSpec]
 
-  val msgCount : Int = 100
+  val msgCount : Int = 50
 
   override protected def afterAll(): Unit = {
     broker.stop()
@@ -73,7 +74,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val dest = JmsDestination.create("testQueue").get
       val cf = amqCf()
 
-      val settings : JMSConsumerSettings = JMSConsumerSettings(
+      val cSettings : JMSConsumerSettings = JMSConsumerSettings(
         connectionFactory = cf,
         jmsDestination = Some(dest),
         sessionCount = 5,
@@ -82,7 +83,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
       val consumer : Source[FlowEnvelope, NotUsed] = restartableConsumer(
         name = "test",
-        settings = settings,
+        settings = cSettings,
         headerConfig = FlowHeaderConfig(prefix = "Spec"),
         log =log
       ).via(Flow.fromFunction{env =>
@@ -94,18 +95,30 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         FlowEnvelope().withHeader("msgNo", i).get
       }
 
-      val switch = sendMessages(cf, dest, log, envelopes:_*)
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = cf,
+        jmsDestination = Some(dest)
+      )
 
-      val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-        name = "ackConsumer",
-        source = consumer,
-        timeout = 5.seconds
-      )(e => e.acknowledge())
+      sendMessages(
+        pSettings,
+        log,
+        envelopes:_*
+      ) match {
+        case Success(s) =>
+          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+            name = "ackConsumer",
+            source = consumer,
+            timeout = 5.seconds
+          )(e => e.acknowledge())
 
-      val result = Await.result(coll.result, 11.seconds).map{ env => env.header[Int]("msgNo").get }
-      result should have size (envelopes.size)
+          val result = Await.result(coll.result, 6.seconds).map{ env => env.header[Int]("msgNo").get }
+          result should have size (envelopes.size)
 
-      switch.shutdown()
+          s.shutdown()
+        case Failure(t) => fail(t)
+      }
+
     }
   }
 

@@ -1,72 +1,92 @@
 package blended.streams.jms
 
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
+
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, RestartSource, Source}
-import akka.stream.{ActorMaterializer, KillSwitch, Materializer}
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsDurableTopic, JmsQueue}
-import blended.streams.{StreamController, StreamControllerConfig, StreamFactories}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.stream._
+import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
+import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, Collector}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.util.Try
 
 trait JmsStreamSupport {
   /**
-    * Send messages to a given Jms destination using an actor source.
+    * Process a sequence of messages with a given flow. If any of the processed
+    * messages cause an exception in the provided flow, the Stream will terminate
+    * with this exeption been thrown.
+    *
     * The resulting stream will expose a killswitch, so that it stays
     * open and the test code needs to tear it down eventually.
     */
 
-  def sendMessages(
-    cf: IdAwareConnectionFactory,
-    dest: JmsDestination,
-    log: Logger,
-    priority : Int,
-    deliveryMode : JmsDeliveryMode,
-    timeToLive : Option[FiniteDuration],
+  def processMessages(
+    processFlow : Flow[FlowEnvelope, FlowEnvelope, _],
     msgs : FlowEnvelope*
-  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext) : KillSwitch = {
+  )(implicit system: ActorSystem) : Try[KillSwitch]  = Try {
 
-    // Create the Jms producer to send the messages
-    val settings: JmsProducerSettings = JmsProducerSettings(
-      connectionFactory = cf,
-      connectionTimeout = 1.second,
-      jmsDestination = Some(dest),
-      priority = priority,
-      deliveryMode = deliveryMode,
-      timeToLive = timeToLive
-    )
+    implicit val materializer : Materializer = ActorMaterializer()
+    implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    val toJms = jmsProducer(
-      name = dest.asString,
-      settings = settings,
+    val hasException : AtomicBoolean = new AtomicBoolean(false)
+    val sendCount : AtomicInteger = new AtomicInteger(0)
+
+    val ((actor : ActorRef, killswitch : KillSwitch), errEnv: Future[Option[FlowEnvelope]]) =
+      Source.actorRef[FlowEnvelope](msgs.size, OverflowStrategy.fail)
+        .viaMat(processFlow)(Keep.left)
+        .viaMat(KillSwitches.single)(Keep.both)
+        .via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env =>
+          if (env.exception.isDefined) {
+            env.exception.foreach { t =>
+              hasException.set(true)
+              throw t
+            }
+          } else {
+            sendCount.incrementAndGet()
+          }
+          env
+        })
+        .filter(_.exception.isDefined)
+        .toMat(Sink.headOption[FlowEnvelope])(Keep.both)
+        .run()
+
+    // Send all the messages
+    msgs.foreach(m => actor ! m)
+
+    // We will wait until all messages have passed through the process flow and check if
+    // any have thrown an exception causing the stream to fail
+    do {
+      Thread.sleep(10)
+      if (hasException.get()) {
+        Await.result(errEnv, 1.second).flatMap(_.exception).foreach(t => throw t)
+      }
+    } while(!hasException.get && sendCount.get < msgs.size)
+
+    killswitch
+  }
+
+  def sendMessages(
+    producerSettings: JmsProducerSettings,
+    log : Logger,
+    msgs : FlowEnvelope*
+  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): Try[KillSwitch] = {
+
+    val producer : Flow[FlowEnvelope, FlowEnvelope, _] = jmsProducer(
+      name = producerSettings.jmsDestination.map(_.asString).getOrElse("producer"),
+      settings = producerSettings,
       autoAck = true,
       log = log
     )
 
-    // Materialize the stream, send the test messages and expose the killswitch
-    StreamFactories.keepAliveFlow(toJms, msgs:_*)
-
-  }
-
-  def sendMessages(
-    cf: IdAwareConnectionFactory,
-    dest: JmsDestination,
-    log: Logger,
-    msgs : FlowEnvelope*
-  )(implicit system: ActorSystem, materializer: Materializer, ectxt: ExecutionContext): KillSwitch = {
-
-    sendMessages(
-      cf = cf,
-      dest = dest,
-      log = log,
-      priority = 4,
-      deliveryMode = JmsDeliveryMode.NonPersistent,
-      timeToLive = None,
+    processMessages(
+      processFlow = producer,
       msgs = msgs:_*
     )
   }

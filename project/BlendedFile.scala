@@ -30,6 +30,7 @@ object BlendedFile extends ProjectFactory {
   override val project = helper.baseProject.dependsOn(
     BlendedAkka.project,
     BlendedJmsUtils.project,
+    BlendedStreams.project,
     BlendedTestsupport.project % "test"
   )
 }

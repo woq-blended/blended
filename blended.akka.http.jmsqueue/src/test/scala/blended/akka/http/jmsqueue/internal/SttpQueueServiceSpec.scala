@@ -12,7 +12,7 @@ import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.http.jmsqueue.BlendedAkkaHttpJmsqueueActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
-import blended.streams.jms.JmsStreamSupport
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -89,12 +89,12 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
-      sendMessages(
-        cf = amqCF,
-        dest = JmsQueue("Queue1"),
-        log = log,
-        msgs = Seq(env):_*
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = amqCF,
+        jmsDestination = Some(JmsQueue("Queue1"))
       )
+
+      sendMessages(pSettings, log, env)
 
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
@@ -110,12 +110,12 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val msg : String = "Hello Blended"
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
-      sendMessages(
-        cf = amqCF,
-        dest = JmsQueue("Queue1"),
-        log = log,
-        msgs = Seq(env):_*
+      val pSettings : JmsProducerSettings = JmsProducerSettings(
+        connectionFactory = amqCF,
+        jmsDestination = Some(JmsQueue("Queue1"))
       )
+
+      sendMessages(pSettings, log, env)
 
       val request = sttp.get(Uri(new URI(s"$svcUrlBase/blended/Queue1")))
       val response = request.send()
