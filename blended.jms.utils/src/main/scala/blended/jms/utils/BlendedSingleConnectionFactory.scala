@@ -111,18 +111,31 @@ class BlendedSingleConnectionFactory(
   }
 }
 
+object SimpleIdAwareConnectionFactory{
+
+  def apply(
+    vendor : String,
+    provider: String,
+    clientId : String,
+    cf: ConnectionFactory
+  )(implicit system: ActorSystem) : IdAwareConnectionFactory = {
+    val cfg : ConnectionConfig = BlendedJMSConnectionConfig.defaultConfig.copy(
+      vendor = vendor,
+      provider = provider,
+      clientId = clientId,
+      pingEnabled = false
+    )
+
+    new SimpleIdAwareConnectionFactory(cfg, cf, None)
+  }
+}
+
 class SimpleIdAwareConnectionFactory(
-  override val vendor : String,
-  override val provider : String,
-  override val clientId : String,
+  cfg : ConnectionConfig,
   cf : ConnectionFactory,
+  bundleContext: Option[BundleContext]
 )(implicit system: ActorSystem) extends BlendedSingleConnectionFactory(
-  BlendedJMSConnectionConfig.defaultConfig.copy(
-    vendor = vendor,
-    provider = provider,
-    clientId = clientId,
-    pingEnabled = false
-  ), None
+  cfg, bundleContext
 ) {
   override def toString: String = s"${getClass().getSimpleName()}($vendor:$provider:$clientId)"
   override protected def createHolder(cfg: ConnectionConfig) : ConnectionHolder = new FactoryConfigHolder(cfg, cf)

@@ -22,7 +22,7 @@ class DispatcherDestinationResolver(
 
     val internal = registry.internalProvider.get
 
-    val msg = createJmsMessage(session, env)
+    val msg = createJmsMessage(session, env).get
 
     val vendor : String = env.header[String](bs.headerBridgeVendor).get
     val provider : String = env.header[String](bs.headerBridgeProvider).get

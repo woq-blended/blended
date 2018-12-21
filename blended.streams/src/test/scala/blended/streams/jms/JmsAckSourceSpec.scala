@@ -31,7 +31,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   lazy val brokerName : String = "blended"
 
-  private def amqCf(): IdAwareConnectionFactory = new SimpleIdAwareConnectionFactory(
+  private def amqCf(): IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
     provider = "amq",
     clientId = "spec",

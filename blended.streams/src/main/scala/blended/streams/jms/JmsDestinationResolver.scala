@@ -4,18 +4,19 @@ import blended.jms.utils.JmsDestination
 import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
-import javax.jms.{JMSException, Message, Session}
+import javax.jms.{Destination, JMSException, Message, Session}
 
 import scala.concurrent.duration._
-import scala.util.Try
+import scala.util.{Success, Try}
 
 trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
   def settings : JmsProducerSettings
   def correlationId(env : FlowEnvelope) : Option[String]
   def sendParameter(session: Session, env: FlowEnvelope) : Try[JmsSendParameter]
+  def replyTo(session : Session, env: FlowEnvelope) : Try[Option[Destination]]
 
-  def createJmsMessage(session : Session, env : FlowEnvelope) : Message = {
+  def createJmsMessage(session : Session, env : FlowEnvelope) : Try[Message] = Try {
 
     val flowMsg = env.flowMessage
 
@@ -37,6 +38,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
       case (k,v) => msg.setObjectProperty(k, v.value)
     }
 
+    replyTo(session, env).get.foreach(msg.setJMSReplyTo)
     // Always try to get the CorrelationId from the flow Message
     correlationId(env).foreach(msg.setJMSCorrelationID)
 
@@ -55,6 +57,13 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
     env.header[String](corrIdHeader(headerConfig.prefix)) match {
       case None => env.header[String]("JMSCorrelationID")
       case x => x
+    }
+  }
+
+  override def replyTo(session: Session, env: FlowEnvelope): Try[Option[Destination]] = Try {
+    env.header[String](replyToHeader(headerConfig.prefix)) match {
+      case None => None
+      case Some(d) => Some(JmsDestination.create(d).map(dest => dest.create(session)).get)
     }
   }
 
@@ -112,13 +121,14 @@ class SettingsDestinationResolver(
   extends JmsDestinationResolver
   with JmsEnvelopeHeader {
 
-
   override def correlationId(env: FlowEnvelope): Option[String] =
     env.header[String]("JMSCorrelationID")
 
+  override def replyTo(session: Session, env: FlowEnvelope): Try[Option[Destination]] = Success(None)
+
   override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
-    val msg = createJmsMessage(session, env)
+    val msg : Message = createJmsMessage(session, env).get
     // Get the destination
     val dest : JmsDestination = settings.jmsDestination match {
       case Some(d) => d
@@ -147,7 +157,7 @@ class MessageDestinationResolver(
   override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
     val flowMsg = env.flowMessage
-    val msg = createJmsMessage(session, env)
+    val msg = createJmsMessage(session, env).get
 
     // Get the destination
     val dest : JmsDestination = destination(flowMsg).get

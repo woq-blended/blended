@@ -95,11 +95,13 @@ trait JmsStreamSupport {
     headerCfg : FlowHeaderConfig,
     cf : IdAwareConnectionFactory,
     dest : JmsDestination,
-    log : Logger
+    log : Logger,
+    listener : Integer = 2,
+    selector : Option[String] = None
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
-    val listener : Int = if (dest.isInstanceOf[JmsQueue]) {
-      2
+    val listenerCount : Int = if (dest.isInstanceOf[JmsQueue]) {
+      listener
     } else {
       1
     }
@@ -115,8 +117,9 @@ trait JmsStreamSupport {
         settings =
           JMSConsumerSettings(connectionFactory = cf)
             .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
-            .withSessionCount(listener)
+            .withSessionCount(listenerCount)
             .withDestination(Some(dest))
+            .withSelector(selector)
       ),
       timeout
     )(collected)

@@ -226,7 +226,7 @@ final class JmsAckSourceStage(
       }
 
       private[this] def createConsumer(session: JmsAckSession) : Unit = {
-        log.debug(s"Creating message consumer for session [${session.sessionId}] and destination [$dest]")
+        log.debug(s"Creating message consumer for session [${session.sessionId}], destination [$dest] and selector [${settings.selector}]")
         session.createConsumer(settings.selector) match {
 
           case Success(c) =>

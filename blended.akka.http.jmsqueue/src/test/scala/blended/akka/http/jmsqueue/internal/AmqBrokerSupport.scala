@@ -2,7 +2,6 @@ package blended.akka.http.jmsqueue.internal
 
 import akka.actor.ActorSystem
 import blended.jms.utils.{IdAwareConnectionFactory, SimpleIdAwareConnectionFactory}
-import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter
@@ -12,7 +11,7 @@ trait AmqBrokerSupport {
   lazy val brokerName : String = "blended"
 
   def amqCf()(implicit system: ActorSystem): IdAwareConnectionFactory = {
-    new SimpleIdAwareConnectionFactory(
+    SimpleIdAwareConnectionFactory(
       vendor = "activemq",
       provider = "activemq",
       clientId = "spec",

@@ -17,6 +17,9 @@ object PojoSrTestHelper {
   val OnlyOnePojoSrAtATime = new Object()
 }
 
+class MandatoryServiceUnavailable(clazz : Class[_], filter : Option[String]) extends
+  Exception(s"Service of type [${clazz.getName()}] with filter [$filter] not available.")
+
 trait PojoSrTestHelper {
 
   private val log = Logger[PojoSrTestHelper]
@@ -168,7 +171,7 @@ trait PojoSrTestHelper {
   def mandatoryService[T](sr: BlendedPojoRegistry)(filter: Option[String] = None)(implicit clazz : ClassTag[T], timeout: FiniteDuration) : T = {
     waitOnService[T](sr)(filter) match {
       case Some(s) => s
-      case None => throw new Exception(s"Service of type [${clazz.runtimeClass.getName()}] with filter [$filter] not available. ")
+      case None => throw new MandatoryServiceUnavailable(clazz.runtimeClass, filter)
     }
   }
   
