@@ -50,6 +50,7 @@ trait JmsEnvelopeHeader {
   val expireHeader : String => String = s => jmsHeaderPrefix(s) + "Expiration"
   val deliveryModeHeader : String => String = s => jmsHeaderPrefix(s) + "DeliveryMode"
   val replyToHeader : String => String = s => jmsHeaderPrefix(s) + "ReplyTo"
+  val timestampHeader : String => String = s => jmsHeaderPrefix(s) + "Timestamp"
 
   val replyToQueueName : String = "replyTo"
 }
@@ -83,7 +84,8 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
         srcProviderHeader(prefix) -> srcProvider,
         srcDestHeader(prefix) -> dest,
         priorityHeader(prefix) -> msg.getJMSPriority(),
-        deliveryModeHeader(prefix) -> delMode
+        deliveryModeHeader(prefix) -> delMode,
+        timestampHeader(prefix) -> msg.getJMSTimestamp()
       ).get
 
       val expireHeaderMap : Map[String, MsgProperty] = msg.getJMSExpiration() match {

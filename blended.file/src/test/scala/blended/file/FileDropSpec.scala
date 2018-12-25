@@ -4,6 +4,7 @@ import java.io.File
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
+import akka.util.ByteString
 import blended.testsupport.TestActorSys
 import blended.util.FileHelper
 import org.scalatest.{FreeSpec, Matchers}
@@ -17,7 +18,7 @@ class FileDropSpec extends FreeSpec with Matchers {
       implicit val system : ActorSystem = testkit.system
 
       val cmd = FileDropCommand(
-        content = "Hallo Andreas".getBytes(),
+        content = ByteString("Hallo Andreas"),
         directory = System.getProperty("projectTestOutput", "/tmp") + "/drop",
         fileName = "test.txt",
         compressed = false,

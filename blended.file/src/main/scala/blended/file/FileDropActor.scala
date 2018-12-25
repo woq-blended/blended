@@ -7,18 +7,19 @@ import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
+import akka.util.ByteString
 import blended.util.StreamCopySupport
 
 import scala.util.control.NonFatal
 
 case class FileDropCommand(
-  content: Array[Byte],
+  content: ByteString,
   directory: String,
   fileName: String,
   compressed: Boolean,
   append: Boolean,
   timestamp: Long,
-  properties: Map[String, Object],
+  properties: Map[String, Any],
   dropNotification : Boolean
 ) {
 
@@ -46,7 +47,7 @@ case class FileDropCommand(
 
 object FileDropResult {
   def result(cmd: FileDropCommand, error: Option[Throwable]): FileDropResult = new FileDropResult(
-    cmd.copy(content = Array.empty), error
+    cmd.copy(content = ByteString("")), error
   )
 }
 
@@ -128,17 +129,17 @@ class FileDropActor extends Actor with ActorLogging {
 
       try {
         log.debug("Trying to use GZIP compression")
-        Some(new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content))))
+        Some(new GZIPInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content.toArray))))
       } catch {
         case NonFatal(_) =>
           log.debug("Trying to use ZIP compression")
-          val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content)))
+          val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(cmd.content.toArray)))
           val next = Option(zis.getNextEntry)
           if (next.isEmpty) None else Some(zis)
       }
     } else {
       log.debug(s"Writing content without compression to ${outFile(cmd)}")
-      Some(new ByteArrayInputStream(cmd.content))
+      Some(new ByteArrayInputStream(cmd.content.toArray))
     }
   }
 
