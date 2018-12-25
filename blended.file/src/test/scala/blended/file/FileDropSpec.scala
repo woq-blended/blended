@@ -137,8 +137,8 @@ class FileDropSpec extends LoggingFreeSpec
 
     val env : FlowEnvelope = FlowEnvelope(FlowMessage(zipContent)(FlowMessage.props(
       cfg.fileHeader -> "header.txt",
-      cfg.compressHeader -> true,
-      cfg.appendHeader -> true
+      cfg.compressHeader -> "true",
+      cfg.appendHeader -> "true"
     ).get))
 
     val r : FileDropResult = dropFile(dropper, cfg, env).get

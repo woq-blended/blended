@@ -3,6 +3,7 @@ package blended.streams.message
 import akka.NotUsed
 import akka.util.ByteString
 
+import scala.reflect.ClassTag
 import scala.util.Try
 
 sealed trait MsgProperty {
@@ -83,6 +84,21 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
   def header[T](name : String)(implicit m : Manifest[T]) : Option[T] = {
 
+    case class ByteMsgProperty(override val value : Byte) extends MsgProperty
+    case class FloatMsgProperty(override val value: Float) extends MsgProperty
+    case class DoubleMsgProperty(override val value: Double) extends MsgProperty
+
+    def fromString[T](v : String)(implicit clazz: ClassTag[T]) : Option[T] = clazz.runtimeClass match {
+      case c if c == classOf[Short] => Some(v.toShort.asInstanceOf[T])
+      case c if c == classOf[Int] => Some(v.toInt.asInstanceOf[T])
+      case c if c == classOf[Long] => Some(v.toLong.asInstanceOf[T])
+      case c if c == classOf[Boolean] => Some(v.toBoolean.asInstanceOf[T])
+      case c if c == classOf[Byte] => Some(v.toByte.asInstanceOf[T])
+      case c if c == classOf[Float] => Some(v.toFloat.asInstanceOf[T])
+      case c if c == classOf[Double] => Some(v.toDouble.asInstanceOf[T])
+      case _ => None
+    }
+
     def classMatch(v : Any, clazz: Class[_]) : Boolean = {
 
       val intClasses : Seq[Class[_]] = Seq(classOf[Integer], classOf[Int])
@@ -121,6 +137,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
 
     header.get(name) match {
       case Some(v) if classMatch(v.value, m.runtimeClass) => Some(v.value.asInstanceOf[T])
+      case Some(v) if v.isInstanceOf[StringMsgProperty] => fromString(v.value.toString)
       case Some(_) => None
       case _ => None
     }
