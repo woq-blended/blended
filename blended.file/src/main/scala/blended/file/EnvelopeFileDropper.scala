@@ -8,7 +8,6 @@ import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, TextFlowMessage
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 
-import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.util.{Failure, Success, Try}
 
@@ -55,7 +54,6 @@ class EnvelopeFileDropper(
       append = env.headerWithDefault(cfg.appendHeader, false),
       timestamp = env.headerWithDefault[Long](timestampHeader(headerConfig.prefix), System.currentTimeMillis()),
       properties = Map("JMSCorrelationID" -> corrId(env)) ++ env.flowMessage.header.mapValues(_.value),
-      dropNotification = cfg.dropNotification
     )
   }
 
@@ -71,7 +69,7 @@ class EnvelopeFileDropper(
 
     dropCmd(env)(extractContent) match {
       case Success(cmd) =>
-        implicit val to: Timeout = Timeout(cfg.dropTimeout.seconds)
+        implicit val to: Timeout = Timeout(cfg.dropTimeout)
         implicit val eCtxt: ExecutionContext = system.dispatcher
         val dropActor = system.actorOf(Props[FileDropActor])
         (dropActor ? cmd).mapTo[FileDropResult].onComplete {

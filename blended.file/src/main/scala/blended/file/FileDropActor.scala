@@ -19,8 +19,7 @@ case class FileDropCommand(
   compressed: Boolean,
   append: Boolean,
   timestamp: Long,
-  properties: Map[String, Any],
-  dropNotification : Boolean
+  properties: Map[String, Any]
 ) {
 
 
@@ -32,8 +31,7 @@ case class FileDropCommand(
       compressed == cmd.compressed &&
       append == cmd.append &&
       timestamp == cmd.timestamp &&
-      properties.equals(cmd.properties) &&
-      dropNotification == cmd.dropNotification
+      properties.equals(cmd.properties)
     case _ => false
   }
 
@@ -146,8 +144,6 @@ class FileDropActor extends Actor with ActorLogging {
   private[this] def respond(requestor: ActorRef, cmd: FileDropCommand, t : Option[Throwable] = None) : Unit = {
 
     val fdr = FileDropResult.result(cmd, t)
-
-    if (cmd.dropNotification) context.system.eventStream.publish(fdr)
     requestor ! fdr
     self ! PoisonPill
   }

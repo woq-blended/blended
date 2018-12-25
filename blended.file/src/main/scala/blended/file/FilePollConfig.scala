@@ -2,9 +2,7 @@ package blended.file
 
 import com.typesafe.config.Config
 
-import scala.collection.mutable
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.duration._
+import scala.concurrent.duration.{FiniteDuration, _}
 
 object FilePollConfig {
 
