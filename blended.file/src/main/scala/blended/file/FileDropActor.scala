@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.zip.{GZIPInputStream, ZipInputStream}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.util.ByteString
 import blended.util.StreamCopySupport
 
@@ -145,7 +145,6 @@ class FileDropActor extends Actor with ActorLogging {
 
     val fdr = FileDropResult.result(cmd, t)
     requestor ! fdr
-    self ! PoisonPill
   }
 
   override def receive: Receive = {

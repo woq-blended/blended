@@ -1,6 +1,6 @@
 package blended.file
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.{ByteString, Timeout}
 import blended.streams.jms.JmsEnvelopeHeader
@@ -14,6 +14,7 @@ import scala.util.{Failure, Success, Try}
 class EnvelopeFileDropper(
   cfg: FileDropConfig,
   headerConfig : FlowHeaderConfig,
+  dropActor : ActorRef,
   log : Logger
 )(implicit system: ActorSystem) extends JmsEnvelopeHeader {
 
@@ -63,7 +64,7 @@ class EnvelopeFileDropper(
     FileDropResult(cmd, Some(error))
   }
 
-  def dropEnvelope(env: FlowEnvelope): Future[FileDropResult] = {
+  def dropEnvelope(env: FlowEnvelope): (FileDropCommand, Future[FileDropResult]) = {
 
     val p: Promise[FileDropResult] = Promise()
 
@@ -71,16 +72,18 @@ class EnvelopeFileDropper(
       case Success(cmd) =>
         implicit val to: Timeout = Timeout(cfg.dropTimeout)
         implicit val eCtxt: ExecutionContext = system.dispatcher
-        val dropActor = system.actorOf(Props[FileDropActor])
+
         (dropActor ? cmd).mapTo[FileDropResult].onComplete {
           case Success(r) => p.complete(Success(r))
           case Failure(t) => p.complete(Success(handleError(env, t)))
         }
 
-      case Failure(t) =>
-        p.complete(Success(handleError(env, t)))
-    }
+        (cmd, p.future)
 
-    p.future
+      case Failure(t) =>
+        val r : FileDropResult = handleError(env, t)
+        p.complete(Success(r))
+        (r.cmd, p.future)
+    }
   }
 }
