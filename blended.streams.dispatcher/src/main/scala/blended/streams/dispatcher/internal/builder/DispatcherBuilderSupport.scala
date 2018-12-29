@@ -16,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
 
   def containerConfig : Config
-  def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig("blended.flow.header"))
+  def headerConfig : FlowHeaderConfig = FlowHeaderConfig.create(containerConfig.getConfig(FlowHeaderConfig.headerConfigPath))
 
   private val headerCfg = headerConfig
   val header = FlowHeaderConfig.header(headerCfg.prefix)

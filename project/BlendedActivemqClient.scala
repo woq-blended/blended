@@ -12,11 +12,12 @@ object BlendedActivemqClient extends ProjectFactory {
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.AmqClientActivator",
-      exportPackage = Seq()
+      exportPackage = Seq(b.bundleSymbolicName)
     )
   )
 
   override val project = helper.baseProject.dependsOn(
+    
     BlendedDomino.project,
     BlendedUtil.project,
     BlendedUtilLogging.project,

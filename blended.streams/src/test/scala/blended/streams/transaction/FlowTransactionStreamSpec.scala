@@ -56,9 +56,8 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
 
         val transColl = Collector[FlowTransaction]("trans")(_ => {})
 
-        val cfg : FlowHeaderConfig = FlowHeaderConfig.create(
-          idSvc.getContainerContext().getContainerConfig().getConfig("blended.flow.header")
-        )
+        val cfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+
         try {
           val good : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { e =>
             val t = FlowTransaction.envelope2Transaction(cfg)(e)

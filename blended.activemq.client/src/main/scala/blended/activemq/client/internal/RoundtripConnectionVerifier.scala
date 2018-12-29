@@ -56,7 +56,7 @@ class RoundtripConnectionVerifier(
 
     sendMessages(pSettings, log, probeEnv) match {
       case Success(s) =>
-        log.info("Request message sent successfully")
+        log.info(s"Request message sent successfully to [${requestDest.asString}]")
         s.shutdown()
 
         implicit val to : FiniteDuration = receiveTimeout
@@ -76,8 +76,9 @@ class RoundtripConnectionVerifier(
               log.debug(s"No response received to verify connection [${cf.vendor}:${cf.provider}]")
               scheduleRetry(cf)
             case h :: _ =>
-              log.info(s"Verified client connection [${cf.vendor}:${cf.provider}]")
-              verified.complete(Success(verify(h)))
+              val result : Boolean = verify(h)
+              log.info(s"Verification result for client connection [${cf.vendor}:${cf.provider}] is [$result]")
+              verified.complete(Success(result))
           }
 
           case Failure(t) =>
@@ -95,7 +96,7 @@ class RoundtripConnectionVerifier(
 
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    after[Unit](1.second, system.scheduler){
+    after[Unit](retryInterval, system.scheduler){
       Future { probe(cf) }
     }
   }

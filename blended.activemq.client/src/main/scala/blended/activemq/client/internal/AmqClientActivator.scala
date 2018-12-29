@@ -41,7 +41,7 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching with L
 
           // TODO: Include connection verifier
           val cfgMap: Map[String, Config] = cfg.getConfigMap("connections", Map.empty)
-          log.info(s"Starting ActiveMQ client connection(s) : [${cfgMap.values.mkString(",")}]")
+          log.info(s"Verifying ActiveMQ client connection(s) : [${cfgMap.values.mkString(",")}]")
 
           cfgMap.foreach { case (key, config) =>
             val connectionCfg: ConnectionConfig = BlendedJMSConnectionConfig.fromConfig(

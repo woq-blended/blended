@@ -1,5 +1,6 @@
 package blended.streams.transaction
 
+import blended.container.context.api.ContainerIdentifierService
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty, TextFlowMessage}
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
@@ -19,7 +20,12 @@ object FlowHeaderConfig {
   private val trackTransactionPath = "trackTransaction"
   private val trackSourcePath = "trackSource"
 
+  val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
+
+  def create(idSvc : ContainerIdentifierService) : FlowHeaderConfig = create(
+    idSvc.containerContext.getContainerConfig().getConfig(FlowHeaderConfig.headerConfigPath)
+  )
 
   def create(cfg: Config): FlowHeaderConfig = {
     val prefix = cfg.getString(prefixPath, "Blended")

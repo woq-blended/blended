@@ -51,8 +51,7 @@ class BridgeSpec extends SimplePojoContainerSpec
   private val (internal, external) = getConnectionFactories(registry)
   private val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
 
-  private val headerCfg : FlowHeaderConfig =
-    FlowHeaderConfig.create(idSvc.containerContext.getContainerConfig().getConfig("blended.flow.header"))
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
   private val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
 

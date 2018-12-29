@@ -22,7 +22,6 @@ case class FileDropCommand(
   properties: Map[String, Any]
 ) {
 
-
   override def equals(obj: scala.Any): Boolean = obj match {
     case cmd : FileDropCommand =>
       content.sameElements(cmd.content) &&

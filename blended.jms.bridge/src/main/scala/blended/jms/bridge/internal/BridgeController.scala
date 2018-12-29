@@ -21,9 +21,7 @@ private[bridge] object BridgeControllerConfig {
     cfg : Config, internalCf : IdAwareConnectionFactory, idSvc: ContainerIdentifierService
   ) : BridgeControllerConfig = {
 
-    val headerCfg = FlowHeaderConfig.create(
-       idSvc.containerContext.getContainerConfig().getConfig("blended.flow.header")
-    )
+    val headerCfg = FlowHeaderConfig.create(idSvc)
 
     val providerList = cfg.getConfigList("provider").asScala.map { p =>
       BridgeProviderConfig.create(idSvc, p).get
