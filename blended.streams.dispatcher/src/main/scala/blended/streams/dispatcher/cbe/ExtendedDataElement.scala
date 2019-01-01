@@ -1,4 +1,4 @@
-package blended.streams.dispatcher.internal.cbe
+package blended.streams.dispatcher.cbe
 
 object ExtendedDataElements {
 

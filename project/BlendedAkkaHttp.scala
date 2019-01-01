@@ -16,6 +16,7 @@ object BlendedAkkaHttp extends ProjectFactory {
       Dependencies.mockitoAll % "test",
       Dependencies.scalatest % "test",
       Dependencies.akkaHttpTestkit % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     ),

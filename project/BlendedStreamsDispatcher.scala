@@ -25,7 +25,11 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.asciiRender % "test"
     ),
     adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.DispatcherActivator"
+      bundleActivator = s"${b.bundleSymbolicName}.internal.DispatcherActivator",
+      exportPackage = Seq(
+        b.bundleSymbolicName,
+        b.bundleSymbolicName + ".cbe"
+      )
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
