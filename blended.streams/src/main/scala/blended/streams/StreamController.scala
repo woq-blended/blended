@@ -3,21 +3,44 @@ package blended.streams
 import akka.NotUsed
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer}
+import akka.stream.{KillSwitch, KillSwitches, Materializer}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
+import com.typesafe.config.Config
+import blended.util.config.Implicits._
 
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.util.{Failure, Random, Success}
+import scala.util.{Failure, Random, Success, Try}
+
+object StreamControllerConfig {
+
+  def fromConfig(cfg : Config) : Try[StreamControllerConfig] = Try {
+    val minDelay : FiniteDuration = cfg.getDuration("minDelay", 5.seconds)
+    val maxDelay : FiniteDuration = cfg.getDuration("maxDelay", 1.minute)
+    val exponential : Boolean = cfg.getBoolean("exponential", true)
+    val random : Double = cfg.getDouble("random", 0.2)
+    val onFailure : Boolean = cfg.getBoolean("onFailureOnly", true)
+
+    StreamControllerConfig(
+      name = "",
+      source = Source.empty,
+      minDelay = minDelay,
+      maxDelay = maxDelay,
+      exponential = exponential,
+      onFailureOnly = onFailure,
+      random = random
+    )
+  }
+}
 
 case class StreamControllerConfig(
   name : String,
   source : Source[FlowEnvelope, NotUsed],
-  minDelay : FiniteDuration = 5.seconds,
-  maxDelay : FiniteDuration = 1.minute,
-  exponential : Boolean = true,
-  onFailureOnly : Boolean = true,
-  random : Double = 0.2
+  minDelay : FiniteDuration,
+  maxDelay : FiniteDuration,
+  exponential : Boolean,
+  onFailureOnly : Boolean,
+  random : Double
 )
 
 object StreamController {
@@ -53,7 +76,11 @@ class StreamController(streamCfg: StreamControllerConfig)(implicit system : Acto
     }
 
     var newIntervalMillis : Double =
-      if (streamCfg.exponential) interval.toMillis * 2 else interval.toMillis + initialInterval.toMillis
+      if (streamCfg.exponential) {
+        interval.toMillis * 2
+      } else {
+        interval.toMillis + initialInterval.toMillis
+      }
 
     newIntervalMillis = scala.math.min(
       streamCfg.maxDelay.toMillis,

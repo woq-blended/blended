@@ -44,6 +44,13 @@ trait ConfigDefaultGetter extends ConfigAccessor {
         default
       }
 
+    def getDouble(key: String, default: Double) : Double =
+      if (config.hasPath(key)) {
+        config.getDouble(key)
+      } else {
+        default
+      }
+
     def getDuration(key: String, default : FiniteDuration) : FiniteDuration = {
       if (config.hasPath(key)) {
         config.getDuration(key).toMillis.millis

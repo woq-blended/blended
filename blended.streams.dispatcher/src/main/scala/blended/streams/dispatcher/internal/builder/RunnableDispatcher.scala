@@ -167,10 +167,11 @@ class RunnableDispatcher(
         val source = bridgeSource(internalProvider, provider, dispLogger).via(dispatcher)
 
         // Prepare and start the dispatcher
-        val streamCfg = StreamControllerConfig(
-          name = dispLogger.name,
-          source = source.via(transactionSend())
-        )
+        val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
+          .copy(
+            name = dispLogger.name,
+            source = source.via(transactionSend())
+          )
 
         val actor = system.actorOf(StreamController.props(streamCfg = streamCfg))
 

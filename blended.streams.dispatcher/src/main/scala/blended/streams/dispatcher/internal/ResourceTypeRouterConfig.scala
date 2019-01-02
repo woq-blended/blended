@@ -60,7 +60,8 @@ object ResourceTypeRouterConfig {
       applicationLogHeader = logHeader,
       defaultHeader = defaultHeader,
       resourceTypeConfigs = routes,
-      providerRegistry = provider
+      providerRegistry = provider,
+      rawConfig = cfg
     )
   }
 }
@@ -71,7 +72,8 @@ case class ResourceTypeRouterConfig(
   providerRegistry : BridgeProviderRegistry,
   applicationLogHeader : List[String],
   defaultHeader : List[HeaderProcessorConfig],
-  resourceTypeConfigs : Map[String, ResourceTypeConfig]
+  resourceTypeConfigs : Map[String, ResourceTypeConfig],
+  rawConfig : Config
 )
 
 object ResourceTypeConfig {

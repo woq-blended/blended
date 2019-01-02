@@ -73,7 +73,8 @@ class BridgeSpec extends SimplePojoContainerSpec
     registry = ctrlCfg.registry,
     trackTransaction = TrackTransaction.Off,
     subscriberName = None,
-    header = List.empty
+    header = List.empty,
+    rawConfig = ctrlCfg.rawConfig
   )
 
   private val streamCfg = new JmsStreamBuilder(cfg).streamCfg

@@ -35,41 +35,41 @@ public class ResourceResolver implements URIResolver {
       loc = location;
     }
 
-    LOG.debug("Resolving resource {}", loc);
+    LOG.trace("Resolving resource {}", loc);
 
     try {
       is = new BufferedInputStream(new FileInputStream(location));
     } catch (Exception e) {
-      LOG.debug(e.getMessage());
+      LOG.trace(e.getMessage());
     }
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} as URL", loc);
+        LOG.trace("Resolving resource {} as URL", loc);
         URL url = new URL(location);
         is = url.openStream();
       } catch (Exception e) {
-        LOG.debug(e.getMessage());
+        LOG.trace(e.getMessage());
       }
     }
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} as File", loc);
+        LOG.trace("Resolving resource {} as File", loc);
         final String path = ResourceResolver.class.getResource(location).getPath();
-        LOG.debug("Resolved path is {}", path);
+        LOG.trace("Resolved path is {}", path);
         is = new FileInputStream(path);
       } catch (Exception e) {
-        LOG.debug(e.getMessage());
+        LOG.trace(e.getMessage());
       }
     }
 
     if (is == null) {
       try {
-        LOG.debug("Resolving resource {} from Classpath", loc);
+        LOG.trace("Resolving resource {} from Classpath", loc);
         is = loader.getResourceAsStream(location);
       } catch (Exception e) {
-        LOG.debug(e.getMessage());
+        LOG.trace(e.getMessage());
       }
     }
 
@@ -77,12 +77,12 @@ public class ResourceResolver implements URIResolver {
       try {
         is = loader.getResourceAsStream("/" + location);
       } catch (Exception e) {
-        LOG.debug(e.getMessage());
+        LOG.trace(e.getMessage());
       }
     }
 
     if (is == null) {
-      LOG.debug("Resolving resource {} as ByteStream", loc);
+      LOG.trace("Resolving resource {} as ByteStream", loc);
       is = new ByteArrayInputStream(location.getBytes());
     }
 

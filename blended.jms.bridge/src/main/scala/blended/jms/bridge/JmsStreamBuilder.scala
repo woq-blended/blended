@@ -13,8 +13,8 @@ import blended.streams.processor.{HeaderProcessorConfig, HeaderTransformProcesso
 import blended.streams.transaction._
 import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.util.logging.Logger
+import com.typesafe.config.Config
 
-import scala.concurrent.duration._
 import scala.util.Try
 
 class InvalidBridgeConfigurationException(msg: String) extends Exception(msg)
@@ -37,7 +37,8 @@ case class JmsStreamConfig(
   headerCfg : FlowHeaderConfig,
   subscriberName : Option[String],
   header : List[HeaderProcessorConfig],
-  idSvc : Option[ContainerIdentifierService] = None
+  idSvc : Option[ContainerIdentifierService] = None,
+  rawConfig : Config
 )
 
 class JmsStreamBuilder(
@@ -165,10 +166,9 @@ class JmsStreamBuilder(
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
   // TODO: Make restart parameters configurable
-  val streamCfg : StreamControllerConfig = StreamControllerConfig(
-    name = streamId,
-    source = stream,
-    exponential = false,
-    maxDelay = 30.seconds
-  )
+  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(cfg.rawConfig).get
+    .copy(
+      name = streamId,
+      source = stream
+    )
 }

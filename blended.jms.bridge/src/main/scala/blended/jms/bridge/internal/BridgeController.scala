@@ -45,7 +45,8 @@ private[bridge] object BridgeControllerConfig {
       registry = registry,
       headerCfg = headerCfg,
       inbound = inboundList,
-      idSvc = idSvc
+      idSvc = idSvc,
+      rawConfig = cfg
     )
   }
 }
@@ -55,7 +56,8 @@ private[bridge] case class BridgeControllerConfig(
   registry : BridgeProviderRegistry,
   headerCfg : FlowHeaderConfig,
   inbound : List[InboundConfig],
-  idSvc : ContainerIdentifierService
+  idSvc : ContainerIdentifierService,
+  rawConfig : Config
 )
 
 object BridgeController{
@@ -98,7 +100,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       trackTransaction = TrackTransaction.On,
       subscriberName = in.subscriberName,
       header = in.header,
-      idSvc = Some(ctrlCfg.idSvc)
+      idSvc = Some(ctrlCfg.idSvc),
+      rawConfig = ctrlCfg.rawConfig
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
@@ -129,7 +132,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       registry = ctrlCfg.registry,
       trackTransaction = TrackTransaction.FromMessage,
       subscriberName = None,
-      header = List.empty
+      header = List.empty,
+      rawConfig = ctrlCfg.rawConfig
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(outCfg).streamCfg
@@ -158,7 +162,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
           log.warn("No internal JMS provider found in config")
       }
 
-    case RemoveConnectionFactory(cf) => {
+    case RemoveConnectionFactory(cf) =>
       log.info(s"Removing connection factory [${cf.vendor}:${cf.provider}]")
 
       streams.filter{ case (key, _) => key.startsWith(cf.id) }.foreach { case (id, stream) =>
@@ -167,5 +171,4 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
         streams -= id
       }
     }
-  }
 }

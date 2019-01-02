@@ -69,10 +69,11 @@ class TransactionOutbound(
 
     val src : Source[FlowEnvelope, NotUsed] = jmsSource.get.via(transactionStream)
 
-    val streamCfg = StreamControllerConfig(
-      name = "transactionOut",
-      source = src
-    )
+    val streamCfg = StreamControllerConfig.fromConfig(dispatcherCfg.rawConfig).get
+      .copy(
+        name = "transactionOut",
+        source = src
+      )
 
     system.actorOf(StreamController.props(streamCfg))
   }
