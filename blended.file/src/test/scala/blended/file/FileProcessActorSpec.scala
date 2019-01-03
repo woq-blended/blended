@@ -26,13 +26,15 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
 
-      val cmd = FileProcessCmd(new File(cfg.sourceDir, "test.txt"), cfg, new SucceedingFileHandler())
+      val handler : SucceedingFileHandler = new SucceedingFileHandler()
+      val cmd = FileProcessCmd(new File(cfg.sourceDir, "test.txt"), cfg, handler)
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
       probe.expectMsg(FileProcessed(cmd, success = true))
       evtProbe.expectMsg(FileProcessed(cmd, success = true))
 
+      handler.count.get() should be (1)
       srcFile.exists() should be (false)
     }
 
@@ -59,7 +61,8 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
 
-      val cmd = FileProcessCmd(srcFile, cfg, new SucceedingFileHandler())
+      val handler : SucceedingFileHandler = new SucceedingFileHandler()
+      val cmd = FileProcessCmd(srcFile, cfg, handler)
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
@@ -72,6 +75,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         }
       }) should have size (1 + oldArchiveDirSize)
 
+      handler.count.get() should be (1)
       srcFile.exists() should be (false)
     }
 

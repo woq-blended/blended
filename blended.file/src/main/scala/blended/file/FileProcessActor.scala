@@ -32,7 +32,6 @@ class FileProcessActor extends Actor with ActorLogging {
 
       cmd.handler.processFile(cmd, tempFile)(context.system) match {
         case Success(_) =>
-          cmd.handler.processFile(cmd, tempFile)(context.system)
           requestor ! FileProcessed(cmd, success = true)
 
           val archiveCmd = cmd.cfg.backup match {

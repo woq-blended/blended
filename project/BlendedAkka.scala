@@ -1,4 +1,5 @@
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedAkka extends ProjectFactory {
 
@@ -8,7 +9,11 @@ object BlendedAkka extends ProjectFactory {
     deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaActor,
-      Dependencies.domino
+      Dependencies.domino,
+
+      Dependencies.scalatest % "test",
+      Dependencies.logbackCore % "test",
+      Dependencies.logbackClassic % "test"
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedAkkaActivator",
@@ -17,11 +22,20 @@ object BlendedAkka extends ProjectFactory {
         s"${b.bundleSymbolicName}.protocol"
       )
     )
-  )
+  ) {
+    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "blended" -> "TRACE"
+      )
+    )
+  }
 
   override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedContainerContextApi.project,
-    BlendedDomino.project
+    BlendedDomino.project,
+
+    BlendedTestsupport.project % "test"
   )
 }

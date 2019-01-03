@@ -2,21 +2,32 @@ package blended.file
 
 import java.io.{File, FilenameFilter}
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
+import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
+import blended.util.logging.Logger
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object FilePollActor {
 
-  def props(cfg: FilePollConfig, handler: FilePollHandler) : Props =
-    Props(new FilePollActor(cfg, handler))
+  def props(
+    cfg: FilePollConfig,
+    handler: FilePollHandler,
+    sem : Option[ActorRef] = None
+  ) : Props =
+    Props(new FilePollActor(cfg, handler, sem))
 }
 
-class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor with ActorLogging {
+class FilePollActor(
+  cfg: FilePollConfig,
+  handler: FilePollHandler,
+  sem : Option[ActorRef]
+) extends Actor {
 
+  private val log : Logger = Logger[FilePollActor]
   case object Tick
 
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -35,7 +46,7 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
         new File(l)
 
       if (f.exists()) {
-        log.info(s"Directory is locked with file [${f.getAbsolutePath()}]")
+        log.info(s"Directory for [${cfg.id}] is locked with file [${f.getAbsolutePath()}]")
         true
       } else {
         false
@@ -50,7 +61,7 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
     }
 
     if (!srcDir.exists() || !srcDir.isDirectory() || !srcDir.canRead()) {
-      log.info(s"Directory [$srcDir] does not exist or is not readable.")
+      log.info(s"Directory [$srcDir] for [${cfg.id}]does not exist or is not readable.")
       List.empty
     } else if (locked()) {
       List.empty
@@ -61,15 +72,31 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
           if (cfg.pattern.isEmpty || cfg.pattern.forall(p => name.matches(p))) {
             val f = new File(dir, name)
             f.exists() && f.isFile() && f.canRead()
-          } else false
+          } else {
+            false
+          }
         }
       }).toList
     }
   }
 
-  override def receive: Receive = {
+  override def receive: Receive = idle
+
+  private[file] def idle : Receive = {
     case Tick =>
-      log.info(s"Executing File Poll for directory [${cfg.sourceDir}]")
+      if (sem.isDefined) {
+        sem.foreach { s =>
+          log.trace(s"Using semaphore actor [$s] to schedule file poll in [${cfg.id}]")
+          s ! Acquire(self)
+        }
+      } else {
+        self ! Acquired
+      }
+
+    case Waiting => // Do nothing - just wait
+
+    case Acquired =>
+      log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}]")
 
       val futures : Iterable[Future[FileProcessed]] = files().map { f =>
         context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(f, cfg, handler)).mapTo[FileProcessed]
@@ -80,13 +107,14 @@ class FilePollActor(cfg: FilePollConfig, handler: FilePollHandler) extends Actor
       listFuture.onComplete { c =>
         c match {
           case Failure(t) =>
-            log.warning(s"Error processing directory [${cfg.sourceDir}] : [${t.getMessage()}]")
+            log.warn(s"Error processing directory [${cfg.sourceDir}] in [${cfg.id}] : [${t.getMessage()}]")
 
           case Success(results) =>
             val succeeded = results.count(_.success)
-            log.info(s"Processed [$succeeded] of [${results.size}] files from [${cfg.sourceDir}], ")
+            log.info(s"Processed [$succeeded] of [${results.size}] files in [${cfg.id}] from [${cfg.sourceDir}], ")
         }
 
+        sem.foreach(_ ! Release(self))
         context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
       }
   }

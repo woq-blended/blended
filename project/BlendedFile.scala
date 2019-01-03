@@ -1,6 +1,7 @@
 import de.wayofquality.sbt.filterresources.FilterResources
 import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 import sbt._
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedFile extends ProjectFactory {
 
@@ -21,6 +22,10 @@ object BlendedFile extends ProjectFactory {
     )
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      Test / testlogDefaultLevel := "INFO",
+      Test / testlogLogPackages ++= Map(
+        "blended" -> "TRACE"
+      ),
       Test / filterProperties := Map(
         "project.build.testOutputDirectory" -> (Test / Keys.classDirectory).value.getAbsolutePath()
       )

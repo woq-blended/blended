@@ -1,5 +1,6 @@
 package blended.file
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 
@@ -13,5 +14,9 @@ class FailingFileHandler extends FilePollHandler {
 
 class SucceedingFileHandler extends FilePollHandler {
 
-  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Try[Unit] = Try {}
+  val count : AtomicInteger = new AtomicInteger(0)
+
+  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Try[Unit] = Try {
+    count.incrementAndGet()
+  }
 }

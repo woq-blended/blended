@@ -2,7 +2,6 @@ package blended.akka
 
 import akka.actor.{ ActorRef, Props }
 import blended.akka.internal.ActorSystemCapsule
-import blended.akka.protocol.BundleActorStarted
 import domino.DominoImplicits
 import domino.capsule.CapsuleContext
 import org.osgi.framework.BundleContext
@@ -31,7 +30,6 @@ trait ActorSystemWatching extends DominoImplicits {
     val actorName = bundleContext.getBundle().getSymbolicName()
     log.debug(s"About to create bundle actor for bundle: ${actorName}")
     val actorRef = system.actorOf(props, actorName)
-    system.eventStream.publish(BundleActorStarted(actorName))
 
     capsuleContext.addCapsule(new Capsule {
       override def start() {

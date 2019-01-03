@@ -35,6 +35,8 @@ class JMSFilePollHandler(
 
     val env : FlowEnvelope = createEnvelope(cmd, f)
 
+    log.trace(s"Handling polled file in JMSHandler : [${env.flowMessage.header.mkString(",")}]")
+
     sendMessages(
       producerSettings = settings,
       log = log,

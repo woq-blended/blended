@@ -2,13 +2,16 @@ package blended.file
 
 import java.io.{File, FileOutputStream}
 
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{TestKit, TestProbe}
+import blended.akka.SemaphoreActor
 import blended.testsupport.TestActorSys
-import org.scalatest.{FreeSpec, Matchers}
+import blended.testsupport.scalatest.LoggingFreeSpec
+import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
-class FilePollSpec extends FreeSpec with Matchers {
+class FilePollSpec extends LoggingFreeSpec with Matchers {
 
   def genFile(f: File) : Unit = {
     val os = new FileOutputStream(f)
@@ -20,6 +23,7 @@ class FilePollSpec extends FreeSpec with Matchers {
   private[this] def withBlocking(lockfile : String, testkit: TestKit) : Unit = {
 
     implicit val system = testkit.system
+    val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
 
     val srcDir = new File(System.getProperty("projectTestOutput") + "/blocking")
     srcDir.mkdirs()
@@ -42,7 +46,8 @@ class FilePollSpec extends FreeSpec with Matchers {
     val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
 
-    system.actorOf(FilePollActor.props(cfg, new SucceedingFileHandler()))
+    val handler = new SucceedingFileHandler()
+    system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
 
     probe.expectNoMessage(3.seconds)
     srcFile.exists() should be (true)
@@ -51,13 +56,16 @@ class FilePollSpec extends FreeSpec with Matchers {
 
     probe.expectMsgType[FileProcessed]
     srcFile.exists() should be (false)
+    handler.count.get should be (1)
   }
 
   "The File Poller should" - {
 
     "do perform a regular poll and process files" in TestActorSys { testkit =>
 
-      implicit val system = testkit.system
+      implicit val system : ActorSystem = testkit.system
+
+      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
 
       val srcDir = new File(System.getProperty("projectTestOutput") + "/pollspec")
       srcDir.mkdirs()
@@ -68,9 +76,8 @@ class FilePollSpec extends FreeSpec with Matchers {
 
       val probe = TestProbe()
       system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
-
-      val actor = system.actorOf(FilePollActor.props(cfg, new SucceedingFileHandler()))
-
+      val handler = new SucceedingFileHandler()
+      val actor = system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
       probe.expectNoMessage(3.seconds)
 
       val f = new File(srcDir, "test.txt")
@@ -91,6 +98,8 @@ class FilePollSpec extends FreeSpec with Matchers {
       probe.expectMsgType[FileProcessed]
 
       files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
+
+      handler.count.get() should be (3)
 
     }
 
