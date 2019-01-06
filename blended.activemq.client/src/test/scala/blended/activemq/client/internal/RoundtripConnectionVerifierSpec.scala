@@ -1,7 +1,7 @@
 package blended.activemq.client.internal
 
 import akka.actor.ActorSystem
-import blended.activemq.client.ConnectionVerifier
+import blended.activemq.client.{ConnectionVerifier, RoundtripConnectionVerifier}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue, SimpleIdAwareConnectionFactory}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
@@ -75,6 +75,28 @@ class RoundtripConnectionVerifierSpec extends LoggingFreeSpec
 
       val f = verifier.verifyConnection(cf)
       assert(!Await.result(f, 5.seconds))
+    }
+
+    "stay unresolve if the connection to the broker did not succeed" in {
+
+      val ucf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
+        vendor = "amq",
+        provider = "unresolved",
+        clientId = "spec",
+        cf = new ActiveMQConnectionFactory("vm://unresolved?create=false")
+      )
+
+      val verifier : ConnectionVerifier = new RoundtripConnectionVerifier(
+        probeMsg = () => FlowEnvelope(FlowMessage("Hello Broker")(FlowMessage.noProps)),
+        verify = env => false,
+        requestDest = JmsQueue("roundtrip"),
+        responseDest = JmsQueue("roundtrip"),
+        headerConfig = FlowHeaderConfig(prefix = "App")
+      )
+
+      val f = verifier.verifyConnection(ucf)
+      Thread.sleep(5.seconds.toMillis)
+      assert(!f.isCompleted)
     }
   }
 }

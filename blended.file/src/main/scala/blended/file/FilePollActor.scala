@@ -2,7 +2,7 @@ package blended.file
 
 import java.io.{File, FilenameFilter}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
 import akka.util.Timeout
 import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
@@ -61,7 +61,7 @@ class FilePollActor(
     }
 
     if (!srcDir.exists() || !srcDir.isDirectory() || !srcDir.canRead()) {
-      log.info(s"Directory [$srcDir] for [${cfg.id}]does not exist or is not readable.")
+      log.info(s"Directory [$srcDir] for [${cfg.id}] does not exist or is not readable.")
       List.empty
     } else if (locked()) {
       List.empty

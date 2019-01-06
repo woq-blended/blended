@@ -50,6 +50,7 @@ class FileProcessActor extends Actor with ActorLogging {
           context.become(cleanUp(requestor, cmd, success = true))
 
         case Failure(e) =>
+          log.warning(s"Failed to process file [${cmd.f.getAbsolutePath()}] : [${e.getMessage()}]")
           context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
           context.become(cleanUp(requestor, cmd, success = false))
       }

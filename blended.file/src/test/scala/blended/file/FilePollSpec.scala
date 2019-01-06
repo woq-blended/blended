@@ -56,7 +56,9 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
 
     probe.expectMsgType[FileProcessed]
     srcFile.exists() should be (false)
-    handler.count.get should be (1)
+    handler.handled should have size(1)
+
+    handler.handled.head.f.getName() should be ("test.txt")
   }
 
   "The File Poller should" - {
@@ -99,8 +101,8 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
 
       files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
 
-      handler.count.get() should be (3)
-
+      handler.handled should have size(3)
+      handler.handled.head.f.getName() should be ("test2.txt")
     }
 
     "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>

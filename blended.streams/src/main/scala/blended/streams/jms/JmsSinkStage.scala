@@ -35,7 +35,8 @@ class JmsSinkStage(
     ) with JmsConnector[JmsProducerSession] {
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
-       failStage(ex)
+        log.warn(s"Failing stage [$name]")
+        failStage(ex)
       }
 
       private[this] val rnd = new Random()

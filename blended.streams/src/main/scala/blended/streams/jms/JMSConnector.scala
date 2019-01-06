@@ -6,6 +6,7 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, GraphStageLogic}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
+import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
@@ -26,6 +27,8 @@ object JmsConnector {
 
 trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
 
+  private[this] val logger : Logger = Logger[JmsConnector.type]
+
   implicit protected var ec : ExecutionContext = _
   implicit protected var system : ActorSystem = _
 
@@ -44,6 +47,7 @@ trait JmsConnector[S <: JmsSession] { this: GraphStageLogic =>
   }}
 
   protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
+    logger.warn(s"Failing stage [$id]")
     failStage(e)
   }
 

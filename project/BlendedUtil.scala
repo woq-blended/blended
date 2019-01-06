@@ -14,7 +14,7 @@ object BlendedUtil extends ProjectFactory {
       Dependencies.logbackCore % "test"
     ),
     adaptBundle = b => b.copy(
-      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.protocol", s"${b.bundleSymbolicName}.config")
+      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.config")
     )
   )
 

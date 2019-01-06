@@ -1,7 +1,7 @@
 package blended.activemq.client.internal
 
 import akka.actor.ActorSystem
-import blended.activemq.client.{ConnectionVerifier, VerificationFailedHandler}
+import blended.activemq.client.{ConnectionVerifierFactory, VerificationFailedHandler}
 import blended.akka.ActorSystemWatching
 import blended.jms.utils._
 import blended.util.config.Implicits._
@@ -12,7 +12,7 @@ import domino.logging.Logging
 import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 class AmqClientActivator extends DominoActivator with ActorSystemWatching with Logging {
@@ -25,15 +25,18 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching with L
       implicit val eCtxt : ExecutionContext = osgiCfg.system.dispatcher
 
       // First we register a default verifier
-      new DefaultConnectionVerifier().providesService[ConnectionVerifier]("name" -> "default")
-      new DefaultVerificationFailedHandler(osgiCfg.bundleContext).providesService[VerificationFailedHandler]("name" -> "default")
+      new DefaultConnectionVerifierFactory()
+        .providesService[ConnectionVerifierFactory]("name" -> "default")
+
+      new DefaultVerificationFailedHandler(osgiCfg.bundleContext)
+        .providesService[VerificationFailedHandler]("name" -> "default")
 
       val verifierName = osgiCfg.config.getString("verifier")
       val failedHandlerName = osgiCfg.config.getString("failedHandler")
       log.info(s"ActiveMQ Client connections using verifier [$verifierName]")
       log.info(s"Using verification failed handler [$failedHandlerName]")
 
-      whenAdvancedServicePresent[ConnectionVerifier](s"(name=$verifierName)") { verifier =>
+      whenAdvancedServicePresent[ConnectionVerifierFactory](s"(name=$verifierName)") { verifierFactory =>
         whenAdvancedServicePresent[VerificationFailedHandler](s"(name=$failedHandlerName)") { failedHandler =>
 
           val cfg: Config = osgiCfg.config
@@ -58,7 +61,9 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching with L
               connectionCfg, Some(osgiCfg.bundleContext)
             )
 
-            verifier.verifyConnection(cf).onComplete {
+            val verified : Future[Boolean] = verifierFactory.createConnectionVerifier().verifyConnection(cf)
+
+            verified.onComplete {
               case Success(b) => if (b) {
                   log.info(s"Connection [${cf.vendor}:${cf.provider}] verified and ready to use.")
                   cf.providesService[ConnectionFactory, IdAwareConnectionFactory](

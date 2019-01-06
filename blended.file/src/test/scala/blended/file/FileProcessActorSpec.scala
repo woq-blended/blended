@@ -34,7 +34,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       probe.expectMsg(FileProcessed(cmd, success = true))
       evtProbe.expectMsg(FileProcessed(cmd, success = true))
 
-      handler.count.get() should be (1)
+      handler.handled should have size(1)
       srcFile.exists() should be (false)
     }
 
@@ -75,7 +75,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         }
       }) should have size (1 + oldArchiveDirSize)
 
-      handler.count.get() should be (1)
+      handler.handled should have size(1)
       srcFile.exists() should be (false)
     }
 

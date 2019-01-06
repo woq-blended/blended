@@ -1,17 +1,16 @@
-package blended.activemq.client.internal
+package blended.activemq.client
 
 import java.util.UUID
 
 import akka.actor.ActorSystem
+import akka.pattern.after
 import akka.stream.{ActorMaterializer, Materializer}
-import blended.activemq.client.ConnectionVerifier
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms.{JmsEnvelopeHeader, JmsProducerSettings, JmsStreamSupport, MessageDestinationResolver}
 import blended.streams.message.FlowEnvelope
+import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
-import akka.pattern.after
-import blended.streams.processor.Collector
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -33,7 +32,12 @@ class RoundtripConnectionVerifier(
   private val verified : Promise[Boolean] = Promise[Boolean]()
 
   override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = {
-    probe(cf)
+    after[Unit](10.millis, system. scheduler) {
+      Future {
+        probe(cf)
+      }
+    }
+
     verified.future
   }
 
@@ -53,6 +57,8 @@ class RoundtripConnectionVerifier(
       jmsDestination = Some(requestDest),
       destinationResolver = s => new MessageDestinationResolver(headerConfig, s)
     )
+
+    log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}]")
 
     sendMessages(pSettings, log, probeEnv) match {
       case Success(s) =>

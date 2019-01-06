@@ -2,7 +2,7 @@ package blended.streams.jms
 
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
 import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
@@ -38,10 +38,11 @@ trait JmsStreamSupport {
     val hasException : AtomicBoolean = new AtomicBoolean(false)
     val sendCount : AtomicInteger = new AtomicInteger(0)
 
-    val ((actor : ActorRef, killswitch : KillSwitch), errEnv: Future[Option[FlowEnvelope]]) =
+    val (((actor : ActorRef, killswitch : KillSwitch), done: Future[Done]), errEnv: Future[Option[FlowEnvelope]]) =
       Source.actorRef[FlowEnvelope](msgs.size, OverflowStrategy.fail)
         .viaMat(processFlow)(Keep.left)
         .viaMat(KillSwitches.single)(Keep.both)
+        .watchTermination()(Keep.both)
         .via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{env =>
           if (env.exception.isDefined) {
             env.exception.foreach { t =>
@@ -64,9 +65,17 @@ trait JmsStreamSupport {
     // any have thrown an exception causing the stream to fail
     do {
       Thread.sleep(10)
+
       if (hasException.get()) {
         Await.result(errEnv, 1.second).flatMap(_.exception).foreach(t => throw t)
       }
+
+      // if the stream has is finished before sending off all the messages, something went wrong.
+      // TODO: This looks strange
+      if (done.isCompleted) {
+        throw new Exception("Failed to create flow.")
+      }
+
     } while(!hasException.get && sendCount.get < msgs.size)
 
     killswitch

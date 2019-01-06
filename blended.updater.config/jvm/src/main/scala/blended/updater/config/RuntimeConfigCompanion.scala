@@ -4,13 +4,13 @@ import java.io._
 import java.net.URL
 import java.nio.file.{Files, Paths, StandardCopyOption}
 import java.security.{DigestInputStream, MessageDigest}
-import java.util.{Formatter, Properties}
+import java.util.Formatter
 
 import blended.updater.config.util.ConfigPropertyMapConverter
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigValue}
 
-import scala.collection.JavaConverters.{asScalaBufferConverter, asScalaSetConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
-import scala.util.{Success, Try}
+import scala.collection.JavaConverters.{asScalaBufferConverter, mapAsJavaMapConverter, seqAsJavaListConverter}
+import scala.util.Try
 import scala.util.control.NonFatal
 
 object RuntimeConfigCompanion {

@@ -2,7 +2,7 @@ package blended.activemq.client.internal
 
 import java.io.File
 
-import blended.activemq.client.{ConnectionVerifier, VerificationFailedHandler}
+import blended.activemq.client.{ConnectionVerifier, ConnectionVerifierFactory, VerificationFailedHandler}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.utils.IdAwareConnectionFactory
@@ -27,8 +27,12 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
 
   private class FailingActivator extends DominoActivator {
 
-    private val failVerifier : ConnectionVerifier = new ConnectionVerifier {
-      override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = Future { false }
+    private val failFactory : ConnectionVerifierFactory = new ConnectionVerifierFactory {
+
+      override def createConnectionVerifier(): ConnectionVerifier = new ConnectionVerifier {
+        override def verifyConnection(cf: IdAwareConnectionFactory)(implicit eCtxt: ExecutionContext): Future[Boolean] = Future { false }
+      }
+
     }
 
     private val failHandler : VerificationFailedHandler = new VerificationFailedHandler {
@@ -38,7 +42,7 @@ class FailingClientActivatorSpec extends SimplePojoContainerSpec
     }
 
     whenBundleActive {
-      failVerifier.providesService[ConnectionVerifier]("name" -> "failing")
+      failFactory.providesService[ConnectionVerifierFactory]("name" -> "failing")
       failHandler.providesService[VerificationFailedHandler]("name" -> "failing")
     }
   }

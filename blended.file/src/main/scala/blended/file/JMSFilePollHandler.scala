@@ -24,11 +24,11 @@ class JMSFilePollHandler(
     val body : ByteString = ByteString(Source.fromFile(file).mkString)
 
     FlowEnvelope(FlowMessage(body)(header))
-      .withHeader("BlendedFileName", file.getName()).get
-      .withHeader("BlendedFilePath", file.getAbsolutePath()).get
+      .withHeader("BlendedFileName", cmd.f.getName()).get
+      .withHeader("BlendedFilePath", cmd.f.getAbsolutePath()).get
   }
 
-  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Try[Unit] = Try {
+  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Try[Unit] = Try {
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
