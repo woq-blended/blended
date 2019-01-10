@@ -7,11 +7,10 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object BlendedDocsJs extends ProjectFactory {
 
-  val helper = new ProjectSettings(
+  private val helper : ProjectSettings = new ProjectSettings(
     projectName = "blended.docs",
     description = "Dummy Js project to download npm modules for the doc generator",
-    osgi = false,
-    publish = false
+    osgi = false
   ) {
     override val projectDir: Option[String] = Some("doc")
     override def plugins: Seq[AutoPlugin] = Seq(ScalaJSPlugin, ScalaJSBundlerPlugin)
@@ -41,5 +40,5 @@ object BlendedDocsJs extends ProjectFactory {
     )
   }
 
-  override val project = helper.baseProject
+  override val project : Project = helper.baseProject.settings(PublishConfig.noPublish)
 }

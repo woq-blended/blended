@@ -32,6 +32,7 @@ object PublishConfig {
   // General settings for subprojects not to be published
   lazy val noPublish = Seq(
     publishArtifact := false,
+    publish := {},
     publishLocal := {}
   )
 }
