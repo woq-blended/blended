@@ -80,8 +80,8 @@ stages:
   - name: BuildPlugin
     if: branch = master AND type = push
 
-  - name: IntegrationTest
-    if: branch = master AND type = push
+#  - name: IntegrationTest
+#    if: branch = master AND type = push
 
 jobs:
   include:
