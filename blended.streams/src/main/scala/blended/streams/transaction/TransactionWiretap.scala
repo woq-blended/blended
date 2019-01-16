@@ -63,6 +63,7 @@ class TransactionWiretap(
       import GraphDSL.Implicits._
 
       val settings = JmsProducerSettings(
+        log = log,
         connectionFactory = cf,
         deliveryMode = JmsDeliveryMode.Persistent,
         jmsDestination = Some(eventDest)
@@ -71,8 +72,7 @@ class TransactionWiretap(
       val producer = b.add(jmsProducer(
         name = "event",
         settings = settings,
-        autoAck = false,
-        log = log
+        autoAck = false
       ))
 
       val switchOffTracking = b.add(Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>

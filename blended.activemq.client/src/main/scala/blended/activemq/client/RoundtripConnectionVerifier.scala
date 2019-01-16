@@ -53,6 +53,7 @@ class RoundtripConnectionVerifier(
       .withHeader(replyToHeader(headerConfig.prefix), responseDest.asString).get
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
+      log = log,
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
       destinationResolver = s => new MessageDestinationResolver(headerConfig, s)

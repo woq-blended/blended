@@ -29,7 +29,7 @@ class JmsSourceStage(
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 
-    val logic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes, log) {
+    val logic : GraphStageLogic = new SourceStageLogic[JmsConsumerSession](shape, out, settings, inheritedAttributes) {
 
       private val bufferSize = (settings.bufferSize + 1) * settings.sessionCount
       private val backpressure = new Semaphore(bufferSize)
@@ -61,22 +61,6 @@ class JmsSourceStage(
         push(out, msg)
         backpressure.release()
       }
-
-      private[this] def closeSession(session: JmsConsumerSession) : Unit = {
-
-        try {
-          log.debug(s"Closing session [${session.sessionId}]")
-          session.closeSessionAsync().onComplete { _ =>
-            jmsSessions -= session.sessionId
-            onSessionClosed()
-          }
-        } catch {
-          case _ : Throwable =>
-            log.error(s"Error closing session with id [${session.sessionId}]")
-        }
-      }
-
-      private[this] def onSessionClosed() : Unit = initSessionAsync()
 
       override protected def onSessionOpened(jmsSession: JmsConsumerSession): Unit = {
 

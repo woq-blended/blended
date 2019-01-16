@@ -75,6 +75,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val cf = amqCf()
 
       val cSettings : JMSConsumerSettings = JMSConsumerSettings(
+        log = log,
         connectionFactory = cf,
         jmsDestination = Some(dest),
         sessionCount = 5,
@@ -84,8 +85,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val consumer : Source[FlowEnvelope, NotUsed] = restartableConsumer(
         name = "test",
         settings = cSettings,
-        headerConfig = FlowHeaderConfig(prefix = "Spec"),
-        log =log
+        headerConfig = FlowHeaderConfig(prefix = "Spec")
       ).via(Flow.fromFunction{env =>
         env.acknowledge()
         env
@@ -96,6 +96,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       }
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = cf,
         jmsDestination = Some(dest)
       )
@@ -118,7 +119,6 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
           s.shutdown()
         case Failure(t) => fail(t)
       }
-
     }
   }
 

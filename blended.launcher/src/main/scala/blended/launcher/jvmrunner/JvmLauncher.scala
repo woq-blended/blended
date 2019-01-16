@@ -1,15 +1,16 @@
 package blended.launcher.jvmrunner
 
-import java.io.{ File, FileInputStream }
+import java.io.{File, FileInputStream}
 import java.util.Properties
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
-
 import blended.launcher.internal.ARM
 import blended.updater.config.OverlayConfigCompanion
 import blended.util.logging.Logger
+
+import scala.annotation.tailrec
 
 object JvmLauncher {
 
@@ -28,7 +29,7 @@ object JvmLauncher {
 }
 
 /**
-  * A small Java wrapper rresponsiblefor controlling the actual Container JVM.
+  * A small Java wrapper responsiblefor controlling the actual Container JVM.
   */
 class JvmLauncher() {
 
@@ -166,7 +167,7 @@ class JvmLauncher() {
     }
   }
 
-  case class Config(
+  case class JvmLauncherConfig(
       classpath: Seq[File] = Seq(),
       otherArgs: Seq[String] = Seq(),
       action: Option[String] = None,
@@ -186,7 +187,9 @@ class JvmLauncher() {
     override def toString(): String = prettyPrint
   }
 
-  def parse(args: Seq[String], initialConfig: Config = Config()): Config = {
+  @tailrec
+  final def parse(args: Seq[String], initialConfig: JvmLauncherConfig = JvmLauncherConfig()): JvmLauncherConfig = {
+
     args match {
       case Seq() =>
         initialConfig
@@ -214,13 +217,18 @@ class JvmLauncher() {
     }
   }
 
-  def checkConfig(config: Config): Try[Config] = Try {
-    if (config.action.isEmpty) sys.error("Missing arguments for action: start|stop")
-    if (config.classpath.isEmpty) Console.err.println("Warning: No classpath given")
+  private def checkConfig(config: JvmLauncherConfig): Try[JvmLauncherConfig] = Try {
+    if (config.action.isEmpty) {
+      sys.error("Missing arguments for action: start|stop")
+    }
+
+    if (config.classpath.isEmpty) {
+      Console.err.println("Warning: No classpath given")
+    }
     config
   }
 
-  def startJava(classpath: Seq[File],
+  private def startJava(classpath: Seq[File],
     jvmOpts: Array[String],
     arguments: Array[String],
     interactive: Boolean = false,
@@ -231,30 +239,20 @@ class JvmLauncher() {
     log.debug("About to run Java process")
 
     // lookup java by JAVA_HOME env variable
-    val javaHome = System.getenv("JAVA_HOME")
-    val java =
-      if (javaHome != null) s"${
-        javaHome
-      }/bin/java"
-      else "java"
+    val java = Option(System.getenv("JAVA_HOME")) match {
+      case Some(javaHome) => s"$javaHome/bin/java"
+      case None => "java"
+    }
 
     log.debug("Using java executable: " + java)
 
-    val cpArgs = classpath match {
-      case null | Seq() => Array[String]()
-      case cp => Array("-cp", pathAsArg(classpath))
+    val cpArgs = Option(classpath) match {
+      case None | Some(Seq()) => Array[String]()
+      case Some(cp) => Array("-cp", pathAsArg(classpath))
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
-    // FIXME: Only pass explicitly configured System properties to the inner JVM
-    val propArgs = System.getProperties.asScala.map(p => s"-D${
-      p._1
-    }=${
-      p._2
-    }").toArray[String]
-    log.debug("Using property args: " + propArgs.mkString(" "))
-
-    val command = Array(java) ++ cpArgs ++ jvmOpts ++ propArgs ++ arguments
+    val command = Array(java) ++ cpArgs ++ jvmOpts ++ arguments
 
     val pb = new ProcessBuilder(command: _*)
     log.debug("Run command: " + command.mkString(" "))

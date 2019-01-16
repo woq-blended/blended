@@ -90,8 +90,7 @@ trait JmsStreamSupport {
     val producer : Flow[FlowEnvelope, FlowEnvelope, _] = jmsProducer(
       name = producerSettings.jmsDestination.map(_.asString).getOrElse("producer"),
       settings = producerSettings,
-      autoAck = true,
-      log = log
+      autoAck = true
     )
 
     processMessages(
@@ -122,9 +121,8 @@ trait JmsStreamSupport {
       jmsConsumer(
         name = dest.asString,
         headerConfig = headerCfg,
-        log = log,
         settings =
-          JMSConsumerSettings(connectionFactory = cf)
+          JMSConsumerSettings(log = log, connectionFactory = cf)
             .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
             .withSessionCount(listenerCount)
             .withDestination(Some(dest))
@@ -137,11 +135,10 @@ trait JmsStreamSupport {
   def jmsProducer(
     name: String,
     settings: JmsProducerSettings,
-    autoAck: Boolean = false,
-    log: Logger
+    autoAck: Boolean = false
   )(implicit system: ActorSystem, materializer: Materializer): Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    val f = Flow.fromGraph(new JmsSinkStage(name, settings, log)).named(name)
+    val f = Flow.fromGraph(new JmsSinkStage(name, settings)).named(name)
 
     if (autoAck) {
       f.via(new AckProcessor(s"ack-$name").flow.named(s"ack-$name"))
@@ -153,27 +150,25 @@ trait JmsStreamSupport {
   def jmsConsumer(
     name : String,
     settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig,
-    log: Logger
+    headerConfig: FlowHeaderConfig
   )(implicit system: ActorSystem): Source[FlowEnvelope, NotUsed] = {
 
     if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig, log))
+      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig))
     } else {
-      Source.fromGraph(new JmsSourceStage(name, settings, headerConfig, log))
+      Source.fromGraph(new JmsSourceStage(name, settings, headerConfig))
     }
   }
 
   def restartableConsumer(
     name : String,
     settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig,
-    log: Logger
+    headerConfig: FlowHeaderConfig
   )(implicit system: ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig, log)
+    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig)
 
     RestartSource.withBackoff(
       minBackoff = 2.seconds,

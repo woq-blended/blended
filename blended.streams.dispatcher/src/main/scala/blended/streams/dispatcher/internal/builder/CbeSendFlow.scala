@@ -32,6 +32,7 @@ class CbeSendFlow(
     )
 
     val sinkSettings = JmsProducerSettings(
+      log = log,
       connectionFactory = internalCf,
       jmsDestination = Some(config.get.cbes),
       deliveryMode = JmsDeliveryMode.Persistent,
@@ -66,8 +67,7 @@ class CbeSendFlow(
     prepareCbe.via(
       jmsProducer(
         name = "cbeSutbound",
-        settings = sinkSettings,
-        log = log
+        settings = sinkSettings
       )
     )
   }

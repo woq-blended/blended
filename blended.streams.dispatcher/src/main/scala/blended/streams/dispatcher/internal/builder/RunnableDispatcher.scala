@@ -34,6 +34,7 @@ class RunnableDispatcher(
   private[builder] def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
     val sendProducerSettings = JmsProducerSettings(
+      log = bs.streamLogger,
       connectionFactory = cf,
       destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs)
     )
@@ -41,8 +42,7 @@ class RunnableDispatcher(
     jmsProducer(
       name = "dispatcherSend",
       autoAck = false,
-      settings = sendProducerSettings,
-      log = bs.streamLogger
+      settings = sendProducerSettings
     )
   }
 
@@ -61,6 +61,7 @@ class RunnableDispatcher(
       })
 
       val transactionSendSettings = JmsProducerSettings(
+        log = bs.streamLogger,
         connectionFactory = cf,
         jmsDestination = Some(internal.transactions),
         deliveryMode = JmsDeliveryMode.Persistent,
@@ -71,8 +72,7 @@ class RunnableDispatcher(
       val producer = b.add(jmsProducer(
         name = "transactionSend",
         settings = transactionSendSettings,
-        autoAck = false,
-        log = bs.streamLogger
+        autoAck = false
       ))
 
       transform ~> producer
@@ -107,6 +107,7 @@ class RunnableDispatcher(
 
     // todo : stick into config
     val settings = JMSConsumerSettings(
+      log = bs.streamLogger,
       connectionFactory = cf,
       sessionCount = 3,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
@@ -121,8 +122,7 @@ class RunnableDispatcher(
     val source = jmsConsumer(
       name = settings.jmsDestination.get.asString,
       settings = settings,
-      headerConfig = bs.headerConfig,
-      log = logger
+      headerConfig = bs.headerConfig
     )
 
     if (provider.internal) {

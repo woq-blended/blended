@@ -64,7 +64,7 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
     * Starts a new thread which copies an InputStream into an Output stream. Does not close the streams.
     */
 
-  def asyncCopy(in: InputStream, out: OutputStream, immediately: Boolean = false): Thread =
+  private def asyncCopy(in: InputStream, out: OutputStream, immediately: Boolean = false): Thread =
     new Thread("StreamCopyThread") {
       setDaemon(true)
 
@@ -84,7 +84,7 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
   /**
     * Copies an InputStream into an OutputStream. Does not close the streams.
     */
-  def copy(in: InputStream, out: OutputStream, immediately: Boolean = false): Unit = {
+  private def copy(in: InputStream, out: OutputStream, immediately: Boolean = false): Unit = {
     if (immediately) {
       while (true) {
         if (in.available > 0) {

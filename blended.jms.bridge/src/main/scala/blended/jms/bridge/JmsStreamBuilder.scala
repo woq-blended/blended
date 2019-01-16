@@ -15,6 +15,7 @@ import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
 class InvalidBridgeConfigurationException(msg: String) extends Exception(msg)
@@ -38,7 +39,8 @@ case class JmsStreamConfig(
   subscriberName : Option[String],
   header : List[HeaderProcessorConfig],
   idSvc : Option[ContainerIdentifierService] = None,
-  rawConfig : Config
+  rawConfig : Config,
+  sessionRecreateTimeout : FiniteDuration
 )
 
 class JmsStreamBuilder(
@@ -49,9 +51,10 @@ class JmsStreamBuilder(
   private val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
   private val outId = s"${cfg.toCf.vendor}:${cfg.toCf.provider}:${cfg.toDest.map(_.asString).getOrElse("out")}"
   private val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
+  private val bridgeLogger = Logger(streamId)
 
   // configure the consumer
-  private val srcSettings = JMSConsumerSettings(cfg.fromCf)
+  private val srcSettings = JMSConsumerSettings(bridgeLogger, cfg.fromCf)
     .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
     .withDestination(Some(cfg.fromDest))
     .withSessionCount(cfg.listener)
@@ -68,13 +71,14 @@ class JmsStreamBuilder(
   }
 
   private val toSettings = JmsProducerSettings(
+    log = bridgeLogger,
     connectionFactory = cfg.toCf
   )
     .withDestination(cfg.toDest)
     .withDestinationResolver(destResolver)
     .withDeliveryMode(JmsDeliveryMode.Persistent)
 
-  private val bridgeLogger = Logger(streamId)
+
 
   private val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
   private val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
@@ -136,8 +140,7 @@ class JmsStreamBuilder(
       Source.fromGraph(new JmsAckSourceStage(
         name = streamId + "-source",
         settings = srcSettings,
-        headerConfig = cfg.headerCfg,
-        log = bridgeLogger
+        headerConfig = cfg.headerCfg
       ))
 
     val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound && cfg.header.nonEmpty) {
@@ -159,7 +162,7 @@ class JmsStreamBuilder(
 
     jmsSource
       .via(Flow.fromGraph(g))
-      .via(jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true, log = bridgeLogger))
+      .via(jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true))
   }
 
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")

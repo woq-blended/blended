@@ -7,6 +7,7 @@ import blended.streams.processor.HeaderProcessorConfig
 import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
+import scala.concurrent.duration._
 import scala.util.Try
 
 object InboundConfig {
@@ -39,6 +40,8 @@ object InboundConfig {
       HeaderProcessorConfig.create(cfg)
     }
 
+    val sessionRecreateTimeout : FiniteDuration = cfg.getDuration("sessionRecreateTimeout", 1.second)
+
     InboundConfig(
       name = name,
       vendor = vendor,
@@ -48,7 +51,8 @@ object InboundConfig {
       persistent = persistent,
       subscriberName = subscriberName,
       listener = listener,
-      header = header
+      header = header,
+      sessionRecreateTimeout = sessionRecreateTimeout
     )
   }
 }
@@ -62,5 +66,6 @@ case class InboundConfig (
   persistent : JmsDeliveryMode,
   subscriberName : Option[String],
   listener : Int,
-  header : List[HeaderProcessorConfig]
+  header : List[HeaderProcessorConfig],
+  sessionRecreateTimeout : FiniteDuration
 )

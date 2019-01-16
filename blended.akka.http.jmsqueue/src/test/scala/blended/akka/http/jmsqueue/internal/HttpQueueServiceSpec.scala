@@ -82,6 +82,7 @@ class HttpQueueServiceSpec extends FreeSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
@@ -108,6 +109,7 @@ class HttpQueueServiceSpec extends FreeSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )

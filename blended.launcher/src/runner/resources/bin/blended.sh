@@ -44,15 +44,23 @@ if [ "x$BLENDED_STRICT" != "x" ] ; then
   LAUNCHER_OPTS="$LAUNCHER_OPTS --strict"
 fi
 
+LOGBACK_CONFIG_SETTING="-Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml"
+
 # Options for the service daemen JVM (outer) with controls the container JVM
 JAVA_OPTS="${JAVA_OPTS} -Xmx24m"
-JAVA_OPTS="${JAVA_OPTS} -Dlogback.configurationFile=${BLENDED_HOME}/etc/logback.xml"
+JAVA_OPTS="${JAVA_OPTS} ${LOGBACK_CONFIG_SETTING}"
 JAVA_OPTS="${JAVA_OPTS} -Dblended.home=${BLENDED_HOME}"
-JAVA_OPTS="${JAVA_OPTS} -Dsun.net.client.defaultConnectTimeout=500 -Dsun.net.client.defaultReadTimeout=500"
 
 # Options for the container JVM (inner) started/managed by the service daemon JVM
-# Use prefix "-jvmOpt=" to mark JVM options for the container JVM
-#CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Xmx1024m"
+# Use prefix "-jvmOpt=" to mark each JVM option to be passed to the container JVM
+
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultConnectTimeout=500"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultReadTimeout=500"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=${LOGBACK_CONFIG_SETTING}"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dblended.home=${BLENDED_HOME}"
+
+# Enable this when you need to debug SSL issues
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Djavax.net.debug=ssl"
 
 if [ -n "$DEBUG_PORT" ] ; then
   if [ -n "$DEBUG_WAIT" ] ; then
@@ -79,11 +87,11 @@ OUTER_CP="${BLENDED_HOME}/lib/*"
 # semicolon-separated
 INNER_CP="\
 ${BLENDED_HOME}/etc;\
-${BLENDED_HOME}/lib/blended.launcher-@blended.launcher.version@.jar;\
+${BLENDED_HOME}/lib/blended.launcher_@scala.binary.version@-@blended.launcher.version@.jar;\
 ${BLENDED_HOME}/lib/config-@typesafe.config.version@.jar;\
 ${BLENDED_HOME}/lib/org.osgi.core-@org.osgi.core.version@.jar;\
-${BLENDED_HOME}/lib/blended.updater.config-@blended.updater.config.version@.jar;\
-${BLENDED_HOME}/lib/blended.util.logging-@blended.util.logging.version@.jar;\
+${BLENDED_HOME}/lib/blended.updater.config_@scala.binary.version@-@blended.updater.config.version@.jar;\
+${BLENDED_HOME}/lib/blended.util.logging_@scala.binary.version@-@blended.util.logging.version@.jar;\
 ${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar;\
 ${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar;\
 ${BLENDED_HOME}/lib/slf4j-api-@slf4j.version@.jar;\

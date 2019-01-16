@@ -14,6 +14,7 @@ import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
+import scala.concurrent.duration._
 
 private[bridge] object BridgeControllerConfig {
 
@@ -101,7 +102,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       subscriberName = in.subscriberName,
       header = in.header,
       idSvc = Some(ctrlCfg.idSvc),
-      rawConfig = ctrlCfg.rawConfig
+      rawConfig = ctrlCfg.rawConfig,
+      sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
@@ -133,7 +135,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       trackTransaction = TrackTransaction.FromMessage,
       subscriberName = None,
       header = List.empty,
-      rawConfig = ctrlCfg.rawConfig
+      rawConfig = ctrlCfg.rawConfig,
+      sessionRecreateTimeout = 1.second
     )
 
     val streamCfg: StreamControllerConfig = new JmsStreamBuilder(outCfg).streamCfg
