@@ -1,6 +1,6 @@
 
 set SCRIPTPATH=%~dp0
-set BLENDED_HOME=%SCRIPTPATH%\..
+set BLENDED_HOME=%SCRIPTPATH%..
 
 set JAVA_HOME=%BLENDED_HOME%\jre
 set JVM=%JAVA_HOME%\bin\client\jvm.dll
@@ -13,7 +13,7 @@ set SERVICE_ENV=BLENDED_HOME=%BLENDED_HOME%;JAVA_HOME=%JAVA_HOME%
 
 if defined BLENDED_ENV set SERVICE_ENV=%SERVICE_ENV%;%BLENDED_ENV%
 
-# Restart delay in seconds, provide default if not set in setenv.bat
+REM Restart delay in seconds, provide default if not set in setenv.bat
 if not defined RESTART_DELAY set RESTART_DELAY=0
 
 set CP=%BLENDED_HOME%/etc^
@@ -21,20 +21,20 @@ set CP=%BLENDED_HOME%/etc^
 ;%BLENDED_HOME%/lib/config-@typesafe.config.version@.jar^
 ;%BLENDED_HOME%/lib/org.osgi.core-@org.osgi.core.version@.jar^
 ;%BLENDED_HOME%/lib/blended.updater.config_@scala.binary.version@-@blended.updater.config.version@.jar^
-;%BLENDED_HOME%/lib/blended.util.logging-@blended.updater.config.version@.jar^
+;%BLENDED_HOME%/lib/blended.util.logging_@scala.binary.version@-@blended.updater.config.version@.jar^
 ;%BLENDED_HOME%/lib/de.tototec.cmdoption-@cmdoption.version@.jar^
 ;%BLENDED_HOME%/lib/scala-library-@scala.library.version@.jar^
 ;%BLENDED_HOME%/lib/slf4j-api-@slf4j.version@.jar^
 ;%BLENDED_HOME%/lib/logback-core-@logback.version@.jar^
 ;%BLENDED_HOME%/lib/logback-classic-@logback.version@.jar
 
-set LOGBACK_CONFIG_SETTING="-Dlogback.configurationFile=%BLENDED_HOME%/etc/logback.xml"
+set LOGBACK_CONFIG_SETTING='-Dlogback.configurationFile=%BLENDED_HOME%/etc/logback.xml'
 
-set CONTAINER_JAVA_OPTS="-jvmOpt=-Dsun.net.client.defaultConnectTimeout=500"
-set CONTAINER_JAVA_OPTS="%CONTAINER_JAVA_OPTS%;-jvmOpt=-Dsun.net.client.defaultReadTimeout=500"
-set CONTAINER_JAVA_OPTS="%CONTAINER_JAVA_OPTS%;-jvmOpt=%LOGBACK_CONFIG_SETTING%"
-set CONTAINER_JAVA_OPTS="%CONTAINER_JAVA_OPTS;-jvmOpt=-Dblended.home=%BLENDED_HOME%"
-# set CONTAINER_JAVA_OPTS="%CONTAINER_JAVA_OPTS;-jvmOpt=-Djavax.net.debug=ssl"
+set CONTAINER_JAVA_OPTS='-jvmOpt=-Dsun.net.client.defaultConnectTimeout=500'
+set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Dsun.net.client.defaultReadTimeout=500'
+set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=%LOGBACK_CONFIG_SETTING%'
+set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Dblended.home=%BLENDED_HOME%'
+REM set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS;'-jvmOpt=-Djavax.net.debug=ssl'
 
 
 set CLASS=blended.launcher.jvmrunner.JvmLauncher

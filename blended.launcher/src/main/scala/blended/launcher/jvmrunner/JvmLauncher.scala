@@ -252,7 +252,10 @@ class JvmLauncher() {
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
+    log.debug(s"Using JVM options ${jvmOpts.mkString("[\n", "\n", "\n]")}")
     val command = Array(java) ++ cpArgs ++ jvmOpts ++ arguments
+
+    log.debug(s"Using JVM arguments [${arguments.mkString("\n")}]")
 
     val pb = new ProcessBuilder(command: _*)
     log.debug("Run command: " + command.mkString(" "))
