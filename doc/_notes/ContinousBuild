@@ -1,0 +1,33 @@
+Goals:
+* Build process creates conainer ready to go container images and deploys them to a given docker registry.
+* Build process is defined in Code (i.e. jenkinsfiles, .travis.yml)
+* Dependent project builds are triggered
+* Build should run easily in Google's compute engine
+* Build should be portable to other cloud platforms easily (i.e. OpenShift)
+
+1. Install Minikube / kubernetes
+
+2. Install and configure google compute engine
+
+* Install Google Cloud SDK
+
+
+
+
+Resources:
+
+Kubernetes Overview:
+https://jaxenter.de/der-steuermann-fuers-containerschiff-65844
+
+Install Jenkins in Kubernetes
+https://www.blazemeter.com/blog/how-to-setup-scalable-jenkins-on-top-of-a-kubernetes-cluster
+
+1. Create jenkins namespace
+kubectl create namespace jenkins
+
+Plan:
+- create and configure Docker Image for jenkins master
+  - project blended.helm/docker/jenkins-master
+- run image locally on docker only
+- deploy image to minikube
+- deploy image to kubectl

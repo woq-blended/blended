@@ -183,7 +183,6 @@ class JvmLauncher() {
          |${otherArgs.mkString("  ", "\n  ", "")}
          |)""".stripMargin
 
-
     override def toString(): String = prettyPrint
   }
 
@@ -247,6 +246,7 @@ class JvmLauncher() {
     }
     log.debug("Using classpath args: " + cpArgs.mkString(" "))
 
+    // FIXME: Only pass explicitly configured System properties to the inner JVM
     val propArgs = System.getProperties.asScala.map(p => s"-D${
       p._1
     }=${
