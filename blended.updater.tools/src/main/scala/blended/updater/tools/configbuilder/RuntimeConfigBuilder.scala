@@ -97,6 +97,7 @@ object RuntimeConfigBuilder {
     }
   }
 
+    run(args = args, debugLog = None)
   def run(
     args: Array[String],
     debugLog: Option[String => Unit] = None,
