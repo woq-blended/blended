@@ -74,7 +74,8 @@ class BridgeSpec extends SimplePojoContainerSpec
     trackTransaction = TrackTransaction.Off,
     subscriberName = None,
     header = List.empty,
-    rawConfig = ctrlCfg.rawConfig
+    rawConfig = ctrlCfg.rawConfig,
+    sessionRecreateTimeout = 1.second
   )
 
   private val streamCfg = new JmsStreamBuilder(cfg).streamCfg
@@ -101,6 +102,7 @@ class BridgeSpec extends SimplePojoContainerSpec
       } map { FlowEnvelope.apply }
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = external,
         jmsDestination = Some(JmsQueue("sampleIn"))
       )
@@ -148,6 +150,7 @@ class BridgeSpec extends SimplePojoContainerSpec
       ).get))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = external,
         jmsDestination = Some(JmsQueue("SampleHeaderIn"))
       )

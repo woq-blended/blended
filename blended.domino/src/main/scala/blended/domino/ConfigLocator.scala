@@ -29,7 +29,7 @@ class ConfigLocator(ctContext: ContainerContext) {
   }
 
   /**
-    * Retrieve a configuartion by it's id.
+    * Retrieve a configuration by it's id.
     *
     * If a config file <code>id.conf</code> exists in the configuration directory, the result
     * is the content of that file read in as a Config object.

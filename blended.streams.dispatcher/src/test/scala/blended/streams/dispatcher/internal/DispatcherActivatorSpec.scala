@@ -86,6 +86,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "Dummy").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = Logger(loggerName),
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
@@ -132,6 +133,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val env = FlowEnvelope().withHeader(ctxt.bs.headerResourceType, "NoCbe").get
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = Logger(loggerName),
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )

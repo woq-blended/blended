@@ -90,6 +90,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(msg)(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
@@ -111,6 +112,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
       val env : FlowEnvelope = FlowEnvelope(FlowMessage(ByteString(msg))(FlowMessage.noProps))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
+        log = log,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )

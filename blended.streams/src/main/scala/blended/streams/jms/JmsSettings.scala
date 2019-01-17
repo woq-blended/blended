@@ -2,6 +2,7 @@ package blended.streams.jms
 
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue, JmsTopic}
 import blended.streams.transaction.FlowHeaderConfig
+import blended.util.logging.Logger
 import javax.jms
 import javax.jms.Session
 
@@ -73,9 +74,15 @@ sealed trait JmsSettings {
 
   // The number of sessions used by the stage using this configuration
   val sessionCount : Int
+
+  // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
+  val sessionRecreateTimeout : FiniteDuration
+
+  val log : Logger
 }
 
 final case class JMSConsumerSettings(
+  override val log: Logger,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
@@ -84,7 +91,8 @@ final case class JMSConsumerSettings(
   bufferSize: Int = 100,
   selector: Option[String] = None,
   ackTimeout: FiniteDuration = 1.second,
-  durableName: Option[String] = None
+  durableName: Option[String] = None,
+  sessionRecreateTimeout : FiniteDuration = 1.second
 ) extends JmsSettings {
 
   def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
@@ -102,11 +110,16 @@ final case class JMSConsumerSettings(
 }
 
 object JMSConsumerSettings {
-  def create(cf: IdAwareConnectionFactory, headerConfig: FlowHeaderConfig) : JMSConsumerSettings =
-    JMSConsumerSettings(cf)
+  def create(
+    log : Logger,
+    cf: IdAwareConnectionFactory,
+    headerConfig: FlowHeaderConfig
+  ) : JMSConsumerSettings =
+    JMSConsumerSettings(log, cf)
 }
 
 final case class JmsProducerSettings(
+  override val log : Logger,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
@@ -120,7 +133,8 @@ final case class JmsProducerSettings(
   // the time to live to be used as a default
   timeToLive: Option[FiniteDuration] = None,
   // A factory for correlation Ids in case no Correlation Id is set in the message
-  correlationId : () => Option[String] = () => None
+  correlationId : () => Option[String] = () => None,
+  sessionRecreateTimeout : FiniteDuration = 1.second
 ) extends JmsSettings {
 
   def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)
@@ -146,6 +160,6 @@ final case class JmsProducerSettings(
 
 object JmsProducerSettings {
 
-  def create(connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
-    JmsProducerSettings(connectionFactory = connectionFactory)
+  def create(log : Logger, connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
+    JmsProducerSettings(log = log, connectionFactory = connectionFactory)
 }

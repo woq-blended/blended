@@ -20,7 +20,9 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.typesafeConfig,
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
-      Dependencies.commonsDaemon
+      Dependencies.commonsDaemon,
+
+      Dependencies.scalatest % "test"
     ),
     adaptBundle = b => b.copy(
       importPackage = Seq(
@@ -52,6 +54,7 @@ object BlendedLauncher extends ProjectFactory {
         "blended.util.logging.version" -> version.value,
         "cmdoption.version" -> cmdOption.revision,
         "org.osgi.core.version" -> orgOsgi.revision,
+        "scala.binary.version" -> scalaBinaryVersion.value,
         "scala.library.version" -> scalaVersion.value,
         "typesafe.config.version" -> typesafeConfig.revision,
         "slf4j.version" -> slf4j.revision,
@@ -112,7 +115,7 @@ object BlendedLauncher extends ProjectFactory {
   override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedUpdaterConfigJvm.project,
-    BlendedAkka.project,
+
     BlendedTestsupport.project % "test"
   )
 }

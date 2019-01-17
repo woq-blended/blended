@@ -15,8 +15,7 @@ import scala.util.control.NonFatal
 abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   settings: T,
   inheritedAttributes: Attributes,
-  shape : Shape,
-  log : Logger
+  shape : Shape
 ) extends TimerGraphStageLogic(shape)
   with JmsConnector[S] {
 
@@ -42,9 +41,9 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   // async callback, so that downstream flow elements can signal an error
   private[jms] val handleError : AsyncCallback[Throwable]
 
-  // Start the confirgured sessions
+  // Start the configured sessions
   override def preStart(): Unit = {
-    log.info(s"Starting JMS Stage [$id] with [$jmsSettings]")
+    settings.log.info(s"Starting JMS Stage [$id] with [$jmsSettings]")
 
     materializer match {
       case am : ActorMaterializer =>
@@ -62,7 +61,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     if (stopping.compareAndSet(false, true)) {
       val closeSessionFutures = jmsSessions.values.map { s =>
         val f = s.closeSessionAsync()
-        f.failed.foreach(e => log.error(e)(s"Error closing jms session in JMS source stage [$id]"))
+        f.failed.foreach(e => settings.log.error(e)(s"Error closing jms session in JMS source stage [$id]"))
         f
       }
       Future
@@ -72,14 +71,14 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
             try {
               connection.close()
             } catch {
-              case NonFatal(e) => log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
+              case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
             } finally {
               // By this time, after stopping the connection, closing sessions, all async message submissions to this
               // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
               // all JMS messages are delivered. This will allow the stage to complete after all pending messages
               // are delivered, thus preventing message loss due to premature stage completion.
               markStopped.invoke(Done)
-              log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+              settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
             }
           }
         }
@@ -89,7 +88,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     if (stopping.compareAndSet(false, true)) {
       val abortSessionFutures = jmsSessions.values.map { s =>
         val f = s.abortSessionAsync()
-        f.failed.foreach(e => log.error(e)(s"Error closing jms session in Jms source stage [$id][$settings]"))
+        f.failed.foreach(e => settings.log.error(e)(s"Error closing jms session in Jms source stage [$id][$settings]"))
         f
       }
       Future
@@ -99,7 +98,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
             try {
               connection.close()
             } catch {
-              case NonFatal(e) => log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
+              case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
             } finally {
               markAborted.invoke(ex)
             }

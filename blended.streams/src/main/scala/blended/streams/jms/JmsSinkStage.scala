@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 import scala.util.Random
 
 class JmsSinkStage(
-  name: String, settings : JmsProducerSettings, log : Logger
+  name: String, settings : JmsProducerSettings
 )(implicit actorSystem : ActorSystem)
   extends GraphStage[FlowShape[FlowEnvelope, FlowEnvelope]] {
 
@@ -31,21 +31,18 @@ class JmsSinkStage(
       settings,
       inheritedAttributes,
       shape,
-      log
     ) with JmsConnector[JmsProducerSession] {
 
       override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
-        log.warn(s"Failing stage [$name]")
+        settings.log.warn(s"Failing stage [$name]")
         failStage(ex)
       }
 
       private[this] val rnd = new Random()
       private[this] var producer : Option[MessageProducer] = None
 
-      override protected def onTimer(timerKey: Any): Unit = {
-        timerKey match {
-          case Push(env) => pushMessage(env)
-        }
+      override protected def handleTimer: PartialFunction[Any, Unit] = super.handleTimer orElse {
+        case Push(env) => pushMessage(env)
       }
 
       private def pushMessage(env: FlowEnvelope) : Unit = {
@@ -57,26 +54,31 @@ class JmsSinkStage(
       }
 
       override protected def createSession(connection: Connection): JmsProducerSession = {
+
         val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
-        new JmsProducerSession(
+
+        val result : JmsProducerSession = JmsProducerSession(
           connection = connection,
           session = session,
           sessionId = nextSessionId(),
           jmsDestination = jmsSettings.jmsDestination
         )
+
+        settings.log.debug(s"Producer session [${result.sessionId}] has been created")
+
+        result
       }
 
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
-        super.onSessionOpened(jmsSession)
         producer = Some(jmsSession.session.createProducer(null))
-        log.trace(s"Created anonymous producer for [${jmsSession.sessionId}]")
+        settings.log.debug(s"Created anonymous producer for [${jmsSession.sessionId}]")
       }
 
       def sendMessage(env: FlowEnvelope): FlowEnvelope = {
 
         var jmsDest : Option[JmsDestination] = None
 
-        log.trace(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
+        settings.log.debug(s"Trying to send envelope [${env.id}][${env.flowMessage.header.mkString(",")}]")
         // select one sender session randomly
         val idx : Int = rnd.nextInt(jmsSessions.size)
         val key = jmsSessions.keys.takeRight(idx+1).head
@@ -88,7 +90,7 @@ class JmsSinkStage(
           producer.foreach { p =>
             val sendTtl : Long = sendParams.ttl match {
               case Some(l) => if (l.toMillis < 0L) {
-                  log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
+                  settings.log.warn(s"The message [${env.id}] has expired and wont be sent to the JMS destination.")
                 }
                 l.toMillis
               case None => 0L
@@ -98,13 +100,13 @@ class JmsSinkStage(
               val dest : Destination = sendParams.destination.create(session.session)
               p.send(dest, sendParams.message, sendParams.deliveryMode.mode, sendParams.priority, sendTtl)
               val logDest = s"${settings.connectionFactory.vendor}:${settings.connectionFactory.provider}:$dest"
-              log.debug(s"Successfuly sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
+              settings.log.debug(s"Successfuly sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
             }
           }
           env
         } catch {
           case t : Throwable =>
-            log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
+            settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
             env.withException(t)
         }
 

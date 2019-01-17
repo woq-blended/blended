@@ -54,6 +54,7 @@ case class RoundtripHelper(
     }.toMap
 
     val pSettings: JmsProducerSettings = JmsProducerSettings(
+      log = log,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )

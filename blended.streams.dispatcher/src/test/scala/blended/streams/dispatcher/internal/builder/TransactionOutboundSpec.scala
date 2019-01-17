@@ -77,6 +77,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
     (implicit system : ActorSystem, materializer : Materializer, eCtxt: ExecutionContext) : KillSwitch = {
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
+      log = Logger(loggerName),
       connectionFactory = cf,
       jmsDestination = Some(JmsQueue("internal.transactions"))
     )
