@@ -14,6 +14,10 @@ case class ServerCertificate private (
   override def toString: String = chain.map { c=>
     X509CertificateInfo(c).toString
   }.mkString("\n", "\n", "")
+
+  def dump : String = {
+    chain.map { c => c.toString() }.mkString("\n\n---------\n\n")
+  }
 }
 
 case object ServerCertificate {
@@ -26,7 +30,7 @@ case object ServerCertificate {
 
       val x509Certs = chain.map(_.asInstanceOf[X509Certificate])
 
-      if (chain.length <= 1) {
+      if (chain.length < 1) {
         x509Certs
       } else {
 

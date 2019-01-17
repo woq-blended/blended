@@ -14,7 +14,8 @@ object BlendedSecuritySsl extends ProjectFactory {
 
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % "test",
+      Dependencies.scalacheck % "test"
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.CertificateActivator"

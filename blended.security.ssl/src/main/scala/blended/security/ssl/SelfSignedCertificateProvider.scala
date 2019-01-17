@@ -1,24 +1,24 @@
 package blended.security.ssl
 
 import java.math.BigInteger
-import java.security.{ KeyPair, KeyPairGenerator }
-import java.util.Calendar
+import java.security.cert.X509Certificate
+import java.security.{KeyPair, KeyPairGenerator, SecureRandom}
+
+import blended.util.logging.Logger
+import org.bouncycastle.cert.X509v3CertificateBuilder
 
 import scala.util.Try
 
-import blended.util.logging.Logger
-import javax.security.auth.x500.X500Principal
-import org.bouncycastle.asn1.x509._
-import org.bouncycastle.cert.jcajce.{ JcaX509CertificateConverter, JcaX509v3CertificateBuilder }
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
-
-class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificateProvider {
+class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
+  extends CertificateProvider
+  with CertificateRequestBuilder
+  with CertificateSigner {
 
   private[this] val log = Logger[SelfSignedCertificateProvider]
 
   private def generateKeyPair(): KeyPair = {
     val kpg = KeyPairGenerator.getInstance("RSA")
-    kpg.initialize(cfg.keyStrength)
+    kpg.initialize(cfg.keyStrength, new SecureRandom())
     kpg.genKeyPair()
   }
 
@@ -28,45 +28,20 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
 
     val requesterKeypair = generateKeyPair()
 
-    val principal = new X500Principal(cnProvider.commonName().get)
-    val requesterIssuer = principal
     val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
       case None => BigInteger.ONE
     }
-    val calendar = Calendar.getInstance()
-    calendar.add(Calendar.DATE, -1)
-    val notBefore = calendar.getTime()
-    calendar.add(Calendar.DATE, 1 + cfg.validDays)
-    val notAfter = calendar.getTime()
-    val requesterSubject = principal
 
-    val certBuilder = new JcaX509v3CertificateBuilder(
-      requesterIssuer, serial, notBefore, notAfter, requesterSubject, requesterKeypair.getPublic()
-    )
+    val certBuilder : X509v3CertificateBuilder = hostCertificateRequest(
+      cnProvider = cnProvider,
+      serial = serial,
+      validDays = cfg.validDays,
+      keyPair = requesterKeypair
+    ).get
 
-    if (cfg.commonNameProvider.alternativeNames().get.nonEmpty) {
-      val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>
-        log.debug(s"Adding alternative dns name [$n] to certificate.")
-        new GeneralName(GeneralName.dNSName, n)
-      }.toArray
+    val cert : X509Certificate = sign(certBuilder, cfg.sigAlg, requesterKeypair.getPrivate()).get
 
-      val names = new GeneralNames(altNames)
-      log.debug(s"General Names : $names")
-
-      certBuilder.addExtension(Extension.subjectAlternativeName, false, names)
-    }
-
-    certBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
-
-    val certSignerBuilder = new JcaContentSignerBuilder(cfg.sigAlg)
-    val certSigner = certSignerBuilder.build(requesterKeypair.getPrivate())
-
-    val certHolder = certBuilder.build(certSigner)
-
-    val converter = new JcaX509CertificateConverter()
-
-    val cert = converter.getCertificate(certHolder)
     log.debug(s"Generated certificate ${X509CertificateInfo(cert)}")
     ServerCertificate(requesterKeypair, List(cert))
   }

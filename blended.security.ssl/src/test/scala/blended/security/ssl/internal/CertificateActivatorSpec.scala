@@ -20,7 +20,7 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
 
   "The Certificate Activator should" - {
 
-    "start up and provide and SSL Context" in {
+    "start up and provide a server and a client SSL Context" in {
       assert(registry.getServiceReferences(classOf[SSLContext].getName(), "(type=server)").length == 1)
       assert(registry.getServiceReferences(classOf[SSLContext].getName(), "(type=client)").length == 1)
     }

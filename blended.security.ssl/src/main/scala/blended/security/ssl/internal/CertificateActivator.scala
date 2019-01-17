@@ -13,7 +13,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
   private[this] val log = Logger[CertificateActivator]
 
   private[this] def setupSelfSignedProvider(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
-    // Sould we provide a CertifacteProvider with a self-signed certificate?
+    // Should we provide a CertifacteProvider with a self-signed certificate?
     cfg.getConfigOption("selfsigned") match {
       case Some(selfCfg) =>
         val selfSignedProvider = new SelfSignedCertificateProvider(SelfSignedConfig.fromConfig(selfCfg, idSvc))
@@ -44,7 +44,7 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
       }
     }
 
-    val distinctProviderNames = mgrConfig.certConfigs.map(_.provider).distinct.toList
+    val distinctProviderNames : List[String] = mgrConfig.certConfigs.map(_.provider).distinct
     waitForProvider(distinctProviderNames, Map.empty)
   }
 
