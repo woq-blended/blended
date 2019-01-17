@@ -54,10 +54,10 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig) extends CertificatePr
       val names = new GeneralNames(altNames)
       log.debug(s"General Names : $names")
 
-      certBuilder.addExtension(X509Extension.subjectAlternativeName, false, names)
+      certBuilder.addExtension(Extension.subjectAlternativeName, false, names)
     }
 
-    certBuilder.addExtension(X509Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
+    certBuilder.addExtension(Extension.keyUsage, false, new KeyUsage(KeyUsage.digitalSignature))
 
     val certSignerBuilder = new JcaContentSignerBuilder(cfg.sigAlg)
     val certSigner = certSignerBuilder.build(requesterKeypair.getPrivate())
