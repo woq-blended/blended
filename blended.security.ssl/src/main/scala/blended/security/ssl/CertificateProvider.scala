@@ -4,5 +4,5 @@ import scala.util.Try
 
 trait CertificateProvider {
 
-  def refreshCertificate(existing: Option[ServerCertificate], cnProvider: CommonNameProvider): Try[ServerCertificate]
+  def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder]
 }

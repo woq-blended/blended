@@ -37,7 +37,7 @@ class QuickSSLTests
     override def commonName(): Try[String] = Success(s"CN=$hostname")
   }
 
-  private def createRootCertificate() : Try[ServerCertificate] = Try {
+  private def createRootCertificate() : Try[CertificateHolder] = Try {
 
     val certReq : X509v3CertificateBuilder = hostCertificateRequest(
       cnProvider = new HostnameCNProvider("Root"),
@@ -46,10 +46,10 @@ class QuickSSLTests
 
     val cert : X509Certificate = sign(certReq, sigAlg, caKeys.getPrivate()).get
 
-    ServerCertificate(caKeys, List(cert))
+    CertificateHolder.create(caKeys, List(cert)).get
   }
 
-  private def createHostCertificate(hostName: String, issuedBy : ServerCertificate) : Try[ServerCertificate] = Try {
+  private def createHostCertificate(hostName: String, issuedBy : CertificateHolder) : Try[CertificateHolder] = Try {
     val certReq : X509v3CertificateBuilder = hostCertificateRequest(
       cnProvider = new HostnameCNProvider(hostName),
       keyPair = kpg.generateKeyPair(),
@@ -57,16 +57,16 @@ class QuickSSLTests
     ).get
 
     val cert : X509Certificate = sign(certReq, sigAlg, caKeys.getPrivate()).get
-    ServerCertificate.create(caKeys, cert :: issuedBy.chain).get
+    CertificateHolder.create(caKeys, cert :: issuedBy.chain).get
   }
 
   def run() : Unit = {
 
-    val root : ServerCertificate = createRootCertificate().get
+    val root : CertificateHolder = createRootCertificate().get
     println(root.dump)
     root.chain.head.verify(caKeys.getPublic())
 
-    val server1 : ServerCertificate = createHostCertificate("server1", root).get
+    val server1 : CertificateHolder = createHostCertificate("server1", root).get
     println(server1.dump)
     server1.chain.head.verify(caKeys.getPublic())
 

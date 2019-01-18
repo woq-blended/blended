@@ -23,10 +23,14 @@ trait CertificateRequestBuilder {
     keyPair : KeyPair,
     serial : BigInteger = new BigInteger("1"),
     validDays : Int = 365,
-    issuedBy : Option[ServerCertificate] = None
+    issuedBy : Option[CertificateHolder] = None
   ) : Try[X509v3CertificateBuilder] = Try {
 
     val principal : X500Principal = new X500Principal(cnProvider.commonName().get)
+    val signer : X500Principal = issuedBy match {
+      case None => principal
+      case Some(c) => c.chain.head.getSubjectX500Principal()
+    }
 
     val calendar = Calendar.getInstance()
     calendar.add(Calendar.DATE, -1)
@@ -34,14 +38,9 @@ trait CertificateRequestBuilder {
     calendar.add(Calendar.DATE, 1 + validDays)
     val notAfter = calendar.getTime()
 
-    val certBuilder : X509v3CertificateBuilder = issuedBy match {
-      case None => new JcaX509v3CertificateBuilder(
-        principal, serial, notBefore, notAfter, principal, keyPair.getPublic()
-      )
-      case Some(c) => new JcaX509v3CertificateBuilder(
-        c.chain.head, serial, notBefore, notAfter, principal, keyPair.getPublic()
-      )
-    }
+    val certBuilder : X509v3CertificateBuilder = new JcaX509v3CertificateBuilder(
+      signer, serial, notBefore, notAfter, principal, keyPair.getPublic()
+    )
 
     if (cnProvider.alternativeNames().get.nonEmpty) {
       val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>

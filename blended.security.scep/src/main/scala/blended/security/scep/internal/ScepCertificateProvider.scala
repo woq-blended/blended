@@ -42,7 +42,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     case Some(p) => scepClient.getCaCapabilities(p)
   }
 
-  override def refreshCertificate(existing: Option[ServerCertificate], cnProvider: CommonNameProvider): Try[ServerCertificate] = {
+  override def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder] = {
     log.info(s"Trying to refresh the server certificate via SCEP from [${cfg.url}]")
     existing match {
       case None =>
@@ -54,7 +54,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     }
   }
 
-  private[this] def selfSignedCertificate(cnProvider: CommonNameProvider) : Try[ServerCertificate] = {
+  private[this] def selfSignedCertificate(cnProvider: CommonNameProvider) : Try[CertificateHolder] = {
 
     val selfSignedConfig = SelfSignedConfig(
       commonNameProvider = cnProvider,
@@ -66,44 +66,51 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     new SelfSignedCertificateProvider(selfSignedConfig).refreshCertificate(None, cnProvider)
   }
 
-  private[this] def enroll(inCert : ServerCertificate, cnProvider: CommonNameProvider): Try[ServerCertificate] = Try {
+  private[this] def enroll(inCert : CertificateHolder, cnProvider: CommonNameProvider): Try[CertificateHolder] = Try {
 
-    val reqCert = inCert.chain.head
+    inCert.privateKey match {
+      case None =>
+        throw new Exception("Certificate to refresh must have a private key defined.")
 
-    log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
+      case Some(privKey) =>
 
-    val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), inCert.keyPair.getPublic())
-    csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
+        val reqCert = inCert.chain.head
 
-    // TODO addextensions ?
+        log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
 
-    val csrSignerBuilder = new JcaContentSignerBuilder(cfg.csrSignAlgorithm)
-    val csrSigner = csrSignerBuilder.build(inCert.keyPair.getPrivate())
-    val csr = csrBuilder.build(csrSigner)
+        val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), inCert.publicKey)
+        csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
-    val response = scepClient.enrol(reqCert, inCert.keyPair.getPrivate(), csr)
+        // TODO addextensions ?
 
-    // TODO: Active wait is baaaad
-    while(response.isPending()) {
-      log.info(s"Waiting for PKI response from [${cfg.url}]")
-      Thread.sleep(1000)
-    }
+        val csrSignerBuilder = new JcaContentSignerBuilder(cfg.csrSignAlgorithm)
+        val csrSigner = csrSignerBuilder.build(privKey)
+        val csr = csrBuilder.build(csrSigner)
 
-    if (response.isFailure()) {
-      val info = response.getFailInfo()
-      log.error(s"Certificate provisioning failed: [$info]")
-      sys.error(info.toString)
-    } else {
-      val store = response.getCertStore()
-      val certs : List[Certificate] = store.getCertificates(null).asScala.toList
+        val response = scepClient.enrol(reqCert, privKey, csr)
 
-      log.info(s"Retrieved [${certs.length}] certificates from [${cfg.url}].")
+        // TODO: Active wait is baaaad
+        while(response.isPending()) {
+          log.info(s"Waiting for PKI response from [${cfg.url}]")
+          Thread.sleep(1000)
+        }
 
-      ServerCertificate.create(
-        keyPair = inCert.keyPair,
-        chain = certs
-      ).get
+        if (response.isFailure()) {
+          val info = response.getFailInfo()
+          log.error(s"Certificate provisioning failed: [$info]")
+          sys.error(info.toString)
+        } else {
+          val store = response.getCertStore()
+          val certs: List[Certificate] = store.getCertificates(null).asScala.toList
 
+          log.info(s"Retrieved [${certs.length}] certificates from [${cfg.url}].")
+
+          CertificateHolder.create(
+            publicKey = inCert.publicKey,
+            privateKey = Some(privKey),
+            chain = certs
+          ).get
+        }
     }
   }
 }

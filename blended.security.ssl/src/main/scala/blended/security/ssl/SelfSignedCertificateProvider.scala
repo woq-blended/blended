@@ -22,7 +22,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
     kpg.genKeyPair()
   }
 
-  override def refreshCertificate(existing: Option[ServerCertificate], cnProvider : CommonNameProvider): Try[ServerCertificate] = Try {
+  override def refreshCertificate(existing: Option[CertificateHolder], cnProvider : CommonNameProvider): Try[CertificateHolder] = Try {
 
     val oldCert = existing.map(_.chain.head)
 
@@ -43,6 +43,6 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
     val cert : X509Certificate = sign(certBuilder, cfg.sigAlg, requesterKeypair.getPrivate()).get
 
     log.debug(s"Generated certificate ${X509CertificateInfo(cert)}")
-    ServerCertificate(requesterKeypair, List(cert))
+    CertificateHolder.create(requesterKeypair, List(cert)).get
   }
 }

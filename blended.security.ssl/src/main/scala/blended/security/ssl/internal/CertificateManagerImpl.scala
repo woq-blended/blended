@@ -7,7 +7,7 @@ import java.util.Date
 import scala.concurrent.duration._
 import scala.util.{ Failure, Success, Try }
 
-import blended.security.ssl.{ CertificateManager, CertificateProvider, ServerCertificate, X509CertificateInfo }
+import blended.security.ssl.{ CertificateManager, CertificateProvider, CertificateHolder, X509CertificateInfo }
 import blended.security.ssl.CertificateManager
 import blended.util.logging.Logger
 import domino.capsule._
@@ -146,7 +146,7 @@ class CertificateManagerImpl(
     (ks, changedAliases(cfg.certConfigs, List.empty).get)
   }
 
-  private[this] def updateKeystore(ks: KeyStore, existingCert: Option[ServerCertificate], certCfg: CertificateConfig): Try[ServerKeyStore] = Try {
+  private[this] def updateKeystore(ks: KeyStore, existingCert: Option[CertificateHolder], certCfg: CertificateConfig): Try[ServerKeyStore] = Try {
     log.info(s"Aquiring new certificate from certificate provider [${certCfg.provider}]")
 
     val provider = providerMap.get(certCfg.provider).get
@@ -159,7 +159,7 @@ class CertificateManagerImpl(
       case Success(cert) =>
         val info = X509CertificateInfo(cert.chain.head)
         log.info(s"Successfully obtained certificate from certificate provider [$provider] : $info")
-        ks.setKeyEntry(certCfg.alias, cert.keyPair.getPrivate(), cfg.keyPass.toCharArray, cert.chain.toArray)
+        cert.keyPair.foreach(p => ks.setKeyEntry(certCfg.alias, p.getPrivate(), cfg.keyPass.toCharArray, cert.chain.toArray))
         saveKeyStore(ks).get
         serverKeystore(ks).get
     }
@@ -178,18 +178,18 @@ class CertificateManagerImpl(
   }
 
   // Extract a single server certificate from the underlying keystore
-  private[this] def extractServerCertificate(ks: KeyStore, certCfg: CertificateConfig): Try[Option[ServerCertificate]] = Try {
+  private[this] def extractServerCertificate(ks: KeyStore, certCfg: CertificateConfig): Try[Option[CertificateHolder]] = Try {
     Option(ks.getCertificateChain(certCfg.alias)).map { chain =>
       val e = ks.getCertificate(certCfg.alias)
       val key = ks.getKey(certCfg.alias, cfg.keyPass.toCharArray).asInstanceOf[PrivateKey]
       val keypair = new KeyPair(e.getPublicKey(), key)
-      ServerCertificate.create(keyPair = keypair, chain = chain.toList).get
+      CertificateHolder.create(keyPair = keypair, chain = chain.toList).get
     }
   }
 
   private[this] def serverKeystore(ks: KeyStore): Try[ServerKeyStore] = Try {
 
-    val certs: Map[String, ServerCertificate] = cfg.certConfigs.map { certCfg =>
+    val certs: Map[String, CertificateHolder] = cfg.certConfigs.map { certCfg =>
       (certCfg.alias, extractServerCertificate(ks, certCfg).get)
     }.filter(_._2.isDefined).toMap.mapValues(_.get)
 

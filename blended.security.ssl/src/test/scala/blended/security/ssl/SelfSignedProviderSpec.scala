@@ -1,6 +1,6 @@
 package blended.security.ssl
 
-import java.security.{KeyPair, KeyPairGenerator, SecureRandom}
+import java.security.KeyPair
 import java.security.cert.X509Certificate
 
 import blended.testsupport.scalatest.LoggingFreeSpec
@@ -13,18 +13,10 @@ import scala.util.{Success, Try}
 
 class SelfSignedProviderSpec extends LoggingFreeSpec
   with Matchers
-  with PropertyChecks {
-
-  private val keyStrength : Int = 2048
-  private val sigAlg : String = "SHA256withRSA"
-  private val validDays : Int = 365
-
-  private val kpg : KeyPairGenerator = {
-    val kpg = KeyPairGenerator.getInstance("RSA")
-    kpg.initialize(keyStrength, new SecureRandom())
-
-    kpg
-  }
+  with PropertyChecks
+  with SecurityTestSupport
+  with CertificateRequestBuilder
+  with CertificateSigner {
 
   private class HostnameCNProvider(hostName: String) extends CommonNameProvider {
     override def commonName(): Try[String] = Success(s"CN=$hostName")
@@ -44,12 +36,11 @@ class SelfSignedProviderSpec extends LoggingFreeSpec
           ).get
 
           val cert : X509Certificate = sign(certReq, sigAlg, caKeys.getPrivate()).get
-          val serverCert : ServerCertificate = ServerCertificate.create(caKeys, List(cert)).get
+          val serverCert : CertificateHolder = CertificateHolder.create(caKeys, List(cert)).get
 
           cert.getIssuerDN().toString should be (cert.getSubjectX500Principal().toString)
 
-          serverCert.chain should have size(1)
-          assert(Try { serverCert.chain.head.verify(caKeys.getPublic()) } isSuccess)
+          serverCert.chain should have size 1
         }
       }
     }
