@@ -46,10 +46,12 @@ object RuntimeConfigBuilder {
       description = "Lookup additional feature configuration(s) from file {0}",
       maxCount = -1)
     def addFeatureRepo(repo: String): Unit = featureRepos ++= Seq(repo)
+
     var featureRepos: Seq[String] = Seq()
 
     @CmdOption(names = Array("-m", "--maven-url"), args = Array("url"), maxCount = -1)
     def addMavenUrl(mavenUrl: String) = this.mavenUrls ++= Seq(mavenUrl)
+
     var mavenUrls: Seq[String] = Seq()
 
     @CmdOption(names = Array("--debug"))
@@ -97,7 +99,14 @@ object RuntimeConfigBuilder {
     }
   }
 
+  /**
+    * Same as [[RuntimeConfigBuilder#main]], but does not call `sys.exit` but throws an exception in case of non-success.
+    * @param args
+    */
+  def run(args: Array[String]): Unit = {
     run(args = args, debugLog = None)
+  }
+
   def run(
     args: Array[String],
     debugLog: Option[String => Unit] = None,
@@ -213,6 +222,7 @@ object RuntimeConfigBuilder {
 
     val newRuntimeConfig = if (options.updateChecksums) {
       var checkedFiles: Map[File, String] = Map()
+
       def checkAndUpdate(file: File, r: Artifact): Artifact = {
         checkedFiles.get(file).orElse(RuntimeConfigCompanion.digestFile(file)).map { checksum =>
           checkedFiles += file -> checksum

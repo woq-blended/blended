@@ -140,6 +140,7 @@ trait Dependencies {
   val travesty = "net.mikolak" %% "travesty" % s"0.9.1_2.5.17"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
+  // FIXME: Rename to typesafeSslConfigCore
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
 
   val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
