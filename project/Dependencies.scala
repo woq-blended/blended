@@ -20,7 +20,7 @@ trait Dependencies {
   val scalaCheckVersion = "1.14.0"
   val slf4jVersion = "1.7.25"
   val sprayVersion = "1.3.4"
-  val springVersion = "4.3.11.RELEASE"
+  val springVersion = "4.3.12.RELEASE_1"
 
   protected def akka(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaVersion
   protected def akka_Http(m: String) = "com.typesafe.akka" %% s"akka-${m}" % akkaHttpVersion
@@ -64,7 +64,7 @@ trait Dependencies {
   val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.0.2"
   val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.0"
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.0"
-  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"  
+  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
   val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.0"
 
@@ -121,21 +121,22 @@ trait Dependencies {
   val snakeyaml = "org.yaml" % "snakeyaml" % "1.18"
   val sprayJson = "io.spray" %% s"spray-json" % sprayVersion
 
-  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
+  //  protected def spring(n: String) = "org.springframework" % s"spring-${n}" % springVersion
+  protected def spring(n: String) = "org.apache.servicemix.bundles" % s"org.apache.servicemix.bundles.spring-${n}" % springVersion
 
   val springBeans = spring("beans")
-  //val springAop = spring("aop")
-  //val springContext = spring("context")
-  //val springContextSupport = spring("context-support")
+  val springAop = spring("aop")
+  val springContext = spring("context")
+  val springContextSupport = spring("context-support")
   val springExpression = spring("expression")
   val springCore = spring("core")
   val springJdbc = spring("jdbc")
-  // val springJms = spring("jms")
+  val springJms = spring("jms")
   val springTx = spring("tx")
 
   val sttp = "com.softwaremill.sttp" %% "core" % "1.3.0"
   val sttpAkka = "com.softwaremill.sttp" %% "akka-http-backend" % "1.3.0"
-  
+
   val travesty = "net.mikolak" %% "travesty" % s"0.9.1_2.5.17"
 
   val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
