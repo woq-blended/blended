@@ -29,7 +29,7 @@ class CertRefresher(salt: String) {
     baseDir
   }
 
-  val registry = {
+  lazy val registry = {
     // Start Felix Connect Runtime
 
     val symbolicNames = List(
