@@ -8,7 +8,6 @@ import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlug
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
-import blended.sbt.Dependencies._
 
 object BlendedLauncher extends ProjectFactory {
 
@@ -53,13 +52,13 @@ object BlendedLauncher extends ProjectFactory {
         "blended.launcher.version" -> version.value,
         "blended.updater.config.version" -> version.value,
         "blended.util.logging.version" -> version.value,
-        "cmdoption.version" -> cmdOption.revision,
-        "org.osgi.core.version" -> orgOsgi.revision,
+        "cmdoption.version" -> Dependencies.cmdOption.revision,
+        "org.osgi.core.version" -> Dependencies.orgOsgi.revision,
         "scala.binary.version" -> scalaBinaryVersion.value,
-        "scala.library.version" -> scalaVersion.value,
-        "typesafe.config.version" -> typesafeConfig.revision,
-        "slf4j.version" -> slf4j.revision,
-        "logback.version" -> logbackClassic.revision
+        "scala.library.version" -> Dependencies.scalaVersion,
+        "typesafe.config.version" -> Dependencies.typesafeConfig.revision,
+        "slf4j.version" -> Dependencies.slf4jVersion,
+        "logback.version" -> Dependencies.logbackClassic.revision
       ),
       Test / resourceGenerators += Def.task {
         val frameworks: Seq[ModuleID] = Seq(
