@@ -1,3 +1,6 @@
+// This file file resides in sbt project dir,
+// but is also symlinked to blended.dependencies project
+// to be shared with other blended sbt projects
 package blended.sbt
 
 import sbt._
