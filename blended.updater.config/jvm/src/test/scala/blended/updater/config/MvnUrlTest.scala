@@ -46,6 +46,7 @@ class MvnUrlTest extends FreeSpec {
     ok("g:a::1:war", MvnGav("g", "a", "1", None, "war"))
     ok("g:a:jar:1", MvnGav("g", "a", "1", None, "jar"))
     ok("io.hawt:hawtio-osgi-jmx::1.4.51:jar", MvnGav("io.hawt", "hawtio-osgi-jmx", "1.4.51", None, "jar"))
+    ok("g:a::1:zip", MvnGav("g", "a", "1", None, "zip"))
 
     notOk("g:a")
     notOk("a")
