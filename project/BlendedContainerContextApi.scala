@@ -8,8 +8,9 @@ object BlendedContainerContextApi extends ProjectFactory {
     description = "The API for the Container Context and Identifier Services",
     deps = Seq(
       Dependencies.springExpression,
-
       Dependencies.typesafeConfig,
+      Dependencies.springCore % "test",
+      Dependencies.jclOverSlf4j % "test",
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
