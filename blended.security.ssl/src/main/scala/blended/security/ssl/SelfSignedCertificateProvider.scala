@@ -26,7 +26,13 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
 
     val oldCert = existing.map(_.chain.head)
 
-    val requesterKeypair = generateKeyPair()
+    val requesterKeypair : KeyPair = existing match {
+      case Some(c) => c.privateKey match {
+        case None => throw new Exception("Existing certificate must have a private key to update")
+        case Some(pk) => new KeyPair(c.publicKey, pk)
+      }
+      case None => generateKeyPair()
+    }
 
     val serial = oldCert match {
       case Some(c) => c.getSerialNumber().add(BigInteger.ONE)
@@ -42,7 +48,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
 
     val cert : X509Certificate = sign(certBuilder, cfg.sigAlg, requesterKeypair.getPrivate()).get
 
-    log.debug(s"Generated certificate ${X509CertificateInfo(cert)}")
+    log.debug(s"Generated certificate [${X509CertificateInfo(cert)}]")
     CertificateHolder.create(requesterKeypair, List(cert)).get
   }
 }

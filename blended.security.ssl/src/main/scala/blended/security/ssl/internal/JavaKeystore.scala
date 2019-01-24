@@ -1,12 +1,13 @@
 package blended.security.ssl.internal
 
 import java.io.{File, FileInputStream, FileOutputStream}
+import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, PublicKey}
 
-import blended.security.ssl.CertificateHolder
+import blended.security.ssl.{CertificateHolder, X509CertificateInfo}
 import blended.util.logging.Logger
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import scala.util.Try
 
 class JavaKeystore(
@@ -81,19 +82,22 @@ class JavaKeystore(
   // Extract a single certificate from the underlying keystore
   // If a keypass is set, we will also extract the private key of the certificate
   private[ssl] def extractCertificate(ks: KeyStore, alias: String): Try[CertificateHolder] = Try {
-    Option(ks.getCertificateChain(alias)) match {
-      case None =>
-        throw new Exception(s"Certificate for alias [$alias] not found.")
 
-      case Some(chain) =>
-        val e = ks.getCertificate(alias)
-        val pubKey : PublicKey = e.getPublicKey()
-        val privKey : Option[PrivateKey] = keypass.map { pwd =>
-          ks.getKey(alias, pwd).asInstanceOf[PrivateKey]
-        }
-
-        CertificateHolder.create(publicKey = pubKey, privateKey = privKey, chain = chain.toList).get
+    val chain : List[X509Certificate] = Option(ks.getCertificateChain(alias)) match {
+      case None => Option(ks.getCertificate(alias)) match {
+        case None =>
+          throw new Exception(s"Certificate for alias [$alias] not found.")
+        case Some(c) => List(c.asInstanceOf[X509Certificate])
+      }
+      case Some(chain) => chain.toList.map(_.asInstanceOf[X509Certificate])
     }
+
+    val pubKey : PublicKey = chain.head.getPublicKey()
+    val privKey : Option[PrivateKey] = keypass.map { pwd =>
+      ks.getKey(alias, pwd).asInstanceOf[PrivateKey]
+    }
+
+    CertificateHolder.create(publicKey = pubKey, privateKey = privKey, chain = chain).get
   }
 
   private[ssl] def memoryKeystore(ks: KeyStore): Try[MemoryKeystore] = Try {

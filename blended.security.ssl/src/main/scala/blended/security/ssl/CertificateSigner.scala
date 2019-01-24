@@ -70,11 +70,8 @@ trait CertificateSigner {
 
     val certSignerBuilder = new JcaContentSignerBuilder(sigAlg)
     val certSigner = certSignerBuilder.build(signKey)
-
     val certHolder = certReq.build(certSigner)
-
     val converter : JcaX509CertificateConverter = new JcaX509CertificateConverter()
-
     converter.getCertificate(certHolder)
   }
 }
