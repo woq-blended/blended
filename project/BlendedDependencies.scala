@@ -1,5 +1,6 @@
 import sbt._
 import sbt.plugins.SbtPlugin
+import scoverage.ScoverageSbtPlugin.autoImport._
 
 object BlendedDependencies extends ProjectFactory {
 
@@ -14,6 +15,7 @@ object BlendedDependencies extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] =
       super.settings ++
         Seq(
+          coverageEnabled := false,
           exportDependenciesFile := {
             file("project/Dependencies.scala")
           }
