@@ -28,7 +28,7 @@ class SelfSignedCertificateProvider(cfg: SelfSignedConfig)
 
     val requesterKeypair : KeyPair = existing match {
       case Some(c) => c.privateKey match {
-        case None => throw new Exception("Existing certificate must have a private key to update")
+        case None => throw new NoPrivateKeyException("Existing certificate must have a private key to update")
         case Some(pk) => new KeyPair(c.publicKey, pk)
       }
       case None => generateKeyPair()

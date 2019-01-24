@@ -1,17 +1,15 @@
 package blended.security.ssl.internal
 
 import java.io.File
-import java.security.KeyStore
 import java.util.Date
 
-import blended.security.ssl.{CertificateHolder, CertificateManager, CertificateProvider, X509CertificateInfo}
+import blended.security.ssl.{CertificateManager, CertificateProvider}
 import blended.util.logging.Logger
 import domino.capsule._
 import domino.service_providing.ServiceProviding
 import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -30,7 +28,6 @@ class CertificateManagerImpl(
   with ServiceProviding {
 
   private[this] val log = Logger[CertificateManagerImpl]
-  private[this] val millisPerDay = 1.day.toMillis
 
   private[this] lazy val javaKeystore : JavaKeystore= new JavaKeystore(
     new File(cfg.keyStore),
@@ -84,70 +81,15 @@ class CertificateManagerImpl(
 
   override def stop(): Unit = {}
 
-  def nextCertificateTimeout(): Try[Date] = Try {
-    loadKeyStore().get.certificates match {
-      case e if e.isEmpty => new Date()
-      case m => m.values.map(_.chain.head.getNotAfter).min
-    }
-  }
-
   private[this] def loadKeyStore(): Try[MemoryKeystore] = javaKeystore.loadKeyStore()
+
+  def nextCertificateTimeout() : Try[Date] = javaKeystore.loadKeyStore().get.nextCertificateTimeout()
 
   /**
    * @return When successful, a tuple of keystore and a list of updated certificate aliases, else the failure.
    */
   override def checkCertificates(): Try[(MemoryKeystore, List[String])] = Try {
-
     val ms : MemoryKeystore = loadKeyStore().get
-
-    def changedAliases(certConfigs: List[CertificateConfig], changed: List[String]): Try[List[String]] = Try {
-      certConfigs match {
-        case Nil => changed
-        case head :: tail =>
-          ms.certificates.get(head.alias) match {
-            case Some(serverCertificate) =>
-              val certInfo = X509CertificateInfo(serverCertificate.chain.head)
-              val remaining = certInfo.notAfter.getTime() - System.currentTimeMillis()
-
-              if (remaining <= head.minValidDays * millisPerDay) {
-                log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
-                updateKeystore(ms, Some(serverCertificate), head).recoverWith {
-                  case _: Throwable =>
-                    log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
-                    changedAliases(tail, changed)
-                }
-                changedAliases(tail, head.alias :: changed).get
-              } else {
-                log.info(s"Server certificate [${head.alias}] is still valid.")
-                changedAliases(tail, changed).get
-              }
-            case None =>
-              log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
-              updateKeystore(ms, None, head).get
-              changedAliases(tail, head.alias :: changed).get
-          }
-      }
-    }
-
-    (ms, changedAliases(cfg.certConfigs, List.empty).get)
-  }
-
-  private[this] def updateKeystore(ks: MemoryKeystore, existingCert: Option[CertificateHolder], certCfg: CertificateConfig): Try[MemoryKeystore] = Try {
-    log.info(s"Acquiring new certificate from certificate provider [${certCfg.provider}]")
-
-    val provider = providerMap.get(certCfg.provider).get
-    val newCert = provider.refreshCertificate(existingCert, certCfg.cnProvider)
-
-    newCert match {
-      case Failure(e) =>
-        log.error(e)("Could not update keystore")
-        throw e
-      case Success(cert) =>
-        val info = X509CertificateInfo(cert.chain.head)
-        log.info(s"Successfully obtained certificate from certificate provider [$provider] : $info")
-
-        val certs : Map[String, CertificateHolder] = ks.certificates.filterKeys(_ != certCfg.alias) + (certCfg.alias -> cert.copy(changed = true))
-        MemoryKeystore(certs)
-    }
+    ms.refreshCertificates(cfg.certConfigs, providerMap).get
   }
 }

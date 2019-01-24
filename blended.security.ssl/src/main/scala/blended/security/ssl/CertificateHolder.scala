@@ -43,10 +43,6 @@ case class CertificateHolder (
   }
 }
 
-class EmptyCertificateChainException extends Exception("The certificate chain can't be empty.")
-class CertificateChainException(msg : String) extends Exception(msg)
-class MissingRootCertificateException extends Exception("The certificate chain must have a root certificate.")
-
 object CertificateHolder {
 
   def create(publicKey: PublicKey, chain : List[Certificate]) : Try[CertificateHolder] =

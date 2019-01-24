@@ -1,8 +1,11 @@
 package blended.security.ssl
 
+import java.io.File
 import java.security.cert.X509Certificate
 import java.security.{KeyPair, KeyPairGenerator, SecureRandom}
 
+import blended.security.ssl.internal.JavaKeystore
+import blended.testsupport.BlendedTestSupport
 import org.bouncycastle.cert.X509v3CertificateBuilder
 
 import scala.util.{Success, Try}
@@ -24,22 +27,34 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     kpg
   }
 
-  def createRootCertificate() : Try[CertificateHolder] = Try {
+  val selfSignedCfg : CommonNameProvider => SelfSignedConfig = cnProvider => SelfSignedConfig(
+    commonNameProvider = cnProvider,
+    sigAlg = "SHA256withRSA",
+    keyStrength = 2048,
+    validDays = 20
+  )
 
-    val caKeys = kpg.generateKeyPair()
+  val jks: String => JavaKeystore = fileName => new JavaKeystore(
+    keystoreFile(fileName),
+    "storepass".toCharArray,
+    Some("storepass".toCharArray)
+  )
 
-    val certReq : X509v3CertificateBuilder = hostCertificateRequest(
-      cnProvider = new HostnameCNProvider("Root"),
-      keyPair = caKeys,
-      issuedBy = None
-    ).get
-
-    val cert : X509Certificate = sign(certReq, sigAlg, caKeys.getPrivate()).get
-
-    CertificateHolder.create(caKeys, List(cert)).get
+  def keystoreFile(name: String) : File = {
+    val f = new File(BlendedTestSupport.projectTestOutput, name)
+    if (f.exists()) {
+      f.delete()
+    }
+    f
   }
 
-  def createHostCertificate(hostName: String, issuedBy : CertificateHolder) : Try[CertificateHolder] = Try {
+  def createRootCertificate(cn : String = "root") : Try[CertificateHolder] = Try {
+
+    val cnProvider : CommonNameProvider = new HostnameCNProvider(cn)
+    new SelfSignedCertificateProvider(selfSignedCfg(cnProvider)).refreshCertificate(None, cnProvider).get
+  }
+
+  def createHostCertificate(hostName: String, issuedBy : CertificateHolder, validDays : Int = 10) : Try[CertificateHolder] = Try {
 
     issuedBy.privateKey match {
 
@@ -51,6 +66,7 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
         val certReq: X509v3CertificateBuilder = hostCertificateRequest(
           cnProvider = HostnameCNProvider(hostName),
           keyPair = pair,
+          validDays = validDays,
           issuedBy = Some(issuedBy)
         ).get
 

@@ -15,23 +15,10 @@ class JavaKeystoreSpec extends LoggingFreeSpec
 
   "The Java Keystore should" - {
 
-    def keystoreFile(name: String) : File = {
-      val f = new File(BlendedTestSupport.projectTestOutput, name)
-      if (f.exists()) {
-        f.delete()
-      }
-      f
-    }
-
     "Initialise to an empty store if the keystore file does not exist" in {
 
-      val jks: JavaKeystore = new JavaKeystore(
-        keystoreFile("dummy.jks"),
-        "storepass".toCharArray,
-        Some("storepass".toCharArray)
-      )
-
-      val ms: MemoryKeystore = jks.loadKeyStore().get
+      val ks: JavaKeystore = jks("dummy.jks")
+      val ms: MemoryKeystore = ks.loadKeyStore().get
 
       ms.consistent should be(true)
       ms.certificates should be(empty)
