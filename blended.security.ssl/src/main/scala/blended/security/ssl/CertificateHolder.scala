@@ -3,6 +3,8 @@ package blended.security.ssl
 import java.security.{KeyPair, Principal, PrivateKey, PublicKey}
 import java.security.cert.{Certificate, X509Certificate}
 
+import javax.security.auth.x500.X500Principal
+
 import scala.util.Try
 
 /**
@@ -18,10 +20,14 @@ import scala.util.Try
   * with the factory method(s) in the companion object. These methods will create the
   * sorted chain verify the signatures of each certificate within the chain.
   */
-case class CertificateHolder private (
+case class CertificateHolder (
   publicKey : PublicKey,
   privateKey : Option[PrivateKey],
-  chain: List[X509Certificate]) {
+  chain: List[X509Certificate],
+  changed : Boolean = false
+) {
+
+  val subjectPrincipal : Option[X500Principal] = chain.headOption.map(_.getIssuerX500Principal())
 
   // retrieve the keyPair of the certificate
   val keyPair : Option[KeyPair] = privateKey.map(pk => new KeyPair(publicKey, pk))

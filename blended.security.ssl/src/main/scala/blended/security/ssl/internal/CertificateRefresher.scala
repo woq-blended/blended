@@ -54,7 +54,7 @@ class CertificateRefresher(
   override def start(): Unit = scheduleRefresh(cfg)
 
   override def stop(): Unit = {
-    log.debug(s"Cancelling timer [${timerName}]")
+    log.debug(s"Cancelling timer [$timerName]")
     timer.cancel()
   }
 
@@ -63,13 +63,11 @@ class CertificateRefresher(
     * If the Domino capsule stops, this timer will also be cancelled.
     */
   def scheduleRefresh(refresherConfig: RefresherConfig): Unit = {
-    val nextScheduleTime = CertificateRefresher.nextRefreshScheduleTime(certMgr.nextCertificateTimeout(), refresherConfig)
+    val nextScheduleTime = CertificateRefresher.nextRefreshScheduleTime(certMgr.nextCertificateTimeout().get, refresherConfig)
     val task = new RefreshTask(certMgr, refresherConfig)
     log.debug(s"Scheduling new timer task with timer [${timerName}] to start at ${nextScheduleTime}")
     timer.schedule(task, nextScheduleTime)
   }
-
-
 
   /**
     * This task tries to refresh a certificate.
@@ -99,7 +97,7 @@ class CertificateRefresher(
                 scope.stop()
 
                 log.info("Registering new SslContextProvider for new KeyStore")
-                certMgr.registerSslContextProvider(newKs.keyStore)
+                certMgr.registerSslContextProvider()
                 scheduleRefresh(refresherConfig)
 
               case RefresherConfig.Restart =>

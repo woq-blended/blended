@@ -7,13 +7,13 @@ import blended.util.config.Implicits._
 import scala.util.Try
 
 /**
- * Configuration of [[CertificateManager]]
+ * Configuration of [[CertificateManagerImpl]]
  *
  * @param keyStore The used keyStore.
  * @param storePass The password used to open the key store.
  * @param keyPass The key password.
  *   If the days until the end of the certificate validity fall below this threshold,
- *   the [[CertificateManager]] will try to re-new the certificate.
+ *   the [[CertificateManagerImpl]] will try to re-new the certificate.
  * @param skipInitialCheck If `true` no initial certifcate check will be issues.
  */
 case class CertificateManagerConfig(

@@ -1,20 +1,21 @@
 package blended.security.ssl.internal
 
 import java.io.File
-
-import org.scalatest.FreeSpec
-import blended.testsupport.pojosr.PojoSrTestHelper
-import java.util.Date
-import java.util.concurrent.TimeUnit
+import java.util.{Calendar, Date, GregorianCalendar}
 
 import blended.testsupport.BlendedTestSupport
+import blended.testsupport.pojosr.PojoSrTestHelper
+import org.scalatest.FreeSpec
 
 class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput).getAbsolutePath()
 
-  //  val dateBase = new Date(100, 0, 1).getTime()
-  def day(n: Long = 1): Long = TimeUnit.DAYS.toMillis(n)
+  def newDate(year : Int, month: Int, day : Int, hour : Int = 0, minute: Int = 0) : Date = {
+    val cal : GregorianCalendar = new GregorianCalendar(year, month, day, hour, minute, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    cal.getTime()
+  }
 
   implicit class RichDate(date: Date) {
     def <(other: Date): Boolean = date.before(other)
@@ -33,43 +34,42 @@ class CertificateRefresherSpec extends FreeSpec with PojoSrTestHelper {
         onRefreshAction = RefresherConfig.Refresh)
 
       "cert end + threshold is in future" in {
-        val now = new Date(100, 5, 1)
-        val validEnd = new Date(100, 5, 20)
+        val now = newDate(100, 5, 1)
+        val validEnd = newDate(100, 5, 20)
         val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
-        assert(date === new Date(100, 5, 10, 1, 30))
+        assert(date === newDate(100, 5, 10, 1, 30))
       }
 
       "cert end is in future, cert end + threshold not" - {
         "schedule should be on same day" in {
-          val now = new Date(100, 5, 1)
-          val validEnd = new Date(100, 5, 5)
+          val now = newDate(100, 5, 1)
+          val validEnd = newDate(100, 5, 5)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
-          assert(date === new Date(100, 5, 1, 1, 30))
+          assert(date === newDate(100, 5, 1, 1, 30))
         }
 
         "schedule should be on next day" in {
-          val now = new Date(100, 5, 1, 2, 0)
-          val validEnd = new Date(100, 5, 5)
+          val now = newDate(100, 5, 1, 2, 0)
+          val validEnd = newDate(100, 5, 5)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
-          assert(date === new Date(100, 5, 2, 1, 30))
+          assert(date === newDate(100, 5, 2, 1, 30))
         }
       }
 
       "cert end is in not in the future" - {
         "schedule should be on same day" in {
-          val now = new Date(100, 5, 1)
-          val validEnd = new Date(100, 4, 20)
+          val now = newDate(100, 5, 1)
+          val validEnd = newDate(100, 4, 20)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
-          assert(date === new Date(100, 5, 1, 1, 30))
+          assert(date === newDate(100, 5, 1, 1, 30))
         }
         "schedule should be on next day" in {
-          val now = new Date(100, 5, 1, 2, 0)
-          val validEnd = new Date(100, 4, 20)
+          val now = newDate(100, 5, 1, 2, 0)
+          val validEnd = newDate(100, 4, 20)
           val date = CertificateRefresher.nextRefreshScheduleTime(validEnd, refresherConfig, Some(now))
-          assert(date === new Date(100, 5, 2, 1, 30))
+          assert(date === newDate(100, 5, 2, 1, 30))
         }
       }
     }
   }
-
 }

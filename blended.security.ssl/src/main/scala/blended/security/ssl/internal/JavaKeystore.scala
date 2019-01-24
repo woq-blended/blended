@@ -1,40 +1,113 @@
 package blended.security.ssl.internal
 
-import java.io.{File, FileInputStream}
-import java.security.KeyStore
+import java.io.{File, FileInputStream, FileOutputStream}
+import java.security.{KeyStore, PrivateKey, PublicKey}
 
+import blended.security.ssl.CertificateHolder
 import blended.util.logging.Logger
+import scala.collection.JavaConverters._
 
-import scala.util.{Failure, Try}
+import scala.util.Try
 
-object JavaKeystore {
+class JavaKeystore(
+  keystore : File,
+  storepass : Array[Char],
+  keypass : Option[Array[Char]]
+) {
 
-  private val log : Logger = Logger[JavaKeystore.type]
+  private val log : Logger = Logger[JavaKeystore]
+
+  private[ssl] val storetype : String = keypass match {
+    case None => KeyStore.getDefaultType()
+    case Some(_) => "PKCS12"
+  }
 
   // Helper method to load a Java Keystore into memory, create the keystore on the fly if required
-  def loadKeyStore(
-    keyStore: File,
-    storePass: Array[Char],
-    keyPass: Array[Char]
+  def loadKeyStore() : Try[MemoryKeystore] = memoryKeystore(loadKeyStoreFromFile().get)
 
-  ): Try[ServerKeyStore] = {
+  def saveKeyStore(ms : MemoryKeystore) : Try[MemoryKeystore] = Try {
 
-    log.info(s"Initializing key store [${keyStore.getAbsolutePath()}] for server ...")
+    val ks : KeyStore = loadKeyStoreFromFile().get
 
-    val ks = KeyStore.getInstance("PKCS12")
+    ms.certificates.filter(_._2.changed).foreach { case (alias, cert) =>
+      keypass match {
+        case None =>
+          ks.setCertificateEntry(alias, cert.chain.head)
+        case Some(pwd) =>
+          cert.privateKey match {
+            case None => throw new Exception(s"Certificate for [${cert.subjectPrincipal}] is missing the private key")
+            case Some(k) => ks.setKeyEntry(alias, k, pwd, cert.chain.toArray)
+          }
+      }
+    }
 
-    if (keyStore.exists()) {
-      val fis = new FileInputStream(keyStore)
+    saveKeyStoreToFile(ks).get
+    MemoryKeystore(ms.certificates.mapValues(_.copy(changed = false)))
+  }
+
+  private[ssl] def loadKeyStoreFromFile() : Try[KeyStore] = Try {
+
+    log.info(s"Initializing key store of type [$storetype] from file [${keystore.getAbsolutePath()}] ...")
+
+    val ks = KeyStore.getInstance(storetype)
+
+    if (keystore.exists()) {
+      val fis = new FileInputStream(keystore)
       try {
-        ks.load(fis, storePass)
+        ks.load(fis, storepass)
       } finally {
         fis.close()
       }
     } else {
-      log.info(s"Creating empty key store [${keyStore.getAbsolutePath()}] ...")
-      ks.load(null, storePass)
+      log.info(s"Creating empty key store [${keystore.getAbsolutePath()}] ...")
+      ks.load(null, storepass)
     }
 
-    Failure(new Exception("Boom"))
+    ks
+  }
+
+  private[ssl] def saveKeyStoreToFile(ks: KeyStore): Try[KeyStore] = Try {
+    val fos = new FileOutputStream(keystore)
+    try {
+      ks.store(fos, storepass)
+      log.info(s"Successfully written key store to [${keystore}] with storePass [${new String(storepass)}]")
+    } finally {
+      fos.close()
+    }
+
+    ks
+  }
+
+  // Extract a single certificate from the underlying keystore
+  // If a keypass is set, we will also extract the private key of the certificate
+  private[ssl] def extractCertificate(ks: KeyStore, alias: String): Try[CertificateHolder] = Try {
+    Option(ks.getCertificateChain(alias)) match {
+      case None =>
+        throw new Exception(s"Certificate for alias [$alias] not found.")
+
+      case Some(chain) =>
+        val e = ks.getCertificate(alias)
+        val pubKey : PublicKey = e.getPublicKey()
+        val privKey : Option[PrivateKey] = keypass.map { pwd =>
+          ks.getKey(alias, pwd).asInstanceOf[PrivateKey]
+        }
+
+        CertificateHolder.create(publicKey = pubKey, privateKey = privKey, chain = chain.toList).get
+    }
+  }
+
+  private[ssl] def memoryKeystore(ks: KeyStore): Try[MemoryKeystore] = Try {
+
+    val certs : Map[String, CertificateHolder] = ks.aliases().asScala.map { alias =>
+      (alias, extractCertificate(ks, alias).get)
+    }.toMap
+
+    val result = MemoryKeystore(certs)
+
+    if (result.consistent) {
+      result
+    } else {
+      throw new InconsistentKeystoreException(s"KeyStore [${keystore.getAbsolutePath()}] is inconsistent.")
+    }
   }
 }

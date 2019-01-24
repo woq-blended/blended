@@ -81,7 +81,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
         val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), inCert.publicKey)
         csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
 
-        // TODO addextensions ?
+        // TODO add extensions ?
 
         val csrSignerBuilder = new JcaContentSignerBuilder(cfg.csrSignAlgorithm)
         val csrSigner = csrSignerBuilder.build(privKey)

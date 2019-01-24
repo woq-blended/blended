@@ -10,7 +10,7 @@ import scala.concurrent.Promise
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.security.ssl.CertificateManager
-import blended.security.ssl.internal.ServerKeyStore
+import blended.security.ssl.internal.MemoryKeystore
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
@@ -71,8 +71,8 @@ class CertRefresher(salt: String) {
     registry.getBundleContext().getBundle().stop(0)
   }
 
-  def checkCert(): Future[(ServerKeyStore, List[String])] = {
-    val promise = Promise[(ServerKeyStore, List[String])]()
+  def checkCert(): Future[(MemoryKeystore, List[String])] = {
+    val promise = Promise[(MemoryKeystore, List[String])]()
     Future {
       new DominoActivator {
         whenBundleActive {
