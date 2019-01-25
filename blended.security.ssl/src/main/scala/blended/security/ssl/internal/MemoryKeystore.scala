@@ -40,13 +40,13 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
     certCfg: CertificateConfig,
     providerMap: Map[String, CertificateProvider],
     oldCert : Option[CertificateHolder]
-  ) : Try[MemoryKeystore] = Try {
+  ) : Try[(MemoryKeystore, List[String])] = Try {
     providerMap.get(certCfg.provider) match {
       case None =>
         log.warn(s"Certificate provider [${certCfg.provider}] not found, not updating certificate [${certCfg.alias}]")
-        this
+        (this, List.empty)
       case Some(p) =>
-        update(certCfg.alias, p.refreshCertificate(oldCert, certCfg.cnProvider).get).get
+        (update(certCfg.alias, p.refreshCertificate(oldCert, certCfg.cnProvider).get).get, List(certCfg.alias))
     }
   }
 
@@ -75,8 +75,8 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
               log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
 
               refreshCertificate(head, providerMap, Some(serverCertificate)) match {
-                case Success(newMs) =>
-                  changed(newMs, tail, providerMap, head.alias :: changedAliases).get
+                case Success((newMs, c)) =>
+                  changed(newMs, tail, providerMap, c ::: changedAliases).get
 
                 case Failure(t) =>
                   log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
@@ -90,7 +90,14 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
           // The keystore does not yet have a certificate for that alias
           case None =>
             log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
-            changed(refreshCertificate(head, providerMap, None).get, tail, providerMap, head.alias :: changedAliases).get
+            refreshCertificate(head, providerMap, None) match {
+              case Success((newMs, c)) =>
+                changed(newMs, tail, providerMap, c ::: changedAliases).get
+
+              case Failure(t) =>
+                log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
+                changed(current, tail, providerMap, changedAliases).get
+            }
         }
     }
   }

@@ -10,6 +10,7 @@ package-lock.json
 .bloop
 node_modules 
 target.tgz
+.sbtopts
 
 blended.sslcontext/notes.txt
 

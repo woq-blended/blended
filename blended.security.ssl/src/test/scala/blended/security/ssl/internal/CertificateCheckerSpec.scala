@@ -20,7 +20,7 @@ class CertificateCheckerSpec extends LoggingFreeSpec
       val root : CertificateHolder = createRootCertificate().get
 
       val newMs : MemoryKeystore = ms
-        .update("root", createRootCertificate().get).get
+        .update("root", root).get
         .update("host1", createHostCertificate("host1", root, 20).get).get
         .update("host2", createHostCertificate("host2", root, 8).get).get
 

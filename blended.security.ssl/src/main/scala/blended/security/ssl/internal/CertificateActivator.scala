@@ -54,5 +54,4 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
       setupCertificateManager(cfg, idSvc)
     }
   }
-
 }

@@ -7,6 +7,7 @@ import java.security.{KeyPair, KeyPairGenerator, SecureRandom}
 import blended.security.ssl.internal.JavaKeystore
 import blended.testsupport.BlendedTestSupport
 import org.bouncycastle.cert.X509v3CertificateBuilder
+import scala.concurrent.duration._
 
 import scala.util.{Success, Try}
 
@@ -18,7 +19,8 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
 
   val keyStrength : Int = 2048
   val sigAlg : String = "SHA256withRSA"
-  val validDays : Int = 365
+  val validDays : Int = 20
+  val millisPerDay : Long = 1.day.toMillis
 
   val kpg : KeyPairGenerator = {
     val kpg = KeyPairGenerator.getInstance("RSA")
@@ -31,7 +33,7 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     commonNameProvider = cnProvider,
     sigAlg = "SHA256withRSA",
     keyStrength = 2048,
-    validDays = 20
+    validDays = validDays
   )
 
   val jks: String => JavaKeystore = fileName => new JavaKeystore(
@@ -48,13 +50,13 @@ trait SecurityTestSupport { this : CertificateRequestBuilder with CertificateSig
     f
   }
 
-  def createRootCertificate(cn : String = "root") : Try[CertificateHolder] = Try {
+  def createRootCertificate(cn : String = "root", validDays : Int = validDays) : Try[CertificateHolder] = Try {
 
     val cnProvider : CommonNameProvider = new HostnameCNProvider(cn)
-    new SelfSignedCertificateProvider(selfSignedCfg(cnProvider)).refreshCertificate(None, cnProvider).get
+    new SelfSignedCertificateProvider(selfSignedCfg(cnProvider).copy(validDays = validDays)).refreshCertificate(None, cnProvider).get
   }
 
-  def createHostCertificate(hostName: String, issuedBy : CertificateHolder, validDays : Int = 10) : Try[CertificateHolder] = Try {
+  def createHostCertificate(hostName: String, issuedBy : CertificateHolder, validDays : Int = validDays) : Try[CertificateHolder] = Try {
 
     issuedBy.privateKey match {
 
