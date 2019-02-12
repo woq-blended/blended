@@ -40,4 +40,4 @@ addSbtPlugin("de.wayofquality" % "sbt-testlogconfig" % "0.1.0-SNAPSHOT")
 addSbtPlugin("de.wayofquality" % "sbt-jbake" % "0.1.0-SNAPSHOT")
 
 // Filter resources (like Maven)
-addSbtPlugin("de.wayofquality" % "sbt-filterresources" % "0.1.0-SNAPSHOT")
+addSbtPlugin("de.wayofquality" % "sbt-filterresources" % "0.1.1-SNAPSHOT")
