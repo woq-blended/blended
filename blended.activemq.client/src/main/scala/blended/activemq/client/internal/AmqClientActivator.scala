@@ -15,7 +15,7 @@ import org.apache.activemq.ActiveMQConnectionFactory
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-class AmqClientActivator extends DominoActivator with ActorSystemWatching with Logging {
+class AmqClientActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] val log = Logger[AmqClientActivator]
 
@@ -31,8 +31,8 @@ class AmqClientActivator extends DominoActivator with ActorSystemWatching with L
       new DefaultVerificationFailedHandler(osgiCfg.bundleContext)
         .providesService[VerificationFailedHandler]("name" -> "default")
 
-      val verifierName = osgiCfg.config.getString("verifier")
-      val failedHandlerName = osgiCfg.config.getString("failedHandler")
+      val verifierName = osgiCfg.config.getString("verifier", "default")
+      val failedHandlerName = osgiCfg.config.getString("failedHandler", "default")
       log.info(s"ActiveMQ Client connections using verifier [$verifierName]")
       log.info(s"Using verification failed handler [$failedHandlerName]")
 
