@@ -1,9 +1,5 @@
 language: scala
 
-# sudo: true
-
-scala: 2.12.8
-
 jdk: oraclejdk8
 
 addons:
@@ -13,13 +9,14 @@ services:
   - docker
 
 script:
-- sbt ciBuild
+  - sbt ciBuild
 
 cache:
   directories:
-  - "$HOME/.m2"
-  - "$HOME/.ivy2"
-  - "$HOME/.sbt"
+    - .prereq-refs
+    - "$HOME/.m2"
+    - "$HOME/.ivy2"
+    - "$HOME/.sbt"
 
 before_install:
   - sudo apt-get update
@@ -27,12 +24,12 @@ before_install:
   - openssl aes-256-cbc -K $encrypted_e8464d595ae2_key -iv $encrypted_e8464d595ae2_iv -in .dropbox_uploader.enc -out $HOME/.dropbox_uploader -d
 
 install:
-- wget -N http://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip -P ~/
-- unzip ~/chromedriver_linux64.zip -d ~/
-- sudo mkdir -p /opt
-- sudo mv -f ~/chromedriver /opt
-- sudo chmod +x /opt/chromedriver
-- sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
+  - wget -N http://chromedriver.storage.googleapis.com/2.40/chromedriver_linux64.zip -P ~/
+  - unzip ~/chromedriver_linux64.zip -d ~/
+  - sudo mkdir -p /opt
+  - sudo mv -f ~/chromedriver /opt
+  - sudo chmod +x /opt/chromedriver
+  - sudo ln -s /opt/chromedriver /usr/local/bin/chromedriver
 
 before_cache:
   - rm -Rf $HOME/.ivy2/.sbt.ivy.lock
@@ -91,56 +88,59 @@ jobs:
 
   # ------ Stage Prerequisites
   - stage: Prerequisites
-    script: bash -e ${TRAVIS_BUILD_DIR}/scripts/build-prerequisites.sh
+    script:
+      - sh -e scripts/build-prereq.sh sbt-testlogconfig
+      - sh -e scripts/build-prereq.sh sbt-jbake
+      - sh -e scripts/build-prereq.sh sbt-filterresources
 
   # ------ Stage Test
   - stage: Test
     before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
-    - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
+      - bash $TRAVIS_BUILD_DIR/scripts/checkScripts.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
     #- bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
-    - sbt clean publishM2 unidoc cleanCoverage
+      - sbt clean publishM2 unidoc cleanCoverage
     after_failure:
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
-    - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
 
   # ------ Stage Deploy
   - stage: Deploy
     script:
-    - bash $TRAVIS_BUILD_DIR/scripts/runPublish.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/runPublish.sh
 
   # ------ Build the integration test support
   - stage: BuildITest
     script:
-    - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/buildITest.sh
 
   # ------ Build and test the management UI
   - stage: BuildUI
     script:
-    - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
 
   # ------ Build Updater Maven Plugin
   - stage: BuildPlugin
     script:
-    - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
     script:
-    - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
+      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
     after_failure:
-    - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
     after_success:
-    - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
 
     # ------ Stage Site Deploy
   - stage: Site
     before_script:
-    - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target target
+      - bash $TRAVIS_BUILD_DIR/scripts/download-directory.sh $TRAVIS_BUILD_DIR/target target
     script:
-    - sbt jbakeSite
+      - sbt jbakeSite
     deploy:
       provider: pages
       local-dir: target/site
