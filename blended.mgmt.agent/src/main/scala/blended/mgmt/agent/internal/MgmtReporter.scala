@@ -142,7 +142,7 @@ trait MgmtReporter extends Actor with PrickleSupport {
           Unmarshal(entity).to[ContainerRegistryResponseOK].pipeTo(self)
 
         case _ =>
-          log.warn(s"Non-OK response ${config.map(c => s"(${c.registryUrl})").getOrElse()} from node: ${response}")
+          log.warn(s"Non-OK response ${config.map(c => c.registryUrl).getOrElse("")} from node: ${response}")
           response.discardEntityBytes()
       }
 

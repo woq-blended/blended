@@ -83,7 +83,7 @@ trait CollectorService {
 
   def collectorRoute: Route = {
 
-    implicit val timeout = Timeout(1.second)
+    implicit val timeout: Timeout = Timeout(1.second)
 
     path("container") {
       post {

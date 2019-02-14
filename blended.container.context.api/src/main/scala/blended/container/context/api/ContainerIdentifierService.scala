@@ -2,7 +2,6 @@ package blended.container.context.api
 
 import java.util.UUID
 
-import scala.annotation.meta.beanGetter
 import scala.beans.BeanProperty
 import scala.util.Try
 
