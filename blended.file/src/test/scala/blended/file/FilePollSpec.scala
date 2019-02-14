@@ -33,10 +33,11 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
       lock = Some(lockfile)
     )
 
-    val lockFile = if (lockfile.startsWith("./"))
+    val lockFile = if (lockfile.startsWith("./")) {
       new File(cfg.sourceDir, lockfile.substring(2))
-    else
+    } else {
       new File(lockfile)
+    }
 
     genFile(lockFile)
 

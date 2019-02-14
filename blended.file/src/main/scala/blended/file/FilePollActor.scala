@@ -40,10 +40,11 @@ class FilePollActor(
   private[this] def locked() : Boolean = cfg.lock match {
     case None => false
     case Some(l) =>
-      val f = if (l.startsWith("./"))
+      val f = if (l.startsWith("./")) {
         new File(cfg.sourceDir, l.substring(2))
-      else
+      } else {
         new File(l)
+      }
 
       if (f.exists()) {
         log.info(s"Directory for [${cfg.id}] is locked with file [${f.getAbsolutePath()}]")
@@ -66,7 +67,6 @@ class FilePollActor(
     } else if (locked()) {
       List.empty
     } else {
-
       srcDir.listFiles(new FilenameFilter {
         override def accept(dir: File, name: String): Boolean = {
           if (cfg.pattern.isEmpty || cfg.pattern.forall(p => name.matches(p))) {
