@@ -8,7 +8,7 @@ import scala.util.Failure
 import blended.testsupport.{BlendedTestSupport, TestFile}
 
 class UnzipperTest extends FreeSpec
-    with TestFile {
+  with TestFile {
 
   implicit val deletePolicy = TestFile.DeleteWhenNoFailure
 
@@ -25,7 +25,7 @@ class UnzipperTest extends FreeSpec
     "unpacking everything should work" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(testZip, dir, Nil, None, None)
-        assert(listFilesRecursive(dir).toSet === Set("dir1", "dir1/dir1a", "dir1/file2a.txt", "dir2", "file1.txt"))
+        expectFiles(dir, true, "dir1", "dir1/dir1a", "dir1/file2a.txt", "dir2", "file1.txt")
       }
     }
 
@@ -39,7 +39,7 @@ class UnzipperTest extends FreeSpec
         assert(fileSelector("dir1/file1") === false)
 
         val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
-        assert(listFilesRecursive(dir).toSet === Set("dir2"))
+        expectFiles(dir, true, "dir2")
       }
     }
     "unpacking with blacklist 2 should work" in {
@@ -49,24 +49,25 @@ class UnzipperTest extends FreeSpec
         val fileSelector = { fileName: String => !blacklist.exists(b => fileName == b || fileName.startsWith(b + "/")) }
 
         val files = Unzipper.unzip(testZip, dir, Nil, Some(fileSelector), None)
-        assert(listFilesRecursive(dir).toSet === Set("dir1", "dir1/file2a.txt", "dir2", "file1.txt"))
+        expectFiles(dir, true, "dir1", "dir1/file2a.txt", "dir2", "file1.txt")
       }
     }
 
   }
 
   "With a usable test2.zip file" - {
-    "unpacking everything and replacing a varible should work" in {
+    "unpacking everything and replacing a variable should work" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map("VERSION" -> "1.0.0"),
           failOnMissing = true
         )))
-        assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
+        assert(files.isSuccess)
+        expectFiles(dir, true, "etc", "etc/test.conf")
         assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-1.0.0\"", ""))
       }
     }
-    "unpacking everything and replacing a missing varible should not work" in {
+    "unpacking everything and replacing a missing variable should not work" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
@@ -78,13 +79,13 @@ class UnzipperTest extends FreeSpec
         assert(files.asInstanceOf[Failure[_]].exception.getCause.getMessage() === "No property found to replace: ${VERSION}")
       }
     }
-    "unpacking everything and replacing a missing varible should work when failOnMissing is false" in {
+    "unpacking everything and replacing a missing variable should work when failOnMissing is false" in {
       withTestDir() { dir =>
         val files = Unzipper.unzip(test2Zip, dir, Nil, None, Some(Unzipper.PlaceholderConfig(
           openSequence = "${", closeSequence = "}", escapeChar = '\\', properties = Map(),
           failOnMissing = false
         )))
-        assert(listFilesRecursive(dir).toSet === Set("etc", "etc/test.conf"))
+        expectFiles(dir, true, "etc", "etc/test.conf")
         assert(Source.fromFile(new File(dir, "etc/test.conf")).getLines().toList === List("name = \"replaced-version-${VERSION}\"", ""))
       }
     }
