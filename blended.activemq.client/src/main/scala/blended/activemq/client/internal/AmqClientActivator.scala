@@ -8,7 +8,6 @@ import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import domino.DominoActivator
-import domino.logging.Logging
 import javax.jms.ConnectionFactory
 import org.apache.activemq.ActiveMQConnectionFactory
 
