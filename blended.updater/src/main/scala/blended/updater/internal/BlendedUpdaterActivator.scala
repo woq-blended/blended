@@ -25,13 +25,12 @@ case class UpdateEnv(
   launchProfileLookupFile: Option[File],
   profilesBaseDir: File,
   launchedProfileDir: Option[File],
-  overlays: Option[List[OverlayRef]])
+  overlays: Option[List[OverlayRef]]
+)
 
 class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
   private[this] val log = Logger[BlendedUpdaterActivator]
-
-  private[this] var commandsReg: Option[ServiceRegistration[_]] = None
 
   whenBundleActive {
     whenActorSystemAvailable { cfg =>
@@ -44,46 +43,16 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
       readUpdateEnv() match {
         case None =>
-          sys.error("Cannot detect updateable environment. Did you used the blended launcher?")
+          sys.error("Cannot detect updateable environment. You need to use the blended launcher to enable the update feature.")
 
         case Some(updateEnv) =>
-          println("Blended Updated env: " + updateEnv)
+          log.info("Blended Updated env: " + updateEnv)
 
-          val profileActivator = new ProfileActivator {
-            override def apply(
-              newName: String,
-              newVersion: String,
-              newOverlays: Set[OverlayRef]): Boolean = {
-              // TODO: Error reporting
-              updateEnv match {
-                case UpdateEnv(_, _, Some(lookupFile), _, _, _) =>
-                  // TODO: write Config
-                  val config = ConfigFactory.parseFile(lookupFile).resolve()
-                  ProfileLookup.read(config) match {
-                    case Success(profileLookup) =>
-                      val newConfig = profileLookup.copy(
-                        profileName = newName,
-                        profileVersion = newVersion,
-                        overlays = newOverlays.toSet
-                      )
-                      log.debug(s"About to update profile lookup file: ${lookupFile} with config: ${newConfig}")
-                      ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
-                      true
-                    case Failure(e) =>
-                      false
-                  }
-
-                case _ =>
-                  // no lookup file
-                  false
-              }
-            }
-          }
-
-          val actor = setupBundleActor(cfg,
+          val actor = setupBundleActor(
+            cfg,
             Updater.props(
               baseDir = updateEnv.profilesBaseDir,
-              profileActivator = profileActivator,
+              profileActivator = profileActivator(updateEnv),
               restartFramework = restartFrameworkAction,
               config = UpdaterConfig.fromConfig(cfg.config),
               launchedProfileDir = updateEnv.launchedProfileDir.orNull,
@@ -103,9 +72,6 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
 
           }
 
-          //          val osgiCommands = new OsgiCommands(bundleContext)
-          //          registerCommands(osgiCommands, osgiCommands.commands)
-
           val commands = new Commands(actor, Some(updateEnv))(cfg.system)
           registerCommands(commands, commands.commandsWithDescription)
 
@@ -113,7 +79,7 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 
-  def readUpdateEnv(): Option[UpdateEnv] = try {
+  private def readUpdateEnv(): Option[UpdateEnv] = try {
     val props = blended.launcher.runtime.Branding.getProperties()
     println("Blended Launcher detected: " + props)
     val pName = Option(props.getProperty(RuntimeConfig.Properties.PROFILE_NAME))
@@ -147,6 +113,37 @@ class BlendedUpdaterActivator extends DominoActivator with ActorSystemWatching {
     case e: NoSuchElementException =>
       // could not found some required properties
       None
+  }
+
+  private def profileActivator(updateEnv: UpdateEnv) = new ProfileActivator {
+    override def apply(
+      newName: String,
+      newVersion: String,
+      newOverlays: Set[OverlayRef]
+    ): Boolean = {
+      // TODO: Error reporting
+      updateEnv match {
+        case UpdateEnv(_, _, Some(lookupFile), _, _, _) =>
+          val config = ConfigFactory.parseFile(lookupFile).resolve()
+          ProfileLookup.read(config) match {
+            case Success(profileLookup) =>
+              val newConfig = profileLookup.copy(
+                profileName = newName,
+                profileVersion = newVersion,
+                overlays = newOverlays.toSet
+              )
+              log.debug(s"About to update profile lookup file: ${lookupFile} with config: ${newConfig}")
+              ConfigWriter.write(ProfileLookup.toConfig(newConfig), lookupFile, None)
+              true
+            case Failure(e) =>
+              false
+          }
+
+        case _ =>
+          // no lookup file
+          false
+      }
+    }
   }
 
 }
