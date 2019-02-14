@@ -8,6 +8,7 @@ import java.io.SyncFailedException
 import java.util.UUID
 
 trait TestFile {
+
   import TestFile._
 
   def nextId(): String = UUID.randomUUID().toString()
@@ -68,10 +69,10 @@ trait TestFile {
   }
 
   def writeFile(file: File, content: String): Unit = writeToFile(file, append = false, content)
- 
+
   def appendFile(file: File, content: String): Unit = writeToFile(file, append = true, content)
-  
-  
+
+
   private[this] def writeToFile(file: File, append: Boolean, content: String): Unit = {
     Option(file.getParentFile()) foreach { parent =>
       parent.mkdirs()
@@ -153,7 +154,24 @@ trait TestFile {
           }
       }
     }
+
     list(file, "").sorted
+  }
+
+
+  def expectFiles(dir: File, exact: Boolean, files: String*): Unit = {
+    val existing = listFilesRecursive(dir).toSet
+    val expected = files.toSet
+    val missing = expected.diff(existing)
+    if (!missing.isEmpty) {
+      throw new AssertionError(s"${missing.size} missing files in directory [${dir}]: [${missing.mkString(",")}]")
+    }
+    if (exact) {
+      val tooMany = existing.diff(expected)
+      if (!tooMany.isEmpty) {
+        throw new AssertionError(s"${tooMany.size} unexpected files in directory [${dir}]: [${tooMany.mkString(",")}]")
+      }
+    }
   }
 
 }
@@ -161,8 +179,11 @@ trait TestFile {
 object TestFile extends TestFile {
 
   sealed trait DeletePolicy
+
   case object DeleteAlways extends DeletePolicy
+
   case object DeleteNever extends DeletePolicy
+
   case object DeleteWhenNoFailure extends DeletePolicy
 
 }
