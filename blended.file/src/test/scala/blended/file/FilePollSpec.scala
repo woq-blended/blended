@@ -82,16 +82,16 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
       val actor = system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
       probe.expectNoMessage(3.seconds)
 
-      val f = new File(srcDir, "test.txt")
+      val f = new File(srcDir, "test1.txt")
       genFile(f)
 
       probe.expectMsgType[FileProcessed]
       f.exists() should be (false)
 
       val files = List(
-        new File(srcDir, "test.txt"),
-        new File(srcDir, "test.xml"),
-        new File(srcDir, "test2.txt")
+        new File(srcDir, "test2.txt"),
+        new File(srcDir, "test3.xml"),
+        new File(srcDir, "test4.txt")
       )
 
       files.foreach(genFile)
@@ -102,7 +102,7 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
       files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
 
       handler.handled should have size(3)
-      handler.handled.head.f.getName() should be ("test2.txt")
+      handler.handled.map(_.f.getName()).sorted should be (List("test4.txt", "test2.txt", "test1.txt").sorted)
     }
 
     "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>
