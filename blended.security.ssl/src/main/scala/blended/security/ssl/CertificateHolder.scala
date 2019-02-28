@@ -2,7 +2,9 @@ package blended.security.ssl
 
 import java.security.{KeyPair, Principal, PrivateKey, PublicKey}
 import java.security.cert.{Certificate, X509Certificate}
+import java.util.Date
 
+import javax.crypto.Cipher
 import javax.security.auth.x500.X500Principal
 
 import scala.util.Try
@@ -40,6 +42,20 @@ case class CertificateHolder (
   // A complete dump of the certificate chain as a String
   def dump : String = {
     chain.map { c => c.toString() }.mkString("\n" + "*" * 30 , "\n\n--- Signed by ---\n\n", "*" * 30)
+  }
+
+  lazy val keypairValid : Option[Boolean] = privateKey.map { pk =>
+    val enc = Cipher.getInstance("RSA")
+
+    enc.init(Cipher.ENCRYPT_MODE, pk)
+    val s1 = new Date().toString()
+    val encrypred = enc.doFinal(s1.getBytes())
+
+    val dec = Cipher.getInstance("RSA")
+    dec.init(Cipher.DECRYPT_MODE, publicKey)
+    val s2 = new String(dec.doFinal(encrypred))
+
+    s1.equals(s2)
   }
 }
 

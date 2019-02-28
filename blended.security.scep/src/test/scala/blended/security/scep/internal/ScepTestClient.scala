@@ -48,6 +48,9 @@ object ScepTestClient {
       log.info(X509CertificateInfo(c).toString)
     }
 
+    assert(cert1.keypairValid.contains(true))
+    assert(cert1.keypairValid.contains(true))
+
     val memStore : MemoryKeystore = new MemoryKeystore(Map.empty)
       .update("initial", cert1).get
       .update("refreshed", cert2).get
