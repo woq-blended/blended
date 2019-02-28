@@ -39,7 +39,7 @@ case class CertificateHolder (
 
   // A complete dump of the certificate chain as a String
   def dump : String = {
-    chain.map { c => c.toString() }.mkString("*" * 30 , "\n\n--- Signed by ---\n\n", "*" * 30)
+    chain.map { c => c.toString() }.mkString("\n" + "*" * 30 , "\n\n--- Signed by ---\n\n", "*" * 30)
   }
 }
 

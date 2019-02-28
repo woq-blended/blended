@@ -1,12 +1,14 @@
 package blended.security.scep.internal
 
+import java.io.{ByteArrayOutputStream, PrintStream}
 import java.net.URL
-import java.security.cert.Certificate
+import java.security._
+import java.security.cert.{Certificate, X509Certificate}
 
 import blended.security.ssl._
 import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.x500.X500Principal
-import org.bouncycastle.asn1.DERPrintableString
+import org.bouncycastle.asn1.{ASN1Encodable, DERPrintableString}
 import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder
 import org.bouncycastle.pkcs.jcajce.JcaPKCS10CertificationRequestBuilder
@@ -17,6 +19,9 @@ import org.jscep.transport.response.Capabilities
 import scala.collection.JavaConverters._
 import scala.util.Try
 import blended.util.logging.Logger
+import org.bouncycastle.asn1.x509.{Extension, ExtensionsGenerator, GeneralName, GeneralNames}
+import org.bouncycastle.pkcs.PKCS10CertificationRequest
+import sun.misc.BASE64Encoder
 
 case class ScepConfig(
   url : String,
@@ -26,7 +31,9 @@ case class ScepConfig(
   scepChallenge : String
 )
 
-class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
+class ScepCertificateProvider(cfg: ScepConfig)
+  extends CertificateRequestBuilder
+  with CertificateProvider {
 
   private[this] lazy val log = Logger[ScepCertificateProvider]
 
@@ -47,10 +54,10 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     existing match {
       case None =>
         log.info("Obtaining initial server certificate from SCEP server.")
-        enroll(selfSignedCertificate(cnProvider).get, cnProvider)
+        enroll(None, cnProvider)
       case Some(c) =>
         log.info("Refreshing certificate previously obtained from SCEP server.")
-        enroll(c, cnProvider)
+        enroll(Some(c), cnProvider)
     }
   }
 
@@ -66,26 +73,63 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
     new SelfSignedCertificateProvider(selfSignedConfig).refreshCertificate(None, cnProvider)
   }
 
-  private[this] def enroll(inCert : CertificateHolder, cnProvider: CommonNameProvider): Try[CertificateHolder] = Try {
+  private def dumpCsr(csr : PKCS10CertificationRequest) : Unit = {
 
-    inCert.privateKey match {
+    val s = new BASE64Encoder().encode(csr.getEncoded())
+    println("-----BEGIN CERTIFICATE REQUEST-----\n" + s + "\n-----END CERTIFICATE REQUEST-----\n")
+  }
+
+  private[this] def enroll(
+    inCert : Option[CertificateHolder],
+    cnProvider: CommonNameProvider
+  ): Try[CertificateHolder] = Try {
+
+    val selfSigned = selfSignedCertificate(cnProvider).get
+
+    val csrSignKey : Option[PrivateKey] = inCert match {
+      case None => selfSigned.privateKey
+      case Some(c) => c.privateKey
+    }
+
+    csrSignKey match {
       case None =>
-        throw new Exception("Certificate to refresh must have a private key defined.")
+        throw new Exception("No key found to sign SCEP certificate request.")
 
       case Some(privKey) =>
 
-        val reqCert = inCert.chain.head
+        val reqCert : X509Certificate = inCert match {
+          case None =>
+            log.info(s"Requesting initial certificate from SCEP server at [${cfg.url}].")
+            selfSigned.chain.head
+          case Some(c) =>
+            log.info(s"Refreshing certificate from SCEP server at [${cfg.url}].")
+            c.chain.head
+        }
 
-        log.info(s"Trying to obtain server certificate from SCEP server at [${cfg.url}] with existing certificate [${X509CertificateInfo(reqCert)}]" )
-
-        val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), inCert.publicKey)
+        val csrBuilder = new JcaPKCS10CertificationRequestBuilder(new X500Principal(cnProvider.commonName().get), reqCert.getPublicKey())
         csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_challengePassword, new DERPrintableString(cfg.scepChallenge))
+
+        if (cnProvider.alternativeNames().get.nonEmpty) {
+          val altNames : Array[GeneralName] = cnProvider.alternativeNames().get.map { n=>
+            log.info(s"Adding alternative dns name [$n] to SCEP certificate request.")
+            new GeneralName(GeneralName.dNSName, n)
+          }.toArray
+
+          val names = new GeneralNames(altNames)
+          val extGen = new ExtensionsGenerator()
+          val sanExt = extGen.addExtension(Extension.subjectAlternativeName, false, names)
+
+          csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extGen.generate())
+        }
 
         // TODO add extensions ?
 
         val csrSignerBuilder = new JcaContentSignerBuilder(cfg.csrSignAlgorithm)
         val csrSigner = csrSignerBuilder.build(privKey)
         val csr = csrBuilder.build(csrSigner)
+
+        dumpCsr(csr
+        )
 
         val response = scepClient.enrol(reqCert, privKey, csr)
 
@@ -106,7 +150,7 @@ class ScepCertificateProvider(cfg: ScepConfig) extends CertificateProvider {
           log.info(s"Retrieved [${certs.length}] certificates from [${cfg.url}].")
 
           CertificateHolder.create(
-            publicKey = inCert.publicKey,
+            publicKey = reqCert.getPublicKey(),
             privateKey = Some(privKey),
             chain = certs
           ).get

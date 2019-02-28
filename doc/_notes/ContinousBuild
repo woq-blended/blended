@@ -21,13 +21,20 @@ https://jaxenter.de/der-steuermann-fuers-containerschiff-65844
 
 Install Jenkins in Kubernetes
 https://www.blazemeter.com/blog/how-to-setup-scalable-jenkins-on-top-of-a-kubernetes-cluster
+https://www.infoq.com/articles/scaling-docker-with-kubernetes
 
-1. Create jenkins namespace
-kubectl create namespace jenkins
+Make sure the default account can be used:
+https://github.com/fabric8io/fabric8/issues/6840
 
-Plan:
-- create and configure Docker Image for jenkins master
-  - project blended.helm/docker/jenkins-master
-- run image locally on docker only
-- deploy image to minikube
-- deploy image to kubectl
+Sample Jenkins Pipeline
+https://github.com/eldada/jenkins-pipeline-kubernetes/blob/master/Jenkinsfile
+
+Automating jenkins setup
+https://dzone.com/articles/dockerizing-jenkins-2-setup-and-using-it-along-wit
+https://dzone.com/articles/dockerizing-jenkins-part-2-deployment-with-maven-a
+https://dzone.com/articles/securing-password-with-docker-compose-docker-secre
+https://dzone.com/articles/putting-jenkins-build-logs-into-elk-stack-filebeat
+https://dzone.com/articles/creating-jenkins-configuration-as-code-and-applyin
+
+Multinode local kubernetes cluster
+https://github.com/kinvolk/kube-spawn
