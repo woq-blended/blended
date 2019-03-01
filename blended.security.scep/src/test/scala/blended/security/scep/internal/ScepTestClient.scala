@@ -19,9 +19,9 @@ object ScepTestClient {
     log.info("Starting Scep Test Client ...")
 
     val cnProvider = new CommonNameProvider {
-      override def commonName(): Try[String] = Try { "CN=cachea.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC" }
-      //override def commonName(): Try[String] = Try { "CN=cc9999lnxprx01.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC" }
-      override def alternativeNames(): Try[List[String]] = Try { List("cachea.9998.cc.kaufland", "cachea.9999.cc.kaufland") }
+      //override def commonName(): Try[String] = Try { "CN=cachea.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC" }
+      override def commonName(): Try[String] = Try { "CN=cc9999lnxprx01.9999.de.kaufland, O=Schwarz IT GmbH & Co. KG, C=DE" }
+      override def alternativeNames(): Try[List[String]] = Try { List("cc9999lnxprx01.9999.de.kaufland", "cachea.9999.de.kaufland") }
     }
 
     val scepConfig = new ScepConfig(
