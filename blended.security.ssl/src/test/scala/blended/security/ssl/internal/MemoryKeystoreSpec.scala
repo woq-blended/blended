@@ -66,20 +66,20 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
       val ms : MemoryKeystore = new MemoryKeystore(Map.empty)
 
-      val (newMs, changed) = ms.refreshCertificates(List(certCfg), Map("selfsigned" -> provider)).get
+      val newMs = ms.refreshCertificates(List(certCfg), Map("selfsigned" -> provider)).get
 
       newMs.certificates should have size 1
       newMs.certificates.keys should contain("cert")
 
-      changed should be (List("cert"))
+      newMs.changedAliases should be (List("cert"))
     }
 
     "should not update the certificates if the required provider can't be found (empty store)" in {
       val ms : MemoryKeystore = new MemoryKeystore(Map.empty)
-      val (newMs, changed) = ms.refreshCertificates(List(certCfg), Map.empty).get
+      val newMs = ms.refreshCertificates(List(certCfg), Map.empty).get
 
       newMs.certificates should be (empty)
-      changed should be (empty)
+      newMs.changedAliases should be (empty)
     }
 
     "should not update the certificates if the required provider can't be found (non-empty store)" in {
@@ -88,10 +88,10 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
       val root : CertificateHolder = createRootCertificate(validDays = validDays / 2).get
 
       val ms : MemoryKeystore = new MemoryKeystore(Map(certCfg.alias -> root))
-      val (newMs, changed) = ms.refreshCertificates(List(certCfg), Map.empty).get
+      val newMs = ms.refreshCertificates(List(certCfg), Map.empty).get
 
       newMs.certificates should have size 1
-      changed should be (empty)
+      newMs.changedAliases should be (empty)
 
       newMs.certificates.values.head.chain.head.getSerialNumber should be (BigInteger.ONE)
     }
@@ -110,10 +110,10 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
         certCfg.copy(alias = "stillValid")
       )
 
-      val (newMs, changed) = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
+      val newMs = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
 
       newMs.certificates should have size(2)
-      changed should be (List("timingOut"))
+      newMs.changedAliases should be (List("timingOut"))
 
       newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be (BigInteger.ONE)
       newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be (new BigInteger("2"))
@@ -137,14 +137,13 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
         certCfg.copy(alias = "stillValid")
       )
 
-      val (newMs, changed) = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
+      val newMs = ms.refreshCertificates(certCfgs, Map("selfsigned" -> provider)).get
 
       newMs.certificates should have size(2)
-      changed should be (List.empty)
+      newMs.changedAliases should be (List.empty)
 
       newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be (BigInteger.ONE)
       newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be (BigInteger.ONE)
-
     }
   }
 }

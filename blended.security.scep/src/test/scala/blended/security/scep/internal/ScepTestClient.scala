@@ -7,6 +7,7 @@ import blended.security.ssl.internal.{JavaKeystore, MemoryKeystore}
 import scala.util.Try
 import blended.security.ssl.{CommonNameProvider, X509CertificateInfo}
 import blended.util.logging.Logger
+import javax.tools.DocumentationTool.Location
 
 object ScepTestClient {
 
@@ -18,10 +19,16 @@ object ScepTestClient {
 
     log.info("Starting Scep Test Client ...")
 
+    val country = "de"
+    val location = "0113"
+
     val cnProvider = new CommonNameProvider {
       //override def commonName(): Try[String] = Try { "CN=cachea.9999.cc.kaufland, O=Schwarz IT GmbH & Co. KG, C=CC" }
-      override def commonName(): Try[String] = Try { "CN=cc9999lnxprx01.9999.de.kaufland, O=Schwarz IT GmbH & Co. KG, C=DE" }
-      override def alternativeNames(): Try[List[String]] = Try { List("cc9999lnxprx01.9999.de.kaufland", "cachea.9999.de.kaufland") }
+      override def commonName(): Try[String] = Try { s"CN=${country}${location}lnxprx02.${location}.${country}.kaufland, O=Schwarz IT GmbH & Co. KG, C=${country.toUpperCase()}" }
+      override def alternativeNames(): Try[List[String]] = Try { List(
+        s"${country}${location}lnxprx02.${location}.de.kaufland",
+        s"cacheb.${location}.${country}.kaufland"
+      )}
     }
 
     val scepConfig = new ScepConfig(

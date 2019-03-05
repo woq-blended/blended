@@ -29,17 +29,17 @@ object ContainerPropertyResolver {
   private[this] val evalStartChar = "{"
   private[this] val evalEndChar = "}"
 
-  private[this] val startDelim : String => String => Pattern = { s => e =>
+  private[this] val startDelim : String => Pattern = { s =>
     val buf : StringBuffer = new StringBuffer()
-    buf.append("(\\$\\" + s + ")")                             // Match a modifier if any
-    buf.append("([^\\" + s + "]*)(\\" + s + ")")
+    buf.append("(\\$\\" + s + ")")               // Match a modifier if any
+    buf.append("([^\\" + s + "]*)(\\" + s + ")") // capture the modifier name as match group
     Pattern.compile(buf.toString)
   }
 
-  private[this] val resolveStartDelim : Pattern = startDelim(resolveStartChar)(resolveEndChar)
+  private[this] val resolveStartDelim : Pattern = startDelim(resolveStartChar)
   private[this] val resolveEndDelim : String = s"$resolveEndChar$resolveEndChar"
 
-  private[this] val evalStartDelim : Pattern = startDelim(evalStartChar)(evalEndChar)
+  private[this] val evalStartDelim : Pattern = startDelim(evalStartChar)
   private[this] val evalEndDelim : String = s"$evalEndChar$evalEndChar"
 
   private[this] val parser = new SpelExpressionParser()
@@ -225,6 +225,9 @@ object ContainerPropertyResolver {
   ) : AnyRef = {
 
     val context = new StandardEvaluationContext()
+    classOf[SpelFunctions].getDeclaredMethods().foreach { m =>
+      context.registerFunction(m.getName(), m)
+    }
     context.setRootObject(idSvc)
 
     additionalProps.foreach { case (k,v) =>

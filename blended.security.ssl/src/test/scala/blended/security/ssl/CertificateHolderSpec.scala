@@ -68,5 +68,4 @@ class CertificateHolderSpec extends LoggingFreeSpec
       }
     }
   }
-
 }

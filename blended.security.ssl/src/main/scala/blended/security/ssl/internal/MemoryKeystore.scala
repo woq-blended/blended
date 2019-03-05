@@ -13,6 +13,8 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   private[this] val log : Logger = Logger[MemoryKeystore]
   private[this] val millisPerDay : Long = 1.day.toMillis
 
+  val changedAliases : List[String] = certificates.filter { case (k,v) => v.changed }.keys.toList
+
   // The in memory keystore is consistent if and only if all certificates have a private key defined
   // or none of it does have a private key defined.
   def consistent : Boolean = {
@@ -20,9 +22,13 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   }
 
   def update(alias: String, cert : CertificateHolder) : Try[MemoryKeystore] = Try {
-    val result : MemoryKeystore = MemoryKeystore(certificates.filterKeys(_ != alias) + (alias -> cert))
+
+    log.info(s"Updating memory keystore [alias=$alias]")
+    val result : MemoryKeystore =
+      MemoryKeystore(certificates.filterKeys(_ != alias) + (alias -> cert.copy(changed = true)))
 
     if (result.consistent) {
+      log.info(s"Updated keystore aliases : [${result.certificates.keys}]")
       result
     } else {
       throw new InconsistentKeystoreException("Keystore must be consistent after update")
@@ -40,27 +46,26 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
     certCfg: CertificateConfig,
     providerMap: Map[String, CertificateProvider],
     oldCert : Option[CertificateHolder]
-  ) : Try[(MemoryKeystore, List[String])] = Try {
+  ) : Try[MemoryKeystore] = Try {
     providerMap.get(certCfg.provider) match {
       case None =>
         log.warn(s"Certificate provider [${certCfg.provider}] not found, not updating certificate [${certCfg.alias}]")
-        (this, List.empty)
+        this
       case Some(p) =>
-        (update(certCfg.alias, p.refreshCertificate(oldCert, certCfg.cnProvider).get).get, List(certCfg.alias))
+        val newCert = p.refreshCertificate(oldCert, certCfg.cnProvider).get
+        log.info(s"Obtained certificate for alias [${certCfg.alias}] : [${newCert}]")
+        update(certCfg.alias, newCert).get
     }
   }
 
-  private[this] def changed(
-    current : MemoryKeystore,
+  private[ssl] def changed(
     certConfigs: List[CertificateConfig],
-    providerMap: Map[String, CertificateProvider],
-    changedAliases: List[String]
-  ): Try[(MemoryKeystore, List[String])] = Try {
+    providerMap: Map[String, CertificateProvider]
+  ): Try[MemoryKeystore] = Try {
 
     certConfigs match {
       // No further certificate configs to check, returning result
-      case Nil =>
-        (current, changedAliases)
+      case Nil => this
 
       // Otherwise we check the certificate specifies by the cert config at the head of
       // the list and update the result
@@ -75,28 +80,28 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
               log.info(s"Certificate [${head.alias}] is about to expire in ${remaining.toDouble / millisPerDay} days...refreshing certificate")
 
               refreshCertificate(head, providerMap, Some(serverCertificate)) match {
-                case Success((newMs, c)) =>
-                  changed(newMs, tail, providerMap, c ::: changedAliases).get
+                case Success(newMs) =>
+                  newMs.changed(tail, providerMap).get
 
                 case Failure(t) =>
                   log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
-                  changed(current, tail, providerMap, changedAliases).get
+                  changed(tail, providerMap).get
               }
             } else {
               log.info(s"Server certificate [${head.alias}] is still valid.")
-              changed(current, tail, providerMap, changedAliases).get
+              changed(tail, providerMap).get
             }
 
           // The keystore does not yet have a certificate for that alias
           case None =>
             log.info(s"Certificate with alias [${head.alias}] does not yet exist.")
             refreshCertificate(head, providerMap, None) match {
-              case Success((newMs, c)) =>
-                changed(newMs, tail, providerMap, c ::: changedAliases).get
+              case Success(newMs) =>
+                newMs.changed(tail, providerMap).get
 
               case Failure(t) =>
-                log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
-                changed(current, tail, providerMap, changedAliases).get
+                log.info(s"Could not refresh certificate [${head.alias}] : [${t.getMessage()}] ... reusing the existing one.")
+                changed(tail, providerMap).get
             }
         }
     }
@@ -105,9 +110,10 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
   def refreshCertificates(
     certCfgs : List[CertificateConfig],
     providerMap : Map[String, CertificateProvider]
-  ): Try[(MemoryKeystore, List[String])] = {
+  ): Try[MemoryKeystore] = {
 
-    changed(this, certCfgs, providerMap, List.empty)
+    val result = changed(certCfgs, providerMap)
+    result
   }
 
 }

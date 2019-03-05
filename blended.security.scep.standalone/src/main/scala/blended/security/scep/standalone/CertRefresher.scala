@@ -71,8 +71,8 @@ class CertRefresher(salt: String) {
     registry.getBundleContext().getBundle().stop(0)
   }
 
-  def checkCert(): Future[(MemoryKeystore, List[String])] = {
-    val promise = Promise[(MemoryKeystore, List[String])]()
+  def checkCert(): Future[MemoryKeystore] = {
+    val promise = Promise[MemoryKeystore]()
     Future {
       new DominoActivator {
         whenBundleActive {

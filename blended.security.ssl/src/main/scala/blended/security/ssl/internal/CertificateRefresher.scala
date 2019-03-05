@@ -82,8 +82,8 @@ class CertificateRefresher(
           log.debug(e)("Automatic certifcate refresh failed. Countinuing with old SslContextProvider")
           scheduleRefresh(refresherConfig)
 
-        case Success((newKs, changed)) =>
-          if (changed.isEmpty) {
+        case Success(newKs) =>
+          if (newKs.changedAliases.isEmpty) {
             // no cert update
             log.debug("Automatic certificate refresh could not obtain an updated certificate. Continuing with old SslContextProviver")
             scheduleRefresh(refresherConfig)

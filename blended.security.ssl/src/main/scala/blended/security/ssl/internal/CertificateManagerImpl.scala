@@ -40,6 +40,9 @@ class CertificateManagerImpl(
     val sslCtxtProvider = new SslContextProvider(javaKeystore.loadKeyStoreFromFile().get, cfg.keyPass.toCharArray)
     // TODO: what should we do with this side-effect, if we unregister the context provider?
     // FIXME: should this side-effect be configurable?
+
+    log.info(new SSLContextInfo("server", sslCtxtProvider.serverContext).toString())
+
     SSLContext.setDefault(sslCtxtProvider.serverContext)
     val serverReg = sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
     val clientReg = sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
@@ -59,19 +62,24 @@ class CertificateManagerImpl(
           log.error("Could not initialise Server certificate(s)")
           throw e
 
-        case Success((sks, _)) =>
-          log.info("Successfully obtained Server Certificate(s) for SSLContext")
-          val regScope : Try[CapsuleScope] = Try { registerSslContextProvider() }
+        case Success(sks) =>
+          log.info(s"Successfully obtained [${sks.certificates.size}] Server Certificate(s) for SSLContext")
+          javaKeystore.saveKeyStore(sks) match {
+            case Failure(t) =>
+              log.warn(s"Failed to save keystore to file [${cfg.keyStore}] : [${t.getMessage()}]")
+            case Success(mks) =>
+              val regScope : Try[CapsuleScope] = Try { registerSslContextProvider() }
 
-          cfg.refresherConfig match {
-            case None => log.debug("No configuration for automatic certificate refresh found")
-            case Some(c) =>
-              regScope match {
-                case Success(scope) =>
-                  capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, scope))
-                case Failure(t) => log.warn(s"Failed to load keystore from [${cfg.keyStore}] : [${t.getMessage()}]")
+              cfg.refresherConfig match {
+                case None => log.debug("No configuration for automatic certificate refresh found")
+                case Some(c) =>
+                  regScope match {
+                    case Success(scope) =>
+                      capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, scope))
+                    case Failure(t) =>
+                      log.warn(s"Failed to load keystore from [${cfg.keyStore}] : [${t.getMessage()}]")
+                  }
               }
-
           }
       }
     } else {
@@ -88,7 +96,7 @@ class CertificateManagerImpl(
   /**
    * @return When successful, a tuple of keystore and a list of updated certificate aliases, else the failure.
    */
-  override def checkCertificates(): Try[(MemoryKeystore, List[String])] = Try {
+  override def checkCertificates(): Try[MemoryKeystore] = Try {
     val ms : MemoryKeystore = loadKeyStore().get
     ms.refreshCertificates(cfg.certConfigs, providerMap).get
   }

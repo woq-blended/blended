@@ -96,6 +96,16 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "$[[version(replace:\\.:_)]]") should be ("2_2_0")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeA(replace:A:1)(replace:B:2))]]") should be ("1")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
+
+      ContainerPropertyResolver.resolve(idSvc, "${{'$[[foo]]'.toUpperCase()}}") should be("BAR")
+      ContainerPropertyResolver.resolve(idSvc, "${{'$[[FOO]]'.toLowerCase()}}") should be("bar")
+      //ContainerPropertyResolver.resolve(idSvc, "${{#capitalize('$[[FOO]]'.toLowerCase())}}") should be("Bar")
+      ContainerPropertyResolver.resolve(idSvc, "${{#left('$[[num]]', 4)}}") should be ("1234")
+      ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 4)}}") should be ("2345")
+      ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 6)}}") should be ("12345")
+      ContainerPropertyResolver.resolve(idSvc, "${{'$[[version]]'.replaceAll('\\.', '_')}}") should be ("2_2_0")
+//      ContainerPropertyResolver.resolve(idSvc, "${{#replace('$[[typeA]]')}}") should be ("1")
+      ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
     }
 
     "should allow to delay the property resolution" in {

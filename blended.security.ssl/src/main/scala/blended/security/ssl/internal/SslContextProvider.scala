@@ -39,14 +39,14 @@ class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
   }
 
   lazy val serverContext: SSLContext = {
-    val result = SSLContext.getInstance("TLS")
+    val result = SSLContext.getInstance("TLSv1.2")
     result.init(keyManager, trustManager, null)
 
     result
   }
 
   lazy val clientContext : SSLContext = {
-    val ctxt = SSLContext.getInstance("TLS")
+    val ctxt = SSLContext.getInstance("TLSv1.2")
     ctxt.init(null, trustManager, null)
 
     ctxt

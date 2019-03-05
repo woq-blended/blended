@@ -4,11 +4,12 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, PublicKey}
 
-import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException, X509CertificateInfo}
+import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException}
 import blended.util.logging.Logger
 
 import scala.collection.JavaConverters._
 import scala.util.Try
+import scala.collection.JavaConverters._
 
 class JavaKeystore(
   keystore : File,
@@ -70,6 +71,8 @@ class JavaKeystore(
   private[ssl] def saveKeyStoreToFile(ks: KeyStore): Try[KeyStore] = Try {
     val fos = new FileOutputStream(keystore)
     try {
+      val certCount = ks.aliases().asScala.size
+      log.info(s"Storing [$certCount] certificates to [$keystore]")
       ks.store(fos, storepass)
       log.info(s"Successfully written key store to [${keystore}] with storePass [${new String(storepass)}]")
     } finally {
