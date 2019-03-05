@@ -95,20 +95,26 @@ object BlendedLauncher extends ProjectFactory {
         Universal / topLevelDirectory := None,
 
         Universal / mappings += {
-          val packaged = (Compile/packageBin).value
+          val packaged = (Compile / packageBin).value
           packaged -> s"lib/${packaged.getName}"
         },
         Universal / mappings ++= {
           val dir = baseDirectory.value / "src" / "runner" / "binaryResources"
           PathFinder(dir).**("***").pair(relativeTo(dir))
         },
-        Universal / mappings ++= (Compile / dependencyClasspathAsJars).value.filter(_.data.isFile).map { f =>
-          f.data -> s"lib/${f.data.getName}"
-        },
+        Universal / mappings ++= (Compile / dependencyClasspathAsJars).value
+          .map(_.data)
+          .filter(_.isFile)
+          .filterNot(_.getName().startsWith("akka-actor"))
+          .filterNot(_.getName().startsWith("akka-slf4j"))
+          .filterNot(_.getName().startsWith("prickle"))
+          .map { f =>
+            f -> s"lib/${f.getName()}"
+          },
         Universal / mappings ++= (Compile / filterResources).value,
         Universal / packageBin / mainClass := None,
 
-        packagedArtifacts ++= (Universal/packagedArtifacts).value
+        packagedArtifacts ++= (Universal / packagedArtifacts).value
       )
   }
 
