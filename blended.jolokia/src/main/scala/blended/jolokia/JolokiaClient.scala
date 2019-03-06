@@ -19,6 +19,8 @@ class JolokiaClient(address : JolokiaAddress) {
   private[this] implicit val backend = HttpURLConnectionBackend()
   private[this] val log = Logger[JolokiaClient]
 
+  val url = address.jolokiaUrl
+
   def version : Try[JolokiaVersion] = performGet("version")(JolokiaVersion(_))
 
   def search(searchDef : MBeanSearchDef) : Try[JolokiaSearchResult] = {

@@ -41,7 +41,7 @@ class CertificateManagerImpl(
     // TODO: what should we do with this side-effect, if we unregister the context provider?
     // FIXME: should this side-effect be configurable?
 
-    log.info(new SSLContextInfo("server", sslCtxtProvider.serverContext).toString())
+    log.info(s"Server SSLContext : ${new SslContextInfo(sslCtxtProvider.serverContext, cfg.validCypherSuites).toString()}")
 
     SSLContext.setDefault(sslCtxtProvider.serverContext)
     val serverReg = sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))

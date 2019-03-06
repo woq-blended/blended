@@ -23,7 +23,8 @@ case class CertificateManagerConfig(
   keyPass: String,
   certConfigs: List[CertificateConfig],
   refresherConfig: Option[RefresherConfig],
-  skipInitialCheck: Boolean
+  skipInitialCheck: Boolean,
+  validCypherSuites : List[String]
 )
 
 object CertificateManagerConfig {
@@ -45,14 +46,17 @@ object CertificateManagerConfig {
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
 
     val skipInitialCheck = cfg.getBoolean("skipInitialCheck", false)
-    
+
+    val cyphers = cfg.getStringList("validCypherSuites", List.empty)
+
     CertificateManagerConfig(
       keyStore = keyStore,
       storePass = hasher.password(storePass),
       keyPass = hasher.password(keyPass),
       certConfigs,
       refresherConfig,
-      skipInitialCheck = skipInitialCheck
+      skipInitialCheck = skipInitialCheck,
+      validCypherSuites = cyphers
     )
   }
 }
