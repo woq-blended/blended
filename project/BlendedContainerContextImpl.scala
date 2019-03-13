@@ -12,10 +12,13 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.domino,
       Dependencies.slf4j,
       Dependencies.julToSlf4j,
+      Dependencies.springExpression,
+      Dependencies.springCore % "test",
       Dependencies.scalatest % "test",
       Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.logbackClassic % "test",
+      Dependencies.jclOverSlf4j % "test"
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.ContainerContextActivator",

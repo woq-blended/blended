@@ -13,6 +13,7 @@ object BlendedDomino extends ProjectFactory {
   )
 
   override val project = helper.baseProject.dependsOn(
+    BlendedUtilLogging.project,
     BlendedContainerContextApi.project
   )
 

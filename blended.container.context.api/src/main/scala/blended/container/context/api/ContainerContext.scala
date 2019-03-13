@@ -8,7 +8,7 @@ object ContainerContext {
 
   val transactionCounter = new AtomicLong(0)
 
-  def nextTransactionCounter = {
+  def nextTransactionCounter : Long = {
     if (transactionCounter.get() == Long.MaxValue) {
       transactionCounter.set(0L)
     }

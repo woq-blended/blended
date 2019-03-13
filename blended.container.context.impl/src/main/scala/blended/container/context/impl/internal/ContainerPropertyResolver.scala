@@ -1,7 +1,8 @@
-package blended.container.context.api
+package blended.container.context.impl.internal
 
 import java.util.regex.{Matcher, Pattern}
 
+import blended.container.context.api.{ContainerIdentifierService, PropertyResolverException, SpelFunctions}
 import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
@@ -188,7 +189,7 @@ object ContainerPropertyResolver {
     result
   }
 
-  private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+  private[impl] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
 
     /** TODO: Map the modifier to installable services
@@ -220,7 +221,7 @@ object ContainerPropertyResolver {
   }
 
   // TODO : Should this be Option[AnyRef] ??
-  private[api] def evaluate(
+  private[impl] def evaluate(
     idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
 

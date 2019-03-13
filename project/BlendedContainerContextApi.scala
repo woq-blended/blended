@@ -7,13 +7,7 @@ object BlendedContainerContextApi extends ProjectFactory {
     projectName = "blended.container.context.api",
     description = "The API for the Container Context and Identifier Services",
     deps = Seq(
-      Dependencies.springExpression,
-      Dependencies.typesafeConfig,
-      Dependencies.springCore % "test",
-      Dependencies.jclOverSlf4j % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.typesafeConfig
     ),
     adaptBundle = b => b.copy(
       importPackage = Seq(
@@ -22,8 +16,6 @@ object BlendedContainerContextApi extends ProjectFactory {
     )
   )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project
-  )
+  override val project = helper.baseProject
 
 }

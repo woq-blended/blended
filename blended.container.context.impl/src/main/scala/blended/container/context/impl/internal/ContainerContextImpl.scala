@@ -4,11 +4,12 @@ import java.io.File
 import java.util.Properties
 
 import scala.collection.JavaConverters._
-
 import blended.container.context.api.ContainerContext
-import blended.updater.config.{ LocalOverlays, OverlayRef, RuntimeConfig }
+import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+
+import scala.util.Try
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -86,7 +87,8 @@ class ContainerContextImpl() extends ContainerContext {
   }
 
 
-  override def getContainerConfigDirectory() = new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
+  override def getContainerConfigDirectory(): String =
+    new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
 
   override def getProfileConfigDirectory(): String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
 
@@ -105,14 +107,17 @@ class ContainerContextImpl() extends ContainerContext {
                 log.debug("Unsupported overlay: " + x.mkString(":"))
                 None
             }.toSet
-            if (overlayRefs.isEmpty) None
-            else {
+            if (overlayRefs.isEmpty) {
+              None
+            } else {
               val dir = LocalOverlays.materializedDir(overlayRefs, new File(profileDir))
               val confFile = new File(dir, s"$CONFIG_DIR/application_overlay.conf")
               if (confFile.exists()) {
                 log.debug(s"About to read extra application overlay override file: ${confFile}")
                 Some(confFile)
-              } else None
+              } else {
+                None
+              }
             }
           case _ => None
         }
@@ -133,5 +138,6 @@ class ContainerContextImpl() extends ContainerContext {
     .resolve()
   }
 
-  override def getContainerConfig() = ctConfig
+  override def getContainerConfig() : Config = ctConfig
+
 }

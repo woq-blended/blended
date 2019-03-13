@@ -1,9 +1,11 @@
-package blended.container.context.api
+package blended.container.context.impl.internal
 
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService, PropertyResolverException}
 import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.beans.BeanProperty
+import scala.util.Try
 import scala.util.control.NonFatal
 
 //noinspection NotImplementedCode
@@ -43,6 +45,11 @@ class PropertyResolverSpec extends FreeSpec
       "typeA" -> "A",
       "typeB" -> "B"
     )
+
+    def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
+      val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
+      r
+    }
   }
 
   System.getProperties().setProperty("sysProp", "test")
@@ -141,5 +148,4 @@ class PropertyResolverSpec extends FreeSpec
       ) should be ("bar")
     }
   }
-
 }
