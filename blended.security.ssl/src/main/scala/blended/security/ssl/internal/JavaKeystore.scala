@@ -34,7 +34,7 @@ class JavaKeystore(
     ms.certificates.filter(_._2.changed).foreach { case (alias, cert) =>
       keypass match {
         case None =>
-          ks.setCertificateEntry(alias, cert.chain.head)
+          ks.setCertificateEntry(alias, cert.chain.last)
         case Some(pwd) =>
           cert.privateKey match {
             case None => throw new Exception(s"Certificate for [${cert.subjectPrincipal}] is missing the private key")

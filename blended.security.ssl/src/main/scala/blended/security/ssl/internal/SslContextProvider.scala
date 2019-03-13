@@ -6,12 +6,16 @@ import java.security.KeyStore
 import blended.util.logging.Logger
 import javax.net.ssl._
 
+object SslContextProvider {
+  private[ssl] val propTrustStore = "javax.net.ssl.trustStore"
+  private[ssl] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
+}
+
 class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
 
-  private[this] val log = Logger[SslContextProvider]
+  import SslContextProvider.{propTrustStore, propTrustStorePwd}
 
-  private[this] val propTrustStore = "javax.net.ssl.trustStore"
-  private[this] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
+  private[this] val log = Logger[SslContextProvider]
 
   private[this] lazy val trustManager : Array[TrustManager] = (
     Option(System.getProperty(propTrustStore)),

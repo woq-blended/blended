@@ -61,6 +61,13 @@ case class CertificateHolder (
 
 object CertificateHolder {
 
+  def create(cert : X509Certificate) : CertificateHolder = CertificateHolder(
+    publicKey = cert.getPublicKey(),
+    privateKey = None,
+    chain = List(cert),
+    changed = false
+  )
+
   def create(publicKey: PublicKey, chain : List[Certificate]) : Try[CertificateHolder] =
     create(publicKey, None, chain)
 

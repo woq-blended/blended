@@ -4,6 +4,7 @@ import java.util.Date
 
 import blended.security.ssl.{CertificateHolder, CertificateProvider, InconsistentKeystoreException, X509CertificateInfo}
 import blended.util.logging.Logger
+import javax.security.auth.x500.X500Principal
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -32,6 +33,13 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
       result
     } else {
       throw new InconsistentKeystoreException("Keystore must be consistent after update")
+    }
+  }
+
+  def findByPrincipal(principal : X500Principal) : Option[CertificateHolder] = {
+    certificates.values.find { ch =>
+      ch.subjectPrincipal.isDefined &&
+      ch.subjectPrincipal.forall(_.equals(principal))
     }
   }
 

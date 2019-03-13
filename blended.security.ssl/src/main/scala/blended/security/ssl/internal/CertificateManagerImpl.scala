@@ -44,14 +44,8 @@ class CertificateManagerImpl(
     log.info(s"Server SSLContext : ${new SslContextInfo(sslCtxtProvider.serverContext, cfg.validCypherSuites).toString()}")
 
     SSLContext.setDefault(sslCtxtProvider.serverContext)
-    val serverReg = sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
-    val clientReg = sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
-
-    onStop {
-      log.debug("Unregistering SslContextProvider type=client and type=server")
-      Try { serverReg.unregister() }
-      Try { clientReg.unregister() }
-    }
+    sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
+    sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
   }
 
   def start(): Unit = {
