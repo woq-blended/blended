@@ -37,7 +37,7 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
       val hasher = new PasswordHasher(pojoUuid)
 
       val jks = new JavaKeystore(
-        keystore = new File(baseDir, "etc/keystore"),
+        store = new File(baseDir, "etc/keystore"),
         storepass = hasher.password("blended").toCharArray(),
         keypass = Some(hasher.password("mysecret").toCharArray())
       )

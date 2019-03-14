@@ -1,6 +1,8 @@
 package blended.security.ssl
 
-import scala.util.Try
+import blended.security.ssl.internal.MemoryKeystore
+
+import scala.util.{Success, Try}
 
 /**
   * A certificate provider will retrieve a new Certificate wrapped in a CertificateHolder.
@@ -12,6 +14,9 @@ import scala.util.Try
   * a list of subject alternative names, if any need to be set.
   */
 trait CertificateProvider {
+
+  // Get the root certificates of the PKI, if applicable
+  def rootCertificates() : Try[Option[MemoryKeystore]] = Success(None)
 
   def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder]
 }

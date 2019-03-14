@@ -12,10 +12,12 @@ import scala.util.Try
 import scala.collection.JavaConverters._
 
 class JavaKeystore(
-  keystore : File,
+  store : File,
   storepass : Array[Char],
   keypass : Option[Array[Char]]
 ) {
+
+  def keystore: File = store
 
   private val log : Logger = Logger[JavaKeystore]
 

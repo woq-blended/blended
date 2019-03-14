@@ -11,7 +11,7 @@ object SslContextProvider {
   private[ssl] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
 }
 
-class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
+class SslContextProvider {
 
   import SslContextProvider.{propTrustStore, propTrustStorePwd}
 
@@ -36,13 +36,15 @@ class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
       null
   }
 
-  private[this] lazy val keyManager : Array[KeyManager] = {
-    val kmf = KeyManagerFactory.getInstance("SunX509")
-    kmf.init(keystore, keyPass)
-    kmf.getKeyManagers
-  }
 
-  lazy val serverContext: SSLContext = {
+  def serverContext(keystore : KeyStore, keyPass : Array[Char]) : SSLContext = {
+
+    val keyManager : Array[KeyManager] = {
+      val kmf = KeyManagerFactory.getInstance("SunX509")
+      kmf.init(keystore, keyPass)
+      kmf.getKeyManagers
+    }
+
     val result = SSLContext.getInstance("TLSv1.2")
     result.init(keyManager, trustManager, null)
 

@@ -74,6 +74,23 @@ object CertificateHolder {
   def create(keyPair : KeyPair, chain: List[Certificate]) : Try[CertificateHolder] =
     create(keyPair.getPublic(), Some(keyPair.getPrivate()), chain)
 
+  def create(chain : List[Certificate]) : Try[CertificateHolder] = Try {
+
+    val x509Chain : List[X509Certificate] = chain.map(_.asInstanceOf[X509Certificate])
+    x509Chain.find{ c => c.getSubjectDN().equals(c.getIssuerDN()) } match {
+      case None =>
+        throw new MissingRootCertificateException
+      case Some(root) =>
+        root.verify(root.getPublicKey())
+        val sortedChain : List[X509Certificate] = sort(x509Chain.filter(c => !c.equals(root)))(root :: Nil).get
+        create(
+          publicKey = sortedChain.head.getPublicKey(),
+          privateKey = None,
+          chain = sortedChain
+        ).get
+    }
+  }
+
   def create(publicKey : PublicKey, privateKey: Option[PrivateKey], chain : List[Certificate]) : Try[CertificateHolder] = Try {
 
     val sortedChain: List[X509Certificate] = {
@@ -106,7 +123,7 @@ object CertificateHolder {
   private def signedBy(issuer: Principal): (X509Certificate => Boolean) = c =>
     !c.getIssuerDN().equals(c.getSubjectDN()) && c.getIssuerDN().equals(issuer)
 
-  // Helper functio to sort the certificates of a given chain so that any certificate in the chain is
+  // Helper function to sort the certificates of a given chain so that any certificate in the chain is
   // signed by it's successor. This implies that the root certificate is always the last element in the list
   private def sort(remaining: List[X509Certificate])(sorted: List[X509Certificate]): Try[List[X509Certificate]] = Try {
     remaining match {
