@@ -189,7 +189,7 @@ object ContainerPropertyResolver {
     result
   }
 
-  private[impl] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+  def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
 
     /** TODO: Map the modifier to installable services

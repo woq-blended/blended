@@ -1,12 +1,12 @@
-package blended.security.ssl.internal
+package blended.security.ssl
 
 import java.util.Date
 
-import blended.security.ssl.{CertificateHolder, CertificateProvider, InconsistentKeystoreException, X509CertificateInfo}
+import blended.security.ssl.internal.CertificateConfig
 import blended.util.logging.Logger
 import javax.security.auth.x500.X500Principal
-
 import scala.concurrent.duration._
+
 import scala.util.{Failure, Success, Try}
 
 case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {

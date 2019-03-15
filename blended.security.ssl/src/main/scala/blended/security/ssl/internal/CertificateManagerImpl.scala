@@ -3,7 +3,7 @@ package blended.security.ssl.internal
 import java.io.File
 import java.util.Date
 
-import blended.security.ssl.{CertificateManager, CertificateProvider}
+import blended.security.ssl.{CertificateManager, CertificateProvider, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.capsule._
 import domino.service_providing.ServiceProviding

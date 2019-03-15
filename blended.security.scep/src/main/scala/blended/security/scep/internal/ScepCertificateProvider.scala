@@ -4,8 +4,7 @@ import java.io.StringWriter
 import java.net.URL
 import java.security.cert.Certificate
 
-import blended.security.ssl._
-import blended.security.ssl.internal.MemoryKeystore
+import blended.security.ssl.{MemoryKeystore, _}
 import blended.util.logging.Logger
 import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.x500.X500Principal

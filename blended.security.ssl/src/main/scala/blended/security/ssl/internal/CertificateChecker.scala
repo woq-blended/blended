@@ -1,6 +1,7 @@
 package blended.security.ssl.internal
 
-import blended.security.ssl.{CertificateHolder, X509CertificateInfo}
+import blended.security.ssl.{CertificateHolder, MemoryKeystore, X509CertificateInfo}
+
 import scala.concurrent.duration._
 
 object ResultLevel extends Enumeration {

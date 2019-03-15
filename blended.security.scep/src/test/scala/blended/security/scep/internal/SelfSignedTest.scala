@@ -3,7 +3,7 @@ package blended.security.scep.internal
 import java.io.File
 
 import blended.security.ssl._
-import blended.security.ssl.internal.{JavaKeystore, MemoryKeystore}
+import blended.security.ssl.internal.JavaKeystore
 
 import scala.util.Try
 

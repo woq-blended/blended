@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, PublicKey}
 
-import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException}
+import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException, MemoryKeystore}
 import blended.util.logging.Logger
 
 import scala.collection.JavaConverters._

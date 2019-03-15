@@ -1,7 +1,5 @@
 package blended.security.ssl
 
-import blended.security.ssl.internal.MemoryKeystore
-
 import scala.util.{Success, Try}
 
 /**

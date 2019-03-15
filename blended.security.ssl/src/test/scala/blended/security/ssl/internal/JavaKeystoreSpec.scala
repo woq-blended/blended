@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import java.io.File
 
-import blended.security.ssl.{CertificateHolder, CertificateRequestBuilder, CertificateSigner, SecurityTestSupport}
+import blended.security.ssl._
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers

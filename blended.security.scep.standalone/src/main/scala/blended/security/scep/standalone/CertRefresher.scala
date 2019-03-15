@@ -8,8 +8,7 @@ import scala.concurrent.Future
 import scala.concurrent.Promise
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
-import blended.security.ssl.CertificateManager
-import blended.security.ssl.internal.MemoryKeystore
+import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
@@ -75,7 +74,7 @@ class CertRefresher(salt: String) {
   def checkCert(): Future[MemoryKeystore] = {
 
     val promise = Promise[MemoryKeystore]()
-    
+
     Future {
       new DominoActivator {
         whenBundleActive {

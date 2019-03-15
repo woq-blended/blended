@@ -2,8 +2,6 @@ package blended.security.ssl
 
 import scala.util.Try
 
-import blended.security.ssl.internal.MemoryKeystore
-
 trait CertificateManager {
   
   /**
