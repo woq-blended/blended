@@ -13,8 +13,10 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.slf4j,
       Dependencies.julToSlf4j,
       Dependencies.springExpression,
+      
       Dependencies.springCore % "test",
       Dependencies.scalatest % "test",
+      Dependencies.scalacheck % "test",
       Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test",
@@ -31,6 +33,8 @@ object BlendedContainerContextImpl extends ProjectFactory {
     BlendedUtilLogging.project,
     BlendedUtil.project,
     BlendedUpdaterConfigJvm.project,
-    BlendedLauncher.project
+    BlendedLauncher.project,
+
+    BlendedTestsupport.project % "test"
   )
 }

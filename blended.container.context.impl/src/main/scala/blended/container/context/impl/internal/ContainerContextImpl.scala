@@ -4,16 +4,19 @@ import java.io.File
 import java.util.Properties
 
 import scala.collection.JavaConverters._
-import blended.container.context.api.ContainerContext
+import blended.container.context.api.{ContainerContext, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
+import scala.io.Source
 import scala.util.Try
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
   private val CONFIG_DIR = "etc"
+  private val SECRET_FILE_PATH  : String = "blended.security.secretFile"
+
 }
 
 class ContainerContextImpl() extends ContainerContext {
@@ -22,7 +25,8 @@ class ContainerContextImpl() extends ContainerContext {
 
   private[this] val log = Logger[ContainerContextImpl]
 
-  override def getContainerDirectory() = new File(System.getProperty("blended.home")).getAbsolutePath
+  override def getContainerDirectory() : String =
+    new File(System.getProperty("blended.home")).getAbsolutePath
 
   override def getContainerHostname(): String = {
     try {
@@ -86,6 +90,26 @@ class ContainerContextImpl() extends ContainerContext {
     f.getAbsolutePath()
   }
 
+  private lazy val cryptoSupport : ContainerCryptoSupport = {
+    val ctConfig : Config = getContainerConfig()
+
+    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
+      ctConfig.getString(SECRET_FILE_PATH)
+    } else {
+      "secret"
+    }
+
+    val secretFromFile =
+      Source.fromFile(
+        new File(getContainerConfigDirectory(), cipherSecretFile)
+      ).getLines().toList.headOption.getOrElse("vczP26-QZ5n%$8YP")
+
+    val secret : String = secretFromFile + "V*YE6FPXW6#!g^hD"
+
+    new ContainerCryptoSupportImpl(secret, "AES")
+  }
+
+  override def getContainerCryptoSupport(): ContainerCryptoSupport = cryptoSupport
 
   override def getContainerConfigDirectory(): String =
     new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath

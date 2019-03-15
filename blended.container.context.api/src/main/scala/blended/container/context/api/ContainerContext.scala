@@ -3,6 +3,7 @@ package blended.container.context.api
 import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.config.Config
+import javax.crypto.Cipher
 
 object ContainerContext {
 
@@ -27,6 +28,8 @@ trait ContainerContext {
   def getProfileConfigDirectory(): String
 
   def getContainerHostname(): String
+
+  def getContainerCryptoSupport() : ContainerCryptoSupport
 
   // application.conf + application_overlay.conf
   def getContainerConfig(): Config
