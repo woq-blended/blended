@@ -1,12 +1,35 @@
 package blended.container.context.impl.internal
 
+import java.io.File
 import java.security.Key
 
 import blended.container.context.api.ContainerCryptoSupport
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
+import scala.io.Source
 import scala.util.Try
+
+object ContainerCryptoSupportImpl {
+
+  def initCryptoSupport(fileName : String) : ContainerCryptoSupport = {
+
+    val secretFromFile : Array[Char] =
+      (Source.fromFile(
+        new File(fileName)
+      ).getLines().toList.headOption.getOrElse("vczP26-QZ5n%$8YP") + ("*" * 16))
+        .substring(0,16)
+        .toCharArray()
+
+    val secret : String = {
+      val salt : Array[Char] = ("V*YE6FPXW6#!g^hD" + "*" * 16).substring(0,16).toCharArray()
+      val mixed : String = secretFromFile.zip(salt).map { case (a,b) => a.toString + b.toString} mkString("")
+      mixed.substring(0,16)
+    }
+
+    new ContainerCryptoSupportImpl(secret, "AES")
+  }
+}
 
 class ContainerCryptoSupportImpl(secret : String, alg : String) extends ContainerCryptoSupport {
 

@@ -1,4 +1,3 @@
-import sbt._
 import blended.sbt.Dependencies
 
 object BlendedContainerContextApi extends ProjectFactory {

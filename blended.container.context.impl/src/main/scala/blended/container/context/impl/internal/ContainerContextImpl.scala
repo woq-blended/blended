@@ -3,14 +3,12 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import scala.collection.JavaConverters._
 import blended.container.context.api.{ContainerContext, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
-import scala.io.Source
-import scala.util.Try
+import scala.collection.JavaConverters._
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
@@ -99,14 +97,9 @@ class ContainerContextImpl() extends ContainerContext {
       "secret"
     }
 
-    val secretFromFile =
-      Source.fromFile(
-        new File(getContainerConfigDirectory(), cipherSecretFile)
-      ).getLines().toList.headOption.getOrElse("vczP26-QZ5n%$8YP")
-
-    val secret : String = secretFromFile + "V*YE6FPXW6#!g^hD"
-
-    new ContainerCryptoSupportImpl(secret, "AES")
+    ContainerCryptoSupportImpl.initCryptoSupport(
+      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
+    )
   }
 
   override def getContainerCryptoSupport(): ContainerCryptoSupport = cryptoSupport

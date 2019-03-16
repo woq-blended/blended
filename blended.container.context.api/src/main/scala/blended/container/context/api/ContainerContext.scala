@@ -3,7 +3,6 @@ package blended.container.context.api
 import java.util.concurrent.atomic.AtomicLong
 
 import com.typesafe.config.Config
-import javax.crypto.Cipher
 
 object ContainerContext {
 

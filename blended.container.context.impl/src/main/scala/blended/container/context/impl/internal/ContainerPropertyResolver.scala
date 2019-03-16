@@ -4,7 +4,6 @@ import java.util.regex.{Matcher, Pattern}
 
 import blended.container.context.api.{ContainerIdentifierService, PropertyResolverException, SpelFunctions}
 import blended.util.logging.Logger
-import com.typesafe.config.Config
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.expression.spel.support.StandardEvaluationContext
@@ -189,6 +188,7 @@ object ContainerPropertyResolver {
 
     result
   }
+  
 
   def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
