@@ -2,9 +2,8 @@ package blended.security.scep.standalone
 
 import java.io.File
 
-import blended.container.context.api.{ContainerContext, ContainerCryptoSupport}
-import blended.container.context.impl.internal.ContainerContextImpl.SECRET_FILE_PATH
-import blended.container.context.impl.internal.ContainerCryptoSupportImpl
+import blended.container.context.api.ContainerContext
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 class ScepAppContainerContext(baseDir: String) extends ContainerContext {
@@ -32,7 +31,7 @@ class ScepAppContainerContext(baseDir: String) extends ContainerContext {
       "secret"
     }
 
-    ContainerCryptoSupportImpl.initCryptoSupport(
+    BlendedCryptoSupport.initCryptoSupport(
       new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
     )
   }

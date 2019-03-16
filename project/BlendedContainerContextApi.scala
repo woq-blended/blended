@@ -1,3 +1,4 @@
+import sbt._
 import blended.sbt.Dependencies
 
 object BlendedContainerContextApi extends ProjectFactory {
@@ -15,6 +16,8 @@ object BlendedContainerContextApi extends ProjectFactory {
     )
   )
 
-  override val project = helper.baseProject
+  override val project = helper.baseProject.dependsOn(
+    BlendedSecurityCrypto.project
+  )
 
 }

@@ -1,18 +1,18 @@
-package blended.container.context.impl.internal
+package blended.security.crypto
 
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
-class ContainerCryptoSupportSpec extends LoggingFreeSpec
+class BlendedCryptoSupportSpec extends LoggingFreeSpec
   with Matchers
   with PropertyChecks {
 
-  private val log : Logger = Logger[ContainerCryptoSupportImpl]
+  private val log : Logger = Logger[BlendedCryptoSupport]
 
   private val secret : String = "secret"
-  private val cs : ContainerCryptoSupportImpl = new ContainerCryptoSupportImpl(secret, "AES")
+  private val cs : BlendedCryptoSupport = new BlendedCryptoSupport(secret, "AES")
 
   "The Crypto Support should" - {
 

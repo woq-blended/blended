@@ -3,8 +3,8 @@ package blended.testsupport.pojosr
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.{ContainerContext, ContainerCryptoSupport}
-import blended.container.context.impl.internal.ContainerCryptoSupportImpl
+import blended.container.context.api.ContainerContext
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import com.typesafe.config.impl.Parseable
 import com.typesafe.config.{Config, ConfigFactory, ConfigObject, ConfigParseOptions}
 
@@ -33,7 +33,7 @@ class MockContainerContext(baseDir: String) extends ContainerContext {
       "secret"
     }
 
-    ContainerCryptoSupportImpl.initCryptoSupport(
+    BlendedCryptoSupport.initCryptoSupport(
       new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
     )
   }

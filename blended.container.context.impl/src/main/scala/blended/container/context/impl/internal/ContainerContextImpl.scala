@@ -3,7 +3,8 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import blended.container.context.api.{ContainerContext, ContainerCryptoSupport}
+import blended.container.context.api.ContainerContext
+import blended.security.crypto.{ContainerCryptoSupport, BlendedCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
@@ -97,7 +98,7 @@ class ContainerContextImpl() extends ContainerContext {
       "secret"
     }
 
-    ContainerCryptoSupportImpl.initCryptoSupport(
+    BlendedCryptoSupport.initCryptoSupport(
       new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
     )
   }

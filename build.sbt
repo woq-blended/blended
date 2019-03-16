@@ -91,6 +91,7 @@ lazy val blendedJolokia = BlendedJolokia.project
 lazy val blendedSamplesCamel = BlendedSamplesCamel.project
 lazy val blendedSamplesJms = BlendedSamplesJms.project
 lazy val blendedAkkaHttpSampleHelloworld = BlendedAkkaHttpSampleHelloworld.project
+lazy val blendedSecurityCrypto = BlendedSecurityCrypto.project
 // Referenced in adoc file: doc/content/BUILDING.adoc
 // tag::Building[]
 lazy val blendedActivemqClient = BlendedActivemqClient.project
@@ -151,6 +152,7 @@ lazy val jvmProjects : Seq[ProjectReference] = Seq(
   blendedSecurityTest,
   blendedSecuritySsl,
   blendedSecurityScep,
+  blendedSecurityCrypto,
   blendedSecurityScepStandalone,
   blendedHawtioLogin,
   blendedJolokia,

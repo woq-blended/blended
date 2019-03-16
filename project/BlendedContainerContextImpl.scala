@@ -29,6 +29,7 @@ object BlendedContainerContextImpl extends ProjectFactory {
   )
 
   override val project = helper.baseProject.dependsOn(
+    BlendedSecurityCrypto.project,
     BlendedContainerContextApi.project,
     BlendedUtilLogging.project,
     BlendedUtil.project,

@@ -115,6 +115,7 @@ object BlendedLauncher extends ProjectFactory {
   override val project = helper.baseProject.dependsOn(
     BlendedUtilLogging.project,
     BlendedUpdaterConfigJvm.project,
+    BlendedSecurityCrypto.project,
 
     BlendedTestsupport.project % "test"
   )

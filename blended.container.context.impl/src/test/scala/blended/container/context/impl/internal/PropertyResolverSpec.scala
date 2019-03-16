@@ -1,6 +1,7 @@
 package blended.container.context.impl.internal
 
-import blended.container.context.api.{ContainerContext, ContainerCryptoSupport, ContainerIdentifierService, PropertyResolverException}
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService, PropertyResolverException}
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -28,7 +29,7 @@ class PropertyResolverSpec extends FreeSpec
 
     override def getContainerConfig() : Config = ???
 
-    override def getContainerCryptoSupport(): ContainerCryptoSupport = new ContainerCryptoSupportImpl("secret", "AES")
+    override def getContainerCryptoSupport(): ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("secret")
   }
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
@@ -116,10 +117,10 @@ class PropertyResolverSpec extends FreeSpec
 //      ContainerPropertyResolver.resolve(idSvc, "${{#replace('$[[typeA]]')}}") should be ("1")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
 
-      val enc : String = idSvc.getContainerContext().getContainerCryptoSupport().encrypt("$[[foo]]").get
+      val enc : String = idSvc.getContainerContext().getContainerCryptoSupport().encrypt("$[[foo]]$[[foo(upper)]]").get
       val line = "$[encrypted[" + enc + "]]"
 
-      ContainerPropertyResolver.resolve(idSvc, line) should be ("bar")
+      ContainerPropertyResolver.resolve(idSvc, line) should be ("barBAR")
     }
 
     "should allow to delay the property resolution" in {

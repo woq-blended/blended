@@ -2,6 +2,7 @@ package blended.container.context.api
 
 import java.util.concurrent.atomic.AtomicLong
 
+import blended.security.crypto.ContainerCryptoSupport
 import com.typesafe.config.Config
 
 object ContainerContext {
