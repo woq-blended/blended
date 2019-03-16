@@ -17,17 +17,16 @@ object BlendedEncryptor {
 
     if (cmdLine.help || args.isEmpty) {
       cp.usage()
-      throw new NoArgsProvidedException
-    }
+    } else {
+      val cs : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport(cmdLine.secret)
 
-    val cs : ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport(cmdLine.secret)
-
-    cmdLine.plain.foreach { p =>
-      cs.encrypt(p) match {
-        case Failure(t) =>
-          System.err.println(s"Could not encrypt [$p] : [${t.getMessage()}]")
-        case Success(e) =>
-          System.out.println(s"Encrypted value for [$p] : [$e]")
+      cmdLine.plain.foreach { p =>
+        cs.encrypt(p) match {
+          case Failure(t) =>
+            System.err.println(s"Could not encrypt [$p] : [${t.getMessage()}]")
+          case Success(e) =>
+            System.out.println(s"Encrypted value for [$p] : [$e]")
+        }
       }
     }
   }

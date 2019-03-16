@@ -26,10 +26,13 @@ export BLENDED_HOME=$(blended_home $BLENDED_HOME)
 cd $BLENDED_HOME
 
 # column-separated
-ENC_CP="${BLENDED_HOME}/lib/*"
+ENC_CP="${BLENDED_HOME}/lib/blended.security.crypto_@scala.binary.version@-@blended.security.crypto.version@.jar:\
+${BLENDED_HOME}/lib/scala-library-@scala.library.version@.jar:\
+${BLENDED_HOME}/lib/de.tototec.cmdoption-@cmdoption.version@.jar\
+"
 
 exec ${JAVA_HOME}/bin/java\
  -cp\
  "${ENC_CP}"\
- blended.security.crypto.Encryptor\
+ blended.security.crypto.BlendedEncryptor\
  "$@"

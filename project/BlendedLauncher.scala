@@ -52,6 +52,7 @@ object BlendedLauncher extends ProjectFactory {
         "blended.launcher.version" -> version.value,
         "blended.updater.config.version" -> version.value,
         "blended.util.logging.version" -> version.value,
+        "blended.security.crypto.version" -> version.value,
         "cmdoption.version" -> Dependencies.cmdOption.revision,
         "org.osgi.core.version" -> Dependencies.orgOsgi.revision,
         "scala.binary.version" -> scalaBinaryVersion.value,
