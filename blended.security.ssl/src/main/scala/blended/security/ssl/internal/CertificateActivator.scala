@@ -46,7 +46,9 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
       }
     }
 
-    val distinctProviderNames : List[String] = mgrConfig.certConfigs.map(_.provider).distinct
+    val distinctProviderNames : List[String] =
+      (mgrConfig.providerList ::: mgrConfig.certConfigs.map(_.provider)).distinct
+
     waitForProvider(distinctProviderNames, Map.empty)
   }
 

@@ -36,41 +36,41 @@ object BlendedJMSConnectionConfig {
     jmsClassloader  = None
   )
 
-  val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
-  val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
-  val pingEnabled : Config => Boolean = cfg => cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
-  val pingTolerance : Config => Int = cfg => cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
-  val pingInterval : Config => FiniteDuration = cfg => cfg.getDuration("pingInterval", defaultConfig.pingInterval)
-  val pingTimeout : Config => FiniteDuration = cfg => cfg.getDuration("pingTimeout", defaultConfig.pingTimeout)
-  val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
-  val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
-  val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
-
-  val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER)
-  val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD)
-  val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.pingDestination)
-
-  val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
-    ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
-      .mapValues { v =>
-        stringResolver(v) match {
-          case Failure(t) => throw t
-          case Success(s) => s.toString()
-        }
-      }
-  }
-
-  val jndiName : Config => Option[String] = cfg => cfg.getStringOption(CF_JNDI_NAME)
-  val useJndi : Config => Boolean = cfg => cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
-
-  val clientId : (String => Try[Any]) => Config => Try[String] = stringResolver => cfg => Try {
-    cfg.getStringOption("clientId") match {
-      case None => defaultConfig.clientId
-      case Some(s) => stringResolver(s).map(_.toString).get
-    }
-  }
-
   def fromConfig(stringResolver : String => Try[Any])(vendor: String, provider: String, cfg: Config) : BlendedJMSConnectionConfig = {
+
+    val enabled : Config => Boolean = cfg => cfg.getBoolean("enabled", defaultConfig.enabled)
+    val jmxEnabled : Config => Boolean = cfg => cfg.getBoolean("jmxEnabled", defaultConfig.jmxEnabled)
+    val pingEnabled : Config => Boolean = cfg => cfg.getBoolean("pingEnabled", defaultConfig.pingEnabled)
+    val pingTolerance : Config => Int = cfg => cfg.getInt("pingTolerance", defaultConfig.pingTolerance)
+    val pingInterval : Config => FiniteDuration = cfg => cfg.getDuration("pingInterval", defaultConfig.pingInterval)
+    val pingTimeout : Config => FiniteDuration = cfg => cfg.getDuration("pingTimeout", defaultConfig.pingTimeout)
+    val retryInterval : Config => FiniteDuration = cfg => cfg.getDuration("retryInterval", defaultConfig.retryInterval)
+    val minReconnect : Config => FiniteDuration = cfg => cfg.getDuration("minReconnect", defaultConfig.minReconnect)
+    val maxReconnectTimeout : Config => Option[FiniteDuration] = cfg => cfg.getDurationOption("maxReconnectTimeout")
+
+    val defaultUser : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_USER).map{ u => stringResolver(u).get }.map(_.toString)
+    val defaultPasswd : Config => Option[String] = cfg => cfg.getStringOption(DEFAULT_PWD).map{ p => stringResolver(p).get }.map(_.toString)
+    val destination : Config => String = cfg => cfg.getString("destination", defaultConfig.pingDestination)
+
+    val properties : (String => Try[Any]) => Config => Try[Map[String, String]] = stringResolver => cfg => Try {
+      ConfigPropertyMapConverter.getKeyAsPropertyMap(cfg, "properties", Option(() => defaultConfig.properties))
+        .mapValues { v =>
+          stringResolver(v) match {
+            case Failure(t) => throw t
+            case Success(s) => s.toString()
+          }
+        }
+    }
+
+    val clientId : Config => Try[String] = cfg => Try {
+      cfg.getStringOption("clientId") match {
+        case None => defaultConfig.clientId
+        case Some(s) => stringResolver(s).map(_.toString).get
+      }
+    }
+
+    val jndiName : Config => Option[String] = cfg => cfg.getStringOption(CF_JNDI_NAME)
+    val useJndi : Config => Boolean = cfg => cfg.getBoolean(USE_JNDI, defaultConfig.useJndi)
 
     BlendedJMSConnectionConfig(
       vendor = vendor,
@@ -84,7 +84,7 @@ object BlendedJMSConnectionConfig {
       retryInterval = retryInterval(cfg),
       minReconnect = minReconnect(cfg),
       maxReconnectTimeout = maxReconnectTimeout(cfg),
-      clientId = clientId(stringResolver)(cfg).get,
+      clientId = clientId(cfg).get,
       defaultUser = defaultUser(cfg),
       defaultPassword = defaultPasswd(cfg),
       pingDestination = destination(cfg),

@@ -62,20 +62,25 @@ object BrokerConfig {
 
     val resolve : String => Try[Any] = value => idSvc.resolvePropertyString(value)
 
+    val v = vendor(resolve)(cfg).getOrElse("activemq")
+    val p = provider(resolve)(cfg).getOrElse("activemq")
+
+    val jmsConfig : BlendedJMSConnectionConfig = BlendedJMSConnectionConfig.fromConfig(resolve)(v, p, cfg)
+
     BrokerConfig(
-      vendor = vendor(resolve)(cfg).getOrElse("activemq"),
-      provider = provider(resolve)(cfg).getOrElse("activemq"),
-      clientId = clientId(resolve)(cfg).get,
-      jmxEnabled = jmxEnabled(cfg),
-      pingEnabled = pingEnabled(cfg),
-      pingTolerance = pingTolerance(cfg),
-      pingDestination = destination(cfg),
-      pingInterval = pingInterval(cfg),
-      pingTimeout = pingTimeout(cfg),
-      minReconnect = minReconnect(cfg),
-      maxReconnectTimeout = maxReconnectTimeout(cfg),
-      properties = properties(resolve)(cfg).get,
-      retryInterval = retryInterval(cfg),
+      vendor = jmsConfig.vendor,
+      provider = jmsConfig.provider,
+      clientId = jmsConfig.clientId,
+      jmxEnabled = jmsConfig.jmxEnabled,
+      pingEnabled = jmsConfig.pingEnabled,
+      pingTolerance = jmsConfig.pingTolerance,
+      pingDestination = jmsConfig.pingDestination,
+      pingInterval = jmsConfig.pingInterval,
+      pingTimeout = jmsConfig.pingTimeout,
+      minReconnect = jmsConfig.minReconnect,
+      maxReconnectTimeout = jmsConfig.maxReconnectTimeout,
+      properties = jmsConfig.properties,
+      retryInterval = jmsConfig.retryInterval,
 
       brokerName = name(resolve)(cfg).getOrElse(brokerName),
       file = file(resolve)(cfg).getOrElse(s"$brokerName.amq"),

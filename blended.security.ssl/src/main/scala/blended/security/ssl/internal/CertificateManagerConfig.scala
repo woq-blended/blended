@@ -42,6 +42,7 @@ case class CertificateManagerConfig(
   clientOnly : Boolean,
   maintainTruststore : Boolean,
   keystoreCfg : Option[KeystoreConfig],
+  providerList : List[String],
   certConfigs: List[CertificateConfig],
   refresherConfig: Option[RefresherConfig],
   skipInitialCheck: Boolean,
@@ -66,6 +67,8 @@ object CertificateManagerConfig {
       Some(KeystoreConfig.fromConfig(cfg, hasher))
     }
 
+    val providers : List[String] = cfg.getStringList("providerList", List.empty)
+
     val certConfigs = cfg.getConfigMap("certificates", Map.empty).map {
       case (k, v) =>
         CertificateConfig.fromConfig(k, v, idSvc)
@@ -84,6 +87,7 @@ object CertificateManagerConfig {
       certConfigs = certConfigs,
       refresherConfig = refresherConfig,
       skipInitialCheck = skipInitialCheck,
+      providerList = providers,
       validCypherSuites = cyphers
     )
   }
