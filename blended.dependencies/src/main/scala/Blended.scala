@@ -65,6 +65,7 @@ trait Blended {
   val security = blended("blended.security")
   val securityAkkaHttp = blended("blended.security.akka.http")
   val securityBoot = blended("blended.security.boot")
+  val securityCrypto = blended("blended.security.crypto")
   val securityScep = blended("blended.security.scep")
   val securityScepStandalone = blended("blended.security.scep.standalone")
   val securitySsl = blended("blended.security.ssl")
