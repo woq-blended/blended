@@ -2,11 +2,13 @@ package blended.security.ssl.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.domino.TypesafeConfigWatching
-import blended.security.ssl.{ CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig }
+import blended.security.ssl.{CertificateManager, CertificateProvider, SelfSignedCertificateProvider, SelfSignedConfig}
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import domino.DominoActivator
+import javax.management.{MBeanServer, ObjectName}
+import javax.net.ssl.SSLContext
 
 class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
 
@@ -25,9 +27,9 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
     }
   }
 
-  private[this] def setupCertificateManager(cfg: Config, idSvc: ContainerIdentifierService) : Unit = {
-
-    val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid), idSvc)
+  private[this] def setupCertificateManager(
+    mgrConfig: CertificateManagerConfig
+  ) : Unit = {
 
     def waitForProvider(providerNames: List[String], provider: Map[String, CertificateProvider]) : Unit = {
       providerNames match {
@@ -44,14 +46,34 @@ class CertificateActivator extends DominoActivator with TypesafeConfigWatching {
       }
     }
 
-    val distinctProviderNames : List[String] = mgrConfig.certConfigs.map(_.provider).distinct
+    val distinctProviderNames : List[String] =
+      (mgrConfig.providerList ::: mgrConfig.certConfigs.map(_.provider)).distinct
+
     waitForProvider(distinctProviderNames, Map.empty)
   }
 
   whenBundleActive {
+
     whenTypesafeConfigAvailable { (cfg, idSvc) =>
+
+      val mgrConfig = CertificateManagerConfig.fromConfig(cfg, new PasswordHasher(idSvc.uuid), idSvc)
+
       setupSelfSignedProvider(cfg, idSvc)
-      setupCertificateManager(cfg, idSvc)
+      setupCertificateManager(mgrConfig)
+
+      whenAdvancedServicePresent[SSLContext]("(type=server)") { ctxt =>
+        val info = new SslContextInfo(ctxt, mgrConfig.validCypherSuites)
+        info.providesService[blended.security.ssl.SslContextInfo]
+
+        whenServicePresent[MBeanServer] { server =>
+          val objName: ObjectName = new ObjectName("blended:type=SslContext,name=server")
+          server.registerMBean(info, objName)
+
+          onStop {
+            server.unregisterMBean(objName)
+          }
+        }
+      }
     }
   }
 }

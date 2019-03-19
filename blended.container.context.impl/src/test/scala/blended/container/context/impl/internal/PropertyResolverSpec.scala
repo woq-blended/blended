@@ -1,9 +1,12 @@
-package blended.container.context.api
+package blended.container.context.impl.internal
 
+import blended.container.context.api.{ContainerContext, ContainerIdentifierService, PropertyResolverException}
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import com.typesafe.config.Config
 import org.scalatest.{FreeSpec, Matchers}
 
 import scala.beans.BeanProperty
+import scala.util.Try
 import scala.util.control.NonFatal
 
 //noinspection NotImplementedCode
@@ -25,6 +28,8 @@ class PropertyResolverSpec extends FreeSpec
     override def getContainerHostname() : String = ???
 
     override def getContainerConfig() : Config = ???
+
+    override def getContainerCryptoSupport(): ContainerCryptoSupport = BlendedCryptoSupport.initCryptoSupport("secret")
   }
 
   val idSvc : ContainerIdentifierService = new ContainerIdentifierService {
@@ -43,6 +48,11 @@ class PropertyResolverSpec extends FreeSpec
       "typeA" -> "A",
       "typeB" -> "B"
     )
+
+    def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
+      val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
+      r
+    }
   }
 
   System.getProperties().setProperty("sysProp", "test")
@@ -106,6 +116,11 @@ class PropertyResolverSpec extends FreeSpec
       ContainerPropertyResolver.resolve(idSvc, "${{'$[[version]]'.replaceAll('\\.', '_')}}") should be ("2_2_0")
 //      ContainerPropertyResolver.resolve(idSvc, "${{#replace('$[[typeA]]')}}") should be ("1")
       ContainerPropertyResolver.resolve(idSvc, "$[[typeB(replace:A:1,replace:B:2))]]") should be ("2")
+
+      val enc : String = idSvc.getContainerContext().getContainerCryptoSupport().encrypt("$[[foo]]$[[foo(upper)]]").get
+      val line = "$[encrypted[" + enc + "]]"
+
+      ContainerPropertyResolver.resolve(idSvc, line) should be ("barBAR")
     }
 
     "should allow to delay the property resolution" in {
@@ -141,5 +156,4 @@ class PropertyResolverSpec extends FreeSpec
       ) should be ("bar")
     }
   }
-
 }

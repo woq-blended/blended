@@ -2,7 +2,6 @@ package blended.streams.message
 
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.util.logging.Logger
 import org.scalatest.Matchers
 import org.scalatest.prop.PropertyChecks
 
@@ -11,8 +10,6 @@ import scala.util.Success
 class FlowMessageSpec extends LoggingFreeSpec
   with Matchers
   with PropertyChecks {
-
-  private val log = Logger[FlowMessageSpec]
 
   "A Flow Message should" - {
 

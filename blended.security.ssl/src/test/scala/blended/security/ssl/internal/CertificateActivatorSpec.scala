@@ -5,6 +5,7 @@ import java.io.File
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.logging.Logger
 import javax.net.ssl.SSLContext
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
@@ -22,25 +23,40 @@ class CertificateActivatorSpec extends SimplePojoContainerSpec
     "blended.security.ssl" -> new CertificateActivator()
   )
 
+  private val log = Logger[CertificateActivatorSpec]
+
+  private implicit val timeout : FiniteDuration = 3.seconds
+
   "The Certificate Activator should" - {
 
     "start up and provide a server and a client SSL Context" in {
 
-      implicit val timeout : FiniteDuration = 3.seconds
-
       val serverContext : SSLContext = mandatoryService[SSLContext](registry)(Some("(type=server)"))
-      val clientContext : SSLContext = mandatoryService[SSLContext](registry)(Some("(type=server)"))
+      val clientContext : SSLContext = mandatoryService[SSLContext](registry)(Some("(type=client)"))
 
       val hasher = new PasswordHasher(pojoUuid)
 
       val jks = new JavaKeystore(
-        keystore = new File(baseDir, "etc/keystore"),
+        store = new File(baseDir, "etc/keystore"),
         storepass = hasher.password("blended").toCharArray(),
         keypass = Some(hasher.password("mysecret").toCharArray())
       )
 
       val mks = jks.loadKeyStore().get
       mks.certificates.keys.toList.sorted should be (List("default", "logical"))
+    }
+
+    "Only support selected CypherSuites and protocols" in {
+
+      val sslInfo : blended.security.ssl.SslContextInfo = mandatoryService[blended.security.ssl.SslContextInfo](registry)(None)
+      val serverContext : SSLContext = mandatoryService[SSLContext](registry)(Some("(type=server)"))
+
+      val enabled : List[String] = sslInfo.getEnabledCypherSuites().toList
+
+      val invalid = sslInfo.getInvalidCypherSuites()
+      log.info(s"Invalid CypherSuites [${invalid.size}] : [\n${invalid.mkString("\n")}\n]")
+
+      invalid should be (empty)
     }
   }
 

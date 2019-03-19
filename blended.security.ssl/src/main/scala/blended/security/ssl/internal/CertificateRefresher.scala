@@ -63,10 +63,13 @@ class CertificateRefresher(
     * If the Domino capsule stops, this timer will also be cancelled.
     */
   def scheduleRefresh(refresherConfig: RefresherConfig): Unit = {
-    val nextScheduleTime = CertificateRefresher.nextRefreshScheduleTime(certMgr.nextCertificateTimeout().get, refresherConfig)
-    val task = new RefreshTask(certMgr, refresherConfig)
-    log.debug(s"Scheduling new timer task with timer [${timerName}] to start at ${nextScheduleTime}")
-    timer.schedule(task, nextScheduleTime)
+
+    certMgr.nextCertificateTimeout().get.foreach { timeOut =>
+      val nextScheduleTime = CertificateRefresher.nextRefreshScheduleTime(timeOut, refresherConfig)
+      val task = new RefreshTask(certMgr, refresherConfig)
+      log.debug(s"Scheduling new timer task with timer [$timerName] to start at [$nextScheduleTime]")
+      timer.schedule(task, nextScheduleTime)
+    }
   }
 
   /**
@@ -82,7 +85,10 @@ class CertificateRefresher(
           log.debug(e)("Automatic certifcate refresh failed. Countinuing with old SslContextProvider")
           scheduleRefresh(refresherConfig)
 
-        case Success(newKs) =>
+        case Success(None) =>
+          // do nothing
+
+        case Success(Some(newKs)) =>
           if (newKs.changedAliases.isEmpty) {
             // no cert update
             log.debug("Automatic certificate refresh could not obtain an updated certificate. Continuing with old SslContextProviver")
@@ -108,7 +114,7 @@ class CertificateRefresher(
                     frameworkService.restartContainer("The certificate required for the SSL context was refreshed. An restart is required to cleanly use the new certificate.", true)
 
                   case None =>
-                    log.error("Could not aquire a FrameworkService to restart the OSGi container. Skipping certificate refresh.")
+                    log.error("Could not acquire a FrameworkService to restart the OSGi container. Skipping certificate refresh.")
                     scheduleRefresh(refresherConfig)
                 }
             }

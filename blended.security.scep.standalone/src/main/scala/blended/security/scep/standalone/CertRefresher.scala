@@ -6,15 +6,15 @@ import java.util.ServiceLoader
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.concurrent.Promise
-
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
-import blended.security.ssl.CertificateManager
-import blended.security.ssl.internal.MemoryKeystore
+import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
 import org.apache.felix.connect.launch.PojoServiceRegistryFactory
+
+import scala.util.Success
 
 class CertRefresher(salt: String) {
 
@@ -72,18 +72,27 @@ class CertRefresher(salt: String) {
   }
 
   def checkCert(): Future[MemoryKeystore] = {
+
     val promise = Promise[MemoryKeystore]()
+
     Future {
       new DominoActivator {
         whenBundleActive {
           whenServicePresent[CertificateManager] { certMgr =>
-            val checked = certMgr.checkCertificates()
-            promise.complete(checked)
+
+            certMgr.checkCertificates().get match {
+              case None =>
+                throw new Exception("Server configuration is required to updated server certificates.")
+              case Some(ms) =>
+                promise.complete(Success(ms))
+            }
+
             bundleContext.getBundle().stop()
           }
         }
       }.start(registry.getBundleContext())
     }
+
     promise.future
   }
 

@@ -2,13 +2,14 @@ package blended.container.context.api
 
 import java.util.concurrent.atomic.AtomicLong
 
+import blended.security.crypto.ContainerCryptoSupport
 import com.typesafe.config.Config
 
 object ContainerContext {
 
   val transactionCounter = new AtomicLong(0)
 
-  def nextTransactionCounter = {
+  def nextTransactionCounter : Long = {
     if (transactionCounter.get() == Long.MaxValue) {
       transactionCounter.set(0L)
     }
@@ -27,6 +28,8 @@ trait ContainerContext {
   def getProfileConfigDirectory(): String
 
   def getContainerHostname(): String
+
+  def getContainerCryptoSupport() : ContainerCryptoSupport
 
   // application.conf + application_overlay.conf
   def getContainerConfig(): Config

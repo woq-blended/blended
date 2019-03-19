@@ -27,10 +27,7 @@ trait ContainerIdentifierService {
    */
   def resolvePropertyString(value : String) : Try[AnyRef] = resolvePropertyString(value, Map.empty)
 
-  def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
-    val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
-    r
-  }
+  def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef]
 }
 
 object ContainerIdentifierService {

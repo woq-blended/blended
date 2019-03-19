@@ -12,10 +12,15 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.domino,
       Dependencies.slf4j,
       Dependencies.julToSlf4j,
+      Dependencies.springExpression,
+      
+      Dependencies.springCore % "test",
       Dependencies.scalatest % "test",
+      Dependencies.scalacheck % "test",
       Dependencies.mockitoAll % "test",
       Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.logbackClassic % "test",
+      Dependencies.jclOverSlf4j % "test"
     ),
     adaptBundle = b => b.copy(
       bundleActivator = s"${b.bundleSymbolicName}.internal.ContainerContextActivator",
@@ -24,10 +29,13 @@ object BlendedContainerContextImpl extends ProjectFactory {
   )
 
   override val project = helper.baseProject.dependsOn(
+    BlendedSecurityCrypto.project,
     BlendedContainerContextApi.project,
     BlendedUtilLogging.project,
     BlendedUtil.project,
     BlendedUpdaterConfigJvm.project,
-    BlendedLauncher.project
+    BlendedLauncher.project,
+
+    BlendedTestsupport.project % "test"
   )
 }

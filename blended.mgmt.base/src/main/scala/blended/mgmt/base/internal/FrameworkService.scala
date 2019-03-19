@@ -16,7 +16,8 @@ import org.osgi.framework.BundleContext
 /**
  * Note: The fact that this class has the same name as it's trait is required by the MBean spec. 
  */
-class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext) extends FrameworkServiceMBean {
+class FrameworkService(bundleContext: BundleContext, ctContext: ContainerContext)
+  extends FrameworkServiceMBean {
 
   private[this] val log = Logger[FrameworkService]
   private[this] val restarting : AtomicBoolean = new AtomicBoolean(false)

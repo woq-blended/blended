@@ -2,7 +2,7 @@ package blended.security.ssl.internal
 
 import java.io.File
 
-import blended.security.ssl.{CertificateHolder, CertificateRequestBuilder, CertificateSigner, SecurityTestSupport}
+import blended.security.ssl._
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalatest.Matchers
@@ -37,7 +37,7 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms.certificates should not be (empty)
     }
 
-    "Allow to store a new certificate" in {
+    "Allow to store a new certificate (with private key)" in {
       val jks: JavaKeystore = new JavaKeystore(
         keystoreFile("dummy.jks"),
         "storepass".toCharArray,
@@ -49,12 +49,38 @@ class JavaKeystoreSpec extends LoggingFreeSpec
       ms1.consistent should be(true)
       ms1.certificates should be(empty)
 
-      val cert : CertificateHolder = createRootCertificate().get.copy(changed = true)
-      val ms2 : MemoryKeystore = jks.saveKeyStore(ms1.update("test", cert).get).get
+      val cert: CertificateHolder = createRootCertificate().get.copy(changed = true)
+      val ms2: MemoryKeystore = jks.saveKeyStore(ms1.update("test", cert).get).get
 
-      ms2.certificates should have size(1)
-      ms2.consistent should be (true)
-      ms2.certificates.forall(_._2.privateKey.isDefined) should be (true)
+      ms2.certificates should have size (1)
+      ms2.consistent should be(true)
+      ms2.certificates.forall(_._2.privateKey.isDefined) should be(true)
+    }
+
+    "Allow to store a new certificate (without private key)" in {
+      val jks: JavaKeystore = new JavaKeystore(
+        keystoreFile("dummy.jks"),
+        "storepass".toCharArray,
+        None
+      )
+
+      val ms1: MemoryKeystore = jks.loadKeyStore().get
+
+      ms1.consistent should be(true)
+      ms1.certificates should be(empty)
+
+      val cert: CertificateHolder = createRootCertificate().get.copy(changed = true)
+      jks.saveKeyStore(ms1.update("test", cert).get).get
+
+      val ms2: MemoryKeystore = jks.loadKeyStore().get
+
+      ms2.certificates should have size (1)
+      ms2.consistent should be(true)
+      ms2.certificates.forall(_._2.privateKey.isEmpty) should be(true)
+
+      val cert2 = ms2.certificates.get("test").get
+
+      assert(cert.publicKey.equals(cert2.publicKey))
     }
   }
 }

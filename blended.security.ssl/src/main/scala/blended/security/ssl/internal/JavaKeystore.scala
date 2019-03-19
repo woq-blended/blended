@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream, FileOutputStream}
 import java.security.cert.X509Certificate
 import java.security.{KeyStore, PrivateKey, PublicKey}
 
-import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException}
+import blended.security.ssl.{CertificateHolder, InconsistentKeystoreException, MemoryKeystore}
 import blended.util.logging.Logger
 
 import scala.collection.JavaConverters._
@@ -12,10 +12,12 @@ import scala.util.Try
 import scala.collection.JavaConverters._
 
 class JavaKeystore(
-  keystore : File,
+  store : File,
   storepass : Array[Char],
   keypass : Option[Array[Char]]
 ) {
+
+  def keystore: File = store
 
   private val log : Logger = Logger[JavaKeystore]
 
@@ -34,7 +36,7 @@ class JavaKeystore(
     ms.certificates.filter(_._2.changed).foreach { case (alias, cert) =>
       keypass match {
         case None =>
-          ks.setCertificateEntry(alias, cert.chain.head)
+          ks.setCertificateEntry(alias, cert.chain.last)
         case Some(pwd) =>
           cert.privateKey match {
             case None => throw new Exception(s"Certificate for [${cert.subjectPrincipal}] is missing the private key")

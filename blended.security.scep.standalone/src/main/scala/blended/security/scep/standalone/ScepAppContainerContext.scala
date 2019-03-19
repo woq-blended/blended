@@ -3,9 +3,12 @@ package blended.security.scep.standalone
 import java.io.File
 
 import blended.container.context.api.ContainerContext
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 class ScepAppContainerContext(baseDir: String) extends ContainerContext {
+
+  private val SECRET_FILE_PATH  : String = "blended.security.secretFile"
 
   override def getContainerDirectory(): String = baseDir
 
@@ -18,6 +21,22 @@ class ScepAppContainerContext(baseDir: String) extends ContainerContext {
   override def getProfileConfigDirectory(): String = getContainerConfigDirectory()
 
   override def getContainerHostname(): String = "localhost"
+
+  private lazy val cryptoSupport : ContainerCryptoSupport = {
+    val ctConfig : Config = getContainerConfig()
+
+    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
+      ctConfig.getString(SECRET_FILE_PATH)
+    } else {
+      "secret"
+    }
+
+    BlendedCryptoSupport.initCryptoSupport(
+      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
+    )
+  }
+
+  override def getContainerCryptoSupport(): ContainerCryptoSupport = cryptoSupport
 
   override def getContainerConfig(): Config = {
     val sysProps = ConfigFactory.systemProperties()

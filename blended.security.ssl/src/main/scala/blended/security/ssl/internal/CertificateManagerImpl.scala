@@ -3,7 +3,7 @@ package blended.security.ssl.internal
 import java.io.File
 import java.util.Date
 
-import blended.security.ssl.{CertificateManager, CertificateProvider}
+import blended.security.ssl.{CertificateManager, CertificateProvider, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.capsule._
 import domino.service_providing.ServiceProviding
@@ -29,29 +29,28 @@ class CertificateManagerImpl(
 
   private[this] val log = Logger[CertificateManagerImpl]
 
-  private[this] lazy val javaKeystore : JavaKeystore= new JavaKeystore(
-    new File(cfg.keyStore),
-    cfg.storePass.toCharArray,
-    Some(cfg.keyPass.toCharArray)
-  )
+  private val javaKeystore : Option[JavaKeystore] = cfg.keystoreCfg.map { ksCfg =>
+    new JavaKeystore(
+      new File(ksCfg.keyStore),
+      ksCfg.storePass.toCharArray,
+      Some(ksCfg.keyPass.toCharArray)
+    )
+  }
 
   private[internal] def registerSslContextProvider(): CapsuleScope = capsuleContext.executeWithinNewCapsuleScope {
-    log.debug("Registering SslContextProvider type=client and type=server")
-    val sslCtxtProvider = new SslContextProvider(javaKeystore.loadKeyStoreFromFile().get, cfg.keyPass.toCharArray)
-    // TODO: what should we do with this side-effect, if we unregister the context provider?
-    // FIXME: should this side-effect be configurable?
 
-    log.info(new SSLContextInfo("server", sslCtxtProvider.serverContext).toString())
+    val sslCtxtProvider = new SslContextProvider()
 
-    SSLContext.setDefault(sslCtxtProvider.serverContext)
-    val serverReg = sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
-    val clientReg = sslCtxtProvider.serverContext.providesService[SSLContext](Map("type" -> "server"))
+    javaKeystore.map(_.loadKeyStoreFromFile().get).foreach{ ks =>
+      log.debug("Registering SslContextProvider type=server")
+      val serverCtxt : SSLContext = sslCtxtProvider.serverContext(ks, cfg.keystoreCfg.get.keyPass.toCharArray())
+      SSLContext.setDefault(serverCtxt)
 
-    onStop {
-      log.debug("Unregistering SslContextProvider type=client and type=server")
-      Try { serverReg.unregister() }
-      Try { clientReg.unregister() }
+      serverCtxt.providesService[SSLContext](Map("type" -> "server"))
+      log.info(s"Server SSLContext : ${new SslContextInfo(serverCtxt, cfg.validCypherSuites).toString()}")
     }
+
+    sslCtxtProvider.clientContext.providesService[SSLContext](Map("type" -> "client"))
   }
 
   def start(): Unit = {
@@ -62,11 +61,17 @@ class CertificateManagerImpl(
           log.error("Could not initialise Server certificate(s)")
           throw e
 
-        case Success(sks) =>
+        case Success(None) =>
+          registerSslContextProvider()
+          log.info("Successfully refreshed trusted certificate store")
+
+        case Success(Some(sks)) =>
+          val jks = javaKeystore.get
+
           log.info(s"Successfully obtained [${sks.certificates.size}] Server Certificate(s) for SSLContext")
-          javaKeystore.saveKeyStore(sks) match {
+          jks.saveKeyStore(sks) match {
             case Failure(t) =>
-              log.warn(s"Failed to save keystore to file [${cfg.keyStore}] : [${t.getMessage()}]")
+              log.warn(s"Failed to save keystore to file [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
             case Success(mks) =>
               val regScope : Try[CapsuleScope] = Try { registerSslContextProvider() }
 
@@ -77,7 +82,7 @@ class CertificateManagerImpl(
                     case Success(scope) =>
                       capsuleContext.addCapsule(new CertificateRefresher(bundleContext, this, c, scope))
                     case Failure(t) =>
-                      log.warn(s"Failed to load keystore from [${cfg.keyStore}] : [${t.getMessage()}]")
+                      log.warn(s"Failed to load keystore from [${jks.keystore.getAbsolutePath()}] : [${t.getMessage()}]")
                   }
               }
           }
@@ -89,15 +94,32 @@ class CertificateManagerImpl(
 
   override def stop(): Unit = {}
 
-  private[this] def loadKeyStore(): Try[MemoryKeystore] = javaKeystore.loadKeyStore()
+  private[this] def loadKeyStore(): Try[Option[MemoryKeystore]] = Try {
+    javaKeystore.map(_.loadKeyStore().get)
+  }
 
-  def nextCertificateTimeout() : Try[Date] = javaKeystore.loadKeyStore().get.nextCertificateTimeout()
+  def nextCertificateTimeout() : Try[Option[Date]] = Try {
+    loadKeyStore().get.map(_.nextCertificateTimeout().get)
+  }
 
   /**
-   * @return When successful, a tuple of keystore and a list of updated certificate aliases, else the failure.
+   * @return When successful, an updated server keystore
    */
-  override def checkCertificates(): Try[MemoryKeystore] = Try {
-    val ms : MemoryKeystore = loadKeyStore().get
-    ms.refreshCertificates(cfg.certConfigs, providerMap).get
+  override def checkCertificates(): Try[Option[MemoryKeystore]] = Try {
+
+    // for all configured providers update the trusted certificates
+    if (cfg.maintainTruststore) {
+      providerMap.foreach { case (key, provider) =>
+        provider.rootCertificates().get.foreach { ms =>
+          log.info(s"Updating trust store for root certificates of provider [$key]")
+          new TrustStoreRefresher(ms).refreshTruststore().get
+        }
+      }
+    }
+
+    // first refresh the server certificates if required
+    loadKeyStore().get.map { ms =>
+      ms.refreshCertificates(cfg.certConfigs, providerMap).get
+    }
   }
 }

@@ -1,10 +1,10 @@
 package blended.security.scep.internal
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.ssl.{CertificateProvider, CommonNameProvider}
+import blended.security.ssl.CertificateProvider
 import blended.util.config.Implicits._
-import domino.DominoActivator
 import blended.util.logging.Logger
+import domino.DominoActivator
 
 class ScepActivator extends DominoActivator with TypesafeConfigWatching {
 

@@ -67,4 +67,9 @@ class ContainerIdentifierServiceImpl(
 
     resolve.map{ case (k: String, v: Try[String]) => k -> v.get }
   }
+
+  def resolvePropertyString(value: String, additionalProps: Map[String, Any]) : Try[AnyRef] = Try {
+    val r = ContainerPropertyResolver.resolve(this, value, additionalProps)
+    r
+  }
 }

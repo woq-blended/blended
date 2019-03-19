@@ -60,7 +60,7 @@ CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=${LOGBACK_CONFIG_SETTING}"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dblended.home=${BLENDED_HOME}"
 
 # Enable this when you need to debug SSL issues
-CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Djavax.net.debug=ssl"
+# CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Djavax.net.debug=ssl"
 
 if [ -n "$DEBUG_PORT" ] ; then
   if [ -n "$DEBUG_WAIT" ] ; then

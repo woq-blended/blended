@@ -7,6 +7,27 @@ import blended.util.config.Implicits._
 
 import scala.util.Try
 
+object KeystoreConfig {
+
+  def fromConfig(cfg: Config, hasher : PasswordHasher) : KeystoreConfig = {
+    val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
+    val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
+    val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
+
+    KeystoreConfig(
+      keyStore,
+      hasher.password(storePass),
+      hasher.password(keyPass)
+    )
+  }
+}
+
+case class KeystoreConfig(
+  keyStore: String,
+  storePass: String,
+  keyPass: String
+)
+
 /**
  * Configuration of [[CertificateManagerImpl]]
  *
@@ -18,12 +39,14 @@ import scala.util.Try
  * @param skipInitialCheck If `true` no initial certifcate check will be issues.
  */
 case class CertificateManagerConfig(
-  keyStore: String,
-  storePass: String,
-  keyPass: String,
+  clientOnly : Boolean,
+  maintainTruststore : Boolean,
+  keystoreCfg : Option[KeystoreConfig],
+  providerList : List[String],
   certConfigs: List[CertificateConfig],
   refresherConfig: Option[RefresherConfig],
-  skipInitialCheck: Boolean
+  skipInitialCheck: Boolean,
+  validCypherSuites : List[String]
 )
 
 object CertificateManagerConfig {
@@ -33,9 +56,18 @@ object CertificateManagerConfig {
    * using the given [[PasswordHasher]] to hash the passwords (`keyPass` and `storePass`).
    */
   def fromConfig(cfg: Config, hasher: PasswordHasher, idSvc: ContainerIdentifierService): CertificateManagerConfig = {
-    val keyStore = cfg.getString("keyStore", System.getProperty("javax.net.ssl.keyStore"))
-    val storePass = cfg.getString("storePass", System.getProperty("javax.net.ssl.keyStorePassword"))
-    val keyPass = cfg.getString("keyPass", System.getProperty("javax.net.ssl.keyPassword"))
+
+    val clientOnly : Boolean = cfg.getBoolean("clientOnly", false)
+
+    val maintainTruststore : Boolean = cfg.getBoolean("maintainTruststore", true)
+
+    val keystoreCfg : Option[KeystoreConfig] = if (clientOnly) {
+      None
+    } else {
+      Some(KeystoreConfig.fromConfig(cfg, hasher))
+    }
+
+    val providers : List[String] = cfg.getStringList("providerList", List.empty)
 
     val certConfigs = cfg.getConfigMap("certificates", Map.empty).map {
       case (k, v) =>
@@ -45,14 +77,18 @@ object CertificateManagerConfig {
     val refresherConfig = cfg.getConfigOption("refresher").map(c => RefresherConfig.fromConfig(c).get)
 
     val skipInitialCheck = cfg.getBoolean("skipInitialCheck", false)
-    
+
+    val cyphers = cfg.getStringList("validCypherSuites", List.empty)
+
     CertificateManagerConfig(
-      keyStore = keyStore,
-      storePass = hasher.password(storePass),
-      keyPass = hasher.password(keyPass),
-      certConfigs,
-      refresherConfig,
-      skipInitialCheck = skipInitialCheck
+      clientOnly = clientOnly,
+      maintainTruststore = maintainTruststore,
+      keystoreCfg = keystoreCfg,
+      certConfigs = certConfigs,
+      refresherConfig = refresherConfig,
+      skipInitialCheck = skipInitialCheck,
+      providerList = providers,
+      validCypherSuites = cyphers
     )
   }
 }

@@ -3,16 +3,19 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.util.Properties
 
-import scala.collection.JavaConverters._
-
 import blended.container.context.api.ContainerContext
-import blended.updater.config.{ LocalOverlays, OverlayRef, RuntimeConfig }
+import blended.security.crypto.{ContainerCryptoSupport, BlendedCryptoSupport}
+import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
-import com.typesafe.config.{ Config, ConfigFactory, ConfigParseOptions }
+import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
+
+import scala.collection.JavaConverters._
 
 object ContainerContextImpl {
   private val PROP_BLENDED_HOME = "blended.home"
   private val CONFIG_DIR = "etc"
+  private val SECRET_FILE_PATH  : String = "blended.security.secretFile"
+
 }
 
 class ContainerContextImpl() extends ContainerContext {
@@ -21,7 +24,8 @@ class ContainerContextImpl() extends ContainerContext {
 
   private[this] val log = Logger[ContainerContextImpl]
 
-  override def getContainerDirectory() = new File(System.getProperty("blended.home")).getAbsolutePath
+  override def getContainerDirectory() : String =
+    new File(System.getProperty("blended.home")).getAbsolutePath
 
   override def getContainerHostname(): String = {
     try {
@@ -85,8 +89,24 @@ class ContainerContextImpl() extends ContainerContext {
     f.getAbsolutePath()
   }
 
+  private lazy val cryptoSupport : ContainerCryptoSupport = {
+    val ctConfig : Config = getContainerConfig()
 
-  override def getContainerConfigDirectory() = new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
+    val cipherSecretFile : String = if (ctConfig.hasPath(SECRET_FILE_PATH)) {
+      ctConfig.getString(SECRET_FILE_PATH)
+    } else {
+      "secret"
+    }
+
+    BlendedCryptoSupport.initCryptoSupport(
+      new File(getContainerConfigDirectory(), cipherSecretFile).getAbsolutePath()
+    )
+  }
+
+  override def getContainerCryptoSupport(): ContainerCryptoSupport = cryptoSupport
+
+  override def getContainerConfigDirectory(): String =
+    new File(getContainerDirectory(), CONFIG_DIR).getAbsolutePath
 
   override def getProfileConfigDirectory(): String = new File(getProfileDirectory(), CONFIG_DIR).getAbsolutePath
 
@@ -105,14 +125,17 @@ class ContainerContextImpl() extends ContainerContext {
                 log.debug("Unsupported overlay: " + x.mkString(":"))
                 None
             }.toSet
-            if (overlayRefs.isEmpty) None
-            else {
+            if (overlayRefs.isEmpty) {
+              None
+            } else {
               val dir = LocalOverlays.materializedDir(overlayRefs, new File(profileDir))
               val confFile = new File(dir, s"$CONFIG_DIR/application_overlay.conf")
               if (confFile.exists()) {
                 log.debug(s"About to read extra application overlay override file: ${confFile}")
                 Some(confFile)
-              } else None
+              } else {
+                None
+              }
             }
           case _ => None
         }
@@ -133,5 +156,6 @@ class ContainerContextImpl() extends ContainerContext {
     .resolve()
   }
 
-  override def getContainerConfig() = ctConfig
+  override def getContainerConfig() : Config = ctConfig
+
 }

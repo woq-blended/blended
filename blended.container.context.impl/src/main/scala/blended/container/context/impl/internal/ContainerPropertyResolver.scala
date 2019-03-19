@@ -1,7 +1,8 @@
-package blended.container.context.api
+package blended.container.context.impl.internal
 
 import java.util.regex.{Matcher, Pattern}
 
+import blended.container.context.api.{ContainerIdentifierService, PropertyResolverException, SpelFunctions}
 import blended.util.logging.Logger
 import org.springframework.expression.Expression
 import org.springframework.expression.spel.standard.SpelExpressionParser
@@ -187,8 +188,9 @@ object ContainerPropertyResolver {
 
     result
   }
+  
 
-  private[api] def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
+  def resolve(idSvc: ContainerIdentifierService, line: String, additionalProps: Map[String, Any] = Map.empty) : AnyRef = {
     // First we check if we have replacements in "Blended Style"
 
     /** TODO: Map the modifier to installable services
@@ -199,11 +201,17 @@ object ContainerPropertyResolver {
       e.modifier match {
         case "delayed" =>
           resolve(idSvc, e.prefix) + e.pattern + resolve(idSvc, e.postfix)
+
+        case "encrypted" =>
+          val decrypted : String = idSvc.getContainerContext().getContainerCryptoSupport().decrypt(e.pattern).get
+          resolve(idSvc, e.prefix) + resolve(idSvc, decrypted).toString() + resolve(idSvc, e.postfix)
+
         case _ =>
           // First we resolve the inner expression to resolve any nested expressions
           val inner = resolve(idSvc, e.pattern, additionalProps).toString
           // then we resolve the entire line with the inner expression resolved
           resolve(idSvc, e.prefix + processRule(idSvc, inner, additionalProps) + e.postfix, additionalProps)
+
       }
     } else {
       lastIndexOfPattern(-1, -1, line, evalStartDelim) match {
@@ -220,7 +228,7 @@ object ContainerPropertyResolver {
   }
 
   // TODO : Should this be Option[AnyRef] ??
-  private[api] def evaluate(
+  private[impl] def evaluate(
     idSvc: ContainerIdentifierService, line: String, additionalProps : Map[String, Any] = Map.empty
   ) : AnyRef = {
 

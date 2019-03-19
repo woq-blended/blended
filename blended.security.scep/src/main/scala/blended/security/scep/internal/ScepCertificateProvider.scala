@@ -4,7 +4,7 @@ import java.io.StringWriter
 import java.net.URL
 import java.security.cert.Certificate
 
-import blended.security.ssl._
+import blended.security.ssl.{MemoryKeystore, _}
 import blended.util.logging.Logger
 import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.x500.X500Principal
@@ -46,6 +46,16 @@ class ScepCertificateProvider(cfg: ScepConfig)
   private[this] lazy val caps : Capabilities = cfg.profile match {
     case None => scepClient.getCaCapabilities()
     case Some(p) => scepClient.getCaCapabilities(p)
+  }
+
+
+  override def rootCertificates(): Try[Option[MemoryKeystore]] = Try {
+    val certs : List[Certificate] =
+      scepClient.getCaCertificate().getCertificates(null).asScala.toList
+
+    val ms : MemoryKeystore = MemoryKeystore(Map("ca" -> CertificateHolder.create(certs).get))
+
+    Some(ms)
   }
 
   override def refreshCertificate(existing: Option[CertificateHolder], cnProvider: CommonNameProvider): Try[CertificateHolder] = {
@@ -116,8 +126,6 @@ class ScepCertificateProvider(cfg: ScepConfig)
 
       csrBuilder.addAttribute(PKCSObjectIdentifiers.pkcs_9_at_extensionRequest, extGen.generate())
     }
-
-    // TODO add extensions ?
 
     val csrSignerBuilder = new JcaContentSignerBuilder(cfg.csrSignAlgorithm)
     val csrSigner = csrSignerBuilder.build(privKey)

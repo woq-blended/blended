@@ -6,12 +6,16 @@ import java.security.KeyStore
 import blended.util.logging.Logger
 import javax.net.ssl._
 
-class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
+object SslContextProvider {
+  private[ssl] val propTrustStore = "javax.net.ssl.trustStore"
+  private[ssl] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
+}
+
+class SslContextProvider {
+
+  import SslContextProvider.{propTrustStore, propTrustStorePwd}
 
   private[this] val log = Logger[SslContextProvider]
-
-  private[this] val propTrustStore = "javax.net.ssl.trustStore"
-  private[this] val propTrustStorePwd = "javax.net.ssl.trustStorePassword"
 
   private[this] lazy val trustManager : Array[TrustManager] = (
     Option(System.getProperty(propTrustStore)),
@@ -32,13 +36,15 @@ class SslContextProvider(keystore : KeyStore, keyPass: Array[Char]) {
       null
   }
 
-  private[this] lazy val keyManager : Array[KeyManager] = {
-    val kmf = KeyManagerFactory.getInstance("SunX509")
-    kmf.init(keystore, keyPass)
-    kmf.getKeyManagers
-  }
 
-  lazy val serverContext: SSLContext = {
+  def serverContext(keystore : KeyStore, keyPass : Array[Char]) : SSLContext = {
+
+    val keyManager : Array[KeyManager] = {
+      val kmf = KeyManagerFactory.getInstance("SunX509")
+      kmf.init(keystore, keyPass)
+      kmf.getKeyManagers
+    }
+
     val result = SSLContext.getInstance("TLSv1.2")
     result.init(keyManager, trustManager, null)
 

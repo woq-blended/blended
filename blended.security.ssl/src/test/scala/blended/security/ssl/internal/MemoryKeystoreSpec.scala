@@ -4,6 +4,7 @@ import java.math.BigInteger
 
 import blended.security.ssl._
 import blended.testsupport.scalatest.LoggingFreeSpec
+import javax.security.auth.x500.X500Principal
 import org.scalatest.Matchers
 
 import scala.util.{Failure, Try}
@@ -144,6 +145,24 @@ class MemoryKeystoreSpec extends LoggingFreeSpec
 
       newMs.certificates.get("stillValid").get.chain.head.getSerialNumber should be (BigInteger.ONE)
       newMs.certificates.get("timingOut").get.chain.head.getSerialNumber should be (BigInteger.ONE)
+    }
+
+    "should allow to look up a certificate by the subjectPrincipal" in {
+
+      val c1 : CertificateHolder = createRootCertificate("cert1", validDays = validDays).get
+      val c2 : CertificateHolder = createRootCertificate("cert2", validDays = validDays).get
+
+      val ms : MemoryKeystore = new MemoryKeystore(Map("cert1" -> c1, "cert2" -> c2))
+
+      val notFound : Option[CertificateHolder] = ms.findByPrincipal(new X500Principal("CN=foo"))
+      val cert : Option[CertificateHolder] = ms.findByPrincipal(new X500Principal("CN=cert1"))
+
+      notFound should be (empty)
+      cert should be (defined)
+
+      assert(cert.forall { ch =>
+        ch.publicKey.equals(c1.publicKey)
+      })
     }
   }
 }

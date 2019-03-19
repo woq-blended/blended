@@ -25,6 +25,9 @@ object BlendedSecuritySsl extends ProjectFactory {
 
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
 
+      Test / javaOptions += 
+        "-Djava.security.properties=" + ((Test / classDirectory).value / "container/security.properties").getAbsolutePath(),
+        
       embeddedJars := {
         (Compile/externalDependencyClasspath).value
           .map(_.data)
