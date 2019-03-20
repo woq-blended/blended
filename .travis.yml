@@ -100,7 +100,7 @@ jobs:
       - bash $TRAVIS_BUILD_DIR/scripts/dropbox_uploader.sh list
     #- bash $TRAVIS_BUILD_DIR/scripts/build-akka.sh
     script:
-      - sbt clean publishM2 unidoc cleanCoverage
+      - sbt clean update publishLocal publishM2 unidoc cleanCoverage
     after_failure:
       - bash $TRAVIS_BUILD_DIR/scripts/upload-results.sh
     after_success:
