@@ -88,7 +88,7 @@ trait Dependencies {
   val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
   val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
   val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
-  val junit = "junit" % "junit" % "4.11"
+  val junit = "junit" % "junit" % "4.12"
 
   val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
   val levelDbJava = "org.iq80.leveldb" % "leveldb" % "0.9"
