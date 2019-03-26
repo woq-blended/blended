@@ -35,7 +35,7 @@ object MockObjects {
   private[this] def sizedProperties(namePrefix: String = "prop", numProps: Int) =
     1.to(numProps).map(i => (s"$namePrefix-$i", s"value$i")).toMap
 
-  private[this] def serviceInfo(numProps: Int = 10) = ServiceInfo(
+  private[this] def serviceInfo(numProps: Int = 10) : ServiceInfo = ServiceInfo(
     name = s"service-${serviceCount.incrementAndGet()}",
     serviceType = s"type-${rnd.nextInt(3) + 1}",
     timestampMsec = System.currentTimeMillis(),
@@ -76,7 +76,7 @@ object MockObjects {
     ProfileGroup(name = "blended-simple", "1.1", List(noOverlays, someOverlays, invalid))
   ).flatMap(_.toSingle)
 
-  def createContainer(numContainers: Integer) = 1.to(numContainers).map { i =>
+  def createContainer(numContainers: Integer) : List[ContainerInfo] = 1.to(numContainers).map { i =>
 
     val serviceSeqs = 1.to(3).map { i =>
       serviceSeq(rnd.nextInt(5) + 1)
@@ -91,54 +91,5 @@ object MockObjects {
       appliedUpdateActionIds = Nil
     )
   }.toList
-
-  // use this method and one of the defined environments in the mock server
-  def containerList(l: List[ContainerInfo]): String = {
-    log.debug("about to pickle: ${l}")
-    Pickle.intoString(l)
-  }
-
-  def remoteContainerStateList(l: List[ContainerInfo]): String = {
-    log.debug(s"about to pickle: ${l}")
-    val result = l.map(ci => RemoteContainerState(containerInfo = ci, outstandingUpdateActions = List()))
-    Pickle.intoString(result)
-  }
-
-  def profilesList(l: List[ProfileGroup]) = Pickle.intoString(l)
-
-  // Define some test environments here
-
-  // 1. empty environment
-  val emptyEnv = List.empty[ContainerInfo]
-
-  // 2. a single container environment
-  val minimalEnv = createContainer(1)
-
-  // 3. A medium sized environment
-  val mediumEnv = createContainer(5)
-
-  val runtimeConfigs = {
-    val rcs = List(
-      RuntimeConfig(
-        name = "blended-example",
-        version = "1.0.0",
-        startLevel = 10,
-        defaultStartLevel = 10,
-        properties = sizedProperties("prop", 3),
-        frameworkProperties = sizedProperties("frameworkProp", 2),
-        systemProperties = sizedProperties("sysProp", 1)
-      )
-    )
-    Pickle.intoString(rcs)
-  }
-
-  val overlayConfigs = {
-    val ocs = List(
-      OverlayConfig(name = "test-overlay", version = "1.0.0", properties = sizedProperties("prop", 3),
-        generatedConfigs = List(GeneratedConfig(configFile = "conf/test.conf", config = "org.example { a = 1, b = 2 }")))
-    )
-    Pickle.intoString(ocs)
-  }
-
 }
 

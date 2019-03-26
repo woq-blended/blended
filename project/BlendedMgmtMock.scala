@@ -10,7 +10,6 @@ object BlendedMgmtMock extends ProjectFactory {
     deps = Seq(
       Dependencies.cmdOption,
       Dependencies.akkaActor,
-      Dependencies.wiremockStandalone,
       Dependencies.logbackClassic,
       Dependencies.logbackCore
     )

@@ -242,9 +242,6 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
         assert(handled === true)
         assert(entityAs[String].contains("An OSGI container framework in Scala with focus on testing"))
       }
-
     }
-
   }
-
 }

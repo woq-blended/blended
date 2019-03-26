@@ -34,19 +34,4 @@ object BuildHelper {
       isSnapshot := buildVersion.endsWith("SNAPSHOT")
     )
   }
-
-//  def classpathDepsByScope(cp: Keys.Classpath, scope: String) : Seq[File] = {
-//
-//    cp.filter{ af =>
-//      af.metadata.entries.find { e => e.value.isInstanceOf[Configuration] } match {
-//        case None => false
-//        case Some(obj) =>
-//          val cfg = obj.value.asInstanceOf[Configuration]
-//
-//          println(cfg.name + ":" + cfg.extendsConfigs)
-//          cfg.name == scope ||
-//          (cfg.extendsConfigs.exists(_.name == scope))
-//      }
-//    }.map(_.data)
-//  }
 }

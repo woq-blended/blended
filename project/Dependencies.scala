@@ -145,10 +145,7 @@ trait Dependencies {
   val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
   // FIXME: Rename to typesafeSslConfigCore
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
-
-  val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
-  val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
-
+  
 }
 
 object Dependencies extends Dependencies
