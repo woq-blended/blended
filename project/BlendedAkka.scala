@@ -37,6 +37,7 @@ object BlendedAkka extends ProjectFactory {
     BlendedContainerContextApi.project,
     BlendedDomino.project,
 
-    BlendedTestsupport.project % "test"
+    BlendedTestsupport.project % "test",
+    BlendedTestsupportPojosr.project % "test"
   )
 }

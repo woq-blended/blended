@@ -14,6 +14,8 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       Dependencies.akkaSlf4j % "test",
       Dependencies.akkaTestkit % "test",
       Dependencies.scalatest % "test",
+      Dependencies.akkaTestkit % "test",
+      Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
@@ -27,6 +29,7 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
     BlendedAkkaHttp.project,
     BlendedUtil.project,
     BlendedUtilLogging.project,
+    BlendedTestsupport.project % "test",
     BlendedTestsupportPojosr.project % "test"
   )
 }

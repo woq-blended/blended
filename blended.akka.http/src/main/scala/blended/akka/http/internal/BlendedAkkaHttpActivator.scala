@@ -35,7 +35,7 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
 
       val dynamicRoutes = new RouteProvider()
 
-      log.info(s"Starting HTTP server at ${httpHost}:${httpPort}")
+      log.info(s"Starting HTTP server at [$httpHost:$httpPort]")
       val bindingFuture = Http().bindAndHandle(dynamicRoutes.dynamicRoute, httpHost, httpPort)
 
       bindingFuture.onComplete {
@@ -47,14 +47,14 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
       }
 
       onStop {
-        log.info(s"Stopping HTTP server at ${httpHost}:${httpPort}")
+        log.info(s"Stopping HTTP server at [$httpHost:$httpPort]")
         bindingFuture.map(serverBinding => serverBinding.unbind())
       }
 
       log.debug("Listening for SSLContext registrations of type=server...")
       whenAdvancedServicePresent[SSLContext]("(type=server)") { sslContext =>
         
-        log.info(s"Detected an server SSLContext. Starting HTTPS server at ${httpsHost}:${httpsPort}")
+        log.info(s"Detected an server SSLContext. Starting HTTPS server at [$httpsHost:$httpsPort]")
         
         val https = ConnectionContext.https(sslContext)
         val httpsBindingFuture = Http().bindAndHandle(
@@ -72,17 +72,13 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
         }
 
         onStop {
-          log.info(s"Stopping HTTPS server at ${httpsHost}:${httpsPort}")
+          log.info(s"Stopping HTTPS server at [$httpsHost:$httpsPort]")
           httpsBindingFuture.map(serverBinding => serverBinding.unbind())
         }
       }
 
       // Consume routes from OSGi Service Registry (white-board pattern)
       dynamicRoutes.dynamicAdapt(capsuleContext, bundleContext)
-
     }
   }
-
 }
-
-

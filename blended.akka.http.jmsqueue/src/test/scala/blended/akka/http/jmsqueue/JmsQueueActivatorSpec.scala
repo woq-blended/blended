@@ -1,8 +1,10 @@
-package blended.akka.http.proxy
+package blended.akka.http.jmsqueue
 
 import java.io.File
 
+import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.http.HttpContext
+import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -11,7 +13,7 @@ import org.osgi.framework.BundleActivator
 
 import scala.concurrent.duration._
 
-class ProxyActivatorSpec extends SimplePojoContainerSpec
+class JmsQueueActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper {
 
@@ -19,12 +21,14 @@ class ProxyActivatorSpec extends SimplePojoContainerSpec
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
-    "blended.akka.http.proxy" -> new BlendedAkkaHttpProxyActivator()
+    "blended.activemq.brokerstarter" -> new BrokerActivator(),
+    "blended.akka.http" -> new BlendedAkkaHttpActivator(),
+    "blended.akka.http.jmsqueue" -> new BlendedAkkaHttpJmsqueueActivator()
   )
 
-  "The HTTP proxy activator" - {
+  "The JmsQueueActivator" - {
 
-    "should register the proxy routes as Simple Http context services" in {
+    "should register a webcontext for the configured destinations" in {
 
       implicit val timeout : FiniteDuration = 3.seconds
       mandatoryService[HttpContext](registry)(None)
