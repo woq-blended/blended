@@ -9,8 +9,8 @@ trait Dependencies {
 
   // Versions
   val activeMqVersion = "5.15.6"
-  val akkaVersion = "2.5.19"
-  val akkaHttpVersion = "10.1.5"
+  val akkaVersion = "2.5.21"
+  val akkaHttpVersion = "10.1.7"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
   val jettyVersion = "9.4.8.v20171121"
@@ -61,6 +61,7 @@ trait Dependencies {
   val commonsLang2 = "commons-lang" % "commons-lang" % "2.6"
   val concurrentLinkedHashMapLru = "com.googlecode.concurrentlinkedhashmap" % "concurrentlinkedhashmap-lru" % "1.4.2"
 
+  val dockerJava = "com.github.docker-java" % "docker-java" % "3.0.13"
   val domino = "com.github.domino-osgi" %% "domino" % dominoVersion
 
   val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
