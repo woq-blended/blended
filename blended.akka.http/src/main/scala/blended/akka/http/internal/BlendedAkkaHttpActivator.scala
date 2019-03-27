@@ -42,7 +42,7 @@ class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching 
         case Success(b) =>
           log.info(s"Started HTTP server at ${b.localAddress}")
         case Failure(t) =>
-          log.error(t)(t.getMessage())
+          log.error(t)(s"Failed to start HTTP Server : [${t.getMessage()}]")
           throw t
       }
 
