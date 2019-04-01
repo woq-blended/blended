@@ -18,13 +18,8 @@ addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.1.1")
 // Export test coveragt to codacy
 addSbtPlugin("com.codacy" % "sbt-codacy-coverage" % "1.3.15")
 
-//addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.4")
-// instead we use a binary located uder project/lib containing
-// https://github.com/sbt/sbt-osgi/pull/61
-// but we also need to add transitive deps
-libraryDependencies ++= Seq(
-  "biz.aQute.bnd" % "biz.aQute.bndlib" % "4.0.0"
-)
+// OSGi bundle build support
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.9.5")
 
 // bloop compile server support (config file generator currently)
 addSbtPlugin("ch.epfl.scala" % "sbt-bloop" % "1.0.0")
