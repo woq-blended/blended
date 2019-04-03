@@ -68,7 +68,8 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
         Seq(
           packageBin := (Universal/packageBin).dependsOn(Compile/packageBin).value,
           publishM2 := (Universal/publishM2).dependsOn(Compile/packageBin).value,
-          publishLocal := publishLocal.dependsOn(Universal/publishLocal).value
+          publishLocal := publishLocal.dependsOn(Universal/publishLocal).value,
+          publish := publish.dependsOn(Universal/publish).value
         )
   }
 
