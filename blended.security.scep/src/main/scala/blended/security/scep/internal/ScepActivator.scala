@@ -11,7 +11,7 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
   private[this] val log = Logger[ScepActivator]
 
   whenBundleActive {
-    whenTypesafeConfigAvailable{ (cfg, _) =>
+    whenTypesafeConfigAvailable{ (cfg, idSvc) =>
 
       val scepUrl = cfg.getStringOption("scepUrl")
 
@@ -20,7 +20,9 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
         val profile = cfg.getStringOption("scepProfile")
         val keyLength = cfg.getInt("keyLength", 2048)
         val csrSignAlgorithm = cfg.getString("csrSignAlgorithm", "SHA1withRSA")
-        val scepChallenge = cfg.getString("scepChallenge")
+
+        val scepChallenge : String =
+          idSvc.resolvePropertyString(cfg.getString("scepChallenge")).map(_.toString).get
 
         val scepCfg = ScepConfig(
           url = url,

@@ -38,3 +38,12 @@ https://dzone.com/articles/creating-jenkins-configuration-as-code-and-applyin
 
 Multinode local kubernetes cluster
 https://github.com/kinvolk/kube-spawn
+
+
+Google Cload Storage
+
+----
+
+Jenkins on GCE
+
+- Create kubernetes cluster
