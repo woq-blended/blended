@@ -89,7 +89,7 @@ class BridgeSpec extends SimplePojoContainerSpec
     (cf1, cf2)
   }
 
-  "The bridge activator should" - {
+  "The Activated Bridge should" - {
 
     "process normal in- and outbound messages" in {
 
@@ -99,6 +99,7 @@ class BridgeSpec extends SimplePojoContainerSpec
         FlowMessage(s"Message $i")(FlowMessage.noProps)
           .withHeader(destHeader, s"sampleOut.$i").get
           .withHeader(headerCfg.headerTrack, true).get
+          .withHeader("UnitProperty", null).get
       } map { FlowEnvelope.apply }
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
@@ -110,8 +111,11 @@ class BridgeSpec extends SimplePojoContainerSpec
       val switch = sendMessages(pSettings, log, msgs:_*).get
 
       1.to(msgCount).map { i =>
-        val messages = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"), log)(1.second, system, materializer)
+        val messages =
+          receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"), log)(1.second, system, materializer)
+
         messages.result.map { l =>
+          l.head.header[Unit]("UnitProperty") should be (Some(()))
           l should have size(1)
         }
       }

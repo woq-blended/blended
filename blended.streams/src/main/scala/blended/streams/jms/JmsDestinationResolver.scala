@@ -1,7 +1,7 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage}
+import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage, UnitMsgProperty}
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms.{Destination, JMSException, Message, Session}
@@ -35,7 +35,10 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
     flowMsg.header.filter {
       case (k, v) => !k.startsWith("JMS")
     }.foreach {
-      case (k,v) => msg.setObjectProperty(k, v.value)
+      case (k,v) => v match {
+        case u : UnitMsgProperty => msg.setObjectProperty(k, null)
+        case o => msg.setObjectProperty(k, o.value)
+      }
     }
 
     replyTo(session, env).get.foreach(msg.setJMSReplyTo)
