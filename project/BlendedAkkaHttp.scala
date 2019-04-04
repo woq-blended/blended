@@ -13,14 +13,14 @@ object BlendedAkkaHttp extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.akkaOsgi,
       Dependencies.akkaHttp,
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.mockitoAll % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.mockitoAll % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -33,8 +33,8 @@ object BlendedAkkaHttp extends ProjectFactory {
       BlendedUtil.project,
       BlendedUtilLogging.project,
       BlendedAkka.project,
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

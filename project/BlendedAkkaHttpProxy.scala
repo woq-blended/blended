@@ -12,14 +12,14 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.akkaHttp,
       Dependencies.akkaActor,
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
@@ -29,8 +29,8 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       BlendedAkkaHttp.project,
       BlendedUtil.project,
       BlendedUtilLogging.project,
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

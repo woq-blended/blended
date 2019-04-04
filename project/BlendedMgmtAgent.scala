@@ -12,8 +12,8 @@ object BlendedMgmtAgent extends ProjectFactory {
       Dependencies.akkaOsgi,
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
-      Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.akkaTestkit % Test,
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

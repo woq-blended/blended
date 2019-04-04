@@ -27,7 +27,7 @@ object BlendedSecurityJs extends ProjectFactory {
       moduleName := projectName,
       libraryDependencies ++= Seq(
         "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
-        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
+        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % Test
       ),
       coverageEnabled := false
     )
@@ -41,9 +41,9 @@ object BlendedSecurityJvm extends ProjectFactory {
 
     override def deps = Seq(
       Dependencies.prickle,
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

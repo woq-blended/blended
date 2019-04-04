@@ -10,8 +10,8 @@ object BlendedActivemqClient extends ProjectFactory {
 
     override def deps = Seq(
       Dependencies.activeMqClient,
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test"
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -27,8 +27,8 @@ object BlendedActivemqClient extends ProjectFactory {
       BlendedAkka.project,
       BlendedStreams.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

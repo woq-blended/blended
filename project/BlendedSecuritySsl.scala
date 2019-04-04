@@ -14,10 +14,10 @@ object BlendedSecuritySsl extends ProjectFactory {
       Dependencies.bouncyCastleBcprov,
       Dependencies.bouncyCastlePkix,
 
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.scalacheck % "test"
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.scalacheck % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -43,8 +43,8 @@ object BlendedSecuritySsl extends ProjectFactory {
       BlendedUtil.project,
       BlendedMgmtBase.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

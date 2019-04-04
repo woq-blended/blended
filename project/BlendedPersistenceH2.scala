@@ -19,11 +19,11 @@ object BlendedPersistenceH2 extends ProjectFactory {
       Dependencies.springJdbc,
       Dependencies.liquibase,
       Dependencies.snakeyaml,
-      Dependencies.jclOverSlf4j % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.lambdaTest % "test",
-      Dependencies.scalacheck % "test"
+      Dependencies.jclOverSlf4j % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.lambdaTest % Test,
+      Dependencies.scalacheck % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -39,7 +39,7 @@ object BlendedPersistenceH2 extends ProjectFactory {
       BlendedPersistence.project,
       BlendedUtilLogging.project,
       BlendedUtil.project,
-      BlendedTestsupport.project % "test",
+      BlendedTestsupport.project % Test,
       // we want to use the scalacheck data generators in tests
       BlendedUpdaterConfigJvm.project % "test->test"
     )

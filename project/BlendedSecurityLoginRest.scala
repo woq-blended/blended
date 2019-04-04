@@ -11,14 +11,14 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
-      Dependencies.scalatest % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.sttp % "test",
-      Dependencies.sttpAkka % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.sttp % Test,
+      Dependencies.sttpAkka % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -31,9 +31,9 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       BlendedUtilLogging.project,
       BlendedSecurityLoginApi.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedSecurityLoginImpl.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedSecurityLoginImpl.project % Test
     )
   }
 }

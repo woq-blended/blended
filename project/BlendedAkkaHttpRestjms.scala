@@ -15,16 +15,16 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.camelCore,
       Dependencies.camelJms,
       Dependencies.jms11Spec,
-      Dependencies.sttp % "test",
-      Dependencies.sttpAkka % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqClient % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.sttp % Test,
+      Dependencies.sttpAkka % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqClient % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
@@ -34,7 +34,7 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       BlendedAkka.project,
       BlendedAkkaHttp.project,
       BlendedUtil.project,
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

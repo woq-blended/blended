@@ -10,14 +10,14 @@ object BlendedJmsUtils extends ProjectFactory {
     override def deps = Seq(
       Dependencies.camelJms,
       Dependencies.jms11Spec,
-      Dependencies.scalatest % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.akkaStream % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.akkaStream % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
@@ -27,8 +27,8 @@ object BlendedJmsUtils extends ProjectFactory {
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,
       BlendedAkka.project,
-      BlendedCamelUtils.project % "test",
-      BlendedTestsupport.project % "test"
+      BlendedCamelUtils.project % Test,
+      BlendedTestsupport.project % Test
     )
   }
 }

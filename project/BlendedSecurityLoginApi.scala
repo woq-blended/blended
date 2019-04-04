@@ -10,9 +10,9 @@ private object BlendedSecurityLoginApi extends ProjectFactory {
     override def deps = Seq(
       Dependencies.prickle,
       Dependencies.jjwt,
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -23,8 +23,8 @@ private object BlendedSecurityLoginApi extends ProjectFactory {
       BlendedDomino.project,
       BlendedAkka.project,
       BlendedSecurityJvm.project,
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

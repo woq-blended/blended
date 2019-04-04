@@ -11,17 +11,17 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
     override def deps = Seq(
       Dependencies.domino,
       Dependencies.jms11Spec,
-      Dependencies.sttp % "test",
-      Dependencies.sttpAkka % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test"
+      Dependencies.sttp % Test,
+      Dependencies.sttpAkka % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
@@ -31,10 +31,10 @@ object BlendedAkkaHttpJmsqueue extends ProjectFactory {
       BlendedAkkaHttp.project,
       BlendedUtil.project,
 
-      BlendedActivemqBrokerstarter.project % "test",
-      BlendedStreams.project % "test",
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedActivemqBrokerstarter.project % Test,
+      BlendedStreams.project % Test,
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
 
   }

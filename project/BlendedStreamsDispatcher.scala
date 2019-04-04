@@ -16,15 +16,15 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.akkaPersistence,
       Dependencies.levelDbJava,
 
-      Dependencies.scalatest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.travesty % "test",
-      Dependencies.asciiRender % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.travesty % Test,
+      Dependencies.asciiRender % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -52,11 +52,11 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       BlendedAkka.project,
       BlendedPersistence.project,
 
-      BlendedPersistenceH2.project % "test",
-      BlendedActivemqBrokerstarter.project % "test",
-      BlendedStreamsTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedTestsupport.project % "test"
+      BlendedPersistenceH2.project % Test,
+      BlendedActivemqBrokerstarter.project % Test,
+      BlendedStreamsTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedTestsupport.project % Test
     )
   }
 }

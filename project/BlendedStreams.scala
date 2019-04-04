@@ -15,14 +15,14 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.geronimoJms11Spec,
       Dependencies.levelDbJava,
 
-      Dependencies.scalacheck % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.activeMqKahadbStore % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalacheck % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.activeMqKahadbStore % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

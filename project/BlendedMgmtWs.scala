@@ -11,13 +11,13 @@ object BlendedMgmtWs extends ProjectFactory {
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
-      Dependencies.akkaTestkit % "test",
-      Dependencies.sttp % "test",
-      Dependencies.sttpAkka % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.jclOverSlf4j % "test"
+      Dependencies.akkaTestkit % Test,
+      Dependencies.sttp % Test,
+      Dependencies.sttpAkka % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.jclOverSlf4j % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -31,13 +31,13 @@ object BlendedMgmtWs extends ProjectFactory {
       BlendedSecurityLoginApi.project,
       BlendedUpdaterConfigJvm.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedMgmtRest.project % "test",
-      BlendedUpdaterRemote.project % "test",
-      BlendedPersistenceH2.project % "test",
-      BlendedSecurityLoginImpl.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedSecurityLoginRest.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedMgmtRest.project % Test,
+      BlendedUpdaterRemote.project % Test,
+      BlendedPersistenceH2.project % Test,
+      BlendedSecurityLoginImpl.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedSecurityLoginRest.project % Test
     )
   }
 }

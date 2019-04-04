@@ -35,7 +35,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.commonsCodec,
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test
     )
 
     override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
@@ -79,7 +79,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       BlendedContainerContextApi.project,
       BlendedDomino.project,
       BlendedUpdaterConfigJvm.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

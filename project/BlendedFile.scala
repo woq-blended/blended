@@ -11,11 +11,11 @@ object BlendedFile extends ProjectFactory {
     override val description = "Bundle to define a customizable Filedrop / Filepoll API"
 
     override def deps = Seq(
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.scalatest % Test
     )
 
     override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
@@ -36,7 +36,7 @@ object BlendedFile extends ProjectFactory {
       BlendedAkka.project,
       BlendedJmsUtils.project,
       BlendedStreams.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

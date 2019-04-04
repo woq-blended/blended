@@ -14,11 +14,11 @@ object BlendedJmsBridge extends ProjectFactory {
       Dependencies.akkaStream,
       Dependencies.typesafeConfig,
 
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.activeMqBroker % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.scalacheck % "test"
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.activeMqBroker % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.scalacheck % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -41,10 +41,10 @@ object BlendedJmsBridge extends ProjectFactory {
       BlendedAkka.project,
       BlendedStreams.project,
 
-      BlendedActivemqBrokerstarter.project % "test",
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedStreamsTestsupport.project % "test"
+      BlendedActivemqBrokerstarter.project % Test,
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedStreamsTestsupport.project % Test
     )
   }
 }

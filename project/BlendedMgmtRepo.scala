@@ -8,13 +8,13 @@ object BlendedMgmtRepo extends ProjectFactory {
     override val description = "File Artifact Repository"
 
     override def deps = Seq(
-      Dependencies.scalatest % "test",
-      Dependencies.lambdaTest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.lambdaTest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -30,7 +30,7 @@ object BlendedMgmtRepo extends ProjectFactory {
       BlendedUpdaterConfigJvm.project,
       BlendedUtilLogging.project,
       BlendedMgmtBase.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

@@ -13,10 +13,10 @@ object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
       Dependencies.slf4j,
-      Dependencies.scalatest % "test",
-      Dependencies.slf4jLog4j12 % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.slf4jLog4j12 % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

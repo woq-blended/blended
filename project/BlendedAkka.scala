@@ -13,9 +13,9 @@ object BlendedAkka extends ProjectFactory {
       Dependencies.akkaActor,
       Dependencies.domino,
 
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -38,8 +38,8 @@ object BlendedAkka extends ProjectFactory {
       BlendedContainerContextApi.project,
       BlendedDomino.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

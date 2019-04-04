@@ -23,7 +23,7 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.logbackClassic,
       Dependencies.commonsDaemon,
 
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -123,7 +123,7 @@ object BlendedLauncher extends ProjectFactory {
       BlendedUpdaterConfigJvm.project,
       BlendedSecurityCrypto.project,
 
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

@@ -12,9 +12,9 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
     override def deps = Seq(
       Dependencies.jjwt,
       Dependencies.bouncyCastleBcprov,
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -35,8 +35,8 @@ object BlendedSecurityLoginImpl extends ProjectFactory {
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedSecurityLoginApi.project,
 
-      BlendedTestsupport.project.project % "test",
-      BlendedTestsupportPojosr.project % "test"
+      BlendedTestsupport.project.project % Test,
+      BlendedTestsupportPojosr.project % Test
     )
   }
 }

@@ -23,9 +23,9 @@ object BlendedSecurityScep extends ProjectFactory {
       Dependencies.jcip,
       Dependencies.jscep,
 
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.scalatest % "test"
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

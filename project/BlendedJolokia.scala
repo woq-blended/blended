@@ -13,9 +13,9 @@ object BlendedJolokia extends ProjectFactory {
       Dependencies.slf4j,
       Dependencies.sttp,
       Dependencies.jolokiaJvmAgent % "runtime",
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -35,7 +35,7 @@ object BlendedJolokia extends ProjectFactory {
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

@@ -10,7 +10,7 @@ object BlendedUpdaterTools extends ProjectFactory {
     override def deps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.cmdOption,
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

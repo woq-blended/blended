@@ -14,14 +14,14 @@ object BlendedMgmtRest extends ProjectFactory {
       Dependencies.akkaHttpCore,
       Dependencies.akkaStream,
 
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.sttp % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.lambdaTest % "test",
-      Dependencies.jclOverSlf4j % "test"
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.sttp % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.lambdaTest % Test,
+      Dependencies.jclOverSlf4j % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -38,9 +38,9 @@ object BlendedMgmtRest extends ProjectFactory {
       BlendedPrickleAkkaHttp.project,
       BlendedMgmtRepo.project,
 
-      BlendedTestsupport.project % "test",
-      BlendedTestsupportPojosr.project % "test",
-      BlendedPersistenceH2.project % "test"
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedPersistenceH2.project % Test
     )
   }
 }

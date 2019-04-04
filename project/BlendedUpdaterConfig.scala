@@ -30,9 +30,9 @@ object BlendedUpdaterConfigJs extends ProjectFactory {
       moduleName := projectName,
       libraryDependencies ++= Seq(
         "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
-        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test",
-        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % "test",
-        "org.log4s" %%% "log4s" % Dependencies.log4s.revision % "test"
+        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % Test,
+        "org.scalacheck" %%% "scalacheck" % Dependencies.scalacheck.revision % Test,
+        "org.log4s" %%% "log4s" % Dependencies.log4s.revision % Test
       ),
       coverageEnabled := false
     )
@@ -53,11 +53,11 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
     override def deps = Seq(
       Dependencies.prickle,
       Dependencies.typesafeConfig,
-      Dependencies.scalatest % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.scalacheck % "test",
-      Dependencies.log4s % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.scalacheck % Test,
+      Dependencies.log4s % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -73,7 +73,7 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       BlendedUtilLogging.project,
       BlendedSecurityJvm.project,
 
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(

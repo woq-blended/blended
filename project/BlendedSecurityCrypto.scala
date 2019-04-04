@@ -12,10 +12,10 @@ object BlendedSecurityCrypto extends ProjectFactory {
     override def deps = Seq(
       Dependencies.cmdOption,
 
-      Dependencies.scalatest % "test",
-      Dependencies.scalacheck % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.scalacheck % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -32,7 +32,7 @@ object BlendedSecurityCrypto extends ProjectFactory {
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = super.dependsOn ++ Seq(
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 

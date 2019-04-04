@@ -13,19 +13,19 @@ private object BlendedSecurityAkkaHttp extends ProjectFactory {
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
       Dependencies.slf4j,
-      Dependencies.commonsBeanUtils % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.jclOverSlf4j % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.commonsBeanUtils % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.jclOverSlf4j % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
       BlendedAkka.project,
       BlendedSecurityJvm.project,
       BlendedUtilLogging.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }

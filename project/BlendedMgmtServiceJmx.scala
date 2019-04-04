@@ -13,10 +13,10 @@ object BlendedMgmtServiceJmx extends ProjectFactory {
     )
 
     override def deps = Seq(
-      Dependencies.scalatest % "test",
-      Dependencies.akkaTestkit % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.akkaTestkit % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(

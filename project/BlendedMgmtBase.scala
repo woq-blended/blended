@@ -8,7 +8,7 @@ object BlendedMgmtBase extends ProjectFactory {
     override val description = "Shared classes for management and reporting facility."
 
     override def deps = Seq(
-      Dependencies.scalatest % "test"
+      Dependencies.scalatest % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(

@@ -12,10 +12,10 @@ object BlendedPrickleAkkaHttp extends ProjectFactory {
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
       Dependencies.prickle,
-      Dependencies.scalatest % "test",
-      Dependencies.akkaStreamTestkit % "test",
-      Dependencies.akkaHttpTestkit % "test",
-      Dependencies.logbackClassic % "test"
+      Dependencies.scalatest % Test,
+      Dependencies.akkaStreamTestkit % Test,
+      Dependencies.akkaHttpTestkit % Test,
+      Dependencies.logbackClassic % Test
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(

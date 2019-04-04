@@ -13,16 +13,16 @@ object BlendedUpdater extends ProjectFactory {
       Dependencies.akkaOsgi,
       Dependencies.slf4j,
       Dependencies.typesafeConfig,
-      Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.felixFramework % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.akkaSlf4j % "test",
-      Dependencies.felixGogoRuntime % "test",
-      Dependencies.felixGogoShell % "test",
-      Dependencies.felixGogoCommand % "test",
-      Dependencies.felixFileinstall % "test",
-      Dependencies.mockitoAll % "test"
+      Dependencies.akkaTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.felixFramework % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.akkaSlf4j % Test,
+      Dependencies.felixGogoRuntime % Test,
+      Dependencies.felixGogoShell % Test,
+      Dependencies.felixGogoCommand % Test,
+      Dependencies.felixFileinstall % Test,
+      Dependencies.mockitoAll % Test
     )
 
     override def bundle: BlendedBundle = super.bundle.copy(
@@ -38,7 +38,7 @@ object BlendedUpdater extends ProjectFactory {
       BlendedMgmtBase.project,
       BlendedContainerContextApi.project,
       BlendedAkka.project,
-      BlendedTestsupport.project % "test"
+      BlendedTestsupport.project % Test
     )
   }
 }
