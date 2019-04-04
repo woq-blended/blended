@@ -12,12 +12,14 @@ import xsbti.api.{AnalyzedClass, Projection}
 
 trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConfig {
 
+  /** If `true` (default), this project is packaged as OSGi bundle. */
   def osgi: Boolean = true
+  /** If `true` (default), some default imports will be applied. */
   def osgiDefaultImports: Boolean = true
+  /** The project descriptions. Also used in published pom.xml and as bundle description. */
   def description: String
+  /** Dependencies */
   def deps: Seq[ModuleID] = Seq()
-
-  def libDeps: Seq[ModuleID] = deps
 
   /**
    * Override this method to specify additional plugins for this project.
@@ -35,6 +37,9 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
     Project(name, file(projectDir.getOrElse(projectName)))
   }
 
+  /**
+    * The Bundle configuration. The Bundle ID is the [[projectName]]
+    */
   def bundle: BlendedBundle = BlendedBundle(
     bundleSymbolicName = projectName,
     exportPackage = Seq(projectName),
@@ -64,7 +69,7 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
       Keys.name := projectName,
       Keys.moduleName := Keys.name.value,
       Keys.description := description,
-      Keys.libraryDependencies ++= libDeps,
+      Keys.libraryDependencies ++= deps,
       Test / javaOptions += ("-DprojectTestOutput=" + (Test / classDirectory).value), 
       Test / fork := true,
       Test / parallelExecution := false,
