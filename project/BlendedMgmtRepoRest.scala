@@ -1,29 +1,31 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtRepoRest extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.repo.rest"
+    override val description = "File Artifact Repository REST Service"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.repo.rest",
-    description = "File Artifact Repository REST Service",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaHttp,
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.ArtifactRepoRestActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.ArtifactRepoRestActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedUpdaterConfigJvm.project,
-    BlendedMgmtBase.project,
-    BlendedMgmtRepo.project,
-    BlendedSecurityAkkaHttp.project,
-    BlendedUtil.project,
-    BlendedUtilLogging.project,
-    BlendedAkkaHttp.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUpdaterConfigJvm.project,
+      BlendedMgmtBase.project,
+      BlendedMgmtRepo.project,
+      BlendedSecurityAkkaHttp.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedAkkaHttp.project
+    )
+  }
 }

@@ -1,13 +1,14 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedStreamsTestsupport extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.streams.testsupport"
+    override val description = "Some classes to make testing for streams a bit easier"
+    override val osgi = false
 
-  private val settings = new ProjectSettings(
-    projectName = "blended.streams.testsupport",
-    description = "Some classes to make testing for streams a bit easier",
-    osgi = false,
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.scalacheck,
       Dependencies.scalatest,
       Dependencies.akkaTestkit,
@@ -17,11 +18,11 @@ object BlendedStreamsTestsupport extends ProjectFactory {
       Dependencies.logbackCore,
       Dependencies.logbackClassic
     )
-  )
 
-  override val project = settings.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedStreams.project,
-    BlendedTestsupport.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedStreams.project,
+      BlendedTestsupport.project
+    )
+  }
 }

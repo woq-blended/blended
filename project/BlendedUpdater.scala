@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedUpdater extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.updater"
+    override val description = "OSGi Updater"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.updater",
-    description = "OSGi Updater",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.domino,
       Dependencies.akkaOsgi,
@@ -22,20 +23,22 @@ object BlendedUpdater extends ProjectFactory {
       Dependencies.felixGogoCommand % "test",
       Dependencies.felixFileinstall % "test",
       Dependencies.mockitoAll % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedUpdaterActivator",
-      importPackage = Seq("blended.launcher.runtime;resolution:=optional")
-
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUpdaterConfigJvm.project,
-    BlendedLauncher.project,
-    BlendedMgmtBase.project,
-    BlendedContainerContextApi.project,
-    BlendedAkka.project,
-    BlendedTestsupport.project % "test"
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.BlendedUpdaterActivator",
+      importPackage = Seq(
+        "blended.launcher.runtime;resolution:=optional"
+      )
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUpdaterConfigJvm.project,
+      BlendedLauncher.project,
+      BlendedMgmtBase.project,
+      BlendedContainerContextApi.project,
+      BlendedAkka.project,
+      BlendedTestsupport.project % "test"
+    )
+  }
 }

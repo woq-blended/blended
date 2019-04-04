@@ -1,31 +1,32 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedActivemqBrokerstarter extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.activemq.brokerstarter"
+    override val description = "A simple wrapper around an Active MQ broker that makes sure that the broker is completely started before exposing a connection factory OSGi service"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.activemq.brokerstarter",
-    description = "A simple wrapper around an Active MQ broker that makes sure that the broker is completely started before exposing a connection factory OSGi service",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.camelJms,
       Dependencies.activeMqBroker,
       Dependencies.activeMqSpring,
 
-      Dependencies.scalatest % "test",
-      Dependencies.logbackCore % "test",
-      Dependencies.logbackClassic % "test",
+      Dependencies.scalatest % Test,
+      Dependencies.logbackCore % Test,
+      Dependencies.logbackClassic % Test,
       Dependencies.activeMqKahadbStore
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BrokerActivator"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedJmsUtils.project,
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.BrokerActivator"
+    )
 
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedJmsUtils.project,
+      BlendedTestsupport.project % Test,
+      BlendedTestsupportPojosr.project % Test
+    )
+  }
 }

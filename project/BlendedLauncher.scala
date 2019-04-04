@@ -8,13 +8,14 @@ import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlug
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedLauncher extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.launcher"
+    override val description = "Provide an OSGi Launcher"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.launcher",
-    description = "Provide an OSGi Launcher",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.cmdOption,
       Dependencies.orgOsgi,
       Dependencies.typesafeConfig,
@@ -23,28 +24,27 @@ object BlendedLauncher extends ProjectFactory {
       Dependencies.commonsDaemon,
 
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       importPackage = Seq(
         "org.apache.commons.daemon;resolution:=optional",
         "de.tototec.cmdoption.*;resolution:=optional"
       ),
       privatePackage = Seq(
-        s"${b.bundleSymbolicName}.internal",
-        s"${b.bundleSymbolicName}.jvmrunner",
-        s"${b.bundleSymbolicName}.runtime"
+        s"${projectName}.internal",
+        s"${projectName}.jvmrunner",
+        s"${projectName}.runtime"
       )
     )
-  ) {
 
-    override def extraPlugins = Seq(
+    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
       UniversalPlugin,
       UniversalDeployPlugin,
       FilterResources
     )
 
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
-
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Compile / filterSources := Seq(baseDirectory.value / "src" / "runner" / "resources"),
       Compile / filterTargetDir := target.value / "runner",
       Compile / filterRegex := "[@]([^\\n]+?)[@]",
@@ -117,13 +117,13 @@ object BlendedLauncher extends ProjectFactory {
 
         packagedArtifacts ++= (Universal / packagedArtifacts).value
       )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedUpdaterConfigJvm.project,
+      BlendedSecurityCrypto.project,
+
+      BlendedTestsupport.project % "test"
+    )
   }
-
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedUpdaterConfigJvm.project,
-    BlendedSecurityCrypto.project,
-
-    BlendedTestsupport.project % "test"
-  )
 }

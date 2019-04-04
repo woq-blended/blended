@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedPrickleAkkaHttp extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.prickle.akka.http"
+    override val description = "Define some convenience to use Prickle with Akka HTTP"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.prickle.akka.http",
-    description = "Define some convenience to use Prickle with Akka HTTP",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaHttpCore,
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
@@ -16,9 +17,9 @@ object BlendedPrickleAkkaHttp extends ProjectFactory {
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project
+    )
+  }
 }

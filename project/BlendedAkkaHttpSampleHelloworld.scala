@@ -1,13 +1,14 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka.http.sample.helloworld"
+    override val description = "A sample Akka HTTP bases HTTP endpoint for the blended container"
+    override val projectDir = Some("blended.samples/blended.akka.http.sample.helloworld")
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka.http.sample.helloworld",
-    description = "A sample Akka HTTP bases HTTP endpoint for the blended container",
-    projectDir = Some("blended.samples/blended.akka.http.sample.helloworld"),
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
@@ -16,16 +17,17 @@ object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
       Dependencies.slf4jLog4j12 % "test",
       Dependencies.akkaStreamTestkit % "test",
       Dependencies.akkaHttpTestkit % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.HelloworldActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.HelloworldActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedAkkaHttp.project,
-    BlendedAkkaHttpApi.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedAkkaHttp.project,
+      BlendedAkkaHttpApi.project
+    )
+  }
 }

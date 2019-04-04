@@ -1,23 +1,24 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedContainerContextApi extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.container.context.api"
+    override val description = "The API for the Container Context and Identifier Services"
 
-  private[this] val helper: ProjectSettings = new ProjectSettings(
-    projectName = "blended.container.context.api",
-    description = "The API for the Container Context and Identifier Services",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.typesafeConfig
-    ),
-    adaptBundle = b => b.copy(
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       importPackage = Seq(
         "blended.launcher.runtime;resolution:=optional"
       )
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedSecurityCrypto.project
-  )
-
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedSecurityCrypto.project
+    )
+  }
 }

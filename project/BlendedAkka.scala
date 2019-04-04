@@ -1,13 +1,14 @@
 import sbt._
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkka extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka"
+    override val description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka",
-    description = "Provide OSGi services and API to use Actors in OSGi bundles with a shared ActorSystem.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaActor,
       Dependencies.domino,
@@ -15,29 +16,30 @@ object BlendedAkka extends ProjectFactory {
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedAkkaActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.BlendedAkkaActivator",
       exportPackage = Seq(
-        b.bundleSymbolicName,
-        s"${b.bundleSymbolicName}.protocol"
+        projectName,
+        s"${projectName}.protocol"
       )
     )
-  ) {
+
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "blended" -> "TRACE"
       )
     )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedContainerContextApi.project,
+      BlendedDomino.project,
+
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test"
+    )
   }
-
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedContainerContextApi.project,
-    BlendedDomino.project,
-
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
 }

@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtWs extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.ws"
+    override val description = "Web sockets interface for Mgmt clients."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.ws",
-    description = "Web sockets interface for Mgmt clients.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
@@ -17,25 +18,26 @@ object BlendedMgmtWs extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.jclOverSlf4j % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtWSActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.MgmtWSActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedAkkaHttp.project,
-    BlendedSecurityLoginApi.project,
-    BlendedUpdaterConfigJvm.project,
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedAkkaHttp.project,
+      BlendedSecurityLoginApi.project,
+      BlendedUpdaterConfigJvm.project,
 
-    BlendedTestsupport.project % "test",
-    BlendedMgmtRest.project % "test",
-    BlendedUpdaterRemote.project % "test",
-    BlendedPersistenceH2.project % "test",
-    BlendedSecurityLoginImpl.project % "test",
-    BlendedTestsupportPojosr.project % "test",
-    BlendedSecurityLoginRest.project % "test"
-  )
+      BlendedTestsupport.project % "test",
+      BlendedMgmtRest.project % "test",
+      BlendedUpdaterRemote.project % "test",
+      BlendedPersistenceH2.project % "test",
+      BlendedSecurityLoginImpl.project % "test",
+      BlendedTestsupportPojosr.project % "test",
+      BlendedSecurityLoginRest.project % "test"
+    )
+  }
 }

@@ -1,22 +1,26 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedUpdaterTools extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.updater.tools"
+    override val description = "Configurations for Updater and Launcher"
 
-  private[this] val helper = new ProjectSettings(
-    "blended.updater.tools",
-    "Configurations for Updater and Launcher",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.cmdOption,
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      privatePackage = b.privatePackage ++ Seq(s"${b.bundleSymbolicName}.configbuilder")
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUpdaterConfigJvm.project
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      privatePackage = super.bundle.privatePackage ++ Seq(
+      s"${projectName}.configbuilder"
+    )
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUpdaterConfigJvm.project
+    )
+  }
 }

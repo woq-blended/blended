@@ -1,21 +1,22 @@
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedSecurityBoot extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.security.boot"
+    override val description = "A delegating Login Module for the Blended Container"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.security.boot",
-    description = "A delegating Login Module for the Blended Container",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.orgOsgi
-    ),
-    osgiDefaultImports = false,
-    adaptBundle = b => b.copy(
+    )
+
+    override def osgiDefaultImports = false
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       additionalHeaders = Map("Fragment-Host" -> "system.bundle;extension:=framework"),
       // This is required to omit the Import-Package header in the OSGi manifest
       // because framework extensions are not allowed to have imports
       importPackage = Seq("")
     )
-  )
-
-  override val project = helper.baseProject
+  }
 }

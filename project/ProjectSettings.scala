@@ -2,6 +2,7 @@ import de.wayofquality.sbt.testlogconfig.TestLogConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import com.typesafe.sbt.osgi.SbtOsgi
 import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
+import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt._
@@ -9,31 +10,12 @@ import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype
 import xsbti.api.{AnalyzedClass, Projection}
 
-trait ProjectFactory {
-  val project: Project
-}
+trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConfig {
 
-/**
- * Blended project settings.
- *
- * @param projectName The Project name, also used as Bundle-Name and prefix for package names.
- * @param description The project description, also used as Bundle-Description.
- * @param deps        The project classpath dependencies (exclusive of other blended projects).
- * @param osgi        If `true` this project is packaged as OSGi Bundle.
- * @param publish     If `true`, this projects package will be publish.
- * @param adaptBundle adapt the bundle configuration (used by sbt-osgi)
- * @param projectDir  Optional project directory (use this if not equal to project name)
- */
-class ProjectSettings(
-  val projectName: String,
-  val description: String,
-  deps: Seq[ModuleID] = Seq.empty,
-  osgi: Boolean = true,
-  osgiDefaultImports: Boolean = true,
-  publish: Boolean = true,
-  adaptBundle: BlendedBundle => BlendedBundle = identity,
-  val projectDir: Option[String] = None
-) {
+  def osgi: Boolean = true
+  def osgiDefaultImports: Boolean = true
+  def description: String
+  def deps: Seq[ModuleID] = Seq()
 
   def libDeps: Seq[ModuleID] = deps
 
@@ -53,14 +35,12 @@ class ProjectSettings(
     Project(name, file(projectDir.getOrElse(projectName)))
   }
 
-  def defaultBundle: BlendedBundle = BlendedBundle(
+  def bundle: BlendedBundle = BlendedBundle(
     bundleSymbolicName = projectName,
     exportPackage = Seq(projectName),
     privatePackage = Seq(s"${projectName}.internal.*"),
     defaultImports = osgiDefaultImports
   )
-
-  def bundle: BlendedBundle = adaptBundle(defaultBundle)
 
   def sbtBundle: Option[BlendedBundle] = if (osgi) Some(bundle) else None
 
@@ -76,7 +56,7 @@ class ProjectSettings(
     }
   }
 
-  def defaultSettings: Seq[Setting[_]] = CommonSettings() ++ {
+  def defaultSettings: Seq[Setting[_]] = {
 
     val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
 
@@ -136,23 +116,14 @@ class ProjectSettings(
         // We need to explicitly load the rb settings again to
         // make sure the OSGi package is post-processed:
         ReproducibleBuildsPlugin.projectSettings
-      ) ++ (
-          if (publish) PublishConfig.doPublish else PublishConfig.noPublish
-        )
+      )
   }
 
-  def settings: Seq[sbt.Setting[_]] =  defaultSettings
+  override def settings: Seq[sbt.Setting[_]] = super.settings ++ defaultSettings
 
-  def plugins: Seq[AutoPlugin] = extraPlugins ++
+ override def plugins: Seq[AutoPlugin] = super.plugins ++
     Seq(ReproducibleBuildsPlugin) ++
     Seq(TestLogConfig) ++
-    (if (publish) Seq(Sonatype) else Seq()) ++ 
     (if (osgi) Seq(SbtOsgi) else Seq())
-
-  // creates the project and apply settings and plugins
-  def baseProject: Project = projectFactory
-    .apply()
-    .settings(settings)
-    .enablePlugins(plugins: _*)
 
 }

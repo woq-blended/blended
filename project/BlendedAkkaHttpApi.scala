@@ -2,19 +2,22 @@ import com.typesafe.sbt.osgi.OsgiKeys._
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkkaHttpApi extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka.http.api"
+    override val description = "Package the Akka Http API into a bundle."
 
-  private[this] val helper: ProjectSettings = new ProjectSettings(
-    projectName = "blended.akka.http.api",
-    description = "Package the Akka Http API into a bundle.",
-    osgiDefaultImports = false,
-    deps = Seq(
+    override val osgiDefaultImports = false
+
+    override def deps = Seq(
       Dependencies.akkaHttp.intransitive(),
       Dependencies.akkaHttpCore.intransitive(),
       Dependencies.akkaParsing.intransitive()
-    ),
-    adaptBundle = b => b.copy(
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       importPackage = Seq(
         "com.sun.*;resolution:=optional",
         "sun.*;resolution:=optional",
@@ -28,22 +31,17 @@ object BlendedAkkaHttpApi extends ProjectFactory {
         s"akka.http.*;version=${Dependencies.akkaHttpVersion};-split-package:=merge-first"
       )
     )
-  ) {
 
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
-
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       embeddedJars := {
-        (Compile/externalDependencyClasspath).value
+        (Compile / externalDependencyClasspath).value
           .map(_.data)
           .filter(f =>
             f.getName().contains("akka-parsing_") ||
-            f.getName().contains("akka-http-core_") ||
-            f.getName().contains("akka-http_")
-          )
+              f.getName().contains("akka-http-core_") ||
+              f.getName().contains("akka-http_"))
       }
     )
   }
-
-  override val project = helper.baseProject
 }
 

@@ -2,17 +2,19 @@ import com.typesafe.sbt.osgi.OsgiKeys._
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedSecurityScep extends ProjectFactory {
-  private[this] val embeddedPrefixes : Seq[String] = Seq(
+  private[this] val embeddedPrefixes: Seq[String] = Seq(
     "bcprov", "bcpkix", "commons-io", "commons-lang", "commons-codec", "jcip-annotations",
     "jscep"
   )
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.security.scep",
-    description = "Bundle to manage the container certificate via SCEP.",
-    deps = Seq(
+  object config extends ProjectSettings {
+    override val projectName = "blended.security.scep"
+    override val description = "Bundle to manage the container certificate via SCEP."
+
+    override def deps = Seq(
       Dependencies.bouncyCastlePkix,
       Dependencies.bouncyCastleBcprov,
       Dependencies.commonsIo,
@@ -24,24 +26,23 @@ object BlendedSecurityScep extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.ScepActivator"
     )
-  ){
 
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.ScepActivator"
+    )
 
-      embeddedJars :=  (Compile/externalDependencyClasspath).value
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      embeddedJars := (Compile / externalDependencyClasspath).value
         .map(af => af.data)
-        .filter{ f => embeddedPrefixes.exists(p => f.getName().startsWith(p)) }
+        .filter { f => embeddedPrefixes.exists(p => f.getName().startsWith(p)) }
 
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedSecuritySsl.project,
+      BlendedUtilLogging.project
     )
   }
-
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedSecuritySsl.project,
-    BlendedUtilLogging.project
-  )
 }

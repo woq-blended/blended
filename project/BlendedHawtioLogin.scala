@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedHawtioLogin extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.hawtio.login"
+    override val description = "Adding required imports to the hawtio war bundle"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.hawtio.login",
-    description = "Adding required imports to the hawtio war bundle",
-    adaptBundle = b => b.copy(
+    override def bundle: BlendedBundle = super.bundle.copy(
       importPackage = Seq(
         "blended.security.boot",
         "com.sun.jndi.ldap;resolution:=optional"
@@ -16,9 +17,9 @@ object BlendedHawtioLogin extends ProjectFactory {
         "Fragment-Host" -> "io.hawt.hawtio-web"
       )
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedSecurityBoot.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedSecurityBoot.project
+    )
+  }
 }

@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedJolokia extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.jolokia"
+    override val description = "Provide an Actor based Jolokia Client to access JMX resources of a container via REST"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.jolokia",
-    description = "Provide an Actor based Jolokia Client to access JMX resources of a container via REST",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.sprayJson,
       Dependencies.jsonLenses,
       Dependencies.slf4j,
@@ -15,13 +16,14 @@ object BlendedJolokia extends ProjectFactory {
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    ),
-    adaptBundle = b => b.copy(
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       exportPackage = Seq(
-        s"${b.bundleSymbolicName}"
+        projectName
       )
     )
-  ) {
+
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / Keys.javaOptions += {
         val jarFile = Keys.dependencyClasspathAsJars.in(Test).value
@@ -30,10 +32,10 @@ object BlendedJolokia extends ProjectFactory {
         s"-javaagent:$jarFile=port=7777,host=localhost"
       }
     )
-  }
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedTestsupport.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedTestsupport.project % "test"
+    )
+  }
 }

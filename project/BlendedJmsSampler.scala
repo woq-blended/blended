@@ -1,23 +1,25 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedJmsSampler extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.jms.sampler"
+    override val description = "A bundle to sample messages from a given JMS topic."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.jms.sampler",
-    description = "A bundle to sample messages from a given JMS topic.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.geronimoJms11Spec
-    ),
-    adaptBundle = b => b.copy(
-      exportPackage = Seq.empty,
-      bundleActivator = s"${b.bundleSymbolicName}.internal.JmsSamplerActivator"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedAkka.project,
-    BlendedUtil.project
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      exportPackage = Seq.empty,
+      bundleActivator = s"${projectName}.internal.JmsSamplerActivator"
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedAkka.project,
+      BlendedUtil.project
+    )
+  }
 }

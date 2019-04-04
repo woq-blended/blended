@@ -1,22 +1,24 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedJmx extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.jmx"
+    override val description = "Helper bundle to expose the platform's MBeanServer as OSGI Service."
 
-  private[this] val helper = new ProjectSettings(
-    "blended.jmx",
-    "Helper bundle to expose the platform's MBeanServer as OSGI Service.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedJmxActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.BlendedJmxActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test"
+    )
+  }
 }

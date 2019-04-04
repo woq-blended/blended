@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkkaHttp extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka.http"
+    override val description = "Provide Akka HTTP support"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka.http",
-    description = "Provide Akka HTTP support",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.orgOsgi,
       Dependencies.akkaStream,
@@ -20,19 +21,20 @@ object BlendedAkkaHttp extends ProjectFactory {
       Dependencies.akkaStreamTestkit % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.BlendedAkkaHttpActivator"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedContainerContextApi.project,
-    BlendedDomino.project,
-    BlendedUtil.project,
-    BlendedUtilLogging.project,
-    BlendedAkka.project,
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.BlendedAkkaHttpActivator"
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedContainerContextApi.project,
+      BlendedDomino.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedAkka.project,
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test"
+    )
+  }
 }

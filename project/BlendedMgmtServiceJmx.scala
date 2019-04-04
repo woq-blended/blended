@@ -1,27 +1,29 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtServiceJmx extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.service.jmx"
+    override val description = "A JMX based Service Info Collector."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.service.jmx",
-    description = "A JMX based Service Info Collector.",
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.ServiceJmxActivator",
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.ServiceJmxActivator",
       exportPackage = Seq()
-    ),
-    deps = Seq(
+    )
+
+    override def deps = Seq(
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedUtilLogging.project,
-    BlendedAkka.project,
-    BlendedUpdaterConfigJvm.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUtilLogging.project,
+      BlendedAkka.project,
+      BlendedUpdaterConfigJvm.project
+    )
+  }
 }

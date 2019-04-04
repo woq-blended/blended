@@ -2,13 +2,14 @@ import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedStreamsDispatcher extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.streams.dispatcher"
+    override val description = "A generic Dispatcher to support common integration routing."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.streams.dispatcher",
-    description = "A generic Dispatcher to support common integration routing.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
       Dependencies.geronimoJms11Spec,
@@ -24,16 +25,17 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.travesty % "test",
       Dependencies.asciiRender % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.DispatcherActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.DispatcherActivator",
       exportPackage = Seq(
-        b.bundleSymbolicName,
-        b.bundleSymbolicName + ".cbe"
+        projectName,
+        s"${projectName}.cbe"
       )
     )
-  ) {
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / parallelExecution := false,
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
@@ -42,19 +44,19 @@ object BlendedStreamsDispatcher extends ProjectFactory {
         "blended" -> "TRACE"
       )
     )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedStreams.project,
+      BlendedJmsBridge.project,
+      BlendedAkka.project,
+      BlendedPersistence.project,
+
+      BlendedPersistenceH2.project % "test",
+      BlendedActivemqBrokerstarter.project % "test",
+      BlendedStreamsTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test",
+      BlendedTestsupport.project % "test"
+    )
   }
-
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedStreams.project,
-    BlendedJmsBridge.project,
-    BlendedAkka.project,
-    BlendedPersistence.project,
-
-    BlendedPersistenceH2.project % "test",
-    BlendedActivemqBrokerstarter.project % "test",
-    BlendedStreamsTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test",
-    BlendedTestsupport.project % "test"
-  )
 }

@@ -1,12 +1,14 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedPersistenceH2 extends ProjectFactory {
+  object config extends ProjectSettings {
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.persistence.h2",
-    description = "Implement a persistence backend with H2 JDBC database",
-    deps = Seq(
+    override val projectName = "blended.persistence.h2"
+    override val description = "Implement a persistence backend with H2 JDBC database"
+
+    override def deps = Seq(
       Dependencies.slf4j,
       Dependencies.domino,
       Dependencies.h2,
@@ -22,23 +24,24 @@ object BlendedPersistenceH2 extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.lambdaTest % "test",
       Dependencies.scalacheck % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.H2Activator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.H2Activator",
       exportPackage = Seq(),
       privatePackage = Seq(
-        s"${b.bundleSymbolicName}.internal",
+        s"${projectName}.internal",
         "blended.persistence.jdbc"
       )
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedPersistence.project,
-    BlendedUtilLogging.project,
-    BlendedUtil.project,
-    BlendedTestsupport.project % "test",
-    // we want to use the scalacheck data generators in tests
-    BlendedUpdaterConfigJvm.project % "test->test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedPersistence.project,
+      BlendedUtilLogging.project,
+      BlendedUtil.project,
+      BlendedTestsupport.project % "test",
+      // we want to use the scalacheck data generators in tests
+      BlendedUpdaterConfigJvm.project % "test->test"
+    )
+  }
 }

@@ -1,20 +1,20 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedDomino extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.domino"
+    override val description = "Blended Domino extension for new Capsule scopes."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.domino",
-    description = "Blended Domino extension for new Capsule scopes.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.typesafeConfig,
       Dependencies.domino
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedContainerContextApi.project
-  )
-
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedContainerContextApi.project
+    )
+  }
 }

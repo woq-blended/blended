@@ -1,13 +1,14 @@
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedStreams extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.streams"
+    override val description = "Helper objects to work with Streams in blended integration flows."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.streams",
-    description = "Helper objects to work with Streams in blended integration flows.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaStream,
       Dependencies.akkaPersistence,
@@ -22,20 +23,21 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.activeMqKahadbStore % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    ),
-    adaptBundle = b => b.copy(
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
       exportPackage = Seq(
-        s"${b.bundleSymbolicName}",
-        s"${b.bundleSymbolicName}.jms",
-        s"${b.bundleSymbolicName}.message",
-        s"${b.bundleSymbolicName}.processor",
-        s"${b.bundleSymbolicName}.persistence",
-        s"${b.bundleSymbolicName}.transaction",
-        s"${b.bundleSymbolicName}.worklist"
+        projectName,
+        s"${projectName}.jms",
+        s"${projectName}.message",
+        s"${projectName}.processor",
+        s"${projectName}.persistence",
+        s"${projectName}.transaction",
+        s"${projectName}.worklist"
       )
     )
-  ) {
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
         "App" -> "TRACE",
@@ -43,17 +45,17 @@ object BlendedStreams extends ProjectFactory {
         "blended" -> "TRACE"
       )
     )
-  }
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedUtilLogging.project,
-    BlendedJmsUtils.project,
-    BlendedAkka.project,
-    BlendedPersistence.project,
-    
-    BlendedPersistenceH2.project % "test",
-    BlendedTestsupportPojosr.project % "test",
-    BlendedTestsupport.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedUtilLogging.project,
+      BlendedJmsUtils.project,
+      BlendedAkka.project,
+      BlendedPersistence.project,
+
+      BlendedPersistenceH2.project % Test,
+      BlendedTestsupportPojosr.project % Test,
+      BlendedTestsupport.project % Test
+    )
+  }
 }

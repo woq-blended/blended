@@ -1,32 +1,34 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedActivemqClient extends ProjectFactory {
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.activemq.client",
-    description = "An Active MQ Connection factory as a service",
-    deps = Seq(
+  object config extends ProjectSettings {
+    override val projectName = "blended.activemq.client"
+    override val description = "An Active MQ Connection factory as a service"
+
+    override def deps = Seq(
       Dependencies.activeMqClient,
       Dependencies.activeMqBroker % "test",
       Dependencies.activeMqKahadbStore % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.AmqClientActivator",
-      exportPackage = Seq(b.bundleSymbolicName)
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    
-    BlendedDomino.project,
-    BlendedUtil.project,
-    BlendedUtilLogging.project,
-    BlendedJmsUtils.project,
-    BlendedAkka.project,
-    BlendedStreams.project,
-    
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.AmqClientActivator",
+      exportPackage = Seq(projectName)
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedJmsUtils.project,
+      BlendedAkka.project,
+      BlendedStreams.project,
+
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test"
+    )
+  }
 }

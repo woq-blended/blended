@@ -1,25 +1,29 @@
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin
 import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 
 object BlendedDocsJs extends ProjectFactory {
-
-  private val helper : ProjectSettings = new ProjectSettings(
-    projectName = "blended.docs",
-    description = "Dummy Js project to download npm modules for the doc generator",
-    osgi = false
-  ) {
+  object config extends ProjectSettings {
+    override val projectName = "blended.docs"
+    override val description = "Dummy Js project to download npm modules for the doc generator"
+    override val osgi = false
     override val projectDir: Option[String] = Some("doc")
-    override def plugins: Seq[AutoPlugin] = Seq(ScalaJSPlugin, ScalaJSBundlerPlugin)
+    override val publish = false
+
+    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
+      ScalaJSPlugin,
+      ScalaJSBundlerPlugin
+    )
 
     override def settings: Seq[sbt.Setting[_]] = Seq(
       Compile / fastOptJS / webpackConfigFile := Some(baseDirectory.value / "docs.webpack.config.js"),
       Compile / fastOptJS / webpackMonitoredDirectories += baseDirectory.value / "scss",
       Compile / fastOptJS / webpackMonitoredFiles / includeFilter := "*.scss",
-      
+
       Compile / npmDevDependencies ++= Seq(
         "webpack-merge" -> "4.1.2",
         "style-loader" -> "0.23.1",
@@ -27,7 +31,7 @@ object BlendedDocsJs extends ProjectFactory {
         "sass-loader" -> "^7.1.0",
         "raw-loader" -> "0.5.1",
         "node-sass" -> "4.9.4",
-        "extract-text-webpack-plugin" -> "3.0.2",
+        "extract-text-webpack-plugin" -> "3.0.2"
       ),
 
       Compile / npmDependencies ++= Seq(
@@ -39,6 +43,4 @@ object BlendedDocsJs extends ProjectFactory {
       )
     )
   }
-
-  override val project : Project = helper.baseProject.settings(PublishConfig.noPublish)
 }

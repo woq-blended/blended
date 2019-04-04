@@ -1,14 +1,14 @@
 import com.typesafe.sbt.SbtScalariform.autoImport._
+import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt._
 import xerial.sbt.Sonatype.SonatypeKeys._
-import xsbti.api.{AnalyzedClass, Projection}
 
-object CommonSettings {
+trait CommonSettings extends ProjectConfig {
 
   val m2Repo = "file://" + System.getProperty("maven.repo.local", System.getProperty("user.home") + "/.m2/repository")
 
-  def apply() : Seq[Def.Setting[_]] = Seq(
+  override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
     organization := "de.wayofquality.blended",
     homepage := Some(url("https://github.com/woq-blended/blended")),
 

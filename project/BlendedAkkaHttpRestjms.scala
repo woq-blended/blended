@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkkaHttpRestjms extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka.http.restjms"
+    override val description = "Provide a simple REST interface to perform JMS request / reply operations"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka.http.restjms",
-    description = "Provide a simple REST interface to perform JMS request / reply operations",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.akkaStream,
       Dependencies.akkaHttp,
@@ -25,15 +26,15 @@ object BlendedAkkaHttpRestjms extends ProjectFactory {
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedCamelUtils.project,
-    BlendedDomino.project,
-    BlendedContainerContextApi.project,
-    BlendedAkka.project,
-    BlendedAkkaHttp.project,
-    BlendedUtil.project,
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedCamelUtils.project,
+      BlendedDomino.project,
+      BlendedContainerContextApi.project,
+      BlendedAkka.project,
+      BlendedAkkaHttp.project,
+      BlendedUtil.project,
+      BlendedTestsupportPojosr.project % "test"
+    )
+  }
 }

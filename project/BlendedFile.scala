@@ -3,22 +3,22 @@ import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
 import sbt._
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedFile extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.file"
+    override val description = "Bundle to define a customizable Filedrop / Filepoll API"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.file",
-    description = "Bundle to define a customizable Filedrop / Filepoll API",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaTestkit % "test",
       Dependencies.akkaSlf4j % "test",
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.scalatest % "test"
     )
-  ) {
 
-    override def extraPlugins: Seq[AutoPlugin] = super.extraPlugins ++ Seq(
+    override def plugins: Seq[AutoPlugin] = super.plugins ++ Seq(
       FilterResources
     )
 
@@ -31,12 +31,12 @@ object BlendedFile extends ProjectFactory {
         "project.build.testOutputDirectory" -> (Test / Keys.classDirectory).value.getAbsolutePath()
       )
     )
-  }
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedJmsUtils.project,
-    BlendedStreams.project,
-    BlendedTestsupport.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedJmsUtils.project,
+      BlendedStreams.project,
+      BlendedTestsupport.project % "test"
+    )
+  }
 }

@@ -2,17 +2,17 @@ import com.typesafe.sbt.osgi.OsgiKeys
 import sbt.Keys._
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedJettyBoot extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.jetty.boot"
+    override val description = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services"
 
-  private[this] val helper: ProjectSettings = new ProjectSettings(
-    projectName = "blended.jetty.boot",
-    description = "Bundle wrapping the original jetty boot bundle to dynamically provide SSL Context via OSGI services",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.jettyOsgiBoot
     )
-  ) {
 
     private val jettyVersion = "version=\"[9.4,20)\""
 
@@ -47,17 +47,16 @@ object BlendedJettyBoot extends ProjectFactory {
       )
     )
 
-
-    override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       OsgiKeys.embeddedJars := {
         val jettyOsgi = BuildHelper.resolveModuleFile(Dependencies.jettyOsgiBoot.intransitive(), target.value)
         jettyOsgi.distinct
       }
     )
-  }
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedUtilLogging.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUtilLogging.project
+    )
+  }
 }

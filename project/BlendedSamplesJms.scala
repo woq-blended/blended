@@ -1,27 +1,29 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedSamplesJms extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.samples.jms"
+    override val description = "A combined JMS example"
+    override val projectDir = Some("blended.samples/blended.samples.jms")
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.samples.jms",
-    description = "A combined JMS example",
-    projectDir = Some("blended.samples/blended.samples.jms"),
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.camelCore,
       Dependencies.camelJms,
       Dependencies.geronimoJms11Spec,
       Dependencies.slf4j
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.JmsSampleActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.JmsSampleActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedCamelUtils.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedCamelUtils.project
+    )
+  }
 }

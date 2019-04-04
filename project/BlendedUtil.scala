@@ -1,25 +1,29 @@
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
+import sbt._
 
 object BlendedUtil extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.util"
+    override val description = "Utility classes to use in other bundles"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.util",
-    description = "Utility classes to use in other bundles",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaActor,
       Dependencies.akkaSlf4j,
       Dependencies.slf4j,
-      Dependencies.akkaTestkit % "test",
-      Dependencies.scalatest % "test",
-      Dependencies.junit % "test",
-      Dependencies.logbackClassic % "test",
-      Dependencies.logbackCore % "test"
-    ),
-    adaptBundle = b => b.copy(
-      exportPackage = Seq(b.bundleSymbolicName, s"${b.bundleSymbolicName}.config")
+      Dependencies.akkaTestkit % Test,
+      Dependencies.scalatest % Test,
+      Dependencies.junit % Test,
+      Dependencies.logbackClassic % Test,
+      Dependencies.logbackCore % Test
     )
-  )
 
-  override val project = helper.baseProject
+    override def bundle: BlendedBundle = super.bundle.copy(
+      exportPackage = Seq(
+        projectName,
+        s"${projectName}.config"
+      )
+    )
+  }
 }
 

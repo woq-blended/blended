@@ -5,70 +5,66 @@ import sbtcrossproject.CrossPlugin.autoImport._
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys.coverageEnabled
 import blended.sbt.Dependencies
+import phoenix.{ProjectConfig, ProjectFactory}
+import sbtcrossproject.CrossProject
 
 private object BlendedSecurityCross {
 
   private[this] val builder = sbtcrossproject
     .CrossProject("blendedSecurity", file("blended.security"))(JVMPlatform, JSPlatform)
 
-  val project = builder
+  val project: CrossProject = builder
     .crossType(CrossType.Full)
     .build()
 }
 
 object BlendedSecurityJs extends ProjectFactory {
-
-  override val project = {
-    BlendedSecurityCross.project.js.settings(
-      Seq(
-        name := "blended.security",
-        moduleName := "blended.security",
-        libraryDependencies ++= Seq(
-          "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
-          "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
-        )
-      )
+  object config extends ProjectConfig with CommonSettings with PublishConfig {
+    override val projectName = "blended.security"
+    override def createProject(): Project = BlendedSecurityCross.project.js
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      name := projectName,
+      moduleName := projectName,
+      libraryDependencies ++= Seq(
+        "com.github.benhutchison" %%% "prickle" % Dependencies.prickleVersion,
+        "org.scalatest" %%% "scalatest" % Dependencies.scalatestVersion % "test"
+      ),
+      coverageEnabled := false
     )
-      .settings(CommonSettings())
-      .settings(PublishConfig.doPublish)
-      .settings(Seq(coverageEnabled := false))
   }
 }
 
 object BlendedSecurityJvm extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.security"
+    override val description = "Configuration bundle for the security framework."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.security",
-    description = "Configuration bundle for the security framework.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.prickle,
       Dependencies.scalatest % "test",
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.SecurityActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.SecurityActivator",
       exportPackage = Seq(
-        b.bundleSymbolicName,
-        s"${b.bundleSymbolicName}.json"
+        projectName,
+        s"${projectName}.json"
       )
     )
-  ) {
 
-    override def projectFactory: () => Project = { () =>
-      BlendedSecurityCross.project.jvm.settings(
-        Seq(
-          name := "blendedSecurityJvm"
-        )
-      )
-    }
+    override def createProject(): Project = BlendedSecurityCross.project.jvm
 
+    override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+      name := "blendedSecurityJvm"
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedDomino.project,
+      BlendedUtil.project,
+      BlendedSecurityBoot.project
+    )
   }
-
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedDomino.project,
-    BlendedUtil.project,
-    BlendedSecurityBoot.project
-  )
 }

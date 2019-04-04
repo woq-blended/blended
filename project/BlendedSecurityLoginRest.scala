@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedSecurityLoginRest extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.security.login.rest"
+    override val description = "A REST service providing login services and web token management"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.security.login.rest",
-    description = "A REST service providing login services and web token management",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaHttpCore,
 
@@ -18,20 +19,21 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       Dependencies.akkaHttpTestkit % "test",
       Dependencies.sttp % "test",
       Dependencies.sttpAkka % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.RestLoginActivator"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkkaHttp.project,
-    BlendedSecurityAkkaHttp.project,
-    BlendedUtilLogging.project,
-    BlendedSecurityLoginApi.project,
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.RestLoginActivator"
+    )
 
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test",
-    BlendedSecurityLoginImpl.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkkaHttp.project,
+      BlendedSecurityAkkaHttp.project,
+      BlendedUtilLogging.project,
+      BlendedSecurityLoginApi.project,
+
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test",
+      BlendedSecurityLoginImpl.project % "test"
+    )
+  }
 }

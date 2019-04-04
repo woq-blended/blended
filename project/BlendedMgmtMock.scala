@@ -1,22 +1,24 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtMock extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.mock"
+    override val description = "Mock server to simulate a larger network of blended containers for UI testing."
+    override val osgi = false
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.mock",
-    description = "Mock server to simulate a larger network of blended containers for UI testing.",
-    osgi = false,
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.cmdOption,
       Dependencies.akkaActor,
       Dependencies.logbackClassic,
       Dependencies.logbackCore
     )
-  )
-  override  val project = helper.baseProject.dependsOn(
-    BlendedMgmtBase.project,
-    BlendedMgmtAgent.project,
-    BlendedUtilLogging.project
-  )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedMgmtBase.project,
+      BlendedMgmtAgent.project,
+      BlendedUtilLogging.project
+    )
+  }
 }

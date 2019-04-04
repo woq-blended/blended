@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedAkkaHttpProxy extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.akka.http.proxy"
+    override val description = "Provide Akka HTTP Proxy support"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.akka.http.proxy",
-    description = "Provide Akka HTTP Proxy support",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.akkaStream,
       Dependencies.akkaHttp,
@@ -20,16 +21,16 @@ object BlendedAkkaHttpProxy extends ProjectFactory {
       Dependencies.logbackCore % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedContainerContextApi.project,
-    BlendedAkka.project,
-    BlendedAkkaHttp.project,
-    BlendedUtil.project,
-    BlendedUtilLogging.project,
-    BlendedTestsupport.project % "test",
-    BlendedTestsupportPojosr.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedContainerContextApi.project,
+      BlendedAkka.project,
+      BlendedAkkaHttp.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedTestsupport.project % "test",
+      BlendedTestsupportPojosr.project % "test"
+    )
+  }
 }

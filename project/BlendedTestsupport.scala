@@ -1,13 +1,14 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedTestsupport extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.testsupport"
+    override val description = "Some test helper classes."
+    override val osgi = false
 
-  private[this] val helper = new ProjectSettings(
-    "blended.testsupport",
-    "Some test helper classes.",
-    osgi = false,
-    deps = Seq(
+    override def deps = super.deps ++ Seq(
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,
       Dependencies.akkaCamel,
@@ -16,11 +17,11 @@ object BlendedTestsupport extends ProjectFactory {
       Dependencies.scalatest,
       Dependencies.junit
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtil.project,
-    BlendedUtilLogging.project,
-    BlendedSecurityBoot.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtil.project,
+      BlendedUtilLogging.project,
+      BlendedSecurityBoot.project
+    )
+  }
 }

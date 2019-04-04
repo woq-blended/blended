@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtRepo extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.repo"
+    override val description = "File Artifact Repository"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.repo",
-    description = "File Artifact Repository",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.scalatest % "test",
       Dependencies.lambdaTest % "test",
       Dependencies.akkaTestkit % "test",
@@ -14,21 +15,22 @@ object BlendedMgmtRepo extends ProjectFactory {
       Dependencies.logbackClassic % "test",
       Dependencies.logbackCore % "test",
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.ArtifactRepoActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.ArtifactRepoActivator",
       privatePackage = Seq(
-        s"${b.bundleSymbolicName}.file.*",
-        s"${b.bundleSymbolicName}.internal.*"
+        s"${projectName}.file.*",
+        s"${projectName}.internal.*"
       )
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedUpdaterConfigJvm.project,
-    BlendedUtilLogging.project,
-    BlendedMgmtBase.project,
-    BlendedTestsupport.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedUpdaterConfigJvm.project,
+      BlendedUtilLogging.project,
+      BlendedMgmtBase.project,
+      BlendedTestsupport.project % "test"
+    )
+  }
 }

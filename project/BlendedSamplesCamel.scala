@@ -1,26 +1,28 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedSamplesCamel extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.samples.camel"
+    override val description = "A sample camel route"
+    override val projectDir = Some("blended.samples/blended.samples.camel")
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.samples.camel",
-    description = "A sample camel route",
-    projectDir = Some("blended.samples/blended.samples.camel"),
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.domino,
       Dependencies.camelCore,
       Dependencies.camelJms,
       Dependencies.geronimoJms11Spec,
       Dependencies.slf4j
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.CamelSampleActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.CamelSampleActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedCamelUtils.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedCamelUtils.project
+    )
+  }
 }

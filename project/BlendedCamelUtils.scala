@@ -1,20 +1,21 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedCamelUtils extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.camel.utils"
+    override val description = "Useful helpers for Camel"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.camel.utils",
-    description = "Useful helpers for Camel",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.orgOsgiCompendium,
       Dependencies.camelJms,
       Dependencies.slf4j
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project
+    )
+  }
 }

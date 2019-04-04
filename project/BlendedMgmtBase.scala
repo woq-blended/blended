@@ -1,23 +1,25 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtBase extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.base"
+    override val description = "Shared classes for management and reporting facility."
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.base",
-    description = "Shared classes for management and reporting facility.",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.MgmtBaseActivator"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedDomino.project,
-    BlendedContainerContextApi.project,
-    BlendedUtil.project,
-    BlendedUtilLogging.project
-  )
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.MgmtBaseActivator"
+    )
+
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedDomino.project,
+      BlendedContainerContextApi.project,
+      BlendedUtil.project,
+      BlendedUtilLogging.project
+    )
+  }
 }

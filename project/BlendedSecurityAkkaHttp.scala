@@ -1,12 +1,13 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 private object BlendedSecurityAkkaHttp extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.security.akka.http"
+    override val description = "Some security aware Akka HTTP routes for the blended container"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.security.akka.http",
-    description = "Some security aware Akka HTTP routes for the blended container",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
       Dependencies.orgOsgi,
@@ -19,13 +20,13 @@ private object BlendedSecurityAkkaHttp extends ProjectFactory {
       Dependencies.jclOverSlf4j % "test",
       Dependencies.logbackClassic % "test"
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedSecurityJvm.project,
-    BlendedUtilLogging.project,
-    BlendedTestsupport.project % "test"
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedSecurityJvm.project,
+      BlendedUtilLogging.project,
+      BlendedTestsupport.project % "test"
+    )
+  }
 }
 

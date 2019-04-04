@@ -1,29 +1,31 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedMgmtAgent extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.mgmt.agent"
+    override val description = "Bundle to regularly report monitoring information to a central container hosting the container registry"
 
-  private[this] val helper = new ProjectSettings(
-    projectName = "blended.mgmt.agent",
-    description = "Bundle to regularly report monitoring information to a central container hosting the container registry",
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.orgOsgi,
       Dependencies.akkaOsgi,
       Dependencies.akkaHttp,
       Dependencies.akkaStream,
       Dependencies.akkaTestkit % "test",
       Dependencies.scalatest % "test"
-    ),
-    adaptBundle = b => b.copy(
-      bundleActivator = s"${b.bundleSymbolicName}.internal.AgentActivator",
+    )
+
+    override def bundle: BlendedBundle = super.bundle.copy(
+      bundleActivator = s"${projectName}.internal.AgentActivator",
       exportPackage = Seq()
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedAkka.project,
-    BlendedUpdaterConfigJvm.project,
-    BlendedUtilLogging.project,
-    BlendedPrickleAkkaHttp.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedAkka.project,
+      BlendedUpdaterConfigJvm.project,
+      BlendedUtilLogging.project,
+      BlendedPrickleAkkaHttp.project
+    )
+  }
 }

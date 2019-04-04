@@ -1,22 +1,23 @@
 import sbt._
 import blended.sbt.Dependencies
+import phoenix.ProjectFactory
 
 object BlendedTestsupportPojosr extends ProjectFactory {
+  object config extends ProjectSettings {
+    override val projectName = "blended.testsupport.pojosr"
+    override val description = "A simple Pojo based test container that can be used in unit testing"
+    override val osgi = false
 
-  private[this] val helper = new ProjectSettings(
-    "blended.testsupport.pojosr",
-    "A simple Pojo based test container that can be used in unit testing",
-    osgi = false,
-    deps = Seq(
+    override def deps = Seq(
       Dependencies.scalatest,
       Dependencies.felixConnect,
       Dependencies.orgOsgi
     )
-  )
 
-  override val project = helper.baseProject.dependsOn(
-    BlendedUtilLogging.project,
-    BlendedContainerContextImpl.project,
-    BlendedDomino.project
-  )
+    override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
+      BlendedUtilLogging.project,
+      BlendedContainerContextImpl.project,
+      BlendedDomino.project
+    )
+  }
 }
