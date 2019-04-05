@@ -2,13 +2,17 @@ package blended.security
 
 import java.util
 
-import blended.security.boot.{ GroupPrincipal, UserPrincipal }
+import blended.container.context.api.ContainerIdentifierService
+import blended.security.boot.{GroupPrincipal, UserPrincipal}
+import blended.security.internal.BlendedConfiguration
 import blended.util.logging.Logger
-import com.typesafe.config.{ Config, ConfigFactory }
+import com.typesafe.config.{Config, ConfigFactory}
 import javax.security.auth.Subject
-import javax.security.auth.callback.{ CallbackHandler, NameCallback, PasswordCallback }
+import javax.security.auth.callback.{CallbackHandler, NameCallback, PasswordCallback}
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
+
+import scala.reflect.ClassTag
 
 abstract class AbstractLoginModule extends LoginModule {
 
@@ -18,6 +22,7 @@ abstract class AbstractLoginModule extends LoginModule {
   protected var cbHandler : Option[CallbackHandler] = None
   protected var loginConfig : Config = ConfigFactory.empty()
   protected var loggedInUser : Option[String] = None
+  protected var idSvc : Option[ContainerIdentifierService] = None
 
   protected val moduleName : String
 
@@ -28,12 +33,23 @@ abstract class AbstractLoginModule extends LoginModule {
     options: util.Map[String, _])
   : Unit = {
 
+    def getOption[T](name: String)(implicit classTag: ClassTag[T]) : Option[T] =
+      Option(options.get(name)) match {
+        case Some(v) if classTag.runtimeClass.isAssignableFrom(v.getClass) =>
+          Some(v.asInstanceOf[T])
+
+        case Some(v) =>
+          log.warn(s"Expected configuration object [$name] of type [${classOf[Config].getName()}], got [${v.getClass().getName()}]")
+          None
+
+        case None => None
+      }
+
+
     log.info(s"Initialising Login module ...[$moduleName]")
 
-    options.get("config") match {
-      case cfg : Config => loginConfig = cfg
-      case other => log.warn(s"Expected configuration object of type [${classOf[Config].getName()}], got [${other.getClass().getName()}]")
-    }
+    loginConfig = getOption[Config](BlendedConfiguration.configProp).getOrElse(ConfigFactory.empty())
+    idSvc = getOption[ContainerIdentifierService](BlendedConfiguration.idSvcProp)
 
     // This is the subject which needs to be enriched with the user and group information
     this.subject = Option(subject)
