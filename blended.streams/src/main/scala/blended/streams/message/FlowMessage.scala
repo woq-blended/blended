@@ -15,6 +15,7 @@ case class StringMsgProperty(override val value: String) extends MsgProperty {
   override def toString: String = "\"" + super.toString + "\""
 }
 
+case class UnitMsgProperty(override val value: Unit = ()) extends MsgProperty
 case class IntMsgProperty(override val value: Int) extends MsgProperty
 case class LongMsgProperty(override val value: Long) extends MsgProperty
 case class BooleanMsgProperty(override val value : Boolean) extends MsgProperty
@@ -27,6 +28,7 @@ object MsgProperty {
 
   import scala.language.implicitConversions
 
+  def apply() : MsgProperty = UnitMsgProperty()
   def apply(s : String) : MsgProperty = StringMsgProperty(s)
   def apply(i : Int) : MsgProperty = IntMsgProperty(i)
   def apply(l : Long) : MsgProperty = LongMsgProperty(l)
@@ -36,17 +38,22 @@ object MsgProperty {
   def apply(f : Float) : MsgProperty = FloatMsgProperty(f)
   def apply(d : Double) : MsgProperty = DoubleMsgProperty(d)
 
-  def lift(o : Any) : Try[MsgProperty] = Try {
-    o match {
-      case s: String => apply(s)
-      case i: java.lang.Integer => apply(i)
-      case l: java.lang.Long => apply(l)
-      case b: java.lang.Boolean => apply(b)
-      case b: java.lang.Byte => apply(b)
-      case s: java.lang.Short => apply(s)
-      case f: java.lang.Float => apply(f)
-      case d: java.lang.Double => apply(d)
-      case _ => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
+  def lift(v : Any) : Try[MsgProperty] = Try {
+    Option(v) match {
+      case None => apply()
+      case Some(o) =>
+        o match {
+          case u : Unit => apply()
+          case s: String => apply(s)
+          case i: java.lang.Integer => apply(i)
+          case l: java.lang.Long => apply(l)
+          case b: java.lang.Boolean => apply(b)
+          case b: java.lang.Byte => apply(b)
+          case s: java.lang.Short => apply(s)
+          case f: java.lang.Float => apply(f)
+          case d: java.lang.Double => apply(d)
+          case _ => throw new IllegalArgumentException(s"Unsupported Msg Property type [${o.getClass().getName()}]")
+        }
     }
   }
 
@@ -96,6 +103,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
       case c if c == classOf[Byte] => Some(v.toByte.asInstanceOf[T])
       case c if c == classOf[Float] => Some(v.toFloat.asInstanceOf[T])
       case c if c == classOf[Double] => Some(v.toDouble.asInstanceOf[T])
+      case c if c == classOf[Unit] => Some(().asInstanceOf[T])
       case _ => None
     }
 
@@ -136,10 +144,17 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
 
     header.get(name) match {
-      case Some(v) if classMatch(v.value, m.runtimeClass) => Some(v.value.asInstanceOf[T])
-      case Some(v) if v.isInstanceOf[StringMsgProperty] => fromString(v.value.toString)
-      case Some(_) => None
-      case _ => None
+      case Some(v) if classMatch(v.value, m.runtimeClass) =>
+        Some(v.value.asInstanceOf[T])
+
+      case Some(v) if v.isInstanceOf[StringMsgProperty] =>
+        fromString(v.value.toString)
+
+      case Some(v) if v.isInstanceOf[UnitMsgProperty] && m.runtimeClass.getName().equals("void") =>
+        Some(v.value.asInstanceOf[T])
+
+      case _ =>
+        None
     }
   }
 
@@ -156,7 +171,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-  def withHeader(keys : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
+  def withHeader(key : String, value: Any, overwrite: Boolean = true) : Try[FlowMessage]
 
   protected def doRemoveHeader(keys : String*) : FlowMessageProps = header.filter(k => !keys.contains(k))
 

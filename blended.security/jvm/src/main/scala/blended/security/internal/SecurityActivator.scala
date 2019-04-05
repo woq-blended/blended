@@ -23,7 +23,7 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
       val loginModuleClassName = module match {
         case "ldap" => classOf[LDAPLoginModule].getName()
         case "simple" => classOf[ConfigLoginModule].getName()
-        case o => throw new Exception(s"Unknown login module implementation : [$module]")
+        case o => throw new Exception(s"Unknown login module implementation : [$o]")
       }
 
       if (!cfg.hasPath(module)) {
@@ -36,7 +36,8 @@ class SecurityActivator extends DominoActivator with TypesafeConfigWatching {
         new BlendedConfiguration(
           bundleName = symName,
           loginModuleClassName = loginModuleClassName,
-          cfg = cfg.getConfig(module)
+          cfg = cfg.getConfig(module),
+          idSvc = idSvc
         )
       )
 

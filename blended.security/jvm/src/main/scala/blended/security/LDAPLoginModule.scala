@@ -3,15 +3,16 @@ package blended.security
 import java.text.MessageFormat
 import java.util
 
+import blended.container.context.api.ContainerIdentifierService
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.util.Try
-
-import blended.security.internal.{ LDAPLoginConfig, LdapSearchResult }
+import blended.security.internal.{LDAPLoginConfig, LdapSearchResult}
 import blended.util.logging.Logger
 import com.sun.jndi.ldap.LdapCtxFactory
 import javax.naming.Context
-import javax.naming.directory.{ DirContext, InitialDirContext, SearchControls }
+import javax.naming.directory.{DirContext, InitialDirContext, SearchControls}
 import javax.security.auth.login.LoginException
 
 class LDAPLoginModule extends AbstractLoginModule {
@@ -21,7 +22,12 @@ class LDAPLoginModule extends AbstractLoginModule {
   override protected val moduleName: String = "ldap"
 
   // convenience to extract the LDAP Config object
-  lazy val ldapCfg : LDAPLoginConfig = LDAPLoginConfig.fromConfig(loginConfig)
+  lazy val ldapCfg : LDAPLoginConfig = idSvc match {
+    case Some(s) =>
+      LDAPLoginConfig.fromConfig(loginConfig, s)
+    case None =>
+      throw new Exception(s"LDAP Login module must be configured with an instane of [${classOf[ContainerIdentifierService]}]")
+  }
 
   // obtain the initial LDAP Context
   private[this] lazy val dirContext : Try[DirContext] = Try {

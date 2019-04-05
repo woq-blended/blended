@@ -3,12 +3,9 @@ package blended.security.scep.internal
 import blended.domino.TypesafeConfigWatching
 import blended.security.ssl.CertificateProvider
 import blended.util.config.Implicits._
-import blended.util.logging.Logger
 import domino.DominoActivator
 
 class ScepActivator extends DominoActivator with TypesafeConfigWatching {
-
-  private[this] val log = Logger[ScepActivator]
 
   whenBundleActive {
     whenTypesafeConfigAvailable{ (cfg, idSvc) =>
@@ -17,12 +14,10 @@ class ScepActivator extends DominoActivator with TypesafeConfigWatching {
 
       scepUrl.foreach { url =>
 
-        val profile = cfg.getStringOption("scepProfile")
-        val keyLength = cfg.getInt("keyLength", 2048)
-        val csrSignAlgorithm = cfg.getString("csrSignAlgorithm", "SHA1withRSA")
-
-        val scepChallenge : String =
-          idSvc.resolvePropertyString(cfg.getString("scepChallenge")).map(_.toString).get
+        val profile : Option[String] = cfg.getStringOption("scepProfile")
+        val keyLength : Int = cfg.getInt("keyLength", 2048)
+        val csrSignAlgorithm : String = cfg.getString("csrSignAlgorithm", "SHA1withRSA")
+        val scepChallenge : String = idSvc.resolvePropertyString(cfg.getString("scepChallenge")).map(_.toString()).get
 
         val scepCfg = ScepConfig(
           url = url,

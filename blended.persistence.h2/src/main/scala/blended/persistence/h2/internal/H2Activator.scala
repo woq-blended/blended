@@ -22,13 +22,17 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
 
     whenTypesafeConfigAvailable { (config, idService) =>
 
-      def getString(path: String): Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
+      def getString(path: String): Option[String] = {
+        val lookup :Option[String] = if (config.hasPath(path)) Some(config.getString(path)) else None
+        lookup.map(v => idService.resolvePropertyString(v).map(_.toString()).get)
+      }
 
-      val dbPath = getString("dbPath").map(dbPath => new File(dbPath).getAbsolutePath())
-      val dbUrl = getString("dbUrl").orElse(dbPath.map(p => s"jdbc:h2:${p}"))
-      val dbUserName = getString("dbUserName")
-      val dbPassword = getString("dbPassword")
-      val extraOptions = getString("options")
+      val dbPath : Option[String] = getString("dbPath")
+      val dbUrl : Option[String] = getString("dbUrl").orElse(dbPath.map(p => s"jdbc:h2:${p}"))
+
+      val dbUserName : Option[String] = getString("dbUserName")
+      val dbPassword : Option[String] = getString("dbPassword")
+      val extraOptions : Option[String] = getString("options")
 
       (dbUrl, dbUserName, dbPassword) match {
         case (None, _, _) =>
@@ -40,7 +44,7 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
         case (_, _, None) =>
           sys.error("No 'dbPassword' defined in configuration. Cannot start H2 persistence service")
 
-        case (Some(dbUrl), Some(dbUserName), Some(dbPassword)) =>
+        case (Some(url), Some(user), Some(pwd)) =>
           dbPath.foreach { dbPath =>
             val f = new File(dbPath).getParentFile()
             if (f != null && !f.exists()) {
@@ -49,20 +53,18 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
             }
           }
 
-          val finalUrl = dbUrl + extraOptions.filter(!_.isEmpty()).map(";" + _).getOrElse("")
+          val finalUrl = url + extraOptions.filter(!_.isEmpty()).map(";" + _).getOrElse("")
           log.debug(s"DB url: [${finalUrl}]")
           
-          val ds = new JdbcDataSource();
-          ds.setURL(finalUrl);
-          ds.setUser("admin");
-          ds.setPassword("admin");
+          val ds = new JdbcDataSource()
+          ds.setURL(finalUrl)
+          ds.setUser(user)
+          ds.setPassword(pwd)
 
           // to avoid OSGi classloading issue with Hikari datasource, we feed a DS from H2 into Hikari
           val dataSource = new HikariDataSource()
           dataSource.setDataSource(ds)
-          //          dataSource.setJdbcUrl(dbUrl)
-          //          dataSource.setUsername("admin")
-          //          dataSource.setPassword("admin")
+
           onStop {
             dataSource.close()
           }
@@ -74,7 +76,7 @@ class H2Activator() extends DominoActivator with TypesafeConfigWatching {
             case Success(()) =>
               log.info("Database initialized successfully")
               val persistenceService = new PersistenceServiceJdbc(txManager, persistedClassDao)
-              persistenceService.providesService[PersistenceService]("dbUrl" -> dbUrl)
+              persistenceService.providesService[PersistenceService]("dbUrl" -> url)
 
             case Failure(e) => log.error(e)("Could not initialize database")
           }
