@@ -70,7 +70,7 @@ trait Dependencies {
   val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.2"
   val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.2"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "6.0.2"
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
