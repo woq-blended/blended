@@ -18,6 +18,8 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
   def createJmsMessage(session : Session, env : FlowEnvelope) : Try[Message] = Try {
 
+    import JmsFlowSupport.{hyphen, hyphen_repl, dot, dot_repl}
+
     val flowMsg = env.flowMessage
 
     val msg = flowMsg match {
@@ -35,10 +37,12 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
     flowMsg.header.filter {
       case (k, v) => !k.startsWith("JMS")
     }.foreach {
-      case (k,v) => v match {
-        case u : UnitMsgProperty => msg.setObjectProperty(k, null)
-        case o => msg.setObjectProperty(k, o.value)
-      }
+      case (k,v) =>
+        val propName = k.replaceAll("\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
+        v match {
+          case u : UnitMsgProperty => msg.setObjectProperty(propName, null)
+          case o => msg.setObjectProperty(propName, o.value)
+        }
     }
 
     replyTo(session, env).get.foreach(msg.setJMSReplyTo)

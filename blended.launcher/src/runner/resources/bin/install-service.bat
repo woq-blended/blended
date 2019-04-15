@@ -36,7 +36,6 @@ set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=%LOGBACK_CONFIG_SETTING%'
 set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS%;'-jvmOpt=-Dblended.home=%BLENDED_HOME%'
 REM set CONTAINER_JAVA_OPTS=%CONTAINER_JAVA_OPTS;'-jvmOpt=-Djavax.net.debug=ssl'
 
-
 set CLASS=blended.launcher.jvmrunner.JvmLauncher
 
 %SCRIPTPATH%prunsrv.exe ^
@@ -49,9 +48,7 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --StopMode=jvm ^
   --StartClass=%CLASS% ^
   --StartParams="start;-interactive=false;%CONTAINER_JAVA_OPTS%;-cp='%CP%';-restartDelay=%RESTART_DELAY%;--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-container-id;--framework-restart;false" ^
-  --JvmOptions="%LOGBACK_CONFIG_SETTING%" ^
-  ++JvmOptions="-Dblended.home=%BLENDED_HOME%" ^
-  ++JvmOptions="-Xmx24m" ^
+  --JvmOptions="%LOGBACK_CONFIG_SETTING%;-Dblended.home=%BLENDED_HOME%;-Xmx24m" ^
   --StopClass=%CLASS% ^
   --StopParams="stop" ^
   --Classpath="%CP%" ^
@@ -59,4 +56,4 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --StdError=auto ^
   --LogPath=%BLENDED_HOME%/log ^
   --LogLevel=Debug ^
-  --LibraryPath=%JAVA_HOME/bin
+  --LibraryPath=%JAVA_HOME%/bin

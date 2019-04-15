@@ -65,12 +65,12 @@ trait Dependencies {
   val domino = "com.github.domino-osgi" %% "domino" % dominoVersion
 
   val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
-  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.0.2"
-  val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.0"
-  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.0"
-  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"
+  val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.1.0"
+  val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.4"
+  val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.2"
+  val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.2"
   val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.0"
+  val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.10"
 
   val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
