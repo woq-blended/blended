@@ -26,7 +26,7 @@ class LDAPLoginModule extends AbstractLoginModule {
     case Some(s) =>
       LDAPLoginConfig.fromConfig(loginConfig, s)
     case None =>
-      throw new Exception(s"LDAP Login module must be configured with an instane of [${classOf[ContainerIdentifierService]}]")
+      throw new Exception(s"LDAP Login module must be configured with an instance of [${classOf[ContainerIdentifierService]}]")
   }
 
   // obtain the initial LDAP Context

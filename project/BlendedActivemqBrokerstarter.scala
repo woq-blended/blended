@@ -3,6 +3,7 @@ import blended.sbt.Dependencies
 import phoenix.ProjectFactory
 
 object BlendedActivemqBrokerstarter extends ProjectFactory {
+  
   object config extends ProjectSettings {
     override val projectName = "blended.activemq.brokerstarter"
     override val description = "A simple wrapper around an Active MQ broker that makes sure that the broker is completely started before exposing a connection factory OSGi service"

@@ -77,7 +77,8 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
     )
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
-      name := "blendedUpdaterConfigJvm"
+      name := "blendedUpdaterConfigJvm",
+      moduleName := "blended.updater.config"
     )
   }
 }

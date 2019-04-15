@@ -57,7 +57,8 @@ object BlendedSecurityJvm extends ProjectFactory {
     override def createProject(): Project = BlendedSecurityCross.project.jvm
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
-      name := "blendedSecurityJvm"
+      name := "blendedSecurityJvm",
+      moduleName := "blended.security"
     )
 
     override def dependsOn: Seq[ClasspathDep[ProjectReference]] = Seq(
