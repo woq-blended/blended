@@ -38,7 +38,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
       case (k, v) => !k.startsWith("JMS")
     }.foreach {
       case (k,v) =>
-        val propName = k.replaceAll("\\\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
+        val propName = k.replaceAll("\\" + dot, dot_repl).replaceAll(hyphen, hyphen_repl)
         v match {
           case u : UnitMsgProperty => msg.setObjectProperty(propName, null)
           case o => msg.setObjectProperty(propName, o.value)
