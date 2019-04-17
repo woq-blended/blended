@@ -18,4 +18,4 @@ set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\slf4j-api-@slf4j.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\logback-core-@logback.version@.jar
 set BLENDED_CP=%BLENDED_CP%;%BLENDED_HOME%\lib\logback-classic-@logback.version@.jar
 
-%JAVA_HOME%\bin\java -cp %BLENDED_CP% -Dlogback.configurationFile=%BLENDED_HOME%\etc\logback.xml -Dblended.home=%BLENDED_HOME% blended.launcher.Launcher --profile-lookup %BLENDED_HOME%\launch.conf --init-container-id --framework-restart false 
+%JAVA_HOME%\bin\java -cp %BLENDED_CP% -Dlogback.configurationFile=%BLENDED_HOME%\etc\logback.xml -Dblended.home=%BLENDED_HOME% -Dblended.laucher.startbundles=org.apache.felix.gogo.runtime,org.apache.felix.gogo.shell,org.apache.felix.gogo.command blended.launcher.Launcher --profile-lookup %BLENDED_HOME%\launch.conf --init-container-id --framework-restart false

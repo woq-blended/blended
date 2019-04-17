@@ -27,7 +27,9 @@ object Launcher {
 
   private lazy val blendedHomeDir = Option(System.getProperty("blended.home")).getOrElse(".")
   private lazy val containerConfigDirectory = blendedHomeDir + "/etc"
-  private lazy val containerIdFile = "blended.container.context.id"
+
+  private val containerIdFile : String = "blended.container.context.id"
+  private val extraStartBundle : String = "blended.laucher.startbundles"
 
   case class InstalledBundle(jarBundle: LauncherConfig.BundleConfig, bundle: Bundle)
 
@@ -305,7 +307,7 @@ object Launcher {
       }
     }
 
-    val shutdownHook = new Thread("framework-shutdown-hook") {
+    val shutdownHook : Thread = new Thread("framework-shutdown-hook") {
       override def run(): Unit = {
         log.info("Catched kill signal: stopping framework")
         framework.stop()
@@ -350,10 +352,15 @@ class Launcher private (config: LauncherConfig) {
     files.flatMap {
       case (kind, file) =>
         val f = new File(file).getAbsoluteFile()
-        if (!f.exists()) Some(s"${kind} ${f} does not exists")
-        else if (!f.isFile()) Some(s"${kind} ${f} is not a file")
-        else if (!f.canRead()) Some(s"${kind} ${f} is not readable")
-        else None
+        if (!f.exists()) {
+          Some(s"${kind} ${f} does not exists")
+        } else if (!f.isFile()) {
+          Some(s"${kind} ${f} is not a file")
+        } else if (!f.canRead()) {
+          Some(s"${kind} ${f} is not readable")
+        } else {
+          None
+        }
     }
 
   }
@@ -406,7 +413,7 @@ class Launcher private (config: LauncherConfig) {
       framework.getBundleContext.registerService(classOf[Properties], brandingProps, props)
     }
 
-    log.info("Installing bundles");
+    log.info(s"Installing [${config.bundles.size}] bundles");
     val context = framework.getBundleContext()
     val osgiBundles = config.bundles.map { b =>
       log.info(s"Installing Bundle: ${b}")
@@ -427,20 +434,32 @@ class Launcher private (config: LauncherConfig) {
       log.info(s"------ Entering start level [$startLevel] ------")
       frameworkStartLevel.setStartLevel(startLevel, new FrameworkListener() {
         override def frameworkEvent(event: FrameworkEvent): Unit = {
-          log.debug(s"Active start level ${startLevel} reached")
+          log.debug(s"Active start level [${startLevel}] reached")
         }
       })
 
-      val bundlesToStart = osgiBundles.filter(b => b.jarBundle.startLevel == startLevel
-        && b.jarBundle.start && !isFragment(b))
+      // A bundle needs to start if it is configured with start=true within the profile or the
+      // bundle symbolic name is set in the Systemproperty blended.laucher.startbundles
 
-      log.info(s"Starting ${bundlesToStart.size} bundles");
+      val extraStartBundles : List[String] = Option(System.getProperty(Launcher.extraStartBundle)) match {
+        case None => List.empty
+        case Some(s) => s.split(",").toList
+      }
+
+      val bundlesToStart = osgiBundles.filter { b =>
+        val startConfigured : Boolean =
+          b.jarBundle.startLevel == startLevel && b.jarBundle.start && !isFragment(b)
+
+        startConfigured || extraStartBundles.contains(b.bundle.getSymbolicName())
+      }
+
+      log.info(s"Starting [${bundlesToStart.size}] bundles");
 
       val startedBundles = bundlesToStart.map { bundle =>
         val result = Try {
           bundle.bundle.start()
         }
-        log.info(s"State of ${bundle.bundle.getSymbolicName}: ${bundle.bundle.getState}")
+        log.info(s"State of [${bundle.bundle.getSymbolicName}] : [${bundle.bundle.getState}]")
 
         result match {
           case Success(_) =>
@@ -451,7 +470,7 @@ class Launcher private (config: LauncherConfig) {
         }
         bundle -> result
       }
-      log.info(s"${startedBundles.filter(_._2.isSuccess).size} bundles started");
+      log.info(s"[${startedBundles.filter(_._2.isSuccess).size}] bundles started");
 
       val failedBundles = startedBundles.filter(_._2.isFailure)
 
