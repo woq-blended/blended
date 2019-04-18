@@ -36,7 +36,7 @@ fi
 
 # Whether to start the container in interactive mode
 if [ -z "${INTERACTIVE}" ]; then
-  INTERACTIVE=true
+  INTERACTIVE=false
 fi
 
 if [ "${INTERACTIVE}" == "true" ]; then

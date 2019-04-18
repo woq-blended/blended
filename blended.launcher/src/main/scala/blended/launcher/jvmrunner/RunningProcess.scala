@@ -2,14 +2,26 @@ package blended.launcher.jvmrunner
 
 import java.io.{IOException, InputStream, OutputStream}
 
+import blended.util.logging.Logger
+
+import scala.concurrent.duration._
+
 private[jvmrunner]
-class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: Boolean) {
+class RunningProcess(
+  process: Process,
+  errorsIntoOutput: Boolean,
+  interactive: Boolean,
+  shutdownTimeout : FiniteDuration
+) {
 
-  private[this] val errThread = asyncCopy(process.getErrorStream, if (errorsIntoOutput) Console.out else Console.err)
-  private[this] val inThread = asyncCopy(process.getInputStream, Console.out, interactive)
+  private[this] val errThread : Thread = asyncCopy(process.getErrorStream, if (errorsIntoOutput) Console.out else Console.err)
+  private[this] val inThread : Thread = asyncCopy(process.getInputStream, Console.out, interactive)
 
-  private[this] val in = System.in
-  private[this] val out = process.getOutputStream
+  private[this] val in : InputStream = System.in
+  private[this] val out : OutputStream = process.getOutputStream
+
+  private[this] val log : Logger = Logger[RunningProcess]
+  private[this] val sleepInterval : FiniteDuration = 50.millis
 
   private[this] val outThread = new Thread("StreamCopyThread") {
     setDaemon(true)
@@ -25,7 +37,7 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
                 out.flush()
             }
           } else {
-            Thread.sleep(50)
+            Thread.sleep(sleepInterval.toMillis)
           }
         }
       } catch {
@@ -35,7 +47,12 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
     }
   }
 
-  if (interactive) outThread.start()
+  if (interactive) {
+    log.info("Starting console read thread ...")
+    outThread.start()
+  } else {
+    log.info("Container is started without console read thread ...")
+  }
 
   def waitFor(): Int = {
     try {
@@ -48,11 +65,31 @@ class RunningProcess(process: Process, errorsIntoOutput: Boolean, interactive: B
     }
   }
 
+  private def waitUntilStopped(t : FiniteDuration) : Boolean = {
+
+    val now : Long = System.currentTimeMillis()
+    val end : Long = now + t.toMillis
+
+    while(process.isAlive() && System.currentTimeMillis() <= end) {
+      Thread.sleep(sleepInterval.toMillis)
+    }
+
+    process.isAlive()
+  }
+
   def stop(): Int = {
+
+    log.info("Stopping container JVM ...")
     if (interactive) {
       outThread.interrupt()
     } else {
       out.write("stop 0\n".getBytes())
+    }
+
+    // If the process is still alive after we tried to stop it we will kill it
+    if (waitUntilStopped(shutdownTimeout)) {
+      log.info("Killing container JVM after maximum shutdown timeout ...")
+      process.destroy()
     }
 
     out.flush()
