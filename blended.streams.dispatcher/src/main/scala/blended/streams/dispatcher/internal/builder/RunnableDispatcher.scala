@@ -122,7 +122,8 @@ class RunnableDispatcher(
     val source = jmsConsumer(
       name = settings.jmsDestination.get.asString,
       settings = settings,
-      headerConfig = bs.headerConfig
+      headerConfig = bs.headerConfig,
+      minMessageDelay = None
     )
 
     if (provider.internal) {

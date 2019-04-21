@@ -105,6 +105,7 @@ trait JmsStreamSupport {
     dest : JmsDestination,
     log : Logger,
     listener : Integer = 2,
+    minMessageDelay : Option[FiniteDuration] = None,
     selector : Option[String] = None
   )(implicit timeout : FiniteDuration, system: ActorSystem, materializer: Materializer) : Collector[FlowEnvelope] = {
 
@@ -126,7 +127,8 @@ trait JmsStreamSupport {
             .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
             .withSessionCount(listenerCount)
             .withDestination(Some(dest))
-            .withSelector(selector)
+            .withSelector(selector),
+        minMessageDelay = minMessageDelay,
       ),
       timeout
     )(collected)
@@ -150,11 +152,12 @@ trait JmsStreamSupport {
   def jmsConsumer(
     name : String,
     settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig
+    headerConfig: FlowHeaderConfig,
+    minMessageDelay : Option[FiniteDuration]
   )(implicit system: ActorSystem): Source[FlowEnvelope, NotUsed] = {
 
     if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig))
+      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig, minMessageDelay))
     } else {
       Source.fromGraph(new JmsSourceStage(name, settings, headerConfig))
     }
@@ -163,12 +166,13 @@ trait JmsStreamSupport {
   def restartableConsumer(
     name : String,
     settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig
+    headerConfig: FlowHeaderConfig,
+    minMessageDelay : Option[FiniteDuration]
   )(implicit system: ActorSystem) : Source[FlowEnvelope, NotUsed] = {
 
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig)
+    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig, minMessageDelay)
 
     RestartSource.withBackoff(
       minBackoff = 2.seconds,

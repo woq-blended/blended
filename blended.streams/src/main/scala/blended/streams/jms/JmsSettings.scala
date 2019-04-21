@@ -87,6 +87,8 @@ final case class JMSConsumerSettings(
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
   sessionCount: Int = 1,
+  receiveTimeout : FiniteDuration = 0.seconds,
+  pollInterval : FiniteDuration = 100.millis,
   acknowledgeMode: AcknowledgeMode = AcknowledgeMode.AutoAcknowledge,
   bufferSize: Int = 100,
   selector: Option[String] = None,

@@ -6,7 +6,7 @@ import akka.stream.scaladsl.{Flow, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
-import blended.streams.{StreamController, StreamControllerConfig, StreamFactories}
+import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
@@ -29,13 +29,15 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
   with JmsStreamSupport
   with BeforeAndAfterAll {
 
-  lazy val brokerName : String = "blended"
+  private val brokerName : String = "blended"
+  private val consumerCount : Int = 5
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig(prefix = "Spec")
 
-  private def amqCf(): IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
+  private lazy val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
     provider = "amq",
     clientId = "spec",
-    cf = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false")
+    cf = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false&jms.prefetchPolicy.queuePrefetch=10")
   )
 
   private val broker : BrokerService = {
@@ -53,13 +55,15 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     b
   }
 
-  implicit val actorSystem : ActorSystem = system
-  implicit val materializer : Materializer = ActorMaterializer()
-  implicit val eCtxt : ExecutionContext = system.dispatcher
+  private implicit val actorSystem : ActorSystem = system
+  private implicit val materializer : Materializer = ActorMaterializer()
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
 
-  val log : Logger = Logger[JmsAckSourceSpec]
+  private val log : Logger = Logger[JmsAckSourceSpec]
 
-  val msgCount : Int = 50
+  val envelopes : Int => Seq[FlowEnvelope] = msgCount => 1.to(msgCount).map { i =>
+    FlowEnvelope().withHeader("msgNo", i).get
+  }
 
   override protected def afterAll(): Unit = {
     broker.stop()
@@ -67,44 +71,52 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     system.terminate()
   }
 
+  private val consumerSettings : String => JMSConsumerSettings = destName => {
+
+    val dest = JmsDestination.create(destName).get
+
+    JMSConsumerSettings(
+      log = log,
+      connectionFactory = amqCf,
+      jmsDestination = Some(dest),
+      sessionCount = consumerCount,
+      acknowledgeMode = AcknowledgeMode.ClientAcknowledge
+    )
+  }
+
+  private val producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
+    log = log,
+    connectionFactory = amqCf,
+    jmsDestination = Some(JmsDestination.create(destName).get)
+  )
+
+  private val jmsConsumer : JMSConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
+    cSettings => minMessageDelay => restartableConsumer(
+      name = "test",
+      settings = cSettings,
+      headerConfig = headerCfg,
+      minMessageDelay = minMessageDelay
+    ).via(Flow.fromFunction{env =>
+      env.acknowledge()
+      env
+    })
+
   "The JMS Ack Source should" - {
 
-    "Consume and acknowledge messages correctly" in {
+    "Consume and acknowledge messages without delay correctly" in {
 
-      val dest = JmsDestination.create("testQueue").get
-      val cf = amqCf()
+      val msgCount : Int = 50
+      val destName : String = "noDelay"
 
-      val cSettings : JMSConsumerSettings = JMSConsumerSettings(
-        log = log,
-        connectionFactory = cf,
-        jmsDestination = Some(dest),
-        sessionCount = 5,
-        acknowledgeMode = AcknowledgeMode.ClientAcknowledge
-      )
+      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val pSettings : JmsProducerSettings = producerSettings(destName)
 
-      val consumer : Source[FlowEnvelope, NotUsed] = restartableConsumer(
-        name = "test",
-        settings = cSettings,
-        headerConfig = FlowHeaderConfig(prefix = "Spec")
-      ).via(Flow.fromFunction{env =>
-        env.acknowledge()
-        env
-      })
-
-      val envelopes : Seq[FlowEnvelope] = 1.to(msgCount).map { i =>
-        FlowEnvelope().withHeader("msgNo", i).get
-      }
-
-      val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
-        connectionFactory = cf,
-        jmsDestination = Some(dest)
-      )
+      val consumer : Source[FlowEnvelope, NotUsed] = jmsConsumer(cSettings)(None)
 
       sendMessages(
         pSettings,
         log,
-        envelopes:_*
+        envelopes(msgCount):_*
       ) match {
         case Success(s) =>
           val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
@@ -114,9 +126,50 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
           )(e => e.acknowledge())
 
           val result = Await.result(coll.result, 6.seconds).map{ env => env.header[Int]("msgNo").get }
-          result should have size (envelopes.size)
+          result should have size (msgCount)
 
           s.shutdown()
+        case Failure(t) => fail(t)
+      }
+    }
+
+    "Do not consume messages before the minimum message delay is reached" in {
+
+      val msgCount : Int = 10
+      val destName : String = "delayed"
+      val minDelay : FiniteDuration = 3.seconds
+
+      val cSettings : JMSConsumerSettings = consumerSettings(destName)
+      val pSettings : JmsProducerSettings = producerSettings(destName)
+
+      val consumer : Source[FlowEnvelope, NotUsed] = jmsConsumer(cSettings)(Some(minDelay))
+
+      sendMessages(
+        pSettings,
+        log,
+        envelopes(msgCount):_*
+      ) match {
+        case Success(s) =>
+          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+            name = "delayedConsumer",
+            source = consumer,
+            timeout = minDelay - 1.seconds
+          )(e => e.acknowledge())
+
+          val result : List[Int] = Await.result(coll.result, minDelay + 1.second).map{ env => env.header[Int]("msgNo").get }
+          result should be (empty)
+
+          s.shutdown()
+
+          val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+            name = "delayedConsumer2",
+            source = consumer,
+            timeout = minDelay + 500.millis
+          )(e => e.acknowledge())
+
+          val result2 : List[Int] = Await.result(coll2.result, minDelay + 1.seconds).map{ env => env.header[Int]("msgNo").get }
+          result2 should have size(msgCount)
+
         case Failure(t) => fail(t)
       }
     }
