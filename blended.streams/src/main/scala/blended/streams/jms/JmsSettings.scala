@@ -136,7 +136,8 @@ final case class JmsProducerSettings(
   timeToLive: Option[FiniteDuration] = None,
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
-  sessionRecreateTimeout : FiniteDuration = 1.second
+  sessionRecreateTimeout : FiniteDuration = 1.second,
+  clearPreviousException : Boolean = false
 ) extends JmsSettings {
 
   def withDestinationResolver(f : JmsProducerSettings => JmsDestinationResolver) : JmsProducerSettings = copy(destinationResolver = f)

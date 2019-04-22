@@ -5,7 +5,9 @@ import java.util.Date
 
 import blended.streams.FlowProcessor
 import blended.streams.transaction.FlowHeaderConfig
+import blended.util.logging.Logger
 
+import scala.concurrent.duration._
 import scala.util.Try
 
 class RetryCountExceededException(n : Long)
@@ -18,7 +20,8 @@ class MissingRetryDestinationException(d : String)
   extends Exception(s"The retry destination header [$d] is missing in the message.")
 
 class JmsRetryRouter(
-  retryCfg : JmsRetryConfig
+  retryCfg : JmsRetryConfig,
+  log : Logger
 ) {
 
   private[this] val headerCfg : FlowHeaderConfig = retryCfg.headerCfg
@@ -29,6 +32,9 @@ class JmsRetryRouter(
     val retryCount : Long = env.header[Long](headerCfg.headerRetryCount).getOrElse(0L) + 1
     val retryTimeout : Long = env.header[Long](headerCfg.headerRetryTimeout).getOrElse(retryCfg.retryTimeout.toMillis)
     val firstRetry : Long = env.header[Long](headerCfg.headerFirstRetry).getOrElse(System.currentTimeMillis())
+
+    val remaining : FiniteDuration = (retryTimeout - (System.currentTimeMillis() - firstRetry)).millis
+    log.info(s"Retrying envelope [${env.id}] : [$retryCount / $maxRetries] [${remaining}] remaining")
 
     if (maxRetries > 0 && retryCount > maxRetries) {
       throw new RetryCountExceededException(maxRetries)

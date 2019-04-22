@@ -31,7 +31,7 @@ class JmsRetryProcessorSpec extends TestKit(ActorSystem("JmsRetrySpec"))
 
   private val brokerName : String = "retry"
   private val consumerCount : Int = 5
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig(prefix = "spec")
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "spec")
 
   private lazy val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
@@ -97,53 +97,75 @@ class JmsRetryProcessorSpec extends TestKit(ActorSystem("JmsRetrySpec"))
       env
     })
 
+  private val retryCfg : JmsRetryConfig = JmsRetryConfig(
+    cf = amqCf,
+    retryDestName = "retryQueue",
+    failedDestName = "retryFailed",
+    retryInterval = 3.seconds,
+    maxRetries = 5,
+    retryTimeout = 100.millis,
+    headerCfg = headerCfg
+  )
+
+  def withExpectedDestination(destName : String)(env : FlowEnvelope): Unit ={
+
+    val retryProcessor = JmsRetryProcessor("spec", retryCfg)
+    retryProcessor.start()
+
+    sendMessages(producerSettings(retryCfg.retryDestName), log, Seq(env):_*) match {
+      case Success(s) =>
+        val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
+          name = "retryConsumer",
+          source = jmsConsumer(consumerSettings(destName))(None),
+          timeout = retryCfg.retryInterval + 500.millis
+        )(e => e.acknowledge())
+
+        s.shutdown()
+
+        val result : List[FlowEnvelope] = Await.result(coll.result, retryCfg.retryInterval + 1.second)
+        result should have size (1)
+
+      case Failure(t) => fail(t)
+    }
+
+  }
+
   "The Jms Retry Processor should" - {
 
     "Consume messages from the retry destination and reinsert them into the original destination" in {
 
       val srcQueue : String = "myQueue"
 
-      val retryCfg : JmsRetryConfig = JmsRetryConfig(
-        cf = amqCf,
-        retryDestName = "retryQueue",
-        failedDestName = "retryFailed",
-        retryInterval = 3.seconds,
-        headerCfg = headerCfg
-      )
-
-      val retryProcessor = JmsRetryProcessor("spec", retryCfg)
-      retryProcessor.start()
-
       val retryMsg : FlowEnvelope = FlowEnvelope()
         .withHeader(headerCfg.headerRetryDestination, srcQueue).get
 
-      sendMessages(producerSettings(retryCfg.retryDestName), log, Seq(retryMsg):_*) match {
-        case Success(s) =>
-          val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
-            name = "retryConsumer",
-            source = jmsConsumer(consumerSettings(srcQueue))(None),
-            timeout = retryCfg.retryInterval + 500.millis
-          )(e => e.acknowledge())
-
-          s.shutdown()
-
-          val result : List[FlowEnvelope] = Await.result(coll.result, retryCfg.retryInterval + 1.second)
-          result should have size (1)
-
-        case Failure(t) => fail(t)
-      }
+      withExpectedDestination(srcQueue)(retryMsg)
     }
 
     "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
-      pending
+      val srcQueue : String = "myQueue"
+
+      val retryMsg : FlowEnvelope = FlowEnvelope()
+        .withHeader(headerCfg.headerRetryDestination, srcQueue).get
+        .withHeader(headerCfg.headerRetryCount, retryCfg.maxRetries).get
+
+      withExpectedDestination(retryCfg.failedDestName)(retryMsg)
     }
 
     "Consume messages from the retry destination and pass them to the retry failed destination if the retry timeout exceeds" in {
-      pending
+      val srcQueue : String = "myQueue"
+
+      val retryMsg : FlowEnvelope = FlowEnvelope()
+        .withHeader(headerCfg.headerRetryDestination, srcQueue).get
+        .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - 2 * retryCfg.retryTimeout.toMillis).get
+
+      withExpectedDestination(retryCfg.failedDestName)(retryMsg)
     }
 
     "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {
-      pending
+      val retryMsg : FlowEnvelope = FlowEnvelope()
+
+      withExpectedDestination(retryCfg.failedDestName)(retryMsg)
     }
 
   }
