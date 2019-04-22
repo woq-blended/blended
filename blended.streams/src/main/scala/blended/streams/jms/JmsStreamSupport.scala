@@ -20,8 +20,8 @@ import scala.util.Try
 trait JmsStreamSupport {
   /**
     * Process a sequence of messages with a given flow. If any of the processed
-    * messages cause an exception in the provided flow, the Stream will terminate
-    * with this exeption been thrown.
+    * messages cause an exception in the provided flow, the Stream will terminated
+    * with this exception been thrown.
     *
     * The resulting stream will expose a killswitch, so that it stays
     * open and the test code needs to tear it down eventually.
