@@ -47,7 +47,7 @@ set CLASS=blended.launcher.jvmrunner.JvmLauncher
   --StartMode=jvm ^
   --StopMode=jvm ^
   --StartClass=%CLASS% ^
-  --StartParams="start;-interactive=false;%CONTAINER_JAVA_OPTS%;-cp='%CP%';-restartDelay=%RESTART_DELAY%;--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-container-id;--framework-restart;false" ^
+  --StartParams="start;-interactive=false;-maxShutdown=10;%CONTAINER_JAVA_OPTS%;-cp='%CP%';-restartDelay=%RESTART_DELAY%;--;blended.launcher.Launcher;--profile-lookup;%BLENDED_HOME%/launch.conf;--init-container-id;--framework-restart;false" ^
   --JvmOptions="%LOGBACK_CONFIG_SETTING%;-Dblended.home=%BLENDED_HOME%;-Xmx24m" ^
   --StopClass=%CLASS% ^
   --StopParams="stop" ^

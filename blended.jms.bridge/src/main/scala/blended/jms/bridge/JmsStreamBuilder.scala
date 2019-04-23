@@ -78,8 +78,6 @@ class JmsStreamBuilder(
     .withDestinationResolver(destResolver)
     .withDeliveryMode(JmsDeliveryMode.Persistent)
 
-
-
   private val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
   private val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
 

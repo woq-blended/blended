@@ -63,11 +63,14 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     } else {
       scheduleOnce(RecreateSessions, jmsSettings.sessionRecreateTimeout)
     }
+
+    afterSessionClose(s)
   }
 
   protected def handleTimer : PartialFunction[Any, Unit] = {
     case RecreateSessions =>
       initSessionAsync()
+      cancelTimer(RecreateSessions)
   }
 
   override protected def onTimer(timerKey: Any): Unit = handleTimer(timerKey)
@@ -75,6 +78,8 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
 
   protected def createSession(connection: Connection): S
+
+  protected def afterSessionClose(session : S) : Unit = {}
 
   protected[this] def closeSession(session: S) : Unit = {
 
@@ -126,7 +131,6 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
     Future.sequence(sessionFutures)
   }
-
 
   private def openConnection(startConnection: Boolean) : Future[Connection] = {
 

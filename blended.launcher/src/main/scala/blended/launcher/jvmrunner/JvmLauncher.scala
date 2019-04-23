@@ -11,6 +11,7 @@ import blended.updater.config.OverlayConfigCompanion
 import blended.util.logging.Logger
 
 import scala.annotation.tailrec
+import scala.concurrent.duration._
 
 object JvmLauncher {
 
@@ -105,6 +106,7 @@ class JvmLauncher() {
                   arguments = config.otherArgs.toArray ++ Array("--write-system-properties", sysPropsFile.getAbsolutePath()),
                   interactive = false,
                   errorsIntoOutput = false,
+                  shutdownTimeout = config.shutdownTimeout,
                   directory = new File(".").getAbsoluteFile()
                 )
                 val retVal = p.waitFor
@@ -137,6 +139,7 @@ class JvmLauncher() {
                 arguments = config.otherArgs.toArray,
                 interactive = config.interactive,
                 errorsIntoOutput = false,
+                shutdownTimeout = config.shutdownTimeout,
                 directory = new File(".").getAbsoluteFile()
               )
               log.debug("Process started: " + p)
@@ -168,12 +171,14 @@ class JvmLauncher() {
   }
 
   case class JvmLauncherConfig(
-      classpath: Seq[File] = Seq(),
-      otherArgs: Seq[String] = Seq(),
-      action: Option[String] = None,
-      jvmOpts: Seq[String] = Seq(),
-      interactive: Boolean = true,
-      restartDelaySec: Option[Int] = None) {
+    classpath: Seq[File] = Seq(),
+    otherArgs: Seq[String] = Seq(),
+    action: Option[String] = None,
+    jvmOpts: Seq[String] = Seq(),
+    interactive: Boolean = true,
+    shutdownTimeout : FiniteDuration = 5.seconds,
+    restartDelaySec: Option[Int] = None
+  ) {
 
     private[this] lazy val prettyPrint : String =
       s"""${getClass().getSimpleName()}(
@@ -212,6 +217,9 @@ class JvmLauncher() {
       case Seq(interactive, rest @_*) if interactive.startsWith("-interactive") =>
         val iAct = interactive.substring("-interactive=".length).toBoolean
         parse(rest, initialConfig.copy(interactive = iAct))
+      case Seq(maxShutdown, rest @ _*) if maxShutdown.startsWith("-maxShutdown") =>
+        val seconds : Int = Integer.parseInt(maxShutdown.substring("-maxShutdown=".length()))
+        parse(rest, initialConfig.copy(shutdownTimeout = seconds.seconds))
       case _ =>
         sys.error("Cannot parse arguments: " + args)
     }
@@ -233,7 +241,8 @@ class JvmLauncher() {
     arguments: Array[String],
     interactive: Boolean = false,
     errorsIntoOutput: Boolean = true,
-    directory: File = new File(".")
+    directory: File = new File("."),
+    shutdownTimeout : FiniteDuration
   ): RunningProcess = {
 
     log.debug("About to run Java process")
@@ -264,7 +273,7 @@ class JvmLauncher() {
     // if (!env.isEmpty) env.foreach { case (k, v) => pb.environment().put(k, v) }
     val p = pb.start
 
-    new RunningProcess(p, errorsIntoOutput, interactive)
+    new RunningProcess(p, errorsIntoOutput, interactive, shutdownTimeout)
   }
 
   /**

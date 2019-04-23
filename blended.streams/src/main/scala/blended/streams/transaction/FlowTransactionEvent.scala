@@ -19,6 +19,22 @@ object FlowHeaderConfig {
   private val statePath = "transactionState"
   private val trackTransactionPath = "trackTransaction"
   private val trackSourcePath = "trackSource"
+  private val retryCountPath = "retryCount"
+  private val maxRetriesPath = "maxRetries"
+  private val retryTimeoutPath = "retryTimeout"
+  private val retryDestPath = "retryDestination"
+  private val firstRetryPath = "firstRetry"
+
+  private val transId = "TransactionId"
+  private val branchId = "BranchId"
+  private val transState = "TransactionState"
+  private val trackTrans = "TrackTransaction"
+  private val trackSource = "TrackSource"
+  private val retryCount = "RetryCount"
+  private val maxRetries = "MaxRetries"
+  private val retryTimeout = "RetryTimeout"
+  private val retryDest = "RetryDestination"
+  private val firstRetry = "FirstRetry"
 
   val headerConfigPath : String = "blended.flow.header"
   val header : String => String => String = prefix => name => prefix + name
@@ -27,13 +43,33 @@ object FlowHeaderConfig {
     idSvc.containerContext.getContainerConfig().getConfig(FlowHeaderConfig.headerConfigPath)
   )
 
+  def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
+    prefix = prefix,
+    headerTrans = header(prefix)(transId),
+    headerBranch = header(prefix)(branchId),
+    headerState = header(prefix)(transState),
+    headerTrack = header(prefix)(trackTrans),
+    headerTrackSource = header(prefix)(trackSource),
+    headerRetryCount = header(prefix)(retryCount),
+    headerMaxRetries = header(prefix)(maxRetries),
+    headerRetryTimeout = header(prefix)(retryTimeout),
+    headerRetryDestination = header(prefix)(retryDest),
+    headerFirstRetry = header(prefix)(firstRetry)
+  )
+
   def create(cfg: Config): FlowHeaderConfig = {
+
     val prefix = cfg.getString(prefixPath, "Blended")
-    val headerTrans = cfg.getString(transIdPath, "TransactionId")
-    val headerBranch = cfg.getString(branchIdPath, "BranchId")
-    val headerState = cfg.getString(statePath, "TransactionState")
-    val headerTrack = cfg.getString(trackTransactionPath, "TrackTransaction")
-    val headerTrackSource = cfg.getString(trackSourcePath, "TrackSource")
+    val headerTrans = cfg.getString(transIdPath, transId)
+    val headerBranch = cfg.getString(branchIdPath, branchId)
+    val headerState = cfg.getString(statePath, transState)
+    val headerTrack = cfg.getString(trackTransactionPath, trackTrans)
+    val headerTrackSource = cfg.getString(trackSourcePath, trackSource)
+    val headerRetryCount = cfg.getString(retryCountPath, retryCount)
+    val headerMaxRetries = cfg.getString(maxRetriesPath, maxRetries)
+    val headerRetryTimeout = cfg.getString(retryTimeoutPath, retryTimeout)
+    val headerRetryDest = cfg.getString(retryDestPath, retryDest)
+    val headerFirstRetry = cfg.getString(firstRetryPath, firstRetry)
 
     FlowHeaderConfig(
       prefix = prefix,
@@ -41,7 +77,12 @@ object FlowHeaderConfig {
       headerBranch = header(prefix)(headerBranch),
       headerState = header(prefix)(headerState),
       headerTrack = header(prefix)(headerTrack),
-      headerTrackSource = header(prefix)(headerTrackSource)
+      headerTrackSource = header(prefix)(headerTrackSource),
+      headerRetryCount = header(prefix)(headerRetryCount),
+      headerMaxRetries = header(prefix)(headerMaxRetries),
+      headerRetryTimeout = header(prefix)(headerRetryTimeout),
+      headerRetryDestination = header(prefix)(headerRetryDest),
+      headerFirstRetry = header(prefix)(headerFirstRetry)
     )
   }
 }
@@ -52,7 +93,12 @@ case class FlowHeaderConfig(
   headerBranch : String = "BranchId",
   headerState : String = "TransactionState",
   headerTrack : String = "TrackTransaction",
-  headerTrackSource : String = "TrackSource"
+  headerTrackSource : String = "TrackSource",
+  headerRetryCount : String = "RetryCount",
+  headerMaxRetries : String = "MaxRetries",
+  headerRetryTimeout : String = "RetryTimeout",
+  headerRetryDestination : String = "RetryDestination",
+  headerFirstRetry : String = "FirstRetry"
 )
 
 object FlowTransactionEvent {

@@ -25,7 +25,7 @@ case class JmsAcknowledgeHandler(
   }
 
   override def acknowledge() : Try[Unit] = Try {
-    log.trace(s"Scheduling acknowldegement for envelope [$id] in [${session.sessionId}].")
+    log.trace(s"Scheduling acknowledgement for envelope [$id] in [${session.sessionId}].")
     session.ack(jmsMessage)
   }
 }

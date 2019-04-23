@@ -103,7 +103,12 @@ class JmsSinkStage(
               settings.log.debug(s"Successfuly sent message to [$logDest] with headers [${env.flowMessage.header.mkString(",")}] with parameters [${sendParams.deliveryMode}, ${sendParams.priority}, ${sendParams.ttl}]")
             }
           }
-          env
+
+          if (settings.clearPreviousException) {
+            env.clearException()
+          } else {
+            env
+          }
         } catch {
           case t : Throwable =>
             settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")

@@ -37,7 +37,8 @@ class TransactionOutbound(
     jmsConsumer(
       name = "transactionOutbound",
       settings = srcSettings,
-      headerConfig = headerConfig
+      headerConfig = headerConfig,
+      minMessageDelay = None
     )
   }
 

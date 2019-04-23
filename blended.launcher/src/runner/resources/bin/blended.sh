@@ -36,7 +36,13 @@ fi
 
 # Whether to start the container in interactive mode
 if [ -z "${INTERACTIVE}" ]; then
-  INTERACTIVE=true
+  INTERACTIVE=false
+fi
+
+if [ "${INTERACTIVE}" == "true" ]; then
+  EXTRA_START_BUNDLES="-jvmOpt=-Dblended.laucher.startbundles=org.apache.felix.gogo.runtime,org.apache.felix.gogo.shell,org.apache.felix.gogo.command"
+else
+  EXTRA_START_BUNDLES=""
 fi
 
 LAUNCHER_OPTS="--profile-lookup $BLENDED_HOME/launch.conf --init-container-id"
@@ -58,6 +64,7 @@ CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultConn
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dsun.net.client.defaultReadTimeout=500"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=${LOGBACK_CONFIG_SETTING}"
 CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Dblended.home=${BLENDED_HOME}"
+CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} ${EXTRA_START_BUNDLES}"
 
 # Enable this when you need to debug SSL issues
 # CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-Djavax.net.debug=ssl"
@@ -82,7 +89,7 @@ if [ -n "$PROFILE_PORT" ] ; then
  UNSET MY_DEBUG_WAIT
 fi
 
-# colun-separated
+# column-separated
 OUTER_CP="${BLENDED_HOME}/lib/*"
 # semicolon-separated
 INNER_CP="\
