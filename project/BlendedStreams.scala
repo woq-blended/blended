@@ -32,7 +32,8 @@ object BlendedStreams extends ProjectFactory {
         s"${b.bundleSymbolicName}.persistence",
         s"${b.bundleSymbolicName}.transaction",
         s"${b.bundleSymbolicName}.worklist"
-      )
+      ),
+      bundleActivator = "blended.streams.internal.StreamsActivator"
     )
   ) {
     override def settings: Seq[sbt.Setting[_]] = defaultSettings ++ Seq(

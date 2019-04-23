@@ -11,10 +11,42 @@ import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 import akka.stream.scaladsl.GraphDSL.Implicits._
-import javax.jms.Session
+import blended.container.context.api.ContainerIdentifierService
+import com.typesafe.config.Config
+import javax.jms.{ConnectionFactory, Session}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
+import blended.util.config.Implicits._
+
+object JmsRetryConfig {
+
+  def fromConfig(
+    idSvc : ContainerIdentifierService,
+    cf : IdAwareConnectionFactory,
+    cfg : Config
+  ) : Try[JmsRetryConfig] = Try {
+
+    val resolve : String => String = s =>
+      idSvc.resolvePropertyString(cfg.getString(s)).get.toString()
+
+    val retryDest : String = resolve("retryDestination")
+    val failedDest : String = resolve("failedDestination")
+    val retryInterval : FiniteDuration = cfg.getDuration("retryInterval", 1.minutes)
+    val maxRetries : Long = cfg.getLong("maxRetries", -1L)
+    val retryTimeout : FiniteDuration = cfg.getDuration("retryTimeout", 1.day)
+
+    JmsRetryConfig(
+      cf = cf,
+      headerCfg = FlowHeaderConfig.create(idSvc),
+      retryDestName = retryDest,
+      failedDestName = failedDest,
+      retryInterval = retryInterval,
+      maxRetries = maxRetries,
+      retryTimeout = retryTimeout
+    )
+  }
+}
 
 case class JmsRetryConfig(
   cf : IdAwareConnectionFactory,
@@ -24,7 +56,10 @@ case class JmsRetryConfig(
   retryInterval : FiniteDuration,
   maxRetries : Long = -1,
   retryTimeout : FiniteDuration = 1.day
-)
+) {
+  override def toString: String = s"${getClass().getSimpleName}[${cf.vendor}:${cf.provider}](retryDestination=$retryDestName," +
+    s"failedDestination=$failedDestName,retryInterval=$retryInterval,maxRetries=$maxRetries,retryTimeout=$retryTimeout)"
+}
 
 class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   implicit system : ActorSystem, materializer : Materializer
@@ -150,7 +185,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   def start() : Unit = {
 
     if (actor.isEmpty) {
-      log.info(s"Starting Jms Retry processor for [${retryCfg.retryDestName}] with retry interval [${retryCfg.retryInterval}]")
+      log.info(s"Starting Jms Retry processor [$name] with [$retryCfg]")
 
       // TODO: Load from config
       val streamCfg : StreamControllerConfig = StreamControllerConfig(
