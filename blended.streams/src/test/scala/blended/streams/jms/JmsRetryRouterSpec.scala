@@ -16,7 +16,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
   with LoggingFreeSpecLike
   with Matchers {
 
-  private[this] val log : Logger = Logger[JmsRetryProcessorSpec]
+  private[this] val log : Logger = Logger[JmsRetryRouterSpec]
   private[this] val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = "spec")
 
   private[this] val amqCf : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
