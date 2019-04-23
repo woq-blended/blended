@@ -1,8 +1,8 @@
 package blended.streams.jms
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, GraphDSL, Source}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.message.FlowEnvelope
@@ -26,18 +26,14 @@ case class JmsRetryConfig(
   retryTimeout : FiniteDuration = 1.day
 )
 
-object JmsRetryProcessor {
-  def apply(name : String, cfg : JmsRetryConfig)(
-    implicit system : ActorSystem, materializer : Materializer
-  ): JmsRetryProcessor = new JmsRetryProcessor(name, cfg)
-}
-
 class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   implicit system : ActorSystem, materializer : Materializer
 ) extends JmsStreamSupport {
 
   private[this] val retryLog : Logger = Logger(retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName)
   private[this] val log : Logger = Logger[JmsRetryProcessor]
+
+  private[this] var actor : Option[ActorRef] = None
 
   class RetryDestinationResolver(
     override val headerConfig : FlowHeaderConfig,
@@ -63,7 +59,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     }
   }
 
-  private[this] val retrySource : Source[FlowEnvelope, NotUsed] = {
+  protected def retrySource : Source[FlowEnvelope, NotUsed] = {
     val settings = JMSConsumerSettings(
       log = retryLog,
       connectionFactory = retryCfg.cf,
@@ -79,12 +75,12 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     )
   }
 
-  private val routeRetry : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
-    val router = new JmsRetryRouter(retryCfg, retryLog)
-    FlowProcessor.fromFunction("route", retryLog)(router.resolve)
+  protected def routeRetry : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+    val router = new JmsRetryRouter("route", retryCfg, retryLog)
+    router.flow
   }
 
-  private val retrySend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+  protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     val producerSettings : JmsProducerSettings = JmsProducerSettings(
       log = retryLog,
       connectionFactory = retryCfg.cf,
@@ -101,22 +97,60 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     )
   }
 
-  def retryGraph : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
+  protected def sendToRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    val producerSettings : JmsProducerSettings = JmsProducerSettings(
+      log = retryLog,
+      connectionFactory = retryCfg.cf,
+      destinationResolver = s => new SettingsDestinationResolver(s),
+      jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get),
+      deliveryMode = JmsDeliveryMode.Persistent,
+      timeToLive = None,
+      clearPreviousException = true
+    )
+
+    jmsProducer(
+      name = name + ".retrySend",
+      settings = producerSettings,
+      autoAck = false
+    )
+  }
+
+  protected def retryGraph : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = {
 
     GraphDSL.create() { implicit b =>
 
       // determine the retry routing parameters from the message
       val route = b.add(routeRetry)
 
-      val routeSend = b.add(retrySend)
+      val routeSend = b.add(sendToOriginal)
 
       // After determining the retry parameters we send the envelope to either the Retry Destination
       // or the ReryFailed destination
       route.out ~> routeSend.in
 
+
+      // Partition the normal outcome and the error outcome of forwarding the message
+      val routeErrorSplit = b.add(FlowProcessor.partition[FlowEnvelope](_.exception.isEmpty))
+
+      routeSend.out ~> routeErrorSplit.in
+
+
+      // Merge the spliited branches
+      val merge = b.add(Merge[FlowEnvelope](2))
+
+      // If no errors occurred so far, we will simply pass the envelope to acknowledgement
+      routeErrorSplit.out0 ~> merge.in(0)
+
+      // In case of an error resending the message to the original JMS Destination we will
+      // resend it the end of the retry destination right away
+      val retrySend = b.add(sendToRetry)
+      routeErrorSplit.out1 ~> retrySend.in
+      retrySend.out ~> merge.in(1)
+
       // Acknowledge / Deny the result of the overall retry flow
       val ack = b.add(new AckProcessor(name + ".ack").flow)
-      routeSend.out ~> ack.in
+      merge.out ~> ack.in
 
       // Finally we hook up the dangling endpoints of the flow
       new FlowShape[FlowEnvelope, FlowEnvelope](
@@ -128,22 +162,26 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
 
   def start() : Unit = {
 
-    log.info(s"Starting Jms Retry processor for [${retryCfg.retryDestName}] with retry interval [${retryCfg.retryInterval}]")
+    if (actor.isEmpty) {
+      log.info(s"Starting Jms Retry processor for [${retryCfg.retryDestName}] with retry interval [${retryCfg.retryInterval}]")
 
-    val src : Source[FlowEnvelope, NotUsed] = retrySource
-      .via(retryGraph)
+      // TODO: Load from config
+      val streamCfg : StreamControllerConfig = StreamControllerConfig(
+        name = name,
+        source = retrySource.via(retryGraph),
+        minDelay = 10.seconds,
+        maxDelay = 3.minutes,
+        exponential = true,
+        onFailureOnly = true,
+        random = 0.2
+      )
 
-    // TODO: Load from config
-    val streamCfg : StreamControllerConfig = StreamControllerConfig(
-      name = name,
-      source = src,
-      minDelay = 10.seconds,
-      maxDelay = 3.minutes,
-      exponential = true,
-      onFailureOnly = true,
-      random = 0.2
-    )
+      actor = Some(system.actorOf(StreamController.props(streamCfg)))
+    }
+  }
 
-    system.actorOf(StreamController.props(streamCfg))
+  def stop(): Unit = {
+    actor.foreach(system.stop)
+    actor = None
   }
 }

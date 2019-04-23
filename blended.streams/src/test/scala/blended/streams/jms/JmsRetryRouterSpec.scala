@@ -41,6 +41,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val maxRetries : Long = 5L
 
       val router : JmsRetryRouter = new JmsRetryRouter(
+        name = "spec",
         retryCfg = retryCfg.copy(maxRetries = maxRetries),
         log = log
       )
@@ -49,7 +50,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
         val env : FlowEnvelope = FlowEnvelope()
           .withHeader(headerCfg.headerRetryCount, maxRetries).get
 
-        router.resolve(env).get
+        router.validate(router.header(env).get).get
       }
     }
 
@@ -57,6 +58,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val  timeout : Long = 100
 
       val router : JmsRetryRouter = new JmsRetryRouter(
+        name = "spec",
         retryCfg = retryCfg.copy(retryTimeout = (timeout / 2).millis),
         log = log
       )
@@ -65,24 +67,26 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
         val env : FlowEnvelope = FlowEnvelope()
           .withHeader(headerCfg.headerFirstRetry, System.currentTimeMillis() - timeout).get
 
-        router.resolve(env).get
+        router.validate(router.header(env).get).get
       }
     }
 
     "throw a MissingRetryDestinationException if the header is missing in the retry message" in {
       val router : JmsRetryRouter = new JmsRetryRouter(
+        name = "spec",
         retryCfg = retryCfg,
         log = log
       )
 
       intercept[MissingRetryDestinationException] {
         val env : FlowEnvelope = FlowEnvelope()
-        router.resolve(env).get
+        router.validate(router.header(env).get).get
       }
     }
 
     "increment the retry count by 1 in normal operations" in {
       val router : JmsRetryRouter = new JmsRetryRouter(
+        name = "spec",
         retryCfg = retryCfg,
         log = log
       )
@@ -90,14 +94,15 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env : FlowEnvelope = FlowEnvelope()
         .withHeader(headerCfg.headerRetryDestination, "myQueue").get
 
-      val env1 : FlowEnvelope = router.resolve(env).get
-      val env2 : FlowEnvelope = router.resolve(env1).get
+      val env1 : FlowEnvelope = router.validate(router.header(env).get).get
+      val env2 : FlowEnvelope = router.validate(router.header(env1).get).get
 
       env2.header[Int](headerCfg.headerRetryCount) should be (Some(2))
     }
 
     "maintain the first retry timestamp in normal operations" in {
       val router : JmsRetryRouter = new JmsRetryRouter(
+        name = "spec",
         retryCfg = retryCfg,
         log = log
       )
@@ -105,8 +110,8 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
       val env : FlowEnvelope = FlowEnvelope()
         .withHeader(headerCfg.headerRetryDestination, "myQueue").get
 
-      val env1 : FlowEnvelope = router.resolve(env).get
-      val env2 : FlowEnvelope = router.resolve(env1).get
+      val env1 : FlowEnvelope = router.validate(router.header(env).get).get
+      val env2 : FlowEnvelope = router.validate(router.header(env1).get).get
 
       env2.header[Long](headerCfg.headerFirstRetry) should be (defined)
       env2.header[Long](headerCfg.headerFirstRetry) should be (env1.header[Long](headerCfg.headerFirstRetry))

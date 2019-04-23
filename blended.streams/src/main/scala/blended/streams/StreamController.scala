@@ -91,6 +91,9 @@ class StreamController(streamCfg: StreamControllerConfig)(implicit system : Acto
   }
 
   def starting : Receive = {
+    case StreamController.Stop =>
+      context.stop(self)
+
     case StreamController.Start =>
       log.debug(s"Initializing StreamController [${streamCfg.name}]")
 
@@ -137,5 +140,4 @@ class StreamController(streamCfg: StreamControllerConfig)(implicit system : Acto
   def stopping : Receive = {
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
-
 }

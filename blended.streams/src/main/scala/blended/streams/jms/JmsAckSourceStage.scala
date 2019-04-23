@@ -155,7 +155,7 @@ final class JmsAckSourceStage(
 
               val result : (Option[Message], FiniteDuration) = msg match {
                 case None =>
-                  (None, minMessageDelay.getOrElse(settings.pollInterval))
+                  (None, settings.pollInterval)
 
                 case Some(m) =>
                   minMessageDelay match {
