@@ -27,20 +27,40 @@ object TrackTransaction extends Enumeration {
 }
 
 case class BridgeStreamConfig(
+  // whether the BridgeStream is container inbound or container outbound
   inbound : Boolean,
+  // the JMS connection factory to be used to consume messages
   fromCf : IdAwareConnectionFactory,
+  // Jms Destination to consume messages from
   fromDest : JmsDestination,
+  // the JMS connection factory to forward the messages to
   toCf : IdAwareConnectionFactory,
+  // optional destination to forward the messages to. If None, the target destination
+  // must be set in the message
   toDest : Option[JmsDestination],
+  // the number of consumers consumin in parallel from the source destination
   listener : Int,
+  // An optional selector to consume the messages
   selector : Option[String] = None,
+  // Whether to track transactions, can be set to No / Yes / fromMessage
   trackTransaction : TrackTransaction,
+  // a Bridge provider registry which contains all currently available JMS connection
+  // factories within the container
   registry : BridgeProviderRegistry,
+  // The header confirguration of the container (effectively provides headernames with
+  // customized prefixes)
   headerCfg : FlowHeaderConfig,
+  // A subscriber name that must be used when the source destination is a topic
   subscriberName : Option[String],
+  // Optional list of headers to be set after consuming messages from the source
   header : List[HeaderProcessorConfig],
+  // A reference to an ContainerIdentifierService that must be used to resolve header
+  // expressions
   idSvc : Option[ContainerIdentifierService] = None,
+  // The raw typesafe config object for the bridge configuration
   rawConfig : Config,
+  // the minimum timespan after which a new session will be created after closing a session
+  // upon an exception
   sessionRecreateTimeout : FiniteDuration
 )
 
@@ -49,21 +69,13 @@ class BridgeStreamBuilder(
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
-  private val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
-  private val outId = s"${cfg.toCf.vendor}:${cfg.toCf.provider}:${cfg.toDest.map(_.asString).getOrElse("out")}"
-  private val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
-  private val bridgeLogger = Logger(streamId)
-
-  // configure the consumer
-  private val srcSettings = JMSConsumerSettings(bridgeLogger, cfg.fromCf)
-    .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
-    .withDestination(Some(cfg.fromDest))
-    .withSessionCount(cfg.listener)
-    .withSelector(cfg.selector)
-    .withSubScriberName(cfg.subscriberName)
+  protected val inId = s"${cfg.fromCf.vendor}:${cfg.fromCf.provider}:${cfg.fromDest.asString}"
+  protected val outId = s"${cfg.toCf.vendor}:${cfg.toCf.provider}:${cfg.toDest.map(_.asString).getOrElse("out")}"
+  protected val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
+  protected val bridgeLogger = Logger(streamId)
 
   // How we resolve the target destination
-  private val destResolver = cfg.toDest match {
+  protected val destResolver = cfg.toDest match {
     case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
     case None => s : JmsProducerSettings => new MessageDestinationResolver(
       headerConfig = cfg.headerCfg,
@@ -71,7 +83,7 @@ class BridgeStreamBuilder(
     )
   }
 
-  private val toSettings = JmsProducerSettings(
+  protected val toSettings = JmsProducerSettings(
     log = bridgeLogger,
     connectionFactory = cfg.toCf
   )
@@ -79,10 +91,10 @@ class BridgeStreamBuilder(
     .withDestinationResolver(destResolver)
     .withDeliveryMode(JmsDeliveryMode.Persistent)
 
-  private val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
-  private val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
+  protected val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
+  protected val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
 
-  private val internalCf : Try[IdAwareConnectionFactory] = Try {
+  protected val internalCf : Try[IdAwareConnectionFactory] = Try {
 
     if ((cfg.fromCf.vendor, cfg.fromCf.provider) == internalId) {
       cfg.fromCf
@@ -93,47 +105,17 @@ class BridgeStreamBuilder(
     }
   }
 
-  // Decide whether a tracking event should be generated for this bridge step
-  private[bridge] val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
+  // The jmsSource provides the inbound stream of FlowEnvelopes that need to be passed onwards
+  // to the target JMS destination
+  protected def jmsSource : Source[FlowEnvelope, NotUsed] = {
 
-    val doTrack : Boolean = cfg.trackTransaction match {
-      case TrackTransaction.Off => false
-      case TrackTransaction.On => true
-      case TrackTransaction.FromMessage =>
-        bridgeLogger.trace(s"Getting tracking mode from message property [${cfg.headerCfg.headerTrack}]")
-        val msgTrack = env.header[Boolean](cfg.headerCfg.headerTrack)
-        msgTrack.getOrElse(false)
-    }
-
-    bridgeLogger.debug(s"Tracking for envelope [${env.id}] is [$doTrack]")
-
-    doTrack
-  }
-
-  private val stream : Source[FlowEnvelope, NotUsed] = {
-
-    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
-      import GraphDSL.Implicits._
-
-      val trackSplit = b.add(trackFilter)
-      val mergeResult = b.add(Merge[FlowEnvelope](2))
-
-      val wiretap : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-        new TransactionWiretap(
-          cf = internalCf.get,
-          eventDest = internalProvider.get.transactions,
-          headerCfg = cfg.headerCfg,
-          inbound = cfg.inbound,
-          trackSource = streamId,
-          log = bridgeLogger
-        ).flow()
-
-
-      trackSplit.out0 ~> wiretap ~> mergeResult.in(0)
-      trackSplit.out1 ~> mergeResult.in(1)
-
-      FlowShape(trackSplit.in, mergeResult.out)
-    }
+    // configure the consumer
+    val srcSettings = JMSConsumerSettings(bridgeLogger, cfg.fromCf)
+      .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
+      .withDestination(Some(cfg.fromDest))
+      .withSessionCount(cfg.listener)
+      .withSelector(cfg.selector)
+      .withSubScriberName(cfg.subscriberName)
 
     val src : Source[FlowEnvelope, NotUsed] =
       Source.fromGraph(new JmsAckSourceStage(
@@ -142,7 +124,7 @@ class BridgeStreamBuilder(
         headerConfig = cfg.headerCfg
       ))
 
-    val jmsSource : Source[FlowEnvelope, NotUsed] = if (cfg.inbound && cfg.header.nonEmpty) {
+    if (cfg.inbound && cfg.header.nonEmpty) {
 
       bridgeLogger.info(s"Creating Stream with header configs [${cfg.header}]")
 
@@ -158,10 +140,58 @@ class BridgeStreamBuilder(
       bridgeLogger.info(s"Creating Stream without additional header configs")
       src
     }
+  }
+
+  // The jms producer for forwarding the messages to the target destination
+  protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+    jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true)
+
+  // flow to generate a transaction event from the current envelope and send it to the
+  // JMS transaction endpoint
+  protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+    new TransactionWiretap(
+      cf = internalCf.get,
+      eventDest = internalProvider.get.transactions,
+      headerCfg = cfg.headerCfg,
+      inbound = cfg.inbound,
+      trackSource = streamId,
+      log = bridgeLogger
+    ).flow()
+
+  // Decide whether a tracking event should be generated for this bridge step
+  protected[bridge] val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
+
+    val doTrack : Boolean = cfg.trackTransaction match {
+      case TrackTransaction.Off => false
+      case TrackTransaction.On => true
+      case TrackTransaction.FromMessage =>
+        bridgeLogger.trace(s"Getting tracking mode from message property [${cfg.headerCfg.headerTrack}]")
+        val msgTrack = env.header[Boolean](cfg.headerCfg.headerTrack)
+        msgTrack.getOrElse(false)
+    }
+
+    bridgeLogger.debug(s"Tracking for envelope [${env.id}] is [$doTrack]")
+
+    doTrack
+  }
+
+  protected val stream : Source[FlowEnvelope, NotUsed] = {
+
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val trackSplit = b.add(trackFilter)
+      val mergeResult = b.add(Merge[FlowEnvelope](2))
+
+      trackSplit.out0 ~> sendTransaction ~> mergeResult.in(0)
+      trackSplit.out1 ~> mergeResult.in(1)
+
+      FlowShape(trackSplit.in, mergeResult.out)
+    }
 
     jmsSource
       .via(Flow.fromGraph(g))
-      .via(jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true))
+      .via(jmsSend)
   }
 
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
