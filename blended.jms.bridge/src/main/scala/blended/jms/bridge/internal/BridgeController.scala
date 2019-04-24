@@ -88,7 +88,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       ).get
     }
 
-    val inCfg = JmsStreamConfig(
+    val inCfg = BridgeStreamConfig(
       inbound = true,
       fromCf = cf,
       fromDest = in.from,
@@ -106,7 +106,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
-    val streamCfg: StreamControllerConfig = new JmsStreamBuilder(inCfg).streamCfg
+    val streamCfg: StreamControllerConfig = new BridgeStreamBuilder(inCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
@@ -122,7 +122,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     }
 
     // TODO: Make listener count configurable
-    val outCfg = JmsStreamConfig(
+    val outCfg = BridgeStreamConfig(
       inbound = false,
       headerCfg = ctrlCfg.headerCfg,
       fromCf = ctrlCfg.internalCf,
@@ -139,7 +139,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = 1.second
     )
 
-    val streamCfg: StreamControllerConfig = new JmsStreamBuilder(outCfg).streamCfg
+    val streamCfg: StreamControllerConfig = new BridgeStreamBuilder(outCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }

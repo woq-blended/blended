@@ -1,11 +1,12 @@
-package blended.jms.bridge
+package blended.jms.bridge.internal
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.TrackTransaction.TrackTransaction
+import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
+import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
@@ -25,7 +26,7 @@ object TrackTransaction extends Enumeration {
   val On, Off, FromMessage = Value
 }
 
-case class JmsStreamConfig(
+case class BridgeStreamConfig(
   inbound : Boolean,
   fromCf : IdAwareConnectionFactory,
   fromDest : JmsDestination,
@@ -43,8 +44,8 @@ case class JmsStreamConfig(
   sessionRecreateTimeout : FiniteDuration
 )
 
-class JmsStreamBuilder(
-  cfg : JmsStreamConfig
+class BridgeStreamBuilder(
+  cfg : BridgeStreamConfig
 )(implicit system: ActorSystem, materializer: Materializer) extends JmsStreamSupport {
 
   // So that we find the stream in the logs
@@ -166,7 +167,6 @@ class JmsStreamBuilder(
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
-  // TODO: Make restart parameters configurable
   val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(cfg.rawConfig).get
     .copy(
       name = streamId,
