@@ -10,7 +10,7 @@ import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.processor.{HeaderProcessorConfig, HeaderTransformProcessor}
+import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.{FlowProcessor, StreamControllerConfig}
 import blended.util.logging.Logger
@@ -38,7 +38,7 @@ case class BridgeStreamConfig(
   // optional destination to forward the messages to. If None, the target destination
   // must be set in the message
   toDest : Option[JmsDestination],
-  // the number of consumers consumin in parallel from the source destination
+  // the number of consumers consuming in parallel from the source destination
   listener : Int,
   // An optional selector to consume the messages
   selector : Option[String] = None,
@@ -75,7 +75,7 @@ class BridgeStreamBuilder(
   protected val bridgeLogger = Logger(streamId)
 
   // How we resolve the target destination
-  protected val destResolver = cfg.toDest match {
+  protected val destResolver : JmsProducerSettings => JmsDestinationResolver = cfg.toDest match {
     case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
     case None => s : JmsProducerSettings => new MessageDestinationResolver(
       headerConfig = cfg.headerCfg,
@@ -83,7 +83,7 @@ class BridgeStreamBuilder(
     )
   }
 
-  protected val toSettings = JmsProducerSettings(
+  protected val toSettings : JmsProducerSettings = JmsProducerSettings(
     log = bridgeLogger,
     connectionFactory = cfg.toCf
   )
@@ -92,7 +92,8 @@ class BridgeStreamBuilder(
     .withDeliveryMode(JmsDeliveryMode.Persistent)
 
   protected val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
-  protected val internalId = (internalProvider.get.vendor, internalProvider.get.provider)
+  protected val internalId : (String, String) = (internalProvider.get.vendor, internalProvider.get.provider)
+  protected val retryDest : Option[JmsDestination] = internalProvider.get.retry
 
   protected val internalCf : Try[IdAwareConnectionFactory] = Try {
 
@@ -124,6 +125,7 @@ class BridgeStreamBuilder(
         headerConfig = cfg.headerCfg
       ))
 
+    // If we need to transform additional headers on the inbound leg
     if (cfg.inbound && cfg.header.nonEmpty) {
 
       bridgeLogger.info(s"Creating Stream with header configs [${cfg.header}]")
@@ -144,7 +146,24 @@ class BridgeStreamBuilder(
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = true)
+    jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = false)
+
+  // The producer to send the current envelope to the retry queue in case of an error
+  protected def jmsRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = retryDest match {
+    case None => Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
+    case Some(d) => jmsProducer(
+      name = streamId + "-retry",
+      settings = toSettings.copy(
+        jmsDestination = Some(d),
+        clearPreviousException = true
+      ),
+      autoAck = false
+    )
+  }
+
+  // to acknowledge the message once everything is done
+  protected def acknowledge : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+    new AckProcessor(streamId + "-ack").flow
 
   // flow to generate a transaction event from the current envelope and send it to the
   // JMS transaction endpoint
@@ -192,6 +211,7 @@ class BridgeStreamBuilder(
     jmsSource
       .via(Flow.fromGraph(g))
       .via(jmsSend)
+      .via(acknowledge)
   }
 
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")

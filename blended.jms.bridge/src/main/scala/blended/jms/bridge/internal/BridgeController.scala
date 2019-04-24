@@ -19,7 +19,10 @@ import scala.concurrent.duration._
 private[bridge] object BridgeControllerConfig {
 
   def create(
-    cfg : Config, internalCf : IdAwareConnectionFactory, idSvc: ContainerIdentifierService
+    cfg : Config,
+    internalCf : IdAwareConnectionFactory,
+    idSvc: ContainerIdentifierService,
+    streamBuilderFactory : ActorSystem => Materializer => BridgeStreamConfig => BridgeStreamBuilder
   ) : BridgeControllerConfig = {
 
     val headerCfg = FlowHeaderConfig.create(idSvc)
@@ -47,7 +50,8 @@ private[bridge] object BridgeControllerConfig {
       headerCfg = headerCfg,
       inbound = inboundList,
       idSvc = idSvc,
-      rawConfig = cfg
+      rawConfig = cfg,
+      streamBuilderFactory = streamBuilderFactory
     )
   }
 }
@@ -58,7 +62,8 @@ private[bridge] case class BridgeControllerConfig(
   headerCfg : FlowHeaderConfig,
   inbound : List[InboundConfig],
   idSvc : ContainerIdentifierService,
-  rawConfig : Config
+  rawConfig : Config,
+  streamBuilderFactory : ActorSystem => Materializer => BridgeStreamConfig => BridgeStreamBuilder
 )
 
 object BridgeController{
@@ -106,7 +111,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
-    val streamCfg: StreamControllerConfig = new BridgeStreamBuilder(inCfg).streamCfg
+    val streamCfg: StreamControllerConfig = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
@@ -139,7 +144,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = 1.second
     )
 
-    val streamCfg: StreamControllerConfig = new BridgeStreamBuilder(outCfg).streamCfg
+    val streamCfg: StreamControllerConfig = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }

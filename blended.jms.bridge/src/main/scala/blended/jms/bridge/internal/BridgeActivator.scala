@@ -2,7 +2,7 @@ package blended.jms.bridge.internal
 
 import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
 import blended.jms.utils.IdAwareConnectionFactory
@@ -34,6 +34,9 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 
+  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
+    new BridgeStreamBuilder(cfg)(system, materializer)
+
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
@@ -59,7 +62,8 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
         val ctrlConfig = BridgeControllerConfig.create(
           cfg = osgiCfg.config,
           internalCf = cf,
-          idSvc = osgiCfg.idSvc
+          idSvc = osgiCfg.idSvc,
+          streamBuilderFactory = streamBuilderFactory
         )
 
         ctrlConfig.registry.providesService[BridgeProviderRegistry]
