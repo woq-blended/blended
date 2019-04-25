@@ -3,7 +3,7 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
-import akka.stream.{FlowShape, Graph, Materializer}
+import akka.stream.{FanOutShape2, FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.internal.TrackTransaction.TrackTransaction
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
@@ -13,11 +13,11 @@ import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, HeaderProcessorConfig, HeaderTransformProcessor}
 import blended.streams.transaction._
 import blended.streams.{FlowProcessor, StreamControllerConfig}
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 
 import scala.concurrent.duration.FiniteDuration
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 
 class InvalidBridgeConfigurationException(msg: String) extends Exception(msg)
 
@@ -74,35 +74,36 @@ class BridgeStreamBuilder(
   protected val streamId = s"${cfg.headerCfg.prefix}.bridge.JmsStream($inId->$outId)"
   protected val bridgeLogger = Logger(streamId)
 
-  // How we resolve the target destination
-  protected val destResolver : JmsProducerSettings => JmsDestinationResolver = cfg.toDest match {
-    case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
-    case None => s : JmsProducerSettings => new MessageDestinationResolver(
-      headerConfig = cfg.headerCfg,
-      settings = s
-    )
-  }
+  protected val toSettings : IdAwareConnectionFactory => Option[JmsDestination] => JmsProducerSettings = cf => dest => {
+    val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
+      case Some(d) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
+      case None => s : JmsProducerSettings => new MessageDestinationResolver(
+        headerConfig = cfg.headerCfg,
+        settings = s
+      )
+    }
 
-  protected val toSettings : JmsProducerSettings = JmsProducerSettings(
-    log = bridgeLogger,
-    connectionFactory = cfg.toCf
-  )
-    .withDestination(cfg.toDest)
-    .withDestinationResolver(destResolver)
-    .withDeliveryMode(JmsDeliveryMode.Persistent)
+    JmsProducerSettings(
+      log = bridgeLogger,
+      connectionFactory = cf
+    )
+      .withDestination(dest)
+      .withDestinationResolver(resolver)
+      .withDeliveryMode(JmsDeliveryMode.Persistent)
+  }
 
   protected val internalProvider : Try[BridgeProviderConfig] = cfg.registry.internalProvider
   protected val internalId : (String, String) = (internalProvider.get.vendor, internalProvider.get.provider)
   protected val retryDest : Option[JmsDestination] = internalProvider.get.retry
 
-  protected val internalCf : Try[IdAwareConnectionFactory] = Try {
+  protected val (isInbound, internalCf) : (Boolean, Try[IdAwareConnectionFactory]) = {
 
     if ((cfg.fromCf.vendor, cfg.fromCf.provider) == internalId) {
-      cfg.fromCf
+      (false, Success(cfg.fromCf))
     } else if ((cfg.toCf.vendor, cfg.toCf.provider) == internalId) {
-      cfg.toCf
+      (true, Success(cfg.toCf))
     } else {
-      throw new InvalidBridgeConfigurationException("One leg of the JMS bridge must be internal")
+      (true, Failure(new InvalidBridgeConfigurationException("One leg of the JMS bridge must be internal")))
     }
   }
 
@@ -114,6 +115,7 @@ class BridgeStreamBuilder(
     val srcSettings = JMSConsumerSettings(bridgeLogger, cfg.fromCf)
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
       .withDestination(Some(cfg.fromDest))
+
       .withSessionCount(cfg.listener)
       .withSelector(cfg.selector)
       .withSubScriberName(cfg.subscriberName)
@@ -146,39 +148,38 @@ class BridgeStreamBuilder(
 
   // The jms producer for forwarding the messages to the target destination
   protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    jmsProducer(name = streamId + "-sink", settings = toSettings, autoAck = false)
+    jmsProducer(name = streamId + "-sink", settings = toSettings(cfg.toCf)(None), autoAck = false)
 
   // The producer to send the current envelope to the retry queue in case of an error
-  protected def jmsRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = retryDest match {
-    case None => Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env => env }
-    case Some(d) => jmsProducer(
-      name = streamId + "-retry",
-      settings = toSettings.copy(
-        jmsDestination = Some(d),
-        clearPreviousException = true
-      ),
-      autoAck = false
-    )
+  // We only forward the envelope to the retry Queue if the retry destination is set
+  // AND the bridge direction is outbound
+  protected def jmsRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    val skipRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+      Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, bridgeLogger, "Skipping retry"))
+
+    retryDest match {
+      case None =>
+        bridgeLogger.debug(s"No retry destination set, retry mechanism will be disabled")
+        skipRetry
+
+      case Some(d) => if (isInbound) {
+        bridgeLogger.debug(s"Retry mechanism will be disabled for inbound bridge direction")
+        skipRetry
+      } else {
+        logEnvelope(s"Forwarding to retry [$d]").via(
+          jmsProducer(
+            name = streamId + "-retry",
+            settings = toSettings(cfg.fromCf)(Some(d)).copy(clearPreviousException = true),
+            autoAck = false
+          )
+        )
+      }
+    }
   }
 
-  // to acknowledge the message once everything is done
-  protected def acknowledge : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    new AckProcessor(streamId + "-ack").flow
-
-  // flow to generate a transaction event from the current envelope and send it to the
-  // JMS transaction endpoint
-  protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    new TransactionWiretap(
-      cf = internalCf.get,
-      eventDest = internalProvider.get.transactions,
-      headerCfg = cfg.headerCfg,
-      inbound = cfg.inbound,
-      trackSource = streamId,
-      log = bridgeLogger
-    ).flow()
-
   // Decide whether a tracking event should be generated for this bridge step
-  protected[bridge] val trackFilter = FlowProcessor.partition[FlowEnvelope] { env =>
+  protected[bridge] val trackFilter : Graph[FanOutShape2[FlowEnvelope, FlowEnvelope, FlowEnvelope], NotUsed] = FlowProcessor.partition[FlowEnvelope] { env =>
 
     val doTrack : Boolean = cfg.trackTransaction match {
       case TrackTransaction.Off => false
@@ -194,24 +195,77 @@ class BridgeStreamBuilder(
     doTrack
   }
 
+  // flow to generate a transaction event from the current envelope and send it to the
+  // JMS transaction endpoint
+  protected def transactionFlow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b=>
+
+    import GraphDSL.Implicits._
+
+    val doLog = b.add(logEnvelope("Before Tracking"))
+
+    // First we decide wether we need to track the transaction
+    val doTrack= b.add(trackFilter)
+    doLog.out ~> doTrack.in
+
+    // The actual send of the transaction
+    val sendTransaction = b.add(new TransactionWiretap(
+      cf = internalCf.get,
+      eventDest = internalProvider.get.transactions,
+      headerCfg = cfg.headerCfg,
+      inbound = cfg.inbound,
+      trackSource = streamId,
+      log = bridgeLogger
+    ).flow())
+
+    val merge = b.add(Merge[FlowEnvelope](2))
+
+    doTrack.out0 ~> sendTransaction ~> merge.in(0)
+    doTrack.out1 ~> merge.in(1)
+
+    FlowShape(doLog.in, merge.out)
+  }
+
+  protected def logEnvelope(msg : String) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+    Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, bridgeLogger, msg))
+
   protected val stream : Source[FlowEnvelope, NotUsed] = {
 
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val trackSplit = b.add(trackFilter)
-      val mergeResult = b.add(Merge[FlowEnvelope](2))
+      // We will forward the message to the target destination
+      val forward = b.add(jmsSend.via(logEnvelope("After Send")))
 
-      trackSplit.out0 ~> sendTransaction ~> mergeResult.in(0)
-      trackSplit.out1 ~> mergeResult.in(1)
+      // Then we have a path where the send is successfull and one where the send has failed
+      val sendError = b.add(FlowProcessor.partition[FlowEnvelope] {
+        _.exception.isEmpty
+      })
+      forward ~> sendError.in
 
-      FlowShape(trackSplit.in, mergeResult.out)
+      val merge = b.add(Merge[FlowEnvelope](2))
+
+      // In case the send was success full we will track the transaction if required and then
+      val transaction = b.add(transactionFlow)
+
+      sendError.out0 ~> transaction ~> merge.in(0)
+
+      // In case of an exception we will
+      // - pass the message to the retry queue if the direction is outbound && the retry is enabled
+      //   if the send to the retry fails, the envelope will simply be rejected
+      // - simply deny the message if the direction is inbound or the retry is disabled
+
+      val retry = b.add(jmsRetry)
+      sendError.out1 ~> retry ~> merge.in(1)
+
+      // Finally, we acknowledge or reject the envelope, depending whether we have encountered an exception
+      val ack = b.add(new AckProcessor(streamId + "-ack").flow)
+
+      merge.out ~> ack.in
+
+      FlowShape(forward.in, ack.out)
     }
 
-    jmsSource
-      .via(Flow.fromGraph(g))
-      .via(jmsSend)
-      .via(acknowledge)
+    jmsSource.via(g)
   }
 
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")

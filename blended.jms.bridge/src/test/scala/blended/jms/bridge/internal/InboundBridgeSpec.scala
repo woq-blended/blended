@@ -35,7 +35,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with PropertyChecks {
 
   protected implicit val timeout : FiniteDuration = 5.seconds
-  protected val log = Logger[InboundBridgeSpec]
+  protected val log = Logger(getClass().getName())
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -52,11 +52,11 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   protected implicit val ectxt : ExecutionContext = system.dispatcher
 
   protected val (internal, external) = getConnectionFactories(registry)
-  protected val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
 
   protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
-  protected val destinationName = destHeader(headerCfg.prefix)
+  protected val destinationName : String = destHeader(headerCfg.prefix)
 
   protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
@@ -259,18 +259,18 @@ class SendFailedBridgeSpec extends BridgeSpecSupport {
 
       val switch = sendOutbound(msgCount, true)
 
-      val messages : List[FlowEnvelope] =
-        consumeMessages(internal, "retries").get
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
 
-      messages should have size(msgCount)
+      retried should have size(msgCount)
 
-      messages.foreach{ env =>
+      retried.foreach{ env =>
         env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+      consumeEvents().get should be (empty)
+      consumeMessages(external, "sampleOut").get should be (empty)
 
-      envelopes should be (empty)
+      switch.shutdown()
     }
   }
 }

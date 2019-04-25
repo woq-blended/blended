@@ -34,6 +34,8 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 
+  // We maintain the streamBuilder factory as a function here, so that unit tests can override
+  // the factory with stream builders throwing particular exceptions
   protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
     new BridgeStreamBuilder(cfg)(system, materializer)
 

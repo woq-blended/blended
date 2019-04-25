@@ -4,6 +4,7 @@ import akka.NotUsed
 import akka.stream.{FanOutShape2, FlowShape, Graph}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
 import blended.streams.message.FlowEnvelope
+import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger
 
 import scala.reflect.ClassTag
@@ -61,6 +62,11 @@ object FlowProcessor {
           env
       }
     }.named(name)
+  }
+
+  def log(level : LogLevel, logger : Logger, text : String = "") : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+    logger.log(level, s"$text : $env")
+    env
   }
 
   def splitEither[L,R]() : Graph[FanOutShape2[Either[L,R], L, R], NotUsed] = {

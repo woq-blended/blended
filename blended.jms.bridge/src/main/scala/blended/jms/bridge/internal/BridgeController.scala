@@ -36,6 +36,8 @@ private[bridge] object BridgeControllerConfig {
         InboundConfig.create(idSvc, i).get
       }
 
+    val trackInbound : Boolean = cfg.getBoolean("trackInbound", true)
+
     providerList.filter(_.internal) match {
       case Nil => throw new Exception("Exactly one provider must be marked as the internal provider for the JMS bridge.")
       case _ :: Nil =>
@@ -51,6 +53,7 @@ private[bridge] object BridgeControllerConfig {
       inbound = inboundList,
       idSvc = idSvc,
       rawConfig = cfg,
+      trackInbound = trackInbound,
       streamBuilderFactory = streamBuilderFactory
     )
   }
@@ -62,6 +65,7 @@ private[bridge] case class BridgeControllerConfig(
   headerCfg : FlowHeaderConfig,
   inbound : List[InboundConfig],
   idSvc : ContainerIdentifierService,
+  trackInbound : Boolean,
   rawConfig : Config,
   streamBuilderFactory : ActorSystem => Materializer => BridgeStreamConfig => BridgeStreamBuilder
 )
@@ -103,7 +107,11 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       selector = in.selector,
       registry = ctrlCfg.registry,
       headerCfg = ctrlCfg.headerCfg,
-      trackTransaction = TrackTransaction.On,
+      trackTransaction = if (ctrlCfg.trackInbound) {
+        TrackTransaction.On
+      } else {
+        TrackTransaction.Off
+      },
       subscriberName = in.subscriberName,
       header = in.header,
       idSvc = Some(ctrlCfg.idSvc),
@@ -151,11 +159,11 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
 
   override def receive: Receive = {
     case AddConnectionFactory(cf) =>
-      log.info(s"Adding connection factory [${cf.id}]")
 
       ctrlCfg.registry.internalProvider match {
         case Success(p) =>
           val internal = p.vendor == cf.vendor && p.provider == cf.provider
+          log.info(s"Adding connection factory [${cf.id}], internal [$internal]")
 
           // Create inbound streams for all matching inbound configs
           val inbound : List[InboundConfig] = ctrlCfg.inbound.filter { in =>
