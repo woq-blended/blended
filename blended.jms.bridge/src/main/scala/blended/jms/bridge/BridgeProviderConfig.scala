@@ -14,6 +14,7 @@ case class BridgeProviderConfig(
   inbound : JmsDestination,
   outbound : JmsDestination,
   retry : Option[JmsDestination],
+  retryFailed : JmsDestination,
   errors : JmsDestination,
   transactions : JmsDestination,
   cbes : JmsDestination
@@ -39,7 +40,8 @@ object BridgeProviderConfig {
     val eventDest = resolve(cfg.getString("transactions", "blended.transaction"))
     val cbeDest = resolve(cfg.getString("cbes", "blended.cbe"))
 
-    val retryDest = cfg.getStringOption("retry").map(resolve).map(s => JmsDestination.create(s).get)
+    val retryDest : Option[JmsDestination] = cfg.getStringOption("retry").map(resolve).map(s => JmsDestination.create(s).get)
+    val retryFailed : JmsDestination = JmsDestination.create(cfg.getString("retryFailed", errorDest)).get
 
     val inbound = s"${cfg.getString("inbound")}"
     val outbound = s"${cfg.getString("outbound")}"
@@ -53,6 +55,7 @@ object BridgeProviderConfig {
       inbound = JmsDestination.create(inbound).get,
       outbound = JmsDestination.create(outbound).get,
       retry = retryDest,
+      retryFailed = retryFailed,
       errors = JmsDestination.create(errorDest).get,
       transactions = JmsDestination.create(eventDest).get,
       cbes = JmsDestination.create(cbeDest).get

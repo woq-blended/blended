@@ -5,8 +5,9 @@ import akka.pattern.{Backoff, BackoffSupervisor}
 import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import blended.jms.utils.IdAwareConnectionFactory
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.util.logging.Logger
+import com.typesafe.config.Config
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
 import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
@@ -72,6 +73,27 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
 
         implicit val system : ActorSystem = osgiCfg.system
         implicit val materialzer : ActorMaterializer = ActorMaterializer()
+
+        if (osgiCfg.config.hasPath("retry")) {
+
+          registry.internalProvider.get.retry.foreach { retryDest =>
+            val retryCfg : JmsRetryConfig = JmsRetryConfig.fromConfig(
+              idSvc = osgiCfg.idSvc,
+              cf = cf,
+              retryDestName = JmsDestination.asString(retryDest),
+              retryFailedName = JmsDestination.asString(registry.internalProvider.get.retryFailed),
+              cfg = osgiCfg.config.getConfig("retry")
+            ).get
+
+            val processor = new JmsRetryProcessor(s"$internalVendor:$internalProvider", retryCfg)
+
+            processor.start()
+
+            onStop {
+              processor.stop()
+            }
+          }
+        }
 
         try {
           val bridgeProps = BridgeController.props(ctrlConfig)

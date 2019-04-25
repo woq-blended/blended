@@ -1,37 +1,36 @@
-package blended.streams.jms
+package blended.jms.bridge.internal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
+import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
+import blended.container.context.api.ContainerIdentifierService
+import blended.jms.bridge.BridgeProviderConfig
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.jms.{AcknowledgeMode, FlowHeaderConfigAware, JMSConsumerSettings, JmsDeliveryMode, JmsEnvelopeHeader, JmsProducerSettings, JmsSendParameter, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.util.config.Implicits._
 import blended.util.logging.Logger
-import akka.stream.scaladsl.GraphDSL.Implicits._
-import blended.container.context.api.ContainerIdentifierService
 import com.typesafe.config.Config
-import javax.jms.{ConnectionFactory, Session}
+import javax.jms.Session
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
-import blended.util.config.Implicits._
 
 object JmsRetryConfig {
 
   def fromConfig(
     idSvc : ContainerIdentifierService,
     cf : IdAwareConnectionFactory,
+    retryDestName : String,
+    retryFailedName : String,
     cfg : Config
   ) : Try[JmsRetryConfig] = Try {
 
-    val resolve : String => String = s =>
-      idSvc.resolvePropertyString(cfg.getString(s)).get.toString()
-
-    val retryDest : String = resolve("retryDestination")
-    val failedDest : String = resolve("failedDestination")
     val retryInterval : FiniteDuration = cfg.getDuration("retryInterval", 1.minutes)
     val maxRetries : Long = cfg.getLong("maxRetries", -1L)
     val retryTimeout : FiniteDuration = cfg.getDuration("retryTimeout", 1.day)
@@ -39,8 +38,8 @@ object JmsRetryConfig {
     JmsRetryConfig(
       cf = cf,
       headerCfg = FlowHeaderConfig.create(idSvc),
-      retryDestName = retryDest,
-      failedDestName = failedDest,
+      retryDestName = retryDestName,
+      failedDestName = retryFailedName,
       retryInterval = retryInterval,
       maxRetries = maxRetries,
       retryTimeout = retryTimeout
@@ -151,24 +150,21 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       // or the ReryFailed destination
       route.out ~> routeSend.in
 
-
       // Partition the normal outcome and the error outcome of forwarding the message
       val routeErrorSplit = b.add(FlowProcessor.partition[FlowEnvelope](_.exception.isEmpty))
 
       routeSend.out ~> routeErrorSplit.in
 
-
-      // Merge the spliited branches
+      // Merge the splitted branches
       val merge = b.add(Merge[FlowEnvelope](2))
 
       // If no errors occurred so far, we will simply pass the envelope to acknowledgement
       routeErrorSplit.out0 ~> merge.in(0)
 
       // In case of an error resending the message to the original JMS Destination we will
-      // resend it the end of the retry destination right away
+      // resend it to the end of the retry destination right away
       val retrySend = b.add(sendToRetry)
-      routeErrorSplit.out1 ~> retrySend.in
-      retrySend.out ~> merge.in(1)
+      routeErrorSplit.out1 ~> retrySend ~> merge.in(1)
 
       // Acknowledge / Deny the result of the overall retry flow
       val ack = b.add(new AckProcessor(name + ".ack").flow)

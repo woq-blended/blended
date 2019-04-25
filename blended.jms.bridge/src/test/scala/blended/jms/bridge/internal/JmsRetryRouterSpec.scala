@@ -1,4 +1,4 @@
-package blended.streams.jms
+package blended.jms.bridge.internal
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
