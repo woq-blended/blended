@@ -76,7 +76,7 @@ class BridgeStreamBuilder(
 
   protected val toSettings : IdAwareConnectionFactory => Option[JmsDestination] => JmsProducerSettings = cf => dest => {
     val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
-      case Some(d) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
+      case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
       case None => s : JmsProducerSettings => new MessageDestinationResolver(
         headerConfig = cfg.headerCfg,
         settings = s
@@ -147,8 +147,10 @@ class BridgeStreamBuilder(
   }
 
   // The jms producer for forwarding the messages to the target destination
-  protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
-    jmsProducer(name = streamId + "-sink", settings = toSettings(cfg.toCf)(None), autoAck = false)
+  protected def jmsSend : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+    jmsProducer(name = streamId + "-sink", settings = toSettings(cfg.toCf)(cfg.toDest), autoAck = false)
+  }
+
 
   // The producer to send the current envelope to the retry queue in case of an error
   // We only forward the envelope to the retry Queue if the retry destination is set
