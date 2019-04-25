@@ -205,6 +205,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
   }
 }
 
+@RequiresForkedJVM
 class InboundRejectBridgeSpec extends BridgeSpecSupport {
 
   private def sendInbound(msgCount : Int) : KillSwitch = {
@@ -404,6 +405,7 @@ class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
   }
 }
 
+@RequiresForkedJVM
 class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
   private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
