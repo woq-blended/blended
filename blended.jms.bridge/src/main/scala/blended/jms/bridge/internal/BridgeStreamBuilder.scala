@@ -169,13 +169,19 @@ class BridgeStreamBuilder(
         bridgeLogger.debug(s"Retry mechanism will be disabled for inbound bridge direction")
         skipRetry
       } else {
-        logEnvelope(s"Forwarding to retry [$d]").via(
-          jmsProducer(
-            name = streamId + "-retry",
-            settings = toSettings(cfg.fromCf)(Some(d)).copy(clearPreviousException = true),
-            autoAck = false
+        logEnvelope(s"Forwarding to retry [$d]")
+          .via(
+            Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+              env.withHeader(cfg.headerCfg.headerRetryDestination, JmsDestination.asString(cfg.fromDest)).get
+            }
           )
-        )
+          .via(
+            jmsProducer(
+              name = streamId + "-retry",
+              settings = toSettings(cfg.fromCf)(Some(d)).copy(clearPreviousException = true),
+              autoAck = false
+            )
+          )
       }
     }
   }

@@ -344,6 +344,7 @@ class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
 
       retried.foreach{ env =>
         env.header[Unit]("UnitProperty") should be (Some(()))
+        env.header[String](headerCfg.headerRetryDestination) should be (Some("bridge.data.out.activemq.external"))
       }
 
       consumeEvents().get should be (empty)

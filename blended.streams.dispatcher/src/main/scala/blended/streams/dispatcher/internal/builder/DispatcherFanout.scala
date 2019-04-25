@@ -6,6 +6,7 @@ import akka.stream.{FanOutShape2, Graph}
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.dispatcher.internal._
+import blended.streams.jms.JmsEnvelopeHeader
 import blended.streams.message.{BaseFlowMessage, FlowEnvelope}
 import blended.streams.worklist.{WorklistEvent, WorklistStarted}
 
@@ -15,7 +16,7 @@ import scala.util.{Failure, Success, Try}
 case class DispatcherFanout(
   dispatcherCfg : ResourceTypeRouterConfig,
   idSvc : ContainerIdentifierService
-)(implicit bs : DispatcherBuilderSupport) {
+)(implicit bs : DispatcherBuilderSupport) extends JmsEnvelopeHeader {
 
   /*-------------------------------------------------------------------------------------------------*/
   private[builder] val funFanoutOutbound : FlowEnvelope => Try[Seq[(OutboundRouteConfig, FlowEnvelope)]] = { env =>
@@ -71,7 +72,7 @@ case class DispatcherFanout(
 
       outCfg.outboundHeader.filter(b => useHeaderBlock(b).get).foldLeft(env) { case (current, oh) =>
         var newEnv : FlowEnvelope = current
-          .withHeader(bs.headerBridgeMaxRetry, oh.maxRetries).get
+          .withHeader(bs.headerConfig.headerMaxRetries, oh.maxRetries).get
           .withHeader(bs.headerAutoComplete, oh.autoComplete).get
 
         if (oh.timeToLive >= 0L) {
@@ -81,7 +82,7 @@ case class DispatcherFanout(
         }
 
         newEnv = newEnv
-          .withHeader(bs.headerDeliveryMode, oh.deliveryMode).get
+          .withHeader(deliveryModeHeader(bs.headerConfig.prefix), oh.deliveryMode).get
 
         oh.header.foreach { case (header, value) =>
           val resolved = idSvc.resolvePropertyString(value, env.flowMessage.header.mapValues(_.value)).get

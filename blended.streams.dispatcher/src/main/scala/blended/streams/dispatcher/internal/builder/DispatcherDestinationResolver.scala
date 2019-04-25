@@ -35,7 +35,7 @@ class DispatcherDestinationResolver(
         JmsDestination.create(dest).get
     }
 
-    val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](bs.headerDeliveryMode).get).get
+    val delMode : JmsDeliveryMode = JmsDeliveryMode.create(env.header[String](deliveryModeHeader(bs.headerConfig.prefix)).get).get
     val ttl : Option[FiniteDuration] = env.header[Long](bs.headerTimeToLive).map(_.millis)
 
     bs.streamLogger.debug(s"Sending envelope [${env.id}] to [$dest]")
