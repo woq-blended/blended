@@ -197,34 +197,50 @@ class BridgeStreamBuilder(
     doTrack
   }
 
+  protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = new TransactionWiretap(
+    cf = internalCf.get,
+    eventDest = internalProvider.get.transactions,
+    headerCfg = cfg.headerCfg,
+    inbound = cfg.inbound,
+    trackSource = streamId,
+    log = bridgeLogger
+  ).flow()
+
   // flow to generate a transaction event from the current envelope and send it to the
   // JMS transaction endpoint
-  protected def transactionFlow : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b=>
+  protected def transactionFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
-    import GraphDSL.Implicits._
+    val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b=>
 
-    val doLog = b.add(logEnvelope("Before Tracking"))
+      import GraphDSL.Implicits._
 
-    // First we decide wether we need to track the transaction
-    val doTrack= b.add(trackFilter)
-    doLog.out ~> doTrack.in
+      val doLog = b.add(logEnvelope("Before Tracking"))
 
-    // The actual send of the transaction
-    val sendTransaction = b.add(new TransactionWiretap(
-      cf = internalCf.get,
-      eventDest = internalProvider.get.transactions,
-      headerCfg = cfg.headerCfg,
-      inbound = cfg.inbound,
-      trackSource = streamId,
-      log = bridgeLogger
-    ).flow())
+      // First we decide wether we need to track the transaction
+      val doTrack= b.add(trackFilter)
+      doLog.out ~> doTrack.in
 
-    val merge = b.add(Merge[FlowEnvelope](2))
+      // The actual send of the transaction
+      val send = sendTransaction
 
-    doTrack.out0 ~> sendTransaction ~> merge.in(0)
-    doTrack.out1 ~> merge.in(1)
+      val merge = b.add(Merge[FlowEnvelope](2))
 
-    FlowShape(doLog.in, merge.out)
+      val sendError = b.add(FlowProcessor.partition[FlowEnvelope](_.exception.isEmpty))
+      val mergeError = b.add(Merge[FlowEnvelope](2))
+      val retry = b.add(jmsRetry)
+
+      doTrack.out0 ~> send ~> sendError.in
+
+      sendError.out0 ~> mergeError.in(0)
+      sendError.out1 ~> retry ~> mergeError.in(1)
+
+      mergeError.out ~> merge.in(0)
+      doTrack.out1 ~> merge.in(1)
+
+      FlowShape(doLog.in, merge.out)
+    }
+
+    Flow.fromGraph(g)
   }
 
   protected def logEnvelope(msg : String) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =

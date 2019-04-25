@@ -110,7 +110,8 @@ class DispatcherOutboundSpec extends DispatcherSpecSupport
       outbound = JmsDestination.create("out").get,
       errors = JmsDestination.create("error").get,
       transactions = JmsDestination.create("trans").get,
-      cbes = JmsDestination.create("cbes").get
+      cbes = JmsDestination.create("cbes").get,
+      retry = None
     )
 
     val prefix : DispatcherExecContext => String = ctxt => ctxt.bs.headerConfig.prefix
