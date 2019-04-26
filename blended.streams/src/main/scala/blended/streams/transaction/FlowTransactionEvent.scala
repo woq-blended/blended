@@ -45,7 +45,7 @@ object FlowHeaderConfig {
 
   def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
     prefix = prefix,
-    headerTrans = header(prefix)(transId),
+    headerTransId = header(prefix)(transId),
     headerBranch = header(prefix)(branchId),
     headerState = header(prefix)(transState),
     headerTrack = header(prefix)(trackTrans),
@@ -73,7 +73,7 @@ object FlowHeaderConfig {
 
     FlowHeaderConfig(
       prefix = prefix,
-      headerTrans = header(prefix)(headerTrans),
+      headerTransId = header(prefix)(headerTrans),
       headerBranch = header(prefix)(headerBranch),
       headerState = header(prefix)(headerState),
       headerTrack = header(prefix)(headerTrack),
@@ -89,7 +89,7 @@ object FlowHeaderConfig {
 
 case class FlowHeaderConfig(
   prefix : String,
-  headerTrans : String = "TransactionId",
+  headerTransId : String = "TransactionId",
   headerBranch : String = "BranchId",
   headerState : String = "TransactionState",
   headerTrack : String = "TrackTransaction",
@@ -109,7 +109,7 @@ object FlowTransactionEvent {
 
     val basicProps : FlowTransactionEvent => FlowMessageProps = event =>
       event.properties ++ FlowMessage.props(
-        cfg.headerTrans -> event.transactionId,
+        cfg.headerTransId -> event.transactionId,
         cfg.headerState -> event.state.toString()
       ).get
 
@@ -135,7 +135,7 @@ object FlowTransactionEvent {
           update.updatedState.toString()
         )(
           update.properties ++ FlowMessage.props(
-            cfg.headerTrans -> update.transactionId,
+            cfg.headerTransId -> update.transactionId,
             cfg.headerState -> state,
             cfg.headerBranch -> branchIds
           ).get
@@ -146,7 +146,7 @@ object FlowTransactionEvent {
   def envelope2event : FlowHeaderConfig => FlowEnvelope => Try[FlowTransactionEvent] = { cfg => envelope =>
 
     Try {
-      (envelope.header[String](cfg.headerTrans), envelope.header[String](cfg.headerState)) match {
+      (envelope.header[String](cfg.headerTransId), envelope.header[String](cfg.headerState)) match {
         case (Some(id), Some(state)) => FlowTransactionState.withName(state) match {
           case FlowTransactionState.Started =>
             val header = envelope.flowMessage.header.filter{ case (k, v) => !k.startsWith("JMS") }
@@ -179,7 +179,7 @@ object FlowTransactionEvent {
           case s =>
             throw new InvalidTransactionEnvelopeException(s"Invalid Transaction state in envelope [$s]")
         }
-        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [${cfg.headerTrans}] and [${cfg.headerState}]")
+        case (_,_) => throw new InvalidTransactionEnvelopeException(s"Envelope must have headers [${cfg.headerTransId}] and [${cfg.headerState}]")
       }
     }
   }

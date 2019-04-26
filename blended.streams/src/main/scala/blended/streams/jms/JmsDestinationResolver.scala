@@ -78,7 +78,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   val destination: FlowMessage => Try[JmsDestination] = { flowMsg =>
     Try {
 
-      val id : String = flowMsg.header[String](headerConfig.headerTrans).getOrElse("UNKNOWN")
+      val id : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNKNOWN")
 
       log.trace(s"Trying to resolve destination for [$id] from header [${destHeader(headerConfig.prefix)}]")
 
@@ -95,7 +95,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
           }
       }
 
-      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTrans)}] to [${d.asString}]")
+      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTransId)}] to [${d.asString}]")
       d
     }
   }

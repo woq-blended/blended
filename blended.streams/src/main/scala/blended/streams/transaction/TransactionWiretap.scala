@@ -39,19 +39,17 @@ class TransactionWiretap(
       }
     }
 
-    val g = FlowProcessor.fromFunction("createTransaction", log){ env =>
-      Try {
-        val event : FlowTransactionEvent = if (inbound) {
-          startTransaction(env)
-        } else {
-          updateTransaction(env)
-        }
-
-        log.debug(s"Generated bridge transaction event [$event]")
-        FlowTransactionEvent.event2envelope(headerCfg)(event)
-          .withHeader(headerCfg.headerTrackSource, trackSource).get
-
+    val g = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+      val event : FlowTransactionEvent = if (inbound) {
+        startTransaction(env)
+      } else {
+        updateTransaction(env)
       }
+
+      log.debug(s"Generated bridge transaction event [$event]")
+      FlowTransactionEvent.event2envelope(headerCfg)(event)
+        .withHeader(headerCfg.headerTrackSource, trackSource).get
+
     }
 
     Flow.fromGraph(g)
@@ -95,7 +93,16 @@ class TransactionWiretap(
       val trans = b.add(createTransaction)
       val sink = b.add(transactionSink())
       val zip = b.add(Zip[FlowEnvelope, FlowEnvelope]())
-      val select = b.add(Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ _._2 })
+
+      val select = b.add(
+        Flow.fromFunction[(FlowEnvelope, FlowEnvelope), FlowEnvelope]{ pair =>
+
+          pair._1.exception match {
+            case None => pair._2.clearException()
+            case Some(e) => pair._2.withException(e)
+          }
+        }
+      )
 
       split.out(1) ~> zip.in1
       split.out(0) ~> trans ~> sink ~> zip.in0

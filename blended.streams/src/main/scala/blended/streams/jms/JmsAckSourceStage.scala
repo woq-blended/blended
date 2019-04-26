@@ -192,7 +192,7 @@ final class JmsAckSourceStage(
                 val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                 settings.log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : ${flowMessage.header.mkString(",")}")
 
-                val envelopeId: String = flowMessage.header[String](headerConfig.headerTrans) match {
+                val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
                   case None =>
                     val newId = UUID.randomUUID().toString()
                     settings.log.debug(s"Created new envelope id [$newId]")
@@ -210,7 +210,7 @@ final class JmsAckSourceStage(
                 )
 
                 val envelope = FlowEnvelope(flowMessage, envelopeId)
-                  .withHeader(headerConfig.headerTrans, envelopeId).get
+                  .withHeader(headerConfig.headerTransId, envelopeId).get
                   .withRequiresAcknowledge(true)
                   .withAckHandler(Some(handler))
 

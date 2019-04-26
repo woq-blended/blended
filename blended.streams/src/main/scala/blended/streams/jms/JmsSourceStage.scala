@@ -76,7 +76,7 @@ class JmsSourceStage(
                   val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
                   log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
 
-                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
+                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTransId) match {
                     case None =>
                       val newId = UUID.randomUUID().toString()
                       log.debug(s"Created new envelope id [$newId]")
@@ -88,7 +88,7 @@ class JmsSourceStage(
 
                   handleMessage.invoke(
                     FlowEnvelope(
-                      flowMessage.withHeader(headerConfig.headerTrans, envelopeId).get, envelopeId
+                      flowMessage.withHeader(headerConfig.headerTransId, envelopeId).get, envelopeId
                     )
                   )
                 }

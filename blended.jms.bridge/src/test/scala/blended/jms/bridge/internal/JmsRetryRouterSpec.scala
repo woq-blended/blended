@@ -30,6 +30,7 @@ class JmsRetryRouterSpec extends TestKit(ActorSystem("RetryRouter"))
     cf = amqCf,
     retryDestName = "retryQueue",
     failedDestName = "retryFailed",
+    eventDestName = "transactions",
     retryInterval = 3.seconds,
     headerCfg = headerCfg
   )

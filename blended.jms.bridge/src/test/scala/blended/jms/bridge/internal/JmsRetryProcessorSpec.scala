@@ -1,6 +1,7 @@
 package blended.jms.bridge.internal
 
 import java.io.File
+import java.util.UUID
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -13,7 +14,7 @@ import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -69,6 +70,7 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
     cf = amqCf,
     retryDestName = "retryQueue",
     failedDestName = "retryFailed",
+    eventDestName = "internal.transactions",
     retryInterval = 2.seconds,
     maxRetries = 5,
     retryTimeout = 100.millis,
@@ -113,19 +115,9 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
     Await.result(coll.result, timeout + 100.millis)
   }
 
-//  def cunsumeTransactions()(implicit timeout : FiniteDuration) : Try[List[FlowEnvelope]] = Try {
-//
-//    log.info(s"Consuming transaction events ...")
-//    val coll : Collector[FlowEnvelope] = receiveMessages(
-//      headerCfg = headerCfg,
-//      cf = amqCf,
-//      dest = JmsDestination.create(dest).get,
-//      log = log,
-//      listener = 1
-//    )
-//
-//    Await.result(coll.result, timeout + 100.millis)
-//  }
+  def consumeTransactions()(implicit timeout : FiniteDuration) : Try[List[FlowEnvelope]] =
+    consumeMessages("internal.transactions")
+
 }
 
 @RequiresForkedJVM
@@ -217,7 +209,10 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
       }
     }
 
+    val id : String = UUID.randomUUID().toString()
+
     val retryMsg : FlowEnvelope = FlowEnvelope()
+      .withHeader(headerCfg.headerTransId, id).get
       .withHeader(headerCfg.headerRetryDestination, srcQueue).get
 
     val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 3)(retryMsg).get
@@ -227,7 +222,23 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
       case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Some(env) =>
         // Make sure the message has travelled [maxRetries] loops
+        env.header[String](headerCfg.headerTransId) should be (Some(id))
         env.header[Long](headerCfg.headerRetryCount) should be (Some(3))
+
+        val events = consumeTransactions().get
+        events should have size(1)
+
+        // We lso expect a failed transaction event in the transactions destinations
+        events.headOption match {
+          case None =>
+            fail("Expected transaction failed event")
+          case Some(env) =>
+            env.header[String](headerCfg.headerTransId) should be (Some(id))
+
+            val t = FlowTransactionEvent.envelope2event(headerCfg)(env).get
+            assert(t.transactionId.equals(id))
+            assert(t.isInstanceOf[FlowTransactionFailed])
+        }
     }
   }
 }

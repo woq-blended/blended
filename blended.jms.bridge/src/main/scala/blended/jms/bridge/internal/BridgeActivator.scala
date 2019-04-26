@@ -82,6 +82,7 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
               cf = cf,
               retryDestName = JmsDestination.asString(retryDest),
               retryFailedName = JmsDestination.asString(registry.internalProvider.get.retryFailed),
+              eventDestName = JmsDestination.asString(registry.internalProvider.get.transactions),
               cfg = osgiCfg.config.getConfig("retry")
             ).get
 

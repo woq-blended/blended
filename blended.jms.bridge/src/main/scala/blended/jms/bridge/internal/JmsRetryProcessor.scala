@@ -6,15 +6,14 @@ import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.BridgeProviderConfig
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.jms.{AcknowledgeMode, FlowHeaderConfigAware, JMSConsumerSettings, JmsDeliveryMode, JmsEnvelopeHeader, JmsProducerSettings, JmsSendParameter, JmsStreamSupport}
+import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
-import blended.streams.transaction.FlowHeaderConfig
+import blended.streams.transaction.{FlowHeaderConfig, TransactionWiretap}
 import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.config.Implicits._
-import blended.util.logging.Logger
+import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
 import javax.jms.Session
 
@@ -28,6 +27,7 @@ object JmsRetryConfig {
     cf : IdAwareConnectionFactory,
     retryDestName : String,
     retryFailedName : String,
+    eventDestName : String,
     cfg : Config
   ) : Try[JmsRetryConfig] = Try {
 
@@ -40,6 +40,7 @@ object JmsRetryConfig {
       headerCfg = FlowHeaderConfig.create(idSvc),
       retryDestName = retryDestName,
       failedDestName = retryFailedName,
+      eventDestName = eventDestName,
       retryInterval = retryInterval,
       maxRetries = maxRetries,
       retryTimeout = retryTimeout
@@ -52,6 +53,7 @@ case class JmsRetryConfig(
   headerCfg : FlowHeaderConfig,
   retryDestName : String,
   failedDestName : String,
+  eventDestName : String,
   retryInterval : FiniteDuration,
   maxRetries : Long = -1,
   retryTimeout : FiniteDuration = 1.day
@@ -64,7 +66,8 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   implicit system : ActorSystem, materializer : Materializer
 ) extends JmsStreamSupport {
 
-  private[this] val retryLog : Logger = Logger(retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName)
+  private[this] val id : String = retryCfg.headerCfg.prefix + ".retry." + retryCfg.retryDestName
+  private[this] val retryLog : Logger = Logger(id)
   private[this] val log : Logger = Logger[JmsRetryProcessor]
 
   private[this] var actor : Option[ActorRef] = None
@@ -80,10 +83,14 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 
       val dest : JmsDestination = env.exception match {
+        // If the envelope does not have an exception, we will send it to the original destination for reprocessing
+        // If the header "RetryDestination" is missing, we will send the message to the retry failed queue
         case None =>
           JmsDestination.create(env.headerWithDefault[String](headerConfig.headerRetryDestination, retryCfg.failedDestName)).get
 
-        case Some(e) =>
+        // If the envelope has an exception, we will try to resend it unless the retry router validation
+        // throws an exception (which always means we can't retry the message
+        case Some(_) =>
           validator(env) match {
             case Success(_) => JmsDestination.create(retryCfg.retryDestName).get
             case Failure(_) => JmsDestination.create(retryCfg.failedDestName).get
@@ -133,6 +140,22 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     )
   }
 
+  protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+
+    val wiretap = new TransactionWiretap(
+      cf = retryCfg.cf,
+      eventDest = JmsDestination.create(retryCfg.eventDestName).get,
+      headerCfg = retryCfg.headerCfg,
+      inbound = false,
+      trackSource = id,
+      log = retryLog
+    )
+
+    Flow.fromGraph(FlowProcessor.fromFunction(name, retryLog)(router.validate))
+      .via(FlowProcessor.log(LogLevel.Debug, retryLog, "Creating transaction failed event"))
+      .via(wiretap.flow())
+  }
+
   protected def sendToOriginal : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = resendMessage
 
   protected def sendToRetry : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = resendMessage
@@ -166,15 +189,28 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       val retrySend = b.add(sendToRetry)
       routeErrorSplit.out1 ~> retrySend ~> merge.in(1)
 
+      // After sending processing the message we check whether we need to send a
+      // transaction failed event. We only need to send a transaction failed event in
+      // case the envelope is marked with an exception after trying to forward the
+      // message
+
+      val transSplit = b.add(FlowProcessor.partition[FlowEnvelope]{ env => env.exception.isEmpty && router.validate(env).isFailure })
+      val transMerge = b.add(Merge[FlowEnvelope](2))
+
+      merge.out ~> transSplit.in
+
+      transSplit.out0 ~> sendTransaction ~> transMerge.in(0)
+      transSplit.out1 ~> transMerge.in(1)
+
       // Acknowledge / Deny the result of the overall retry flow
-      val ack = b.add(new AckProcessor(name + ".ack").flow)
-      merge.out ~> ack.in
+      val ack = b.add(
+        Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, retryLog, "Before Acknowledge"))
+          .via(new AckProcessor(name + ".ack").flow)
+      )
+      transMerge.out ~> ack.in
 
       // Finally we hook up the dangling endpoints of the flow
-      new FlowShape[FlowEnvelope, FlowEnvelope](
-        route.in,
-        ack.out
-      )
+      new FlowShape[FlowEnvelope, FlowEnvelope](route.in, ack.out)
     }
   }
 
