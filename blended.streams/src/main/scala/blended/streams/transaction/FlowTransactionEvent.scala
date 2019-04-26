@@ -217,6 +217,8 @@ case class FlowTransactionFailed(
   reason : Option[String]
 ) extends FlowTransactionEvent {
   override val state: FlowTransactionState = FlowTransactionState.Failed
+
+  override def toString: String = super.toString + s"[${reason.getOrElse("")}]"
 }
 
 final case class FlowTransactionCompleted (
