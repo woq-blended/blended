@@ -66,7 +66,7 @@ class CbeSendFlow(
 
     prepareCbe.via(
       jmsProducer(
-        name = "cbeSutbound",
+        name = "cbeOutbound",
         settings = sinkSettings
       )
     )
