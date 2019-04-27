@@ -30,9 +30,29 @@ private[internal] trait PingOperations { this : JMSSupport =>
   private val log = Logger[PingOperations]
 
   def closeJmsResources(info: PingInfo)(implicit eCtxt: ExecutionContext) : Future[PingInfo] = Future {
+
+    info.consumer.foreach{ c =>
+      // We can ignore the exception as closing the session should also close all consumers and producers
+      try {
+        c.close()
+      } catch {
+        case NonFatal(e) =>
+          log.warn(s"Error closing consumer for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+      }
+    }
+
+    info.producer.foreach { p =>
+      try {
+        p.close()
+      } catch {
+        case NonFatal(e) =>
+          log.warn(s"Error closing producer for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+      }
+    }
+
     try {
       info.session.foreach{ i =>
-        log.info(s"Closing JMS resources for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
+        log.info(s"Closing JMS session for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
         i.close()
         log.debug(s"JMS session closed for [${info.cfg.vendor}:${info.cfg.provider}] with id [${info.pingId}]")
       }
@@ -151,7 +171,7 @@ object JmsPingPerformer {
 class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: PingOperations)
   extends Actor with ActorLogging {
 
-  implicit val eCtxt = context.system.dispatchers.lookup("FixedPool")
+  implicit val eCtxt : ExecutionContext = context.system.dispatchers.lookup("FixedPool")
 
   private[this] var pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
   private[this] var responded : Boolean = false

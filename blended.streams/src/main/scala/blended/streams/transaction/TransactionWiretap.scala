@@ -5,13 +5,36 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Zip}
 import akka.stream.{FlowShape, Materializer}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
-import blended.streams.FlowProcessor
-import blended.streams.jms.{JmsDeliveryMode, JmsProducerSettings, JmsStreamSupport}
+import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.worklist.WorklistState
 import blended.util.logging.Logger
+import javax.jms.Session
 
 import scala.util.Try
+
+class TransactionDestinationResolver(
+  override val headerConfig : FlowHeaderConfig,
+  override val settings : JmsProducerSettings,
+  eventDestName : String
+) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
+
+  override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
+
+    val transShard : String = env.header[String](headerConfig.headerTransShard).map{ s => s".$s" }.getOrElse("")
+    val dest : JmsDestination = JmsDestination.create(eventDestName + transShard).get
+
+    log.debug(s"Transaction destination for [${env.id}] is [$dest]")
+
+    JmsSendParameter(
+      message = createJmsMessage(session, env).get,
+      destination = dest,
+      deliveryMode = settings.deliveryMode,
+      priority = settings.priority,
+      ttl = None
+    )
+  }
+}
 
 class TransactionWiretap(
   cf : IdAwareConnectionFactory,
@@ -63,8 +86,9 @@ class TransactionWiretap(
       val settings = JmsProducerSettings(
         log = log,
         connectionFactory = cf,
+        destinationResolver = s => new TransactionDestinationResolver(headerCfg, s, JmsDestination.asString(eventDest)),
         deliveryMode = JmsDeliveryMode.Persistent,
-        jmsDestination = Some(eventDest)
+        jmsDestination = None
       )
 
       val producer = b.add(jmsProducer(

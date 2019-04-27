@@ -56,7 +56,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 trait FlowHeaderConfigAware extends JmsDestinationResolver {
   this: JmsEnvelopeHeader =>
 
-  val log : Logger = Logger[JmsDestinationResolver]
+  val log : Logger = Logger(getClass().getName())
 
   def headerConfig: FlowHeaderConfig
 

@@ -120,12 +120,23 @@ class BridgeStreamBuilder(
       .withSelector(cfg.selector)
       .withSubScriberName(cfg.subscriberName)
 
-    val src : Source[FlowEnvelope, NotUsed] =
-      Source.fromGraph(new JmsAckSourceStage(
+    val src : Source[FlowEnvelope, NotUsed] = {
+      val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsAckSourceStage(
         name = streamId + "-source",
         settings = srcSettings,
         headerConfig = cfg.headerCfg
       ))
+
+      // set the transaction from a the system property blended.streams.transactionShard
+      // Maintaining the transaction shard in the message will ensure that all transaction events
+      // with the same event id will end up in the same transaction destination.
+      Option(System.getProperty("blended.streams.transactionShard")) match {
+        case None => result
+        case Some(shard) => result.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+          env.withHeader(cfg.headerCfg.headerTransShard, shard, false).get
+        })
+      }
+    }
 
     // If we need to transform additional headers on the inbound leg
     if (cfg.inbound && cfg.header.nonEmpty) {

@@ -13,6 +13,8 @@ import scala.util.Try
 
 object FlowHeaderConfig {
 
+  // these are the keys the we will look up in the config to potentially
+  // overwrite the default settings
   private val prefixPath = "prefix"
   private val transIdPath = "transactionId"
   private val branchIdPath = "branchId"
@@ -24,8 +26,10 @@ object FlowHeaderConfig {
   private val retryTimeoutPath = "retryTimeout"
   private val retryDestPath = "retryDestination"
   private val firstRetryPath = "firstRetry"
+  private val transShardPath = "transactionShard"
 
   private val transId = "TransactionId"
+  private val transShard = "TransactionShard"
   private val branchId = "BranchId"
   private val transState = "TransactionState"
   private val trackTrans = "TrackTransaction"
@@ -46,6 +50,7 @@ object FlowHeaderConfig {
   def create(prefix : String) : FlowHeaderConfig = FlowHeaderConfig(
     prefix = prefix,
     headerTransId = header(prefix)(transId),
+    headerTransShard = header(prefix)(transShard),
     headerBranch = header(prefix)(branchId),
     headerState = header(prefix)(transState),
     headerTrack = header(prefix)(trackTrans),
@@ -60,7 +65,8 @@ object FlowHeaderConfig {
   def create(cfg: Config): FlowHeaderConfig = {
 
     val prefix = cfg.getString(prefixPath, "Blended")
-    val headerTrans = cfg.getString(transIdPath, transId)
+    val headerTransId = cfg.getString(transIdPath, transId)
+    val headerTransShard = cfg.getString(transShardPath, transShard)
     val headerBranch = cfg.getString(branchIdPath, branchId)
     val headerState = cfg.getString(statePath, transState)
     val headerTrack = cfg.getString(trackTransactionPath, trackTrans)
@@ -73,7 +79,8 @@ object FlowHeaderConfig {
 
     FlowHeaderConfig(
       prefix = prefix,
-      headerTransId = header(prefix)(headerTrans),
+      headerTransId = header(prefix)(headerTransId),
+      headerTransShard = header(prefix)(headerTransShard),
       headerBranch = header(prefix)(headerBranch),
       headerState = header(prefix)(headerState),
       headerTrack = header(prefix)(headerTrack),
@@ -87,9 +94,10 @@ object FlowHeaderConfig {
   }
 }
 
-case class FlowHeaderConfig(
+case class FlowHeaderConfig private (
   prefix : String,
   headerTransId : String = "TransactionId",
+  headerTransShard : String = "TransactionShard",
   headerBranch : String = "BranchId",
   headerState : String = "TransactionState",
   headerTrack : String = "TrackTransaction",

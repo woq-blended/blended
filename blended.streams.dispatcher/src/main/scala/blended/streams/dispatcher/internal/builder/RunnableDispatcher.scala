@@ -11,7 +11,7 @@ import blended.persistence.PersistenceService
 import blended.streams.dispatcher.internal.ResourceTypeRouterConfig
 import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
-import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionWiretap}
+import blended.streams.transaction.{FlowTransactionEvent, FlowTransactionManager, TransactionDestinationResolver, TransactionWiretap}
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.logging.Logger
 
@@ -30,6 +30,8 @@ class RunnableDispatcher(
   private val startedDispatchers : mutable.Map[String, ActorRef] = mutable.Map.empty
   private var transMgr : Option[ActorRef] = None
   private var transStream : Option[ActorRef] = None
+
+  private val internal : BridgeProviderConfig = registry.internalProvider.get
 
   private[builder] def dispatcherSend() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
 
@@ -53,8 +55,6 @@ class RunnableDispatcher(
     GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val internal = registry.internalProvider.get
-
       val transform = b.add(Flow.fromFunction[FlowTransactionEvent, FlowEnvelope] { t =>
         FlowTransactionEvent.event2envelope(bs.headerConfig)(t)
           .withHeader(bs.headerConfig.headerTrackSource, bs.streamLogger.name).get
@@ -63,7 +63,8 @@ class RunnableDispatcher(
       val transactionSendSettings = JmsProducerSettings(
         log = bs.streamLogger,
         connectionFactory = cf,
-        jmsDestination = Some(internal.transactions),
+        destinationResolver = s => new TransactionDestinationResolver(bs.headerConfig, s, JmsDestination.asString(internal.transactions)),
+        jmsDestination = None,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = 4,
         timeToLive = None
@@ -127,6 +128,14 @@ class RunnableDispatcher(
     )
 
     if (provider.internal) {
+
+      val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
+        case None => source
+        case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+          env.withHeader(bs.headerConfig.headerTransShard, shard, false).get
+        })
+      }
+
       val startTransaction = new TransactionWiretap(
         cf = cf,
         eventDest = provider.transactions,
@@ -136,7 +145,7 @@ class RunnableDispatcher(
         log = bs.streamLogger
       ).flow()
 
-      source.via(startTransaction)
+      setShard.via(startTransaction)
     } else {
       source
     }
