@@ -69,9 +69,10 @@ class FlowTransactionStreamSpec extends SimplePojoContainerSpec
           val source = Source.single[FlowEnvelope](envelope)
 
           val stream : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = new FlowTransactionStream(
-            cfg = cfg,
+            headerCfg = cfg,
+            internalCf = None,
             tMgr = tMgr,
-            log = log,
+            streamLogger = log,
             performSend = env => env.header[Boolean](cfg.prefix + "CbeEnabled").getOrElse(true),
             sendFlow = good
           ).build()

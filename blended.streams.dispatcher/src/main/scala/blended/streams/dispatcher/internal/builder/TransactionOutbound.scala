@@ -61,9 +61,10 @@ class TransactionOutbound(
 
     val transactionStream : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
       new FlowTransactionStream(
-        cfg = headerConfig,
+        headerCfg = headerConfig,
+        internalCf = Some(internalCf),
         tMgr = tMgr,
-        log = log,
+        streamLogger = log,
         // The default for CBE is false here
         // all messages that have run through the dispatcher will have the correct CBE setting
         performSend = { env =>
@@ -72,7 +73,7 @@ class TransactionOutbound(
             env.header[String](bs.headerConfig.headerState).getOrElse(FlowTransactionState.Updated.toString())
           ) != FlowTransactionState.Updated
         },
-        sendFlow
+        sendFlow = sendFlow
       ).build()
 
 

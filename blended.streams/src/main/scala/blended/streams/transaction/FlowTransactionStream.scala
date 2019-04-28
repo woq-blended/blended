@@ -4,8 +4,10 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer}
+import akka.stream.{ActorMaterializer, FlowShape, Graph, Inlet, Materializer}
 import akka.util.Timeout
+import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
@@ -14,12 +16,13 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 class FlowTransactionStream(
-  cfg : FlowHeaderConfig,
+  internalCf : Option[IdAwareConnectionFactory],
+  headerCfg : FlowHeaderConfig,
   tMgr : ActorRef,
-  log: Logger,
+  streamLogger: Logger,
   performSend : FlowEnvelope => Boolean,
   sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
-)(implicit system: ActorSystem) {
+)(implicit system: ActorSystem) extends JmsStreamSupport {
 
   private case class TransactionStreamContext(
     envelope : FlowEnvelope,
@@ -34,23 +37,35 @@ class FlowTransactionStream(
   // recreate the FlowTransactionEvent from the inbound envelope
   private val updateEvent : FlowEnvelope => Try[(FlowEnvelope, FlowTransactionEvent)] = { env =>
     Try {
-      val event = FlowTransactionEvent.envelope2event(cfg)(env).get
-      log.debug(s"Received transaction event [${event.transactionId}][${event.state}]")
+      val event = FlowTransactionEvent.envelope2event(headerCfg)(env).get
+      streamLogger.debug(s"Received transaction event [${event.transactionId}][${event.state}]")
       (env, event)
     }
+  }
+
+  private val logEventToJms : IdAwareConnectionFactory => Flow[FlowEnvelope, FlowEnvelope, NotUsed] = { cf =>
+
+    val settings : JmsProducerSettings = JmsProducerSettings(
+      log = streamLogger,
+      connectionFactory = cf,
+      jmsDestination = Some(JmsTopic(s"${headerCfg.prefix}.topic.transactions")),
+      clearPreviousException = true
+    )
+
+    jmsProducer("logToJms", settings, false)
   }
 
   // run the inbound transaction update through the transaction manager
   private val recordTransaction : Try[(FlowEnvelope, FlowTransactionEvent)] => TransactionStreamContext = {
     case Success((env, event)) =>
-      log.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
+      streamLogger.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
       TransactionStreamContext(
         envelope = env,
         trans = Some((tMgr ? event).mapTo[FlowTransaction].map(s => Success(s))),
         sendEnvelope = None
       )
     case Failure(t) =>
-      log.error(t)(s"Failed to record transaction [$t]")
+      streamLogger.error(t)(s"Failed to record transaction [$t]")
       throw t
   }
 
@@ -60,13 +75,13 @@ class FlowTransactionStream(
       in.trans.get.map {
         case Success(t) =>
           if (t.state == FlowTransactionState.Started || t.terminated) {
-            log.info(t.toString())
+            streamLogger.info(t.toString())
           } else {
-            log.debug(t.toString())
+            streamLogger.debug(t.toString())
           }
-          Success(FlowTransaction.transaction2envelope(cfg)(t))
+          Success(FlowTransaction.transaction2envelope(headerCfg)(t))
         case Failure(t) =>
-          log.error(t)(t.getMessage())
+          streamLogger.error(t)(t.getMessage())
           Failure(t)
       }
 
@@ -81,12 +96,14 @@ class FlowTransactionStream(
     val sendEnv : Future[Try[FlowEnvelope]] = in.sendEnvelope.get.map {
       case Success(s) =>
         if (performSend(s)) {
-          log.trace(s"About to send transaction envelope  [${in.envelope.id}]")
-          Source.single(s).via(sendFlow).toMat(Sink.head[FlowEnvelope])(Keep.right).run()
+          streamLogger.trace(s"About to send transaction envelope  [${in.envelope.id}]")
+          Source.single(s)
+            .via(sendFlow)
+            .toMat(Sink.head[FlowEnvelope])(Keep.right).run()
         }
         Success(s)
       case Failure(t) =>
-        log.error(t)(s"Failed to create transaction envelope for [${in.envelope.id}]")
+        streamLogger.error(t)(s"Failed to create transaction envelope for [${in.envelope.id}]")
         Failure(t)
     }
 
@@ -108,7 +125,7 @@ class FlowTransactionStream(
             Future(ctxt.envelope.withException(new IllegalStateException("Send transaction has not been called.")))
           case Some(s) => s.map {
             case Success(env) =>
-              log.trace(s"Send flow for transaction [${env.id}] completed successfully.")
+              streamLogger.trace(s"Send flow for transaction [${env.id}] completed successfully.")
               ctxt.envelope.acknowledge()
               env
             case Failure(t) =>
@@ -126,9 +143,17 @@ class FlowTransactionStream(
       val sendTrans = b.add(Flow.fromFunction(sendTransaction).named("sendTransaction"))
       val acknowledge = b.add(ack)
 
-      update ~> record ~> logTrans ~> sendTrans ~> acknowledge
+      val in : Inlet[FlowEnvelope] = internalCf match {
+        case None =>
+          update ~> record ~> logTrans ~> sendTrans ~> acknowledge
+          update.in
+        case Some(cf) =>
+          val logToJms = b.add(logEventToJms(cf).named("logToJms"))
+          logToJms ~> update ~> record ~> logTrans ~> sendTrans ~> acknowledge
+          logToJms.in
+      }
 
-      FlowShape(update.in, acknowledge.out)
+      FlowShape(in, acknowledge.out)
     }
 
     Flow.fromGraph(g)
