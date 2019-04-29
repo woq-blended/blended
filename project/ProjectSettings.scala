@@ -10,12 +10,12 @@ import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype
 import xsbti.api.{AnalyzedClass, Projection}
 
-trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConfig {
+trait ProjectSettings
+  extends ProjectConfig
+  with CommonSettings
+  with PublishConfig
+  with OsgiSettings {
 
-  /** If `true` (default), this project is packaged as OSGi bundle. */
-  def osgi: Boolean = true
-  /** If `true` (default), some default imports will be applied. */
-  def osgiDefaultImports: Boolean = true
   /** The project descriptions. Also used in published pom.xml and as bundle description. */
   def description: String
   /** Dependencies */
@@ -37,17 +37,7 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
     Project(name, file(projectDir.getOrElse(projectName)))
   }
 
-  /**
-    * The Bundle configuration. The Bundle ID is the [[projectName]]
-    */
-  def bundle: BlendedBundle = BlendedBundle(
-    bundleSymbolicName = projectName,
-    exportPackage = Seq(projectName),
-    privatePackage = Seq(s"${projectName}.internal.*"),
-    defaultImports = osgiDefaultImports
-  )
 
-  def sbtBundle: Option[BlendedBundle] = if (osgi) Some(bundle) else None
 
   private def hasForkAnnotation(clazz: AnalyzedClass): Boolean = {
 
@@ -61,16 +51,14 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
     }
   }
 
-  def defaultSettings: Seq[Setting[_]] = {
-
-    val osgiSettings: Seq[Setting[_]] = sbtBundle.toSeq.flatMap(_.osgiSettings)
+  override def settings: Seq[sbt.Setting[_]] = super.settings ++ {
 
     Seq(
       Keys.name := projectName,
       Keys.moduleName := Keys.name.value,
       Keys.description := description,
       Keys.libraryDependencies ++= deps,
-      Test / javaOptions += ("-DprojectTestOutput=" + (Test / classDirectory).value), 
+      Test / javaOptions += ("-DprojectTestOutput=" + (Test / classDirectory).value),
       Test / fork := true,
       Test / parallelExecution := false,
       Compile / unmanagedResourceDirectories += baseDirectory.value / "src" / "main" / "binaryResources",
@@ -82,7 +70,7 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
 
       Test / resourceGenerators += (Test / testlogCreateConfig).taskValue,
 
-      // inspired by : https://chariotsolutions.com/blog/post/sbt-group-annotated-tests-run-forked-jvms 
+      // inspired by : https://chariotsolutions.com/blog/post/sbt-group-annotated-tests-run-forked-jvms
       Test / testGrouping := {
 
         val log = streams.value.log
@@ -117,18 +105,16 @@ trait ProjectSettings extends ProjectConfig with CommonSettings with PublishConf
         forked ++ Seq(combined)
       },
 
-    ) ++ osgiSettings ++ (
-        // We need to explicitly load the rb settings again to
-        // make sure the OSGi package is post-processed:
-        ReproducibleBuildsPlugin.projectSettings
+    ) ++ (
+      // We need to explicitly load the rb settings again to
+      // make sure the OSGi package is post-processed:
+      ReproducibleBuildsPlugin.projectSettings
       )
   }
 
-  override def settings: Seq[sbt.Setting[_]] = super.settings ++ defaultSettings
 
- override def plugins: Seq[AutoPlugin] = super.plugins ++
+  override def plugins: Seq[AutoPlugin] = super.plugins ++
     Seq(ReproducibleBuildsPlugin) ++
-    Seq(TestLogConfig) ++
-    (if (osgi) Seq(SbtOsgi) else Seq())
+    Seq(TestLogConfig)
 
 }

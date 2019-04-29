@@ -10,13 +10,12 @@ object BlendedSecurityBoot extends ProjectFactory {
       Dependencies.orgOsgi
     )
 
-    override def osgiDefaultImports = false
-
     override def bundle: BlendedBundle = super.bundle.copy(
       additionalHeaders = Map("Fragment-Host" -> "system.bundle;extension:=framework"),
       // This is required to omit the Import-Package header in the OSGi manifest
       // because framework extensions are not allowed to have imports
-      importPackage = Seq("")
+      importPackage = Seq(""),
+      defaultImports = false
     )
   }
 }

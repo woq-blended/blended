@@ -9,8 +9,6 @@ object BlendedAkkaHttpApi extends ProjectFactory {
     override val projectName = "blended.akka.http.api"
     override val description = "Package the Akka Http API into a bundle."
 
-    override val osgiDefaultImports = false
-
     override def deps = Seq(
       Dependencies.akkaHttp.intransitive(),
       Dependencies.akkaHttpCore.intransitive(),
@@ -29,7 +27,8 @@ object BlendedAkkaHttpApi extends ProjectFactory {
       ),
       exportContents = Seq(
         s"akka.http.*;version=${Dependencies.akkaHttpVersion};-split-package:=merge-first"
-      )
+      ),
+      defaultImports = false
     )
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
