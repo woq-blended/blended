@@ -4,10 +4,10 @@ import java.io.{File, FilenameFilter}
 
 import akka.actor.{Actor, ActorRef, Props}
 import akka.pattern.ask
-import akka.util.Timeout
 import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
 import blended.util.logging.Logger
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -31,7 +31,11 @@ class FilePollActor(
   case object Tick
 
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
-  private[this ]implicit val timeout : Timeout = Timeout(FileManipulationActor.operationTimeout)
+  private[this] val timeout : FiniteDuration = FileManipulationActor.operationTimeout
+
+  private[this] val batchSize : Int = 2
+  private[this] var totalToProcess : Int = 0
+  private[this] var pending : List[File] = List.empty
 
   override def preStart(): Unit = {
     context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
@@ -67,16 +71,25 @@ class FilePollActor(
     } else if (locked()) {
       List.empty
     } else {
-      srcDir.listFiles(new FilenameFilter {
-        override def accept(dir: File, name: String): Boolean = {
-          if (cfg.pattern.isEmpty || cfg.pattern.forall(p => name.matches(p))) {
-            val f = new File(dir, name)
-            f.exists() && f.isFile() && f.canRead()
-          } else {
-            false
+      if (pending.isEmpty) {
+        pending = srcDir.listFiles(new FilenameFilter {
+          override def accept(dir: File, name: String): Boolean = {
+            if (cfg.pattern.isEmpty || cfg.pattern.forall(p => name.matches(p))) {
+              val f = new File(dir, name)
+              f.exists() && f.isFile() && f.canRead()
+            } else {
+              false
+            }
           }
-        }
-      }).toList
+        }).toList
+
+        totalToProcess = pending.size
+      }
+
+      val result = pending.take(batchSize)
+      pending = pending.drop(result.size)
+
+      result
     }
   }
 
@@ -98,8 +111,10 @@ class FilePollActor(
     case Acquired =>
       log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}]")
 
-      val futures : Iterable[Future[FileProcessed]] = files().map { f =>
-        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(f, cfg, handler)).mapTo[FileProcessed]
+      val toProcess : List[File] = files()
+
+      val futures : Iterable[Future[FileProcessed]] = toProcess.map { f =>
+        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(f, cfg, handler))(timeout * 2, self).mapTo[FileProcessed]
       }
 
       val listFuture : Future[Iterable[FileProcessed]] = Future.sequence(futures)
@@ -111,11 +126,16 @@ class FilePollActor(
 
           case Success(results) =>
             val succeeded = results.count(_.success)
-            log.info(s"Processed [$succeeded] of [${results.size}] files in [${cfg.id}] from [${cfg.sourceDir}], ")
+            log.info(s"Processed [$succeeded] of [$totalToProcess](remaining [${pending.size}]) files in [${cfg.id}] from [${cfg.sourceDir}], ")
         }
 
         sem.foreach(_ ! Release(self))
-        context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+
+        if (pending.nonEmpty) {
+          self ! Tick
+        } else {
+          context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+        }
       }
   }
 }

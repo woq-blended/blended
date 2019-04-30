@@ -9,8 +9,9 @@ import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import scala.io.Source
-import scala.util.{Success, Try}
+import scala.io.{BufferedSource, Source}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class JMSFilePollHandler(
   settings : JmsProducerSettings,
@@ -19,13 +20,22 @@ class JMSFilePollHandler(
 
   private val log : Logger = Logger[JMSFilePollHandler]
 
-  private def createEnvelope(cmd : FileProcessCmd, file : File) : FlowEnvelope = {
+  private def createEnvelope(cmd : FileProcessCmd, file : File) : Try[FlowEnvelope] = {
 
-    val body : ByteString = ByteString(Source.fromFile(file).mkString)
+    val src : BufferedSource = Source.fromFile(file)
 
-    FlowEnvelope(FlowMessage(body)(header))
-      .withHeader("BlendedFileName", cmd.f.getName()).get
-      .withHeader("BlendedFilePath", cmd.f.getAbsolutePath()).get
+    try {
+      val body : ByteString = ByteString(src.mkString)
+      src.close()
+
+      Success(FlowEnvelope(FlowMessage(body)(header))
+        .withHeader("BlendedFileName", cmd.f.getName()).get
+        .withHeader("BlendedFilePath", cmd.f.getAbsolutePath()).get)
+    } catch {
+      case NonFatal(t) => Failure(t)
+    } finally {
+      src.close()
+    }
   }
 
   override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Try[Unit] = Try {
@@ -33,17 +43,19 @@ class JMSFilePollHandler(
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
 
-    val env : FlowEnvelope = createEnvelope(cmd, f)
+    createEnvelope(cmd, f) match {
+      case Success(env) =>
+        log.trace(s"Handling polled file in JMSHandler : [${env.flowMessage.header.mkString(",")}]")
 
-    log.trace(s"Handling polled file in JMSHandler : [${env.flowMessage.header.mkString(",")}]")
-
-    sendMessages(
-      producerSettings = settings,
-      log = log,
-      env
-    ) match {
-      case Success(s) => s.shutdown()
-      case _ => // do nothing as the stream is already closed
+        sendMessages(
+          producerSettings = settings,
+          log = log,
+          env
+        ) match {
+          case Success(s) => Success(s.shutdown())
+          case Failure(t) => Failure(t)
+        }
+      case Failure(t) => Failure(t)
     }
   }
 }

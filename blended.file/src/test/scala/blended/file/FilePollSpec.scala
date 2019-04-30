@@ -62,48 +62,57 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
     handler.handled.head.f.getName() should be ("test.txt")
   }
 
+  private[this] def withMessages(dir : String, msgCount : Int, testkit : TestKit) : Unit = {
+
+    implicit val system : ActorSystem = testkit.system
+
+    val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+
+    val srcDir = new File(System.getProperty("projectTestOutput") + "/" + dir)
+    srcDir.mkdirs()
+
+    val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      sourceDir = srcDir.getAbsolutePath()
+    )
+
+    val probe = TestProbe()
+    system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
+
+    val handler = new SucceedingFileHandler()
+    val actor = system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
+
+    val files : List[File] = (1.to(msgCount)).map { i =>
+      val f = new File(srcDir, s"test$i." + (if (i % 2 == 0) "txt" else "xml"))
+      genFile(f)
+      f
+    }.toList
+
+    val processCount : Int = files.count(_.getName.endsWith("txt"))
+    probe.receiveWhile[FileProcessed](max = 10.seconds, messages = msgCount) {
+      case fp : FileProcessed => fp
+    }.size should be (processCount)
+
+    files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
+
+    handler.handled should have size(processCount)
+
+    val names : List[String] = files.map(_.getName())
+
+    assert(
+      handler.handled.forall(h => names.contains(h.f.getName()))
+    )
+
+    testkit.system.stop(actor)
+  }
+
   "The File Poller should" - {
 
     "do perform a regular poll and process files" in TestActorSys { testkit =>
+      withMessages("pollspec", 5, testkit)
+    }
 
-      implicit val system : ActorSystem = testkit.system
-
-      val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
-
-      val srcDir = new File(System.getProperty("projectTestOutput") + "/pollspec")
-      srcDir.mkdirs()
-
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
-        sourceDir = srcDir.getAbsolutePath()
-      )
-
-      val probe = TestProbe()
-      system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
-      val handler = new SucceedingFileHandler()
-      val actor = system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
-      probe.expectNoMessage(3.seconds)
-
-      val f = new File(srcDir, "test1.txt")
-      genFile(f)
-
-      probe.expectMsgType[FileProcessed]
-      f.exists() should be (false)
-
-      val files = List(
-        new File(srcDir, "test2.txt"),
-        new File(srcDir, "test3.xml"),
-        new File(srcDir, "test4.txt")
-      )
-
-      files.foreach(genFile)
-
-      probe.expectMsgType[FileProcessed]
-      probe.expectMsgType[FileProcessed]
-
-      files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
-
-      handler.handled should have size(3)
-      handler.handled.map(_.f.getName()).sorted should be (List("test4.txt", "test2.txt", "test1.txt").sorted)
+    "do perform a regular poll and process files (bulk)" in TestActorSys { testkit =>
+      withMessages("pollspec", 500, testkit)
     }
 
     "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>
