@@ -8,7 +8,7 @@ import akka.testkit.{TestKit, TestProbe}
 import akka.util.Timeout
 import blended.testsupport.camel._
 import blended.testsupport.camel.protocol._
-import javax.jms.{DeliveryMode, Message, Session}
+import javax.jms.{DeliveryMode, Message, Session, TextMessage}
 import org.apache.activemq.broker.BrokerService
 import org.apache.camel.CamelContext
 import org.apache.camel.component.jms.JmsComponent
@@ -23,8 +23,8 @@ class JMSSupportSpec extends FreeSpec
   with BeforeAndAfterAll
   with AmqBrokerSupport {
 
-  implicit val testkit = new TestKit(ActorSystem("JMSSupportSpec"))
-  implicit val system = testkit.system
+  implicit val testkit : TestKit = new TestKit(ActorSystem("JMSSupportSpec"))
+  implicit val system : ActorSystem = testkit.system
 
   implicit val timeout : Timeout = 3.seconds
 
@@ -42,7 +42,7 @@ class JMSSupportSpec extends FreeSpec
       destName = destName,
       content = (),
       msgFactory = new JMSMessageFactory[Unit] {
-        override def createMessage(session: Session, content: Unit) = {
+        override def createMessage(session: Session, content: Unit) : TextMessage = {
           session.createTextMessage("Hello AMQ")
         }
       },

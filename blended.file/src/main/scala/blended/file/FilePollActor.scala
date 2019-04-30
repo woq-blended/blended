@@ -16,15 +16,17 @@ object FilePollActor {
   def props(
     cfg: FilePollConfig,
     handler: FilePollHandler,
-    sem : Option[ActorRef] = None
+    sem : Option[ActorRef] = None,
+    batchSize : Int = 100
   ) : Props =
-    Props(new FilePollActor(cfg, handler, sem))
+    Props(new FilePollActor(cfg, handler, sem, batchSize))
 }
 
 class FilePollActor(
   cfg: FilePollConfig,
   handler: FilePollHandler,
-  sem : Option[ActorRef]
+  sem : Option[ActorRef],
+  batchSize : Int,
 ) extends Actor {
 
   private val log : Logger = Logger[FilePollActor]
@@ -33,7 +35,6 @@ class FilePollActor(
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private[this] val timeout : FiniteDuration = FileManipulationActor.operationTimeout
 
-  private[this] val batchSize : Int = 2
   private[this] var totalToProcess : Int = 0
   private[this] var pending : List[File] = List.empty
 
@@ -84,6 +85,7 @@ class FilePollActor(
         }).toList
 
         totalToProcess = pending.size
+        log.info(s"Found [$totalToProcess] files to process from [$srcDir]")
       }
 
       val result = pending.take(batchSize)

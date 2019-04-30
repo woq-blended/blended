@@ -10,6 +10,9 @@ object BlendedFile extends ProjectFactory {
     projectName = "blended.file",
     description = "Bundle to define a customizable Filedrop / Filepoll API",
     deps = Seq(
+      Dependencies.commonsIo % "test",
+      Dependencies.activeMqBroker % "test",
+      Dependencies.activeMqKahadbStore % "test",
       Dependencies.akkaTestkit % "test",
       Dependencies.akkaSlf4j % "test",
       Dependencies.logbackClassic % "test",
@@ -25,7 +28,7 @@ object BlendedFile extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
-        "blended" -> "TRACE"
+        "blended" -> "DEBUG"
       ),
       Test / filterProperties := Map(
         "project.build.testOutputDirectory" -> (Test / Keys.classDirectory).value.getAbsolutePath()
@@ -37,6 +40,7 @@ object BlendedFile extends ProjectFactory {
     BlendedAkka.project,
     BlendedJmsUtils.project,
     BlendedStreams.project,
+    
     BlendedTestsupport.project % "test"
   )
 }

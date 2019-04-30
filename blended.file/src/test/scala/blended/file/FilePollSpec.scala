@@ -1,24 +1,22 @@
 package blended.file
 
-import java.io.{File, FileOutputStream}
+import java.io.File
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.{TestKit, TestProbe}
 import blended.akka.SemaphoreActor
 import blended.testsupport.TestActorSys
-import blended.testsupport.scalatest.LoggingFreeSpec
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 
-class FilePollSpec extends LoggingFreeSpec with Matchers {
+class FilePollSpec extends TestKit(ActorSystem("JmsFilePoll"))
+  with AbstractFilePollSpec
+  with Matchers
+  with LoggingFreeSpecLike {
 
-  def genFile(f: File) : Unit = {
-    val os = new FileOutputStream(f)
-    os.write("Hallo Andreas".getBytes())
-    os.flush()
-    os.close()
-  }
+  override def handler()(implicit system : ActorSystem): FilePollHandler = new SucceedingFileHandler()
 
   private[this] def withBlocking(lockfile : String, testkit: TestKit) : Unit = {
 
@@ -47,72 +45,27 @@ class FilePollSpec extends LoggingFreeSpec with Matchers {
     val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
 
-    val handler = new SucceedingFileHandler()
-    system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
+    system.actorOf(FilePollActor.props(cfg, handler(), Some(sem)))
 
     probe.expectNoMessage(3.seconds)
     srcFile.exists() should be (true)
 
     lockFile.delete()
 
-    probe.expectMsgType[FileProcessed]
+    val processed = probe.expectMsgType[FileProcessed]
     srcFile.exists() should be (false)
-    handler.handled should have size(1)
 
-    handler.handled.head.f.getName() should be ("test.txt")
-  }
-
-  private[this] def withMessages(dir : String, msgCount : Int, testkit : TestKit) : Unit = {
-
-    implicit val system : ActorSystem = testkit.system
-
-    val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
-
-    val srcDir = new File(System.getProperty("projectTestOutput") + "/" + dir)
-    srcDir.mkdirs()
-
-    val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
-      sourceDir = srcDir.getAbsolutePath()
-    )
-
-    val probe = TestProbe()
-    system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
-
-    val handler = new SucceedingFileHandler()
-    val actor = system.actorOf(FilePollActor.props(cfg, handler, Some(sem)))
-
-    val files : List[File] = (1.to(msgCount)).map { i =>
-      val f = new File(srcDir, s"test$i." + (if (i % 2 == 0) "txt" else "xml"))
-      genFile(f)
-      f
-    }.toList
-
-    val processCount : Int = files.count(_.getName.endsWith("txt"))
-    probe.receiveWhile[FileProcessed](max = 10.seconds, messages = msgCount) {
-      case fp : FileProcessed => fp
-    }.size should be (processCount)
-
-    files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
-
-    handler.handled should have size(processCount)
-
-    val names : List[String] = files.map(_.getName())
-
-    assert(
-      handler.handled.forall(h => names.contains(h.f.getName()))
-    )
-
-    testkit.system.stop(actor)
+    processed.cmd.f.getName() should be ("test.txt")
   }
 
   "The File Poller should" - {
 
     "do perform a regular poll and process files" in TestActorSys { testkit =>
-      withMessages("pollspec", 5, testkit)
+      withMessages("pollspec", 5)
     }
 
     "do perform a regular poll and process files (bulk)" in TestActorSys { testkit =>
-      withMessages("pollspec", 500, testkit)
+      withMessages("pollspec", 500)
     }
 
     "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>
