@@ -8,7 +8,7 @@ import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.{BufferedSource, Source}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -38,7 +38,7 @@ class JMSFilePollHandler(
     }
   }
 
-  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Try[Unit] = Try {
+  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Future[(FileProcessCmd, Option[Throwable])] = {
 
     implicit val materializer : Materializer = ActorMaterializer()
     implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -52,10 +52,10 @@ class JMSFilePollHandler(
           log = log,
           env
         ) match {
-          case Success(s) => Success(s.shutdown())
-          case Failure(t) => Failure(t)
+          case Success(s) => Future((cmd, None))
+          case Failure(t) => Future((cmd, Some(t)))
         }
-      case Failure(t) => Failure(t)
+      case Failure(t) => Future((cmd, Some(t)))
     }
   }
 }

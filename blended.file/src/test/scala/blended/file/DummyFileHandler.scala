@@ -4,22 +4,25 @@ import java.io.File
 import akka.actor.ActorSystem
 import blended.util.logging.Logger
 
-import scala.util.{Failure, Try}
+import scala.concurrent.{ExecutionContext, Future}
 
 class FailingFileHandler extends FilePollHandler {
 
-  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Try[Unit] =
-    Failure(new Exception("Could not process !!"))
+  private implicit val eCtxt : ExecutionContext = ExecutionContext.global
+
+  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Future[(FileProcessCmd, Option[Throwable])] =
+    Future((cmd, Some(new Exception("Boom"))))
 }
 
 class SucceedingFileHandler extends FilePollHandler {
 
-  private val log : Logger = Logger[SucceedingFileHandler]
+  private implicit val eCtxt : ExecutionContext = ExecutionContext.global
 
+  private val log : Logger = Logger[SucceedingFileHandler]
   var handled : List[FileProcessCmd] = List.empty
 
-  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Try[Unit] = Try {
+  override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Future[(FileProcessCmd, Option[Throwable])] = {
     log.info(s"Handling [$cmd]")
-    handled = cmd :: handled
+    Future(cmd, None)
   }
 }

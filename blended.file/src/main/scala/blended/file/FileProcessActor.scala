@@ -6,6 +6,8 @@ import java.util.Date
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
+import akka.pattern.pipe
+import org.springframework.cglib.core.MethodWrapper.MethodWrapperKey
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
@@ -28,39 +30,38 @@ class FileProcessActor extends Actor with ActorLogging {
   }
 
   def initiated(requestor: ActorRef, tempFile: File, cmd: FileProcessCmd) : Receive = {
-    case result : FileCmdResult => if (result.success) {
 
-      cmd.handler.processFile(cmd, tempFile)(context.system) match {
-        case Success(_) =>
-          requestor ! FileProcessed(cmd, success = true)
+    case result : FileCmdResult if result.success =>
+      cmd.handler.processFile(cmd, tempFile)(context.system).pipeTo(self)
 
-          val archiveCmd = cmd.cfg.backup match {
-            case None =>
-              DeleteFile(tempFile)
-            case Some(d) =>
-              val backupDir = new File(d)
-              if (!backupDir.exists()) {
-                backupDir.mkdirs()
-              }
-              val backupFileName = cmd.f.getName + "-" + sdf.format(new Date())
-              RenameFile(tempFile, new File(d, backupFileName))
-          }
-
-          context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
-          context.become(cleanUp(requestor, cmd, success = true))
-
-        case Failure(e) =>
-          log.warning(s"Failed to process file [${cmd.f.getAbsolutePath()}] : [${e.getMessage()}]")
-          context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
-          context.become(cleanUp(requestor, cmd, success = false))
-      }
-
-
-    } else {
+    case result : FileCmdResult if !result.success =>
       log.warning(s"File [${cmd.f.getAbsolutePath}] can't be accessed yet - processing delayed.")
       context.become(cleanUp(requestor, cmd, success = false))
       self.forward(result)
-    }
+
+    case p : (FileProcessCmd, Option[Throwable]) if p._2.isEmpty =>
+      requestor ! FileProcessed(cmd, success = true)
+
+      val archiveCmd = cmd.cfg.backup match {
+        case None =>
+          DeleteFile(tempFile)
+        case Some(d) =>
+          val backupDir = new File(d)
+          if (!backupDir.exists()) {
+            backupDir.mkdirs()
+          }
+          val backupFileName = cmd.f.getName + "-" + sdf.format(new Date())
+          RenameFile(tempFile, new File(d, backupFileName))
+      }
+
+      context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
+      context.become(cleanUp(requestor, cmd, success = true))
+
+    case p : (FileProcessCmd, Option[Throwable]) if p._2.isDefined =>
+      val t : Throwable = p._2.get
+      log.warning(s"Failed to process file [${p._1.f.getAbsolutePath()}] : [${t.getMessage()}]")
+      context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, cmd.f), self)
+      context.become(cleanUp(requestor, cmd, success = false))
   }
 
   def cleanUp(requestor: ActorRef, cmd: FileProcessCmd, success: Boolean) : Receive = {

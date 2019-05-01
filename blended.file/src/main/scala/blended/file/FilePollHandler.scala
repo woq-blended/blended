@@ -4,9 +4,9 @@ import java.io.File
 
 import akka.actor.ActorSystem
 
-import scala.util.Try
+import scala.concurrent.Future
 
 trait FilePollHandler {
 
-  def processFile(cmd : FileProcessCmd, f : File)(implicit system: ActorSystem) : Try[Unit]
+  def processFile(cmd : FileProcessCmd, f : File)(implicit system: ActorSystem) : Future[(FileProcessCmd, Option[Throwable])]
 }
