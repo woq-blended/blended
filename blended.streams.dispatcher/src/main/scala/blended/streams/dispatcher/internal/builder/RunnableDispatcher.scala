@@ -180,10 +180,9 @@ class RunnableDispatcher(
         val streamCfg = StreamControllerConfig.fromConfig(routerCfg.rawConfig).get
           .copy(
             name = dispLogger.name,
-            source = source.via(transactionSend())
           )
 
-        val actor = system.actorOf(StreamController.props(streamCfg = streamCfg))
+        val actor = system.actorOf(StreamController.props[FlowEnvelope](source.via(transactionSend()), streamCfg))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)

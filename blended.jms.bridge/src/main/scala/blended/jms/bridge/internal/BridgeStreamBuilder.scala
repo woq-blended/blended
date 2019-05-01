@@ -263,7 +263,7 @@ class BridgeStreamBuilder(
   protected def logEnvelope(msg : String) : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
     Flow.fromGraph(FlowProcessor.log(LogLevel.Debug, bridgeLogger, msg))
 
-  protected val stream : Source[FlowEnvelope, NotUsed] = {
+  val stream : Source[FlowEnvelope, NotUsed] = {
 
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
@@ -306,9 +306,6 @@ class BridgeStreamBuilder(
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
-  val streamCfg : StreamControllerConfig[FlowEnvelope] = StreamControllerConfig.fromConfig[FlowEnvelope](cfg.rawConfig).get
-    .copy(
-      name = streamId,
-      source = stream
-    )
+  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(cfg.rawConfig).get
+    .copy(name = streamId)
 }

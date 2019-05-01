@@ -71,7 +71,7 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
     retryDestName = "retryQueue",
     failedDestName = "retryFailed",
     eventDestName = "internal.transactions",
-    retryInterval = 2.seconds,
+    retryInterval = 1.seconds,
     maxRetries = 5,
     retryTimeout = 100.millis,
     headerCfg = headerCfg
@@ -215,7 +215,7 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
       .withHeader(headerCfg.headerTransId, id).get
       .withHeader(headerCfg.headerRetryDestination, srcQueue).get
 
-    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 3)(retryMsg).get
+    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 5)(retryMsg).get
     messages should be (empty)
 
     consumeMessages(retryCfg.failedDestName)(1.second).get.headOption match {

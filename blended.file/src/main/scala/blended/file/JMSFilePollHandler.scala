@@ -1,15 +1,16 @@
 package blended.file
-import akka.NotUsed
+import akka.{Done, NotUsed, stream}
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Materializer, OverflowStrategy}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Source, Zip}
+import akka.stream.{ActorMaterializer, FlowShape, Graph, KillSwitch, KillSwitches, Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Keep, Sink, Source, Zip}
 import akka.util.ByteString
 import blended.akka.MemoryStash
+import blended.streams.{StreamController, StreamControllerConfig, StreamControllerSupport}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.io.BufferedSource
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -22,25 +23,113 @@ object AsyncSendActor {
   ) : Props = Props(new AsyncSendActor(settings, header))
 }
 
+private case class FileSendInfo(
+  actor : ActorRef,
+  cmd : FileProcessCmd,
+  env : FlowEnvelope,
+  p : Promise[FileProcessResult]
+)
+
+private case class JmsStreamStarted(entry: ActorRef)
+private case object JmsStreamStopped
+
+private object JmsSendStream {
+
+  def props(
+    streamCfg : StreamControllerConfig,
+    settings : JmsProducerSettings,
+    asyncSender : ActorRef
+  ) : Props = Props(new JmsSendStream(streamCfg, settings, asyncSender))
+}
+
+private class JmsSendStream(
+  streamCfg : StreamControllerConfig,
+  settings: JmsProducerSettings,
+  asyncSender : ActorRef
+) extends Actor
+  with StreamControllerSupport[FileSendInfo]
+  with JmsStreamSupport {
+
+  private var entry : Option[ActorRef] = None
+
+  private implicit val system : ActorSystem = context.system
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
+  private implicit val materializer : Materializer = ActorMaterializer()
+
+  override def preStart(): Unit = self ! StreamController.Start
+
+  override def afterStreamStarted(): Unit = {
+    entry.foreach{ ref => asyncSender ! JmsStreamStarted(ref) }
+  }
+
+  override def beforeStreamRestart(): Unit = {
+    entry = None
+    asyncSender ! JmsStreamStopped
+  }
+
+  override def receive: Receive = starting(streamCfg, streamCfg.minDelay)
+
+  // We create an outbound JMS Stream with an actor serving as the entryPoint
+  private val pollingSrc : Source[FileSendInfo, ActorRef] =
+    Source.actorRef[FileSendInfo](FilePollActor.batchSize * 2, overflowStrategy = OverflowStrategy.fail)
+
+  private val performSend : Flow[FileSendInfo, FileSendInfo, NotUsed] = {
+
+    val g : Graph[FlowShape[FileSendInfo, FileSendInfo], NotUsed] = GraphDSL.create() { implicit b=>
+
+      import GraphDSL.Implicits._
+
+      // First we spilt the flow, so that we can keep the file info in one part
+      // and perform the send in the other part, collecting any exceptions that
+      // may occurr
+      val split = b.add(Broadcast[FileSendInfo](2))
+
+      // to send the jms message we need to select the envelope
+      val select = b.add(Flow.fromFunction[FileSendInfo, FlowEnvelope](_.env))
+
+      // then we perform the jms send
+      val jmsSend = b.add(jmsProducer(
+        name = "filesend",
+        settings = settings
+      ))
+
+      split.out(0) ~> select ~> jmsSend.in
+
+      // Finally we zip the branches
+      val zip = b.add(Zip[FlowEnvelope, FileSendInfo])
+
+      jmsSend.out ~> zip.in0
+      split.out(1) ~> zip.in1
+
+      val merge = b.add(Flow.fromFunction[(FlowEnvelope, FileSendInfo), FileSendInfo]{ p => p._2.copy(env = p._1)})
+      zip.out ~> merge.in
+
+      FlowShape(split.in, merge.out)
+    }
+
+    Flow.fromGraph(g)
+  }
+
+  // This is to send the completed info object back to the controlling actor after sending the message
+  // The flow envelope will have an exception set if the send has failed
+  val respond : Flow[FileSendInfo, FileSendInfo, NotUsed] = Flow.fromFunction[FileSendInfo, FileSendInfo]{ info =>
+    info.actor ! info
+    info
+  }
+
+  override def source(): Source[FileSendInfo, _] = Source.actorRef[FileSendInfo](FilePollActor.batchSize * 2, OverflowStrategy.fail)
+}
+
 class AsyncSendActor(
   settings : JmsProducerSettings,
   header : FlowMessage.FlowMessageProps
-) extends Actor with MemoryStash with JmsStreamSupport {
+) extends Actor with MemoryStash {
 
   private val log : Logger = Logger[AsyncSendActor]
-  private implicit val system : ActorSystem = context.system
-  private implicit val materializer : Materializer = ActorMaterializer()
 
   case object Start
 
   override def preStart(): Unit = self ! Start
-
-  case class FileSendInfo(
-    actor : ActorRef,
-    cmd : FileProcessCmd,
-    env : FlowEnvelope,
-    p : Promise[FileProcessResult]
-  )
 
   private def createEnvelope(cmd : FileProcessCmd) : Try[FlowEnvelope] = {
 
@@ -64,71 +153,21 @@ class AsyncSendActor(
 
   override def receive: Receive = starting.orElse(stashing)
 
-  private def sendStream() : ActorRef = {
-
-    // We create an outbound JMS Stream with an actor serving as the entryPoint
-    val src : Source[FileSendInfo, ActorRef] =
-      Source.actorRef[FileSendInfo](FilePollActor.batchSize * 2, overflowStrategy = OverflowStrategy.fail)
-
-    val performSend : Flow[FileSendInfo, FileSendInfo, NotUsed] = {
-
-      val g : Graph[FlowShape[FileSendInfo, FileSendInfo], NotUsed] = GraphDSL.create() { implicit b=>
-
-        import GraphDSL.Implicits._
-
-        // First we spilt the flow, so that we can keep the file info in one part
-        // and perform the send in the other part, collecting any exceptions that
-        // may occurr
-        val split = b.add(Broadcast[FileSendInfo](2))
-
-        // to send the jms message we need to select the envelope
-        val select = b.add(Flow.fromFunction[FileSendInfo, FlowEnvelope](_.env))
-
-        // then we perform the jms send
-        val jmsSend = b.add(jmsProducer(
-          name = "filesend",
-          settings = settings
-        ))
-
-        split.out(0) ~> select ~> jmsSend.in
-
-        // Finally we zip the branches
-        val zip = b.add(Zip[FlowEnvelope, FileSendInfo])
-
-        jmsSend.out ~> zip.in0
-        split.out(1) ~> zip.in1
-
-        val merge = b.add(Flow.fromFunction[(FlowEnvelope, FileSendInfo), FileSendInfo]{ p => p._2.copy(env = p._1)})
-        zip.out ~> merge.in
-
-        FlowShape(split.in, merge.out)
-      }
-
-      Flow.fromGraph(g)
-    }
-
-    // This is to send the completed info object back to the controlling actor after sending the message
-    // The flow envelope will have an exception set if the send has failed
-    val respond : Flow[FileSendInfo, FileSendInfo, NotUsed] = Flow.fromFunction[FileSendInfo, FileSendInfo]{ info =>
-      info.actor ! info
-      info
-    }
-
-    self
-  }
-
   private def starting : Receive = {
     case Start =>
       log.info(s"Starting Async Send Actor...")
-      context.become(started(sendStream()))
+      context.become(withoutStream)
   }
 
-  private def started(sendStream : ActorRef) : Receive = {
+  private def withStream(streamController : ActorRef, jmsSendActor : ActorRef) : Receive = {
+    case JmsStreamStopped =>
+
     case (cmd : FileProcessCmd, p : Promise[FileProcessResult]) =>
 
       createEnvelope(cmd) match {
         case Success(env) =>
-          sendStream ! FileSendInfo(self, cmd, env, p)
+          jmsSendActor ! FileSendInfo(self, cmd, env, p)
+
         case Failure(t) =>
           p.failure(t)
       }
@@ -141,6 +180,15 @@ class AsyncSendActor(
 
         case Some(t) => info.p.failure(t)
       }
+  }
+
+  private def withoutStream : Receive = {
+
+    case JmsStreamStarted(ref) =>
+      context.become(withStream(sender(), ref))
+
+    case (cmd : FileProcessCmd, p : Promise[FileProcessResult]) =>
+      p.success(FileProcessResult(cmd, Some(new Exception("JMS Stream is not currently connected."))))
   }
 }
 

@@ -81,10 +81,9 @@ class TransactionOutbound(
 
     val streamCfg = StreamControllerConfig.fromConfig(dispatcherCfg.rawConfig).get
       .copy(
-        name = "transactionOut",
-        source = src
+        name = "transactionOut"
       )
 
-    system.actorOf(StreamController.props(streamCfg))
+    system.actorOf(StreamController.props[FlowEnvelope](src, streamCfg))
   }
 }

@@ -1,7 +1,7 @@
 package blended.jms.bridge.internal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
@@ -11,7 +11,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowHeaderConfig, TransactionWiretap}
-import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{AbstractStreamController, FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.config.Implicits._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config
@@ -216,26 +216,30 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
 
   def start() : Unit = {
 
-    if (actor.isEmpty) {
-      log.info(s"Starting Jms Retry processor [$name] with [$retryCfg]")
+    actor.synchronized {
+      if (actor.isEmpty) {
+        log.info(s"Starting Jms Retry processor [$name] with [$retryCfg]")
 
-      // TODO: Load from config
-      val streamCfg : StreamControllerConfig[FlowEnvelope] = StreamControllerConfig(
-        name = name,
-        source = retrySource.via(retryGraph),
-        minDelay = 10.seconds,
-        maxDelay = 3.minutes,
-        exponential = true,
-        onFailureOnly = true,
-        random = 0.2
-      )
+        // TODO: Load from config
+        val streamCfg : StreamControllerConfig = StreamControllerConfig(
+          name = name,
+          //source = retrySource.via(retryGraph),
+          minDelay = 10.seconds,
+          maxDelay = 3.minutes,
+          exponential = true,
+          onFailureOnly = true,
+          random = 0.2
+        )
 
-      actor = Some(system.actorOf(StreamController.props(streamCfg)))
+        actor = Some(system.actorOf(StreamController.props[FlowEnvelope](retrySource.via(retryGraph), streamCfg)))
+      }
     }
   }
 
   def stop(): Unit = {
-    actor.foreach(system.stop)
-    actor = None
+    actor.synchronized{
+      actor.foreach(system.stop)
+      actor = None
+    }
   }
 }
