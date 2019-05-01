@@ -1,15 +1,14 @@
 package blended.streams
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{KillSwitch, KillSwitches, Materializer}
-import blended.streams.message.FlowEnvelope
+import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer}
+import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
-import blended.util.config.Implicits._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Random, Success, Try}
 
@@ -44,33 +43,14 @@ case class StreamControllerConfig[T](
   random : Double
 )
 
-object StreamController {
+trait StreamControllerSupport { this : Actor =>
 
-  case object Start
-  case object Stop
-  case class Abort(t: Throwable)
-  case class StreamTerminated(exception : Option[Throwable])
-
-  def props[T](streamCfg : StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer) : Props =
-    Props(new StreamController[T](streamCfg))
-}
-
-class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer) extends Actor {
-
-  private[this] val log = Logger[StreamController[T]]
-  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+  private[this] val log : Logger = Logger[StreamControllerSupport]
   private[this] val rnd = new Random()
+  private[this] implicit val materializer : Materializer = ActorMaterializer()
+  private[this] implicit val eCtxt : ExecutionContext = context.dispatcher
 
-  private[this] val initialInterval : FiniteDuration = streamCfg.minDelay
-  private[this] var interval : FiniteDuration = streamCfg.minDelay
-
-  override def preStart(): Unit = self ! StreamController.Start
-
-  override def receive: Receive = starting
-
-  override def toString: String = s"${getClass().getSimpleName()}($streamCfg)"
-
-  private[this] def nextInterval : FiniteDuration = {
+  val nextInterval : FiniteDuration => StreamControllerConfig[_] => FiniteDuration = { interval => streamCfg =>
 
     val noise = {
       val d = rnd.nextDouble().abs
@@ -81,7 +61,7 @@ class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system 
       if (streamCfg.exponential) {
         interval.toMillis * 2
       } else {
-        interval.toMillis + initialInterval.toMillis
+        interval.toMillis + streamCfg.minDelay.toMillis
       }
 
     newIntervalMillis = scala.math.min(
@@ -92,18 +72,14 @@ class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system 
     newIntervalMillis.toLong.millis
   }
 
-  def starting : Receive = {
+  def starting(streamCfg :StreamControllerConfig[_], interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       context.stop(self)
 
     case StreamController.Start =>
       log.debug(s"Initializing StreamController [${streamCfg.name}]")
 
-      val (killswitch, done) = streamCfg.source
-        .viaMat(KillSwitches.single)(Keep.right)
-        .watchTermination()(Keep.both)
-        .toMat(Sink.ignore)(Keep.left)
-        .run()
+      val (killswitch, done) = startStream()
 
       done.onComplete {
         case Success(_) =>
@@ -112,10 +88,10 @@ class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system 
           self ! StreamController.StreamTerminated(Some(t))
       }
 
-      context.become(running(killswitch))
+      context.become(running(streamCfg, killswitch, interval))
   }
 
-  def running(killSwitch: KillSwitch) : Receive = {
+  def running(streamCfg : StreamControllerConfig[_], killSwitch: KillSwitch, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       killSwitch.shutdown()
       context.become(stopping)
@@ -131,9 +107,8 @@ class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system 
         log.info(s"Stream [${streamCfg.name}] terminated [${t.map(_.getMessage).getOrElse("")}] ...scheduling restart in [$interval]")
 
         context.system.scheduler.scheduleOnce(interval, self, StreamController.Start)
-        interval = nextInterval
 
-        context.become(starting)
+        context.become(starting(streamCfg, nextInterval(interval)(streamCfg)))
       } else {
         context.stop(self)
       }
@@ -142,4 +117,37 @@ class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system 
   def stopping : Receive = {
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
+
+  def startStream() : (KillSwitch, Future[Done])
+}
+
+object StreamController {
+
+  case object Start
+  case object Stop
+  case class Abort(t: Throwable)
+  case class StreamTerminated(exception : Option[Throwable])
+
+  def props[T](streamCfg : StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer) : Props =
+    Props(new StreamController[T](streamCfg))
+}
+
+class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer)
+  extends Actor
+  with StreamControllerSupport {
+
+  private[this] val log = Logger[StreamController[T]]
+  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
+
+  override def preStart(): Unit = self ! StreamController.Start
+
+  override def receive: Receive = starting(streamCfg, streamCfg.minDelay)
+
+  override def toString: String = s"${getClass().getSimpleName()}($streamCfg)"
+
+  override def startStream(): (KillSwitch, Future[Done]) = streamCfg.source
+    .viaMat(KillSwitches.single)(Keep.right)
+    .watchTermination()(Keep.both)
+    .toMat(Sink.ignore)(Keep.left)
+    .run()
 }
