@@ -306,7 +306,7 @@ class BridgeStreamBuilder(
   bridgeLogger.info(s"Starting bridge stream with config [inbound=${cfg.inbound},trackTransaction=${cfg.trackTransaction}]")
   // The stream will be handled by an actor which that can be used to shutdown the stream
   // and will restart the stream with a backoff strategy on failure
-  val streamCfg : StreamControllerConfig = StreamControllerConfig.fromConfig(cfg.rawConfig).get
+  val streamCfg : StreamControllerConfig[FlowEnvelope] = StreamControllerConfig.fromConfig[FlowEnvelope](cfg.rawConfig).get
     .copy(
       name = streamId,
       source = stream

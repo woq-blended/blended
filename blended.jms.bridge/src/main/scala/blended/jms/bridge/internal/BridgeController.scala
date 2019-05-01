@@ -6,6 +6,7 @@ import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge._
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
+import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
 import blended.streams.{StreamController, StreamControllerConfig}
 import blended.util.config.Implicits._
@@ -119,7 +120,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = in.sessionRecreateTimeout
     )
 
-    val streamCfg: StreamControllerConfig = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg).streamCfg
+    val streamCfg: StreamControllerConfig[FlowEnvelope] =
+      ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }
@@ -152,7 +154,8 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
       sessionRecreateTimeout = 1.second
     )
 
-    val streamCfg: StreamControllerConfig = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg).streamCfg
+    val streamCfg: StreamControllerConfig[FlowEnvelope] =
+      ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg).streamCfg
 
     streams += (streamCfg.name -> context.actorOf(StreamController.props(streamCfg)))
   }

@@ -5,13 +5,13 @@ import java.io.File
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.testkit.TestKit
-import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
+import blended.jms.utils.{JmsDestination, JmsQueue}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
+import blended.testsupport.RequiresForkedJVM
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.testsupport.{RequiresForkedJVM, TestActorSys}
 import blended.util.logging.Logger
 import org.apache.activemq.broker.BrokerService
 import org.scalatest.{BeforeAndAfterAll, Matchers}
@@ -31,6 +31,8 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
   private val log : Logger = Logger[FilePollToJmsSpec]
   private var brokerSvc : Option[BrokerService] = None
 
+  private val dest : JmsDestination = JmsQueue("filepoll")
+
   private implicit val materializer : Materializer = ActorMaterializer()
 
   override protected def beforeAll(): Unit = {
@@ -48,7 +50,7 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
       log = log,
 
       connectionFactory = connF,
-      jmsDestination = Some(JmsQueue("filepoll"))
+      jmsDestination = Some(dest)
     )
 
     val jmsHandler = new JMSFilePollHandler(
@@ -69,7 +71,7 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
     val collector : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = FlowHeaderConfig.create("App"),
       cf = connF,
-      dest = JmsQueue("filepoll"),
+      dest = dest,
       log = log,
       listener = 1
     )

@@ -220,7 +220,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
       log.info(s"Starting Jms Retry processor [$name] with [$retryCfg]")
 
       // TODO: Load from config
-      val streamCfg : StreamControllerConfig = StreamControllerConfig(
+      val streamCfg : StreamControllerConfig[FlowEnvelope] = StreamControllerConfig(
         name = name,
         source = retrySource.via(retryGraph),
         minDelay = 10.seconds,

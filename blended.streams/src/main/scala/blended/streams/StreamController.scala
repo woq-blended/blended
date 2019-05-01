@@ -9,19 +9,20 @@ import blended.util.logging.Logger
 import com.typesafe.config.Config
 import blended.util.config.Implicits._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{FiniteDuration, _}
 import scala.util.{Failure, Random, Success, Try}
 
 object StreamControllerConfig {
 
-  def fromConfig(cfg : Config) : Try[StreamControllerConfig] = Try {
+  def fromConfig[T](cfg : Config) : Try[StreamControllerConfig[T]] = Try {
     val minDelay : FiniteDuration = cfg.getDuration("minDelay", 5.seconds)
     val maxDelay : FiniteDuration = cfg.getDuration("maxDelay", 1.minute)
     val exponential : Boolean = cfg.getBoolean("exponential", true)
     val random : Double = cfg.getDouble("random", 0.2)
     val onFailure : Boolean = cfg.getBoolean("onFailureOnly", true)
 
-    StreamControllerConfig(
+    StreamControllerConfig[T](
       name = "",
       source = Source.empty,
       minDelay = minDelay,
@@ -33,9 +34,9 @@ object StreamControllerConfig {
   }
 }
 
-case class StreamControllerConfig(
+case class StreamControllerConfig[T](
   name : String,
-  source : Source[FlowEnvelope, NotUsed],
+  source : Source[T, NotUsed],
   minDelay : FiniteDuration,
   maxDelay : FiniteDuration,
   exponential : Boolean,
@@ -50,13 +51,14 @@ object StreamController {
   case class Abort(t: Throwable)
   case class StreamTerminated(exception : Option[Throwable])
 
-  def props(streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props = Props(new StreamController(streamCfg))
+  def props[T](streamCfg : StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer) : Props =
+    Props(new StreamController[T](streamCfg))
 }
 
-class StreamController(streamCfg: StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) extends Actor {
+class StreamController[T](streamCfg: StreamControllerConfig[T])(implicit system : ActorSystem, materializer: Materializer) extends Actor {
 
-  private[this] val log = Logger[StreamController]
-  private[this] implicit val eCtxt = context.system.dispatcher
+  private[this] val log = Logger[StreamController[T]]
+  private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private[this] val rnd = new Random()
 
   private[this] val initialInterval : FiniteDuration = streamCfg.minDelay
