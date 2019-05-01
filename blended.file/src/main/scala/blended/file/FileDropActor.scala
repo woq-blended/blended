@@ -13,6 +13,7 @@ import blended.util.StreamCopySupport
 import scala.util.control.NonFatal
 
 case class FileDropCommand(
+  id : String,
   content: ByteString,
   directory: String,
   fileName: String,
@@ -37,7 +38,7 @@ case class FileDropCommand(
   override def toString: String = {
 
     val ts = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss:SSS").format(new Date(timestamp))
-    s"FileDropCommand(dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.length}), " +
+    s"FileDropCommand[$id](dir = [$directory], fileName = [$fileName], compressed = $compressed, append = $append, timestamp = [$ts], content-size = ${content.length}), " +
     s"properties=${properties.mkString("[", ",", "]")}"
   }
 }

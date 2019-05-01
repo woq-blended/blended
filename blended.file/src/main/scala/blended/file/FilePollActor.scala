@@ -115,11 +115,11 @@ class FilePollActor(
 
       val toProcess : List[File] = files()
 
-      val futures : Iterable[Future[FileProcessed]] = toProcess.map { f =>
-        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).mapTo[FileProcessed]
+      val futures : Iterable[Future[FileProcessResult]] = toProcess.map { f =>
+        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).mapTo[FileProcessResult]
       }
 
-      val listFuture : Future[Iterable[FileProcessed]] = Future.sequence(futures)
+      val listFuture : Future[Iterable[FileProcessResult]] = Future.sequence(futures)
 
       listFuture.onComplete { c =>
         c match {
@@ -127,7 +127,7 @@ class FilePollActor(
             log.warn(s"Error processing directory [${cfg.sourceDir}] in [${cfg.id}] : [${t.getMessage()}]")
 
           case Success(results) =>
-            val succeeded = results.count(_.success)
+            val succeeded = results.count(_.t.isEmpty)
             log.info(s"Processed [$succeeded] of [$totalToProcess](remaining [${pending.size}]) files in [${cfg.id}] from [${cfg.sourceDir}], ")
         }
 

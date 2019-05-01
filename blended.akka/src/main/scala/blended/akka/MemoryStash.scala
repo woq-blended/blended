@@ -1,21 +1,19 @@
 package blended.akka
 
-import akka.actor.{Actor, ActorLogging, ActorRef}
+import akka.actor.{Actor, ActorRef}
 
 import scala.collection.mutable.ListBuffer
 
-trait MemoryStash { this : Actor with ActorLogging =>
+trait MemoryStash { this : Actor =>
 
-  val requests = ListBuffer.empty[(ActorRef, Any)]
+  val requests : ListBuffer[(ActorRef, Any)] = ListBuffer.empty[(ActorRef, Any)]
 
   def stashing : Receive = {
     case msg =>
-      log.debug(s"Stashing [${msg}]")
       requests.prepend((sender, msg))
   }
 
   def unstash() : Unit = {
-    log.debug(s"Unstashing [${requests.size}] messages.")
     val r = requests.reverse.toList
     requests.clear()
     r.foreach { case (requestor, msg) =>

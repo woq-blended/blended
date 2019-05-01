@@ -1,50 +1,45 @@
 package blended.file
-import java.io.File
-
-import akka.NotUsed
-import akka.actor.{Actor, ActorRef, ActorSystem}
-import akka.stream.scaladsl.Source
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.util.ByteString
+import blended.akka.MemoryStash
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Future, Promise}
 import scala.io.BufferedSource
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-class AsyncSendActor extends Actor {
+object AsyncSendActor {
 
-  private val inflight : mutable.Map[String, FileProcessCmd] = mutable.Map.empty
-
-  override def receive: Receive = {
-    case cmd : FileProcessCmd =>
-    case env : FlowEnvelope =>
-  }
+  def props(
+    settings : JmsProducerSettings,
+    header : FlowMessage.FlowMessageProps
+  ) : Props = Props(new AsyncSendActor(settings, header))
 }
 
-class JMSFilePollHandler(
+class AsyncSendActor(
   settings : JmsProducerSettings,
-  header : FlowMessage.FlowMessageProps,
-  bufferSize : Int
-) extends FilePollHandler with JmsStreamSupport {
+  header : FlowMessage.FlowMessageProps
+) extends Actor with MemoryStash {
 
-  private val log : Logger = Logger[JMSFilePollHandler]
+  private val log : Logger = Logger[AsyncSendActor]
 
-  def start() : Unit = {
+  case object Start
 
-    // Create an actor where we can send FileProcessCommands to
-    val actorSrc : Source[FileProcessCmd, ActorRef] = Source.actorRef[FileProcessCmd](bufferSize, OverflowStrategy.backpressure)
+  override def preStart(): Unit = self ! Start
 
+  case class FileSendInfo(
+    actor : ActorRef,
+    cmd : FileProcessCmd,
+    env : FlowEnvelope,
+    p : Promise[FileProcessResult]
+  )
 
-  }
+  private def createEnvelope(cmd : FileProcessCmd) : Try[FlowEnvelope] = {
 
-  private def createEnvelope(cmd : FileProcessCmd, file : File) : Try[FlowEnvelope] = {
-
-    val src : BufferedSource = scala.io.Source.fromFile(file)
+    val src : BufferedSource = scala.io.Source.fromFile(cmd.fileToProcess)
 
     try {
       val body : ByteString = ByteString(src.mkString)
@@ -62,24 +57,68 @@ class JMSFilePollHandler(
     }
   }
 
-  override def processFile(cmd: FileProcessCmd, f : File)(implicit system: ActorSystem): Future[(FileProcessCmd, Option[Throwable])] = {
+  override def receive: Receive = starting.orElse(stashing)
 
-    implicit val materializer : Materializer = ActorMaterializer()
-    implicit val eCtxt : ExecutionContext = system.dispatcher
+  private def starting : Receive = {
+    case Start =>
+      log.info(s"Starting Async Send Actor...")
+      context.become(started)
+  }
 
-    createEnvelope(cmd, f) match {
-      case Success(env) =>
-        log.trace(s"Handling polled file in JMSHandler : [${env.flowMessage.header.mkString(",")}]")
+  private def started : Receive = {
+    case (cmd : FileProcessCmd, p : Promise[FileProcessResult]) =>
+      createEnvelope(cmd) match {
+        case Success(env) =>
+          self ! FileSendInfo(sender(), cmd, env, p)
+        case Failure(t) =>
+          p.failure(t)
+      }
+    case info : FileSendInfo =>
+      info.env.exception match {
+        case None =>
+          log.info(s"Successfully processed file [${info.cmd.id}] : [${info.cmd}]")
+          info.p.success(FileProcessResult(info.cmd, None))
 
-        sendMessages(
-          producerSettings = settings,
-          log = log,
-          env
-        ) match {
-          case Success(s) => Future((cmd, None))
-          case Failure(t) => Future((cmd, Some(t)))
-        }
-      case Failure(t) => Future((cmd, Some(t)))
+        case Some(t) => info.p.failure(t)
+      }
+  }
+}
+
+class JMSFilePollHandler(
+  settings : JmsProducerSettings,
+  header : FlowMessage.FlowMessageProps,
+  bufferSize : Int
+)(implicit system: ActorSystem) extends FilePollHandler with JmsStreamSupport {
+
+  private val log : Logger = Logger[JMSFilePollHandler]
+  private var processActor : Option[ActorRef] = None
+
+  def start() : Unit = { processActor.synchronized {
+    if (processActor.isEmpty) {
+      processActor = Some(system.actorOf(AsyncSendActor.props(settings, header)))
     }
+  }}
+
+  def stop() : Unit = {
+    processActor.synchronized{
+      processActor.foreach(system.stop)
+      processActor = None
+    }
+  }
+
+  override def processFile(cmd: FileProcessCmd) : Future[FileProcessResult] = {
+
+    val p : Promise[FileProcessResult] = Promise[FileProcessResult]()
+
+    processActor match {
+      case None =>
+        val msg = s"Actor to process file [${cmd.fileToProcess}] for [${cmd.id}] is not available"
+        log.warn(msg)
+        p.success(FileProcessResult(cmd, Some(new Exception(msg))))
+      case Some(a) =>
+        a ! (cmd, p)
+    }
+
+    p.future
   }
 }

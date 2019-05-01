@@ -7,6 +7,7 @@ import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import blended.util.logging.Logger
 import org.scalatest.{ FreeSpec, Matchers }
+import scala.concurrent.duration._
 
 class FileManipulationSpec extends FreeSpec with Matchers {
 
@@ -25,7 +26,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
 
       actor.tell(DeleteFile(f), probe.ref)
 
-      probe.expectMsg(FileCmdResult(DeleteFile(f), true))
+      probe.expectMsg(FileCmdResult(DeleteFile(f), None))
 
       f.exists() should be (false)
     }
@@ -42,7 +43,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val actor = system.actorOf(Props[FileManipulationActor])
 
       actor.tell(RenameFile(s, d), probe.ref)
-      probe.expectMsg(FileCmdResult(RenameFile(s, d), success = true))
+      probe.expectMsg(FileCmdResult(RenameFile(s, d), None))
 
       s.exists() should be (false)
       d.exists() should be (true)
@@ -61,7 +62,10 @@ class FileManipulationSpec extends FreeSpec with Matchers {
 
       actor.tell(RenameFile(s, d), probe.ref)
 
-      probe.expectMsg(FileCmdResult(RenameFile(s, d), success = false))
+      probe.fishForMessage(1.second){
+        case FileCmdResult(RenameFile(_,_), Some(t)) =>
+          t.isInstanceOf[FileCommandTimeoutException]
+      }
 
       s.exists() should be (true)
       d.exists() should be (true)

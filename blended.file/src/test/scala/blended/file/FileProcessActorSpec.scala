@@ -11,8 +11,8 @@ import scala.concurrent.duration._
 class FileProcessActorSpec extends FreeSpec with Matchers {
 
   val fish : Boolean => FileProcessCmd => PartialFunction[Any, Boolean] = expected => cmd => {
-    case p : FileProcessed =>
-      p.success.equals(expected) && p.cmd.copy(workFile = None).equals(cmd.copy(workFile = None))
+    case p : FileProcessResult =>
+      p.t.isEmpty.equals(expected) && p.cmd.copy(workFile = None).equals(cmd.copy(workFile = None))
     case _ =>
       false
   }
@@ -32,7 +32,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
       val handler : SucceedingFileHandler = new SucceedingFileHandler()
       val cmd = FileProcessCmd(originalFile = new File(cfg.sourceDir, "test.txt"), cfg = cfg, handler = handler)
@@ -67,7 +67,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
       val handler : SucceedingFileHandler = new SucceedingFileHandler()
       val cmd = FileProcessCmd(originalFile = srcFile, cfg = cfg, handler = handler)
@@ -101,7 +101,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
       val cmd = FileProcessCmd(originalFile = srcFile, cfg = cfg, handler = new FailingFileHandler())
 

@@ -43,7 +43,7 @@ class FilePollSpec extends TestKit(ActorSystem("JmsFilePoll"))
     genFile(srcFile)
 
     val probe = TestProbe()
-    system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
+    system.eventStream.subscribe(probe.ref, classOf[FileProcessResult])
 
     system.actorOf(FilePollActor.props(cfg, handler(), Some(sem)))
 
@@ -52,7 +52,7 @@ class FilePollSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
     lockFile.delete()
 
-    val processed = probe.expectMsgType[FileProcessed]
+    val processed = probe.expectMsgType[FileProcessResult]
     srcFile.exists() should be (false)
 
     processed.cmd.originalFile.getName() should be ("test.txt")

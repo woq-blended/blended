@@ -34,7 +34,7 @@ trait AbstractFilePollSpec { this : Matchers =>
     )
 
     val probe = TestProbe()
-    system.eventStream.subscribe(probe.ref, classOf[FileProcessed])
+    system.eventStream.subscribe(probe.ref, classOf[FileProcessResult])
 
     val actor = system.actorOf(FilePollActor.props(cfg, handler(), Some(sem)))
 
@@ -47,8 +47,8 @@ trait AbstractFilePollSpec { this : Matchers =>
     val result : List[File] = files.filter(_.getName.endsWith("txt"))
     val processCount : Int = result.size
 
-    val processed : List[FileProcessed] = probe.receiveWhile[FileProcessed](max = 10.seconds, messages = msgCount) {
-      case fp : FileProcessed => fp
+    val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 10.seconds, messages = msgCount) {
+      case fp : FileProcessResult => fp
     }.toList
 
     files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)

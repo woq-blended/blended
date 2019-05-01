@@ -5,6 +5,7 @@ import java.util.zip._
 
 import akka.util.ByteString
 import blended.util.logging.Logger
+import org.apache.commons.io.FileUtils
 import org.scalatest.Matchers
 
 import scala.io.Source
@@ -136,17 +137,7 @@ trait FileTestSupport extends  Matchers {
   def cleanUpDirectory (dirName : String) : Unit = {
 
     log.info(s"Cleaning up directory [$dirName]")
-
-    Option(new File(dirName).listFiles()).foreach(_.foreach{
-      f => if (f.isFile) {
-        log.info(s"Removing file [${f.getAbsolutePath}]")
-        f.delete()
-      } else {
-        cleanUpDirectory(f.getAbsolutePath)
-      }
-    })
-
-    new File(dirName).delete()
+    FileUtils.deleteDirectory(new File(dirName))
   }
 
   def genFile(f: File, content : ByteString) : Unit = {
