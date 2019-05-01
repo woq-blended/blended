@@ -23,6 +23,7 @@ class SucceedingFileHandler extends FilePollHandler {
 
   override def processFile(cmd: FileProcessCmd, f: File)(implicit system: ActorSystem): Future[(FileProcessCmd, Option[Throwable])] = {
     log.info(s"Handling [$cmd]")
+    handled = cmd :: handled
     Future(cmd, None)
   }
 }

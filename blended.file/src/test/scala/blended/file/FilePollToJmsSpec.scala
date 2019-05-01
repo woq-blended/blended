@@ -51,7 +51,11 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
       jmsDestination = Some(JmsQueue("filepoll"))
     )
 
-    new JMSFilePollHandler(settings, FlowMessage.props("ResourceType" -> "myType").get)
+    new JMSFilePollHandler(
+      settings = settings,
+      header = FlowMessage.props("ResourceType" -> "myType").get,
+      bufferSize = FilePollActor.batchSize
+    )
   }
 
   private def withJmsMessages(dir : String, msgCount : Int)(implicit timeout : FiniteDuration) : Unit = {

@@ -13,20 +13,20 @@ import scala.util.{Failure, Success}
 
 object FilePollActor {
 
+  val batchSize : Int = 100
+
   def props(
     cfg: FilePollConfig,
     handler: FilePollHandler,
     sem : Option[ActorRef] = None,
-    batchSize : Int = 100
   ) : Props =
-    Props(new FilePollActor(cfg, handler, sem, batchSize))
+    Props(new FilePollActor(cfg, handler, sem))
 }
 
 class FilePollActor(
   cfg: FilePollConfig,
   handler: FilePollHandler,
-  sem : Option[ActorRef],
-  batchSize : Int,
+  sem : Option[ActorRef]
 ) extends Actor {
 
   private val log : Logger = Logger[FilePollActor]
@@ -88,7 +88,7 @@ class FilePollActor(
         log.info(s"Found [$totalToProcess] files to process from [$srcDir]")
       }
 
-      val result = pending.take(batchSize)
+      val result = pending.take(FilePollActor.batchSize)
       pending = pending.drop(result.size)
 
       result
@@ -116,7 +116,7 @@ class FilePollActor(
       val toProcess : List[File] = files()
 
       val futures : Iterable[Future[FileProcessed]] = toProcess.map { f =>
-        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(f, cfg, handler))(timeout * 2, self).mapTo[FileProcessed]
+        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).mapTo[FileProcessed]
       }
 
       val listFuture : Future[Iterable[FileProcessed]] = Future.sequence(futures)

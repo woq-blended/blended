@@ -57,7 +57,7 @@ trait AbstractFilePollSpec { this : Matchers =>
 
     processed should have size(processCount)
     assert(
-      processed.forall(p => names.contains(p.cmd.f.getName()))
+      processed.forall(p => names.contains(p.cmd.originalFile.getName()))
     )
 
     system.stop(actor)

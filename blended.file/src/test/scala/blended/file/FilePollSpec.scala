@@ -55,7 +55,7 @@ class FilePollSpec extends TestKit(ActorSystem("JmsFilePoll"))
     val processed = probe.expectMsgType[FileProcessed]
     srcFile.exists() should be (false)
 
-    processed.cmd.f.getName() should be ("test.txt")
+    processed.cmd.originalFile.getName() should be ("test.txt")
   }
 
   "The File Poller should" - {
