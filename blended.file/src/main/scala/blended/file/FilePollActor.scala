@@ -3,13 +3,12 @@ package blended.file
 import java.io.{File, FilenameFilter}
 
 import akka.actor.{Actor, ActorRef, Props}
-import akka.pattern.ask
+import akka.pattern.{ask, pipe}
 import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
 import blended.util.logging.Logger
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
 
 object FilePollActor {
 
@@ -59,7 +58,7 @@ class FilePollActor(
       }
   }
 
-  private[this] def files() : List[File] = {
+  protected def files() : List[File] = {
     val srcDir = new File(cfg.sourceDir)
 
     if (!srcDir.exists()) {
@@ -95,9 +94,11 @@ class FilePollActor(
     }
   }
 
+  protected def fileProcessor() : ActorRef = context.actorOf(Props[FileProcessActor])
+
   override def receive: Receive = idle
 
-  private[file] def idle : Receive = {
+  private def idle : Receive = {
     case Tick =>
       if (sem.isDefined) {
         sem.foreach { s =>
@@ -113,31 +114,58 @@ class FilePollActor(
     case Acquired =>
       log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}]")
 
+      // First we get the batch files up next for processing
       val toProcess : List[File] = files()
 
-      val futures : Iterable[Future[FileProcessResult]] = toProcess.map { f =>
-        context.actorOf(Props[FileProcessActor]).ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).mapTo[FileProcessResult]
+      if (toProcess.nonEmpty) {
+        // Schedule the processing of all files in the batch and pick up the results in the processing receive
+        context.become(processing(toProcess, List.empty, 0))
+        toProcess.map { f =>
+          fileProcessor().ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).pipeTo(self)
+        }
+      } else {
+        // if the batch is empty we simply schedule the next directory scan
+        context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
       }
 
-      val listFuture : Future[Iterable[FileProcessResult]] = Future.sequence(futures)
+    case FileCmdResult => // do nothing - its just the response to restore a file
+  }
 
-      listFuture.onComplete { c =>
-        c match {
-          case Failure(t) =>
-            log.warn(s"Error processing directory [${cfg.sourceDir}] in [${cfg.id}] : [${t.getMessage()}]")
+  private def isProcessingComplete(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Unit = {
+    if (succeeded.size + failed == batch.size) {
+      log.info(s"Processed [${succeeded.size}] of [$totalToProcess](remaining [${pending.size}]) files in [${cfg.id}] from [${cfg.sourceDir}], ")
+      // the batch is now complete, so we switch states and schedule the next tick
+      context.become(idle)
 
-          case Success(results) =>
-            val succeeded = results.count(_.t.isEmpty)
-            log.info(s"Processed [$succeeded] of [$totalToProcess](remaining [${pending.size}]) files in [${cfg.id}] from [${cfg.sourceDir}], ")
-        }
-
-        sem.foreach(_ ! Release(self))
-
-        if (pending.nonEmpty) {
-          self ! Tick
-        } else {
-          context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+      batch.foreach { f =>
+        if (!f.exists()) {
+          val tempFile : File = new File(f.getParentFile, f.getName + cfg.tmpExt)
+          context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, f), self)
         }
       }
+
+      sem.foreach(_ ! Release(self))
+
+      if (pending.nonEmpty) {
+        self ! Tick
+      } else {
+        context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+      }
+    } else {
+      // We are still waiting for file processors to respond
+      context.become(processing(batch, succeeded, failed))
+    }
+  }
+
+  private def processing(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Receive = {
+    case akka.actor.Status.Failure(t) =>
+      log.warn(s"Error executing file processor for dir [${cfg.sourceDir}] : [${t.getMessage()}]")
+      isProcessingComplete(batch, succeeded, failed + 1)
+
+    case r @ FileProcessResult(_, None) =>
+      isProcessingComplete(batch, r :: succeeded, failed)
+
+    case FileProcessResult(_, Some(_)) =>
+      isProcessingComplete(batch, succeeded, failed + 1)
   }
 }

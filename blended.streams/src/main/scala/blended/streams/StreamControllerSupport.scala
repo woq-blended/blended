@@ -10,7 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 import scala.util.{Failure, Random, Success}
 
-trait StreamControllerSupport[T] { this : Actor =>
+trait StreamControllerSupport[T, Mat] { this : Actor =>
 
   private[this] val log : Logger = Logger(getClass().getName())
   private[this] val rnd = new Random()
@@ -39,7 +39,7 @@ trait StreamControllerSupport[T] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
-  def afterStreamStarted() : Unit = {}
+  def afterStreamStarted(m: Mat) : Unit = {}
 
   def starting(streamCfg :StreamControllerConfig, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
@@ -48,7 +48,7 @@ trait StreamControllerSupport[T] { this : Actor =>
     case StreamController.Start =>
       log.debug(s"Initializing StreamController [${streamCfg.name}]")
 
-      val (killswitch, done) = startStream()
+      val (mat, killswitch, done) = startStream()
 
       done.onComplete {
         case Success(_) =>
@@ -57,7 +57,7 @@ trait StreamControllerSupport[T] { this : Actor =>
           self ! StreamController.StreamTerminated(Some(t))
       }
 
-      afterStreamStarted()
+      afterStreamStarted(mat)
       context.become(running(streamCfg, killswitch, interval))
   }
 
@@ -92,11 +92,15 @@ trait StreamControllerSupport[T] { this : Actor =>
     case StreamController.StreamTerminated(_) => context.stop(self)
   }
 
-  def startStream(): (KillSwitch, Future[Done]) = source()
-    .viaMat(KillSwitches.single)(Keep.right)
-    .watchTermination()(Keep.both)
-    .toMat(Sink.ignore)(Keep.left)
-    .run()
+  def startStream(): (Mat, KillSwitch, Future[Done]) = {
+    val ((m, s), d) = source()
+      .viaMat(KillSwitches.single)(Keep.both)
+      .watchTermination()(Keep.both)
+      .toMat(Sink.ignore)(Keep.left)
+      .run()
 
-  def source() : Source[T,_]
+    (m, s, d)
+  }
+
+  def source() : Source[T,Mat]
 }

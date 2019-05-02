@@ -66,14 +66,14 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
   private def withJmsMessages(dir : String, msgCount : Int)(implicit timeout : FiniteDuration) : Unit = {
 
-    val files : List[File] = withMessages(dir, msgCount)
+    val files : List[File] = withMessages(dir, msgCount)(defaultTest)
 
     val collector : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = FlowHeaderConfig.create("App"),
       cf = connF,
       dest = dest,
       log = log,
-      listener = 1
+      listener = 5
     )
 
     val msgs : List[FlowEnvelope] = Await.result(collector.result, timeout + 500.millis)
@@ -83,12 +83,11 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
   "The JMS File Poller should" - {
 
     "do perform a regular poll and process files" in {
-      withJmsMessages("pollspec", 5)(10.seconds)
+      withJmsMessages("jmspoll", 5)(5.seconds)
     }
 
-//    "do perform a regular poll and process files (bulk)" in {
-//      withJmsMessages("pollspec", 500)(10.seconds)
-//    }
+    "do perform a regular poll and process files (bulk)" in {
+      withJmsMessages("jmsbulk", 2000)(10.seconds)
+    }
   }
-
 }

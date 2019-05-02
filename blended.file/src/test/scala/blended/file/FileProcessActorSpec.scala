@@ -6,6 +6,7 @@ import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
+
 import scala.concurrent.duration._
 
 class FileProcessActorSpec extends FreeSpec with Matchers {
@@ -55,7 +56,7 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         override def accept(fileName : File): Boolean = {
           fileName.getName.startsWith("test.xml")
         }
-      }).size 
+      }).size
 
       val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor",

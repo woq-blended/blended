@@ -84,6 +84,6 @@ class TransactionOutbound(
         name = "transactionOut"
       )
 
-    system.actorOf(StreamController.props[FlowEnvelope](src, streamCfg))
+    system.actorOf(StreamController.props[FlowEnvelope, NotUsed](src, streamCfg))
   }
 }

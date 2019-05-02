@@ -182,7 +182,7 @@ class RunnableDispatcher(
             name = dispLogger.name,
           )
 
-        val actor = system.actorOf(StreamController.props[FlowEnvelope](source.via(transactionSend()), streamCfg))
+        val actor = system.actorOf(StreamController.props[FlowEnvelope, NotUsed](source.via(transactionSend()), streamCfg))
 
         bs.streamLogger.info(s"Started dispatcher flow for provider [${provider.id}]")
         startedDispatchers.put(provider.id, actor)
@@ -195,7 +195,7 @@ class RunnableDispatcher(
   def stop() : Unit = {
     transMgr.foreach(system.stop)
     transStream.foreach(_ ! StreamController.Stop)
-    startedDispatchers.foreach { case (k, d) => d ! StreamController.Stop }
+    startedDispatchers.foreach { case (_, d) => d ! StreamController.Stop }
     startedDispatchers.clear()
   }
 }

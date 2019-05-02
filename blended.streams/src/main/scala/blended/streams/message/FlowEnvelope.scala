@@ -80,6 +80,7 @@ final case class FlowEnvelope private[message] (
   def withAckHandler(handler : Option[AcknowledgeHandler]): FlowEnvelope = copy(ackHandler = handler)
 
   // For the default we simply do nothing when a downstream consumer calls acknowledge or deny
-  def acknowledge(): Unit = ackHandler.foreach(h => h.acknowledge())
+  def acknowledge(): Unit = {ackHandler.foreach(h => h.acknowledge())}
+
   def deny() : Unit = ackHandler.foreach(h => h.deny())
 }

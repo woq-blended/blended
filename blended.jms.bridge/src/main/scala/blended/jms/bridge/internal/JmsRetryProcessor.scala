@@ -231,7 +231,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
           random = 0.2
         )
 
-        actor = Some(system.actorOf(StreamController.props[FlowEnvelope](retrySource.via(retryGraph), streamCfg)))
+        actor = Some(system.actorOf(StreamController.props[FlowEnvelope, NotUsed](retrySource.via(retryGraph), streamCfg)))
       }
     }
   }

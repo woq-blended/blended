@@ -1,5 +1,6 @@
 package blended.jms.bridge.internal
 
+import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.Materializer
 import akka.stream.scaladsl.Source
@@ -122,7 +123,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(inCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope](builder.stream, builder.streamCfg))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg))
 
     streams += (builder.streamCfg.name -> actor)
   }
@@ -156,7 +157,7 @@ class BridgeController(ctrlCfg: BridgeControllerConfig)(implicit system : ActorS
     )
 
     val builder = ctrlCfg.streamBuilderFactory(system)(materializer)(outCfg)
-    val actor = context.actorOf(StreamController.props[FlowEnvelope](builder.stream, builder.streamCfg))
+    val actor = context.actorOf(StreamController.props[FlowEnvelope, NotUsed](builder.stream, builder.streamCfg))
 
     streams += (builder.streamCfg.name -> actor)
   }

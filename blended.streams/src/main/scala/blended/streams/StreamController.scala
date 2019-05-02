@@ -48,15 +48,15 @@ object StreamController {
   case class Abort(t: Throwable)
   case class StreamTerminated(exception : Option[Throwable])
 
-  def props[T](src : Source[T, _], streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
-    Props(new AbstractStreamController[T](streamCfg) {
-      override def source(): Source[T, _] = src
+  def props[T, Mat](src : Source[T, Mat], streamCfg : StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer) : Props =
+    Props(new AbstractStreamController[T, Mat](streamCfg) {
+      override def source(): Source[T, Mat] = src
     })
 }
 
-abstract class AbstractStreamController[T](streamCfg: StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer)
+abstract class AbstractStreamController[T, Mat](streamCfg: StreamControllerConfig)(implicit system : ActorSystem, materializer: Materializer)
   extends Actor
-  with StreamControllerSupport[T] {
+  with StreamControllerSupport[T, Mat] {
 
   private[this] val log = Logger(getClass().getName())
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher

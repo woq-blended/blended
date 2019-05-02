@@ -28,7 +28,7 @@ object BlendedFile extends ProjectFactory {
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
       Test / testlogDefaultLevel := "INFO",
       Test / testlogLogPackages ++= Map(
-        "blended" -> "DEBUG"
+        "blended" -> "INFO"
       ),
       Test / filterProperties := Map(
         "project.build.testOutputDirectory" -> (Test / Keys.classDirectory).value.getAbsolutePath()
@@ -40,7 +40,7 @@ object BlendedFile extends ProjectFactory {
     BlendedAkka.project,
     BlendedJmsUtils.project,
     BlendedStreams.project,
-    
+
     BlendedTestsupport.project % "test"
   )
 }

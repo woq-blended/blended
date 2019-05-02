@@ -5,6 +5,7 @@ import java.io.{File, FileOutputStream}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.akka.SemaphoreActor
+import blended.util.logging.Logger
 import org.apache.commons.io.FileUtils
 import org.scalatest.Matchers
 
@@ -12,18 +13,48 @@ import scala.concurrent.duration._
 
 trait AbstractFilePollSpec { this : Matchers =>
 
-  def handler()(implicit system : ActorSystem) : FilePollHandler
+  private val log : Logger = Logger[AbstractFilePollSpec]
 
-  def genFile(f: File) : Unit = {
+  protected def handler()(implicit system : ActorSystem) : FilePollHandler
+
+  protected def genFile(f: File) : Unit = {
+    log.info(s"Creating file [${f.getAbsolutePath()}]")
     val os = new FileOutputStream(f)
     os.write("Hallo Andreas".getBytes())
     os.flush()
     os.close()
   }
 
-  protected def withMessages(dir : String, msgCount : Int)(implicit system : ActorSystem) : List[File] = {
+  protected def semaphore()(implicit system : ActorSystem) : Option[ActorRef] =
+    Some(system.actorOf(Props[SemaphoreActor]))
 
-    val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
+  protected def filePoller(cfg : FilePollConfig)(implicit system: ActorSystem) : ActorRef =
+    system.actorOf(FilePollActor.props(cfg, handler(), semaphore()))
+
+  protected val defaultTest : List[File] => TestProbe => Unit = files => probe => {
+    val result : List[File] = files.filter(_.getName.endsWith("txt"))
+    val processCount : Int = result.size
+
+    val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 10.seconds, messages = files.size) {
+      case fp : FileProcessResult => fp
+    }.toList
+
+    files.forall{ f =>
+      (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists())
+    } should be (true)
+
+    val names : List[String] = files.map(_.getName())
+
+    processed should have size processCount
+    assert(
+      processed.forall(p => names.contains(p.cmd.originalFile.getName()))
+    )
+  }
+
+  protected def withMessages(
+    dir : String,
+    msgCount : Int
+  )(f : List[File] => TestProbe => Unit)(implicit system : ActorSystem) : List[File] = {
 
     val srcDir = new File(System.getProperty("projectTestOutput") + "/" + dir)
     FileUtils.deleteDirectory(srcDir)
@@ -36,32 +67,18 @@ trait AbstractFilePollSpec { this : Matchers =>
     val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[FileProcessResult])
 
-    val actor = system.actorOf(FilePollActor.props(cfg, handler(), Some(sem)))
+    val actor : ActorRef = filePoller(cfg)
 
-    val files : List[File] = (1.to(msgCount)).map { i =>
+    val files : List[File] = 1.to(msgCount).map { i =>
       val f = new File(srcDir, s"test$i." + (if (i % 2 == 0) "txt" else "xml"))
       genFile(f)
       f
     }.toList
 
-    val result : List[File] = files.filter(_.getName.endsWith("txt"))
-    val processCount : Int = result.size
-
-    val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 10.seconds, messages = msgCount) {
-      case fp : FileProcessResult => fp
-    }.toList
-
-    files.forall{ f => (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists()) } should be (true)
-
-    val names : List[String] = files.map(_.getName())
-
-    processed should have size(processCount)
-    assert(
-      processed.forall(p => names.contains(p.cmd.originalFile.getName()))
-    )
+    f(files)(probe)
 
     system.stop(actor)
 
-    result
+    files.filter(_.getName().matches(cfg.pattern.getOrElse(".*")))
   }
 }

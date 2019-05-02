@@ -115,7 +115,10 @@ trait JmsStreamSupport {
       1
     }
 
-    val collected : FlowEnvelope => Unit = env => env.acknowledge()
+    val collected : FlowEnvelope => Unit = { env =>
+      log.debug(s"Acknowledging envelope [${env.id}]")
+      env.acknowledge()
+    }
 
     StreamFactories.runSourceWithTimeLimit(
       dest.asString,

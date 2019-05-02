@@ -6,7 +6,8 @@ import akka.actor.Props
 import akka.testkit.TestProbe
 import blended.testsupport.TestActorSys
 import blended.util.logging.Logger
-import org.scalatest.{ FreeSpec, Matchers }
+import org.scalatest.{FreeSpec, Matchers}
+
 import scala.concurrent.duration._
 
 class FileManipulationSpec extends FreeSpec with Matchers {

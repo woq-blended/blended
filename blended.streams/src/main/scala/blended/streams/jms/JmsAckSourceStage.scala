@@ -65,12 +65,12 @@ final class JmsAckSourceStage(
 
       private[this] def addInflight(s : String, env: FlowEnvelope) : Unit = {
         inflight = inflight + (s -> env)
-        settings.log.debug(s"Inflight message count is [${inflight.size}]")
+        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def removeInflight(s : String) : Unit = {
         inflight = inflight.filterKeys(_!= s)
-        settings.log.debug(s"Inflight message of [$id] count is [${inflight.size}]")
+        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
@@ -111,7 +111,7 @@ final class JmsAckSourceStage(
               handler.jmsMessage.acknowledge()
               settings.log.debug(s"Acknowledged envelope [${env.id}] message for session [$sessionId]")
               removeInflight(sessionId)
-              scheduleOnce(Poll(sessionId), 10.millis)
+              poll(sessionId)
             } catch {
               case t: Throwable =>
                 settings.log.error(t)(s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
@@ -217,7 +217,7 @@ final class JmsAckSourceStage(
                 session.resetAck()
                 addInflight(session.sessionId, envelope)
                 handleMessage.invoke(envelope)
-                scheduleOnce(Ack(sid), 10.millis)
+                ackQueued(sid)
               case (None, nextPoll) =>
                 settings.log.trace(s"No message available for [${session.sessionId}]")
                 scheduleOnce(Poll(sid), nextPoll)
@@ -255,6 +255,7 @@ final class JmsAckSourceStage(
       override protected def handleTimer: PartialFunction[Any, Unit] = super.handleTimer orElse {
         case Ack(s) =>
           ackQueued(s)
+
         case p : Poll =>
           nextPoll match {
             case None => poll(p.s)

@@ -2,7 +2,7 @@ package blended.file
 
 import java.io.File
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorRef, Cancellable}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 

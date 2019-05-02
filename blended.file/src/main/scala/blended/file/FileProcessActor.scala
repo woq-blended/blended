@@ -9,7 +9,6 @@ import akka.pattern.pipe
 import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
-import scala.util.Failure
 
 case class FileProcessCmd(
   originalFile : File,
