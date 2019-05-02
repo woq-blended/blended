@@ -21,7 +21,7 @@ object BlendedSecurityLoginRest extends ProjectFactory {
       Dependencies.sttpAkka % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.RestLoginActivator"
     )
 

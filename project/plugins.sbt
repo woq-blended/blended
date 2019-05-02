@@ -38,3 +38,5 @@ addSbtPlugin("de.wayofquality" % "sbt-jbake" % "0.1.0-SNAPSHOT")
 addSbtPlugin("de.wayofquality" % "sbt-filterresources" % "0.1.1-SNAPSHOT")
 
 addSbtPlugin("de.wayofquality.sbt" % "sbt-phoenix" % "0.1-SNAPSHOT")
+
+addSbtPlugin("de.wayofquality.blended" % "sbt-blendedbuild" % "0.1-SNAPSHOT")

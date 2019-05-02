@@ -20,7 +20,7 @@ object BlendedAkka extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.BlendedAkkaActivator",
       exportPackage = Seq(
         projectName,

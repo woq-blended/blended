@@ -25,7 +25,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       exportPackage = Seq(
         projectName,
         s"${projectName}.jms",

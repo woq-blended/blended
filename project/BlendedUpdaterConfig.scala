@@ -60,7 +60,7 @@ object BlendedUpdaterConfigJvm extends ProjectFactory {
       Dependencies.log4s % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       exportPackage = Seq(
         projectName,
         s"${projectName}.json",

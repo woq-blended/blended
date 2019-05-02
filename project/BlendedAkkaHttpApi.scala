@@ -15,7 +15,7 @@ object BlendedAkkaHttpApi extends ProjectFactory {
       Dependencies.akkaParsing.intransitive()
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       importPackage = Seq(
         "com.sun.*;resolution:=optional",
         "sun.*;resolution:=optional",

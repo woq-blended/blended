@@ -18,7 +18,7 @@ object BlendedUtil extends ProjectFactory {
       Dependencies.logbackCore % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       exportPackage = Seq(
         projectName,
         s"${projectName}.config"

@@ -7,7 +7,7 @@ object BlendedMgmtServiceJmx extends ProjectFactory {
     override val projectName = "blended.mgmt.service.jmx"
     override val description = "A JMX based Service Info Collector."
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.ServiceJmxActivator",
       exportPackage = Seq()
     )

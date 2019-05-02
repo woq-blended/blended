@@ -19,7 +19,7 @@ object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
       Dependencies.akkaHttpTestkit % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.HelloworldActivator",
       exportPackage = Seq()
     )

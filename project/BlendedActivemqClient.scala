@@ -14,7 +14,7 @@ object BlendedActivemqClient extends ProjectFactory {
       Dependencies.activeMqKahadbStore % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.AmqClientActivator",
       exportPackage = Seq(projectName)
     )

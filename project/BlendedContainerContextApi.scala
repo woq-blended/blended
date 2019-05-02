@@ -11,7 +11,7 @@ object BlendedContainerContextApi extends ProjectFactory {
       Dependencies.typesafeConfig
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       importPackage = Seq(
         "blended.launcher.runtime;resolution:=optional"
       )

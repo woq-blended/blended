@@ -11,7 +11,7 @@ object BlendedJmsSampler extends ProjectFactory {
       Dependencies.geronimoJms11Spec
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       exportPackage = Seq.empty,
       bundleActivator = s"${projectName}.internal.JmsSamplerActivator"
     )

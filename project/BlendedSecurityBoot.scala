@@ -10,7 +10,7 @@ object BlendedSecurityBoot extends ProjectFactory {
       Dependencies.orgOsgi
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       additionalHeaders = Map("Fragment-Host" -> "system.bundle;extension:=framework"),
       // This is required to omit the Import-Package header in the OSGi manifest
       // because framework extensions are not allowed to have imports

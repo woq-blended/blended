@@ -15,7 +15,7 @@ private object BlendedSecurityLoginApi extends ProjectFactory {
       Dependencies.logbackClassic % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       importPackage = Seq("android.*;resolution:=optional")
     )
 

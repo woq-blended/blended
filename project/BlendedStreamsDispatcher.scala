@@ -27,7 +27,7 @@ object BlendedStreamsDispatcher extends ProjectFactory {
       Dependencies.asciiRender % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.DispatcherActivator",
       exportPackage = Seq(
         projectName,

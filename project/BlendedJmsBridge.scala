@@ -21,7 +21,7 @@ object BlendedJmsBridge extends ProjectFactory {
       Dependencies.scalacheck % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.BridgeActivator"
     )
 

@@ -11,7 +11,7 @@ object BlendedJmx extends ProjectFactory {
       Dependencies.domino
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.BlendedJmxActivator",
       exportPackage = Seq()
     )

@@ -16,7 +16,7 @@ object BlendedJettyBoot extends ProjectFactory {
 
     private val jettyVersion = "version=\"[9.4,20)\""
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.JettyActivator",
       importPackage = Seq(
         s"org.eclipse.jetty.annotations;${jettyVersion};resolution:=optional",

@@ -16,7 +16,7 @@ object BlendedSamplesJms extends ProjectFactory {
       Dependencies.slf4j
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.JmsSampleActivator",
       exportPackage = Seq()
     )

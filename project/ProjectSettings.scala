@@ -9,12 +9,13 @@ import sbt._
 import sbt.internal.inc.Analysis
 import xerial.sbt.Sonatype
 import xsbti.api.{AnalyzedClass, Projection}
+import blended.sbt.phoenix.osgi.OsgiConfig
 
 trait ProjectSettings
   extends ProjectConfig
   with CommonSettings
   with PublishConfig
-  with OsgiSettings {
+  with OsgiConfig {
 
   /** The project descriptions. Also used in published pom.xml and as bundle description. */
   def description: String

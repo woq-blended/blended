@@ -25,7 +25,7 @@ object BlendedUpdater extends ProjectFactory {
       Dependencies.mockitoAll % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.BlendedUpdaterActivator",
       importPackage = Seq(
         "blended.launcher.runtime;resolution:=optional"

@@ -28,7 +28,7 @@ object BlendedSecurityScep extends ProjectFactory {
       Dependencies.scalatest % Test
     )
 
-    override def bundle: BlendedBundle = super.bundle.copy(
+    override def bundle = super.bundle.copy(
       bundleActivator = s"${projectName}.internal.ScepActivator"
     )
 
