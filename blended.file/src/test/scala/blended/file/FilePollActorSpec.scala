@@ -84,7 +84,7 @@ class FilePollActorFailSpec extends AbstractFilePollSpec
     override def receive: Receive = {
       case cmd : FileProcessCmd =>
         val tempFile : File = new File(cmd.originalFile.getParentFile, cmd.originalFile.getName + cmd.cfg.tmpExt)
-        context.actorOf(Props[FileManipulationActor]).tell(RenameFile(cmd.originalFile, tempFile), self)
+        context.actorOf(FileManipulationActor.props(100.millis)).tell(RenameFile(cmd.originalFile, tempFile), self)
 
       case _ =>
     }

@@ -2,9 +2,8 @@ package blended.file
 
 import java.io.File
 
-import akka.actor.{Actor, ActorRef, Cancellable}
+import akka.actor.{Actor, ActorRef, Cancellable, Props}
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -16,16 +15,13 @@ case class FileCmdResult(cmd: FileCommand, t : Option[Throwable])
 
 object FileManipulationActor {
 
-  val operationTimeout : FiniteDuration = {
-    val config = ConfigFactory.load()
-    val toPath = "blended.file.operationTimeout"
-    (if (config.hasPath(toPath)) config.getLong(toPath) else 100l).millis
-  }
+  def props(operationTimeout : FiniteDuration) : Props =
+    Props(new FileManipulationActor(operationTimeout))
 }
 
 class FileCommandTimeoutException(cmd : FileCommand) extends Exception(s"Command [$cmd] timed out")
 
-class FileManipulationActor extends Actor {
+class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor {
 
   private val log : Logger = Logger[FileManipulationActor]
 
@@ -61,7 +57,7 @@ class FileManipulationActor extends Actor {
 
   override def receive: Receive = {
     case cmd : FileCommand =>
-      context.become(executing(sender(), cmd, List(context.system.scheduler.scheduleOnce(FileManipulationActor.operationTimeout, self, Timeout))))
+      context.become(executing(sender(), cmd, List(context.system.scheduler.scheduleOnce(operationTimeout, self, Timeout))))
       self ! Tick
   }
 

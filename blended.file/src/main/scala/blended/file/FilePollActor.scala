@@ -12,7 +12,7 @@ import scala.concurrent.duration._
 
 object FilePollActor {
 
-  val batchSize : Int = 100
+  val batchSize : Int = 10
 
   def props(
     cfg: FilePollConfig,
@@ -32,7 +32,6 @@ class FilePollActor(
   case object Tick
 
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
-  private[this] val timeout : FiniteDuration = FileManipulationActor.operationTimeout
 
   private[this] var totalToProcess : Int = 0
   private[this] var pending : List[File] = List.empty
@@ -121,7 +120,7 @@ class FilePollActor(
         // Schedule the processing of all files in the batch and pick up the results in the processing receive
         context.become(processing(toProcess, List.empty, 0))
         toProcess.map { f =>
-          fileProcessor().ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(timeout * 2, self).pipeTo(self)
+          fileProcessor().ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(cfg.handleTimeout, self).pipeTo(self)
         }
       } else {
         // if the batch is empty we simply schedule the next directory scan
@@ -140,7 +139,7 @@ class FilePollActor(
       batch.foreach { f =>
         if (!f.exists()) {
           val tempFile : File = new File(f.getParentFile, f.getName + cfg.tmpExt)
-          context.actorOf(Props[FileManipulationActor]).tell(RenameFile(tempFile, f), self)
+          context.actorOf(FileManipulationActor.props(cfg.operationTimeout)).tell(RenameFile(tempFile, f), self)
         }
       }
 

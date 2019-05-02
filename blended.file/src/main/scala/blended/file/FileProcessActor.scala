@@ -26,7 +26,6 @@ case class FileProcessResult(cmd: FileProcessCmd, t : Option[Throwable]) {
 
 class FileProcessActor extends Actor with ActorLogging {
 
-  implicit val timeout : Timeout = Timeout(FileManipulationActor.operationTimeout)
   implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   private[this] val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
@@ -34,7 +33,7 @@ class FileProcessActor extends Actor with ActorLogging {
   override def receive: Receive = {
     case cmd : FileProcessCmd =>
       val tempFile : File = new File(cmd.originalFile.getParentFile, cmd.originalFile.getName + cmd.cfg.tmpExt)
-      context.actorOf(Props[FileManipulationActor]).tell(RenameFile(cmd.originalFile, tempFile), self)
+      context.actorOf(FileManipulationActor.props(cmd.cfg.operationTimeout)).tell(RenameFile(cmd.originalFile, tempFile), self)
       context.become(initiated(sender(), cmd.copy(workFile = Some(tempFile))))
   }
 
@@ -61,17 +60,15 @@ class FileProcessActor extends Actor with ActorLogging {
           RenameFile(c.cmd.fileToProcess, new File(d, backupFileName))
       }
 
-      context.actorOf(Props[FileManipulationActor]).tell(archiveCmd, self)
+      context.actorOf(FileManipulationActor.props(command.cfg.operationTimeout)).tell(archiveCmd, self)
       context.become(cleanUp(requestor, c))
 
       self ! c
 
-    case r @ FileProcessResult(_, Some(t)) =>
+    case r @ FileProcessResult(command, Some(t)) =>
       log.warning(s"Failed to process file [${cmd.originalFile.getAbsolutePath()}] : [${t.getMessage()}]")
-      context.actorOf(Props[FileManipulationActor]).tell(RenameFile(cmd.fileToProcess, cmd.originalFile), self)
+      context.actorOf(FileManipulationActor.props(command.cfg.operationTimeout)).tell(RenameFile(cmd.fileToProcess, cmd.originalFile), self)
       context.become(cleanUp(requestor, r))
-
-    case m => println("xxx" + m.toString)
   }
 
   def cleanUp(requestor: ActorRef, r: FileProcessResult) : Receive = {

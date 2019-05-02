@@ -55,8 +55,7 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
     val jmsHandler = new JMSFilePollHandler(
       settings = settings,
-      header = FlowMessage.props("ResourceType" -> "myType").get,
-      bufferSize = FilePollActor.batchSize
+      header = FlowMessage.props("ResourceType" -> "myType").get
     )
 
     jmsHandler.start()

@@ -22,8 +22,7 @@ import scala.util.{Failure, Success, Try}
   */
 class JMSFilePollHandler(
   settings : JmsProducerSettings,
-  header : FlowMessage.FlowMessageProps,
-  bufferSize : Int
+  header : FlowMessage.FlowMessageProps
 )(implicit system: ActorSystem) extends FilePollHandler with JmsStreamSupport {
 
   private val log : Logger = Logger[JMSFilePollHandler]

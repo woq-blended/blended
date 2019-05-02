@@ -23,7 +23,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val f = new File(System.getProperty("projectTestOutput") + "/files", "toDelete.txt")
 
       val probe = TestProbe()
-      val actor = system.actorOf(Props[FileManipulationActor])
+      val actor = system.actorOf(FileManipulationActor.props(100.millis))
 
       actor.tell(DeleteFile(f), probe.ref)
 
@@ -41,7 +41,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       if (d.exists()) d.delete()
 
       val probe = TestProbe()
-      val actor = system.actorOf(Props[FileManipulationActor])
+      val actor = system.actorOf(FileManipulationActor.props(100.millis))
 
       actor.tell(RenameFile(s, d), probe.ref)
       probe.expectMsg(FileCmdResult(RenameFile(s, d), None))
@@ -59,7 +59,7 @@ class FileManipulationSpec extends FreeSpec with Matchers {
       val d = new File(System.getProperty("projectTestOutput") + "/files", "AlreadyExists.txt")
 
       val probe = TestProbe()
-      val actor = system.actorOf(Props[FileManipulationActor])
+      val actor = system.actorOf(FileManipulationActor.props(100.millis))
 
       actor.tell(RenameFile(s, d), probe.ref)
 
