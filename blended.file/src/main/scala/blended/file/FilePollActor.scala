@@ -123,6 +123,7 @@ class FilePollActor(
           fileProcessor().ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(cfg.handleTimeout, self).pipeTo(self)
         }
       } else {
+        sem.foreach(_ ! Release)
         // if the batch is empty we simply schedule the next directory scan
         context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
       }

@@ -1,15 +1,14 @@
 package blended.streams
 
-import akka.Done
 import akka.actor.{Actor, ActorSystem, Props}
-import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{KillSwitch, KillSwitches, Materializer}
+import akka.stream.Materializer
+import akka.stream.scaladsl.Source
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{FiniteDuration, _}
-import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 object StreamControllerConfig {
