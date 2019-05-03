@@ -91,9 +91,9 @@ jobs:
     script:
       - sh -e scripts/build-prereq.sh sbt-testlogconfig
       - sh -e scripts/build-prereq.sh sbt-jbake
-      - sh -e scripts/build-prereq.sh sbt-filterresources
-      - sh -e scripts/build-prereq.sh sbt-phoenix
-      - sh -e scripts/build-prereq.sh sbt-blendedbuild
+#      - sh -e scripts/build-prereq.sh sbt-filterresources
+#      - sh -e scripts/build-prereq.sh sbt-phoenix
+#      - sh -e scripts/build-prereq.sh sbt-blendedbuild
 
   # ------ Stage Test
   - stage: Test
