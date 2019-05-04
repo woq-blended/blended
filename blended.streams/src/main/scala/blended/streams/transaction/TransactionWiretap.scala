@@ -14,7 +14,6 @@ import javax.jms.Session
 import scala.util.Try
 
 class TransactionDestinationResolver(
-  override val headerConfig : FlowHeaderConfig,
   override val settings : JmsProducerSettings,
   eventDestName : String
 ) extends FlowHeaderConfigAware with JmsEnvelopeHeader {
@@ -85,8 +84,9 @@ class TransactionWiretap(
 
       val settings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = cf,
-        destinationResolver = s => new TransactionDestinationResolver(headerCfg, s, JmsDestination.asString(eventDest)),
+        destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(eventDest)),
         deliveryMode = JmsDeliveryMode.Persistent,
         jmsDestination = None
       )

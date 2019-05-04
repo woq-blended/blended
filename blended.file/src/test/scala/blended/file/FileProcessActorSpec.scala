@@ -4,6 +4,7 @@ import java.io.{File, FileFilter}
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
+import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
 
@@ -11,7 +12,9 @@ import scala.concurrent.duration._
 
 class FileProcessActorSpec extends FreeSpec with Matchers {
 
-  val fish : Boolean => FileProcessCmd => PartialFunction[Any, Boolean] = expected => cmd => {
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+
+  private val fish : Boolean => FileProcessCmd => PartialFunction[Any, Boolean] = expected => cmd => {
     case p : FileProcessResult =>
       p.t.isEmpty.equals(expected) && p.cmd.copy(workFile = None).equals(cmd.copy(workFile = None))
     case _ =>
@@ -24,7 +27,10 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       implicit val system : ActorSystem = testkit.system
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor"
       )
 
@@ -58,7 +64,10 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         }
       }).size
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor",
         backup = Some(archiveDir.getAbsolutePath)
       )
@@ -92,7 +101,10 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       implicit val system : ActorSystem = testkit.system
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/poll",
         tmpExt = "_temp"
       )

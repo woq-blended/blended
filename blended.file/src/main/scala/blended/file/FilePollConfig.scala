@@ -1,5 +1,7 @@
 package blended.file
 
+import blended.container.context.api.ContainerIdentifierService
+import blended.streams.transaction.FlowHeaderConfig
 import com.typesafe.config.Config
 
 import scala.concurrent.duration._
@@ -17,9 +19,14 @@ object FilePollConfig {
   val PATH_OP_TIMEOUT     = "operationTimeout"
   val PATH_HANDLE_TIMEOUT = "handleTimeout"
 
-  def apply(cfg: Config): FilePollConfig = {
+  def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig =
+    apply(cfg, FlowHeaderConfig.create(idSvc))
+
+  def apply(cfg: Config, headerCfg : FlowHeaderConfig): FilePollConfig = {
+
     new FilePollConfig(
       id = cfg.getString(PATH_ID),
+      headerCfg = headerCfg,
       interval = if (cfg.hasPath(PATH_INTERVAL)) cfg.getInt(PATH_INTERVAL).seconds else 1.second,
       sourceDir = cfg.getString(PATH_SOURCEDIR),
       pattern= if (cfg.hasPath(PATH_PATTERN)) Some(cfg.getString(PATH_PATTERN)) else None,
@@ -35,6 +42,7 @@ object FilePollConfig {
 
 case class FilePollConfig(
   id : String,
+  headerCfg : FlowHeaderConfig,
   interval : FiniteDuration,
   sourceDir : String,
   pattern : Option[String],

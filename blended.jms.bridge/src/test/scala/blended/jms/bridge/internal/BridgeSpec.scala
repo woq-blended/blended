@@ -91,6 +91,7 @@ abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
     val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = log,
+      headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsDestination.create(destName).get)
     )
@@ -189,6 +190,7 @@ class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = external,
         jmsDestination = Some(JmsQueue("SampleHeaderIn"))
       )

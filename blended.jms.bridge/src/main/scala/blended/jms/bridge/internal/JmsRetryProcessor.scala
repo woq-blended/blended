@@ -110,6 +110,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   protected def retrySource : Source[FlowEnvelope, NotUsed] = {
     val settings = JMSConsumerSettings(
       log = retryLog,
+      headerCfg = retryCfg.headerCfg,
       connectionFactory = retryCfg.cf,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
       jmsDestination = Some(JmsDestination.create(retryCfg.retryDestName).get)
@@ -118,7 +119,6 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     jmsConsumer(
       name = settings.jmsDestination.get.asString,
       settings = settings,
-      headerConfig = retryCfg.headerCfg,
       minMessageDelay = Some(retryCfg.retryInterval)
     )
   }
@@ -126,6 +126,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
   protected def resendMessage : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
     val producerSettings : JmsProducerSettings = JmsProducerSettings(
       log = retryLog,
+      headerCfg = retryCfg.headerCfg,
       connectionFactory = retryCfg.cf,
       destinationResolver = s => new RetryDestinationResolver(retryCfg.headerCfg, s, router.validate),
       deliveryMode = JmsDeliveryMode.Persistent,

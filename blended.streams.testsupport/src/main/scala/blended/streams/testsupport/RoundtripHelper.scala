@@ -57,6 +57,7 @@ case class RoundtripHelper(
 
     val pSettings: JmsProducerSettings = JmsProducerSettings(
       log = log,
+      headerCfg = headerConfig,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )

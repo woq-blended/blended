@@ -38,7 +38,6 @@ import scala.util.{Failure, Success, Try}
 final class JmsAckSourceStage(
   name : String,
   settings: JMSConsumerSettings,
-  headerConfig : FlowHeaderConfig,
   minMessageDelay : Option[FiniteDuration] = None
 )(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
@@ -46,6 +45,8 @@ final class JmsAckSourceStage(
   sealed trait TimerEvent
   private case class Ack(s : String) extends TimerEvent
   private case class Poll(s : String) extends TimerEvent
+
+  private val headerConfig : FlowHeaderConfig = settings.headerCfg
 
   private val out = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
 
@@ -190,17 +191,18 @@ final class JmsAckSourceStage(
             receive(sid) match {
               case (Some(message), _) =>
                 val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
-                settings.log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : ${flowMessage.header.mkString(",")}")
 
                 val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
                   case None =>
                     val newId = UUID.randomUUID().toString()
-                    settings.log.debug(s"Created new envelope id [$newId]")
+                    settings.log.trace(s"Created new envelope id [$newId]")
                     newId
                   case Some(s) =>
-                    settings.log.debug(s"Reusing transaction id [$s] as envelope id")
+                    settings.log.trace(s"Reusing transaction id [$s] as envelope id")
                     s
                 }
+
+                settings.log.info(s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : ${flowMessage.header.mkString(",")}")
 
                 val handler = JmsAcknowledgeHandler(
                   id = envelopeId,

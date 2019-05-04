@@ -38,6 +38,7 @@ class RunnableDispatcher(
     val sendProducerSettings = JmsProducerSettings(
       log = bs.streamLogger,
       connectionFactory = cf,
+      headerCfg = bs.headerConfig,
       destinationResolver = s => new DispatcherDestinationResolver(s, registry, bs)
     )
 
@@ -62,8 +63,9 @@ class RunnableDispatcher(
 
       val transactionSendSettings = JmsProducerSettings(
         log = bs.streamLogger,
+        headerCfg = bs.headerConfig,
         connectionFactory = cf,
-        destinationResolver = s => new TransactionDestinationResolver(bs.headerConfig, s, JmsDestination.asString(internal.transactions)),
+        destinationResolver = s => new TransactionDestinationResolver(s, JmsDestination.asString(internal.transactions)),
         jmsDestination = None,
         deliveryMode = JmsDeliveryMode.Persistent,
         priority = 4,
@@ -109,6 +111,7 @@ class RunnableDispatcher(
     // todo : stick into config
     val settings = JMSConsumerSettings(
       log = bs.streamLogger,
+      headerCfg = bs.headerConfig,
       connectionFactory = cf,
       sessionCount = 3,
       acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
@@ -123,7 +126,6 @@ class RunnableDispatcher(
     val source = jmsConsumer(
       name = settings.jmsDestination.get.asString,
       settings = settings,
-      headerConfig = bs.headerConfig,
       minMessageDelay = None
     )
 

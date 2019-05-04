@@ -21,6 +21,7 @@ import scala.util.{Failure, Success, Try}
   * A [[FilePollHandler]] that sends the contents of processed files to a JMS destination.
   */
 class JMSFilePollHandler(
+  cfg : FilePollConfig,
   settings : JmsProducerSettings,
   header : FlowMessage.FlowMessageProps
 )(implicit system: ActorSystem) extends FilePollHandler with JmsStreamSupport {
@@ -30,7 +31,7 @@ class JMSFilePollHandler(
 
   def start() : Unit = { processActor.synchronized {
     if (processActor.isEmpty) {
-      processActor = Some(system.actorOf(AsyncSendActor.props(settings, header)))
+      processActor = Some(system.actorOf(AsyncSendActor.props(cfg, settings, header)))
     }
   }}
 
@@ -49,7 +50,7 @@ class JMSFilePollHandler(
       case None =>
         val msg = s"Actor to process file [${cmd.fileToProcess}] for [${cmd.id}] is not available - perhaps the ${getClass().getName()} has not been started ?"
         log.warn(msg)
-        // Looks a bit strange, but the promise is successfull with a FileProcessResult that carries
+        // Looks a bit strange, but the promise is successful with a FileProcessResult that carries
         // the an exception.
         p.success(FileProcessResult(cmd, Some(new Exception(msg))))
       case Some(a) =>
@@ -76,12 +77,14 @@ private case object JmsStreamStopped
 object AsyncSendActor {
 
   def props(
+    cfg : FilePollConfig,
     settings : JmsProducerSettings,
     header : FlowMessage.FlowMessageProps
-  ) : Props = Props(new AsyncSendActor(settings, header))
+  ) : Props = Props(new AsyncSendActor(cfg, settings, header))
 }
 
 class AsyncSendActor(
+  cfg : FilePollConfig,
   settings : JmsProducerSettings,
   header : FlowMessage.FlowMessageProps
 ) extends Actor with MemoryStash {
@@ -122,7 +125,7 @@ class AsyncSendActor(
     case Start =>
       log.info(s"Starting Async Send Actor...")
       val streamCfg : StreamControllerConfig = StreamControllerConfig(
-        name = "filepoll",
+        name = cfg.id + "-stream",
         minDelay = 10.seconds,
         maxDelay = 1.minute,
         exponential = true,

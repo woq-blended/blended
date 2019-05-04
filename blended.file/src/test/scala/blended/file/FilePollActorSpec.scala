@@ -24,7 +24,10 @@ class FilePollActorSpec extends AbstractFilePollSpec
     val srcDir = new File(System.getProperty("projectTestOutput") + "/blocking")
     srcDir.mkdirs()
 
-    val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+    val cfg = FilePollConfig(
+      cfg = system.settings.config.getConfig("blended.file.poll"),
+      headerCfg = headerCfg
+    ).copy(
       sourceDir = srcDir.getAbsolutePath(),
       lock = Some(lockfile)
     )

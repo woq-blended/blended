@@ -47,6 +47,7 @@ class FlowTransactionStream(
 
     val settings : JmsProducerSettings = JmsProducerSettings(
       log = streamLogger,
+      headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(JmsTopic(s"${headerCfg.prefix}.topic.transactions")),
       clearPreviousException = true

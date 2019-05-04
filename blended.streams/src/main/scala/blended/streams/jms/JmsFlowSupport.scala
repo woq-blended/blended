@@ -62,7 +62,6 @@ object JmsFlowSupport extends JmsEnvelopeHeader {
   val hyphen_repl : String = "_HYPHEN_"
   val dot_repl : String = "_DOT_"
 
-
   import MsgProperty.lift
 
   // Convert a JMS message into a FlowMessage. This is normally used in JMS Sources

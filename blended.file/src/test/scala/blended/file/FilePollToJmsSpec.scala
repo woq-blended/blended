@@ -10,7 +10,7 @@ import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.FlowHeaderConfig
-import blended.testsupport.RequiresForkedJVM
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.apache.activemq.broker.BrokerService
@@ -46,14 +46,20 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
   override def handler()(implicit system: ActorSystem): FilePollHandler = {
 
+    val cfg = FilePollConfig(
+      cfg = system.settings.config.getConfig("blended.file.poll"),
+      headerCfg = headerCfg
+    )
+
     val settings : JmsProducerSettings = JmsProducerSettings(
       log = log,
-
+      headerCfg = headerCfg,
       connectionFactory = connF,
       jmsDestination = Some(dest)
     )
 
     val jmsHandler = new JMSFilePollHandler(
+      cfg = cfg,
       settings = settings,
       header = FlowMessage.props("ResourceType" -> "myType").get
     )
@@ -76,7 +82,14 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
     )
 
     val msgs : List[FlowEnvelope] = Await.result(collector.result, timeout + 500.millis)
-    msgs should have size(files.size)
+
+    msgs should have size files.size
+
+    msgs.foreach { m =>
+      m.header[String](headerCfg.headerTransId) should be (defined)
+      m.header[String]("BlendedFileName").get should startWith("test")
+      m.header[String]("BlendedFilePath").get should startWith(BlendedTestSupport.projectTestOutput + "/" + dir)
+    }
   }
 
   "The JMS File Poller should" - {

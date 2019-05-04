@@ -12,7 +12,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowProcessor
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
@@ -62,6 +62,7 @@ abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpe
 
   def producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
     log = log,
+    headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
@@ -211,9 +212,10 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
 
     val id : String = UUID.randomUUID().toString()
 
-    val retryMsg : FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerTransId, id).get
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).get
+    val retryMsg : FlowEnvelope = FlowEnvelope(
+      FlowMessage(FlowMessage.props(headerCfg.headerRetryDestination -> srcQueue).get),
+      id
+    )
 
     val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 5)(retryMsg).get
     messages should be (empty)

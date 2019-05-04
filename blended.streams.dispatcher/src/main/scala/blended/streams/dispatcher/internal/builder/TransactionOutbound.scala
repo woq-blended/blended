@@ -36,6 +36,7 @@ class TransactionOutbound(
 
     val srcSettings = JMSConsumerSettings(
       log = log,
+      headerCfg = headerConfig,
       connectionFactory = internalCf,
     )
       .withSessionCount(3)
@@ -45,7 +46,6 @@ class TransactionOutbound(
     jmsConsumer(
       name = "transactionOutbound",
       settings = srcSettings,
-      headerConfig = headerConfig,
       minMessageDelay = None
     )
   }

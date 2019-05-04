@@ -45,6 +45,9 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
         }
     }
 
+    // Always set the env id as id for the message
+    msg.setStringProperty(settings.headerCfg.headerTransId, env.id)
+
     replyTo(session, env).get.foreach(msg.setJMSReplyTo)
     // Always try to get the CorrelationId from the flow Message
     correlationId(env).foreach(msg.setJMSCorrelationID)
@@ -58,7 +61,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
 
   val log : Logger = Logger(getClass().getName())
 
-  def headerConfig: FlowHeaderConfig
+  def headerConfig: FlowHeaderConfig = settings.headerCfg
 
   override def correlationId(env: FlowEnvelope): Option[String] = {
     env.header[String](corrIdHeader(headerConfig.prefix)) match {
@@ -153,13 +156,10 @@ class SettingsDestinationResolver(
 }
 
 class MessageDestinationResolver(
-  override val headerConfig : FlowHeaderConfig,
   override val settings: JmsProducerSettings
 )
   extends FlowHeaderConfigAware
   with JmsEnvelopeHeader {
-
-  private val prefix = headerConfig.prefix
 
   override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 

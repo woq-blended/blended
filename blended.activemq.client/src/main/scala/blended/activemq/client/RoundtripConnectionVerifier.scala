@@ -54,9 +54,10 @@ class RoundtripConnectionVerifier(
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = log,
+      headerCfg = headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(requestDest),
-      destinationResolver = s => new MessageDestinationResolver(headerConfig, s)
+      destinationResolver = s => new MessageDestinationResolver(s)
     )
 
     log.info(s"Running verification probe for connection [${cf.vendor}:${cf.provider}]")

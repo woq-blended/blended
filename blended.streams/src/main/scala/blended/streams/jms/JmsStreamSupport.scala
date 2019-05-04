@@ -124,9 +124,8 @@ trait JmsStreamSupport {
       dest.asString,
       jmsConsumer(
         name = dest.asString,
-        headerConfig = headerCfg,
         settings =
-          JMSConsumerSettings(log = log, connectionFactory = cf)
+          JMSConsumerSettings(log = log, headerCfg = headerCfg, connectionFactory = cf)
             .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
             .withSessionCount(listenerCount)
             .withDestination(Some(dest))
@@ -155,14 +154,13 @@ trait JmsStreamSupport {
   def jmsConsumer(
     name : String,
     settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig,
     minMessageDelay : Option[FiniteDuration]
   )(implicit system: ActorSystem): Source[FlowEnvelope, NotUsed] = {
 
     if (settings.acknowledgeMode == AcknowledgeMode.ClientAcknowledge) {
-      Source.fromGraph(new JmsAckSourceStage(name, settings, headerConfig, minMessageDelay))
+      Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay))
     } else {
-      Source.fromGraph(new JmsSourceStage(name, settings, headerConfig))
+      Source.fromGraph(new JmsSourceStage(name, settings))
     }
   }
 
@@ -175,7 +173,7 @@ trait JmsStreamSupport {
 
     implicit val materializer : Materializer = ActorMaterializer()
 
-    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, headerConfig, minMessageDelay)
+    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, minMessageDelay)
 
     RestartSource.withBackoff(
       minBackoff = 2.seconds,

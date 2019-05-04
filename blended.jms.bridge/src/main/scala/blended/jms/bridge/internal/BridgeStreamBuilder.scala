@@ -78,14 +78,14 @@ class BridgeStreamBuilder(
     val resolver : JmsProducerSettings => JmsDestinationResolver = dest match {
       case Some(_) => s : JmsProducerSettings => new SettingsDestinationResolver(s)
       case None => s : JmsProducerSettings => new MessageDestinationResolver(
-        headerConfig = cfg.headerCfg,
         settings = s
       )
     }
 
     JmsProducerSettings(
       log = bridgeLogger,
-      connectionFactory = cf
+      connectionFactory = cf,
+      headerCfg = cfg.headerCfg
     )
       .withDestination(dest)
       .withDestinationResolver(resolver)
@@ -112,7 +112,7 @@ class BridgeStreamBuilder(
   protected def jmsSource : Source[FlowEnvelope, NotUsed] = {
 
     // configure the consumer
-    val srcSettings = JMSConsumerSettings(bridgeLogger, cfg.fromCf)
+    val srcSettings = JMSConsumerSettings(log = bridgeLogger, connectionFactory = cfg.fromCf, headerCfg = cfg.headerCfg)
       .withAcknowledgeMode(AcknowledgeMode.ClientAcknowledge)
       .withDestination(Some(cfg.fromDest))
 
@@ -123,8 +123,7 @@ class BridgeStreamBuilder(
     val src : Source[FlowEnvelope, NotUsed] = {
       val result : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new JmsAckSourceStage(
         name = streamId + "-source",
-        settings = srcSettings,
-        headerConfig = cfg.headerCfg
+        settings = srcSettings
       ))
 
       // set the transaction from a the system property blended.streams.transactionShard

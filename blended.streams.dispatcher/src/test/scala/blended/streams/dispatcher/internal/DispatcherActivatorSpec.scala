@@ -87,6 +87,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = Logger(loggerName),
+        headerCfg = ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
@@ -106,12 +107,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val cbes = results.last
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size >= 2)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
-      assert(
-        logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) +
-        logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Failed}]")) == logEvents.size
-      )
+      assert(logEvents.size >= 4)
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Failed}]")) >= 1)
 
       errors should have size 1
       cbes should have size 0
@@ -134,6 +133,7 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = Logger(loggerName),
+        ctxt.bs.headerConfig,
         connectionFactory = sonic,
         jmsDestination = Some(JmsQueue("sonic.data.in"))
       )
@@ -153,12 +153,10 @@ class DispatcherActivatorSpec extends DispatcherSpecSupport
       val out = results(1)
 
       // TODO: Reconstruct FlowTransaction from String ??
-      assert(logEvents.size >= 2)
-      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") })
-      assert(
-        logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) +
-        logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Completed}]")) == logEvents.size
-      )
+      assert(logEvents.size >= 4)
+      assert(logEvents.forall { e => e.getMessage().startsWith("FlowTransaction") || e.getMessage().startsWith("Message received")})
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Started}]")) >= 1)
+      assert(logEvents.count(e => e.getMessage().startsWith(s"FlowTransaction[${FlowTransactionState.Completed}]")) >= 1)
 
       errors should have size 0
       out should have size 1

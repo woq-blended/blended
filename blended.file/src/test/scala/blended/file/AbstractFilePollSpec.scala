@@ -5,6 +5,7 @@ import java.io.{File, FileOutputStream}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.akka.SemaphoreActor
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import org.apache.commons.io.FileUtils
 import org.scalatest.Matchers
@@ -14,6 +15,8 @@ import scala.concurrent.duration._
 trait AbstractFilePollSpec { this : Matchers =>
 
   private val log : Logger = Logger[AbstractFilePollSpec]
+
+  protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
   protected def handler()(implicit system : ActorSystem) : FilePollHandler
 
@@ -60,7 +63,10 @@ trait AbstractFilePollSpec { this : Matchers =>
     FileUtils.deleteDirectory(srcDir)
     srcDir.mkdirs()
 
-    val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+    val cfg = FilePollConfig(
+      headerCfg = headerCfg,
+      cfg = system.settings.config.getConfig("blended.file.poll")
+    ).copy(
       sourceDir = srcDir.getAbsolutePath()
     )
 
