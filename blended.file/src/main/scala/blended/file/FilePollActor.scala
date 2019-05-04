@@ -123,7 +123,7 @@ class FilePollActor(
           fileProcessor().ask(FileProcessCmd(originalFile = f, cfg = cfg, handler = handler))(cfg.handleTimeout, self).pipeTo(self)
         }
       } else {
-        sem.foreach(_ ! Release)
+        sem.foreach(_ ! Release(self))
         // if the batch is empty we simply schedule the next directory scan
         context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
       }
@@ -131,7 +131,7 @@ class FilePollActor(
     case FileCmdResult => // do nothing - its just the response to restore a file
   }
 
-  private def isProcessingComplete(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Unit = {
+  private def checkProcessingComplete(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Unit = {
     if (succeeded.size + failed == batch.size) {
       log.info(s"Processed [${succeeded.size}] of [$totalToProcess](remaining [${pending.size}]) files in [${cfg.id}] from [${cfg.sourceDir}], ")
       // the batch is now complete, so we switch states and schedule the next tick
@@ -160,12 +160,12 @@ class FilePollActor(
   private def processing(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Receive = {
     case akka.actor.Status.Failure(t) =>
       log.warn(s"Error executing file processor for dir [${cfg.sourceDir}] : [${t.getMessage()}]")
-      isProcessingComplete(batch, succeeded, failed + 1)
+      checkProcessingComplete(batch, succeeded, failed + 1)
 
     case r @ FileProcessResult(_, None) =>
-      isProcessingComplete(batch, r :: succeeded, failed)
+      checkProcessingComplete(batch, r :: succeeded, failed)
 
     case FileProcessResult(_, Some(_)) =>
-      isProcessingComplete(batch, succeeded, failed + 1)
+      checkProcessingComplete(batch, succeeded, failed + 1)
   }
 }
