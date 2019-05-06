@@ -37,8 +37,7 @@ before_cache:
 env:
   global:
     - TEST_ONLINE="true"
-    - DOCKER_HOST="127.0.0.1"
-    - DOCKER_PORT=2375
+    - DOCKER_HOST="unix:///var/run/docker.sock"
     # PGP_PASS
     - secure: "r048egec7DYp2HXockVYQOQru6FsxYZTABzEmTqZxOIRBpE3/c/km8TrSdKU32te7pZVryTGe2J6DK7xa2U2rHmu9H8Z7ah1a4CZzL0daFP8xZGXJ2aUby8Z++5eoav+CVzqyHWYKZtuB/DEhOlVsvx397rJVRhWIBBQVt5sgxY="
     # SONATYPE_USERNAME
@@ -74,11 +73,11 @@ stages:
   - name: BuildUI
     if: branch = master AND type = push
 
-  - name: BuildPlugin
-    if: branch = master AND type = push
-
-#  - name: IntegrationTest
+#  - name: BuildPlugin
 #    if: branch = master AND type = push
+
+  - name: IntegrationTest
+    if: branch = master AND type = push
 
 jobs:
   include:
@@ -124,18 +123,44 @@ jobs:
       - bash $TRAVIS_BUILD_DIR/scripts/buildUI.sh
 
   # ------ Build Updater Maven Plugin
-  - stage: BuildPlugin
-    script:
-      - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
+#  - stage: BuildPlugin
+#    script:
+#      - bash $TRAVIS_BUILD_DIR/scripts/updaterMavenPlugin.sh
 
   # ------ Stage Docker Images
   - stage: IntegrationTest
+    name: blendedItestNode
+    before_script:
+      - git clone --branch master --depth 1 https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
     script:
-      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
+#      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
+      - docker info
+      - wget "https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz" -O "docker/blended.docker.base/files/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz"
+      - cd ${TRAVIS_BUILD_DIR}/container
+      - docker build -t atooni/blended-base docker/blended.docker.base
+      - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
+      - sbt update blendedItestNode/test
     after_failure:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
     after_success:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/itest itest
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
+
+  - stage: IntegrationTest
+    name: blendedItestMgmt
+    before_script:
+      - git clone --branch master --depth 1 https://github.com/woq-blended/blended.container.git $TRAVIS_BUILD_DIR/container
+    script:
+#      - bash $TRAVIS_BUILD_DIR/scripts/itest.sh
+      - docker info
+      - wget "https://cdn.azul.com/zulu/bin/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz" -O "docker/blended.docker.base/files/zulu8.33.0.1-jdk8.0.192-linux_x64.tar.gz"
+      - cd ${TRAVIS_BUILD_DIR}/container
+      - docker build -t atooni/blended-base docker/blended.docker.base
+      - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
+      - sbt update blendedItestMgmt/test
+    after_failure:
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
+    after_success:
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
 
     # ------ Stage Site Deploy
   - stage: Site
