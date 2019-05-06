@@ -141,9 +141,9 @@ jobs:
       - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
       - sbt update blendedItestNode/test
     after_failure:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log || true
     after_success:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.node-test.log || true
 
   - stage: IntegrationTest
     name: blendedItestMgmt
@@ -158,9 +158,9 @@ jobs:
       - echo -e "-Ddocker.host=${DOCKER_HOST}\n-Ddocker.port=${DOCKER_PORT}\n" > .sbtopts
       - sbt update blendedItestMgmt/test
     after_failure:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log || true
     after_success:
-      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log
+      - $TRAVIS_BUILD_DIR/scripts/upload-directory.sh $TRAVIS_BUILD_DIR/container/target/testlog blended.itest.mgmt-test.log || true
 
     # ------ Stage Site Deploy
   - stage: Site
