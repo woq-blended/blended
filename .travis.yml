@@ -58,7 +58,7 @@ stages:
   - name: VerifyPublish
     if: branch = publish AND type = push
 
-  - Prerequisites
+#  - Prerequisites
 
   - Test
 
@@ -87,10 +87,10 @@ jobs:
     script: $TRAVIS_BUILD_DIR/scripts/verifyPublish.sh
 
   # ------ Stage Prerequisites
-  - stage: Prerequisites
-    script:
-      - sh -e scripts/build-prereq.sh sbt-testlogconfig
-      - sh -e scripts/build-prereq.sh sbt-jbake
+#  - stage: Prerequisites
+#    script:
+#      - sh -e scripts/build-prereq.sh sbt-testlogconfig
+#      - sh -e scripts/build-prereq.sh sbt-jbake
 #      - sh -e scripts/build-prereq.sh sbt-filterresources
 #      - sh -e scripts/build-prereq.sh sbt-phoenix
 #      - sh -e scripts/build-prereq.sh sbt-blendedbuild
