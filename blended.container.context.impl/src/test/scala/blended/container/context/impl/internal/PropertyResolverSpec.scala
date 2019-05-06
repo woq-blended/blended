@@ -109,7 +109,7 @@ class PropertyResolverSpec extends FreeSpec
 
       ContainerPropertyResolver.resolve(idSvc, "${{'$[[foo]]'.toUpperCase()}}") should be("BAR")
       ContainerPropertyResolver.resolve(idSvc, "${{'$[[FOO]]'.toLowerCase()}}") should be("bar")
-      //ContainerPropertyResolver.resolve(idSvc, "${{#capitalize('$[[FOO]]'.toLowerCase())}}") should be("Bar")
+      ContainerPropertyResolver.resolve(idSvc, "$[[foo(capitalize)]]") should be("Bar")
       ContainerPropertyResolver.resolve(idSvc, "${{#left('$[[num]]', 4)}}") should be ("1234")
       ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 4)}}") should be ("2345")
       ContainerPropertyResolver.resolve(idSvc, "${{#right('$[[num]]', 6)}}") should be ("12345")
