@@ -7,6 +7,7 @@ import akka.testkit.TestProbe
 import blended.akka.SemaphoreActor
 import blended.testsupport.TestActorSys
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
@@ -61,11 +62,11 @@ class FilePollActorSpec extends AbstractFilePollSpec
   "The File Poller should" - {
 
     "do perform a regular poll and process files" in TestActorSys { testkit =>
-      withMessages("pollspec", 5)(defaultTest)(testkit.system)
+      withMessages(pollCfg = defaultFilePollConfig(testkit.system), dir = "pollspec", msgCount = 5)(defaultTest)(testkit.system)
     }
 
     "do perform a regular poll and process files (bulk)" in TestActorSys { testkit =>
-      withMessages("pollspec", 500)(defaultTest)(testkit.system)
+      withMessages(pollCfg = defaultFilePollConfig(testkit.system), dir = "pollspec", msgCount = 500)(defaultTest)(testkit.system)
     }
 
     "block the message processing if specified lock file exists (relative)" in TestActorSys { testkit =>
@@ -102,9 +103,9 @@ class FilePollActorFailSpec extends AbstractFilePollSpec
     }))
 
   "Restore the original messages if the FileProcessActor is unresponsive" in TestActorSys { testkit =>
-    withMessages("failedPoll", msgCount = 5){ files => probe =>
+    withMessages(pollCfg = defaultFilePollConfig(testkit.system).copy(interval = 10.seconds, handleTimeout = 500.millis), dir = "failedPoll", msgCount = 5){ files => probe =>
 
-      val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 5.seconds, messages = files.size) {
+      val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 2.seconds, messages = files.size) {
         case fp : FileProcessResult => fp
       }.toList
 

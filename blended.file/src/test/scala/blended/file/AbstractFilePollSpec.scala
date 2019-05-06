@@ -18,6 +18,11 @@ trait AbstractFilePollSpec { this : Matchers =>
 
   protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
+  protected val defaultFilePollConfig : ActorSystem => FilePollConfig = system => FilePollConfig(
+    headerCfg = headerCfg,
+    cfg = system.settings.config.getConfig("blended.file.poll")
+  )
+
   protected def handler()(implicit system : ActorSystem) : FilePollHandler
 
   protected def genFile(f: File) : Unit = {
@@ -38,9 +43,9 @@ trait AbstractFilePollSpec { this : Matchers =>
     val result : List[File] = files.filter(_.getName.endsWith("txt"))
     val processCount : Int = result.size
 
-    val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 10.seconds, messages = files.size) {
+    val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 10.seconds, messages = Int.MaxValue) {
       case fp : FileProcessResult => fp
-    }.toList
+    }.toList.filter(_.t.isEmpty)
 
     files.forall{ f =>
       (f.getName().endsWith("txt") && !f.exists()) || (!f.getName().endsWith("txt") && f.exists())
@@ -56,17 +61,16 @@ trait AbstractFilePollSpec { this : Matchers =>
 
   protected def withMessages(
     dir : String,
-    msgCount : Int
+    msgCount : Int,
+    pollCfg : FilePollConfig
   )(f : List[File] => TestProbe => Unit)(implicit system : ActorSystem) : List[File] = {
 
     val srcDir = new File(System.getProperty("projectTestOutput") + "/" + dir)
+
     FileUtils.deleteDirectory(srcDir)
     srcDir.mkdirs()
 
-    val cfg = FilePollConfig(
-      headerCfg = headerCfg,
-      cfg = system.settings.config.getConfig("blended.file.poll")
-    ).copy(
+    val cfg = pollCfg.copy(
       sourceDir = srcDir.getAbsolutePath()
     )
 

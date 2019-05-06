@@ -44,12 +44,12 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
     brokerSvc = None
   }
 
-  override def handler()(implicit system: ActorSystem): FilePollHandler = {
+  val cfg = FilePollConfig(
+    cfg = system.settings.config.getConfig("blended.file.poll"),
+    headerCfg = headerCfg
+  )
 
-    val cfg = FilePollConfig(
-      cfg = system.settings.config.getConfig("blended.file.poll"),
-      headerCfg = headerCfg
-    )
+  override def handler()(implicit system: ActorSystem): FilePollHandler = {
 
     val settings : JmsProducerSettings = JmsProducerSettings(
       log = log,
@@ -71,7 +71,7 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
   private def withJmsMessages(dir : String, msgCount : Int)(implicit timeout : FiniteDuration) : Unit = {
 
-    val files : List[File] = withMessages(dir, msgCount)(defaultTest)
+    val files : List[File] = withMessages(pollCfg = defaultFilePollConfig(system), dir = dir, msgCount = msgCount)(defaultTest)
 
     val collector : Collector[FlowEnvelope] = receiveMessages(
       headerCfg = FlowHeaderConfig.create("App"),
@@ -83,12 +83,12 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
 
     val msgs : List[FlowEnvelope] = Await.result(collector.result, timeout + 500.millis)
 
-    msgs should have size files.size
+    msgs.map(_.header[String](cfg.filenameProp)).distinct should have size files.size
 
     msgs.foreach { m =>
       m.header[String](headerCfg.headerTransId) should be (defined)
-      m.header[String]("BlendedFileName").get should startWith("test")
-      m.header[String]("BlendedFilePath").get should startWith(BlendedTestSupport.projectTestOutput + "/" + dir)
+      m.header[String](cfg.filenameProp).get should startWith("test")
+      m.header[String](cfg.filepathProp).get should startWith(BlendedTestSupport.projectTestOutput + "/" + dir)
     }
   }
 

@@ -37,7 +37,7 @@ class FilePollActor(
   private[this] var pending : List[File] = List.empty
 
   override def preStart(): Unit = {
-    context.system.scheduler.scheduleOnce(cfg.interval, self, Tick)
+    self ! Tick
   }
 
   private[this] def locked() : Boolean = cfg.lock match {

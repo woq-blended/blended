@@ -108,8 +108,8 @@ class AsyncSendActor(
       src.close()
 
       val msg : FlowMessage = FlowMessage(body)(header)
-        .withHeader("BlendedFileName", cmd.originalFile.getName()).get
-        .withHeader("BlendedFilePath", cmd.originalFile.getAbsolutePath()).get
+        .withHeader(cmd.cfg.filenameProp, cmd.originalFile.getName()).get
+        .withHeader(cmd.cfg.filepathProp, cmd.originalFile.getAbsolutePath()).get
 
       Success(FlowEnvelope(msg, cmd.id))
     } catch {
@@ -152,7 +152,7 @@ class AsyncSendActor(
     case info : FileSendInfo =>
       info.env.exception match {
         case None =>
-          log.info(s"Successfully sent file [${info.cmd.id}] to JMS processed file : [${info.cmd}]")
+          log.info(s"Successfully sent file [${info.cmd.id}] to JMS : [${info.cmd}]")
           info.p.success(FileProcessResult(info.cmd, None))
 
         case Some(t) => info.p.failure(t)
