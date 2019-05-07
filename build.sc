@@ -1,19 +1,15 @@
 import scala.util.Try
 
 import ammonite.runtime.tools.IvyThing
-import mill._
+import mill.{PathRef, _}
 import mill.define.Target
 import mill.scalalib._
 import mill.scalalib.publish._
-import mill.util.Loose
 import os.Path
 
 // This import the mill-osgi plugin
-import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.0.5`
+import $ivy.`de.tototec::de.tobiasroeser.mill.osgi:0.0.6`
 import de.tobiasroeser.mill.osgi._
-
-/** internal helper module */
-object base extends Module
 
 trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
   def scalaVersion = "2.12.8"
@@ -28,9 +24,15 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
   /** Reference to the base project. */
   //  def blendedBase: Module
 
-  override def millSourcePath: os.Path = base.millOuterCtx.millSourcePath / blendedModule
+  override def millSourcePath: os.Path = blended.millOuterCtx.millSourcePath / blendedModule
 
-  def bundleSymbolicName = blendedModule
+  override def resources = T.sources {
+    super.resources() ++ Seq(
+      PathRef(millSourcePath / 'src / 'main / 'binaryResources)
+    )
+  }
+
+  override def bundleSymbolicName = blendedModule
 
   def pomSettings: T[PomSettings] = T {
     PomSettings(
@@ -50,6 +52,13 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     override def ivyDeps = Deps(Dependencies.scalatest)
 
     def testFrameworks = Seq("org.scalatest.tools.Framework")
+
+    override def resources = T.sources {
+      super.resources() ++ Seq(
+        PathRef(millSourcePath / 'src / 'test / 'binaryResources)
+      )
+    }
+    // TODO: set projectTestOutput property to resources directory
   }
 
   /** Show all compiled classes. */
@@ -69,7 +78,7 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
   }:${dep.version}"
 
   object Deps {
-    def apply(deps: coursier.Dependency*): Loose.Agg[Dep] = Agg[Dep](deps.map(d => coursierToMillDep(d)): _*)
+    def apply(deps: coursier.Dependency*): Agg[Dep] = Agg[Dep](deps.map(d => coursierToMillDep(d)): _*)
   }
 
   object Dependencies {
@@ -88,8 +97,8 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
 
     // Versions
     val activeMqVersion = "5.15.6"
-    val akkaVersion = "2.5.19"
-    val akkaHttpVersion = "10.1.5"
+    val akkaVersion = "2.5.21"
+    val akkaHttpVersion = "10.1.7"
     val camelVersion = "2.19.5"
     val dominoVersion = "1.1.3"
     val jettyVersion = "9.4.8.v20171121"
@@ -144,12 +153,12 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     val domino = "com.github.domino-osgi" %% "domino" % dominoVersion
 
     val felixConnect = "org.apache.felix" % "org.apache.felix.connect" % "0.1.0"
-    val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.0.2"
-    val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.0"
-    val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.0"
-    val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.0"
+    val felixGogoCommand = "org.apache.felix" % "org.apache.felix.gogo.command" % "1.1.0"
+    val felixGogoJline = "org.apache.felix" % "org.apache.felix.gogo.jline" % "1.1.4"
+    val felixGogoShell = "org.apache.felix" % "org.apache.felix.gogo.shell" % "1.1.2"
+    val felixGogoRuntime = "org.apache.felix" % "org.apache.felix.gogo.runtime" % "1.1.2"
     val felixFileinstall = "org.apache.felix" % "org.apache.felix.fileinstall" % "3.4.2"
-    val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "5.6.0"
+    val felixFramework = "org.apache.felix" % "org.apache.felix.framework" % "6.0.2"
 
     val geronimoJms11Spec = "org.apache.geronimo.specs" % "geronimo-jms_1.1_spec" % "1.1.1"
 
@@ -168,7 +177,7 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     val jscep = "com.google.code.jscep" % "jscep" % "2.5.0"
     val jsonLenses = "net.virtual-void" %% "json-lenses" % "0.6.2"
     val julToSlf4j = "org.slf4j" % "jul-to-slf4j" % slf4jVersion
-    val junit = "junit" % "junit" % "4.11"
+    val junit = "junit" % "junit" % "4.12"
 
     val lambdaTest = "de.tototec" % "de.tobiasroeser.lambdatest" % "0.6.2"
     val levelDbJava = "org.iq80.leveldb" % "leveldb" % "0.9"
@@ -226,27 +235,167 @@ trait BlendedModule extends SbtModule with PublishModule with OsgiBundleModule {
     // FIXME: Rename to typesafeSslConfigCore
     val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
 
-    val wiremock = "com.github.tomakehurst" % "wiremock" % "2.1.11"
-    val wiremockStandalone = "com.github.tomakehurst" % "wiremock-standalone" % "2.1.11"
-
   }
 
 }
 
+trait BlendedJvmModule extends BlendedModule {
+  override def millSourcePath = super.millSourcePath / "jvm"
+  override def sources = T.sources {
+    super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'scala))
+  }
+  override def resources = T.sources {
+    super.resources() ++ Seq(
+      PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'resources),
+      PathRef(millSourcePath / os.up / 'shared / 'src / 'main / 'binaryResources)
+    )
+  }
+
+  trait Tests extends super.Tests {
+    override def sources = T.sources {
+      super.sources() ++ Seq(PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'scala))
+    }
+    override def resources = T.sources {
+      super.resources() ++ Seq(
+        PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'resources),
+        PathRef(millSourcePath / os.up / 'shared / 'src / 'test / 'binaryResources)
+      )
+    }
+  }
+}
+
 object blended extends Module {
+
+  object container extends Module {
+    object context extends Module {
+
+      object api extends BlendedModule {
+        def blendedModule = "blended.container.context.api"
+        override def description = "The API for the Container Context and Identifier Service"
+        override def ivyDeps = Deps(
+          Dependencies.typesafeConfig
+        )
+        override def osgiHeaders = T {
+          super.osgiHeaders().copy(
+            `Import-Package` = Seq(
+              "blended.launcher.runtime;resolution:=optional"
+            )
+          )
+        }
+        override def moduleDeps = Seq(
+          security.crypto
+        )
+      }
+
+      object impl extends BlendedModule {
+        def blendedModule = "blended.container.context.impl"
+        override def description = "A simple OSGi service to provide access to the container's config directory"
+        override def ivyDeps = Deps(
+          Dependencies.orgOsgiCompendium,
+          Dependencies.orgOsgi,
+          Dependencies.domino,
+          Dependencies.slf4j,
+          Dependencies.julToSlf4j,
+          Dependencies.springExpression
+        )
+        override def moduleDeps = Seq(
+          blended.security.crypto,
+          blended.container.context.api,
+          blended.util.logging,
+          blended.util,
+          blended.updater.config.jvm,
+          blended.launcher
+        )
+      }
+    }
+  }
+
+  object launcher extends BlendedModule {
+    override def blendedModule = "blended.launcher"
+    override def description = "Provide an OSGi Launcher"
+    override def ivyDeps = Deps(
+      Dependencies.cmdOption,
+      Dependencies.orgOsgi,
+      Dependencies.typesafeConfig,
+      Dependencies.logbackCore,
+      Dependencies.logbackClassic,
+      Dependencies.commonsDaemon
+    )
+    override def osgiHeaders = super.osgiHeaders().copy(
+      `Import-Package` = Seq(
+        "org.apache.commons.daemon;resolution:=optional",
+        "de.tototec.cmdoption.*;resolution:=optional"
+      )
+    )
+    // TODO: filter resources
+    // TODO: package laucnher distribution zip
+    override def moduleDeps = Seq(
+      blended.util.logging,
+      blended.updater.config.jvm,
+      blended.security.crypto
+    )
+
+    object test extends Tests {
+      override def ivyDeps = super.ivyDeps() ++ Deps(
+        Dependencies.scalatest
+      )
+      override def moduleDeps = super.moduleDeps ++ Seq(
+        blended.testsupport
+      )
+    }
+  }
+
+  object domino extends BlendedModule {
+    override def blendedModule = "blended.domino"
+    override def description = "Blended Domino extension for new Capsule scopes"
+    override def ivyDeps = Deps(
+      Dependencies.typesafeConfig,
+      Dependencies.domino
+    )
+    override def moduleDeps = Seq(
+      blended.util.logging,
+      blended.container.context.api
+    )
+    object test extends Tests
+  }
 
   object security extends Module {
 
-    object boot extends BlendedModule {
-      override def blendedModule = "blended.security.boot"
-
-      override def description: String = "A delegating login module for the blended container"
-
-      override def compileIvyDeps: Target[Loose.Agg[Dep]] = Deps(
-        Dependencies.orgOsgi
+    object jvm extends BlendedJvmModule {
+      override def blendedModule = "blended.security"
+      override def description = "Configuration bundle for the security framework"
+      override def ivyDeps = Deps(
+        Dependencies.prickle
+      )
+      override def osgiHeaders = super.osgiHeaders().copy(
+        `Bundle-Activator` = Some(s"${blendedModule}.internal.SecurityActivator"),
+        `Export-Package` = Seq(
+          blendedModule,
+          s"${blendedModule}.json"
+        )
+      )
+      override def moduleDeps = Seq(
+        util.logging,
+        domino,
+        util,
+        security.boot
       )
 
-      def osgiHeaders = T {
+      object test extends Tests {
+        override def ivyDeps = super.ivyDeps() ++ Deps(
+          Dependencies.logbackCore,
+          Dependencies.logbackClassic
+        )
+      }
+    }
+
+    object boot extends BlendedModule {
+      override def blendedModule = "blended.security.boot"
+      override def description: String = "A delegating login module for the blended container"
+      override def compileIvyDeps: Target[Agg[Dep]] = Deps(
+        Dependencies.orgOsgi
+      )
+      override def osgiHeaders = T {
         super.osgiHeaders().copy(
           `Fragment-Host` = Some("system.bundle;extension:=framework"),
           `Import-Package` = Seq("")
@@ -254,6 +403,108 @@ object blended extends Module {
       }
     }
 
+    object crypto extends BlendedModule {
+      def blendedModule = "blended.security.crypto"
+      override def description = "Provides classes and mainline for encrypting / decrypting arbitrary Strings"
+      override def ivyDeps = Deps(
+        Dependencies.cmdOption
+      )
+      override def osgiHeaders = T {
+        super.osgiHeaders().copy(
+          `Import-Package` = Seq(
+            "de.tototec.cmdoption;resolution:=optional"
+          ),
+          `Export-Package` = Seq(
+            blendedModule
+          )
+        )
+      }
+      object test extends Tests {
+        override def ivyDeps = super.ivyDeps() ++ Deps(
+          Dependencies.scalacheck,
+          Dependencies.logbackCore,
+          Dependencies.logbackClassic
+        )
+        override def moduleDeps = super.moduleDeps ++ Seq(
+          testsupport
+        )
+      }
+    }
+  }
+
+  object testsupport extends BlendedModule {
+    override def blendedModule = "blended.testsupport"
+    override def description = "Some test helper classes"
+    override def ivyDeps = Deps(
+      Dependencies.akkaActor,
+      Dependencies.akkaTestkit,
+      Dependencies.akkaCamel,
+      Dependencies.camelCore,
+      Dependencies.camelJms,
+      Dependencies.scalatest,
+      Dependencies.junit
+    )
+    override def moduleDeps = Seq(
+      util,
+      util.logging,
+      security.boot
+    )
+
+    object test extends Tests
+
+    object pojosr extends BlendedModule {
+      override def blendedModule = "blended.testsupport.pojosr"
+      override def description = "A simple pojo based test container that can be used in unit testing"
+      override def ivyDeps = Deps(
+        Dependencies.scalatest,
+        Dependencies.felixConnect,
+        Dependencies.orgOsgi
+      )
+      override def moduleDeps = Seq(
+        util.logging,
+        container.context.impl,
+        domino
+      )
+      object test extends Tests
+    }
+  }
+
+  object updater extends Module {
+    object config extends Module {
+      object jvm extends BlendedJvmModule {
+        override def blendedModule = "blended.updater.config"
+        override def description = "Configurations for Updater and Launcher"
+        override def ivyDeps = Deps(
+          Dependencies.prickle,
+          Dependencies.typesafeConfig
+        )
+        override def osgiHeaders = super.osgiHeaders().copy(
+          `Export-Package` = Seq(
+            blendedModule,
+            s"${blendedModule}.json",
+            s"${blendedModule}.util",
+            "blended.launcher.config"
+          )
+        )
+        override def moduleDeps = Seq(
+          util.logging,
+          security.jvm
+        )
+
+        object test extends Tests {
+          override def ivyDeps = super.ivyDeps() ++ Deps(
+            Dependencies.scalatest,
+            Dependencies.logbackClassic,
+            Dependencies.logbackCore,
+            Dependencies.scalacheck,
+            Dependencies.log4s
+          )
+          override def moduleDeps = super.moduleDeps ++ Seq(
+            testsupport
+          )
+        }
+      }
+    }
   }
 
   object util extends BlendedModule {
@@ -261,13 +512,13 @@ object blended extends Module {
 
     override def description: String = "Utility classes to use in other bundles"
 
-    override def compileIvyDeps: Target[Loose.Agg[Dep]] = Deps(
+    override def compileIvyDeps: Target[Agg[Dep]] = Deps(
       Dependencies.akkaActor,
       Dependencies.akkaSlf4j,
       Dependencies.slf4j
     )
 
-    def osgiHeaders = T {
+    override def osgiHeaders = T {
       super.osgiHeaders().copy(
         `Export-Package` = Seq(
           blendedModule,
@@ -290,7 +541,7 @@ object blended extends Module {
 
       override def description: String = "Logging utility classes to use in other bundles"
 
-      override def compileIvyDeps: Target[Loose.Agg[Dep]] = Deps(
+      override def compileIvyDeps: Target[Agg[Dep]] = Deps(
         Dependencies.slf4j
       )
 
