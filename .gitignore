@@ -43,3 +43,6 @@ target/
 .cache-tests
 target-ide/
 
+# Mill
+/out/
+
