@@ -26,8 +26,8 @@ class JmsSourceStage(
 
   override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
-  override protected def initialAttributes: Attributes =
-    ActorAttributes.dispatcher("FixedPool")
+//  override protected def initialAttributes: Attributes =
+//    ActorAttributes.dispatcher("FixedPool")
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 

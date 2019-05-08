@@ -65,12 +65,11 @@ class CbeSendFlow(
       result
     }
 
-    prepareCbe.via(
-      jmsProducer(
+    prepareCbe
+      .via(jmsProducer(
         name = "cbeOutbound",
         settings = sinkSettings
-      )
-    )
+      ))
   }
 
   def build() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = cbeSink.get

@@ -52,8 +52,8 @@ final class JmsAckSourceStage(
 
   override def shape: SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
 
-  override protected def initialAttributes: Attributes =
-    ActorAttributes.dispatcher("FixedPool")
+//  override protected def initialAttributes: Attributes =
+//    ActorAttributes.dispatcher("FixedPool")
 
   // TODO: Refactor to clean up code
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {

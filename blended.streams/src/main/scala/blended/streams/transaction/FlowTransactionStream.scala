@@ -3,16 +3,18 @@ package blended.streams.transaction
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
+import akka.stream._
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, Inlet, Materializer}
 import akka.util.Timeout
 import blended.jms.utils.{IdAwareConnectionFactory, JmsTopic}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
+import blended.streams.message
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext, Promise}
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 class FlowTransactionStream(
@@ -26,11 +28,11 @@ class FlowTransactionStream(
 
   private case class TransactionStreamContext(
     envelope : FlowEnvelope,
-    trans : Option[Future[Try[FlowTransaction]]],
-    sendEnvelope : Option[Future[Try[FlowEnvelope]]]
+    trans : Option[Try[FlowTransaction]],
+    sendEnvelope : Option[Try[FlowEnvelope]]
   )
 
-  private implicit val timeout : Timeout = Timeout(1.second)
+  private implicit val timeout : Timeout = Timeout(3.seconds)
   private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
 
@@ -60,9 +62,15 @@ class FlowTransactionStream(
   private val recordTransaction : Try[(FlowEnvelope, FlowTransactionEvent)] => TransactionStreamContext = {
     case Success((env, event)) =>
       streamLogger.debug(s"Recording transaction event [${event.transactionId}][${event.state}]")
+
+      // TODO: Refactor to remove Await
+      val t : Try[FlowTransaction] = Try {
+        Await.result( (tMgr ? event).mapTo[FlowTransaction], timeout.duration)
+      }
+
       TransactionStreamContext(
         envelope = env,
-        trans = Some((tMgr ? event).mapTo[FlowTransaction].map(s => Success(s))),
+        trans = Some(t),
         sendEnvelope = None
       )
     case Failure(t) =>
@@ -72,8 +80,8 @@ class FlowTransactionStream(
 
   private val logAndPrepareSend : TransactionStreamContext => TransactionStreamContext = { in =>
 
-    val transEnv : Future[Try[FlowEnvelope]] =
-      in.trans.get.map {
+    val transEvent : Try[FlowEnvelope] = {
+      in.trans.get match {
         case Success(t) =>
           if (t.state == FlowTransactionState.Started || t.terminated) {
             streamLogger.info(t.toString())
@@ -85,24 +93,46 @@ class FlowTransactionStream(
           streamLogger.error(t)(t.getMessage())
           Failure(t)
       }
+    }
 
-    TransactionStreamContext(
-      in.envelope,
-      trans = None,
-      sendEnvelope = Some(transEnv)
-    )
+    in.copy(sendEnvelope = Some(transEvent))
   }
 
   private val sendTransaction : TransactionStreamContext => TransactionStreamContext = { in =>
-    val sendEnv : Future[Try[FlowEnvelope]] = in.sendEnvelope.get.map {
+
+    val sendEnv : Try[FlowEnvelope] = in.sendEnvelope.get match {
       case Success(s) =>
         if (performSend(s)) {
-          streamLogger.trace(s"About to send transaction envelope  [${in.envelope.id}]")
-          Source.single(s)
-            .via(sendFlow)
-            .toMat(Sink.head[FlowEnvelope])(Keep.right).run()
+          streamLogger.debug(s"About to send transaction envelope  [${in.envelope.id}]")
+
+          val pEnv : Promise[FlowEnvelope] = Promise[FlowEnvelope]
+
+          val sentEnv : FlowEnvelope => FlowEnvelope = { env =>
+            pEnv.success(env)
+            env
+          }
+
+          // TODO : Avoid await
+          val (actor, switch) = Source.actorRef[FlowEnvelope](1, OverflowStrategy.fail)
+            .viaMat(sendFlow)(Keep.left)
+            .viaMat(Flow.fromFunction[FlowEnvelope, FlowEnvelope](sentEnv))(Keep.left)
+            .viaMat(KillSwitches.single)(Keep.both)
+            .toMat(Sink.ignore)(Keep.left)
+            .run()
+
+          actor ! s
+
+          try {
+            val env : message.FlowEnvelope = Await.result(pEnv.future, timeout.duration)
+            Success(env)
+          } catch {
+            case NonFatal(e) => Failure(e)
+          } finally {
+            switch.shutdown()
+          }
+        } else {
+          Success(s)
         }
-        Success(s)
       case Failure(t) =>
         streamLogger.error(t)(s"Failed to create transaction envelope for [${in.envelope.id}]")
         Failure(t)
@@ -120,13 +150,13 @@ class FlowTransactionStream(
     val g : Graph[FlowShape[FlowEnvelope, FlowEnvelope], NotUsed] = GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val performSend : TransactionStreamContext => Future[FlowEnvelope] = { ctxt =>
+      val performSend : TransactionStreamContext => FlowEnvelope = { ctxt =>
         ctxt.sendEnvelope match {
           case None =>
-            Future(ctxt.envelope.withException(new IllegalStateException("Send transaction has not been called.")))
-          case Some(s) => s.map {
+            ctxt.envelope.withException(new IllegalStateException("Send transaction has not been called."))
+          case Some(s) => s match {
             case Success(env) =>
-              streamLogger.trace(s"Send flow for transaction [${env.id}] completed successfully.")
+              streamLogger.debug(s"Send flow for transaction [${env.id}] completed successfully.")
               ctxt.envelope.acknowledge()
               env
             case Failure(t) =>
@@ -136,7 +166,7 @@ class FlowTransactionStream(
       }
 
       val ack : Flow[TransactionStreamContext, FlowEnvelope, NotUsed] =
-        Flow[TransactionStreamContext].mapAsync[FlowEnvelope](5)(performSend).named("performSend")
+        Flow[TransactionStreamContext].map[FlowEnvelope](performSend).named("performSend")
 
       val update = b.add(Flow.fromFunction(updateEvent).named("updateEvent"))
       val record = b.add(Flow.fromFunction(recordTransaction).named("recordTransaction"))
