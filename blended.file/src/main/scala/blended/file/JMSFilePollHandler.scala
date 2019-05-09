@@ -132,7 +132,7 @@ class AsyncSendActor(
         onFailureOnly = true,
         random = 0.2
       )
-      context.actorOf(JmsSendStream.props(streamCfg, settings, self))
+      context.actorOf(JmsSendStream.props(cfg, streamCfg, settings, self))
       context.become(withoutStream)
   }
 
@@ -174,14 +174,16 @@ class AsyncSendActor(
 private object JmsSendStream {
 
   def props(
+    pollCfg : FilePollConfig,
     streamCfg : StreamControllerConfig,
     settings : JmsProducerSettings,
     asyncSender : ActorRef
   )(implicit system : ActorSystem, materializer: Materializer) : Props =
-    Props(new JmsSendStream(streamCfg, settings, asyncSender))
+    Props(new JmsSendStream(pollCfg, streamCfg, settings, asyncSender))
 }
 
 private class JmsSendStream(
+  pollCfg : FilePollConfig,
   streamCfg : StreamControllerConfig,
   settings: JmsProducerSettings,
   asyncSender : ActorRef
@@ -209,7 +211,7 @@ private class JmsSendStream(
 
   // We create an outbound JMS Stream with an actor serving as the entryPoint
   private val pollingSrc : Source[FileSendInfo, ActorRef] =
-    Source.actorRef[FileSendInfo](FilePollActor.batchSize * 2, overflowStrategy = OverflowStrategy.fail)
+    Source.actorRef[FileSendInfo](pollCfg.batchSize * 2, overflowStrategy = OverflowStrategy.fail)
 
   private val performSend : Flow[FileSendInfo, FileSendInfo, NotUsed] = {
 

@@ -8,11 +8,10 @@ import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
 import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration._
 
 object FilePollActor {
 
-  val batchSize : Int = 10
+  val defaultBatchSize : Int = 10
 
   def props(
     cfg: FilePollConfig,
@@ -86,7 +85,7 @@ class FilePollActor(
         log.info(s"Found [$totalToProcess] files to process from [$srcDir]")
       }
 
-      val result = pending.take(FilePollActor.batchSize)
+      val result = pending.take(cfg.batchSize)
       pending = pending.drop(result.size)
 
       result
@@ -111,7 +110,7 @@ class FilePollActor(
     case Waiting => // Do nothing - just wait
 
     case Acquired =>
-      log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}]")
+      log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}] with pattern [${cfg.pattern}]")
 
       // First we get the batch files up next for processing
       val toProcess : List[File] = files()

@@ -21,6 +21,7 @@ object FilePollConfig {
   val PATH_HANDLE_TIMEOUT = "handleTimeout"
   val PATH_FILENAME_PROP  = "filenameProperty"
   val PATH_FILEPATH_PROP  = "filepathProperty"
+  val PATH_BATCHSIZE      = "batchSize"
 
   def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig =
     apply(cfg, FlowHeaderConfig.create(idSvc))
@@ -39,6 +40,7 @@ object FilePollConfig {
       tmpExt = cfg.getString(PATH_TMP_EXT, "_to_send"),
       filenameProp = cfg.getString(PATH_FILENAME_PROP, "BlendedFileName"),
       filepathProp = cfg.getString(PATH_FILEPATH_PROP, "BlendedFilePath"),
+      batchSize = cfg.getInt(PATH_BATCHSIZE, FilePollActor.defaultBatchSize),
       operationTimeout = cfg.getDuration(PATH_OP_TIMEOUT, 1.second),
       handleTimeout = cfg.getDuration(PATH_HANDLE_TIMEOUT, 1.second)
     )
@@ -56,6 +58,7 @@ case class FilePollConfig(
   asText: Boolean,
   operationTimeout : FiniteDuration,
   handleTimeout : FiniteDuration,
+  batchSize : Int,
   filenameProp : String,
   filepathProp : String,
   tmpExt : String
