@@ -221,7 +221,7 @@ private class JmsSendStream(
 
       // First we spilt the flow, so that we can keep the file info in one part
       // and perform the send in the other part, collecting any exceptions that
-      // may occurr
+      // may occur
       val split = b.add(Broadcast[FileSendInfo](2))
 
       // to send the jms message we need to select the envelope
