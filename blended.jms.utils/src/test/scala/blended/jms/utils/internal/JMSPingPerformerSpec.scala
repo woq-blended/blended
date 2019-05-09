@@ -58,10 +58,10 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   val cfg: BlendedJMSConnectionConfig
   var con: Option[Connection]
 
-  val bulkCount: Int = 100000
-  val bulkTimeout = Math.max(1, bulkCount / 50000).minutes
+  protected val bulkCount: Int = 100000
+  protected val bulkTimeout : FiniteDuration = Math.max(1, bulkCount / 50000).minutes
 
-  private[this] implicit val eCtxt: ExecutionContext = system.dispatchers.lookup("FixedPool")
+  private[this] implicit val eCtxt: ExecutionContext = system.dispatcher
 
   private[this] def execPing(exec: PingExecute)(implicit to: Timeout): Future[PingResult] = {
     (system.actorOf(Props[PingExecutor]) ? exec).mapTo[PingResult]

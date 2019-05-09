@@ -48,7 +48,6 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
     materializer match {
       case am : ActorMaterializer =>
         system = am.system
-        //ec = system.dispatchers.lookup("FixedPool")
         ec = system.dispatcher
       case _ =>
         failStage(new Exception(s"Expected to run on top of an ActorSystem [$id]"))

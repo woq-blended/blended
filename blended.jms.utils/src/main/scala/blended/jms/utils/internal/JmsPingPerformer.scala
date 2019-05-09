@@ -171,7 +171,7 @@ object JmsPingPerformer {
 class JmsPingPerformer(config: ConnectionConfig, con: Connection, operations: PingOperations)
   extends Actor with ActorLogging {
 
-  implicit val eCtxt : ExecutionContext = context.system.dispatchers.lookup("FixedPool")
+  implicit val eCtxt : ExecutionContext = context.system.dispatcher
 
   private[this] var pingId = s"${config.vendor}:${config.provider}-${UUID.randomUUID().toString()}"
   private[this] var responded : Boolean = false

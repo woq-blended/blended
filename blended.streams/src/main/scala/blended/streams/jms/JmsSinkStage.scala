@@ -23,9 +23,6 @@ class JmsSinkStage(
 
   override val shape : FlowShape[FlowEnvelope, FlowEnvelope] = FlowShape(in, out)
 
-//  override protected def initialAttributes: Attributes =
-//    ActorAttributes.dispatcher("FixedPool")
-
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new JmsStageLogic[JmsProducerSession, JmsProducerSettings](
       settings,
