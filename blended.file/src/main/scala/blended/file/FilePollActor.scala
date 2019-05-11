@@ -2,10 +2,9 @@ package blended.file
 
 import java.io.{File, FilenameFilter}
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
-import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
 
@@ -25,9 +24,8 @@ class FilePollActor(
   cfg: FilePollConfig,
   handler: FilePollHandler,
   sem : Option[ActorRef]
-) extends Actor {
+) extends Actor with ActorLogging {
 
-  private val log : Logger = Logger[FilePollActor]
   case object Tick
 
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
@@ -100,7 +98,7 @@ class FilePollActor(
     case Tick =>
       if (sem.isDefined) {
         sem.foreach { s =>
-          log.trace(s"Using semaphore actor [$s] to schedule file poll in [${cfg.id}]")
+          log.debug(s"Using semaphore actor [$s] to schedule file poll in [${cfg.id}]")
           s ! Acquire(self)
         }
       } else {
@@ -158,7 +156,7 @@ class FilePollActor(
 
   private def processing(batch : List[File], succeeded : List[FileProcessResult], failed : Int) : Receive = {
     case akka.actor.Status.Failure(t) =>
-      log.warn(s"Error executing file processor for dir [${cfg.sourceDir}] : [${t.getMessage()}]")
+      log.warning(s"Error executing file processor for dir [${cfg.sourceDir}] : [${t.getMessage()}]")
       checkProcessingComplete(batch, succeeded, failed + 1)
 
     case r @ FileProcessResult(_, None) =>

@@ -1,7 +1,7 @@
 package blended.file
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Source, Zip}
 import akka.util.ByteString
@@ -87,9 +87,7 @@ class AsyncSendActor(
   cfg : FilePollConfig,
   settings : JmsProducerSettings,
   header : FlowMessage.FlowMessageProps
-) extends Actor with MemoryStash {
-
-  private val log : Logger = Logger[AsyncSendActor]
+) extends Actor with ActorLogging with MemoryStash {
 
   private implicit val system : ActorSystem = context.system
   private implicit val eCtxt : ExecutionContext = system.dispatcher
@@ -140,6 +138,8 @@ class AsyncSendActor(
     case JmsStreamStopped =>
 
     case (cmd : FileProcessCmd, p : Promise[FileProcessResult]) =>
+
+      log.debug(s"Processing [$cmd]")
 
       createEnvelope(cmd) match {
         case Success(env) =>
@@ -193,16 +193,19 @@ private class JmsSendStream(
 
   private var entry : Option[ActorRef] = None
 
+  private val log : Logger = Logger[JmsSendStream]
   private implicit val eCtxt : ExecutionContext = system.dispatcher
 
   override def preStart(): Unit = self ! StreamController.Start
 
   override def afterStreamStarted(mat : ActorRef): Unit = {
+    log.debug(s"JMS Stream for file poller [${pollCfg.id}] started.")
     entry = Some(mat)
     entry.foreach{ ref => asyncSender ! JmsStreamStarted(ref) }
   }
 
   override def beforeStreamRestart(): Unit = {
+    log.debug(s"JMS Stream for file poller [${pollCfg.id}] stopped.")
     entry = None
     asyncSender ! JmsStreamStopped
   }

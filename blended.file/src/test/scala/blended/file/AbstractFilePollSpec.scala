@@ -26,7 +26,6 @@ trait AbstractFilePollSpec { this : Matchers =>
   protected def handler()(implicit system : ActorSystem) : FilePollHandler
 
   protected def genFile(f: File) : Unit = {
-    log.info(s"Creating file [${f.getAbsolutePath()}]")
     val os = new FileOutputStream(f)
     os.write("Hallo Andreas".getBytes())
     os.flush()

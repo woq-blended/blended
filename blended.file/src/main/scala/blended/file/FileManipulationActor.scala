@@ -2,7 +2,7 @@ package blended.file
 
 import java.io.File
 
-import akka.actor.{Actor, ActorRef, Cancellable, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import blended.util.logging.Logger
 
 import scala.concurrent.ExecutionContext
@@ -21,9 +21,9 @@ object FileManipulationActor {
 
 class FileCommandTimeoutException(cmd : FileCommand) extends Exception(s"Command [$cmd] timed out")
 
-class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor {
+class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor with ActorLogging {
 
-  private val log : Logger = Logger[FileManipulationActor]
+  private val logger : Logger = Logger[FileManipulationActor]
 
   case object Tick
   case object Timeout
@@ -35,7 +35,7 @@ class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor {
       case DeleteFile(f) =>
         f.delete()
         if (f.exists()) {
-          log.trace(s"Attempt to delete file [${f.getAbsolutePath}] failed.")
+          logger.trace(s"Attempt to delete file [${f.getAbsolutePath}] failed.")
           false
         } else {
           true
@@ -46,7 +46,7 @@ class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor {
         } else {
           src.renameTo(dest)
           if (!dest.exists() || src.exists()) {
-            log.trace(s"Attempt to rename file [${src.getAbsolutePath}] to [${dest.getAbsolutePath}] failed.")
+            logger.trace(s"Attempt to rename file [${src.getAbsolutePath}] to [${dest.getAbsolutePath}] failed.")
             false
           } else {
             true
@@ -77,6 +77,7 @@ class FileManipulationActor(operationTimeout: FiniteDuration) extends Actor {
       }
 
     case Timeout =>
+      logger.debug(s"File command [$cmd] timed out.")
       requestor ! FileCmdResult(cmd, Some(new FileCommandTimeoutException(cmd)) )
       stop(t)
   }

@@ -98,8 +98,8 @@ class FilePollToJmsSpec extends TestKit(ActorSystem("JmsFilePoll"))
       withJmsMessages("jmspoll", 5)(5.seconds)
     }
 
-    "do perform a regular poll and process files (bulk)" in {
-      withJmsMessages("jmsbulk", 2000)(10.seconds)
-    }
+//    "do perform a regular poll and process files (bulk)" in {
+//      withJmsMessages("jmsbulk", 2000)(10.seconds)
+//    }
   }
 }
