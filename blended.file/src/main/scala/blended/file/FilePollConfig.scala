@@ -22,6 +22,7 @@ object FilePollConfig {
   val PATH_FILENAME_PROP  = "filenameProperty"
   val PATH_FILEPATH_PROP  = "filepathProperty"
   val PATH_BATCHSIZE      = "batchSize"
+  val PATH_CHARSET        = "charset"
 
   def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig =
     apply(cfg, FlowHeaderConfig.create(idSvc))
@@ -36,6 +37,7 @@ object FilePollConfig {
       pattern= cfg.getStringOption(PATH_PATTERN),
       lock = cfg.getStringOption(PATH_LOCK),
       backup = cfg.getStringOption(PATH_BACKUP),
+      charSet = cfg.getStringOption(PATH_CHARSET),
       asText = cfg.getBoolean(PATH_ASTEXT, false),
       tmpExt = cfg.getString(PATH_TMP_EXT, "_to_send"),
       filenameProp = cfg.getString(PATH_FILENAME_PROP, "BlendedFileName"),
@@ -56,6 +58,7 @@ case class FilePollConfig(
   lock: Option[String],
   backup : Option[String],
   asText: Boolean,
+  charSet : Option[String],
   operationTimeout : FiniteDuration,
   handleTimeout : FiniteDuration,
   batchSize : Int,

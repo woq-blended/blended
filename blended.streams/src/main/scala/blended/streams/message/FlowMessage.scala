@@ -187,7 +187,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-  override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
+  override def toString: String = s"${getClass().getSimpleName()}($header)"
 }
 
 case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {
@@ -221,6 +221,8 @@ case class BinaryFlowMessage(content : ByteString, override val header: FlowMess
   }
 
   override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+
+  override def toString: String = super.toString + s"(binary content of length [${bodySize()}])"
 }
 
 case class TextFlowMessage(content : String, override val header: FlowMessageProps) extends FlowMessage(header) {
@@ -234,4 +236,6 @@ case class TextFlowMessage(content : String, override val header: FlowMessagePro
   }
 
   override def removeHeader(keys: String*): FlowMessage = copy(header = doRemoveHeader(keys:_*))
+
+  override def toString: String = super.toString + s"(${getText()})"
 }

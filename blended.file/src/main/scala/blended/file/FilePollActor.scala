@@ -62,7 +62,7 @@ class FilePollActor(
     }
 
     if (!srcDir.exists() || !srcDir.isDirectory() || !srcDir.canRead()) {
-      log.info(s"Directory [$srcDir] for [${cfg.id}] does not exist or is not readable.")
+      log.warning(s"Directory [$srcDir] for [${cfg.id}] does not exist or is not readable.")
       List.empty
     } else if (locked()) {
       List.empty
@@ -70,6 +70,9 @@ class FilePollActor(
       if (pending.isEmpty) {
         pending = srcDir.listFiles(new FilenameFilter {
           override def accept(dir: File, name: String): Boolean = {
+
+            log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}] with pattern [${cfg.pattern}]")
+
             if (cfg.pattern.isEmpty || cfg.pattern.forall(p => name.matches(p))) {
               val f = new File(dir, name)
               f.exists() && f.isFile() && f.canRead()
@@ -80,7 +83,7 @@ class FilePollActor(
         }).toList
 
         totalToProcess = pending.size
-        log.info(s"Found [$totalToProcess] files to process from [$srcDir]")
+        log.info(s"Found [$totalToProcess] files to process from [$srcDir] with pattern [${cfg.pattern}]")
       }
 
       val result = pending.take(cfg.batchSize)
@@ -108,8 +111,6 @@ class FilePollActor(
     case Waiting => // Do nothing - just wait
 
     case Acquired =>
-      log.info(s"Executing File Poll in [${cfg.id}] for directory [${cfg.sourceDir}] with pattern [${cfg.pattern}]")
-
       // First we get the batch files up next for processing
       val toProcess : List[File] = files()
 
@@ -134,8 +135,10 @@ class FilePollActor(
       // the batch is now complete, so we switch states and schedule the next tick
       context.become(idle)
 
+      val processedFiles : List[String] = succeeded.map(_.cmd.originalFile.getAbsolutePath())
+
       batch.foreach { f =>
-        if (!f.exists()) {
+        if (!f.exists() && !processedFiles.contains(f.getAbsolutePath())) {
           val tempFile : File = new File(f.getParentFile, f.getName + cfg.tmpExt)
           context.actorOf(FileManipulationActor.props(cfg.operationTimeout)).tell(RenameFile(tempFile, f), self)
         }

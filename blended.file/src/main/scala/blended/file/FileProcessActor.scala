@@ -4,9 +4,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.{Date, UUID}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
-import akka.util.Timeout
 
 import scala.concurrent.ExecutionContext
 
@@ -69,6 +68,9 @@ class FileProcessActor extends Actor with ActorLogging {
       log.warning(s"Failed to process file [${cmd.originalFile.getAbsolutePath()}] : [${t.getMessage()}]")
       context.actorOf(FileManipulationActor.props(command.cfg.operationTimeout)).tell(RenameFile(cmd.fileToProcess, cmd.originalFile), self)
       context.become(cleanUp(requestor, r))
+
+    case m =>
+      log.warning(s"Received unexpected message of type [${m.getClass().getName()}] : [$m]")
   }
 
   def cleanUp(requestor: ActorRef, r: FileProcessResult) : Receive = {

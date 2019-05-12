@@ -1,5 +1,7 @@
 package blended.file
 
+import java.nio.charset.Charset
+
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.stream._
@@ -9,6 +11,7 @@ import blended.akka.MemoryStash
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.{AbstractStreamController, StreamController, StreamControllerConfig}
+import blended.util.FileHelper
 import blended.util.logging.Logger
 
 import scala.concurrent.duration._
@@ -97,24 +100,30 @@ class AsyncSendActor(
 
   override def preStart(): Unit = self ! Start
 
-  private def createEnvelope(cmd : FileProcessCmd) : Try[FlowEnvelope] = {
+  private def createEnvelope(cmd : FileProcessCmd) : Try[FlowEnvelope] = Try {
 
-    val src : BufferedSource = scala.io.Source.fromFile(cmd.fileToProcess)
+    val bytes : Array[Byte] = FileHelper.readFile(cmd.fileToProcess.getAbsolutePath())
 
-    try {
-      val body : ByteString = ByteString(src.mkString)
-      src.close()
+    val msg : FlowMessage = if (cmd.cfg.asText) {
+      val charSet : Charset = cmd.cfg.charSet match {
+        case None => Charset.defaultCharset()
+        case Some(s) => Charset.forName(s)
+      }
 
-      val msg : FlowMessage = FlowMessage(body)(header)
-        .withHeader(cmd.cfg.filenameProp, cmd.originalFile.getName()).get
-        .withHeader(cmd.cfg.filepathProp, cmd.originalFile.getAbsolutePath()).get
+      log.debug(s"Using charset [${charSet.displayName()}] to create text message.")
 
-      Success(FlowEnvelope(msg, cmd.id))
-    } catch {
-      case NonFatal(t) => Failure(t)
-    } finally {
-      src.close()
+      FlowMessage(new String(bytes, charSet))(header)
+    } else {
+      FlowMessage(bytes)(header)
     }
+
+    val env : FlowEnvelope = FlowEnvelope(msg, cmd.id)
+      .withHeader(cmd.cfg.filenameProp, cmd.originalFile.getName()).get
+      .withHeader(cmd.cfg.filepathProp, cmd.originalFile.getAbsolutePath()).get
+
+    log.debug(s"Created Envelope [$env] from [$cmd]")
+
+    env
   }
 
   override def receive: Receive = starting.orElse(stashing)
@@ -146,7 +155,8 @@ class AsyncSendActor(
           jmsSendActor ! FileSendInfo(self, cmd, env, p)
 
         case Failure(t) =>
-          p.failure(t)
+          log.warning(s"Failed to create envelope for [$cmd] : [${t.getMessage()}]")
+          p.success(FileProcessResult(cmd, Some(t)))
       }
 
     case info : FileSendInfo =>
@@ -155,7 +165,9 @@ class AsyncSendActor(
           log.info(s"Successfully sent file [${info.cmd.id}] to JMS : [${info.cmd}]")
           info.p.success(FileProcessResult(info.cmd, None))
 
-        case Some(t) => info.p.failure(t)
+        case Some(t) =>
+          log.warning(s"Failed to send file content for [${info.cmd}] : [${t.getMessage()}]")
+          info.p.success(FileProcessResult(info.cmd, Some(t)))
       }
   }
 
