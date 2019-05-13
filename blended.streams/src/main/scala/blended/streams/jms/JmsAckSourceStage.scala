@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import javax.jms._
 
@@ -187,7 +187,7 @@ final class JmsAckSourceStage(
           try {
             receive(sid) match {
               case (Some(message), _) =>
-                val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
+                val flowMessage : FlowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
 
                 val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
                   case None =>

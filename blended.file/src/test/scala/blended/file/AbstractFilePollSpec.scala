@@ -76,13 +76,13 @@ trait AbstractFilePollSpec { this : Matchers =>
     val probe = TestProbe()
     system.eventStream.subscribe(probe.ref, classOf[FileProcessResult])
 
-    val actor : ActorRef = filePoller(cfg)
-
     val files : List[File] = 1.to(msgCount).map { i =>
       val f = new File(srcDir, s"test$i." + (if (i % 2 == 0) "txt" else "xml"))
       genFile(f)
       f
     }.toList
+
+    val actor : ActorRef = filePoller(cfg)
 
     f(files)(probe)
 

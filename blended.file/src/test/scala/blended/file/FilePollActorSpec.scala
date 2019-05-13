@@ -103,7 +103,10 @@ class FilePollActorFailSpec extends AbstractFilePollSpec
     }))
 
   "Restore the original messages if the FileProcessActor is unresponsive" in TestActorSys { testkit =>
-    withMessages(pollCfg = defaultFilePollConfig(testkit.system).copy(interval = 10.seconds, handleTimeout = 500.millis), dir = "failedPoll", msgCount = 5){ files => probe =>
+    withMessages(pollCfg = defaultFilePollConfig(testkit.system).copy(
+      interval = 10.seconds,
+      handleTimeout = 500.millis
+    ), dir = "failedPoll", msgCount = 5){ files => probe =>
 
       val processed : List[FileProcessResult] = probe.receiveWhile[FileProcessResult](max = 2.seconds, messages = files.size) {
         case fp : FileProcessResult => fp

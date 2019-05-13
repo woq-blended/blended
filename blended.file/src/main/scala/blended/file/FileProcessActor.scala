@@ -62,8 +62,6 @@ class FileProcessActor extends Actor with ActorLogging {
       context.actorOf(FileManipulationActor.props(command.cfg.operationTimeout)).tell(archiveCmd, self)
       context.become(cleanUp(requestor, c))
 
-      self ! c
-
     case r @ FileProcessResult(command, Some(t)) =>
       log.warning(s"Failed to process file [${cmd.originalFile.getAbsolutePath()}] : [${t.getMessage()}]")
       context.actorOf(FileManipulationActor.props(command.cfg.operationTimeout)).tell(RenameFile(cmd.fileToProcess, cmd.originalFile), self)
