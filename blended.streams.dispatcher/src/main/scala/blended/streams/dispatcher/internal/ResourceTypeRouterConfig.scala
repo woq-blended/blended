@@ -209,7 +209,7 @@ object OutboundHeaderConfig {
     val clearBody = cfg.getBoolean(clearBodyPath, false)
     val autoComplete = cfg.getBoolean(autocompletePath, true)
     val maxRetries = cfg.getLong(maxRetryPath, -1L)
-    val timeToLive = cfg.getLong(timeToLivePath, 0L)
+    val timeToLive = cfg.getDuration(timeToLivePath, 0.millis).toMillis
     val delMode = cfg.getString(deliveryModePath, JmsDeliveryMode.Persistent.asString)
 
     new OutboundHeaderConfig(
