@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import javax.jms._
 
@@ -38,7 +38,6 @@ import scala.util.{Failure, Success, Try}
 final class JmsAckSourceStage(
   name : String,
   settings: JMSConsumerSettings,
-  headerConfig : FlowHeaderConfig,
   minMessageDelay : Option[FiniteDuration] = None
 )(implicit system : ActorSystem)
   extends GraphStage[SourceShape[FlowEnvelope]] {
@@ -47,12 +46,11 @@ final class JmsAckSourceStage(
   private case class Ack(s : String) extends TimerEvent
   private case class Poll(s : String) extends TimerEvent
 
+  private val headerConfig : FlowHeaderConfig = settings.headerCfg
+
   private val out = Outlet[FlowEnvelope](s"JmsAckSource($name.out)")
 
   override def shape: SourceShape[FlowEnvelope] = SourceShape[FlowEnvelope](out)
-
-  override protected def initialAttributes: Attributes =
-    ActorAttributes.dispatcher("FixedPool")
 
   // TODO: Refactor to clean up code
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = {
@@ -65,12 +63,12 @@ final class JmsAckSourceStage(
 
       private[this] def addInflight(s : String, env: FlowEnvelope) : Unit = {
         inflight = inflight + (s -> env)
-        settings.log.debug(s"Inflight message count is [${inflight.size}]")
+        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def removeInflight(s : String) : Unit = {
         inflight = inflight.filterKeys(_!= s)
-        settings.log.debug(s"Inflight message of [$id] count is [${inflight.size}]")
+        settings.log.debug(s"Inflight message count of [$id] count is [${inflight.size}]")
       }
 
       private[this] def addConsumer(s: String, c : MessageConsumer) : Unit = {
@@ -111,7 +109,7 @@ final class JmsAckSourceStage(
               handler.jmsMessage.acknowledge()
               settings.log.debug(s"Acknowledged envelope [${env.id}] message for session [$sessionId]")
               removeInflight(sessionId)
-              scheduleOnce(Poll(sessionId), 10.millis)
+              poll(sessionId)
             } catch {
               case t: Throwable =>
                 settings.log.error(t)(s"Failed to acknowledge message [${env.id}] for session [$sessionId]")
@@ -189,18 +187,19 @@ final class JmsAckSourceStage(
           try {
             receive(sid) match {
               case (Some(message), _) =>
-                val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
-                settings.log.debug(s"Message received [${settings.jmsDestination.map(_.asString)}] [${session.sessionId}] : ${flowMessage.header.mkString(",")}")
+                val flowMessage : FlowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
 
-                val envelopeId: String = flowMessage.header[String](headerConfig.headerTrans) match {
+                val envelopeId: String = flowMessage.header[String](headerConfig.headerTransId) match {
                   case None =>
                     val newId = UUID.randomUUID().toString()
-                    settings.log.debug(s"Created new envelope id [$newId]")
+                    settings.log.trace(s"Created new envelope id [$newId]")
                     newId
                   case Some(s) =>
-                    settings.log.debug(s"Reusing transaction id [$s] as envelope id")
+                    settings.log.trace(s"Reusing transaction id [$s] as envelope id")
                     s
                 }
+
+                settings.log.info(s"Message received [$envelopeId][${settings.jmsDestination.map(_.asString)}][${session.sessionId}] : $flowMessage")
 
                 val handler = JmsAcknowledgeHandler(
                   id = envelopeId,
@@ -210,14 +209,14 @@ final class JmsAckSourceStage(
                 )
 
                 val envelope = FlowEnvelope(flowMessage, envelopeId)
-                  .withHeader(headerConfig.headerTrans, envelopeId).get
+                  .withHeader(headerConfig.headerTransId, envelopeId).get
                   .withRequiresAcknowledge(true)
                   .withAckHandler(Some(handler))
 
                 session.resetAck()
                 addInflight(session.sessionId, envelope)
                 handleMessage.invoke(envelope)
-                scheduleOnce(Ack(sid), 10.millis)
+                ackQueued(sid)
               case (None, nextPoll) =>
                 settings.log.trace(s"No message available for [${session.sessionId}]")
                 scheduleOnce(Poll(sid), nextPoll)
@@ -255,6 +254,7 @@ final class JmsAckSourceStage(
       override protected def handleTimer: PartialFunction[Any, Unit] = super.handleTimer orElse {
         case Ack(s) =>
           ackQueued(s)
+
         case p : Poll =>
           nextPoll match {
             case None => poll(p.s)

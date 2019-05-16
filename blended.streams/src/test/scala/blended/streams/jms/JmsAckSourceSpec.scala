@@ -77,6 +77,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
     JMSConsumerSettings(
       log = log,
+      headerCfg = headerCfg,
       connectionFactory = amqCf,
       jmsDestination = Some(dest),
       sessionCount = consumerCount,
@@ -86,6 +87,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
   private val producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
     log = log,
+    headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
   )

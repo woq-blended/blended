@@ -14,6 +14,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -38,6 +39,8 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
   private implicit val backend = HttpURLConnectionBackend()
 
   private val svcUrlBase : String = "http://localhost:9995/httpqueue"
+
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
   override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
 
@@ -91,6 +94,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
@@ -113,6 +117,7 @@ class SttpQueueServiceSpec extends SimplePojoContainerSpec
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = amqCF,
         jmsDestination = Some(JmsQueue("Queue1"))
       )

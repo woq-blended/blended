@@ -2,16 +2,17 @@ package blended.jms.bridge.internal
 
 import java.io.File
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream._
+import akka.stream.scaladsl.Flow
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.jms.bridge.{JmsStreamBuilder, JmsStreamConfig, TrackTransaction}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
-import blended.streams.StreamController
 import blended.streams.jms._
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.processor.Collector
 import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionStarted, FlowTransactionUpdate}
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
@@ -23,123 +24,157 @@ import org.scalatest.prop.PropertyChecks
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
+import scala.util.Try
 
-@RequiresForkedJVM
-class BridgeSpec extends SimplePojoContainerSpec
+abstract class BridgeSpecSupport extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
   with PojoSrTestHelper
   with Matchers
   with JmsStreamSupport
+  with JmsEnvelopeHeader
   with PropertyChecks {
 
-  private val log = Logger[BridgeSpec]
+  protected implicit val timeout : FiniteDuration = 5.seconds
+  protected val log = Logger(getClass().getName())
 
-  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withRetries").getAbsolutePath()
+
+  protected def bridgeActivator : BridgeActivator = new BridgeActivator()
 
   override def bundles: Seq[(String, BundleActivator)] = Seq(
     "blended.akka" -> new BlendedAkkaActivator(),
     "blended.activemq.brokerstarter" -> new BrokerActivator(),
-    "blended.jms.bridge" -> new BridgeActivator()
+    "blended.jms.bridge" -> bridgeActivator
   )
 
-  implicit val timeout = 5.seconds
+  protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  protected implicit val materializer : ActorMaterializer = ActorMaterializer()
+  protected implicit val ectxt : ExecutionContext = system.dispatcher
 
-  private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
-  private implicit val materializer : ActorMaterializer = ActorMaterializer()
-  private implicit val ectxt : ExecutionContext = system.dispatcher
+  protected val (internal, external) = getConnectionFactories(registry)
+  protected val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
 
-  private val (internal, external) = getConnectionFactories(registry)
-  private val idSvc = mandatoryService[ContainerIdentifierService](registry)(None)
+  protected val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
 
-  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(idSvc)
+  protected val destinationName : String = destHeader(headerCfg.prefix)
 
-  private val destHeader = new JmsEnvelopeHeader(){}.destHeader(headerCfg.prefix)
+  protected def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
 
-  val ctrlCfg : BridgeControllerConfig = BridgeControllerConfig.create(
-    cfg = idSvc.containerContext.getContainerConfig().getConfig("blended.jms.bridge"),
-    internalCf = internal,
-    idSvc = idSvc
-  )
-
-  val cfg : JmsStreamConfig = JmsStreamConfig(
-    inbound = true,
-    headerCfg = ctrlCfg.headerCfg,
-    fromCf = internal,
-    fromDest = JmsDestination.create(s"bridge.data.in.${external.vendor}.${external.provider}").get,
-    toCf = internal,
-    toDest = Some(JmsDestination.create(s"bridge.data.out.${external.vendor}.${external.provider}").get),
-    listener = 3,
-    selector = None,
-    registry = ctrlCfg.registry,
-    trackTransaction = TrackTransaction.Off,
-    subscriberName = None,
-    header = List.empty,
-    rawConfig = ctrlCfg.rawConfig,
-    sessionRecreateTimeout = 1.second
-  )
-
-  private val streamCfg = new JmsStreamBuilder(cfg).streamCfg
-  system.actorOf(StreamController.props(streamCfg))
-
-  private def brokerFilter(provider : String) : String = s"(&(vendor=activemq)(provider=$provider))"
-
-  private def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
+  protected def getConnectionFactories(sr: BlendedPojoRegistry)(implicit timeout : FiniteDuration) : (IdAwareConnectionFactory, IdAwareConnectionFactory) = {
     val cf1 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("internal")))
     val cf2 = mandatoryService[IdAwareConnectionFactory](sr)(Some(brokerFilter("external")))
     (cf1, cf2)
   }
 
-  "The Activated Bridge should" - {
+  protected def consumeMessages(cf: IdAwareConnectionFactory, destName : String)(
+    implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer
+  ) : Try[List[FlowEnvelope]] = Try {
 
-    "process normal in- and outbound messages" in {
+    val coll : Collector[FlowEnvelope] = receiveMessages(headerCfg, cf, JmsDestination.create(destName).get, log)
+    Await.result(coll.result, timeout + 100.millis)
+  }
 
+  protected def consumeEvents()(implicit timeout : FiniteDuration, system : ActorSystem, materializer: Materializer) : Try[List[FlowTransactionEvent]] = Try {
+    consumeMessages(internal, "internal.transactions").get.map{ env =>
+      FlowTransactionEvent.envelope2event(headerCfg)(env).get
+    }
+  }
+
+  protected def generateMessages(msgCount : Int)(f: FlowEnvelope => FlowEnvelope = { env => env} ) : Try[Seq[FlowEnvelope]] = Try {
+
+    1.to(msgCount).map { i =>
+      FlowMessage(s"Message $i")(FlowMessage.noProps)
+        .withHeader("UnitProperty", null).get
+    }.map(FlowEnvelope.apply).map(f)
+  }
+
+  protected def sendMessages(destName : String, cf : IdAwareConnectionFactory)(msgs : FlowEnvelope*) : KillSwitch = {
+    val pSettings : JmsProducerSettings = JmsProducerSettings(
+      log = log,
+      headerCfg = headerCfg,
+      connectionFactory = cf,
+      jmsDestination = Some(JmsDestination.create(destName).get)
+    )
+
+    sendMessages(pSettings, log, msgs:_*).get
+  }
+}
+
+@RequiresForkedJVM
+class InboundBridgeUntrackedSpec extends BridgeSpecSupport {
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutTracking").getAbsolutePath()
+
+  private def sendInbound(msgCount : Int) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+    }.get
+
+
+    sendMessages("sampleIn", external)(msgs:_*)
+  }
+
+  "The inbound bridge should" - {
+
+    "process normal inbound messages without tracking" in {
+      implicit val timeout : FiniteDuration = 1.second
       val msgCount = 2
 
-      val msgs : Seq[FlowEnvelope] = 1.to(msgCount).map { i =>
-        FlowMessage(s"Message $i")(FlowMessage.noProps)
-          .withHeader(destHeader, s"sampleOut.$i").get
-          .withHeader(headerCfg.headerTrack, true).get
-          .withHeader("UnitProperty", null).get
-      } map { FlowEnvelope.apply }
+      val switch = sendInbound(msgCount)
 
-      val pSettings : JmsProducerSettings = JmsProducerSettings(
-        log = log,
-        connectionFactory = external,
-        jmsDestination = Some(JmsQueue("sampleIn"))
-      )
+      val messages : List[FlowEnvelope] =
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
 
-      val switch = sendMessages(pSettings, log, msgs:_*).get
+      messages should have size(msgCount)
 
-      1.to(msgCount).map { i =>
-        val messages =
-          receiveMessages(ctrlCfg.headerCfg, external, JmsQueue(s"sampleOut.$i"), log)(1.second, system, materializer)
-
-        messages.result.map { l =>
-          l.head.header[Unit]("UnitProperty") should be (Some(()))
-          l should have size(1)
-        }
+      messages.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      val collector = receiveMessages(ctrlCfg.headerCfg, internal, JmsQueue("internal.transactions"), log)(1.second, system, materializer)
+      consumeEvents().get should be (empty)
 
-      val result = collector.result.map { l =>
-        val envelopes = l.map(env => FlowTransactionEvent.envelope2event(ctrlCfg.headerCfg)(env).get)
+      switch.shutdown()
+    }
+  }
+}
 
-        envelopes should have size(msgCount * 2)
-        val (started, updated) = envelopes.partition(_.isInstanceOf[FlowTransactionStarted])
+@RequiresForkedJVM
+class InboundBridgeTrackedSpec extends BridgeSpecSupport {
 
-        started should have size msgCount
-        updated should have size msgCount
+  private def sendInbound(msgCount : Int) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+    }.get
 
-        assert(updated.forall(_.isInstanceOf[FlowTransactionUpdate]))
 
-        val sIds = started.map(_.transactionId)
-        val uIds = updated.map(_.transactionId)
+    sendMessages("sampleIn", external)(msgs:_*)
+  }
 
-        assert(sIds.forall(id => uIds.contains(id)))
+  "The Inbound Bridge should" - {
+
+    // We only test for tracked transactions as all bridge inbound streams generate transaction started events by design
+    "process normal inbound messages with tracked transactions" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendInbound(msgCount)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get
+
+      messages should have size(msgCount)
+
+      messages.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
       }
 
-      Await.result(result, 3.seconds)
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+
+      envelopes should have size(msgCount)
+      assert(envelopes.forall(_.isInstanceOf[FlowTransactionStarted]))
+
       switch.shutdown()
     }
 
@@ -148,27 +183,323 @@ class BridgeSpec extends SimplePojoContainerSpec
       val desc = "TestDesc"
 
       val env : FlowEnvelope = FlowEnvelope(FlowMessage("Header")(FlowMessage.props(
-        destHeader -> "SampleHeaderOut",
+        destinationName -> "SampleHeaderOut",
         "Description" -> desc,
         headerCfg.headerTrack -> false
       ).get))
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = external,
         jmsDestination = Some(JmsQueue("SampleHeaderIn"))
       )
 
-      val switch = sendMessages(pSettings, log, env).get
+      val switch : KillSwitch = sendMessages(pSettings, log, env).get
 
-      val coll = receiveMessages(ctrlCfg.headerCfg, external, JmsQueue("SampleHeaderOut"), log)(1.second, system, materializer)
-      val result = Await.result(coll.result, 1100.millis)
-      switch.shutdown()
-      system.stop(coll.actor)
+      val result : List[FlowEnvelope] = consumeMessages(internal, "bridge.data.in.activemq.external").get
 
       result should have size 1
       result.head.header[String]("ResourceType") should be (Some(desc))
+
+      switch.shutdown()
+    }
+  }
+}
+
+@RequiresForkedJVM
+class InboundRejectBridgeSpec extends BridgeSpecSupport {
+
+  private def sendInbound(msgCount : Int) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+    }.get
+
+
+    sendMessages("sampleIn", external)(msgs:_*)
+  }
+
+  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg)(system, materializer) {
+        override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+          env.withException(new Exception("Boom"))
+        }
+      }
+  }
+
+  "The inbound bridge should" - {
+
+    "reject messages in case the send forward fails" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendInbound(msgCount)
+
+      consumeMessages(internal, "bridge.data.in.activemq.external")(1.second, system, materializer).get should be (empty)
+      consumeEvents().get should be (empty)
+
+      consumeMessages(external, "sampleIn").get should have size(msgCount)
+
+      switch.shutdown()
     }
   }
 
+}
+
+@RequiresForkedJVM
+class OutboundBridgeSpec extends BridgeSpecSupport {
+
+  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(headerCfg.headerTrack, track).get
+    }.get
+
+
+    sendMessages("bridge.data.out.activemq.external", internal)(msgs:_*)
+  }
+
+  "The outbound bridge should " - {
+
+    "process normal inbound messages with untracked transactions" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, false)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(external, "sampleOut").get
+
+      messages should have size(msgCount)
+
+      messages.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
+      }
+
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+
+      envelopes should be (empty)
+    }
+
+    "process normal inbound messages with tracked transactions" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, true)
+
+      val messages : List[FlowEnvelope] =
+        consumeMessages(external, "sampleOut").get
+
+      messages should have size(msgCount)
+
+      messages.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
+      }
+
+      val envelopes : List[FlowTransactionEvent] = consumeEvents().get
+
+      envelopes should have size(msgCount)
+      assert(envelopes.forall(_.isInstanceOf[FlowTransactionUpdate]))
+    }
+  }
+}
+
+@RequiresForkedJVM
+class SendFailedRetryBridgeSpec extends BridgeSpecSupport {
+
+  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(headerCfg.headerTrack, track).get
+    }.get
+
+
+    sendMessages("bridge.data.out.activemq.external", internal)(msgs:_*)
+  }
+
+  // We override the send flow with a flow simply triggering an exception, so that the
+  // exceptional path will be triggered
+  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg)(system, materializer) {
+        override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+          env.withException(new Exception("Boom"))
+        }
+      }
+  }
+
+  "The outbound bridge should " - {
+
+    "pass the message to the retry destination and not generate a transaction event if the forwarding of the message fails" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, true)
+
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+
+      retried should have size(msgCount)
+
+      retried.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
+        env.header[String](headerCfg.headerRetryDestination) should be (Some("bridge.data.out.activemq.external"))
+      }
+
+      consumeEvents().get should be (empty)
+      consumeMessages(external, "sampleOut").get should be (empty)
+
+      switch.shutdown()
+    }
+  }
+}
+
+@RequiresForkedJVM
+class SendFailedRejectBridgeSpec extends BridgeSpecSupport {
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutRetries").getAbsolutePath()
+
+  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(headerCfg.headerTrack, track).get
+    }.get
+
+
+    sendMessages("bridge.data.out.activemq.external", internal)(msgs:_*)
+  }
+
+  // We override the send flow with a flow simply triggering an exception, so that the
+  // exceptional path will be triggered
+  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg)(system, materializer) {
+        override protected def jmsSend: Flow[FlowEnvelope, FlowEnvelope, NotUsed] = Flow.fromFunction[FlowEnvelope, FlowEnvelope] { env =>
+          env.withException(new Exception("Boom"))
+        }
+      }
+  }
+
+  "The outbound bridge should " - {
+
+    "reject the messages in a forward fails and no retry destination is defined" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, true)
+
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      retried should be (empty)
+
+      consumeEvents().get should be (empty)
+
+      retried.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
+      }
+
+      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size(msgCount)
+
+      switch.shutdown()
+    }
+  }
+}
+
+@RequiresForkedJVM
+class TransactionSendFailedRetryBridgeSpec extends BridgeSpecSupport {
+
+  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(headerCfg.headerTrack, track).get
+    }.get
+
+
+    sendMessages("bridge.data.out.activemq.external", internal)(msgs:_*)
+  }
+
+  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg)(system, materializer) {
+
+        override protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+          Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+            env.withException(new Exception("Boom !"))
+          }
+      }
+  }
+
+  "The outbound bridge should " - {
+
+    "pass messages to the retry destination if the send of the transaction envelope fails" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, true)
+
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      retried should have size (msgCount)
+
+      consumeEvents().get should be (empty)
+
+      retried.foreach{ env =>
+        env.header[Unit]("UnitProperty") should be (Some(()))
+      }
+
+      consumeMessages(internal, "bridge.data.out.activemq.external").get should be (empty)
+
+      switch.shutdown()
+    }
+  }
+}
+
+@RequiresForkedJVM
+class TransactionSendFailedRejectBridgeSpec extends BridgeSpecSupport {
+
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "withoutRetries").getAbsolutePath()
+
+  private def sendOutbound(msgCount : Int, track : Boolean) : KillSwitch = {
+    val msgs : Seq[FlowEnvelope] = generateMessages(msgCount){ env =>
+      env
+        .withHeader(destinationName, s"sampleOut").get
+        .withHeader(headerCfg.headerTrack, track).get
+    }.get
+
+
+    sendMessages("bridge.data.out.activemq.external", internal)(msgs:_*)
+  }
+
+  override protected def bridgeActivator: BridgeActivator = new BridgeActivator() {
+    override protected def streamBuilderFactory(system: ActorSystem)(materializer: Materializer)(cfg: BridgeStreamConfig): BridgeStreamBuilder =
+      new BridgeStreamBuilder(cfg)(system, materializer) {
+
+        override protected def sendTransaction : Flow[FlowEnvelope, FlowEnvelope, NotUsed] =
+          Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
+            env.withException(new Exception("Boom !"))
+          }
+      }
+  }
+
+  "The outbound bridge should " - {
+
+    "reject envelopes if the send of the transaction event fails and retry is disabled" in {
+      implicit val timeout : FiniteDuration = 1.second
+      val msgCount = 2
+
+      val switch = sendOutbound(msgCount, true)
+
+      val retried : List[FlowEnvelope] = consumeMessages(internal, "retries").get
+      retried should be (empty)
+
+      consumeEvents().get should be (empty)
+
+      consumeMessages(internal, "bridge.data.out.activemq.external").get should have size(2)
+
+      switch.shutdown()
+    }
+  }
 }

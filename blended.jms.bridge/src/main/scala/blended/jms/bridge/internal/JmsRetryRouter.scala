@@ -1,4 +1,4 @@
-package blended.streams.jms
+package blended.jms.bridge.internal
 
 import java.text.SimpleDateFormat
 import java.util.Date

@@ -32,7 +32,7 @@ object FlowTransaction {
 
   val transaction2envelope : FlowHeaderConfig => FlowTransaction => FlowEnvelope = { cfg => t =>
     FlowEnvelope(t.creationProps, t.tid)
-      .withHeader(cfg.headerTrans, t.tid).get
+      .withHeader(cfg.headerTransId, t.tid).get
       .withHeader(cfg.headerState, t.state.toString).get
       .withHeader(cfg.headerBranch, t.worklist.map { case (k,v) => s"$k=${v.mkString(stateSeparator)}" }.mkString(branchSeparator)).get
   }

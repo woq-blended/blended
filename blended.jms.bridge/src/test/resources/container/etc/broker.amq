@@ -9,75 +9,19 @@
        ">
 
   <amq:broker
-    brokerName="blended"
+    brokerName="activemq"
     useJmx="true"
     persistent="false"
     offlineDurableSubscriberTimeout="604800000"
     offlineDurableSubscriberTaskSchedule="86400000"
     advisorySupport="true"
-    dataDirectory="blended"
-    tmpDataDirectory="blended/tmp"
+    dataDirectory="activemq"
+    tmpDataDirectory="activemq/tmp"
     >
 
     <amq:managementContext>
       <amq:managementContext createConnector="false"/>
     </amq:managementContext>
-
-    <amq:destinationPolicy>
-      <amq:policyMap>
-        <amq:policyEntries>
-
-          <amq:policyEntry
-            id="topicConfig"
-            enableAudit="false"
-            topic=">"
-            topicPrefetch="1"
-            durableTopicPrefetch="1"
-            maxPageSize="20"
-            maxBrowsePageSize="20"
-          >
-            <amq:deadLetterStrategy>
-              <amq:individualDeadLetterStrategy topicPrefix="DLT." processExpired="false" destinationPerDurableSubscriber="true" />
-            </amq:deadLetterStrategy>
-          </amq:policyEntry>
-
-          <amq:policyEntry
-            id="queueConfig"
-            enableAudit="false"
-            queue=">"
-            queuePrefetch="1"
-            maxPageSize="20"
-            maxBrowsePageSize="20">
-            <!-- Make sure that messages cannot get stuck on one NWOB node. -->
-            <amq:networkBridgeFilterFactory>
-              <amq:conditionalNetworkBridgeFilterFactory replayWhenNoConsumers="true" replayDelay="10000" />
-            </amq:networkBridgeFilterFactory>
-            <amq:deadLetterStrategy>
-              <amq:individualDeadLetterStrategy queuePrefix="DLQ." processExpired="false" />
-            </amq:deadLetterStrategy>
-          </amq:policyEntry>
-        </amq:policyEntries>
-      </amq:policyMap>
-    </amq:destinationPolicy>
-
-    <amq:plugins>
-      <amq:redeliveryPlugin>
-        <amq:redeliveryPolicyMap>
-          <amq:redeliveryPolicyMap>
-            <amq:redeliveryPolicyEntries />
-            <amq:defaultEntry>
-              <amq:redeliveryPolicy
-                maximumRedeliveries = "5"
-                initialRedeliveryDelay = "5000"
-                maximumRedeliveryDelay = "120000"
-                backOffMultiplier = "5"
-                useExponentialBackOff = "true"
-              />
-            </amq:defaultEntry>
-          </amq:redeliveryPolicyMap>
-        </amq:redeliveryPolicyMap>
-      </amq:redeliveryPlugin>
-    </amq:plugins>
 
   </amq:broker>
 

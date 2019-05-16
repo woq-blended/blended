@@ -6,7 +6,7 @@ import java.util.concurrent.Semaphore
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage._
-import blended.jms.utils.{JmsAckSession, JmsConsumerSession, JmsDestination}
+import blended.jms.utils.{JmsConsumerSession, JmsDestination}
 import blended.streams.message._
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
@@ -17,15 +17,14 @@ import scala.util.{Failure, Success}
 class JmsSourceStage(
   name : String,
   settings: JMSConsumerSettings,
-  headerConfig : FlowHeaderConfig,
   log : Logger = Logger[JmsSourceStage]
 )(implicit actorSystem: ActorSystem) extends GraphStage[SourceShape[FlowEnvelope]] {
 
   private val out = Outlet[FlowEnvelope](s"JmsSource($name.out)")
-  override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
-  override protected def initialAttributes: Attributes =
-    ActorAttributes.dispatcher("FixedPool")
+  private val headerConfig : FlowHeaderConfig = settings.headerCfg
+
+  override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =  {
 
@@ -74,21 +73,22 @@ class JmsSourceStage(
                   backpressure.acquire()
                   // Use a Default Envelope that simply ignores calls to acknowledge if any
                   val flowMessage = JmsFlowSupport.jms2flowMessage(headerConfig)(jmsSettings)(message).get
-                  log.debug(s"Message received for [${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
 
-                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTrans) match {
+                  val envelopeId : String = flowMessage.header[String](headerConfig.headerTransId) match {
                     case None =>
                       val newId = UUID.randomUUID().toString()
-                      log.debug(s"Created new envelope id [$newId]")
+                      log.trace(s"Created new envelope id [$newId]")
                       newId
                     case Some(s) =>
-                      log.debug(s"Reusing transaction id [$s] as envelope id")
+                      log.trace(s"Reusing transaction id [$s] as envelope id")
                       s
                   }
 
+                  log.debug(s"Message received for [$envelopeId][${settings.jmsDestination.map(_.asString)}] [$id] : $flowMessage")
+
                   handleMessage.invoke(
                     FlowEnvelope(
-                      flowMessage.withHeader(headerConfig.headerTrans, envelopeId).get, envelopeId
+                      flowMessage.withHeader(headerConfig.headerTransId, envelopeId).get, envelopeId
                     )
                   )
                 }

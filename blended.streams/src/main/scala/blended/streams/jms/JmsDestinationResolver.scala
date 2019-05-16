@@ -45,6 +45,9 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
         }
     }
 
+    // Always set the env id as id for the message
+    msg.setStringProperty(settings.headerCfg.headerTransId, env.id)
+
     replyTo(session, env).get.foreach(msg.setJMSReplyTo)
     // Always try to get the CorrelationId from the flow Message
     correlationId(env).foreach(msg.setJMSCorrelationID)
@@ -56,9 +59,9 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 trait FlowHeaderConfigAware extends JmsDestinationResolver {
   this: JmsEnvelopeHeader =>
 
-  val log : Logger = Logger[JmsDestinationResolver]
+  val log : Logger = Logger(getClass().getName())
 
-  def headerConfig: FlowHeaderConfig
+  def headerConfig: FlowHeaderConfig = settings.headerCfg
 
   override def correlationId(env: FlowEnvelope): Option[String] = {
     env.header[String](corrIdHeader(headerConfig.prefix)) match {
@@ -78,7 +81,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
   val destination: FlowMessage => Try[JmsDestination] = { flowMsg =>
     Try {
 
-      val id : String = flowMsg.header[String](headerConfig.headerTrans).getOrElse("UNKNOWN")
+      val id : String = flowMsg.header[String](headerConfig.headerTransId).getOrElse("UNKNOWN")
 
       log.trace(s"Trying to resolve destination for [$id] from header [${destHeader(headerConfig.prefix)}]")
 
@@ -95,7 +98,7 @@ trait FlowHeaderConfigAware extends JmsDestinationResolver {
           }
       }
 
-      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTrans)}] to [${d.asString}]")
+      log.trace(s"Resolved destination for [${flowMsg.header[String](headerConfig.headerTransId)}] to [${d.asString}]")
       d
     }
   }
@@ -153,13 +156,10 @@ class SettingsDestinationResolver(
 }
 
 class MessageDestinationResolver(
-  override val headerConfig : FlowHeaderConfig,
   override val settings: JmsProducerSettings
 )
   extends FlowHeaderConfigAware
   with JmsEnvelopeHeader {
-
-  private val prefix = headerConfig.prefix
 
   override def sendParameter(session: Session, env: FlowEnvelope): Try[JmsSendParameter] = Try {
 

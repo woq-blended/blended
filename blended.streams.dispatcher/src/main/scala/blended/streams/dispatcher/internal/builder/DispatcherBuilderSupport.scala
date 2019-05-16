@@ -43,11 +43,6 @@ trait DispatcherBuilderSupport extends JmsEnvelopeHeader {
   def headerEventDest            : String = header("EventDestination")
   def headerAutoComplete         : String = header("AutoCompleteStep")
 
-  def headerBridgeRetry          : String = header("Retry")
-  def headerBridgeRetryCount     : String = header("BridgeRetryCount")
-  def headerBridgeMaxRetry       : String = header("BridgeMaxRetry")
-
-  def headerDeliveryMode         : String = header("DeliveryMode")
   def headerTimeToLive           : String = header("TimeToLive")
 
   /**

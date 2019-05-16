@@ -22,12 +22,16 @@ object DispatcherInbound {
     /*-------------------------------------------------------------------------------------------------*/
     /* Populate the message with the configured default headers                                        */
     /*-------------------------------------------------------------------------------------------------*/
-    val defaultHeader = HeaderTransformProcessor(
-      name = "defaultHeader",
-      log = bs.streamLogger,
-      rules = dispatcherCfg.defaultHeader,
-      idSvc = Some(idSvc)
-    ).flow(bs.streamLogger).named("defaultHeader")
+    val defaultHeader : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = {
+      Flow.fromGraph(
+        HeaderTransformProcessor(
+          name = "defaultHeader",
+          log = bs.streamLogger,
+          rules = dispatcherCfg.defaultHeader,
+          idSvc = Some(idSvc)
+        ).flow(bs.streamLogger).named("defaultHeader")
+      )
+    }
 
     /*-------------------------------------------------------------------------------------------------*/
     /* Make sure we do have a resourcetype in the message we can process                               */

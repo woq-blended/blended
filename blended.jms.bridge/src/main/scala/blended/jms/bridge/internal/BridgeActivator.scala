@@ -2,11 +2,12 @@ package blended.jms.bridge.internal
 
 import akka.actor.{ActorSystem, OneForOneStrategy, SupervisorStrategy}
 import akka.pattern.{Backoff, BackoffSupervisor}
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.ActorSystemWatching
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import blended.jms.utils.IdAwareConnectionFactory
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.util.logging.Logger
+import com.typesafe.config.Config
 import domino.DominoActivator
 import domino.service_watching.ServiceWatcherContext
 import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
@@ -34,6 +35,11 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
     }
   }
 
+  // We maintain the streamBuilder factory as a function here, so that unit tests can override
+  // the factory with stream builders throwing particular exceptions
+  protected def streamBuilderFactory(system : ActorSystem)(materializer: Materializer)(cfg : BridgeStreamConfig) : BridgeStreamBuilder =
+    new BridgeStreamBuilder(cfg)(system, materializer)
+
   whenBundleActive {
     whenActorSystemAvailable { osgiCfg =>
 
@@ -59,13 +65,36 @@ class BridgeActivator extends DominoActivator with ActorSystemWatching {
         val ctrlConfig = BridgeControllerConfig.create(
           cfg = osgiCfg.config,
           internalCf = cf,
-          idSvc = osgiCfg.idSvc
+          idSvc = osgiCfg.idSvc,
+          streamBuilderFactory = streamBuilderFactory
         )
 
         ctrlConfig.registry.providesService[BridgeProviderRegistry]
 
         implicit val system : ActorSystem = osgiCfg.system
         implicit val materialzer : ActorMaterializer = ActorMaterializer()
+
+        if (osgiCfg.config.hasPath("retry")) {
+
+          registry.internalProvider.get.retry.foreach { retryDest =>
+            val retryCfg : JmsRetryConfig = JmsRetryConfig.fromConfig(
+              idSvc = osgiCfg.idSvc,
+              cf = cf,
+              retryDestName = JmsDestination.asString(retryDest),
+              retryFailedName = JmsDestination.asString(registry.internalProvider.get.retryFailed),
+              eventDestName = JmsDestination.asString(registry.internalProvider.get.transactions),
+              cfg = osgiCfg.config.getConfig("retry")
+            ).get
+
+            val processor = new JmsRetryProcessor(s"$internalVendor:$internalProvider", retryCfg)
+
+            processor.start()
+
+            onStop {
+              processor.stop()
+            }
+          }
+        }
 
         try {
           val bridgeProps = BridgeController.props(ctrlConfig)

@@ -26,9 +26,6 @@ object LogEnvelope {
           case Failure(_) => None
         }
 
-        val maxRetries = env.headerWithDefault[Long](bs.headerBridgeMaxRetry, -1)
-        val retryCount = env.headerWithDefault[Long](bs.headerBridgeRetry, 0L)
-
         val logHeader : List[String] = env.getFromContext[List[String]](bs.appHeaderKey) match {
           case Success(l) => l.getOrElse(List.empty)
           case Failure(_) => dispatcherCfg.applicationLogHeader
@@ -42,7 +39,6 @@ object LogEnvelope {
         }
 
         val id = s"[${env.id}]:[$stepName]" + outCfg.map(c => s":[${c.id}]").getOrElse("")
-        bs.streamLogger.log(level, s"[$retryCount / $maxRetries] : $id : [${headerString.mkString(",")}]")
 
         env
       }

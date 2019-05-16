@@ -4,10 +4,22 @@ import java.io.{File, FileFilter}
 
 import akka.actor.{ActorSystem, Props}
 import akka.testkit.TestProbe
+import blended.streams.transaction.FlowHeaderConfig
 import blended.testsupport.TestActorSys
 import org.scalatest.{FreeSpec, Matchers}
 
+import scala.concurrent.duration._
+
 class FileProcessActorSpec extends FreeSpec with Matchers {
+
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
+
+  private val fish : Boolean => FileProcessCmd => PartialFunction[Any, Boolean] = expected => cmd => {
+    case p : FileProcessResult =>
+      p.t.isEmpty.equals(expected) && p.cmd.copy(workFile = None).equals(cmd.copy(workFile = None))
+    case _ =>
+      false
+  }
 
   "The FileProcessActor should" - {
 
@@ -15,7 +27,10 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       implicit val system : ActorSystem = testkit.system
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor"
       )
 
@@ -24,15 +39,15 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
       val handler : SucceedingFileHandler = new SucceedingFileHandler()
-      val cmd = FileProcessCmd(new File(cfg.sourceDir, "test.txt"), cfg, handler)
+      val cmd = FileProcessCmd(originalFile = new File(cfg.sourceDir, "test.txt"), cfg = cfg, handler = handler)
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, success = true))
-      evtProbe.expectMsg(FileProcessed(cmd, success = true))
+      probe.fishForMessage(1.second)(fish(true)(cmd))
+      evtProbe.fishForMessage(1.second)(fish(true)(cmd))
 
       handler.handled should have size(1)
       srcFile.exists() should be (false)
@@ -47,9 +62,12 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
         override def accept(fileName : File): Boolean = {
           fileName.getName.startsWith("test.xml")
         }
-      }).size 
+      }).size
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/actor",
         backup = Some(archiveDir.getAbsolutePath)
       )
@@ -59,15 +77,15 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
       val handler : SucceedingFileHandler = new SucceedingFileHandler()
-      val cmd = FileProcessCmd(srcFile, cfg, handler)
+      val cmd = FileProcessCmd(originalFile = srcFile, cfg = cfg, handler = handler)
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, success = true))
-      evtProbe.expectMsg(FileProcessed(cmd, success = true))
+      probe.fishForMessage(1.second)(fish(true)(cmd))
+      evtProbe.fishForMessage(1.second)(fish(true)(cmd))
 
       archiveDir.listFiles(new FileFilter {
         override def accept(fileName : File): Boolean = {
@@ -83,7 +101,10 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
 
       implicit val system : ActorSystem = testkit.system
 
-      val cfg = FilePollConfig(system.settings.config.getConfig("blended.file.poll")).copy(
+      val cfg = FilePollConfig(
+        cfg = system.settings.config.getConfig("blended.file.poll"),
+        headerCfg = headerCfg
+      ).copy(
         sourceDir = System.getProperty("projectTestOutput") + "/poll",
         tmpExt = "_temp"
       )
@@ -93,14 +114,14 @@ class FileProcessActorSpec extends FreeSpec with Matchers {
       val probe = TestProbe()
       val evtProbe = TestProbe()
 
-      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessed])
+      system.eventStream.subscribe(evtProbe.ref, classOf[FileProcessResult])
 
-      val cmd = FileProcessCmd(srcFile, cfg, new FailingFileHandler())
+      val cmd = FileProcessCmd(originalFile = srcFile, cfg = cfg, handler = new FailingFileHandler())
 
       system.actorOf(Props[FileProcessActor]).tell(cmd, probe.ref)
 
-      probe.expectMsg(FileProcessed(cmd, success = false))
-      evtProbe.expectMsg(FileProcessed(cmd, success = false))
+      probe.fishForMessage(1.second)(fish(false)(cmd))
+      evtProbe.fishForMessage(1.second)(fish(false)(cmd))
 
       srcFile.exists() should be (true)
     }

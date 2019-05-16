@@ -78,6 +78,7 @@ class TransactionOutboundSpec extends DispatcherSpecSupport
 
     val pSettings : JmsProducerSettings = JmsProducerSettings(
       log = Logger(loggerName),
+      headerCfg = ctxt.bs.headerConfig,
       connectionFactory = cf,
       jmsDestination = Some(JmsQueue("internal.transactions"))
     )

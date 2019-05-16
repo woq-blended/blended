@@ -22,7 +22,7 @@ class SemaphoreActorSpec extends TestKit(ActorSystem("semaphore"))
       probe.expectMsg(SemaphoreActor.Acquired)
     }
 
-    "Allow to aquire the lock if the lock is already acquired by the same actor" in {
+    "Allow to acquire the lock if the lock is already acquired by the same actor" in {
       val probe : TestProbe = TestProbe()
       val sem : ActorRef = system.actorOf(Props[SemaphoreActor])
 

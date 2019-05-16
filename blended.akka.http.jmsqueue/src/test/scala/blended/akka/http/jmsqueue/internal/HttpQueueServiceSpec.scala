@@ -9,6 +9,7 @@ import akka.util.ByteString
 import blended.jms.utils.{IdAwareConnectionFactory, JmsQueue}
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import javax.jms.ConnectionFactory
@@ -31,6 +32,8 @@ class HttpQueueServiceSpec extends FreeSpec
   private val broker : BrokerService = startBroker()
   private val cf : IdAwareConnectionFactory = amqCf()
   private val maerialzer : Materializer = ActorMaterializer()
+
+  private val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create("App")
 
   override protected def afterAll(): Unit = {
     stopBroker(broker)
@@ -83,6 +86,7 @@ class HttpQueueServiceSpec extends FreeSpec
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )
@@ -110,6 +114,7 @@ class HttpQueueServiceSpec extends FreeSpec
 
       val pSettings : JmsProducerSettings = JmsProducerSettings(
         log = log,
+        headerCfg = headerCfg,
         connectionFactory = cf,
         jmsDestination = Some(JmsQueue("Queue1"))
       )

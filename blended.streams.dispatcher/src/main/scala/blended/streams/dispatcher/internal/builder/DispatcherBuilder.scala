@@ -253,7 +253,7 @@ case class DispatcherBuilder(
           bs.streamLogger.debug(s"Routing error envelope [${env.id}] to [$vendor:$provider:$dest]")
 
           env
-            .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
+            .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
             .withHeader(bs.headerBridgeVendor, vendor).get
             .withHeader(bs.headerBridgeProvider, provider).get
             .withHeader(bs.headerBridgeDest, dest).get

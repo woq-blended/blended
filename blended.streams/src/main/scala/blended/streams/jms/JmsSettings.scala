@@ -78,11 +78,14 @@ sealed trait JmsSettings {
   // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
   val sessionRecreateTimeout : FiniteDuration
 
+  val headerCfg : FlowHeaderConfig
+
   val log : Logger
 }
 
 final case class JMSConsumerSettings(
   override val log: Logger,
+  override val headerCfg : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
@@ -117,11 +120,14 @@ object JMSConsumerSettings {
     cf: IdAwareConnectionFactory,
     headerConfig: FlowHeaderConfig
   ) : JMSConsumerSettings =
-    JMSConsumerSettings(log, cf)
+    JMSConsumerSettings(
+      log = log, headerCfg = headerConfig, connectionFactory = cf
+    )
 }
 
 final case class JmsProducerSettings(
   override val log : Logger,
+  override val headerCfg : FlowHeaderConfig,
   connectionFactory: IdAwareConnectionFactory,
   connectionTimeout : FiniteDuration = 1.second,
   jmsDestination: Option[JmsDestination] = None,
@@ -156,7 +162,7 @@ final case class JmsProducerSettings(
 
   def withDeliveryMode(m : JmsDeliveryMode) : JmsProducerSettings = copy(deliveryMode = m)
 
-  override def toString: String = s"{${getClass().getSimpleName()}(cf=${connectionFactory.id}, connTimeout=$connectionTimeout, dest=${jmsDestination}, " +
+  override def toString: String = s"{${getClass().getSimpleName()}(cf=${connectionFactory.id}, connTimeout=$connectionTimeout, dest=$jmsDestination, " +
     s"priority=$priority, delMode=${deliveryMode.asString}, ttl=$timeToLive)"
 
 }
@@ -164,5 +170,5 @@ final case class JmsProducerSettings(
 object JmsProducerSettings {
 
   def create(log : Logger, connectionFactory: IdAwareConnectionFactory, headerConfig : FlowHeaderConfig) : JmsProducerSettings =
-    JmsProducerSettings(log = log, connectionFactory = connectionFactory)
+    JmsProducerSettings(log = log, headerCfg = headerConfig, connectionFactory = connectionFactory)
 }

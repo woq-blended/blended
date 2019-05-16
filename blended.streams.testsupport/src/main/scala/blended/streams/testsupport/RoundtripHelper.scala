@@ -43,7 +43,9 @@ case class RoundtripHelper(
   val log : Logger = Logger(classOf[RoundtripHelper].getName() + "." + name)
 
   def run() : Map[String, Seq[String]] = {
-    log.info(s"Starting test case [$name]")
+    val msg : String = s"Starting test case [$name], timeout = [$timeout]"
+    println(msg)
+    log.info(msg)
 
     val collectors : Map[String, Collector[FlowEnvelope]] = {
       outcome.map { o =>
@@ -55,6 +57,7 @@ case class RoundtripHelper(
 
     val pSettings: JmsProducerSettings = JmsProducerSettings(
       log = log,
+      headerCfg = headerConfig,
       connectionFactory = inbound._1,
       jmsDestination = Some(inbound._2)
     )

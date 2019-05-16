@@ -18,7 +18,7 @@ class CbeSendFlow(
   dispatcherCfg : ResourceTypeRouterConfig,
   internalCf: IdAwareConnectionFactory,
   log: Logger
-)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport {
+)(implicit system : ActorSystem, bs: DispatcherBuilderSupport) extends JmsStreamSupport with JmsEnvelopeHeader {
 
   private implicit val materializer : Materializer = ActorMaterializer()
   private val config = dispatcherCfg.providerRegistry.mandatoryProvider(internalCf.vendor, internalCf.provider)
@@ -33,6 +33,7 @@ class CbeSendFlow(
 
     val sinkSettings = JmsProducerSettings(
       log = log,
+      headerCfg = headerConfig,
       connectionFactory = internalCf,
       jmsDestination = Some(config.get.cbes),
       deliveryMode = JmsDeliveryMode.Persistent,
@@ -57,19 +58,18 @@ class CbeSendFlow(
         .withHeader(bs.headerBridgeVendor, v).get
         .withHeader(bs.headerBridgeProvider, p).get
         .withHeader(bs.headerBridgeDest, provider.cbes.asString).get
-        .withHeader(bs.headerDeliveryMode, JmsDeliveryMode.Persistent.asString).get
+        .withHeader(deliveryModeHeader(bs.headerConfig.prefix), JmsDeliveryMode.Persistent.asString).get
         .withHeader(bs.headerConfig.headerTrack, false).get
 
       bs.streamLogger.debug(s"Prepared to send CBE for envelope [${env.id}]")
       result
     }
 
-    prepareCbe.via(
-      jmsProducer(
-        name = "cbeSutbound",
+    prepareCbe
+      .via(jmsProducer(
+        name = "cbeOutbound",
         settings = sinkSettings
-      )
-    )
+      ))
   }
 
   def build() : Flow[FlowEnvelope, FlowEnvelope, NotUsed] = cbeSink.get

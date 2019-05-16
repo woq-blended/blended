@@ -1,98 +1,68 @@
-package blended.streams.jms
+package blended.jms.bridge.internal
+
+import java.io.File
+import java.util.UUID
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
-import akka.testkit.TestKit
-import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, SimpleIdAwareConnectionFactory}
+import blended.activemq.brokerstarter.internal.BrokerActivator
+import blended.akka.internal.BlendedAkkaActivator
+import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.FlowProcessor
-import blended.streams.message.FlowEnvelope
+import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.processor.Collector
-import blended.streams.transaction.FlowHeaderConfig
-import blended.testsupport.RequiresForkedJVM
+import blended.streams.transaction.{FlowHeaderConfig, FlowTransactionEvent, FlowTransactionFailed}
+import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
-import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.activemq.broker.BrokerService
-import org.apache.activemq.store.memory.MemoryPersistenceAdapter
-import org.scalatest.{BeforeAndAfterAll, Matchers}
+import org.osgi.framework.BundleActivator
+import org.scalatest.Matchers
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
-abstract class ProcessorSpecSupport(name: String) extends TestKit(ActorSystem(name))
+abstract class ProcessorSpecSupport(name: String) extends SimplePojoContainerSpec
   with LoggingFreeSpecLike
+  with PojoSrTestHelper
   with Matchers
-  with JmsStreamSupport
-  with BeforeAndAfterAll {
+  with JmsStreamSupport {
 
-  lazy implicit val actorSystem : ActorSystem = system
-  lazy implicit val materializer = ActorMaterializer()
-  lazy implicit val eCtxt : ExecutionContext = actorSystem.dispatcher
+  protected implicit val timeout : FiniteDuration = 5.seconds
+  protected val log : Logger = Logger(getClass().getName())
 
-  val log : Logger
+  override def baseDir: String = new File(BlendedTestSupport.projectTestOutput, "container").getAbsolutePath()
+
+  /**
+    * Factory for bundles.
+    * A `Seq` of bundle name and activator class.
+    */
+  override def bundles: Seq[(String, BundleActivator)] = Seq(
+    "blended.akka" -> new BlendedAkkaActivator(),
+    "blended.activemq.brokerstarter" -> new BrokerActivator()
+  )
+
+  protected implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  protected implicit val materializer : ActorMaterializer = ActorMaterializer()
+  protected implicit val ectxt : ExecutionContext = system.dispatcher
+
   val prefix : String = "spec"
 
   val brokerName : String = "retry"
   val consumerCount : Int = 5
   val headerCfg : FlowHeaderConfig = FlowHeaderConfig.create(prefix = prefix)
 
-  private var brokerSvc : Option[BrokerService] = None
-
-  val amqCf : IdAwareConnectionFactory = {
-    val foo = broker
-
-    SimpleIdAwareConnectionFactory(
-      vendor = "amq",
-      provider = "amq",
-      clientId = "spec",
-      cf = new ActiveMQConnectionFactory(s"vm://$brokerName?create=false&jms.prefetchPolicy.queuePrefetch=10")
-    )
-  }
-
-  def broker : BrokerService = {
-    brokerSvc match {
-      case Some(s) => s
-      case None =>
-        val b = createBroker
-        brokerSvc = Some(b)
-        b
-    }
-  }
-
-  private def createBroker : BrokerService = {
-
-    val b = new BrokerService()
-    b.setBrokerName(brokerName)
-    b.setPersistent(false)
-    b.setUseJmx(false)
-    b.setPersistenceAdapter(new MemoryPersistenceAdapter)
-    b.setDedicatedTaskRunner(true)
-
-    b.start()
-    b.waitUntilStarted()
-
-    b
-  }
-
-
-  override protected def beforeAll(): Unit = {
-    createBroker
-  }
-
-  override protected def afterAll(): Unit = {
-    brokerSvc.foreach { b =>
-      b.stop()
-      b.waitUntilStopped()
-    }
-    actorSystem.terminate()
-  }
+  val amqCf : IdAwareConnectionFactory =
+    mandatoryService[IdAwareConnectionFactory](registry)(Some("(&(vendor=activemq)(provider=activemq))"))
 
   def producerSettings : String => JmsProducerSettings = destName => JmsProducerSettings(
     log = log,
+    headerCfg = headerCfg,
     connectionFactory = amqCf,
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
@@ -101,7 +71,8 @@ abstract class ProcessorSpecSupport(name: String) extends TestKit(ActorSystem(na
     cf = amqCf,
     retryDestName = "retryQueue",
     failedDestName = "retryFailed",
-    retryInterval = 2.seconds,
+    eventDestName = "internal.transactions",
+    retryInterval = 1.seconds,
     maxRetries = 5,
     retryTimeout = 100.millis,
     headerCfg = headerCfg
@@ -144,12 +115,14 @@ abstract class ProcessorSpecSupport(name: String) extends TestKit(ActorSystem(na
 
     Await.result(coll.result, timeout + 100.millis)
   }
+
+  def consumeTransactions()(implicit timeout : FiniteDuration) : Try[List[FlowEnvelope]] =
+    consumeMessages("internal.transactions")
+
 }
 
 @RequiresForkedJVM
 class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") {
-
-  override val log: Logger = Logger[JmsRetryProcessorForwardSpec]
 
   "Consume messages from the retry destination and reinsert them into the original destination" in {
 
@@ -170,9 +143,6 @@ class JmsRetryProcessorForwardSpec extends ProcessorSpecSupport("retryForward") 
 @RequiresForkedJVM
 class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount") {
 
-  override val log: Logger = Logger[JmsRetryProcessorRetryCountSpec]
-
-
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry cont exceeds" in {
     val srcQueue : String = "myQueue"
 
@@ -190,8 +160,6 @@ class JmsRetryProcessorRetryCountSpec extends ProcessorSpecSupport("retryCount")
 
 @RequiresForkedJVM
 class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeout") {
-
-  override val log: Logger = Logger[JmsRetryProcessorRetryTimeoutSpec]
 
   "Consume messages from the retry destination and pass them to the retry failed destination if the retry timeout exceeds" in {
     val srcQueue : String = "myQueue"
@@ -214,13 +182,13 @@ class JmsRetryProcessorRetryTimeoutSpec extends ProcessorSpecSupport("retryTimeo
 
 class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("missingDest") {
 
-  override val log: Logger = Logger[JmsRetryProcessorMissingDestinationSpec]
-
   "Consume messages from the retry destination and pass them to the retry failed destination if no original destination is known" in {
     val retryMsg : FlowEnvelope = FlowEnvelope()
 
     withExpectedDestination(retryCfg.failedDestName, new JmsRetryProcessor("spec", retryCfg))(retryMsg).get.headOption match {
-      case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
+      case None =>
+        fail(s"Expected message in [${retryCfg.failedDestName}]")
+
       case Some(env) =>
         env.header[Long](headerCfg.headerRetryCount) should be (Some(1))
     }
@@ -229,8 +197,6 @@ class JmsRetryProcessorMissingDestinationSpec extends ProcessorSpecSupport("miss
 
 @RequiresForkedJVM
 class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry") {
-
-  override val log: Logger = Logger[JmsRetryProcessorSendToRetrySpec]
 
   "Reinsert messages into the retry destination if the send to the original destination fails" in {
     val srcQueue : String = "myQueue"
@@ -244,24 +210,43 @@ class JmsRetryProcessorSendToRetrySpec extends ProcessorSpecSupport("sendToRetry
       }
     }
 
-    val retryMsg : FlowEnvelope = FlowEnvelope()
-      .withHeader(headerCfg.headerRetryDestination, srcQueue).get
+    val id : String = UUID.randomUUID().toString()
 
-    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 3)(retryMsg).get
+    val retryMsg : FlowEnvelope = FlowEnvelope(
+      FlowMessage(FlowMessage.props(headerCfg.headerRetryDestination -> srcQueue).get),
+      id
+    )
+
+    val messages = withExpectedDestination(srcQueue, router, retryCfg.retryInterval * 5)(retryMsg).get
     messages should be (empty)
 
     consumeMessages(retryCfg.failedDestName)(1.second).get.headOption match {
       case None => fail(s"Expected message in [${retryCfg.failedDestName}]")
       case Some(env) =>
+        // Make sure the message has travelled [maxRetries] loops
+        env.header[String](headerCfg.headerTransId) should be (Some(id))
         env.header[Long](headerCfg.headerRetryCount) should be (Some(3))
+
+        val events = consumeTransactions().get
+        events should have size(1)
+
+        // We lso expect a failed transaction event in the transactions destinations
+        events.headOption match {
+          case None =>
+            fail("Expected transaction failed event")
+          case Some(env) =>
+            env.header[String](headerCfg.headerTransId) should be (Some(id))
+
+            val t = FlowTransactionEvent.envelope2event(headerCfg)(env).get
+            assert(t.transactionId.equals(id))
+            assert(t.isInstanceOf[FlowTransactionFailed])
+        }
     }
   }
 }
 
 @RequiresForkedJVM
 class JmsRetryProcessorFailedSpec extends ProcessorSpecSupport("JmsRetrySpec") {
-
-  override val log: Logger = Logger[JmsRetryProcessorFailedSpec]
 
   "The Jms Retry Processor should" - {
 

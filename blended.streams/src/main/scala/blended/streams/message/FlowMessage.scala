@@ -187,7 +187,7 @@ sealed abstract class FlowMessage(msgHeader: FlowMessageProps) {
     }
   }
 
-  override def toString: String = s"${getClass().getSimpleName()}($header)($body)"
+  override def toString: String = s"${getClass().getSimpleName()}(content-size [${bodySize()}])($header)"
 }
 
 case class BaseFlowMessage(override val header: FlowMessageProps) extends FlowMessage(header) {

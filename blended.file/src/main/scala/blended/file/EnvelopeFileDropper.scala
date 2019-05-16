@@ -48,6 +48,7 @@ class EnvelopeFileDropper(
   // extract the drop Command from the envelope
   private[this] def dropCmd(env: FlowEnvelope)(f: FlowEnvelope => Try[ByteString]): Try[FileDropCommand] = Try {
     FileDropCommand(
+      id = env.id,
       content = f(env).get,
       directory = env.headerWithDefault[String](cfg.dirHeader, cfg.defaultDir),
       fileName = env.headerWithDefault[String](cfg.fileHeader, ""),
