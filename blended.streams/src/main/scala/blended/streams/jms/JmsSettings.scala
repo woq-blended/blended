@@ -78,8 +78,11 @@ sealed trait JmsSettings {
   // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
   val sessionRecreateTimeout : FiniteDuration
 
+  // The header configuration which encapsulates the defined header names being used in the 
+  // flow message 
   val headerCfg : FlowHeaderConfig
 
+  // A logger, so that it can be injected rather than being created based on the classname only
   val log : Logger
 }
 

@@ -45,7 +45,10 @@ class JMSFilePollHandler(
     }
   }
 
+  // TODO: Watch AsyncSendActor and implement Supervisor
   override def processFile(cmd: FileProcessCmd) : Future[FileProcessResult] = {
+  
+    log.debug(s"Processing [$cmd]")
 
     val p : Promise[FileProcessResult] = Promise[FileProcessResult]()
 
