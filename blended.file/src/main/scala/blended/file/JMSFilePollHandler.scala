@@ -237,7 +237,7 @@ private class JmsSendStream(
 
       import GraphDSL.Implicits._
 
-      // First we spilt the flow, so that we can keep the file info in one part
+      // First we split the flow, so that we can keep the file info in one part
       // and perform the send in the other part, collecting any exceptions that
       // may occur
       val split = b.add(Broadcast[FileSendInfo](2))
