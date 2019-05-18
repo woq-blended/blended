@@ -8,12 +8,13 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.stage.{GraphStage, GraphStageLogic}
 import akka.stream.{ActorMaterializer, Attributes, Materializer, Outlet, SourceShape}
 import akka.testkit.TestKit
-import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.processor.AckProcessor
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.util.Try
 
@@ -43,20 +44,21 @@ class CountingAckSource(
     /** The id's of the available inflight slots */
     override protected def inflightSlots(): List[String] = 1.to(numSlots).map(i => s"Count-$i").toList
 
-    override protected def doPerformPoll(id: String): Try[Option[AcknowledgeContext]] = Try {
+    override protected def doPerformPoll(id: String, ackHandler : AcknowledgeHandler): Try[Option[AcknowledgeContext]] = Try {
 
       val msg : FlowMessage = FlowMessage(FlowMessage.props("Counter" -> CountingAckSource.counter.incrementAndGet()).get)
 
-      Some(AcknowledgeContext(
+      Some(new DefaultAcknowledgeContext(
         inflightId = id,
-        envelope = FlowEnvelope(msg),
-        state = AckState.Pending
+        envelope = FlowEnvelope(msg)
+          .withRequiresAcknowledge(true)
+          .withAckHandler(Some(ackHandler))
       ))
 
     }
   }
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new CountingLogic(out, shape, 5)
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new CountingLogic(out, shape, 10)
 }
 
 class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
@@ -69,7 +71,9 @@ class AckSourceLogicSpec extends TestKit(ActorSystem("AckSourceLogic"))
 
       implicit val materializer : Materializer = ActorMaterializer()
 
-      val s : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new CountingAckSource("TestCounter"))
+      val s : Source[FlowEnvelope, NotUsed] =
+        Source.fromGraph(new CountingAckSource("TestCounter"))
+          .via(new AckProcessor("TestCounter-ack").flow)
 
       val fCounting : Future[Seq[FlowEnvelope]] = s.take(100).toMat(Sink.seq[FlowEnvelope])(Keep.right).run()
 

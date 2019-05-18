@@ -37,7 +37,7 @@ package blended.streams
 import akka.stream.{Outlet, SourceShape}
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
 import blended.streams.AckState.AckState
-import blended.streams.message.FlowEnvelope
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.util.logging.Logger
 
 import scala.collection.mutable
@@ -54,14 +54,19 @@ object AckState extends Enumeration {
   val Pending, Acknowledged, Denied = Value
 }
 
-case class AcknowledgeContext(
+trait AcknowledgeContext {
+
   // The associated inflight id
-  inflightId : String,
-  // the underlying FlowEnvelope
-  envelope : FlowEnvelope,
+  def inflightId : String
   // the acknowledge state (pending, acknowledged or denied)
-  state : AckState
-)
+
+  def envelope : FlowEnvelope
+}
+
+class DefaultAcknowledgeContext(
+  override val inflightId : String,
+  override val envelope: FlowEnvelope
+) extends AcknowledgeContext
 
 abstract class AckSourceLogic[T <: AcknowledgeContext](
   out : Outlet[FlowEnvelope],
@@ -69,6 +74,11 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 ) extends TimerGraphStageLogic(shape) {
 
   private case object Poll
+  private case object CheckAck
+
+  override def preStart(): Unit = {
+    schedulePeriodically(CheckAck, 100.millis)
+  }
 
   // TODO: start the Timer to regularly process acknowledgements
 
@@ -83,7 +93,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   // The map of current inflight AcknowledgeContexts. An inflight slot is considered
   // to be available if it's id does not occurr in the keys of the inflight map.
-  private var inflightMap : mutable.Map[String, T] = mutable.Map.empty
+  private var inflightMap : mutable.Map[String, (T, AckState)] = mutable.Map.empty
 
   // TODO: Make this configurable ?
   protected def nextPoll() : FiniteDuration = 1.second
@@ -94,18 +104,35 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     failStage(t)
   }
 
-  private def addInflight(id : String, ackCtxt : T) : Unit = {
-    inflightMap += ( id -> ackCtxt)
+  private def addInflight(inflightId : String, ackCtxt : T, state : AckState) : Unit = {
+    inflightMap += ( inflightId -> (ackCtxt, state))
     log.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
   }
 
-  private def removeInflight(id : String) : Unit = {
-    inflightMap -= id
+  private def removeInflight(inflightId : String) : Unit = {
+    inflightMap -= inflightId
     log.debug(s"Inflight message count for [$id] is [${inflightMap.size}]")
   }
 
   // A callback to immediately schedule the next poll
   protected val pollImmediately : AsyncCallback[Unit] = getAsyncCallback[Unit]( _ => poll() )
+
+  // A callback to update the ack state for an inflight message
+  protected val updateAckState : AsyncCallback[(String, AckState)] = getAsyncCallback[(String, AckState)]{ case (id, state) =>
+
+    inflightMap.get(id) match {
+      case Some((ctxt, _ )) =>
+        log.debug(s"Updating state for [$id] to [$state]")
+        inflightMap.put(id, (ctxt, state))
+        state match {
+          case AckState.Acknowledged => acknowledged(ctxt)
+          case AckState.Denied => denied(ctxt)
+          case _ =>
+        }
+      case None =>
+        log.debug(s"AckContext [$id] no longer inflight - perhaps it has timed out ?")
+    }
+  }
 
   protected def beforeAcknowledge(ackCtxt : T) : Unit = {}
   // this will be called whenever an inflight message has been acknowledged
@@ -145,7 +172,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
 
   /* Concrete implementations must implement this method to realize the technical
      poll from the external system */
-  protected def doPerformPoll(id : String) : Try[Option[T]]
+  protected def doPerformPoll(id : String, ackHandler: AcknowledgeHandler) : Try[Option[T]]
 
   /* Perform a poll of the external system within the context of a free inflight slot */
   private def performPoll(id : String) : Unit = Try {
@@ -153,21 +180,31 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     // the outhandler will be called eventually, triggering another
     // poll()
     if (isAvailable(out)) {
+
+      val ackHandler : AcknowledgeHandler = new AcknowledgeHandler {
+        override def acknowledge(): Try[Unit] = Try {
+          updateAckState.invoke((id, AckState.Acknowledged))
+        }
+
+        override def deny(): Try[Unit] = Try {
+          updateAckState.invoke((id, AckState.Denied))
+        }
+      }
+
       log.debug(s"Performing poll for [$id]")
-      doPerformPoll(id).get match {
+      doPerformPoll(id, ackHandler).get match {
         case None =>
           // No message available, schedule next poll
           scheduleOnce(Poll, nextPoll())
         case Some(ackCtxt) =>
           // add the context to the inflight messages
           log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
-          addInflight(id, ackCtxt)
+          addInflight(id, ackCtxt, AckState.Pending)
           // push the envelope to the outlet
           push(out, ackCtxt.envelope)
       }
     }
   }
-
 
   /**
     Poll the external system whether a new message is available.
