@@ -14,6 +14,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.geronimoJms11Spec,
       Dependencies.levelDbJava,
 
+      Dependencies.commonsIo % "test",
       Dependencies.scalacheck % "test",
       Dependencies.scalatest % "test",
       Dependencies.akkaTestkit % "test",

@@ -6,6 +6,7 @@ import java.nio.file.{DirectoryStream, Files, Path}
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.pattern.{ask, pipe}
 import blended.akka.SemaphoreActor.{Acquire, Acquired, Release, Waiting}
+import blended.streams.file.FilePollConfig
 
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal

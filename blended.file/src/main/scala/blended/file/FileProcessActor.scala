@@ -6,6 +6,7 @@ import java.util.{Date, UUID}
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
 import akka.pattern.pipe
+import blended.streams.file.FilePollConfig
 
 import scala.concurrent.ExecutionContext
 

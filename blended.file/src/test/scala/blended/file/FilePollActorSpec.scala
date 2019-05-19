@@ -5,6 +5,7 @@ import java.io.File
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.akka.SemaphoreActor
+import blended.streams.file.FilePollConfig
 import blended.testsupport.TestActorSys
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger

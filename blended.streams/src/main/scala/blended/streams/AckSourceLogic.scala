@@ -202,7 +202,9 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
         case None =>
           // No message available, schedule next poll
           if (!isTimerActive(Poll)) {
-            scheduleOnce(Poll, nextPoll())
+            val np : FiniteDuration = nextPoll()
+            log.debug(s"Scheduling next poll for [$id] in [$np]")
+            scheduleOnce(Poll, np)
           }
         case Some(ackCtxt) =>
           // add the context to the inflight messages

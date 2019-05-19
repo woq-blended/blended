@@ -15,7 +15,7 @@ import blended.util.logging.Logger
 import org.scalatest.Matchers
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.Try
 
 class CountingAckSource(

@@ -5,6 +5,7 @@ import java.io.{File, FileOutputStream}
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.testkit.TestProbe
 import blended.akka.SemaphoreActor
+import blended.streams.file.FilePollConfig
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import org.apache.commons.io.FileUtils

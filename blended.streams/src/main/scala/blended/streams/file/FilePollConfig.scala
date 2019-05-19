@@ -1,10 +1,12 @@
-package blended.file
+package blended.streams.file
 
 import blended.container.context.api.ContainerIdentifierService
+import blended.streams.message.{FlowMessage, MsgProperty}
 import blended.streams.transaction.FlowHeaderConfig
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 
 object FilePollConfig {
@@ -23,11 +25,25 @@ object FilePollConfig {
   val PATH_FILEPATH_PROP  = "filepathProperty"
   val PATH_BATCHSIZE      = "batchSize"
   val PATH_CHARSET        = "charset"
+  val PATH_HEADER         = "header"
 
-  def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig =
-    apply(cfg, FlowHeaderConfig.create(idSvc))
+  val DEFAULT_BATCH_SIZE : Int = 10
 
-  def apply(cfg: Config, headerCfg : FlowHeaderConfig): FilePollConfig = {
+  def apply(cfg : Config, idSvc : ContainerIdentifierService) : FilePollConfig = {
+
+    val props : FlowMessage.FlowMessageProps = if (cfg.hasPath(PATH_HEADER)) {
+      cfg.getConfig(PATH_HEADER).entrySet().asScala.map { e =>
+        val k = e.getKey()
+        val v = idSvc.resolvePropertyString(cfg.getConfig(PATH_HEADER).getString(k, "")).get.toString()
+        k -> MsgProperty.lift(v).get
+      }.toMap
+    } else {
+      Map.empty
+    }
+    apply(cfg, FlowHeaderConfig.create(idSvc), props)
+  }
+
+  def apply(cfg: Config, headerCfg : FlowHeaderConfig, header : FlowMessage.FlowMessageProps = Map.empty): FilePollConfig = {
 
     new FilePollConfig(
       id = cfg.getString(PATH_ID),
@@ -42,9 +58,10 @@ object FilePollConfig {
       tmpExt = cfg.getString(PATH_TMP_EXT, "_to_send"),
       filenameProp = cfg.getString(PATH_FILENAME_PROP, "BlendedFileName"),
       filepathProp = cfg.getString(PATH_FILEPATH_PROP, "BlendedFilePath"),
-      batchSize = cfg.getInt(PATH_BATCHSIZE, FilePollActor.defaultBatchSize),
+      batchSize = cfg.getInt(PATH_BATCHSIZE, DEFAULT_BATCH_SIZE),
       operationTimeout = cfg.getDuration(PATH_OP_TIMEOUT, 1.second),
-      handleTimeout = cfg.getDuration(PATH_HANDLE_TIMEOUT, 1.second)
+      handleTimeout = cfg.getDuration(PATH_HANDLE_TIMEOUT, 1.second),
+      header = header
     )
   }
 }
@@ -64,5 +81,6 @@ case class FilePollConfig(
   batchSize : Int,
   filenameProp : String,
   filepathProp : String,
-  tmpExt : String
+  tmpExt : String,
+  header : FlowMessage.FlowMessageProps
 )

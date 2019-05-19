@@ -6,8 +6,8 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.stream._
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Source, Zip}
-import akka.util.ByteString
 import blended.akka.MemoryStash
+import blended.streams.file.FilePollConfig
 import blended.streams.jms.{JmsProducerSettings, JmsStreamSupport}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.{AbstractStreamController, StreamController, StreamControllerConfig}
@@ -16,8 +16,6 @@ import blended.util.logging.Logger
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future, Promise}
-import scala.io.BufferedSource
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -47,7 +45,7 @@ class JMSFilePollHandler(
 
   // TODO: Watch AsyncSendActor and implement Supervisor
   override def processFile(cmd: FileProcessCmd) : Future[FileProcessResult] = {
-  
+
     log.debug(s"Processing [$cmd]")
 
     val p : Promise[FileProcessResult] = Promise[FileProcessResult]()
