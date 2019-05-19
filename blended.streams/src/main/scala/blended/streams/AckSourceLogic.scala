@@ -61,16 +61,20 @@ trait AcknowledgeContext {
   // the acknowledge state (pending, acknowledged or denied)
 
   def envelope : FlowEnvelope
+
+  protected def created : Long
 }
 
 class DefaultAcknowledgeContext(
   override val inflightId : String,
-  override val envelope: FlowEnvelope
+  override val envelope: FlowEnvelope,
+  override val created : Long = System.currentTimeMillis()
 ) extends AcknowledgeContext
 
 abstract class AckSourceLogic[T <: AcknowledgeContext](
   out : Outlet[FlowEnvelope],
-  shape : SourceShape[FlowEnvelope]
+  shape : SourceShape[FlowEnvelope],
+  ackTimeout : FiniteDuration = 1.seconds
 ) extends TimerGraphStageLogic(shape) {
 
   private case object Poll
@@ -79,8 +83,6 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   override def preStart(): Unit = {
     schedulePeriodically(CheckAck, 100.millis)
   }
-
-  // TODO: start the Timer to regularly process acknowledgements
 
   /** The id to identify the instance in the log files */
   def id : String
@@ -144,8 +146,10 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     beforeAcknowledge(ackCtxt)
     // Then we clear the message from the inflight map
     removeInflight(ackCtxt.inflightId)
-    // finally we can immediately schedule another poll
-    pollImmediately.invoke()
+    // If the poll timer is active we actually have executed a poll recently with no result
+    if (!isTimerActive(Poll)) {
+      pollImmediately.invoke()
+    }
   }
 
   protected def beforeDenied(ackCtxt : T) : Unit = {}
@@ -156,14 +160,16 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     beforeDenied(ackCtxt)
     // we need to clean up the inflight map
     removeInflight(ackCtxt.inflightId)
-    //Then we can immediately poll for a new message
-    pollImmediately.invoke()
+    // If the poll timer is active we actually have executed a poll recently with no result
+    if (!isTimerActive(Poll)) {
+      pollImmediately.invoke()
+    }
   }
 
   // this will be called whenever the acknowledgement for an inflight
   // message has timed out. Per default this will be delegated to the
   // denied() handler
-  protected def ackTimeout(ackCtxt : T) = denied(ackCtxt)
+  protected def ackTimedOut(ackCtxt : T) = denied(ackCtxt)
 
   private def freeInflightSlot() : Option[String] =
     inflightSlots().find { id =>
@@ -177,7 +183,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   /* Perform a poll of the external system within the context of a free inflight slot */
   private def performPoll(id : String) : Unit = Try {
     // make sure, the outlet has been pulled. If that is not the case,
-    // the outhandler will be called eventually, triggering another
+    // the out handler will be called eventually, triggering another
     // poll()
     if (isAvailable(out)) {
 
@@ -195,7 +201,9 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
       doPerformPoll(id, ackHandler).get match {
         case None =>
           // No message available, schedule next poll
-          scheduleOnce(Poll, nextPoll())
+          if (!isTimerActive(Poll)) {
+            scheduleOnce(Poll, nextPoll())
+          }
         case Some(ackCtxt) =>
           // add the context to the inflight messages
           log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
@@ -206,14 +214,35 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     }
   }
 
-  /**
-    Poll the external system whether a new message is available.
-    If a message can be polled without any exceptions, the resulting envelope
-    will be wrapped in an AcknowledgeContext and returned.
-    If no message is available, the result will be Success(None)
+  override protected def onTimer(timerKey: Any): Unit = {
+    timerKey match {
+      case CheckAck =>
 
-    Any exception while polling for a message will deny all remaining inflight
-    messages and then fail the stage.
+        val now = System.currentTimeMillis()
+
+        val pendingAcks : Map[String, T]=
+          inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1)
+
+        val timedoutAcks : Map[String, T] =
+          pendingAcks.filter { case (_, ctxt) => true }
+
+        timedoutAcks.values.foreach { ctxt =>
+          log.warn(s"Acknowledge for [${ctxt.envelope}] has timed out in [${ctxt.inflightId}]")
+          ackTimedOut(ctxt)
+        }
+
+      case Poll => poll()
+    }
+  }
+
+  /**
+    *Poll the external system whether a new message is available.
+    *If a message can be polled without any exceptions, the resulting envelope
+    *will be wrapped in an AcknowledgeContext and returned.
+    *If no message is available, the result will be Success(None)
+ **
+ Any exception while polling for a message will deny all remaining inflight
+    *messages and then fail the stage.
   */
 
   protected def poll() : Unit = {
