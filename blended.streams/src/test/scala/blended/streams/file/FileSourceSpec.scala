@@ -39,14 +39,14 @@ class FileSourceSpec extends SimplePojoContainerSpec
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
   private implicit val materializer : Materializer = ActorMaterializer()
 
-  private def prepareDirectory(subDir : String) : File = {
+  private def prepareDirectory(dir : String) : File = {
 
-    val dir = new File(BlendedTestSupport.projectTestOutput, subDir)
+    val f = new File(dir)
 
-    FileUtils.deleteDirectory(dir)
-    dir.mkdirs()
+    FileUtils.deleteDirectory(f)
+    f.mkdirs()
 
-    dir
+    f
   }
 
   private def genFile(f: File) : Unit = {
@@ -63,6 +63,8 @@ class FileSourceSpec extends SimplePojoContainerSpec
     "perform a regular file poll from a given directory" in {
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll" )
+      prepareDirectory(pollCfg.sourceDir)
+      genFile(new File(pollCfg.sourceDir, "test.txt"))
 
       val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
 
