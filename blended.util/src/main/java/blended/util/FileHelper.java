@@ -34,7 +34,7 @@ public class FileHelper {
   }
 
   public static boolean renameFile(File src, File dest) {
-    if (dest.exists()) {
+    if (!src.exists() || dest.exists()) {
       return false;
     } else {
       src.renameTo(dest);

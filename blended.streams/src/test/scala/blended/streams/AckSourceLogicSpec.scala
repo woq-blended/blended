@@ -58,7 +58,8 @@ class CountingAckSource(
           inflightId = id,
           envelope = FlowEnvelope(msg)
             .withRequiresAcknowledge(true)
-            .withAckHandler(Some(ackHandler))
+            .withAckHandler(Some(ackHandler)),
+          created = System.currentTimeMillis()
         ))
       } else {
         None

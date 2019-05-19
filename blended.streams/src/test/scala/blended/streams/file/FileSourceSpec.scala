@@ -1,6 +1,6 @@
 package blended.streams.file
 
-import java.io.{File, FileOutputStream}
+import java.io.{File, FileOutputStream, FilenameFilter}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -10,7 +10,7 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope
-import blended.streams.processor.Collector
+import blended.streams.processor.{AckProcessor, Collector}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
@@ -56,6 +56,14 @@ class FileSourceSpec extends SimplePojoContainerSpec
     os.close()
   }
 
+  private def listFiles(dir : String, pattern : String) : List[File] = {
+
+    val fDir : File = new File(dir)
+    fDir.listFiles(new FilenameFilter {
+      override def accept(dir: File, name: String): Boolean = name.matches(pattern)
+    }).toList
+  }
+
   "The FilePollSource should" - {
 
     val rawCfg : Config = idSvc.getContainerContext().getContainerConfig().getConfig("simplePoll")
@@ -66,13 +74,16 @@ class FileSourceSpec extends SimplePojoContainerSpec
       prepareDirectory(pollCfg.sourceDir)
       genFile(new File(pollCfg.sourceDir, "test.txt"))
 
-      val src : Source[FlowEnvelope, NotUsed] = Source.fromGraph(new FileAckSource(pollCfg))
+      val src : Source[FlowEnvelope, NotUsed] =
+        Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, timeout + 100.millis)
 
       result should have size(1)
+
+      listFiles(pollCfg.sourceDir, ".*") should be (empty)
     }
   }
 }

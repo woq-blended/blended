@@ -3,6 +3,8 @@ package blended.streams.file
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.{DirectoryStream, Files, Path}
+import java.text.SimpleDateFormat
+import java.util.Date
 
 import akka.actor.ActorSystem
 import akka.stream.{Attributes, Outlet, SourceShape}
@@ -43,12 +45,16 @@ class FileAckSource(
 
   private val pollId : String =  s"${pollCfg.headerCfg.prefix}.FilePoller.${pollCfg.id}.source"
   private val out : Outlet[FlowEnvelope] = Outlet(name = pollId)
+  private val sdf = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
 
   override def shape: SourceShape[FlowEnvelope] = SourceShape(out)
 
   private class FileAckContext(
-    inflightId : String, env: FlowEnvelope
-  ) extends DefaultAcknowledgeContext(inflightId, env)
+    inflightId : String,
+    env: FlowEnvelope,
+    val originalFile : File,
+    val fileToProcess : File
+  ) extends DefaultAcknowledgeContext(inflightId, env, System.currentTimeMillis())
 
   private class FileSourceLogic() extends AckSourceLogic[FileAckContext](out, shape) {
     /** The id to identify the instance in the log files */
@@ -94,10 +100,17 @@ class FileAckSource(
           val env : FlowEnvelope = FlowEnvelope(msg)
             .withHeader(pollCfg.filenameProp, f.getName()).get
             .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
+            .withRequiresAcknowledge(true)
+            .withAckHandler(Some(ackHandler))
 
           log.debug(s"Created Envelope [$env] in [$id]]")
 
-          Some(new FileAckContext(inflightId = id, env = env))
+          Some(new FileAckContext(
+            inflightId = id,
+            env = env,
+            originalFile = f,
+            fileToProcess = fileToProcess
+          ))
         } else {
           None
         }
@@ -123,6 +136,26 @@ class FileAckSource(
       finally {
         FileAckSource.releaseDirectory(pollCfg.sourceDir)
       }
+    }
+
+    override protected def beforeAcknowledge(ackCtxt: FileAckContext): Unit = {
+      pollCfg.backup match {
+        case None => ackCtxt.fileToProcess.delete()
+        case Some(d) =>
+
+          val backupDir = new File(d)
+          if (!backupDir.exists()) {
+            backupDir.mkdirs()
+          }
+
+          val backupFileName = ackCtxt.originalFile.getName + "-" + sdf.format(new Date())
+          FileHelper.renameFile(ackCtxt.fileToProcess, new File(backupFileName))
+      }
+    }
+
+    override protected def beforeDenied(ackCtxt: FileAckContext): Unit = {
+      log.info(s"Restoring file [${ackCtxt.originalFile}] in [${ackCtxt.inflightId}]")
+      FileHelper.renameFile(ackCtxt.fileToProcess, ackCtxt.originalFile)
     }
 
     /**

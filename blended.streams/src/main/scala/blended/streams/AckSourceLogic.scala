@@ -62,13 +62,13 @@ trait AcknowledgeContext {
 
   def envelope : FlowEnvelope
 
-  protected def created : Long
+  def created : Long
 }
 
-class DefaultAcknowledgeContext(
+case class DefaultAcknowledgeContext(
   override val inflightId : String,
   override val envelope: FlowEnvelope,
-  override val created : Long = System.currentTimeMillis()
+  override val created : Long
 ) extends AcknowledgeContext
 
 abstract class AckSourceLogic[T <: AcknowledgeContext](
@@ -226,7 +226,9 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
           inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1)
 
         val timedoutAcks : Map[String, T] =
-          pendingAcks.filter { case (_, ctxt) => true }
+          pendingAcks.filter { case (_, ctxt) =>
+            System.currentTimeMillis() - ctxt.created > ackTimeout.toMillis
+          }
 
         timedoutAcks.values.foreach { ctxt =>
           log.warn(s"Acknowledge for [${ctxt.envelope}] has timed out in [${ctxt.inflightId}]")
