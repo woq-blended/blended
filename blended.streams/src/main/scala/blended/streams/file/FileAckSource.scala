@@ -60,7 +60,7 @@ class FileAckSource(
     /** The id to identify the instance in the log files */
     override def id: String = pollId
 
-    private val pending : mutable.ListBuffer[File] = ListBuffer.empty
+    private var pending : mutable.ListBuffer[File] = ListBuffer.empty
 
     /** A logger that must be defined by concrete implementations */
     override protected def log: Logger = Logger(pollId)
@@ -70,7 +70,7 @@ class FileAckSource(
       1.to(pollCfg.batchSize).map(i => s"FilePoller-${pollCfg.id}-$i").toList
 
     // Reset the polling interval
-    override protected def nextPoll(): FiniteDuration = pollCfg.interval
+    override protected def nextPoll(): Option[FiniteDuration] = if (pending.isEmpty) Some(pollCfg.interval) else None
 
     override protected def doPerformPoll(id: String, ackHandler: AcknowledgeHandler): Try[Option[FileAckContext]] = {
 
@@ -149,7 +149,7 @@ class FileAckSource(
           }
 
           val backupFileName = ackCtxt.originalFile.getName + "-" + sdf.format(new Date())
-          FileHelper.renameFile(ackCtxt.fileToProcess, new File(backupFileName))
+          FileHelper.renameFile(ackCtxt.fileToProcess, new File(backupDir, backupFileName))
       }
     }
 
@@ -226,7 +226,10 @@ class FileAckSource(
           }
         }
 
-        pending.take(1).headOption
+        val result = pending.headOption
+        pending = if (!pending.isEmpty) pending.tail else pending
+
+        result
       }
     }
   }

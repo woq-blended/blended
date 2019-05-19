@@ -98,7 +98,7 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
   private var inflightMap : mutable.Map[String, (T, AckState)] = mutable.Map.empty
 
   // TODO: Make this configurable ?
-  protected def nextPoll() : FiniteDuration = 1.second
+  protected def nextPoll() : Option[FiniteDuration] = Some(1.second)
 
   // A callback to fail the stage
   protected val fail : AsyncCallback[Throwable]= getAsyncCallback[Throwable]{ t : Throwable =>
@@ -200,12 +200,14 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
       log.debug(s"Performing poll for [$id]")
       doPerformPoll(id, ackHandler).get match {
         case None =>
-          // No message available, schedule next poll
-          if (!isTimerActive(Poll)) {
-            val np : FiniteDuration = nextPoll()
-            log.debug(s"Scheduling next poll for [$id] in [$np]")
-            scheduleOnce(Poll, np)
+
+          nextPoll() match {
+            case None => pollImmediately.invoke()
+            case Some(d) => if (!isTimerActive(Poll)) {
+              scheduleOnce(Poll, d)
+            }
           }
+
         case Some(ackCtxt) =>
           // add the context to the inflight messages
           log.debug(s"Received [${ackCtxt.envelope.flowMessage}] in [$id]")
