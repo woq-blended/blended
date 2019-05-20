@@ -13,8 +13,8 @@ object BlendedContainerContextImpl extends ProjectFactory {
       Dependencies.slf4j,
       Dependencies.julToSlf4j,
       Dependencies.springExpression,
-      
-      Dependencies.springCore % "test",
+      Dependencies.springCore,
+
       Dependencies.scalatest % "test",
       Dependencies.scalacheck % "test",
       Dependencies.mockitoAll % "test",

@@ -33,6 +33,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.commonsCodec,
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
+      Dependencies.jclOverSlf4j,
       Dependencies.scalatest % "test"
     )
   ) {
@@ -80,6 +81,7 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
     BlendedContainerContextApi.project,
     BlendedDomino.project,
     BlendedUpdaterConfigJvm.project,
+
     BlendedTestsupport.project % "test"
   )
 }
