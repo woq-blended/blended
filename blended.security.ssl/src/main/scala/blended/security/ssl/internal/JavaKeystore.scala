@@ -63,7 +63,7 @@ class JavaKeystore(
         fis.close()
       }
     } else {
-      log.info(s"Creating empty key store [${keystore.getAbsolutePath()}] ...")
+      log.info(s"Loading empty key store [${keystore.getAbsolutePath()}] ...")
       ks.load(null, storepass)
     }
 

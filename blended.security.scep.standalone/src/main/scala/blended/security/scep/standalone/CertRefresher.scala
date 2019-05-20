@@ -79,14 +79,17 @@ class CertRefresher(salt: String) {
       new DominoActivator {
         whenBundleActive {
           whenServicePresent[CertificateManager] { certMgr =>
-
+            log.debug(s"About to check and refresh certificates with cert manager [${certMgr}]")
             certMgr.checkCertificates().get match {
               case None =>
+                log.error("No server certificates configured")
                 throw new Exception("Server configuration is required to updated server certificates.")
               case Some(ms) =>
+                log.debug("configured certificates checked successfully")
                 promise.complete(Success(ms))
             }
 
+            log.debug("Certificate checking finished, self-stopping bundle")
             bundleContext.getBundle().stop()
           }
         }
