@@ -1,35 +1,36 @@
 package blended.streams.file
 
-import java.io.{File, FileOutputStream, FilenameFilter}
+import java.io.{File, FileOutputStream}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Source
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.testkit.TestProbe
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
-import blended.streams.{FlowProcessor, StreamFactories}
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.{AckProcessor, Collector}
+import blended.streams.{FlowProcessor, StreamFactories}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
-import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
+import blended.testsupport.{BlendedTestSupport, FileTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.typesafe.config.Config
 import org.apache.commons.io.FileUtils
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
-import scala.collection.JavaConverters._
 
 @RequiresForkedJVM
 class FileSourceSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with LoggingFreeSpecLike
-  with Matchers {
+  with Matchers
+  with FileTestSupport {
 
   override def baseDir: String = s"${BlendedTestSupport.projectTestOutput}/container"
 
@@ -40,6 +41,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
   implicit val timeout : FiniteDuration = 1.second
   private val idSvc : ContainerIdentifierService = mandatoryService[ContainerIdentifierService](registry)(None)
   private implicit val system : ActorSystem = mandatoryService[ActorSystem](registry)(None)
+  private implicit val eCtxt : ExecutionContext = system.dispatcher
   private implicit val materializer : Materializer = ActorMaterializer()
   private val log : Logger = Logger[FileSourceSpec]
 
@@ -60,17 +62,38 @@ class FileSourceSpec extends SimplePojoContainerSpec
     os.close()
   }
 
-  private def listFiles(dir : String, pattern : String) : List[File] = {
+  private def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
 
-    val fDir : File = new File(dir)
+    case class FilePolled(env : FlowEnvelope)
 
-    val filter : FilenameFilter = new FilenameFilter {
-      override def accept(d: File, name: String): Boolean = {
-        name.matches(pattern)
-      }
+    def pollFiles(t : FiniteDuration) : List[FlowEnvelope] = {
+      val src : Source[FlowEnvelope, NotUsed] =
+        Source.fromGraph(new FileAckSource(pollCfg))
+          .via(FlowProcessor.fromFunction("event", log){ env => Try {
+            system.eventStream.publish(FilePolled(env))
+            env
+          }})
+          .via(new AckProcessor("simplePoll.ack").flow)
+
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
+      Await.result(collector.result, t + 100.millis)
     }
 
-    fDir.listFiles(filter).toList
+    val probe = TestProbe()
+    system.eventStream.subscribe(probe.ref, classOf[FilePolled])
+
+    prepareDirectory(pollCfg.sourceDir)
+    genFile(lockFile)
+    akka.pattern.after(timeout + 200.millis, system.scheduler)(Future {
+      log.info(s"Removing file [${lockFile.getAbsolutePath()}]")
+      lockFile.delete()
+    })
+
+    genFile(new File(pollCfg.sourceDir, "test.txt"))
+
+    // make sure we do not receive any messages before the lock file is removed
+    probe.expectNoMessage(timeout)
+    pollFiles(timeout * 3) should have size(1)
   }
 
   "The FilePollSource should" - {
@@ -92,7 +115,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       result should have size(1)
 
-      listFiles(pollCfg.sourceDir, ".*") should be (empty)
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
 
     "perform a regular file poll from a given directory(bulk)" in {
@@ -113,7 +136,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       result should have size(numMsg)
 
-      listFiles(pollCfg.sourceDir, ".*") should be (empty)
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
 
     "restore the original file if the envelope was denied" in {
@@ -132,7 +155,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
       Await.result(collector.result, timeout + 100.millis)
 
-      listFiles(pollCfg.sourceDir, ".*").map(_.getName()) should be (List("test.txt"))
+      getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be (List("test.txt"))
     }
 
     "create a backup file if the backup directory is configured" in {
@@ -150,11 +173,56 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
       Await.result(collector.result, timeout + 100.millis)
 
-      listFiles(pollCfg.backup.get, ".*").map(_.getName()) should have size(1)
+      getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size(1)
     }
 
-    "do not process files if the lock file exists (relative)" in pending
-    "do not process files if the lock file exists (absolute" in pending
-    "allow to FileAckSources to process files in parallel" in pending
+    "do not process files if the lock file exists (relative)" in {
+
+      val srcDir : File = new File(BlendedTestSupport.projectTestOutput + "lockrel")
+      val lockFile : File = new File(srcDir, "lock.dat")
+
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+        sourceDir = srcDir.getAbsolutePath(),
+        lock = Some("./lock.dat")
+      )
+
+      testWithLock(srcDir, lockFile, pollCfg)
+    }
+
+    "do not process files if the lock file exists (absolute)" in {
+      val srcDir : File = new File(BlendedTestSupport.projectTestOutput + "lockabs")
+      val lockFile : File = new File(srcDir, "lock.dat")
+
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(
+        sourceDir = srcDir.getAbsolutePath(),
+        lock = Some(lockFile.getAbsolutePath())
+      )
+
+      testWithLock(srcDir, lockFile, pollCfg)
+    }
+
+    "allow to FileAckSources to process files in parallel" in {
+      val numMsg : Int = 5000
+      val t : FiniteDuration = 5.seconds
+
+      val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc)
+        .copy(sourceDir = BlendedTestSupport.projectTestOutput + "/parallel" )
+
+      prepareDirectory(pollCfg.sourceDir)
+      1.to(numMsg).foreach{ i => genFile(new File(pollCfg.sourceDir, s"test_$i.txt")) }
+
+      val src : Source[FlowEnvelope, NotUsed] =
+        Source.fromGraph(new FileAckSource(pollCfg)).async.via(new AckProcessor("simplePoll.ack").flow)
+
+      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis){ env => }
+      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t){ env => }
+
+      val result1 : List[FlowEnvelope] = Await.result(collector1.result, 300.millis)
+      val result2 : List[FlowEnvelope] = Await.result(collector2.result, t + 100.millis)
+
+      (result1.size + result2.size) should be (numMsg)
+
+      getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
+    }
   }
 }

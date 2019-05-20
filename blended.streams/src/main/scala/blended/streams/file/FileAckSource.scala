@@ -60,7 +60,7 @@ class FileAckSource(
     /** The id to identify the instance in the log files */
     override def id: String = pollId
 
-    private var pending : mutable.ListBuffer[File] = ListBuffer.empty
+    private var pendingFiles : mutable.ListBuffer[File] = ListBuffer.empty
 
     /** A logger that must be defined by concrete implementations */
     override protected def log: Logger = Logger(pollId)
@@ -70,7 +70,7 @@ class FileAckSource(
       1.to(pollCfg.batchSize).map(i => s"FilePoller-${pollCfg.id}-$i").toList
 
     // Reset the polling interval
-    override protected def nextPoll(): Option[FiniteDuration] = if (pending.isEmpty) Some(pollCfg.interval) else None
+    override protected def nextPoll(): Option[FiniteDuration] = if (pendingFiles.isEmpty) Some(pollCfg.interval) else None
 
     override protected def doPerformPoll(id: String, ackHandler: AcknowledgeHandler): Try[Option[FileAckContext]] = {
 
@@ -202,7 +202,7 @@ class FileAckSource(
         None
       } else {
 
-        if (pending.isEmpty) {
+        if (pendingFiles.isEmpty) {
           log.info(s"Executing directory scan for [${pollCfg.id}] for directory [${pollCfg.sourceDir}] with pattern [${pollCfg.pattern}]")
 
           try {
@@ -215,7 +215,7 @@ class FileAckSource(
             val dirStream : DirectoryStream[Path] = Files.newDirectoryStream(srcDir.toPath(), filter)
 
             try {
-              dirStream.iterator().asScala.take(100).map(_.toFile()).foreach(f => pending += f)
+              dirStream.iterator().asScala.take(100).map(_.toFile()).foreach(f => pendingFiles += f)
             } catch {
               case NonFatal(e) =>
                 log.warn(s"Error reading directory [${srcDir.getAbsolutePath()}] : [${e.getMessage()}]")
@@ -226,8 +226,8 @@ class FileAckSource(
           }
         }
 
-        val result = pending.headOption
-        pending = if (!pending.isEmpty) pending.tail else pending
+        val result = pendingFiles.headOption
+        pendingFiles = if (!pendingFiles.isEmpty) pendingFiles.tail else pendingFiles
 
         result
       }

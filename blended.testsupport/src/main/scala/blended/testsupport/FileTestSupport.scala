@@ -76,7 +76,7 @@ trait FileTestSupport extends  Matchers {
       case NonFatal(e) =>
         log.debug("Trying to use ZIP compression")
         val zis = new ZipInputStream(new BufferedInputStream(new ByteArrayInputStream(content)))
-        val entry = zis.getNextEntry()
+        zis.getNextEntry()
         zis
     }
 
@@ -98,7 +98,14 @@ trait FileTestSupport extends  Matchers {
     bos.toByteArray
   }
 
-  def getFiles(dirName: String, filter: FileFilter, recursive : Boolean = true): List[File] = {
+  def getFiles(dirName : String, pattern : String, recursive : Boolean) : List[File] =
+    getFiles(
+      dirName = dirName,
+      recursive = recursive,
+      filter = (f : File) => f.getName().matches(pattern)
+    )
+
+  def getFiles(dirName: String, filter: FileFilter, recursive : Boolean): List[File] = {
 
     val f : File = new File(dirName)
 

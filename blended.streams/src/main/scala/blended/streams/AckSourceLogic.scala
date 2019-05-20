@@ -152,6 +152,15 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     }
   }
 
+  override def postStop(): Unit = {
+
+    val p : Map[String, T] = pending()
+    log.debug(s"[$id] has [${p.size}] envelopes still in inflight while stopping")
+
+    // perform any implementation specific logic to roll back pending envelopes
+    p.values.foreach(beforeDenied)
+  }
+
   protected def beforeDenied(ackCtxt : T) : Unit = {}
 
   // this will be called whenever an inflight message has been denied
@@ -218,17 +227,16 @@ abstract class AckSourceLogic[T <: AcknowledgeContext](
     }
   }
 
+  protected def pending() : Map[String, T] =
+    inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1)
+
+
   override protected def onTimer(timerKey: Any): Unit = {
     timerKey match {
       case CheckAck =>
 
-        val now = System.currentTimeMillis()
-
-        val pendingAcks : Map[String, T]=
-          inflightMap.filter { case (_, (_, state)) => state == AckState.Pending }.toMap.mapValues(_._1)
-
         val timedoutAcks : Map[String, T] =
-          pendingAcks.filter { case (_, ctxt) =>
+          pending().filter { case (_, ctxt) =>
             System.currentTimeMillis() - ctxt.created > ackTimeout.toMillis
           }
 
