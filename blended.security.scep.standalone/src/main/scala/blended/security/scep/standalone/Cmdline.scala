@@ -50,7 +50,7 @@ class Cmdline {
   @CmdOption(
     names = Array("--timeout"),
     args = Array("sec"),
-    description = "Timeout used when refreshing certificates."
+    description = "Timeout (in seconds) used when refreshing certificates"
   )
   var timeout = 5
 
