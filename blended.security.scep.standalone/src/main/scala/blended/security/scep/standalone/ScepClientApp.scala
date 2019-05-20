@@ -7,13 +7,12 @@ import java.util.concurrent.TimeoutException
 
 import blended.security.ssl.internal.PasswordHasher
 import blended.util.logging.Logger
-import de.tototec.cmdoption.CmdlineParser
+import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
 import org.bouncycastle.cert.X509CertificateHolder
 import org.bouncycastle.openssl.PEMEncryptedKeyPair
 import org.bouncycastle.openssl.PEMKeyPair
 import org.bouncycastle.openssl.PEMParser
 import org.bouncycastle.pkcs.PKCS10CertificationRequest
-
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.Failure
@@ -58,7 +57,11 @@ object ScepClientApp {
     val cp = new CmdlineParser(cmdline)
     cp.setProgramName("java -jar scep-client.jar")
     cp.setAboutLine("Standalone SCEP client, which can create and update Java key stores from a remote SCEP server.")
-    cp.parse(args: _*)
+    try {
+      cp.parse(args: _*)
+    } catch {
+      case e: CmdlineParserException => throw new ExitAppException(2, Option(e.getLocalizedMessage()), e)
+    }
 
     if (cmdline.help || args.isEmpty) {
       cp.usage()
@@ -80,7 +83,7 @@ object ScepClientApp {
     }
 
     if (cmdline.refreshCerts) {
-      refreshCert(salt, timeout = Duration(5, TimeUnit.SECONDS))
+      refreshCert(salt, timeout = Duration(cmdline.timeout, TimeUnit.SECONDS))
     }
 
   }

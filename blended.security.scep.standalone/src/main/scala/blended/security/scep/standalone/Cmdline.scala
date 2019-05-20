@@ -47,4 +47,11 @@ class Cmdline {
   var _infoFile: String = _
   def infoFile = Option(_infoFile)
 
+  @CmdOption(
+    names = Array("--timeout"),
+    args = Array("sec"),
+    description = "Timeout used when refreshing certificates."
+  )
+  var timeout = 5
+
 }
