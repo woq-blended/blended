@@ -8,6 +8,7 @@ object BlendedTestsupport extends ProjectFactory {
     "Some test helper classes.",
     osgi = false,
     deps = Seq(
+      Dependencies.commonsIo,
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,
       Dependencies.akkaCamel,

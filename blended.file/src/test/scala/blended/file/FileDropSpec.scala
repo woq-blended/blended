@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.ByteString
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
+import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers

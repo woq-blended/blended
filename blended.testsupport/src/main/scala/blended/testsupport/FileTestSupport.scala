@@ -1,4 +1,4 @@
-package blended.file
+package blended.testsupport
 
 import java.io._
 import java.util.zip._
