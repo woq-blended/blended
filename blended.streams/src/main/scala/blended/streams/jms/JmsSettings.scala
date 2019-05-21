@@ -78,8 +78,8 @@ sealed trait JmsSettings {
   // The timespan we will wait to recreate a JMS session after it has been closed due to a JMS exception
   val sessionRecreateTimeout : FiniteDuration
 
-  // The header configuration which encapsulates the defined header names being used in the 
-  // flow message 
+  // The header configuration which encapsulates the defined header names being used in the
+  // flow message
   val headerCfg : FlowHeaderConfig
 
   // A logger, so that it can be injected rather than being created based on the classname only
@@ -100,7 +100,7 @@ final case class JMSConsumerSettings(
   selector: Option[String] = None,
   ackTimeout: FiniteDuration = 1.second,
   durableName: Option[String] = None,
-  sessionRecreateTimeout : FiniteDuration = 1.second
+  sessionRecreateTimeout : FiniteDuration = 100.millis
 ) extends JmsSettings {
 
   def withDestination(dest : Option[JmsDestination]) : JMSConsumerSettings = copy(jmsDestination = dest)
@@ -145,7 +145,7 @@ final case class JmsProducerSettings(
   timeToLive: Option[FiniteDuration] = None,
   // A factory for correlation Ids in case no Correlation Id is set in the message
   correlationId : () => Option[String] = () => None,
-  sessionRecreateTimeout : FiniteDuration = 1.second,
+  sessionRecreateTimeout : FiniteDuration = 100.millis,
   clearPreviousException : Boolean = false
 ) extends JmsSettings {
 
