@@ -52,7 +52,7 @@ class Cmdline {
     args = Array("sec"),
     description = "Timeout (in seconds) used when refreshing certificates"
   )
-  var timeout = 5
+  var timeout = 20
 
   @CmdOption(
     names = Array("--base-dir"),
