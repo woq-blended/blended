@@ -1,10 +1,11 @@
 package blended.jms.utils
 
+import akka.actor.ActorSystem
 import javax.jms._
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.util.{Failure, Success, Try}
 
 abstract class JmsSession {
 
@@ -12,9 +13,29 @@ abstract class JmsSession {
 
   def session: Session
 
-  def closeSessionAsync()(implicit ec: ExecutionContext): Future[Unit] = Future { closeSession() }
+  def closeSessionAsync()(system: ActorSystem): Future[Unit] = {
 
-  def closeSession(): Unit = session.close()
+    implicit val eCtxt : ExecutionContext = system.dispatcher
+
+    val p : Promise[Unit] = Promise()
+
+    Future { closeSession() }.onComplete[Unit] {
+      case Success(_) => p.success()
+      case Failure(t) => p.failure(t)
+    }
+
+    akka.pattern.after(1.seconds, system.scheduler){ Future {
+      if (!p.isCompleted) {
+        p.failure(new Exception(s"Session close for [$sessionId] has timed out"))
+      }
+    }}
+
+    p.future
+  }
+
+  def closeSession(): Unit = {
+    session.close()
+  }
 
   def abortSessionAsync()(implicit ec: ExecutionContext): Future[Unit] = Future { abortSession() }
 

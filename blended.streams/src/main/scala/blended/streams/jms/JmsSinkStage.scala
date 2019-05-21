@@ -6,10 +6,10 @@ import akka.stream.stage._
 import blended.jms.utils.{JmsDestination, JmsProducerSession}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.Logger
-import javax.jms.{Connection, Destination, MessageProducer}
+import javax.jms.{Connection, Destination, JMSException, MessageProducer}
 
 import scala.concurrent.duration._
-import scala.util.Random
+import scala.util.{Failure, Random, Success, Try}
 
 class JmsSinkStage(
   name: String, settings : JmsProducerSettings
@@ -30,11 +30,6 @@ class JmsSinkStage(
       shape,
     ) with JmsConnector[JmsProducerSession] {
 
-      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
-        settings.log.warn(s"Failing stage [$name]")
-        failStage(ex)
-      }
-
       private[this] val rnd = new Random()
       private[this] var producer : Option[MessageProducer] = None
 
@@ -50,20 +45,27 @@ class JmsSinkStage(
         }
       }
 
-      override protected def createSession(connection: Connection): JmsProducerSession = {
+      override protected def createSession(connection: Connection): Try[JmsProducerSession] = {
 
-        val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
+        try {
+          val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
 
-        val result : JmsProducerSession = JmsProducerSession(
-          connection = connection,
-          session = session,
-          sessionId = nextSessionId(),
-          jmsDestination = jmsSettings.jmsDestination
-        )
+          val result : JmsProducerSession = JmsProducerSession(
+            connection = connection,
+            session = session,
+            sessionId = nextSessionId(),
+            jmsDestination = jmsSettings.jmsDestination
+          )
 
-        settings.log.debug(s"Producer session [${result.sessionId}] has been created")
+          settings.log.debug(s"Producer session [${result.sessionId}] has been created")
 
-        result
+          Success(result)
+        } catch {
+          case je : JMSException =>
+            settings.log.warn(s"Error creating JMS session : [${je.getMessage()}]")
+            handleError.invoke(je)
+            Failure(je)
+        }
       }
 
       override protected def onSessionOpened(jmsSession: JmsProducerSession): Unit = {
@@ -109,6 +111,7 @@ class JmsSinkStage(
         } catch {
           case t : Throwable =>
             settings.log.error(t)(s"Error sending message [${env.id}] to [$jmsDest] in [${session.sessionId}]")
+            closeSession(session)
             env.withException(t)
         }
 

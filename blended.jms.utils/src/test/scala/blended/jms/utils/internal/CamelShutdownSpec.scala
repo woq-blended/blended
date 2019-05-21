@@ -5,7 +5,7 @@ import java.util.Date
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
 import blended.camel.utils.BlendedCamelContextFactory
-import blended.jms.utils.{ AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, ConnectionException }
+import blended.jms.utils.{ AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedSingleConnectionFactory, Reconnect }
 import blended.util.logging.Logger
 import javax.jms.{ ExceptionListener, JMSException }
 import org.apache.activemq.ActiveMQConnectionFactory
@@ -56,7 +56,7 @@ class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))
         getJmsCause(e) match {
           case None =>
           case Some(illegalState) if illegalState.isInstanceOf[javax.jms.IllegalStateException] =>
-            system.eventStream.publish(ConnectionException("amq", "amq", illegalState))
+            system.eventStream.publish(Reconnect("amq", "amq", Some(illegalState)))
           case jmse =>
         }
 

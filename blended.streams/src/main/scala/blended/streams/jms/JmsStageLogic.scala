@@ -5,8 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import akka.Done
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
-import blended.jms.utils.JmsSession
-import blended.util.logging.Logger
+import blended.jms.utils.{JmsSession, Reconnect}
 
 import scala.concurrent.Future
 import scala.util.control.NonFatal
@@ -39,7 +38,11 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   }
 
   // async callback, so that downstream flow elements can signal an error
-  private[jms] val handleError : AsyncCallback[Throwable]
+  private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
+    settings.log.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
+    system.eventStream.publish(Reconnect(settings.connectionFactory, Some(t)))
+    failStage(t)
+  }
 
   // Start the configured sessions
   override def preStart(): Unit = {
@@ -60,7 +63,7 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   private[jms] def stopSessions(): Unit =
     if (stopping.compareAndSet(false, true)) {
       val closeSessionFutures = jmsSessions.values.map { s =>
-        val f = s.closeSessionAsync()
+        val f = s.closeSessionAsync()(system)
         f.failed.foreach(e => settings.log.error(e)(s"Error closing jms session in JMS source stage [$id]"))
         f
       }

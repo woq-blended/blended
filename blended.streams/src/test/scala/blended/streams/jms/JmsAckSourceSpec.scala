@@ -47,6 +47,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     b.setPersistent(false)
     b.setUseJmx(false)
     b.setPersistenceAdapter(new MemoryPersistenceAdapter)
+
     b.setDedicatedTaskRunner(true)
 
     b.start()
@@ -92,11 +93,10 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
     jmsDestination = Some(JmsDestination.create(destName).get)
   )
 
-  private val jmsConsumer : JMSConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
-    cSettings => minMessageDelay => restartableConsumer(
+  private val consumer : JMSConsumerSettings => Option[FiniteDuration] => Source[FlowEnvelope, NotUsed] =
+    cSettings => minMessageDelay => jmsConsumer(
       name = "test",
       settings = cSettings,
-      headerConfig = headerCfg,
       minMessageDelay = minMessageDelay
     ).via(Flow.fromFunction{env =>
       env.acknowledge()
@@ -113,7 +113,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val cSettings : JMSConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
-      val consumer : Source[FlowEnvelope, NotUsed] = jmsConsumer(cSettings)(None)
+      val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(None)
 
       sendMessages(
         pSettings,
@@ -123,7 +123,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         case Success(s) =>
           val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
             name = "ackConsumer",
-            source = consumer,
+            source = msgConsumer,
             timeout = 5.seconds
           )(e => e.acknowledge())
 
@@ -144,7 +144,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
       val cSettings : JMSConsumerSettings = consumerSettings(destName)
       val pSettings : JmsProducerSettings = producerSettings(destName)
 
-      val consumer : Source[FlowEnvelope, NotUsed] = jmsConsumer(cSettings)(Some(minDelay))
+      val msgConsumer : Source[FlowEnvelope, NotUsed] = consumer(cSettings)(Some(minDelay))
 
       sendMessages(
         pSettings,
@@ -154,7 +154,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
         case Success(s) =>
           val coll : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
             name = "delayedConsumer",
-            source = consumer,
+            source = msgConsumer,
             timeout = minDelay - 1.seconds
           )(e => e.acknowledge())
 
@@ -165,7 +165,7 @@ class JmsAckSourceSpec extends TestKit(ActorSystem("JmsAckSource"))
 
           val coll2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit(
             name = "delayedConsumer2",
-            source = consumer,
+            source = msgConsumer,
             timeout = minDelay + 500.millis
           )(e => e.acknowledge())
 

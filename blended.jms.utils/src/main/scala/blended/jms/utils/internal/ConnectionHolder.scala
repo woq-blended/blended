@@ -5,7 +5,7 @@ import java.util
 import java.util.concurrent.atomic.AtomicBoolean
 
 import akka.actor.ActorSystem
-import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionConfig, ConnectionException}
+import blended.jms.utils.{BlendedJMSConnection, BlendedJMSConnectionConfig, ConnectionConfig, Reconnect}
 import blended.util.ReflectionHelper
 import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
@@ -22,6 +22,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
   private[this] val log = Logger[ConnectionHolder]
   private[this] var conn : Option[BlendedJMSConnection] = None
   private[this] var connecting : AtomicBoolean = new AtomicBoolean(false)
+  private[this] var reconnect : AtomicBoolean = new AtomicBoolean(false)
 
   def getConnectionFactory() : ConnectionFactory
 
@@ -53,7 +54,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
               c.setExceptionListener(new ExceptionListener {
                 override def onException(e: JMSException): Unit = {
                   log.warn(s"Exception encountered in connection for provider [$vendor:$provider] : ${e.getMessage()}")
-                  system.eventStream.publish(ConnectionException(vendor, provider, e))
+                  system.eventStream.publish(Reconnect(vendor, provider, Some(e)))
                 }
               })
             } catch {
@@ -64,6 +65,7 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
             }
 
             c.start()
+            reconnect.set(false)
 
             log.info(s"Successfully connected to [$vendor:$provider] with clientId [${config.clientId}]")
             val wrappedConnection = new BlendedJMSConnection(c)
@@ -85,8 +87,8 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
   }
 
   def close() : Try[Unit] = Try {
-    log.info(s"Closing underlying connection for provider [$provider]")
     conn.foreach { c =>
+      log.info(s"Closing underlying connection for provider [$provider]")
       c.connection.close()
     }
     conn = None

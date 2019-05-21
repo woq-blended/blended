@@ -6,10 +6,10 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
-import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
+import scala.util.{Failure, Success, Try}
 
 object JmsConnector {
 
@@ -46,11 +46,6 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     case cf => cf.toString()
   }}
 
-  protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
-    jmsSettings.log.warn(s"Failing stage [$id]")
-    failStage(e)
-  }
-
   private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
     jmsSettings.log.debug(s"Session of type [${session.getClass().getSimpleName()}] with id [${session.sessionId}] has been created.")
     jmsSessions += (session.sessionId -> session)
@@ -58,9 +53,11 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   }
 
   private val onSessionClosed : AsyncCallback[S] = getAsyncCallback { s =>
+    jmsSettings.log.debug(s"Session of type [${s.getClass().getSimpleName()}] with id [${s.sessionId}] has been closed.")
     if (isTimerActive(RecreateSessions)) {
       // do nothing as we have already scheduled to recreate the sessions
     } else {
+      jmsSettings.log.debug(s"Restarting sessions in [${jmsSettings.sessionRecreateTimeout}]")
       scheduleOnce(RecreateSessions, jmsSettings.sessionRecreateTimeout)
     }
 
@@ -77,22 +74,22 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
 
-  protected def createSession(connection: Connection): S
+  protected def createSession(connection: Connection): Try[S]
 
   protected def afterSessionClose(session : S) : Unit = {}
 
   protected[this] def closeSession(session: S) : Unit = {
 
-    try {
-      jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
-      session.closeSessionAsync().onComplete { _ =>
+    jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
+
+    session.closeSessionAsync()(system).onComplete {
+      case Success(_) =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)
+      case Failure(t) =>
+        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
+        failStage(t)
       }
-    } catch {
-      case _ : Throwable =>
-        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}]")
-    }
   }
 
   sealed trait ConnectionStatus
@@ -102,14 +99,8 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected def initSessionAsync(): Unit = {
 
-    def failureHandler(ex: Throwable) = {
-      jmsSettings.log.warn(s"Session creation failed [${ex.getMessage()}]")
-      fail.invoke(ex)
-    }
+    val allSessions = openSessions()
 
-    val allSessions = openSessions(failureHandler)
-
-    allSessions.failed.foreach(failureHandler)
     // wait for all sessions to successfully initialize before invoking the onSession callback.
     // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
     allSessions.foreach(_.foreach{ s =>
@@ -117,19 +108,21 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     })(ec)
   }
 
-  def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] =
+  def openSessions(): Future[Seq[S]] =
 
-    openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
+    openConnection(startConnection = true).flatMap { connection =>
 
       val toBeCreated = jmsSettings.sessionCount - jmsSessions.size
       jmsSettings.log.debug(s"Trying to create [$toBeCreated] sessions ...")
-      val sessionFutures =
+      val sessionFutures : Seq[Future[Option[S]]] =
         for (_ <- 0 until toBeCreated) yield Future {
-          val s = createSession(connection)
-          s
+          createSession(connection) match {
+            case Success(s) => Some(s)
+            case _ => None
+          }
         }
 
-    Future.sequence(sessionFutures)
+    Future.sequence(sessionFutures).map(_.flatten)
   }
 
   private def openConnection(startConnection: Boolean) : Future[Connection] = {

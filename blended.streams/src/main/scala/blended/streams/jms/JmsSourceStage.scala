@@ -12,7 +12,8 @@ import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 
-import scala.util.{Failure, Success}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 class JmsSourceStage(
   name : String,
@@ -44,15 +45,23 @@ class JmsSourceStage(
 
       override protected def createSession(
         connection: Connection,
-      ): JmsConsumerSession = {
+      ): Try[JmsConsumerSession] = {
 
-        val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
-        new JmsConsumerSession(
-          connection = connection,
-          session = session,
-          sessionId = nextSessionId(),
-          jmsDestination = dest
-        )
+        try {
+          val session = connection.createSession(false, AcknowledgeMode.AutoAcknowledge.mode)
+
+          Success(new JmsConsumerSession(
+            connection = connection,
+            session = session,
+            sessionId = nextSessionId(),
+            jmsDestination = dest
+          ))
+        } catch {
+          case NonFatal(t) =>
+            log.error(s"Error creating JMS Session : ${t.getMessage()}")
+            handleError.invoke(t)
+            Failure(t)
+        }
       }
 
       override protected def pushMessage(msg: FlowEnvelope): Unit = {

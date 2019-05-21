@@ -30,7 +30,8 @@ class FileSourceSpec extends SimplePojoContainerSpec
   with PojoSrTestHelper
   with LoggingFreeSpecLike
   with Matchers
-  with FileTestSupport {
+  with FileTestSupport
+  with FileSourceTestSupport {
 
   override def baseDir: String = s"${BlendedTestSupport.projectTestOutput}/container"
 
@@ -45,22 +46,6 @@ class FileSourceSpec extends SimplePojoContainerSpec
   private implicit val materializer : Materializer = ActorMaterializer()
   private val log : Logger = Logger[FileSourceSpec]
 
-  private def prepareDirectory(dir : String) : File = {
-
-    val f = new File(dir)
-
-    FileUtils.deleteDirectory(f)
-    f.mkdirs()
-
-    f
-  }
-
-  private def genFile(f: File) : Unit = {
-    val os = new FileOutputStream(f)
-    os.write("Hallo Andreas".getBytes())
-    os.flush()
-    os.close()
-  }
 
   private def testWithLock(srcDir : File, lockFile : File, pollCfg : FilePollConfig): Unit = {
 
@@ -214,11 +199,14 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).async.via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis){ env => }
-      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t){ env => }
+      val collector1 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel1", src, 200.millis){ _ => }
+      val collector2 : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("parallel2", src, t){ _ => }
 
       val result1 : List[FlowEnvelope] = Await.result(collector1.result, 300.millis)
       val result2 : List[FlowEnvelope] = Await.result(collector2.result, t + 100.millis)
+
+      assert(result1.nonEmpty && result1.size < numMsg)
+      assert(result2.nonEmpty && result2.size < numMsg)
 
       (result1.size + result2.size) should be (numMsg)
 
