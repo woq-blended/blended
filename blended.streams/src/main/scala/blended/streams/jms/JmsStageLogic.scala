@@ -8,6 +8,7 @@ import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
 import blended.jms.utils.{JmsSession, Reconnect}
 
 import scala.concurrent.Future
+import scala.util.Success
 import scala.util.control.NonFatal
 
 // Common logic for the Source Stages with Auto Acknowledge and Client Acknowledge
@@ -69,18 +70,22 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
       Future
         .sequence(closeSessionFutures)
         .onComplete { _ =>
-          jmsConnection.foreach { connection =>
-            try {
-              connection.close()
-            } catch {
-              case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
-            } finally {
-              // By this time, after stopping the connection, closing sessions, all async message submissions to this
-              // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
-              // all JMS messages are delivered. This will allow the stage to complete after all pending messages
-              // are delivered, thus preventing message loss due to premature stage completion.
-              markStopped.invoke(Done)
-              settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+          Option(jmsConnection).map{ jc =>
+            jc.onComplete {
+              case Success(connection) =>
+                try {
+                  connection.close()
+                } catch {
+                  case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
+                } finally {
+                  // By this time, after stopping the connection, closing sessions, all async message submissions to this
+                  // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
+                  // all JMS messages are delivered. This will allow the stage to complete after all pending messages
+                  // are delivered, thus preventing message loss due to premature stage completion.
+                  markStopped.invoke(Done)
+                  settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+                }
+              case _ =>
             }
           }
         }
