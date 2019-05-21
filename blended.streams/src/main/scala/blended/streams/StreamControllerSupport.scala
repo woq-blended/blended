@@ -39,8 +39,6 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
-  def afterStreamStarted(m: Mat) : Unit = {}
-
   def starting(streamCfg :StreamControllerConfig, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       context.stop(self)
@@ -57,11 +55,8 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
           self ! StreamController.StreamTerminated(Some(t))
       }
 
-      afterStreamStarted(mat)
       context.become(running(streamCfg, killswitch, interval, System.currentTimeMillis()))
   }
-
-  def beforeStreamRestart() : Unit = {}
 
   def running(
     streamCfg : StreamControllerConfig, killSwitch: KillSwitch, interval : FiniteDuration, startedAt : Long
@@ -75,6 +70,7 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       context.become(stopping)
 
     case StreamController.StreamTerminated(t) =>
+      log.info(s"Stream [${streamCfg.name}] terminated ...")
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
         t.foreach { e =>
           log.error(e)(e.getMessage)
@@ -86,9 +82,8 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
           streamCfg.minDelay
         }
 
-        log.info(s"Stream [${streamCfg.name}] terminated [${t.map(_.getMessage).getOrElse("")}] ...scheduling restart in [$nextStart]")
+        log.info(s"Scheduling restart of Stream [${streamCfg.name}] in [$nextStart]")
 
-        beforeStreamRestart()
         context.system.scheduler.scheduleOnce(nextStart, self, StreamController.Start)
 
         context.become(starting(streamCfg, nextStart))

@@ -2,6 +2,7 @@ package blended.streams.file
 
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
@@ -54,9 +55,10 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
   private case class EnvelopeReceived(env : FlowEnvelope)
 
+  private val cfCnt : AtomicInteger = new AtomicInteger(0)
   private def amqCf(p : Int) : IdAwareConnectionFactory = SimpleIdAwareConnectionFactory(
     vendor = "amq",
-    provider = UUID.randomUUID().toString(),
+    provider = s"${cfCnt.incrementAndGet()}",
     clientId = "spec",
     cf = new ActiveMQConnectionFactory(s"tcp://localhost:$p?jms.prefetchPolicy.queuePrefetch=10"),
     minReconnect = 5.seconds
@@ -101,7 +103,8 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       headerCfg = headerCfg,
       connectionFactory = cf,
       jmsDestination = Some(dest),
-      acknowledgeMode = AcknowledgeMode.ClientAcknowledge
+      acknowledgeMode = AcknowledgeMode.ClientAcknowledge,
+      sessionRecreateTimeout = 100.millis
     )
 
     Source.fromGraph(new JmsAckSourceStage(name, settings, minMessageDelay = None))
@@ -122,7 +125,8 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       log = log,
       connectionFactory = cf,
       headerCfg = headerCfg,
-      jmsDestination = Some(dest)
+      jmsDestination = Some(dest),
+      sessionRecreateTimeout = 100.millis
     )
   }
 
@@ -148,10 +152,10 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
 
       val ctrlConfig : StreamControllerConfig = StreamControllerConfig(
         name = name,
-        minDelay = 5.seconds,
+        minDelay = 2.seconds,
         maxDelay = 10.seconds,
         exponential = false,
-        onFailureOnly = true,
+        onFailureOnly = false,
         random = 0.2
       )
 
