@@ -1,11 +1,13 @@
 package blended.security.scep.standalone
 
 import java.io.File
+import java.net.{InetAddress, URL}
 import java.nio.file.{Files, StandardCopyOption}
 import java.util.concurrent.TimeoutException
 
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
+import com.typesafe.config.ConfigFactory
 import de.tototec.cmdoption.CmdlineParser
 
 class ScepClientAppTest extends LoggingFreeSpec with TestFile {
@@ -60,6 +62,10 @@ class ScepClientAppTest extends LoggingFreeSpec with TestFile {
       assume(confFileName !== null, clue)
       val confFile = new File(confFileName)
       assume(confFile.exists(), clue)
+
+      val url = ConfigFactory.parseFile(confFile).getString("blended.security.scep.scepUrl")
+      val host = new URL(url).getHost()
+      assume(InetAddress.getByName(host).isReachable(2000), "\nScep host is not reachable")
 
       withTestDir() { dir =>
         val etc = new File(dir, "etc")
