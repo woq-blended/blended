@@ -182,19 +182,19 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       system.stop(probe.ref)
     }
 
-//    "pickup file and send them to JMS" in {
-//
-//      val (b, p) = startBroker("normal")
-//      val cf = amqCf(p)
-//      val srcDir = "jmsPoll"
-//
-//      val controller : Seq[ActorRef] = setupStreams("simple", "simpleJmsPoll", cf, srcDir)
-//      testWithJms(10.seconds, srcDir)
-//
-//      controller.foreach(_ ! StreamController.Stop)
-//
-//      stopBroker(b)
-//    }
+    "pickup file and send them to JMS" in {
+
+      val (b, p) = startBroker("normal")
+      val cf = amqCf(p)
+      val srcDir = "jmsPoll"
+
+      val controller : Seq[ActorRef] = setupStreams("simple", "simpleJmsPoll", cf, srcDir)
+      testWithJms(10.seconds, srcDir)
+
+      controller.foreach(_ ! StreamController.Stop)
+
+      stopBroker(b)
+    }
 
     "recover to send JMS messages in case the JMS connection fails and comes back" in {
 

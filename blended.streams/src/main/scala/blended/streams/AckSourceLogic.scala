@@ -1,6 +1,6 @@
 /*
   The AckSource logic encapsulates the underlying logic for an arbitrary Source
-  of FlowEnvelopes. The enevelopes will be passed down stream and must be
+  of FlowEnvelopes. The envelopes will be passed down stream and must be
   acknowledged or denied eventually. An acknowledgement that takes too long,
   will be treated as a denial as well.
 
@@ -24,7 +24,7 @@
   it is using along with any additional that might be required to perform an acknowledge or denial.
 
   As a result, each poll of the external system will produce an Option[AcknowledgeContext] which
-  will then be insrted into a free inflight slot. As a consequence, polling of the external system
+  will then be inserted into a free inflight slot. As a consequence, polling of the external system
   will only be performed if and only if a free inflight slot is available.
 
   As long as free inflight slots are available and no external messages are available, the

@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.{DirectoryStream, Files, Path}
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.{Date, UUID}
 
 import akka.actor.ActorSystem
 import akka.stream.{Attributes, Outlet, SourceShape}
@@ -76,41 +76,46 @@ class FileAckSource(
 
       def createEnvelope(f : File) : Try[Option[FileAckContext]] = Try {
 
-        log.info(s"Processing file [$f] in [$id]")
+        if (f.exists()) {
+          val uuid : String = UUID.randomUUID().toString()
+          log.info(s"Processing file [$f] in [$id] with [$uuid]")
 
-        val fileToProcess : File = new File(f + pollCfg.tmpExt)
+          val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
-        // First we try to rename the file in order to check whether it can be accessed yet
-        if (FileHelper.renameFile(f, fileToProcess)) {
-          val bytes : Array[Byte] = FileHelper.readFile(fileToProcess.getAbsolutePath())
+          // First we try to rename the file in order to check whether it can be accessed yet
+          if (FileHelper.renameFile(f, fileToProcess)) {
+            val bytes : Array[Byte] = FileHelper.readFile(fileToProcess.getAbsolutePath())
 
-          val msg : FlowMessage = if (pollCfg.asText) {
-            val charSet : Charset = pollCfg.charSet match {
-              case None => Charset.defaultCharset()
-              case Some(s) => Charset.forName(s)
+            val msg : FlowMessage = if (pollCfg.asText) {
+              val charSet : Charset = pollCfg.charSet match {
+                case None => Charset.defaultCharset()
+                case Some(s) => Charset.forName(s)
+              }
+
+              log.debug(s"Using charset [${charSet.displayName()}] to create text message.")
+
+              FlowMessage(new String(bytes, charSet))(pollCfg.header)
+            } else {
+              FlowMessage(bytes)(pollCfg.header)
             }
 
-            log.debug(s"Using charset [${charSet.displayName()}] to create text message.")
+            val env : FlowEnvelope = FlowEnvelope(msg,uuid)
+              .withHeader(pollCfg.filenameProp, f.getName()).get
+              .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
+              .withRequiresAcknowledge(true)
+              .withAckHandler(Some(ackHandler))
 
-            FlowMessage(new String(bytes, charSet))(pollCfg.header)
+            log.debug(s"Created Envelope [$env] in [$id]]")
+
+            Some(new FileAckContext(
+              inflightId = id,
+              env = env,
+              originalFile = f,
+              fileToProcess = fileToProcess
+            ))
           } else {
-            FlowMessage(bytes)(pollCfg.header)
+            None
           }
-
-          val env : FlowEnvelope = FlowEnvelope(msg)
-            .withHeader(pollCfg.filenameProp, f.getName()).get
-            .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
-            .withRequiresAcknowledge(true)
-            .withAckHandler(Some(ackHandler))
-
-          log.debug(s"Created Envelope [$env] in [$id]]")
-
-          Some(new FileAckContext(
-            inflightId = id,
-            env = env,
-            originalFile = f,
-            fileToProcess = fileToProcess
-          ))
         } else {
           None
         }
@@ -139,8 +144,14 @@ class FileAckSource(
     }
 
     override protected def beforeAcknowledge(ackCtxt: FileAckContext): Unit = {
+      log.info(s"Successfully processed envelope [${ackCtxt.envelope.id}]")
       pollCfg.backup match {
-        case None => ackCtxt.fileToProcess.delete()
+        case None =>
+          if (ackCtxt.fileToProcess.delete()) {
+            log.info(s"Deleted file for [${ackCtxt.envelope.id}] : [${ackCtxt.fileToProcess}]")
+          } else {
+            log.warn(s"File for [${ackCtxt.envelope.id}] could not be deleted : [${ackCtxt.fileToProcess}]")
+          }
         case Some(d) =>
 
           val backupDir = new File(d)
@@ -149,7 +160,15 @@ class FileAckSource(
           }
 
           val backupFileName = ackCtxt.originalFile.getName + "-" + sdf.format(new Date())
-          FileHelper.renameFile(ackCtxt.fileToProcess, new File(backupDir, backupFileName))
+
+          val fFrom : File = ackCtxt.fileToProcess
+          val fTo : File = new File(backupDir, backupFileName)
+
+          if (FileHelper.renameFile(fFrom, fTo)) {
+            log.info(s"Moved file for [${ackCtxt.envelope.id}] from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          } else {
+            log.warn(s"File for [${ackCtxt.envelope.id}] failed to be renamed from [${fFrom.getAbsolutePath()}] to [${fTo.getAbsolutePath()}]")
+          }
       }
     }
 

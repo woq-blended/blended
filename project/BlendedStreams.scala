@@ -27,6 +27,7 @@ object BlendedStreams extends ProjectFactory {
     adaptBundle = b => b.copy(
       exportPackage = Seq(
         s"${b.bundleSymbolicName}",
+        s"${b.bundleSymbolicName}.file",
         s"${b.bundleSymbolicName}.jms",
         s"${b.bundleSymbolicName}.message",
         s"${b.bundleSymbolicName}.processor",
