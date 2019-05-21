@@ -83,7 +83,10 @@ object ScepClientApp {
     }
 
     if (cmdline.refreshCerts) {
-      refreshCert(salt, timeout = Duration(cmdline.timeout, TimeUnit.SECONDS))
+      refreshCert(
+        salt,
+        timeout = Duration(cmdline.timeout, TimeUnit.SECONDS),
+        baseDir = new File(cmdline.baseDir.getOrElse(".")).getAbsoluteFile())
     }
 
   }
@@ -146,9 +149,9 @@ object ScepClientApp {
     }
   }
 
-  def refreshCert(salt: String, timeout: Duration): Unit = {
+  def refreshCert(salt: String, timeout: Duration, baseDir: File): Unit = {
     implicit val executionContext = scala.concurrent.ExecutionContext.global
-    val refresher = new CertRefresher(salt)
+    val refresher = new CertRefresher(salt, baseDir)
     val checking = refresher.checkCert()
 
     try {

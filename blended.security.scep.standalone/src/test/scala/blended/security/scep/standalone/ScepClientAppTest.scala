@@ -1,32 +1,79 @@
 package blended.security.scep.standalone
 
+import java.io.File
+import java.nio.file.{Files, StandardCopyOption}
 import java.util.concurrent.TimeoutException
 
+import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
 import de.tototec.cmdoption.CmdlineParser
 
-class ScepClientAppTest extends LoggingFreeSpec {
+class ScepClientAppTest extends LoggingFreeSpec with TestFile {
 
-  "Cmdline validate" in {
-    val cmdline = new Cmdline()
-    val cp = new CmdlineParser(cmdline)
-    cp.validate()
-  }
+  "Cmdline parser" - {
 
-  "Cmdline help" in {
-    val ex = intercept[ExitAppException] {
-      ScepClientApp.run(Array("--help"))
+    "validate (ensure consistent cmdoption setup)" in {
+      val cmdline = new Cmdline()
+      val cp = new CmdlineParser(cmdline)
+      cp.validate()
     }
-    assert(ex.exitCode === 0)
-    assert(ex.errMsg === None)
+
+    "cmdline help" in {
+      val ex = intercept[ExitAppException] {
+        ScepClientApp.run(Array("--help"))
+      }
+      assert(ex.exitCode === 0)
+      assert(ex.errMsg === None)
+    }
+
+    "invalid cmdline args exit with code 2" in {
+      val ex = intercept[ExitAppException] {
+        ScepClientApp.run(Array("--unknown"))
+      }
+      assert(ex.exitCode === 2)
+      assert(ex.errMsg !== None)
+    }
+
   }
 
   "App should fail with TimeoutException when no config is present" in {
-     val ex = intercept[ExitAppException] {
-      ScepClientApp.run(Array("--refresh-certs"))
+    withTestDir() { dir =>
+      val etc = new File(dir, "etc")
+      etc.mkdirs()
+      val ex = intercept[ExitAppException] {
+        ScepClientApp.run(Array("--refresh-certs", "--timeout", "5", "--base-dir", dir.getAbsolutePath()))
+      }
+      assert(ex.exitCode === 1)
+      assert(ex.getCause().getClass() === classOf[TimeoutException])
+    }(TestFile.DeleteWhenNoFailure)
+  }
+
+  "Online SCEP server environment specific" - {
+    val envValName = "TEST_SCEP_CONFIGFILE"
+    val clue =
+      s"""
+         |To test against an online SCEP server, please define the $envValName environment variable.
+         |It must point to a configuration file with absolute path""".stripMargin
+    val confFileName = System.getenv(envValName)
+
+    s"should get a test certificate from online-scep server (TEST_SCEP_CONFIGFILE=${confFileName})" in {
+      assume(confFileName !== null, clue)
+      val confFile = new File(confFileName)
+      assume(confFile.exists(), clue)
+
+      withTestDir() { dir =>
+        val etc = new File(dir, "etc")
+        etc.mkdirs()
+        Files.copy(confFile.toPath(), new File(etc, "application.conf").toPath(), StandardCopyOption.REPLACE_EXISTING)
+
+        val ex = intercept[ExitAppException] {
+          ScepClientApp.run(Array("--refresh-certs", "--base-dir", dir.getAbsolutePath()))
+        }
+        assert(ex.exitCode === 0)
+
+      }(TestFile.DeleteWhenNoFailure)
+
     }
-    assert(ex.exitCode === 1)
-    assert(ex.getCause().getClass() === classOf[TimeoutException])
   }
 
 }

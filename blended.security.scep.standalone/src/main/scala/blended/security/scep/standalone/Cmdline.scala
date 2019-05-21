@@ -54,4 +54,13 @@ class Cmdline {
   )
   var timeout = 5
 
+  @CmdOption(
+    names = Array("--base-dir"),
+    args = Array("dir"),
+    description = "Alternative base directory",
+    hidden = true
+  )
+  var _baseDir: String = _
+  def baseDir = Option(_baseDir)
+
 }
