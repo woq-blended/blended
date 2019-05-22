@@ -12,7 +12,7 @@
   <script>hljs.initHighlightingOnLoad();</script>
 
   <link rel="stylesheet" href="${config.site_host}/css/blended-asciidoctor.css">
-  <link rel="stylesheet" href="${config.site_host}/css/blended-bootstrap.css">
   <link rel="stylesheet" href="${config.site_host}/css/perfect-scrollbar.css">
   <link rel="stylesheet" href="${config.site_host}/js/highlight/styles/${config.site_highlight_theme}.css">
+  <link rel="stylesheet" href="${config.site_host}/css/blended-bootstrap.css">
 </head>

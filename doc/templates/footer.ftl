@@ -2,6 +2,8 @@
 </div>
 </div>
 
+    <script>var pageBar = new PerfectScrollbar('#page');</script>
+
     <nav class="navbar navbar-expand-md navbar-fixed-bottom">
       <ul class="navbar-nav mr-auto">
         <li class="navbar-text">
