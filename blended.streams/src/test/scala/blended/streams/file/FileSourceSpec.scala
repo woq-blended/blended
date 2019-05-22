@@ -1,6 +1,6 @@
 package blended.streams.file
 
-import java.io.{File, FileOutputStream}
+import java.io.File
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -17,7 +17,6 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, FileTestSupport, RequiresForkedJVM}
 import blended.util.logging.Logger
 import com.typesafe.config.Config
-import org.apache.commons.io.FileUtils
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
@@ -89,7 +88,9 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       val pollCfg : FilePollConfig = FilePollConfig(rawCfg, idSvc).copy(sourceDir = BlendedTestSupport.projectTestOutput + "/simplePoll" )
       prepareDirectory(pollCfg.sourceDir)
-      genFile(new File(pollCfg.sourceDir, "test.txt"))
+
+      val testFile : File = new File(pollCfg.sourceDir, "test.txt")
+      genFile(testFile)
 
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
@@ -98,7 +99,13 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       val result : List[FlowEnvelope] = Await.result(collector.result, timeout + 100.millis)
 
-      result should have size(1)
+      result should have size 1
+
+      val env = result.head
+      env.header[String]("BlendedFileName") should be (Some(testFile.getName()))
+      env.header[String]("BlendedFilePath") should be (Some(testFile.getAbsolutePath()))
+
+      env.id should endWith (testFile.getName())
 
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
@@ -115,11 +122,11 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, t){ _ => }
 
       val result : List[FlowEnvelope] = Await.result(collector.result, t + 100.millis)
 
-      result should have size(numMsg)
+      result should have size numMsg
 
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
@@ -132,12 +139,12 @@ class FileSourceSpec extends SimplePojoContainerSpec
 
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg))
-          .via(FlowProcessor.fromFunction("simplePoll.fail", log){ env => Try {
+          .via(FlowProcessor.fromFunction("simplePoll.fail", log){ _ => Try {
             throw new Exception("boom")
           }})
           .via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
       Await.result(collector.result, timeout + 100.millis)
 
       getFiles(pollCfg.sourceDir, pattern = ".*", recursive = false).map(_.getName()) should be (List("test.txt"))
@@ -155,10 +162,10 @@ class FileSourceSpec extends SimplePojoContainerSpec
       val src : Source[FlowEnvelope, NotUsed] =
         Source.fromGraph(new FileAckSource(pollCfg)).via(new AckProcessor("simplePoll.ack").flow)
 
-      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ env => }
+      val collector : Collector[FlowEnvelope] = StreamFactories.runSourceWithTimeLimit("simplePoll", src, timeout){ _ => }
       Await.result(collector.result, timeout + 100.millis)
 
-      getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size(1)
+      getFiles(pollCfg.backup.get, pattern = ".*", recursive = false).map(_.getName()) should have size 1
     }
 
     "do not process files if the lock file exists (relative)" in {

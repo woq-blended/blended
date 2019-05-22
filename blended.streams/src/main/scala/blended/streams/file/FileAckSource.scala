@@ -76,9 +76,11 @@ class FileAckSource(
 
       def createEnvelope(f : File) : Try[Option[FileAckContext]] = Try {
 
+        val sdf : SimpleDateFormat = new SimpleDateFormat("yyyyMMdd-HHmmssSSS")
+
         if (f.exists()) {
-          val uuid : String = UUID.randomUUID().toString()
-          log.info(s"Processing file [$f] in [$id] with [$uuid]")
+          val envId : String = s"${sdf.format(new Date())}-${f.getName()}"
+          log.info(s"Processing file [$f] in [$id] with [$envId]")
 
           val fileToProcess : File = new File(f + pollCfg.tmpExt)
 
@@ -99,7 +101,7 @@ class FileAckSource(
               FlowMessage(bytes)(pollCfg.header)
             }
 
-            val env : FlowEnvelope = FlowEnvelope(msg,uuid)
+            val env : FlowEnvelope = FlowEnvelope(msg,envId)
               .withHeader(pollCfg.filenameProp, f.getName()).get
               .withHeader(pollCfg.filepathProp, f.getAbsolutePath()).get
               .withRequiresAcknowledge(true)
