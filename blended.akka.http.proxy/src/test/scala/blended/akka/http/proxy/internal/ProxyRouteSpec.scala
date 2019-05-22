@@ -1,14 +1,15 @@
 package blended.akka.http.proxy.internal
 
+import java.io.IOException
+import java.net.{InetSocketAddress, Socket}
+
 import scala.concurrent.duration._
 
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.headers.Location
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.testkit.RouteTestTimeout
-import akka.http.scaladsl.testkit.ScalatestRouteTest
+import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import blended.util.logging.Logger
 import org.scalatest.FreeSpec
 
@@ -43,11 +44,10 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
           Thread.sleep(5 * 1000)
           "Delayed response"
         }
-      } ~
-      { ctx => // ctx =>
-        log.debug("Rejecting: " + ctx)
-        reject(ctx)
-      }
+      } ~ { ctx => // ctx =>
+      log.debug("Rejecting: " + ctx)
+      reject(ctx)
+    }
 
     def localtest(redirectCount: Int = 0)(f: Route => Unit): Unit = {
       TestServer.withServer(localPort, testRoute) {
@@ -130,14 +130,25 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
     }
   }
 
-  "Live Tests - you need to have internet access - enable with env variable TEST_ONLINE=true" - {
+  "Live Proxy Tests (requires internet access)" - {
 
-    def whenOnline(test: => Unit): Unit = System.getenv("TEST_ONLINE") match {
-      case null | "false" | "0" => pending
-      case _ => test
+    def ping(host: String, port: Int) = {
+      val socket = new Socket()
+      try {
+        socket.connect(new InetSocketAddress(host, port), 500)
+        true
+      } catch {
+        case e: IOException =>
+          false
+      } finally {
+        socket.close()
+      }
     }
 
-    "live test against http://sbuild.org" in whenOnline {
+    val clue = "\nTo run this test you need internet access"
+
+    "live test against http://sbuild.org" in {
+      assume(ping("sbuild.org", 80), clue)
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
@@ -162,7 +173,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
       }
     }
 
-     "live test against http://heise.de with redirectCount 0" in whenOnline {
+    "live test against http://heise.de with redirectCount 0" in {
+      assume(ping("heise.de", 80), clue)
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
@@ -189,8 +201,9 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
       }
 
     }
-    
-    "live test against http://heise.de with redirectCount 1" in whenOnline {
+
+    "live test against http://heise.de with redirectCount 1" in {
+      assume(ping("heise.de", 80), clue)
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
@@ -219,7 +232,8 @@ class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 
     }
 
-    "live test against https://github.com/woq-blended/blended" in whenOnline {
+    "live test against https://github.com/woq-blended/blended" in {
+      assume(ping("github.com", 443), clue)
 
       val proxyRoute = new ProxyRoute {
         override val actorSystem = system
