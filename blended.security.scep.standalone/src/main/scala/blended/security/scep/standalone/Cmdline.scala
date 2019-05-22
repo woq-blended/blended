@@ -47,4 +47,20 @@ class Cmdline {
   var _infoFile: String = _
   def infoFile = Option(_infoFile)
 
+  @CmdOption(
+    names = Array("--timeout"),
+    args = Array("sec"),
+    description = "Timeout (in seconds) used when refreshing certificates"
+  )
+  var timeout = 20
+
+  @CmdOption(
+    names = Array("--base-dir"),
+    args = Array("dir"),
+    description = "Alternative base directory",
+    hidden = true
+  )
+  var _baseDir: String = _
+  def baseDir = Option(_baseDir)
+
 }

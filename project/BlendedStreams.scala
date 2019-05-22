@@ -15,6 +15,7 @@ object BlendedStreams extends ProjectFactory {
       Dependencies.geronimoJms11Spec,
       Dependencies.levelDbJava,
 
+      Dependencies.commonsIo % Test,
       Dependencies.scalacheck % Test,
       Dependencies.scalatest % Test,
       Dependencies.akkaTestkit % Test,
@@ -28,6 +29,7 @@ object BlendedStreams extends ProjectFactory {
     override def bundle = super.bundle.copy(
       exportPackage = Seq(
         projectName,
+        s"${projectName}.file",
         s"${projectName}.jms",
         s"${projectName}.message",
         s"${projectName}.processor",

@@ -29,7 +29,7 @@ cd $BLENDED_HOME
 
 # JVM Restart Delay in seconds
 if [ -z "${RESTART_DELAY}" ]; then
-  # we provide 2-minute default so that remote servers can clean up as well, 
+  # we provide 2-minute default so that remote servers can clean up as well,
   # when no such settings was defined before
   RESTART_DELAY=120
 fi
@@ -81,12 +81,12 @@ fi
 
 if [ -n "$PROFILE_PORT" ] ; then
  if [ -n "$PROFILE_WAIT" ] ; then
-   MY_PROFILE_WAIT="wait"
+   MY_PROFILE_WAIT=""
   else
-   MY_PROFILE_WAIT="nowait"
+   MY_PROFILE_WAIT=",nowait"
  fi
- CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-agentpath:/opt/jprofiler10/bin/linux-x64/libjprofilerti.so=port=${PROFILE_PORT},${MY_PROFILE_WAIT}"
- UNSET MY_DEBUG_WAIT
+ CONTAINER_JAVA_OPTS="${CONTAINER_JAVA_OPTS} -jvmOpt=-agentpath:${BLENDED_HOME}/lib/linux-x64/libjprofilerti.so=port=${PROFILE_PORT}${MY_PROFILE_WAIT}"
+ UNSET MY_PROFILE_WAIT
 fi
 
 # column-separated

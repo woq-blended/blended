@@ -6,6 +6,7 @@ import java.util.ServiceLoader
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
 import scala.concurrent.Promise
+
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.security.ssl.{CertificateManager, MemoryKeystore}
@@ -13,17 +14,21 @@ import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
 import org.apache.felix.connect.launch.PojoServiceRegistryFactory
-
 import scala.util.Success
 
-class CertRefresher(salt: String) {
+/**
+  *
+  * @param salt
+  * @param baseDir0 The base dir, used for the internal blended container configuration (etc, log)
+  */
+class CertRefresher(salt: String, baseDir0: File = new File(".")) {
 
   private[this] val log = Logger[CertRefresher]
 
   implicit val executionContext = scala.concurrent.ExecutionContext.global
 
   val baseDir = {
-    val baseDir = new File(".").getAbsolutePath()
+    val baseDir = baseDir0.getAbsolutePath()
     System.setProperty("blended.container.home", baseDir)
     System.setProperty("scepclient.home", baseDir)
     baseDir
@@ -31,13 +36,14 @@ class CertRefresher(salt: String) {
 
   lazy val registry = {
     // Start Felix Connect Runtime
+    log.debug(s"Starting felix connect runtime")
 
     val symbolicNames = List(
       "blended.security.ssl",
       "blended.security.scep"
     )
     val bundleFilter = s"(|${symbolicNames.map(n => s"(Bundle-SymbolicName=${n}*)").mkString("")})"
-    val bundles = new ClasspathScanner().scanForBundles(bundleFilter)
+    val bundles = new ClasspathScanner().scanForBundles(bundleFilter, getClass().getClassLoader())
     log.debug(s"Found bundles: ${bundles.asScala.map(b => s"${b.getHeaders().get("Bundle-SymbolicName")} -> ${b}").mkString("\n")}")
 
     val config = Map[String, Object](
@@ -53,6 +59,7 @@ class CertRefresher(salt: String) {
 
     val idServProvider = new DominoActivator {
       whenBundleActive {
+        log.debug(s"Starting ScepAppContainerContext with baseDir=${baseDir}")
         val ctCtxt = new ScepAppContainerContext(baseDir)
         // This needs to be a fixed uuid as some tests might be for restarts and require the same id
         val idService = new ContainerIdentifierServiceImpl(ctCtxt) {
@@ -79,14 +86,17 @@ class CertRefresher(salt: String) {
       new DominoActivator {
         whenBundleActive {
           whenServicePresent[CertificateManager] { certMgr =>
-
+            log.debug(s"About to check and refresh certificates with cert manager [${certMgr}]")
             certMgr.checkCertificates().get match {
               case None =>
+                log.error("No server certificates configured")
                 throw new Exception("Server configuration is required to updated server certificates.")
               case Some(ms) =>
+                log.debug("configured certificates checked successfully")
                 promise.complete(Success(ms))
             }
 
+            log.debug("Certificate checking finished, self-stopping bundle")
             bundleContext.getBundle().stop()
           }
         }

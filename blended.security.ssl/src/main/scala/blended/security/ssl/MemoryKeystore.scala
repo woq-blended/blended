@@ -92,7 +92,7 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
                   newMs.changed(tail, providerMap).get
 
                 case Failure(t) =>
-                  log.info(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
+                  log.info(t)(s"Could not refresh certificate [${head.alias}], reusing the existing one.")
                   changed(tail, providerMap).get
               }
             } else {
@@ -108,19 +108,21 @@ case class MemoryKeystore(certificates: Map[String, CertificateHolder]) {
                 newMs.changed(tail, providerMap).get
 
               case Failure(t) =>
-                log.info(s"Could not refresh certificate [${head.alias}] : [${t.getMessage()}] ... reusing the existing one.")
-                changed(tail, providerMap).get
+                log.error(t)(s"Could not initially create certificate [${head.alias}] : [${t.getMessage()}].")
+                // changed(tail, providerMap).get
+                throw new InitialCertificateProvisionException(s"Could not initially create certificate [${head.alias}] : [${t.getMessage()}].")
             }
         }
     }
   }
 
   def refreshCertificates(
-    certCfgs : List[CertificateConfig],
-    providerMap : Map[String, CertificateProvider]
+    certCfgs: List[CertificateConfig],
+    providerMap: Map[String, CertificateProvider]
   ): Try[MemoryKeystore] = {
 
     val result = changed(certCfgs, providerMap)
+    // detect failure
     result
   }
 

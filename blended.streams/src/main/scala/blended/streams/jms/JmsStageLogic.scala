@@ -5,10 +5,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 import akka.Done
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
-import blended.jms.utils.JmsSession
-import blended.util.logging.Logger
+import blended.jms.utils.{JmsSession, Reconnect}
 
 import scala.concurrent.Future
+import scala.util.Success
 import scala.util.control.NonFatal
 
 // Common logic for the Source Stages with Auto Acknowledge and Client Acknowledge
@@ -39,7 +39,10 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   }
 
   // async callback, so that downstream flow elements can signal an error
-  private[jms] val handleError : AsyncCallback[Throwable]
+  private[jms] val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
+    settings.log.error(t)(s"Failing stage [$id] : [${t.getMessage()}]")
+    failStage(t)
+  }
 
   // Start the configured sessions
   override def preStart(): Unit = {
@@ -60,25 +63,29 @@ abstract class JmsStageLogic[S <: JmsSession, T <: JmsSettings](
   private[jms] def stopSessions(): Unit =
     if (stopping.compareAndSet(false, true)) {
       val closeSessionFutures = jmsSessions.values.map { s =>
-        val f = s.closeSessionAsync()
+        val f = s.closeSessionAsync()(system)
         f.failed.foreach(e => settings.log.error(e)(s"Error closing jms session in JMS source stage [$id]"))
         f
       }
       Future
         .sequence(closeSessionFutures)
         .onComplete { _ =>
-          jmsConnection.foreach { connection =>
-            try {
-              connection.close()
-            } catch {
-              case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
-            } finally {
-              // By this time, after stopping the connection, closing sessions, all async message submissions to this
-              // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
-              // all JMS messages are delivered. This will allow the stage to complete after all pending messages
-              // are delivered, thus preventing message loss due to premature stage completion.
-              markStopped.invoke(Done)
-              settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+          Option(jmsConnection).map{ jc =>
+            jc.onComplete {
+              case Success(connection) =>
+                try {
+                  connection.close()
+                } catch {
+                  case NonFatal(e) => settings.log.error(e)(s"Error closing JMS connection in Jms source stage [$id]")
+                } finally {
+                  // By this time, after stopping the connection, closing sessions, all async message submissions to this
+                  // stage should have been invoked. We invoke markStopped as the last item so it gets delivered after
+                  // all JMS messages are delivered. This will allow the stage to complete after all pending messages
+                  // are delivered, thus preventing message loss due to premature stage completion.
+                  markStopped.invoke(Done)
+                  settings.log.debug(s"Successfully closed all sessions for Jms stage [$id][$settings]")
+                }
+              case _ =>
             }
           }
         }

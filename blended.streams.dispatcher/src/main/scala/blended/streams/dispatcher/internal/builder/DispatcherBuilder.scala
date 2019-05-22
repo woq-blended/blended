@@ -120,12 +120,16 @@ case class DispatcherBuilder(
     worklistEvent.worklist.items match {
       // Should not happen
       case Seq() =>
-        Seq(FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id)))
+        Seq(
+          FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id)
+            .withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
+        )
       case s =>
         s.map {
           case flowItem : FlowWorklistItem => flowItem.env
           // Should not happen
-          case _ => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id).withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
+          case _ => FlowEnvelope(FlowMessage.noProps, worklistEvent.worklist.id)
+            .withException(new MismatchedEnvelopeException(worklistEvent.worklist.id))
         }
     }
   }

@@ -7,9 +7,13 @@ import java.io.PrintStream
 import java.io.SyncFailedException
 import java.util.UUID
 
+import blended.util.logging.Logger
+
 trait TestFile {
 
   import TestFile._
+
+  private[this] val log = Logger[this.type]
 
   def nextId(): String = UUID.randomUUID().toString()
 
@@ -35,6 +39,7 @@ trait TestFile {
     if (!file.exists()) {
       throw new AssertionError("Just created file does not exist: " + file)
     }
+    log.debug(s"Created test file [${file}]")
 
     deleteAfter(file) {
       val fos = new FileOutputStream(file)
@@ -61,6 +66,7 @@ trait TestFile {
     if (!file.exists()) {
       throw new AssertionError("Just created file does not exist: " + file)
     }
+    log.debug(s"Created temp file [${file}]")
 
     deleteAfter(file) {
       writeFile(file, content)
@@ -126,6 +132,7 @@ trait TestFile {
     val file = File.createTempFile("test", "", tmpDir)
     file.delete()
     file.mkdir()
+    log.debug(s"Created temp dir [${file}]")
     deleteAfter(file) {
       f(file)
     }

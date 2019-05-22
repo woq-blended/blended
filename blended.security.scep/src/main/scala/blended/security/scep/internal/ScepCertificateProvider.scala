@@ -131,7 +131,7 @@ class ScepCertificateProvider(cfg: ScepConfig)
     val csrSigner = csrSignerBuilder.build(privKey)
     val csr = csrBuilder.build(csrSigner)
 
-    println(dumpCsr(csr))
+    log.debug(s"csr: ${dumpCsr(csr)}")
 
     val response = scepClient.enrol(reqCert.chain.head, privKey, csr)
 

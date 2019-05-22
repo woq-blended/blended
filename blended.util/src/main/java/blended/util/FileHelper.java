@@ -33,6 +33,19 @@ public class FileHelper {
     return readStream(is);
   }
 
+  public static boolean renameFile(File src, File dest) {
+    if (!src.exists() || dest.exists()) {
+      return false;
+    } else {
+      src.renameTo(dest);
+      if (!dest.exists() || src.exists()) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+  }
+
   private static void safeClose(final InputStream is) {
     if (is != null) {
       try {

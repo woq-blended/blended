@@ -6,6 +6,8 @@ import sbt.librarymanagement.InclExclRule
 import blended.sbt.Dependencies
 import phoenix.ProjectFactory
 
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+
 object BlendedSecurityScepStandalone extends ProjectFactory {
 
   private[this] val libDir = "libs"
@@ -35,6 +37,9 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
       Dependencies.commonsCodec,
       Dependencies.logbackCore,
       Dependencies.logbackClassic,
+      Dependencies.jclOverSlf4j,
+ 
+      Dependencies.scalatest % Test,
       Dependencies.scalatest % Test
     )
 
@@ -44,6 +49,14 @@ object BlendedSecurityScepStandalone extends ProjectFactory {
     )
 
     override def settings: Seq[sbt.Setting[_]] = super.settings ++ Seq(
+
+      Test / testlogDefaultLevel := "debug",
+
+      // ensure, we use the JAR of our dependencies, such that we can use them as proper bundles
+      Test / dependencyClasspath := {
+        (Test / dependencyClasspathAsJars).value
+      },
+      
       Universal / mappings ++= (Compile / dependencyClasspathAsJars).value
         .filter(_.data.isFile())
         .map(_.data)

@@ -6,6 +6,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.util.ByteString
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
+import blended.testsupport.FileTestSupport
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalatest.Matchers
@@ -95,10 +96,10 @@ class FileDropSpec extends LoggingFreeSpec
       dropFile(dropper, cfg, env)
       dropFile(dropper, cfg, env)
 
-      val dups = getFiles(cfg.defaultDir, filter = duplicateFilter)
+      val dups = getFiles(cfg.defaultDir, filter = duplicateFilter, recursive = false)
       dups should have size 1
 
-      val files = getFiles(cfg.defaultDir, acceptAllFilter)
+      val files = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 2
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
@@ -132,7 +133,7 @@ class FileDropSpec extends LoggingFreeSpec
       val err: FileDropResult = dropFile(dropper, cfg, env2).get
       err.error should be(defined)
 
-      val files = getFiles(cfg.defaultDir, acceptAllFilter)
+      val files = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
       val expected: ByteString = multiply(content, n)
@@ -155,7 +156,7 @@ class FileDropSpec extends LoggingFreeSpec
       val r: FileDropResult = dropFile(dropper, cfg, env).get
       r.error should be(empty)
 
-      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter)
+      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)
@@ -177,7 +178,7 @@ class FileDropSpec extends LoggingFreeSpec
       val r: FileDropResult = dropFile(dropper, cfg, env).get
       r.error should be(empty)
 
-      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter)
+      val files: List[File] = getFiles(cfg.defaultDir, acceptAllFilter, recursive = false)
       files should have size 1
 
       files.forall { f => verifyTargetFile(f, content) } should be(true)

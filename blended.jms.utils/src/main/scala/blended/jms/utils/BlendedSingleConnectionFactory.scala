@@ -117,13 +117,15 @@ object SimpleIdAwareConnectionFactory{
     vendor : String,
     provider: String,
     clientId : String,
-    cf: ConnectionFactory
+    cf: ConnectionFactory,
+    minReconnect : FiniteDuration = 5.minutes
   )(implicit system: ActorSystem) : IdAwareConnectionFactory = {
     val cfg : ConnectionConfig = BlendedJMSConnectionConfig.defaultConfig.copy(
       vendor = vendor,
       provider = provider,
       clientId = clientId,
-      pingEnabled = false
+      pingEnabled = false,
+      minReconnect = minReconnect
     )
 
     new SimpleIdAwareConnectionFactory(cfg, cf, None)

@@ -163,23 +163,4 @@ trait JmsStreamSupport {
       Source.fromGraph(new JmsSourceStage(name, settings))
     }
   }
-
-  def restartableConsumer(
-    name : String,
-    settings : JMSConsumerSettings,
-    headerConfig: FlowHeaderConfig,
-    minMessageDelay : Option[FiniteDuration]
-  )(implicit system: ActorSystem) : Source[FlowEnvelope, NotUsed] = {
-
-    implicit val materializer : Materializer = ActorMaterializer()
-
-    val innerSource : Source[FlowEnvelope, NotUsed] = jmsConsumer(name, settings, minMessageDelay)
-
-    RestartSource.withBackoff(
-      minBackoff = 2.seconds,
-      maxBackoff = 2.seconds,
-      randomFactor = 0.2,
-      maxRestarts = 10,
-    ) { () => innerSource }
-  }
 }

@@ -9,6 +9,7 @@ object BlendedTestsupport extends ProjectFactory {
     override val osgi = false
 
     override def deps = super.deps ++ Seq(
+      Dependencies.commonsIo,
       Dependencies.akkaActor,
       Dependencies.akkaTestkit,
       Dependencies.akkaCamel,

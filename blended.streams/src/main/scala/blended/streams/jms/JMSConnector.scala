@@ -6,13 +6,14 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsSession}
-import blended.util.logging.Logger
 import javax.jms._
 
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
+import scala.util.{Failure, Success, Try}
 
 object JmsConnector {
 
+  val idCounter : AtomicLong = new AtomicLong(0L)
   private[this] val sessionIdCounter : AtomicLong = new AtomicLong(0L)
 
   def nextSessionId : String = {
@@ -40,15 +41,19 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected def onSessionOpened(jmsSession: S): Unit
 
-  // Just to identify the Source stage in log statements
-  protected val id : String = { jmsSettings.connectionFactory match {
-    case idAware: IdAwareConnectionFactory => idAware.id
-    case cf => cf.toString()
-  }}
+  private val handleError : AsyncCallback[Throwable] = getAsyncCallback[Throwable]{ t =>
+    jmsSettings.log.error(s"Failing stage [$id] with [${t.getMessage()}")
+    failStage(t)
+  }
 
-  protected val fail: AsyncCallback[Throwable] = getAsyncCallback[Throwable]{e =>
-    jmsSettings.log.warn(s"Failing stage [$id]")
-    failStage(e)
+  // Just to identify the Source stage in log statements
+  protected val id : String = {
+    val result : String = jmsSettings.connectionFactory match {
+      case idAware: IdAwareConnectionFactory => idAware.id
+      case cf => cf.toString()
+    }
+
+    s"${JmsConnector.idCounter.incrementAndGet()} -- $result"
   }
 
   private val onSession: AsyncCallback[S] = getAsyncCallback[S] { session =>
@@ -58,9 +63,11 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
   }
 
   private val onSessionClosed : AsyncCallback[S] = getAsyncCallback { s =>
+    jmsSettings.log.debug(s"Session of type [${s.getClass().getSimpleName()}] with id [${s.sessionId}] has been closed.")
     if (isTimerActive(RecreateSessions)) {
       // do nothing as we have already scheduled to recreate the sessions
     } else {
+      jmsSettings.log.debug(s"Restarting sessions in [${jmsSettings.sessionRecreateTimeout}]")
       scheduleOnce(RecreateSessions, jmsSettings.sessionRecreateTimeout)
     }
 
@@ -77,22 +84,22 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected def nextSessionId() : String = s"$id-${JmsConnector.nextSessionId}"
 
-  protected def createSession(connection: Connection): S
+  protected def createSession(connection: Connection): Try[S]
 
   protected def afterSessionClose(session : S) : Unit = {}
 
   protected[this] def closeSession(session: S) : Unit = {
 
-    try {
-      jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
-      session.closeSessionAsync().onComplete { _ =>
+    jmsSettings.log.debug(s"Closing session [${session.sessionId}]")
+
+    session.closeSessionAsync()(system).onComplete {
+      case Success(_) =>
         jmsSessions -= session.sessionId
         onSessionClosed.invoke(session)
+      case Failure(t) =>
+        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}] : [${t.getMessage() }]")
+        handleError.invoke(t)
       }
-    } catch {
-      case _ : Throwable =>
-        jmsSettings.log.error(s"Error closing session with id [${session.sessionId}]")
-    }
   }
 
   sealed trait ConnectionStatus
@@ -102,34 +109,34 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
 
   protected def initSessionAsync(): Unit = {
 
-    def failureHandler(ex: Throwable) = {
-      jmsSettings.log.warn(s"Session creation failed [${ex.getMessage()}]")
-      fail.invoke(ex)
+    openSessions().onComplete {
+      case Success(allSessions) =>
+        // wait for all sessions to successfully initialize before invoking the onSession callback.
+        // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
+        allSessions.foreach { s =>
+          onSession.invoke(s)
+        }
+      case Failure(t) =>
+        jmsSettings.log.error(s"Error creating JMS session in [$id] - failing stage")
+        handleError.invoke(t)
     }
-
-    val allSessions = openSessions(failureHandler)
-
-    allSessions.failed.foreach(failureHandler)
-    // wait for all sessions to successfully initialize before invoking the onSession callback.
-    // reduces flakiness (start, consume, then crash) at the cost of increased latency of startup.
-    allSessions.foreach(_.foreach{ s =>
-      onSession.invoke(s)
-    })(ec)
   }
 
-  def openSessions(onConnectionFailure: JMSException => Unit): Future[Seq[S]] =
+  def openSessions(): Future[Seq[S]] =
 
-    openConnection(startConnection = true, onConnectionFailure).flatMap { connection =>
+    openConnection(startConnection = true).flatMap { connection =>
 
       val toBeCreated = jmsSettings.sessionCount - jmsSessions.size
       jmsSettings.log.debug(s"Trying to create [$toBeCreated] sessions ...")
-      val sessionFutures =
+      val sessionFutures : Seq[Future[Option[S]]] =
         for (_ <- 0 until toBeCreated) yield Future {
-          val s = createSession(connection)
-          s
+          createSession(connection) match {
+            case Success(s) => Some(s)
+            case _ => None
+          }
         }
 
-    Future.sequence(sessionFutures)
+    Future.sequence(sessionFutures).map(_.flatten)
   }
 
   private def openConnection(startConnection: Boolean) : Future[Connection] = {
@@ -141,6 +148,8 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
     val status = new AtomicReference[ConnectionStatus](Connecting)
 
     val connectionFuture = Future {
+
+      jmsSettings.log.debug(s"Creating connection for [$id]")
 
       val connection = factory.createConnection()
 
@@ -156,7 +165,9 @@ trait JmsConnector[S <: JmsSession] { this: TimerGraphStageLogic =>
         connectionRef.get.foreach(_.close())
         connectionRef.set(None)
         throw new TimeoutException("Received timed out signal trying to establish connection")
-      } else connection
+      } else {
+        connection
+      }
     }
 
     val connectTimeout = jmsSettings.connectionTimeout

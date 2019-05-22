@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicLong
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.LoggingReceive
 import blended.jms.utils.internal.ConnectionState._
-import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, ConnectionException}
+import blended.jms.utils.{BlendedJMSConnection, ConnectionConfig, Reconnect}
 import javax.jms.Connection
 
 import scala.concurrent.duration._
@@ -75,7 +75,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     super.preStart()
     switchState(disconnected(), currentState)
     context.system.eventStream.subscribe(self, classOf[ConnectionCommand])
-    context.system.eventStream.subscribe(self, classOf[ConnectionException])
+    context.system.eventStream.subscribe(self, classOf[Reconnect])
   }
 
   // ---- State: Disconnected
@@ -194,9 +194,13 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
       }
   }
 
-  def handleConnectionError(state : ConnectionState) : Receive = {
-    case ce : ConnectionException => if (ce.vendor == vendor && ce.provider == provider) {
-      log.info(s"Initiating reconnect for [$vendor:$provider] after connection exception [${ce.e.getMessage()}]")
+  def handleReconnectRequest(state : ConnectionState) : Receive = {
+    case Reconnect(v, p, None) => if (v == vendor && p == provider) {
+      log.info(s"Initiating reconnect for [$vendor:$provider]")
+      reconnect(state)
+    }
+    case Reconnect(v, p, Some(r)) => if (v == vendor && p == provider) {
+      log.info(s"Initiating reconnect for [$vendor:$provider] after connection exception [${r.getMessage()}]")
       reconnect(state)
     }
   }
@@ -213,7 +217,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
     context.become(LoggingReceive (
       rec(nextState)
         .orElse(jmxOperations(nextState))
-        .orElse(handleConnectionError(nextState))
+        .orElse(handleReconnectRequest(nextState))
         .orElse(unhandled))
     )
   }
@@ -357,6 +361,7 @@ class ConnectionStateManager(config: ConnectionConfig, monitor: ActorRef, holder
 
   private[this] def reconnect(s: ConnectionState) : Unit = {
     disconnect(s)
+    log.info(s"Restarting connection for [$vendor:$provider] in [${config.minReconnect}]")
     checkConnection(config.minReconnect + 1.seconds)
   }
 

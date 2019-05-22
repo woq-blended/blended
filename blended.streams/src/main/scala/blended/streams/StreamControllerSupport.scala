@@ -39,8 +39,6 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
     newIntervalMillis.toLong.millis
   }
 
-  def afterStreamStarted(m: Mat) : Unit = {}
-
   def starting(streamCfg :StreamControllerConfig, interval : FiniteDuration) : Receive = {
     case StreamController.Stop =>
       context.stop(self)
@@ -57,13 +55,12 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
           self ! StreamController.StreamTerminated(Some(t))
       }
 
-      afterStreamStarted(mat)
-      context.become(running(streamCfg, killswitch, interval))
+      context.become(running(streamCfg, killswitch, interval, System.currentTimeMillis()))
   }
 
-  def beforeStreamRestart() : Unit = {}
-
-  def running(streamCfg : StreamControllerConfig, killSwitch: KillSwitch, interval : FiniteDuration) : Receive = {
+  def running(
+    streamCfg : StreamControllerConfig, killSwitch: KillSwitch, interval : FiniteDuration, startedAt : Long
+  ) : Receive = {
     case StreamController.Stop =>
       killSwitch.shutdown()
       context.become(stopping)
@@ -73,16 +70,23 @@ trait StreamControllerSupport[T, Mat] { this : Actor =>
       context.become(stopping)
 
     case StreamController.StreamTerminated(t) =>
+      log.info(s"Stream [${streamCfg.name}] terminated ...")
       if (t.isDefined || (!streamCfg.onFailureOnly)) {
         t.foreach { e =>
           log.error(e)(e.getMessage)
         }
-        log.info(s"Stream [${streamCfg.name}] terminated [${t.map(_.getMessage).getOrElse("")}] ...scheduling restart in [$interval]")
 
-        beforeStreamRestart()
-        context.system.scheduler.scheduleOnce(interval, self, StreamController.Start)
+        val nextStart : FiniteDuration = if (System.currentTimeMillis() - startedAt < streamCfg.maxDelay.toMillis) {
+          nextInterval(interval)(streamCfg)
+        } else {
+          streamCfg.minDelay
+        }
 
-        context.become(starting(streamCfg, nextInterval(interval)(streamCfg)))
+        log.info(s"Scheduling restart of Stream [${streamCfg.name}] in [$nextStart]")
+
+        context.system.scheduler.scheduleOnce(nextStart, self, StreamController.Start)
+
+        context.become(starting(streamCfg, nextStart))
       } else {
         context.stop(self)
       }

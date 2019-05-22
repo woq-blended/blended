@@ -5,12 +5,13 @@ import java.util.UUID
 import akka.actor.ActorSystem
 import akka.stream._
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination}
+import blended.jms.utils.{JmsAckSession, JmsAckState, JmsDestination, Reconnect}
 import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.transaction.FlowHeaderConfig
 import javax.jms._
 
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -80,11 +81,6 @@ final class JmsAckSourceStage(
         consumer = consumer.filterKeys(_ != s)
         cancelTimer(Poll(s))
         settings.log.debug(s"Consumer count of [$id] is [${consumer.size}]")
-      }
-
-      override private[jms] val handleError = getAsyncCallback[Throwable]{ ex =>
-        settings.log.error(ex)(ex.getMessage())
-        failStage(ex)
       }
 
       private val ackHandler : FlowEnvelope => Option[JmsAcknowledgeHandler] = { env =>
@@ -233,21 +229,28 @@ final class JmsAckSourceStage(
         }
       }
 
-      override protected def createSession(connection: Connection): JmsAckSession = {
+      override protected def createSession(connection: Connection): Try[JmsAckSession] = {
 
-        jmsSettings.jmsDestination match {
-          case Some(d) =>
-            val session = connection.createSession(false, AcknowledgeMode.ClientAcknowledge.mode)
-            new JmsAckSession(
-              connection = connection,
-              session = session,
-              sessionId = nextSessionId,
-              jmsDestination = d
-            )
-          case None =>
-            val msg = s"Destination must be set for consumer in [$id]"
-            settings.log.error(msg)
-            throw new IllegalArgumentException(msg)
+        try {
+          jmsSettings.jmsDestination match {
+            case Some(d) =>
+              val session = connection.createSession(false, AcknowledgeMode.ClientAcknowledge.mode)
+              Success(new JmsAckSession(
+                connection = connection,
+                session = session,
+                sessionId = nextSessionId,
+                jmsDestination = d
+              ))
+            case None =>
+              val msg = s"Destination must be set for consumer in [$id]"
+              settings.log.error(msg)
+              throw new IllegalArgumentException(msg)
+          }
+        } catch {
+          case NonFatal(t) =>
+            jmsSettings.log.error(s"Error creating JMS session : [$t.]")
+            handleError.invoke(t)
+            Failure(t)
         }
       }
 
