@@ -15,22 +15,22 @@ Download and unpack the binary distribution file `{binpack}`.
 [subs="attributes,verbatim"]
 ----
 {binpack}
-+-- etc/
-|   +-- application.conf      <1>
-|   +-- keystore              <2>
-+-- libs/                     <3>
-|       ...
-+-- log/
-|   +-- scep-client.log       <4>
-+-- README.adoc               <5>
-+-- scep-client.jar           <6>
+├── README.adoc            <1>
+├── etc
+│   ├── application.conf   <2>
+│   └── keystore           <3>
+├── libs                   <4>
+│   └── ...
+├── log
+│   └── scep-client.log    <5>
+└── scep-client.jar        <6>
 ----
 
-<1> The configuration file`application.conf` in the central place to configure the application.
-<2> The keystore file is automatically created and consecutively updated by the application.
-<3> The `lib` directory contains required libries (JAR files).
-<4> The log file contains verbose runtime information.
-<5> This Documentation.
+<1> This Documentation.
+<2> The configuration file `application.conf` in the central place to configure the application.
+<3> The keystore file is automatically created and consecutively updated by the application.
+<4> The `lib` directory contains required libries (JAR files).
+<5> The log file contains verbose runtime information.
 <6> The application JAR file, containing the main application.
 
 
@@ -52,6 +52,8 @@ from a remote SCEP server.
 Usage: java -jar scep-client.jar [options]
 
 Options:
+  --base-dir dir      Alternative base directory (aka scepclient.home,
+                      used to lookup the etc directory)
   --help,-h           Show this help
   --password,-p seed  Generate a password from a given seed and salt.
                       The salt is either implicitly set or explicitly
@@ -60,9 +62,10 @@ Options:
                       containing certificates from SCEP server
   --salt,-s salt      Use this salt when generating a password with
                       --password
+  --timeout sec       Timeout (in seconds) used when refreshing certificates
 ----
 
-To initialy get the configured certificate(s) use the following command:
+To initially get the configured certificate(s) use the following command:
 
 ----
 $ java -jar scep-client.jar --refresh-certs
@@ -70,11 +73,11 @@ $ java -jar scep-client.jar --refresh-certs
 
 The same command is used to check and, if required, refresh the certificate(s).
 
-After the certifcates were initially fetched and checked successful, the application will return with exit code `0`.
+After the certificates were initially fetched and checked successful, the application will return with exit code `0`.
 
 In case of an error or if one of the certificates were no longer valid, the application will return with an exit code other than `0`.
 
-If an error ocurs while connection to the SCEP server or processing the certificates, _but_ all certificate are still valid, the application will return with exit code `0`.
+If an error occurs while connection to the SCEP server or processing the certificates, _but_ all certificate are still valid, the application will return with exit code `0`.
 
 You can inspect the application log file `log/scep-client.log` for processing and error details.
 
@@ -196,3 +199,16 @@ $ openssl pkcs12 -in keystore.p12  -nokeys -out cert.pem
 ----
 $ openssl pkcs12 -in keystore.p12  -nodes -nocerts -out key.pem
 ----
+
+== Advanced use cases
+
+=== Managing multiple keystores with one scep-client installation
+
+Through the commandline option `--base-dir` you can tell the scep-client to use an alternative base directory.
+It will then use the configuration `etc/application.conf` under that directory.
+Also the keystore can be placed under that directory, when you use the `scepclient.home` variable, as in the above example.
+
+.Configuration, to place the keystore relative to the directory given with `--base-dir`
+```
+blended.security.ssl.keyStore = ${scepclient.home}/etc/keystore
+```
