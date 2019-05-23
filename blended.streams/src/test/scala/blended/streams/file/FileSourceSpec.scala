@@ -215,7 +215,7 @@ class FileSourceSpec extends SimplePojoContainerSpec
       assert(result1.nonEmpty && result1.size < numMsg)
       assert(result2.nonEmpty && result2.size < numMsg)
 
-      (result1.size + result2.size) should be (numMsg)
+      assert(result1.size + result2.size >= numMsg)
 
       getFiles(dirName = pollCfg.sourceDir, pattern = ".*", recursive = false) should be (empty)
     }
