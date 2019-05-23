@@ -4,17 +4,15 @@ import java.io.File
 import java.util.ServiceLoader
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.Promise
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
-import org.apache.felix.connect.launch.ClasspathScanner
-import org.apache.felix.connect.launch.PojoServiceRegistryFactory
-import scala.util.{Failure, Success}
+import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
 
 /**
   *
@@ -87,16 +85,17 @@ class CertRefresher(salt: String, baseDir0: File = new File(".")) {
         whenBundleActive {
           whenServicePresent[CertificateManager] { certMgr =>
             log.debug(s"About to check and refresh certificates with cert manager [${certMgr}]")
-            certMgr.checkCertificates() match {
+            val result = certMgr.checkCertificates() match {
               case Failure(e) =>
-                promise.failure(e)
+                Failure(e)
               case Success(None) =>
                 log.error("No server certificates configured")
-                promise.failure(new Exception("Server configuration is required to updated server certificates."))
+                Failure(new Exception("Server configuration is required to updated server certificates."))
               case Success(Some(ms)) =>
                 log.debug("configured certificates checked successfully")
-                promise.complete(Success(ms))
+                Success(ms)
             }
+            promise.complete(result)
 
             log.debug("Certificate checking finished, self-stopping bundle")
             bundleContext.getBundle().stop()
