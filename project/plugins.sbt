@@ -32,7 +32,7 @@ addSbtPlugin("net.bzzt" % "sbt-reproducible-builds" % "0.16")
 addSbtPlugin("de.wayofquality.sbt" % "sbt-testlogconfig" % "0.1.0")
 
 // Generate site with JBake
-addSbtPlugin("de.wayofquality.sbt" % "sbt-jbake" % "0.1.0")
+addSbtPlugin("de.wayofquality.sbt" % "sbt-jbake" % "0.1.2")
 
 // Filter resources (like Maven)
 addSbtPlugin("de.wayofquality.sbt" % "sbt-filterresources" % "0.1.2")

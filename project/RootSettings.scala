@@ -7,15 +7,16 @@ import scalajsbundler.sbtplugin.ScalaJSBundlerPlugin.autoImport._
 object RootSettings {
 
   def apply(blendedDocs : Project) : Seq[Setting[_]] = Seq(
-    Compile / jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
-    Compile / jbakeInputDir := (blendedDocs / baseDirectory).value,
-    Compile / jbakeNodeBinDir := {
+    jbakeVersion := "2.6.4",
+    jbakeMode := System.getenv().getOrDefault("JBAKE_MODE", "build"),
+    jbakeInputDir := (blendedDocs / baseDirectory).value,
+    jbakeNodeBinDir := {
       (blendedDocs/Compile/fastOptJS/webpack).value
       val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
       Some(modulesDir / "node_modules" / ".bin")
     },
 
-    Compile / jbakeSiteAssets := {
+    jbakeSiteAssets := {
       (blendedDocs/Compile/fastOptJS/webpack).value
 
       val modulesDir = (blendedDocs/Compile/fastOptJS/crossTarget).value
