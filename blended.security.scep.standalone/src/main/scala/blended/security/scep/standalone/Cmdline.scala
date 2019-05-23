@@ -57,8 +57,7 @@ class Cmdline {
   @CmdOption(
     names = Array("--base-dir"),
     args = Array("dir"),
-    description = "Alternative base directory",
-    hidden = true
+    description = "Alternative base directory (aka 'scepclient.home', used to lookup the 'etc' directory)"
   )
   var _baseDir: String = _
   def baseDir = Option(_baseDir)
