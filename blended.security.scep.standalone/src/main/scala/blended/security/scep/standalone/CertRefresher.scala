@@ -14,7 +14,7 @@ import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.ClasspathScanner
 import org.apache.felix.connect.launch.PojoServiceRegistryFactory
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 /**
   *
@@ -87,11 +87,13 @@ class CertRefresher(salt: String, baseDir0: File = new File(".")) {
         whenBundleActive {
           whenServicePresent[CertificateManager] { certMgr =>
             log.debug(s"About to check and refresh certificates with cert manager [${certMgr}]")
-            certMgr.checkCertificates().get match {
-              case None =>
+            certMgr.checkCertificates() match {
+              case Failure(e) =>
+                promise.failure(e)
+              case Success(None) =>
                 log.error("No server certificates configured")
-                throw new Exception("Server configuration is required to updated server certificates.")
-              case Some(ms) =>
+                promise.failure(new Exception("Server configuration is required to updated server certificates."))
+              case Success(Some(ms)) =>
                 log.debug("configured certificates checked successfully")
                 promise.complete(Success(ms))
             }
