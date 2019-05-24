@@ -33,7 +33,7 @@ class LDAPLoginModule extends AbstractLoginModule {
   private[this] lazy val dirContext : Try[DirContext] = Try {
 
     try {
-      var env : mutable.Map[String, String] = mutable.Map(
+      val env : mutable.Map[String, String] = mutable.Map(
         Context.INITIAL_CONTEXT_FACTORY -> classOf[LdapCtxFactory].getName(),
         Context.PROVIDER_URL -> ldapCfg.url,
         Context.SECURITY_AUTHENTICATION -> "simple"

@@ -18,22 +18,22 @@ abstract class AbstractLoginModule extends LoginModule {
 
   private[this] val log = Logger[AbstractLoginModule]
 
-  protected var subject : Option[Subject] = None
-  protected var cbHandler : Option[CallbackHandler] = None
-  protected var loginConfig : Config = ConfigFactory.empty()
-  protected var loggedInUser : Option[String] = None
-  protected var idSvc : Option[ContainerIdentifierService] = None
+  protected var subject: Option[Subject] = None
+  protected var cbHandler: Option[CallbackHandler] = None
+  protected var loginConfig: Config = ConfigFactory.empty()
+  protected var loggedInUser: Option[String] = None
+  protected var idSvc: Option[ContainerIdentifierService] = None
 
-  protected val moduleName : String
+  protected val moduleName: String
 
   override def initialize(
     subject: Subject,
     callbackHandler: CallbackHandler,
     sharedState: util.Map[String, _],
-    options: util.Map[String, _])
-  : Unit = {
+    options: util.Map[String, _]
+  ): Unit = {
 
-    def getOption[T](name: String)(implicit classTag: ClassTag[T]) : Option[T] =
+    def getOption[T](name: String)(implicit classTag: ClassTag[T]): Option[T] =
       Option(options.get(name)) match {
         case Some(v) if classTag.runtimeClass.isAssignableFrom(v.getClass) =>
           Some(v.asInstanceOf[T])
@@ -44,7 +44,6 @@ abstract class AbstractLoginModule extends LoginModule {
 
         case None => None
       }
-
 
     log.info(s"Initialising Login module ...[$moduleName]")
 
@@ -59,7 +58,7 @@ abstract class AbstractLoginModule extends LoginModule {
   }
 
   @throws[LoginException]
-  protected def extractCredentials() : (String,String) = {
+  protected def extractCredentials(): (String, String) = {
     cbHandler match {
       case None => throw new LoginException(s"No Callback Handler defined for module [$moduleName]")
       case Some(cbh) =>
@@ -76,7 +75,7 @@ abstract class AbstractLoginModule extends LoginModule {
   }
 
   @throws[LoginException]
-  final def login() : Boolean = {
+  final def login(): Boolean = {
     try {
       doLogin()
     } finally {
@@ -85,25 +84,23 @@ abstract class AbstractLoginModule extends LoginModule {
   }
 
   @throws[LoginException]
-  protected def doLogin() : Boolean
+  protected def doLogin(): Boolean
 
   @throws[LoginException]
   override def commit(): Boolean = {
-    try {
-      loggedInUser match {
-        case None => false
-        case Some(u) =>
-          subject.foreach { s =>
-            s.getPrincipals().add(new UserPrincipal(u))
-            val groups = getGroups(u)
-            log.debug(s"Found groups [$groups] for [$u]")
-            groups.foreach { g =>
-              s.getPrincipals().add(new GroupPrincipal(g))
-            }
+    loggedInUser match {
+      case None => false
+      case Some(u) =>
+        subject.foreach { s =>
+          s.getPrincipals().add(new UserPrincipal(u))
+          val groups = getGroups(u)
+          log.debug(s"Found groups [$groups] for [$u]")
+          groups.foreach { g =>
+            s.getPrincipals().add(new GroupPrincipal(g))
           }
-          postCommit()
-          true
-      }
+        }
+        postCommit()
+        true
     }
   }
 
@@ -121,7 +118,7 @@ abstract class AbstractLoginModule extends LoginModule {
     true
   }
 
-  protected def getGroups(user: String) : List[String]
+  protected def getGroups(user: String): List[String]
 
   protected def postLogin() = {}
   protected def postAbort() = {}
