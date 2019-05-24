@@ -54,7 +54,7 @@ class PersistedClassDao(dataSource: DataSource) {
       paramSource.addValue(PC.Name, persistedClass.name)
       val keyHolder = new GeneratedKeyHolder()
 
-      val rows = jdbcTemplate.update(sql, paramSource, keyHolder)
+      jdbcTemplate.update(sql, paramSource, keyHolder)
       keyHolder.getKeys().get(PC.Id).asInstanceOf[java.lang.Long]
     }
 
@@ -79,7 +79,7 @@ class PersistedClassDao(dataSource: DataSource) {
         paramSource.addValue(PF.ValueDouble, field.valueDouble.orNull)
         paramSource.addValue(PF.ValueString, field.valueString.orNull)
         paramSource.addValue(PF.TypeName, field.typeName.name)
-        val rows = jdbcTemplate.update(sql, paramSource)
+        jdbcTemplate.update(sql, paramSource)
       }
     }
 
