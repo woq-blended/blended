@@ -182,7 +182,7 @@ class JmsFileSourceSpec extends SimplePojoContainerSpec
       system.stop(probe.ref)
     }
 
-    "pickup file and send them to JMS" in {
+    "pickup files and send them to JMS" in {
 
       val (b, p) = startBroker("normal")
       val cf = amqCf(p)

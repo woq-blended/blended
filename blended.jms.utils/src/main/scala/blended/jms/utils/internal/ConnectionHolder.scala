@@ -11,7 +11,7 @@ import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
 import javax.naming.{Context, InitialContext}
 
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: ActorSystem) {
@@ -86,12 +86,22 @@ abstract class ConnectionHolder(config : ConnectionConfig)(implicit system: Acto
     }
   }
 
-  def close() : Try[Unit] = Try {
-    conn.foreach { c =>
-      log.info(s"Closing underlying connection for provider [$provider]")
-      c.connection.close()
+  def close() : Try[Unit] = {
+
+    conn match {
+      case None => Success()
+      case Some(c) =>
+        log.info(s"Closing underlying connection for provider [$provider]")
+        try {
+          c.connection.close()
+          Success()
+        } catch {
+          case NonFatal(t) =>
+            Failure(t)
+        } finally {
+          conn = None
+        }
     }
-    conn = None
   }
 }
 
