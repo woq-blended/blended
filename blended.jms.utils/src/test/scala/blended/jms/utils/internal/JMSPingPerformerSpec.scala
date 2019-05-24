@@ -58,8 +58,8 @@ abstract class JMSPingPerformerSpec extends TestKit(ActorSystem("JMSPingPerforme
   val cfg: BlendedJMSConnectionConfig
   var con: Option[Connection]
 
-  protected val bulkCount: Int = 100000
-  protected val bulkTimeout : FiniteDuration = Math.max(1, bulkCount / 50000).minutes
+  protected val bulkCount: Int = 40000
+  protected val bulkTimeout : FiniteDuration = Math.max(1, bulkCount / 20000).minutes
 
   private[this] implicit val eCtxt: ExecutionContext = system.dispatcher
 
