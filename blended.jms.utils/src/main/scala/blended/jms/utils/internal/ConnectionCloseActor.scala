@@ -7,8 +7,8 @@ import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 object ConnectionCloseActor {
-  def props(holder: ConnectionHolder, retryInterval : FiniteDuration = 5.seconds) =
-    new ConnectionCloseActor(holder, retryInterval)
+  def props(holder: ConnectionHolder, retryInterval : FiniteDuration = 5.seconds) : Props =
+    Props(new ConnectionCloseActor(holder, retryInterval))
 }
 
 /**
@@ -27,8 +27,8 @@ class ConnectionCloseActor(holder: ConnectionHolder, retryInterval: FiniteDurati
       holder.close() match {
         case Success(_) => self ! ConnectionClosed
         case Failure(t) =>
-          log.warning(s"Error closing connection [${holder.vendor}:${holder.provider}] : [${t.getMessage()}]")
-          context.system.scheduler.scheduleOnce(retryInterval, self, Tick)
+          log.warning(s"Error closing connection [${holder.vendor}:${holder.provider}] : [${t.getMessage()}] -- Assuming the connection is dead")
+          self ! ConnectionClosed
       }
     }
   }

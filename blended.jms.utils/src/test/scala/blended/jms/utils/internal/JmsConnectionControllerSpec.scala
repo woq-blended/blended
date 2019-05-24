@@ -103,7 +103,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       expectMsg(CloseTimeout)
     }
 
-    "should answer with a CloseTimeout message in case of repeated close exceptions" in {
+    "should answer with a ConnectionClosed message in case the close runs into an exception" in {
       val timeout = 50.millis
 
       val holder = new DummyHolder(() => new DummyConnection() {
@@ -123,7 +123,7 @@ class JmsConnectionControllerSpec extends TestKit(ActorSystem("JmsController"))
       assert(m.r.isRight)
 
       testActor ! Disconnect(4 * timeout)
-      expectMsg(CloseTimeout)
+      expectMsg(ConnectionClosed)
     }
   }
 }

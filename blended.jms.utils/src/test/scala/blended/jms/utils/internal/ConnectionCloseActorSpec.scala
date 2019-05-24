@@ -1,6 +1,6 @@
 package blended.jms.utils.internal
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestKit}
 import javax.jms._
 import org.scalatest.FreeSpecLike
@@ -18,7 +18,7 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
       val holder = new DummyHolder(() => new DummyConnection())
       holder.connect()
 
-      val actor = system.actorOf(Props(ConnectionCloseActor.props(holder)))
+      val actor = system.actorOf(ConnectionCloseActor.props(holder))
       actor ! Disconnect(1.second)
 
       expectMsg(ConnectionClosed)
@@ -36,13 +36,13 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
       })
       holder.connect()
 
-      val actor = system.actorOf(Props(ConnectionCloseActor.props(holder)))
+      val actor = system.actorOf(ConnectionCloseActor.props(holder))
       actor ! Disconnect(timeout)
 
       expectMsg(CloseTimeout)
     }
 
-    "retry the close if the call to close() threw an Exception" in {
+    "do not retry the close if the call to close() threw an Exception" in {
       var closeCount : Int = 0
 
       val timeout = 50.millis
@@ -54,11 +54,11 @@ class ConnectionCloseActorSpec extends TestKit(ActorSystem("CloseActorSpec"))
         }
       }
 
-      val actor = system.actorOf(Props(ConnectionCloseActor.props(holder, timeout)))
+      val actor = system.actorOf(ConnectionCloseActor.props(holder, timeout))
       actor ! Disconnect(timeout * 4)
 
-      expectMsg(CloseTimeout)
-      assert(closeCount > 1)
+      expectMsg(ConnectionClosed)
+      assert(closeCount == 1)
     }
   }
 
