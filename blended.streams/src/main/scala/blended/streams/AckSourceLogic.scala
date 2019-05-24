@@ -37,7 +37,7 @@ package blended.streams
 import akka.stream.{Outlet, SourceShape}
 import akka.stream.stage.{AsyncCallback, OutHandler, TimerGraphStageLogic}
 import blended.streams.AckState.AckState
-import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.message.{AcknowledgeHandler, FlowEnvelope}
 import blended.util.logging.Logger
 
 import scala.collection.mutable

@@ -7,9 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import scala.util.Random
 
 import blended.updater.config._
-import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
-import prickle._
 
 object MockObjects {
 

@@ -1,7 +1,6 @@
 package blended.updater.config
 
 import java.io._
-import java.util.Properties
 
 import scala.io.Source
 import scala.util.Try

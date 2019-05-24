@@ -1,6 +1,6 @@
 package blended.updater.config.util
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigValue, ConfigValueFactory}
+import com.typesafe.config.{Config, ConfigValue, ConfigValueFactory}
 
 import scala.collection.JavaConverters._
 

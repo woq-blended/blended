@@ -1,6 +1,5 @@
 package blended.mgmt.agent.internal
 
-import scala.collection.immutable.Queue
 import scala.concurrent.duration.DurationLong
 import scala.util.Try
 

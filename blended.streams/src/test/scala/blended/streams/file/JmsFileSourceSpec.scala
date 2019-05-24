@@ -1,7 +1,6 @@
 package blended.streams.file
 
 import java.io.File
-import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 import akka.NotUsed

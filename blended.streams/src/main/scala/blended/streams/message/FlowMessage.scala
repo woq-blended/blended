@@ -26,8 +26,6 @@ case class DoubleMsgProperty(override val value: Double) extends MsgProperty
 
 object MsgProperty {
 
-  import scala.language.implicitConversions
-
   def apply() : MsgProperty = UnitMsgProperty()
   def apply(s : String) : MsgProperty = StringMsgProperty(s)
   def apply(i : Int) : MsgProperty = IntMsgProperty(i)

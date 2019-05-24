@@ -1,7 +1,7 @@
 package blended.jms.bridge.internal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.GraphDSL.Implicits._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Source}
 import akka.stream.{FlowShape, Graph, Materializer}
@@ -11,7 +11,7 @@ import blended.streams.jms._
 import blended.streams.message.FlowEnvelope
 import blended.streams.processor.AckProcessor
 import blended.streams.transaction.{FlowHeaderConfig, TransactionWiretap}
-import blended.streams.{AbstractStreamController, FlowProcessor, StreamController, StreamControllerConfig}
+import blended.streams.{FlowProcessor, StreamController, StreamControllerConfig}
 import blended.util.config.Implicits._
 import blended.util.logging.{LogLevel, Logger}
 import com.typesafe.config.Config

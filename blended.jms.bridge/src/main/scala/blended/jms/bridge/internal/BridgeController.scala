@@ -3,14 +3,13 @@ package blended.jms.bridge.internal
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.stream.Materializer
-import akka.stream.scaladsl.Source
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge._
 import blended.jms.bridge.internal.BridgeController.{AddConnectionFactory, RemoveConnectionFactory}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination}
 import blended.streams.message.FlowEnvelope
 import blended.streams.transaction.FlowHeaderConfig
-import blended.streams.{AbstractStreamController, StreamController}
+import blended.streams.StreamController
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config

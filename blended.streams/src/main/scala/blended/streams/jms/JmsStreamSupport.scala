@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream._
-import akka.stream.scaladsl.{Flow, Keep, RestartSource, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.StreamFactories
 import blended.streams.message.FlowEnvelope

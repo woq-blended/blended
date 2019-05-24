@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import akka.Done
 import akka.stream._
 import akka.stream.stage.{AsyncCallback, TimerGraphStageLogic}
-import blended.jms.utils.{JmsSession, Reconnect}
+import blended.jms.utils.JmsSession
 
 import scala.concurrent.Future
 import scala.util.Success
