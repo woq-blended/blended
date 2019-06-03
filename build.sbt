@@ -181,10 +181,7 @@ lazy val root = {
       unidocProjectFilter.in(ScalaUnidoc, unidoc) := inAnyProject -- inProjects(jsProjects:_*)
     )
     .settings(global)
-//    .settings(CommonSettings())
-//    .settings(PublishConfig.doPublish)
     .enablePlugins(ScalaUnidocPlugin, JBake)
     .settings(RootSettings(BlendedDocsJs.project))
-    // .settings(ExportDependencies.settings)
     .aggregate((jvmProjects ++ jsProjects ++ Seq[ProjectReference](BlendedDependencies.project)):_*)
 }

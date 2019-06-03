@@ -1,11 +1,11 @@
 package blended.mgmt.service.jmx.internal
 
-import javax.management.MBeanServer
-
-import akka.actor.{Cancellable, Props}
+import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
-
+import javax.management.MBeanServer
 import scala.concurrent.duration._
+
+import scala.concurrent.ExecutionContext
 
 object ServiceJmxCollector {
   def props(cfg: OSGIActorConfig, svcConfig: ServiceJmxConfig, server : MBeanServer) =
@@ -16,26 +16,20 @@ class ServiceJmxCollector(cfg: OSGIActorConfig, svcConfig : ServiceJmxConfig, se
 
   case object Tick
 
-  implicit val eCtxt = cfg.system.dispatcher
+  private implicit val eCtxt : ExecutionContext = cfg.system.dispatcher
 
   val analyser = new ServiceJmxAnalyser(server, svcConfig)
 
-  var timer : Option[Cancellable] = None
-
   override def preStart(): Unit = {
     super.preStart()
-    timer = Some(cfg.system.scheduler.schedule(10.millis, svcConfig.interval.seconds, self, Tick))
-  }
-
-  override def postStop(): Unit = {
-    timer.foreach(_.cancel())
-    super.postStop()
+    self ! Tick
   }
 
   override def receive: Receive = {
     case Tick =>
       log.debug("Refreshing Service Information from JMX")
       analyser.analyse().foreach(info => cfg.system.eventStream.publish(info))
+      context.system.scheduler.scheduleOnce(svcConfig.interval.seconds, self, Tick)
   }
 
 }

@@ -13,8 +13,8 @@ trait Dependencies {
   val akkaHttpVersion = "10.1.7"
   val camelVersion = "2.19.5"
   val dominoVersion = "1.1.3"
-  val jettyVersion = "9.4.8.v20171121"
-  val jolokiaVersion = "1.5.0"
+  val jettyVersion = "9.4.18.v20190429"
+  val jolokiaVersion = "1.6.1"
   val microJsonVersion = "1.4"
   val parboiledVersion = "1.1.6"
   val prickleVersion = "1.1.14"
@@ -146,7 +146,7 @@ trait Dependencies {
   val typesafeConfig = "com.typesafe" % "config" % "1.3.3"
   // FIXME: Rename to typesafeSslConfigCore
   val typesafeConfigSSL = "com.typesafe" %% "ssl-config-core" % "0.3.6"
-  
+
 }
 
 object Dependencies extends Dependencies
