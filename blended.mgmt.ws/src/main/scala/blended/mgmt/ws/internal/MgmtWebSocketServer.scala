@@ -12,12 +12,13 @@ import blended.updater.config.json.PrickleProtocol._
 import blended.util.logging.Logger
 import prickle.Pickle
 
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success}
 
 class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
 
   private[this] val log = Logger[MgmtWebSocketServer]
-  private[this] implicit val eCtxt = system.dispatcher
+  private[this] implicit val eCtxt : ExecutionContext = system.dispatcher
   private[this] val dispatcher = Dispatcher.create(system)
 
   def route : Route = routeImpl
@@ -30,10 +31,10 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
         case Failure(e) =>
           log.error(s"Could not verify token [$token] : [${e.getMessage}]")
           complete(StatusCodes.Unauthorized)
-        case Success(token) =>
-          log.info(s"Starting Web Socket message handler ... [${token.id}]")
+        case Success(verified) =>
+          log.info(s"Starting Web Socket message handler ... [${verified.id}]")
 
-          store.getToken(token.id) match {
+          store.getToken(verified.id) match {
             case None =>
               complete(StatusCodes.BadRequest)
             case Some(info) =>
@@ -45,15 +46,22 @@ class MgmtWebSocketServer(system: ActorSystem, store: TokenStore) {
 
   private[this] def dispatcherFlow(info: Token) : Flow[Message, Message, Any] = {
     Flow[Message]
+      // We will only process TextMessage.Strict variants for now,
+      // so we use a collect here
       .collect {
         case TextMessage.Strict(msg) => msg
       }
+      // We will pass the incoming Strings through the dispatcher
+      // which will process them and generate DispatcherEvents as
+      // appropriate. These will be converted to WebSocket messages
+      // and sent back to the client
       .via(dispatcher.newClient(info))
       .map {
 
         case ReceivedMessage(m) =>
           TextMessage.Strict(m)
 
+        // NewData is a container to send arbitrary data back to the client
         case NewData(data) => data match {
           case ctInfo : ContainerInfo =>
             val json : String = Pickle.intoString(ctInfo)

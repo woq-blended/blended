@@ -27,27 +27,36 @@ object Dispatcher {
   def create(system: ActorSystem): Dispatcher = {
     val dispatcherActor = system.actorOf(Props[DispatcherActor])
 
-    new Dispatcher {
-      override def newClient(info: Token): Flow[String, DispatcherEvent, Any] = {
+    info: Token => {
+      val in = Flow[String]
+        .map(s => ReceivedMessage(s))
+        .to(Sink.actorRef[DispatcherEvent](dispatcherActor, ClientClosed(info)))
 
-        val in = Flow[String]
-          .map(s => ReceivedMessage(s))
-          .to(Sink.actorRef[DispatcherEvent](dispatcherActor, ClientClosed(info)))
+      // This materializes a new actor for the given client. All messages sent to this actor
+      // will be sent to the client via Web Sockets
+      // The new client will be registered with the DispatcherActor, which will then watch this
+      // actor and dispatch events to the client as long as it is active.
+      val out = Source.actorRef[DispatcherEvent](1, OverflowStrategy.fail)
+        .mapMaterializedValue { c => dispatcherActor ! NewClient(ClientInfo(info.id, info, c)) }
 
-        // This actually creates a new client actor
-        val out = Source.actorRef[DispatcherEvent](1, OverflowStrategy.fail)
-          .mapMaterializedValue { c => dispatcherActor ! NewClient(ClientInfo(info.id, info, c)) }
-
-        Flow.fromSinkAndSource(in, out)
-      }
+      Flow.fromSinkAndSourceCoupled(in, out)
     }
   }
 
   class DispatcherActor extends Actor with ActorLogging {
 
-    private[this] var clients: Map[String, ClientInfo] = Map.empty
+    override def receive: Receive = Actor.emptyBehavior
 
-    private[this] def dispatch(e: DispatcherEvent) : Unit = {
+    override def preStart(): Unit = {
+      context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
+      context.become(dispatching(Map.empty))
+    }
+
+    override def postStop(): Unit = {
+      context.system.eventStream.unsubscribe(self)
+    }
+
+    private def dispatch(e: DispatcherEvent)(clients: Map[String, ClientInfo]) : Unit = {
 
       // If we have to dispatch some data, we make sure, the client has the permission to see it
       val filteredClients = clients.values.filter { c =>
@@ -56,42 +65,37 @@ object Dispatcher {
             case g : GrantableObject => c.token.permissions.allows(g.permission)
             case _ => true
           }
-          case ReceivedMessage(msg) => true
+          case ReceivedMessage(_) => true
           case _ => false
         }
       }
 
       log.debug(s"Dispatching event [$e] to [${filteredClients.map(_.id)}] [${filteredClients.size}/${clients.size}]")
+
+      // After we have filtered the clients we send the resulting event to the outbound leg of each client
+      // matching the permission filter
       filteredClients.foreach(_.clientActor ! e)
     }
 
-    override def preStart(): Unit = {
-      context.system.eventStream.subscribe(self, classOf[UpdateContainerInfo])
-    }
-
-    override def postStop(): Unit = {
-      context.system.eventStream.unsubscribe(self)
-    }
-
-    override def receive: Receive = {
+    private def dispatching(clients: Map[String, ClientInfo]): Receive = {
       case m : ReceivedMessage =>
-        dispatch(m)
+        dispatch(m)(clients)
 
       case UpdateContainerInfo(ctInfo) =>
-        dispatch(NewData(ctInfo))
+        dispatch(NewData(ctInfo))(clients)
 
       case NewClient(info) =>
         log.info(s"New client connected [${info.id}]")
         context.watch(info.clientActor)
-        clients += (info.id -> info)
+        context.become(dispatching(clients ++ Map(info.id -> info)))
 
       case ClientClosed(token) =>
         log.info(s"Client closed : ${token.id}")
-        val entry = clients.get(token.id).foreach { info => info.clientActor ! Status.Success(Unit) }
-        clients -= token.id
+        clients.get(token.id).foreach { info => info.clientActor ! Status.Success(Unit) }
+        context.become(dispatching(clients.filterKeys(_ != token.id)))
 
       case Terminated(client) =>
-        clients = clients.filter { case (k, v) => v.clientActor != client }
+        context.become(dispatching(clients.filter { case (_, v) => v.clientActor != client }))
     }
   }
 }

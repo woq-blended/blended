@@ -12,6 +12,7 @@ import akka.http.scaladsl.model.{StatusCodes => AkkaStatusCodes}
 import akka.stream._
 import akka.stream.javadsl.Sink
 import akka.stream.scaladsl.{Keep, Source}
+import akka.util.ByteString
 import blended.akka.http.internal.BlendedAkkaHttpActivator
 import blended.akka.internal.BlendedAkkaActivator
 import blended.mgmt.rest.internal.MgmtRestActivator
@@ -26,7 +27,7 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.remote.internal.RemoteUpdaterActivator
-import com.softwaremill.sttp._
+import com.softwaremill.sttp.{SttpBackend, _}
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
@@ -34,7 +35,7 @@ import prickle.{Pickle, Unpickle}
 import sun.misc.BASE64Decoder
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import scala.util.Try
@@ -78,7 +79,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
   private[this] def serverKey()(implicit system: ActorSystem, materializer: Materializer) : Try[PublicKey] = Try {
 
-    implicit val backend = AkkaHttpBackend()
+    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
     val request = sttp.get(uri"http://localhost:9995/login/key")
     val response = request.send()
@@ -88,7 +89,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
     val rawString = r.body.right.get
       .replace("-----BEGIN PUBLIC KEY-----\n", "")
-      .replace("-----END PRIVATE KEY-----", "")
+      .replace("-----END PUBLIC KEY-----", "")
       .replaceAll("\n", "")
 
     val bytes = new BASE64Decoder().decodeBuffer(rawString)
@@ -99,9 +100,9 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
   private[this] def login(user: String, password: String)(implicit system: ActorSystem, materializer: Materializer) : Try[Token] = {
 
-    implicit val backend = AkkaHttpBackend()
+    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
-    val key : PublicKey = serverKey.get
+    val key : PublicKey = serverKey().get
 
     val request = sttp.post(uri"http://localhost:9995/login/").auth.basic(user, password)
     val response = request.send()
@@ -130,11 +131,11 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
   }
 
   private def countryContainer(country: String) : Seq[ContainerInfo] =
-    containers.filter(_.properties.get("country") == Some(country))
+    containers.filter(_.properties.get("country").contains(country))
 
   private[this] def postContainer()(implicit system: ActorSystem, materializer: Materializer) : Try[Unit] = Try {
 
-    implicit val backend = AkkaHttpBackend()
+    implicit val backend : SttpBackend[Future, Source[ByteString, Any]] = AkkaHttpBackend()
 
     val ctPost = sttp.post(uri"http://localhost:9995/mgmt/container")
       .contentType("application/json")
@@ -171,13 +172,13 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
   "The Web socket server should" - {
 
     "reject clients without token" in {
-      val fut = withWebSocketServer(registry) { actorSystem => actorMaterializer =>
+      withWebSocketServer(registry) { actorSystem => actorMaterializer =>
         implicit val system : ActorSystem = actorSystem
         implicit val materializer : Materializer = actorMaterializer
 
         val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/mgmtws/"))
 
-        val (resp, closed) = source
+        val (resp, _) = source
           .viaMat(flow)(Keep.right)
           .toMat(incoming)(Keep.both)
           .run()
@@ -195,7 +196,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
 
         val flow = Http().webSocketClientFlow(WebSocketRequest("ws://localhost:9995/mgmtws/?token=foo"))
 
-        val (resp, closed) = source
+        val (resp, _) = source
           .viaMat(flow)(Keep.right)
           .toMat(incoming)(Keep.both)
           .run()
@@ -215,7 +216,7 @@ class MgmtWebSocketSpec extends SimplePojoContainerSpec
         val token = login("bg_test", "secret").get
 
         // set up the WS listener
-        val (resp, closed) = source
+        val (resp, _) = source
           .viaMat(wsFlow(token.webToken))(Keep.right)
           .toMat(incoming)(Keep.both)
           .run()

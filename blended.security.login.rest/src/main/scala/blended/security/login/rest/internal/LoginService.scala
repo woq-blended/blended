@@ -74,7 +74,7 @@ class LoginService(
               log.error(s"Could not create token : [${e.getMessage()}]")
               HttpResponse(StatusCodes.BadRequest).withHeaders(header:_*)
             case Success(t) =>
-              log.info(s"User [${t.user}] logged in successgully, token-id is [${t.id}]")
+              log.info(s"User [${t.user}] logged in successfully, token-id is [${t.id}]")
               HttpResponse(StatusCodes.OK, entity = t.webToken).withHeaders(header:_*)
           })
         }
