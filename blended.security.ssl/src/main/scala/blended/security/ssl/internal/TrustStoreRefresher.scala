@@ -4,8 +4,8 @@ import java.io.File
 import java.security.cert.X509Certificate
 import java.util.UUID
 
-import blended.security.ssl.{CertificateHolder, MemoryKeystore}
 import blended.security.ssl.internal.SslContextProvider.{propTrustStore, propTrustStorePwd}
+import blended.security.ssl.{CertificateHolder, MemoryKeystore}
 import blended.util.logging.Logger
 import javax.security.auth.x500.X500Principal
 

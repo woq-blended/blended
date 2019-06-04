@@ -1,6 +1,7 @@
 package blended.util.config
 
 import com.typesafe.config.Config
+
 import scala.collection.JavaConverters._
 
 trait ConfigAccessor {

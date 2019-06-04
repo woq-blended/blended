@@ -1,15 +1,13 @@
+import blended.sbt.phoenix.osgi.OsgiConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
-import com.typesafe.sbt.osgi.SbtOsgi
 import net.bzzt.reproduciblebuilds.ReproducibleBuildsPlugin
 import phoenix.ProjectConfig
 import sbt.Keys._
 import sbt.Tests.{Group, SubProcess}
 import sbt._
 import sbt.internal.inc.Analysis
-import xerial.sbt.Sonatype
 import xsbti.api.{AnalyzedClass, Projection}
-import blended.sbt.phoenix.osgi.OsgiConfig
 
 trait ProjectSettings
   extends ProjectConfig

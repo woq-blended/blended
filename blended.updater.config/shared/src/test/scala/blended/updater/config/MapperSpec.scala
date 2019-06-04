@@ -2,12 +2,12 @@ package blended.updater.config
 
 import java.{util => ju}
 
-import scala.reflect.{ClassTag, classTag}
-import scala.util.{Success, Try}
-
 import org.scalacheck.Arbitrary
 import org.scalatest.FreeSpec
 import org.scalatest.prop.PropertyChecks
+
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Success, Try}
 
 class MapperSpec extends FreeSpec with PropertyChecks {
 

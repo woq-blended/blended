@@ -1,13 +1,11 @@
 package blended.akka
 
-import akka.actor.{ActorRef, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import blended.akka.internal.ActorSystemCapsule
-import domino.DominoImplicits
-import domino.capsule.CapsuleContext
-import org.osgi.framework.BundleContext
-import akka.actor.ActorSystem
-import domino.capsule.Capsule
 import blended.util.logging.Logger
+import domino.DominoImplicits
+import domino.capsule.{Capsule, CapsuleContext}
+import org.osgi.framework.BundleContext
 
 trait ActorSystemWatching extends DominoImplicits {
 

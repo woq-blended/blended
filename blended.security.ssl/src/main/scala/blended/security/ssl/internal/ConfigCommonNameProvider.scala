@@ -2,8 +2,8 @@ package blended.security.ssl.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.security.ssl.CommonNameProvider
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 import scala.util.Try
 

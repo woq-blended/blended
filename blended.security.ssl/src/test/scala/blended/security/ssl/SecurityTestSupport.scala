@@ -7,8 +7,8 @@ import java.security.{KeyPair, KeyPairGenerator, SecureRandom}
 import blended.security.ssl.internal.JavaKeystore
 import blended.testsupport.BlendedTestSupport
 import org.bouncycastle.cert.X509v3CertificateBuilder
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
 case class HostnameCNProvider(hostname : String) extends CommonNameProvider {

@@ -1,11 +1,10 @@
 package blended.jms.utils.internal
 
-import javax.jms.Connection
-
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.LoggingReceive
 import akka.pattern.ask
 import akka.util.Timeout
+import javax.jms.Connection
 
 import scala.concurrent.duration._
 import scala.util.control.NonFatal

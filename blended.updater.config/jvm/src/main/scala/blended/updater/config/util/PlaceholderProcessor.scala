@@ -1,17 +1,10 @@
 package blended.updater.config.util
 
-import java.io.PrintStream
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
-import java.io.File
-import scala.util.Try
+import java.io._
+import java.util.regex.{Matcher, Pattern}
+
 import scala.io.Source
-import java.util.regex.Pattern
-import java.io.OutputStream
-import java.io.InputStream
-import java.io.LineNumberReader
-import java.io.InputStreamReader
-import java.util.regex.Matcher
+import scala.util.Try
 
 class PlaceholderProcessor(props : Map[String, String], openSeq : String, closeSeq : String, escapeChar : Char = '\\', failOnMissing : Boolean) {
 

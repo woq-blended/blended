@@ -2,13 +2,13 @@ package blended.persistence.jdbc
 
 import java.{util => ju}
 
-import scala.collection.JavaConverters._
-import scala.reflect.{ClassTag, classTag}
-import scala.util.{Success, Try}
-
 import blended.testsupport.scalatest.LoggingFreeSpec
 import org.scalacheck.Arbitrary
 import org.scalatest.prop.PropertyChecks
+
+import scala.collection.JavaConverters._
+import scala.reflect.{ClassTag, classTag}
+import scala.util.{Success, Try}
 
 class PersistedFieldTest
   extends LoggingFreeSpec

@@ -1,9 +1,9 @@
 package blended.jmx.internal
 
 import java.lang.management.ManagementFactory
-import javax.management.MBeanServer
 
 import domino.DominoActivator
+import javax.management.MBeanServer
 
 class BlendedJmxActivator extends DominoActivator {
 

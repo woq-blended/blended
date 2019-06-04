@@ -1,11 +1,11 @@
 package blended.security.boot
 
 import java.util
+
 import javax.security.auth.Subject
 import javax.security.auth.callback.CallbackHandler
 import javax.security.auth.login.LoginException
 import javax.security.auth.spi.LoginModule
-
 import org.osgi.framework.{Bundle, BundleContext}
 
 object BlendedLoginModule {

@@ -2,10 +2,10 @@ package blended.updater.config
 
 import java.io.File
 
-import scala.collection.immutable._
-
 import blended.launcher.config.LauncherConfig
 import blended.util.logging.Logger
+
+import scala.collection.immutable._
 
 /**
  * Convert between [[LauncherConfig]] and [[ResolvedRuntimeConfig]].

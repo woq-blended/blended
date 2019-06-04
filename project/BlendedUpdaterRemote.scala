@@ -1,6 +1,6 @@
-import sbt._
 import blended.sbt.Dependencies
 import phoenix.ProjectFactory
+import sbt._
 
 object BlendedUpdaterRemote extends ProjectFactory {
   object config extends ProjectSettings {

@@ -5,21 +5,21 @@ import java.net.URLClassLoader
 import java.nio.file.{Files, Paths}
 import java.util.{Hashtable, Properties, ServiceLoader, UUID}
 
-import scala.collection.JavaConverters._
-import scala.collection.immutable.Map
-import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
-
 import blended.launcher.config.LauncherConfig
 import blended.launcher.internal.ARM
 import blended.updater.config._
 import blended.util.logging.Logger
 import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
 import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
-import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
 import org.osgi.framework.launch.{Framework, FrameworkFactory}
 import org.osgi.framework.startlevel.{BundleStartLevel, FrameworkStartLevel}
 import org.osgi.framework.wiring.FrameworkWiring
+import org.osgi.framework.{Bundle, Constants, FrameworkEvent, FrameworkListener}
+
+import scala.collection.JavaConverters._
+import scala.collection.immutable.Map
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 object Launcher {
 

@@ -1,8 +1,8 @@
 package blended.streams.dispatcher.internal.builder
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream._
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import blended.activemq.brokerstarter.internal.BrokerActivator
 import blended.jms.utils.{IdAwareConnectionFactory, JmsDestination, JmsQueue}
 import blended.streams.jms.JmsStreamSupport
@@ -15,8 +15,8 @@ import blended.util.logging.Logger
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 @RequiresForkedJVM
 class CbeFlowSpec extends DispatcherSpecSupport

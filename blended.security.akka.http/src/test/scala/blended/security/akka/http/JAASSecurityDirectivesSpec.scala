@@ -5,11 +5,10 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import blended.security.{BlendedPermissionManager, BlendedPermissions}
+import blended.security.BlendedPermissionManager
 import blended.security.SubjectImplicits._
 import blended.security.internal.GroupPermissionManager
 import blended.testsupport.security.DummyLoginConfiguration
-import javax.security.auth.Subject
 import javax.security.auth.login.Configuration
 import org.scalatest.{BeforeAndAfterAll, FreeSpec}
 

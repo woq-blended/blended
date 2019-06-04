@@ -2,15 +2,15 @@ package blended.mgmt.mock.clients
 
 import java.util.concurrent.TimeUnit
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
-import scala.util.Random
-
 import akka.actor.ActorSystem
 import blended.mgmt.agent.internal.MgmtReporter.MgmtReporterConfig
 import blended.mgmt.mock.MockObjects
 import blended.util.logging.Logger
 import de.tototec.cmdoption.CmdlineParser
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import scala.util.Random
 
 class MgmtMockClients(config : Config) {
 

@@ -1,11 +1,11 @@
 package blended.akka.http.proxy
 
 import blended.akka.ActorSystemWatching
-import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.akka.http.proxy.internal.{ProxyConfig, ProxyRoute, SimpleProxyRoute}
+import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.net.ssl.SSLContext
-import blended.util.logging.Logger
 
 class BlendedAkkaHttpProxyActivator extends DominoActivator with ActorSystemWatching {
 

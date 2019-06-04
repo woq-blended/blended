@@ -2,14 +2,13 @@ package blended.updater.config
 
 import java.io.File
 
+import blended.util.logging.Logger
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
+
 import scala.collection.JavaConverters._
 import scala.collection.immutable
 import scala.collection.immutable.Map
 import scala.util._
-
-import blended.util.logging.Logger
-import com.typesafe.config.{Config, ConfigFactory}
-import com.typesafe.config.ConfigValueFactory
 
 /**
  * A materialized set of overlays.

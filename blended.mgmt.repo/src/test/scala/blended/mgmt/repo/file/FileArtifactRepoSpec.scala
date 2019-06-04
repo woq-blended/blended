@@ -1,14 +1,12 @@
 package blended.mgmt.repo.file
 
-import java.io.ByteArrayInputStream
-import java.io.File
-
-import scala.util.Success
+import java.io.{ByteArrayInputStream, File}
 
 import blended.testsupport.TestFile
 import de.tobiasroeser.lambdatest.TempFile
-import org.scalatest.FreeSpec
-import org.scalatest.Matchers
+import org.scalatest.{FreeSpec, Matchers}
+
+import scala.util.Success
 
 class FileArtifactRepoSpec extends FreeSpec with TestFile with Matchers {
 

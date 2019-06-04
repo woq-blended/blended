@@ -4,10 +4,6 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-import scala.collection.immutable._
-import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success, Try}
-
 import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, Props}
 import akka.event.{EventStream, LoggingReceive}
 import akka.pattern.ask
@@ -15,6 +11,10 @@ import akka.routing.BalancingPool
 import akka.util.Timeout
 import blended.updater.config.{UpdateAction, ActivateProfile => UAActivateProfile, AddOverlayConfig => UAAddOverlayConfig, AddRuntimeConfig => UAAddRuntimeConfig, StageProfile => UAStageProfile, _}
 import blended.util.logging.Logger
+
+import scala.collection.immutable._
+import scala.concurrent.duration.Duration
+import scala.util.{Failure, Success, Try}
 
 class Updater(
   installBaseDir : File,

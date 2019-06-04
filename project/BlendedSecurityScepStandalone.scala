@@ -1,12 +1,11 @@
+import blended.sbt.Dependencies
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
+import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
 import sbt.librarymanagement.InclExclRule
-import blended.sbt.Dependencies
-import phoenix.ProjectFactory
-
-import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
 
 object BlendedSecurityScepStandalone extends ProjectFactory {
 

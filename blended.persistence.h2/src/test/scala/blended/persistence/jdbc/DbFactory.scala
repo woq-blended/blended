@@ -1,12 +1,12 @@
 package blended.persistence.jdbc
 
-import com.zaxxer.hikari.HikariDataSource
 import java.io.File
 
-import javax.sql.DataSource
-import blended.util.logging.Logger
-import org.springframework.transaction.PlatformTransactionManager
 import blended.testsupport.TestFile
+import blended.util.logging.Logger
+import com.zaxxer.hikari.HikariDataSource
+import javax.sql.DataSource
+import org.springframework.transaction.PlatformTransactionManager
 
 /**
  * A H2 Database factory to testing.

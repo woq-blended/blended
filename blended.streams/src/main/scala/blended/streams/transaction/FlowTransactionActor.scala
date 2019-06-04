@@ -20,7 +20,7 @@ object FlowTransactionActor {
 
 class FlowTransactionActor(persistor: FlowTransactionPersistor, initialState: FlowTransaction) extends Actor {
 
-  private val log = Logger[FlowTransactionActor]
+  private [this] val log : Logger = Logger[FlowTransactionActor]
 
   override def receive: Receive = handleState(initialState)
 
@@ -56,23 +56,24 @@ object FlowTransactionManager {
 
 class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
 
-  private[this] val log = Logger[FlowTransactionManager]
+  private[this] val log : Logger = Logger[FlowTransactionManager]
 
   private[this] implicit val timeout : Timeout = Timeout(3.seconds)
+  //noinspection SpellCheckingInspection
   private[this] implicit val eCtxt : ExecutionContext = context.system.dispatcher
   private[this] val persistor : FlowTransactionPersistor = new FlowTransactionPersistor(pSvc)
-
-  override def receive: Receive = handleEvent(Map.empty)
 
   private val restoreTransaction : String => Option[ActorRef] = tid => persistor.restoreTransaction(tid) match {
     case Success(s) => Some(context.actorOf(FlowTransactionActor.props(persistor, s)))
     case Failure(_) => None
   }
 
+  override def receive: Receive = handleEvent(Map.empty)
+
   private[this] def handleEvent(cache: Map[String, ActorRef]): Receive = {
 
     case e : FlowTransactionEvent =>
-      val respondTo = sender()
+      val respondTo : ActorRef = sender()
 
       log.trace(s"Recording transaction event [$e]")
 
@@ -90,18 +91,18 @@ class FlowTransactionManager(pSvc : PersistenceService) extends Actor {
 
             case None =>
               log.debug(s"Creating new transaction actor for [${e.transactionId}]")
-              val s = FlowTransaction(
+              val s : FlowTransaction = FlowTransaction(
                 id = e.transactionId,
                 creationProps = e.properties,
               )
-              val a = context.actorOf(FlowTransactionActor.props(persistor, s))
+              val a : ActorRef = context.actorOf(FlowTransactionActor.props(persistor, s))
               a.tell(e, respondTo)
               context.become(handleEvent(cache ++ Map(e.transactionId -> a)))
           }
       }
 
     case state @ FlowTransactionActor.TransactionState(tid) =>
-      val respondTo = sender()
+      val respondTo : ActorRef = sender()
       cache.get(tid) match {
         case Some(a) => a.tell(state, respondTo)
         case None => restoreTransaction(state.tid).foreach(_.tell(state, respondTo))

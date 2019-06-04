@@ -1,12 +1,12 @@
+import blended.sbt.Dependencies
 import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
+import phoenix.{ProjectConfig, ProjectFactory}
 import sbt.Keys._
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport._
+import sbtcrossproject.CrossProject
 import scalajscrossproject.ScalaJSCrossPlugin.autoImport._
 import scoverage.ScoverageKeys.coverageEnabled
-import blended.sbt.Dependencies
-import phoenix.{ProjectConfig, ProjectFactory}
-import sbtcrossproject.CrossProject
 
 private object BlendedUpdaterConfigCross {
 

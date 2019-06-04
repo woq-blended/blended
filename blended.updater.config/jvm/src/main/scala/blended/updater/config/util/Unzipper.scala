@@ -1,18 +1,12 @@
 package blended.updater.config.util
 
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import java.io._
 import java.util.zip.ZipInputStream
+
+import blended.util.logging.Logger
 
 import scala.util.Try
 import scala.util.control.NonFatal
-
-import blended.util.logging.Logger
 
 object Unzipper extends Unzipper {
   // TODO: add failMissingProperty

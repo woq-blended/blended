@@ -1,14 +1,14 @@
 package blended.testsupport.camel
 
-import scala.collection.convert.Wrappers.JMapWrapper
-import scala.util.Try
-
 import akka.camel.CamelMessage
 import blended.testsupport.XMLMessageFactory
 import blended.util.FileHelper
 import blended.util.logging.Logger
-import org.apache.camel.{CamelContext, Exchange, ExchangePattern, Message}
 import org.apache.camel.impl.DefaultExchange
+import org.apache.camel.{CamelContext, Exchange, ExchangePattern, Message}
+
+import scala.collection.convert.Wrappers.JMapWrapper
+import scala.util.Try
 
 @Deprecated
 trait CamelTestSupport {

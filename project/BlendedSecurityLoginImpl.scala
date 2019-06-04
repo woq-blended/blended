@@ -1,8 +1,8 @@
+import blended.sbt.Dependencies
 import com.typesafe.sbt.osgi.OsgiKeys._
+import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
-import blended.sbt.Dependencies
-import phoenix.ProjectFactory
 
 object BlendedSecurityLoginImpl extends ProjectFactory {
   object config extends ProjectSettings {

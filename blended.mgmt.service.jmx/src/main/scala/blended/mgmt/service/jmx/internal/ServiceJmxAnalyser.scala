@@ -1,11 +1,11 @@
 package blended.mgmt.service.jmx.internal
 
-import scala.collection.JavaConverters._
-
 import blended.updater.config.ServiceInfo
 import blended.util.logging.Logger
-import javax.management.{Attribute, MBeanServer, ObjectInstance, ObjectName}
 import javax.management.openmbean.{CompositeData, CompositeDataSupport}
+import javax.management.{Attribute, MBeanServer, ObjectInstance, ObjectName}
+
+import scala.collection.JavaConverters._
 
 class ServiceJmxAnalyser(server : MBeanServer, config : ServiceJmxConfig) {
 

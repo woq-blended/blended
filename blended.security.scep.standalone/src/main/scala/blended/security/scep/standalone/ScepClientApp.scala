@@ -1,22 +1,18 @@
 package blended.security.scep.standalone
 
-import java.io.File
-import java.io.FileReader
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import java.io.{File, FileReader}
+import java.util.concurrent.{TimeUnit, TimeoutException}
 
 import blended.security.ssl.internal.PasswordHasher
 import blended.util.logging.Logger
 import de.tototec.cmdoption.{CmdlineParser, CmdlineParserException}
 import org.bouncycastle.cert.X509CertificateHolder
-import org.bouncycastle.openssl.PEMEncryptedKeyPair
-import org.bouncycastle.openssl.PEMKeyPair
-import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.{PEMEncryptedKeyPair, PEMKeyPair, PEMParser}
 import org.bouncycastle.pkcs.PKCS10CertificationRequest
+
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 object ScepClientApp {

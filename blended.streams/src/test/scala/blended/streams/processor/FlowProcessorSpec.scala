@@ -6,8 +6,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.testkit.TestKit
 import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
-import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.streams.message.FlowMessage.FlowMessageProps
+import blended.streams.message.{FlowEnvelope, FlowMessage}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.util.logging.Logger
 import org.scalatest.Matchers

@@ -3,6 +3,7 @@ package blended.security.ssl
 import java.security.cert.X509Certificate
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import scala.collection.JavaConverters._
 
 /**

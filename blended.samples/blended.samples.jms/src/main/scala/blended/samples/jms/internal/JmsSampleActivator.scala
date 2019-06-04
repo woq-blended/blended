@@ -8,9 +8,9 @@ import blended.domino.TypesafeConfigWatching
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.jms.ConnectionFactory
-import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
+import org.apache.camel.{Exchange, Processor}
 
 object JmsSampleActivator {
   val msgCounter : AtomicLong = new AtomicLong()

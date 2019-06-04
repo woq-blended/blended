@@ -1,15 +1,14 @@
 package blended.akka.http.internal
 
-import scala.util.{Failure, Success}
-
-import akka.http.scaladsl.ConnectionContext
-import akka.http.scaladsl.Http
+import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator
 import javax.net.ssl.SSLContext
+
+import scala.util.{Failure, Success}
 
 class BlendedAkkaHttpActivator extends DominoActivator with ActorSystemWatching {
 

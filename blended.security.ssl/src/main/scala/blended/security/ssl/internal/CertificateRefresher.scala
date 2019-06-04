@@ -3,12 +3,12 @@ package blended.security.ssl.internal
 import java.util._
 
 import blended.mgmt.base.FrameworkService
+import blended.util.logging.Logger
 import domino.capsule.{Capsule, CapsuleScope}
 import domino.service_consuming.ServiceConsuming
 import org.osgi.framework.BundleContext
 
 import scala.util.{Failure, Success}
-import blended.util.logging.Logger
 
 object CertificateRefresher {
 

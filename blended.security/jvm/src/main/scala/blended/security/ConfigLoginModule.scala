@@ -1,7 +1,7 @@
 package blended.security
 
-import javax.security.auth.login.LoginException
 import blended.util.config.Implicits._
+import javax.security.auth.login.LoginException
 
 class ConfigLoginModule() extends AbstractLoginModule {
 

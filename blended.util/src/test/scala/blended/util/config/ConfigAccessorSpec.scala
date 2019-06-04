@@ -1,7 +1,7 @@
 package blended.util.config
 
-import org.scalatest.FreeSpec
 import com.typesafe.config.ConfigFactory
+import org.scalatest.FreeSpec
 
 class ConfigAccessorSpec extends FreeSpec with ConfigAccessor {
 

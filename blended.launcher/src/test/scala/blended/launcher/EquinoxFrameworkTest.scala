@@ -2,9 +2,9 @@ package blended.launcher
 
 import java.io.File
 
+import blended.testsupport.BlendedTestSupport.projectTestOutput
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
-import blended.testsupport.BlendedTestSupport.projectTestOutput
 
 class EquinoxFrameworkTest extends LoggingFreeSpec
   with TestFile {

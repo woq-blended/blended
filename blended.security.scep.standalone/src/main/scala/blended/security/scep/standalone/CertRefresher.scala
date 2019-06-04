@@ -3,16 +3,16 @@ package blended.security.scep.standalone
 import java.io.File
 import java.util.ServiceLoader
 
-import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
-
 import blended.container.context.api.ContainerIdentifierService
 import blended.container.context.impl.internal.ContainerIdentifierServiceImpl
 import blended.security.ssl.{CertificateManager, MemoryKeystore}
 import blended.util.logging.Logger
 import domino.DominoActivator
 import org.apache.felix.connect.launch.{ClasspathScanner, PojoServiceRegistryFactory}
+
+import scala.collection.JavaConverters._
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
 /**
  *

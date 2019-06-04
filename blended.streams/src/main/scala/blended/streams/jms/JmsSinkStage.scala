@@ -26,7 +26,7 @@ class JmsSinkStage(
     new JmsStageLogic[JmsProducerSession, JmsProducerSettings](
       settings,
       inheritedAttributes,
-      shape,
+      shape
     ) with JmsConnector[JmsProducerSession] {
 
       private[this] val rnd = new Random()

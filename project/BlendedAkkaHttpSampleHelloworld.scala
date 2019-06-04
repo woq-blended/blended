@@ -1,6 +1,6 @@
-import sbt._
 import blended.sbt.Dependencies
 import phoenix.ProjectFactory
+import sbt._
 
 object BlendedAkkaHttpSampleHelloworld extends ProjectFactory {
   object config extends ProjectSettings {

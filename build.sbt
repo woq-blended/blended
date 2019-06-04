@@ -1,5 +1,5 @@
-import sbt._
 import de.wayofquality.sbt.jbake.JBake
+import sbt._
 
 //// this is required to use proper values in osgi manifest require capability
 //val initSystemEarly: Unit = Option(System.getProperty("java.version"))

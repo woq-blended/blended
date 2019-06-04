@@ -3,14 +3,14 @@ package blended.container.context.impl.internal
 import java.io.File
 import java.nio.file.Files
 
-import scala.collection.JavaConverters._
-import scala.util.{Success, Try}
 import blended.container.context.api.{ContainerContext, ContainerIdentifierService}
 import blended.updater.config.RuntimeConfig
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}
 
 import scala.beans.BeanProperty
+import scala.collection.JavaConverters._
+import scala.util.{Success, Try}
 
 class ContainerIdentifierServiceImpl(
   @BeanProperty override val containerContext : ContainerContext

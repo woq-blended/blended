@@ -2,12 +2,6 @@ package blended.mgmt.rest.internal
 
 import java.io.File
 
-import scala.collection.immutable
-import scala.collection.{immutable => sci}
-import scala.concurrent.Await
-import scala.concurrent.duration._
-import scala.util.Try
-
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.testkit.TestLatch
 import blended.prickle.akka.http.PrickleSupport
@@ -15,6 +9,11 @@ import blended.security.akka.http.DummyBlendedSecurityDirectives
 import blended.updater.config._
 import blended.updater.config.json.PrickleProtocol._
 import org.scalatest.{FreeSpec, Matchers}
+
+import scala.collection.{immutable, immutable => sci}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.Try
 
 class CollectorServiceSpec
   extends FreeSpec

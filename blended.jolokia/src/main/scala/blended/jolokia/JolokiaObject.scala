@@ -1,7 +1,7 @@
 package blended.jolokia
 
+import spray.json.DefaultJsonProtocol._
 import spray.json._
-import DefaultJsonProtocol._
 import spray.json.lenses.JsonLenses._
 
 sealed trait JolokiaObject

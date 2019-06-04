@@ -2,22 +2,15 @@ package blended.updater.internal
 
 import java.io.File
 
-import scala.util.Failure
-import scala.util.Success
-
 import blended.akka.ActorSystemWatching
-import blended.updater.ProfileActivator
-import blended.updater.ProfileId
-import blended.updater.Updater
-import blended.updater.UpdaterConfig
-import blended.updater.config.ConfigWriter
-import blended.updater.config.OverlayRef
-import blended.updater.config.ProfileLookup
-import blended.updater.config.RuntimeConfig
+import blended.updater.{ProfileActivator, ProfileId, Updater, UpdaterConfig}
+import blended.updater.config.{ConfigWriter, OverlayRef, ProfileLookup, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
 import domino.DominoActivator
 import org.osgi.framework.ServiceRegistration
+
+import scala.util.{Failure, Success}
 
 case class UpdateEnv(
   launchedProfileName : String,

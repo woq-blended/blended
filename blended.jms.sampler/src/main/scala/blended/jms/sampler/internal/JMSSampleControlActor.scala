@@ -1,11 +1,11 @@
 package blended.jms.sampler.internal
 
 import java.io.File
-import javax.jms.ConnectionFactory
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import blended.akka.OSGIActorConfig
+import javax.jms.ConnectionFactory
 
 object JMSSampleControlActor {
 

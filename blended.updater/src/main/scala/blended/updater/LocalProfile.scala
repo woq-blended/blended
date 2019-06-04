@@ -1,12 +1,6 @@
 package blended.updater
 
-import blended.updater.config.BundleConfig
-import blended.updater.config.LocalOverlays
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.OverlaySet
-import blended.updater.config.OverlayState
-import blended.updater.config.RuntimeConfig
-import blended.updater.config.Profile
+import blended.updater.config._
 
 object LocalProfile {
 

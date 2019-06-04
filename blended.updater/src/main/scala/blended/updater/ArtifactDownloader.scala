@@ -2,18 +2,12 @@ package blended.updater
 
 import java.io.File
 
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.Props
-import akka.actor.actorRef2Scala
+import akka.actor.{Actor, ActorLogging, Props, actorRef2Scala}
 import akka.event.LoggingReceive
-import blended.updater.config.{Artifact, RuntimeConfig, RuntimeConfigCompanion}
-import blended.updater.config.MvnGav
+import blended.updater.config.{Artifact, MvnGav, RuntimeConfig, RuntimeConfigCompanion}
 import blended.util.logging.Logger
+
+import scala.util.{Failure, Success, Try}
 
 class ArtifactDownloader(mvnRepositories : List[String])
   extends Actor

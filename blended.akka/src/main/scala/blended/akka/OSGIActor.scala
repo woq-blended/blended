@@ -8,8 +8,8 @@ import domino.service_consuming.ServiceConsuming
 import domino.service_providing.ServiceProviding
 import org.osgi.framework.BundleContext
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 abstract class OSGIActor(actorConfig : OSGIActorConfig)
   extends Actor

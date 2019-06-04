@@ -1,18 +1,13 @@
 package blended.akka.http.internal
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.PathMatchers
-import akka.http.scaladsl.server.Route
-import blended.akka.http.HttpContext
-import blended.akka.http.SimpleHttpContext
+import akka.http.scaladsl.server.{PathMatchers, Route}
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.util.logging.Logger
-import domino.capsule.Capsule
-import domino.capsule.CapsuleContext
+import domino.capsule.{Capsule, CapsuleContext}
 import domino.service_consuming.ServiceConsuming
-import domino.service_watching.ServiceWatcherEvent
-import domino.service_watching.ServiceWatching
-import org.osgi.framework.BundleContext
-import org.osgi.framework.ServiceReference
+import domino.service_watching.{ServiceWatcherEvent, ServiceWatching}
+import org.osgi.framework.{BundleContext, ServiceReference}
 
 class RouteProvider {
 

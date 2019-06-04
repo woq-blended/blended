@@ -1,8 +1,7 @@
 package blended.util.config
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.scalatest.FreeSpec
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.Config
 
 class ConfigDefaultGetterSpec extends FreeSpec with ConfigDefaultGetter {
 

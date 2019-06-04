@@ -4,24 +4,18 @@ import java.io.File
 import java.util.UUID
 import java.util.concurrent.TimeUnit.SECONDS
 
-import scala.annotation.varargs
-import scala.concurrent.Await
-import scala.concurrent.duration.HOURS
-import scala.concurrent.duration.MINUTES
-
-import akka.actor.ActorRef
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import blended.updater.LocalProfile
-import blended.updater.ProfileId
-import blended.updater.Updater
-import blended.updater.Updater.OperationFailed
-import blended.updater.Updater.OperationSucceeded
+import blended.updater.{LocalProfile, ProfileId, Updater}
+import blended.updater.Updater.{OperationFailed, OperationSucceeded}
 import blended.updater.config._
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+
+import scala.annotation.varargs
+import scala.concurrent.Await
+import scala.concurrent.duration.{HOURS, MINUTES}
 
 class Commands(updater : ActorRef, env : Option[UpdateEnv])(implicit val actorSystem : ActorSystem) {
 

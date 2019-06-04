@@ -16,8 +16,8 @@ import javax.jms.ConnectionFactory
 import org.apache.activemq.broker.BrokerService
 import org.scalatest.{BeforeAndAfterAll, FreeSpec, FreeSpecLike, Matchers}
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 
 class HttpQueueServiceSpec extends FreeSpec
   with ScalatestRouteTest

@@ -4,16 +4,16 @@ import java.text.MessageFormat
 import java.util
 
 import blended.container.context.api.ContainerIdentifierService
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.util.Try
 import blended.security.internal.{LDAPLoginConfig, LdapSearchResult}
 import blended.util.logging.Logger
 import com.sun.jndi.ldap.LdapCtxFactory
 import javax.naming.Context
 import javax.naming.directory.{DirContext, InitialDirContext, SearchControls}
 import javax.security.auth.login.LoginException
+
+import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.util.Try
 
 class LDAPLoginModule extends AbstractLoginModule {
 

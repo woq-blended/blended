@@ -1,6 +1,5 @@
-import sbt._
-import blended.sbt.Dependencies
 import phoenix.ProjectFactory
+import sbt._
 
 object BlendedHawtioLogin extends ProjectFactory {
   object config extends ProjectSettings {

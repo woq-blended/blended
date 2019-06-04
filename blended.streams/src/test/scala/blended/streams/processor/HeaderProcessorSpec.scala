@@ -3,8 +3,8 @@ package blended.streams.processor
 import java.io.File
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer}
 import blended.akka.internal.BlendedAkkaActivator
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.message.{FlowEnvelope, FlowMessage}

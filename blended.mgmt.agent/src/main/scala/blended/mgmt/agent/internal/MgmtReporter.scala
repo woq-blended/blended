@@ -1,25 +1,19 @@
 package blended.mgmt.agent.internal
 
-import scala.concurrent.duration.DurationLong
-import scala.util.Try
-
-import akka.actor.Actor
-import akka.actor.Cancellable
+import akka.actor.{Actor, Cancellable}
 import akka.event.LoggingReceive
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.HttpMethods
-import akka.http.scaladsl.model.HttpRequest
-import akka.http.scaladsl.model.HttpResponse
-import akka.http.scaladsl.model.MessageEntity
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
-import akka.stream.ActorMaterializerSettings
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import blended.prickle.akka.http.PrickleSupport
 import blended.updater.config._
-import com.typesafe.config.Config
 import blended.util.logging.Logger
+import com.typesafe.config.Config
+
+import scala.concurrent.duration.DurationLong
+import scala.util.Try
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.

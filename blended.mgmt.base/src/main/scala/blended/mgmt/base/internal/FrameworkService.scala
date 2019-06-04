@@ -6,12 +6,12 @@ import java.util.Date
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
-import scala.util.control.NonFatal
-
 import blended.container.context.api.ContainerContext
 import blended.util.StreamCopySupport
 import blended.util.logging.Logger
 import org.osgi.framework.BundleContext
+
+import scala.util.control.NonFatal
 
 /**
  * Note: The fact that this class has the same name as it's trait is required by the MBean spec.

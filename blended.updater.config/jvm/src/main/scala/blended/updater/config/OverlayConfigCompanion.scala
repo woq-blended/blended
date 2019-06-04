@@ -1,11 +1,11 @@
 package blended.updater.config
 
+import blended.updater.config.util.ConfigPropertyMapConverter
 import com.typesafe.config.{Config, ConfigFactory}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.util.{Left, Right, Try}
-import blended.updater.config.util.ConfigPropertyMapConverter
 
 /**
  * Helper for [[OverlayConfig]] containing common useful operations.

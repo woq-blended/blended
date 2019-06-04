@@ -7,19 +7,19 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import akka.actor.ActorSystem
-import akka.stream.{Attributes, Outlet, SourceShape}
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
+import akka.stream.{Attributes, Outlet, SourceShape}
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
+import blended.streams.{AckSourceLogic, DefaultAcknowledgeContext}
 import blended.util.FileHelper
 import blended.util.logging.Logger
 
-import scala.concurrent.duration.FiniteDuration
-import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.duration.FiniteDuration
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 object FileAckSource {
 

@@ -2,12 +2,12 @@ package blended.mgmt.rest.internal
 
 import blended.akka.ActorSystemWatching
 import blended.akka.http.{HttpContext, SimpleHttpContext}
+import blended.mgmt.repo.WritableArtifactRepo
 import blended.persistence.PersistenceService
 import blended.security.BlendedPermissionManager
 import blended.updater.remote.RemoteUpdater
 import blended.util.logging.Logger
 import domino.DominoActivator
-import blended.mgmt.repo.WritableArtifactRepo
 import domino.service_watching.ServiceWatcherEvent
 
 class MgmtRestActivator extends DominoActivator with ActorSystemWatching {

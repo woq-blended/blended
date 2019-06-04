@@ -2,17 +2,12 @@ package blended.updater
 
 import java.io.File
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
-import akka.actor.ActorRef
-import akka.actor.Props
-import akka.actor.actorRef2Scala
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, actorRef2Scala}
 import akka.event.LoggingReceive
 import blended.updater.config.util.Unzipper
 
 import scala.collection.immutable._
-import scala.util.Failure
-import scala.util.Success
+import scala.util.{Failure, Success}
 
 object Unpacker {
 

@@ -1,8 +1,8 @@
 package blended.streams
 
 import akka.NotUsed
-import akka.stream.{FanOutShape2, FlowShape, Graph}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
+import akka.stream.{FanOutShape2, FlowShape, Graph}
 import blended.streams.message.FlowEnvelope
 import blended.util.logging.LogLevel.LogLevel
 import blended.util.logging.Logger

@@ -1,9 +1,10 @@
 package blended.launcher
 
-import org.scalatest.FreeSpec
 import java.io.File
-import blended.testsupport.TestFile
+
 import blended.testsupport.BlendedTestSupport.projectTestOutput
+import blended.testsupport.TestFile
+import org.scalatest.FreeSpec
 
 class FelixFrameworkTest extends FreeSpec with TestFile {
 

@@ -4,6 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit, TestProbe}
 import blended.jms.utils.BlendedJMSConnectionConfig
 import org.scalatest.FreeSpecLike
+
 import scala.concurrent.duration._
 
 class ConnectionStateManagerSpec extends TestKit(ActorSystem("ConnectionManger"))

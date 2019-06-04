@@ -4,14 +4,15 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 import java.{util => ju}
 
-import scala.collection.JavaConverters._
-import scala.reflect.{ClassTag, classTag}
-import scala.util.Try
 import blended.testsupport.scalatest.LoggingFreeSpec
 import blended.util.logging.Logger
 import org.scalacheck.Arbitrary
 import org.scalatest.DoNotDiscover
 import org.scalatest.prop.PropertyChecks
+
+import scala.collection.JavaConverters._
+import scala.reflect.{ClassTag, classTag}
+import scala.util.Try
 
 @DoNotDiscover
 class LoadTest

@@ -1,9 +1,9 @@
+import blended.sbt.Dependencies
 import de.wayofquality.sbt.filterresources.FilterResources
 import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
-import sbt._
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
-import blended.sbt.Dependencies
 import phoenix.ProjectFactory
+import sbt._
 
 object BlendedFile extends ProjectFactory {
   object config extends ProjectSettings {

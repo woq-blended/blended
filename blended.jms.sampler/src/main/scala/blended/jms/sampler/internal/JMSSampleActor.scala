@@ -4,11 +4,11 @@ import java.io.{ByteArrayOutputStream, File}
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
-import javax.jms._
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import blended.akka.OSGIActorConfig
 import blended.util.FileHelper
+import javax.jms._
 
 case object StartSampling
 case object StopSampling

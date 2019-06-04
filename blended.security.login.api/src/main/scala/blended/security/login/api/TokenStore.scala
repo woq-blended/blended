@@ -4,10 +4,10 @@ import java.security.PublicKey
 
 import blended.security.BlendedPermissions
 import blended.security.boot.{GroupPrincipal, UserPrincipal}
+import blended.security.json.PrickleProtocol._
 import io.jsonwebtoken.Jwts
 import javax.security.auth.Subject
 import prickle.Unpickle
-import blended.security.json.PrickleProtocol._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

@@ -23,7 +23,7 @@ class FlowTransactionStream(
   tMgr : ActorRef,
   streamLogger: Logger,
   performSend : FlowEnvelope => Boolean,
-  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed],
+  sendFlow : Flow[FlowEnvelope, FlowEnvelope, NotUsed]
 )(implicit system: ActorSystem) extends JmsStreamSupport {
 
   private case class TransactionStreamContext(

@@ -2,8 +2,8 @@ package blended.updater.config
 
 import java.io._
 
-import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
 import blended.util.logging.Logger
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions}
 
 /**
  * Helper to write [[Config]] to files or streams.

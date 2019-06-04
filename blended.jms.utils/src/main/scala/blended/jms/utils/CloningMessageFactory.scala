@@ -1,9 +1,9 @@
 package blended.jms.utils
 
-import scala.collection.JavaConverters._
-
 import blended.util.logging.Logger
 import javax.jms.{BytesMessage, Message, Session, TextMessage}
+
+import scala.collection.JavaConverters._
 
 object CloningMessageFactory extends JMSMessageFactory[Message] {
 

@@ -1,7 +1,6 @@
 package blended.updater.config.util
 
-import java.io.InputStream
-import java.io.OutputStream
+import java.io.{InputStream, OutputStream}
 
 /**
  * Helper object holding useful methods to copy streams.

@@ -1,15 +1,11 @@
 package blended.security.akka.http
 
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.headers.HttpChallenges
-import akka.http.scaladsl.model.headers.HttpCredentials
+import akka.http.scaladsl.model.headers.{BasicHttpCredentials, HttpChallenges, HttpCredentials}
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.AuthenticationDirective
-import akka.http.scaladsl.server.directives.AuthenticationResult
+import akka.http.scaladsl.server.directives.{AuthenticationDirective, AuthenticationResult}
+import blended.security.{BlendedPermission, BlendedPermissionManager}
 import blended.security.SubjectImplicits._
-import blended.security.BlendedPermission
-import blended.security.BlendedPermissionManager
 import blended.util.logging.Logger
 import javax.security.auth.Subject
 import javax.security.auth.callback._

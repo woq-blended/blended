@@ -1,9 +1,9 @@
 package blended.jms.utils
 
-import scala.util.control.NonFatal
-
 import blended.util.logging.Logger
 import javax.jms._
+
+import scala.util.control.NonFatal
 
 @deprecated(message = "The JMSSupport is deprecated, consider using the new API based on Akka streams", since = "2.6.0")
 trait JMSSupport {

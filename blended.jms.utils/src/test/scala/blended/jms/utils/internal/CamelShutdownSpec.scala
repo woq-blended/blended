@@ -9,10 +9,10 @@ import blended.jms.utils.{AmqBrokerSupport, BlendedJMSConnectionConfig, BlendedS
 import blended.util.logging.Logger
 import javax.jms.{ExceptionListener, JMSException}
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.camel.{Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
 import org.apache.camel.impl.SimpleRegistry
+import org.apache.camel.{Exchange, Processor}
 import org.scalatest.FreeSpecLike
 
 class CamelShutdownSpec extends TestKit(ActorSystem("CamelShutdown"))

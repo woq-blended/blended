@@ -3,9 +3,9 @@ package blended.mgmt.service.jmx.internal
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import javax.management.MBeanServer
-import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 object ServiceJmxCollector {
   def props(cfg : OSGIActorConfig, svcConfig : ServiceJmxConfig, server : MBeanServer) =

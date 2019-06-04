@@ -1,9 +1,8 @@
 package blended.updater.tools.configbuilder
 
-import blended.updater.config.Artifact
-import blended.updater.config.MvnGav
-import blended.updater.config.RuntimeConfig
 import java.io.File
+
+import blended.updater.config.{Artifact, MvnGav, RuntimeConfig}
 
 object MvnGavSupport {
 

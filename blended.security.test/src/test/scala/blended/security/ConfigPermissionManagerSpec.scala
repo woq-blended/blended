@@ -1,7 +1,9 @@
 package blended.security
 
 import java.io.File
+
 import blended.testsupport.BlendedTestSupport
+
 import scala.concurrent.duration._
 
 class ConfigPermissionManagerSpec extends AbstractLoginSpec {

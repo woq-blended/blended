@@ -2,8 +2,6 @@ package blended.updater.remote
 
 import java.util.UUID
 
-import scala.collection.JavaConverters._
-
 import blended.persistence.PersistenceService
 import blended.persistence.jdbc.{PersistedClassDao, PersistenceServiceJdbc}
 import blended.testsupport.TestFile
@@ -14,6 +12,8 @@ import blended.util.logging.Logger
 import org.h2.jdbcx.{JdbcConnectionPool, JdbcDataSource}
 import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
+
+import scala.collection.JavaConverters._
 
 class RemoteUpdaterTest extends LoggingFreeSpec with TestFile {
 

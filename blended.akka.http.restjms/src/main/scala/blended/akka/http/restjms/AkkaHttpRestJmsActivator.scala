@@ -3,8 +3,8 @@ package blended.akka.http.restjms
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import blended.akka.ActorSystemWatching
-import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.akka.http.restjms.internal.{RestJMSConfig, SimpleRestJmsService}
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.camel.utils.BlendedCamelContextFactory
 import domino.DominoActivator
 import javax.jms.ConnectionFactory

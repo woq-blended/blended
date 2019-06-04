@@ -1,6 +1,7 @@
 package blended.updater.remote
 
 import blended.updater.config.{Mapper => BaseMapper}
+
 import scala.collection.JavaConverters._
 import scala.util.Try
 

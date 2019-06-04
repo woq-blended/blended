@@ -2,19 +2,11 @@ package blended.updater
 
 import java.io.File
 
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
-import blended.updater.config.LocalOverlays
-import blended.updater.config.LocalRuntimeConfig
-import blended.updater.config.OverlayConfig
-import blended.updater.config.OverlayConfigCompanion
-import blended.updater.config.ResolvedRuntimeConfig
-import blended.updater.config.RuntimeConfigCompanion
+import blended.updater.config._
 import blended.util.logging.Logger
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.{ConfigFactory, ConfigParseOptions}
+
+import scala.util.{Failure, Success, Try}
 
 class ProfileFsHelper {
 

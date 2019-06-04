@@ -1,12 +1,11 @@
 package blended.updater.remote.internal
 
-import blended.updater.remote.RemoteUpdater
 import java.io.File
+import java.util.{Date, UUID}
 
 import blended.updater.config._
+import blended.updater.remote.{ContainerState, RemoteUpdater}
 import com.typesafe.config.ConfigFactory
-import blended.updater.remote.ContainerState
-import java.util.{Date, UUID}
 
 class RemoteCommands(remoteUpdater : RemoteUpdater) {
 

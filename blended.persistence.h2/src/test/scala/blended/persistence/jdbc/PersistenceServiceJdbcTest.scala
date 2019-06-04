@@ -3,13 +3,13 @@ package blended.persistence.jdbc
 import java.io.File
 import java.{lang => jl, util => ju}
 
-import scala.collection.JavaConverters._
-
 import blended.testsupport.TestFile
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
 import org.springframework.transaction.PlatformTransactionManager
+
+import scala.collection.JavaConverters._
 
 class PersistenceServiceJdbcTest
   extends LoggingFreeSpec

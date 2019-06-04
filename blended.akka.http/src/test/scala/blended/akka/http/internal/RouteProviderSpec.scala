@@ -2,14 +2,14 @@ package blended.akka.http.internal
 
 import java.io.File
 
-import scala.util.Try
-import org.scalatest.FreeSpec
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import blended.akka.http.HttpContext
-import blended.akka.http.SimpleHttpContext
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.testsupport.BlendedTestSupport
 import blended.testsupport.pojosr.PojoSrTestHelper
 import domino.DominoActivator
+import org.scalatest.FreeSpec
+
+import scala.util.Try
 
 class RouteProviderSpec
   extends FreeSpec

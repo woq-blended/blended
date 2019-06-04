@@ -3,15 +3,15 @@ package blended.launcher.jvmrunner
 import java.io.{File, FileInputStream}
 import java.util.Properties
 
-import scala.collection.JavaConverters._
-import scala.util.Try
-import scala.util.control.NonFatal
 import blended.launcher.internal.ARM
 import blended.updater.config.OverlayConfigCompanion
 import blended.util.logging.Logger
 
 import scala.annotation.tailrec
+import scala.collection.JavaConverters._
 import scala.concurrent.duration._
+import scala.util.Try
+import scala.util.control.NonFatal
 
 object JvmLauncher {
 

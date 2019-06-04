@@ -1,11 +1,12 @@
 package blended.updater.config.util
 
-import org.scalatest.FreeSpec
 import java.io.File
+
+import blended.testsupport.{BlendedTestSupport, TestFile}
+import org.scalatest.FreeSpec
 
 import scala.io.Source
 import scala.util.Failure
-import blended.testsupport.{BlendedTestSupport, TestFile}
 
 class UnzipperTest extends FreeSpec
   with TestFile {

@@ -137,7 +137,7 @@ class JmsRetryProcessor(name : String, retryCfg : JmsRetryConfig)(
     jmsProducer(
       name = name + "routeSend",
       settings = producerSettings,
-      autoAck = false,
+      autoAck = false
     )
   }
 

@@ -4,9 +4,9 @@ import java.util.concurrent.atomic.AtomicLong
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.Source
 import akka.stream.stage.{GraphStage, GraphStageLogic}
-import akka.stream.{ActorMaterializer, Attributes, Graph, KillSwitches, Materializer, Outlet, SourceShape}
+import akka.stream._
 import akka.testkit.TestKit
 import blended.streams.message.{AcknowledgeHandler, FlowEnvelope, FlowMessage}
 import blended.streams.processor.{AckProcessor, Collector}

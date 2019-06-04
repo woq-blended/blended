@@ -3,9 +3,9 @@ package blended.akka.http.restjms.internal
 import blended.camel.utils.BlendedCamelContextFactory
 import com.typesafe.config.ConfigFactory
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.apache.camel.{CamelContext, Exchange, Processor}
 import org.apache.camel.builder.RouteBuilder
 import org.apache.camel.component.jms.JmsComponent
+import org.apache.camel.{CamelContext, Exchange, Processor}
 
 object MockResponses {
 

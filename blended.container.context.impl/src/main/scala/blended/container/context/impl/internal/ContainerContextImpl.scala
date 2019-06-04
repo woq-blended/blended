@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Properties
 
 import blended.container.context.api.ContainerContext
-import blended.security.crypto.{ContainerCryptoSupport, BlendedCryptoSupport}
+import blended.security.crypto.{BlendedCryptoSupport, ContainerCryptoSupport}
 import blended.updater.config.{LocalOverlays, OverlayRef, RuntimeConfig}
 import blended.util.logging.Logger
 import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions}

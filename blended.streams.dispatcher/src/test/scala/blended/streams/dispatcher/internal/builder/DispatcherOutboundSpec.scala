@@ -5,7 +5,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, RunnableGraph, Source}
 import akka.stream.{ActorMaterializer, Graph, Materializer, SinkShape}
 import blended.jms.bridge.BridgeProviderConfig
-import blended.jms.utils.{JmsDestination, JmsQueue}
+import blended.jms.utils.JmsDestination
 import blended.streams.dispatcher.internal.builder.DispatcherOutbound.DispatcherTarget
 import blended.streams.jms.JmsFlowSupport
 import blended.streams.message.{FlowEnvelope, FlowMessage}

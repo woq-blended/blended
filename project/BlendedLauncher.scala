@@ -1,14 +1,14 @@
 import java.nio.file.{Files, StandardCopyOption}
 
-import de.wayofquality.sbt.filterresources.FilterResources
-import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
+import blended.sbt.Dependencies
 import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 import com.typesafe.sbt.packager.universal.{UniversalDeployPlugin, UniversalPlugin}
+import de.wayofquality.sbt.filterresources.FilterResources
+import de.wayofquality.sbt.filterresources.FilterResources.autoImport._
+import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
-import blended.sbt.Dependencies
-import phoenix.ProjectFactory
 
 object BlendedLauncher extends ProjectFactory {
   object config extends ProjectSettings {

@@ -5,9 +5,7 @@ import blended.akka.OSGIActorConfig
 import blended.domino.TypesafeConfigWatching
 import blended.util.logging.Logger
 import domino.DominoImplicits
-import domino.capsule.Capsule
-import domino.capsule.CapsuleContext
-import domino.capsule.CapsuleScope
+import domino.capsule.{Capsule, CapsuleContext, CapsuleScope}
 import domino.service_watching.ServiceWatching
 import org.osgi.framework.BundleContext
 

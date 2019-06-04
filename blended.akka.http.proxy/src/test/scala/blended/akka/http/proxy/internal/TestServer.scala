@@ -1,13 +1,13 @@
 package blended.akka.http.proxy.internal
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 object TestServer {
 

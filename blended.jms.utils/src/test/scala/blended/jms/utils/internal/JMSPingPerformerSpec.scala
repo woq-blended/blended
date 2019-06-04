@@ -10,13 +10,12 @@ import akka.stream.scaladsl.Source
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import blended.jms.utils.{BlendedJMSConnectionConfig, JMSSupport}
+import blended.testsupport.scalatest.LoggingFreeSpecLike
 import javax.jms.{Connection, MessageProducer, Session}
-import org.scalatest.FreeSpecLike
+
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.Try
-
-import blended.testsupport.scalatest.LoggingFreeSpecLike
 
 case class PingExecute(
   count : Long,

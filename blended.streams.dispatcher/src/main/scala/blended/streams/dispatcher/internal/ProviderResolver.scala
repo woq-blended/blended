@@ -2,8 +2,8 @@ package blended.streams.dispatcher.internal
 
 import blended.container.context.api.ContainerIdentifierService
 import blended.jms.bridge.{BridgeProviderConfig, BridgeProviderRegistry}
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 import scala.util.Try
 

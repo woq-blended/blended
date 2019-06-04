@@ -1,8 +1,8 @@
 package blended.akka.http.jmsqueue
 
 import blended.akka.ActorSystemWatching
-import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.akka.http.jmsqueue.internal.{HttpQueueConfig, OsgiHttpQueueService}
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import domino.DominoActivator
 
 class BlendedAkkaHttpJmsqueueActivator extends DominoActivator with ActorSystemWatching {

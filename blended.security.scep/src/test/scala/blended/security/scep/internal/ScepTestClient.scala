@@ -3,11 +3,10 @@ package blended.security.scep.internal
 import java.io.File
 
 import blended.security.ssl.internal.JavaKeystore
-
-import scala.util.Try
 import blended.security.ssl.{CommonNameProvider, MemoryKeystore, X509CertificateInfo}
 import blended.util.logging.Logger
-import javax.tools.DocumentationTool.Location
+
+import scala.util.Try
 
 object ScepTestClient {
 

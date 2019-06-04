@@ -1,7 +1,7 @@
 package blended.updater.tools.configbuilder
 
-import org.scalatest.FreeSpec
 import de.tototec.cmdoption.CmdlineParser
+import org.scalatest.FreeSpec
 
 class RuntimConfigBuilderSpec extends FreeSpec {
 

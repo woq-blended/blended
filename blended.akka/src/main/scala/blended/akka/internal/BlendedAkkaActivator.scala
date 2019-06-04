@@ -6,8 +6,8 @@ import blended.util.logging.Logger
 import domino.DominoActivator
 
 import scala.concurrent.Await
-import scala.util.control.NonFatal
 import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 class BlendedAkkaActivator extends DominoActivator {
 

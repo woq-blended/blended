@@ -13,8 +13,8 @@ import blended.security.internal.SecurityActivator
 import blended.testsupport.pojosr.{BlendedPojoRegistry, PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM, TestFile}
-import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
 import blended.updater.config.json.PrickleProtocol._
+import blended.updater.config.{ActivateProfile, OverlayConfig, OverlayConfigCompanion, UpdateAction}
 import blended.updater.remote.internal.RemoteUpdaterActivator
 import blended.util.logging.Logger
 import com.softwaremill.sttp

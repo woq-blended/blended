@@ -1,8 +1,9 @@
 package blended.persistence.jdbc
 
-import java.{util => ju, lang => jl}
-import scala.collection.JavaConverters._
 import java.util.regex.Pattern
+import java.{lang => jl, util => ju}
+
+import scala.collection.JavaConverters._
 
 /**
  * Represents one field in a persisted data set.

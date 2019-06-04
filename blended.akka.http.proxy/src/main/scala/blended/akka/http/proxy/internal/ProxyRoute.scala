@@ -1,17 +1,17 @@
 package blended.akka.http.proxy.internal
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
-
 import akka.actor.ActorSystem
-import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Host, Location}
-import akka.http.scaladsl.server.{RequestContext, Route}
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.{RequestContext, Route}
+import akka.http.scaladsl.{ConnectionContext, Http}
 import akka.stream.ActorMaterializer
 import blended.util.logging.Logger
 import javax.net.ssl.SSLContext
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
 
 trait ProxyRoute {
 

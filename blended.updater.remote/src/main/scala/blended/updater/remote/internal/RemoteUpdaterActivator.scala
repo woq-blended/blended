@@ -2,19 +2,16 @@ package blended.updater.remote.internal
 
 import java.io.File
 
-import scala.util.Try
-
 import blended.akka.ActorSystemWatching
 import blended.domino.TypesafeConfigWatching
 import blended.persistence.PersistenceService
-import blended.updater.remote.FileSystemOverlayConfigPersistor
-import blended.updater.remote.FileSystemRuntimeConfigPersistor
-import blended.updater.remote.PersistentContainerStatePersistor
-import blended.updater.remote.RemoteUpdater
+import blended.updater.remote.{FileSystemOverlayConfigPersistor, FileSystemRuntimeConfigPersistor, PersistentContainerStatePersistor, RemoteUpdater}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigException
 import domino.DominoActivator
 import org.osgi.framework.ServiceRegistration
+
+import scala.util.Try
 
 class RemoteUpdaterActivator
   extends DominoActivator

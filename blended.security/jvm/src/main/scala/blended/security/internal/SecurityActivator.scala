@@ -1,8 +1,8 @@
 package blended.security.internal
 
 import blended.domino.TypesafeConfigWatching
-import blended.security.{BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule}
 import blended.security.boot.BlendedLoginModule
+import blended.security.{BlendedPermissionManager, ConfigLoginModule, LDAPLoginModule}
 import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import domino.DominoActivator

@@ -1,15 +1,12 @@
 package blended.mgmt.repo.rest.internal
 
-import blended.akka.http.HttpContext
-import blended.akka.http.SimpleHttpContext
+import blended.akka.http.{HttpContext, SimpleHttpContext}
 import blended.domino.TypesafeConfigWatching
 import blended.mgmt.repo.ArtifactRepo
 import blended.security.BlendedPermissionManager
 import blended.util.logging.Logger
 import domino.DominoActivator
-import domino.service_watching.ServiceWatcherEvent.AddingService
-import domino.service_watching.ServiceWatcherEvent.ModifiedService
-import domino.service_watching.ServiceWatcherEvent.RemovedService
+import domino.service_watching.ServiceWatcherEvent.{AddingService, ModifiedService, RemovedService}
 
 class ArtifactRepoRestActivator
   extends DominoActivator

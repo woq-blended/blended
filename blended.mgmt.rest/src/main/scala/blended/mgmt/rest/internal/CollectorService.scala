@@ -3,16 +3,9 @@ package blended.mgmt.rest.internal
 import java.io.File
 import java.util.UUID
 
-import scala.collection.{immutable => sci}
-import scala.concurrent.duration._
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.server.ValidationRejection
+import akka.http.scaladsl.server.{Route, ValidationRejection}
 import akka.util.Timeout
 import blended.prickle.akka.http.PrickleSupport
 import blended.security.akka.http.BlendedSecurityDirectives
@@ -21,6 +14,10 @@ import blended.updater.config.json.PrickleProtocol._
 import blended.updater.config.util.Unzipper
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
+
+import scala.collection.{immutable => sci}
+import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
 trait CollectorService {
   // dependencies

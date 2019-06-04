@@ -27,16 +27,16 @@ import blended.testsupport.scalatest.LoggingFreeSpecLike
 import blended.updater.config.ContainerInfo
 import blended.updater.config.json.PrickleProtocol._
 import blended.updater.remote.internal.RemoteUpdaterActivator
-import com.softwaremill.sttp.{SttpBackend, _}
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
+import com.softwaremill.sttp.{SttpBackend, _}
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 import prickle.{Pickle, Unpickle}
 import sun.misc.BASE64Decoder
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.reflect.ClassTag
 import scala.util.Try
 

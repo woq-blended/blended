@@ -9,7 +9,6 @@ import blended.util.logging.Logger
 
 import scala.collection.JavaConverters._
 import scala.util.Try
-import scala.collection.JavaConverters._
 
 class JavaKeystore(
   store : File,

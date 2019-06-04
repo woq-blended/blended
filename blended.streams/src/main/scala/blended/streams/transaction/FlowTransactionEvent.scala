@@ -6,8 +6,8 @@ import blended.streams.message.{FlowEnvelope, FlowMessage, MsgProperty, TextFlow
 import blended.streams.transaction.FlowTransactionState.FlowTransactionState
 import blended.streams.worklist.WorklistState
 import blended.streams.worklist.WorklistState.WorklistState
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 import scala.util.Try
 

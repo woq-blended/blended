@@ -134,7 +134,7 @@ class RunnableDispatcher(
       val setShard = Option(System.getProperty("blended.streams.transactionShard")) match {
         case None => source
         case Some(shard) => source.via(Flow.fromFunction[FlowEnvelope, FlowEnvelope]{ env =>
-          env.withHeader(bs.headerConfig.headerTransShard, shard, false).get
+          env.withHeader(bs.headerConfig.headerTransShard, shard, overwrite = false).get
         })
       }
 

@@ -11,8 +11,8 @@ import blended.util.logging.Logger
 import javax.jms.{Connection, ConnectionFactory, ExceptionListener, JMSException}
 import javax.naming.{Context, InitialContext}
 
-import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 abstract class ConnectionHolder(config : ConnectionConfig)(implicit system : ActorSystem) {
 

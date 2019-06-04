@@ -3,9 +3,9 @@ package blended.streams.processor
 import blended.container.context.api.ContainerIdentifierService
 import blended.streams.FlowProcessor
 import blended.streams.FlowProcessor.IntegrationStep
+import blended.util.config.Implicits._
 import blended.util.logging.Logger
 import com.typesafe.config.Config
-import blended.util.config.Implicits._
 
 import scala.util.Try
 

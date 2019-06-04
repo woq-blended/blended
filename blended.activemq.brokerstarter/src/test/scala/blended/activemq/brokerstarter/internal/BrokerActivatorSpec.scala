@@ -4,9 +4,9 @@ import java.io.File
 
 import blended.akka.internal.BlendedAkkaActivator
 import blended.jms.utils.IdAwareConnectionFactory
-import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 

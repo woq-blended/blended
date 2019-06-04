@@ -1,18 +1,11 @@
 package blended.prickle.akka.http
 
-import akka.http.scaladsl.marshalling.Marshaller
-import akka.http.scaladsl.marshalling.ToEntityMarshaller
-import akka.http.scaladsl.model.ContentTypeRange
-import akka.http.scaladsl.model.MediaTypes
-import akka.http.scaladsl.unmarshalling.FromEntityUnmarshaller
-import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.http.scaladsl.marshalling.{Marshaller, ToEntityMarshaller}
+import akka.http.scaladsl.model.{ContentTypeRange, MediaTypes}
+import akka.http.scaladsl.unmarshalling.{FromEntityUnmarshaller, Unmarshaller}
 import blended.util.logging.Logger
 import microjson.JsValue
-import prickle.PConfig
-import prickle.Pickle
-import prickle.Pickler
-import prickle.Unpickle
-import prickle.Unpickler
+import prickle._
 
 trait PrickleSupport {
 

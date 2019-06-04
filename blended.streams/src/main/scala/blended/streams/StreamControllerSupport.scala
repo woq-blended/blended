@@ -6,8 +6,8 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, KillSwitch, KillSwitches, Materializer}
 import blended.util.logging.Logger
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Random, Success}
 
 trait StreamControllerSupport[T, Mat] { this : Actor =>

@@ -2,17 +2,15 @@ package blended.updater.config
 
 import java.io.File
 
-import scala.collection.JavaConverters._
-import scala.util.Success
-
 import blended.testsupport.TestFile
 import blended.testsupport.TestFile.{DeletePolicy, DeleteWhenNoFailure}
 import blended.updater.config.util.ConfigPropertyMapConverter
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
-import org.scalatest.{FreeSpec, Matchers}
-import org.scalatest.Args
-import org.scalatest.Status
+import org.scalatest.{Args, FreeSpec, Matchers, Status}
+
+import scala.collection.JavaConverters._
+import scala.util.Success
 
 class OverlaysTest extends FreeSpec with Matchers with TestFile {
 

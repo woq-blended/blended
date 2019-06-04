@@ -1,8 +1,8 @@
 package blended.jetty.boot.internal
 
-import javax.net.ssl.SSLContext
 import domino.DominoActivator
 import javax.management.{MBeanServer, ObjectName}
+import javax.net.ssl.SSLContext
 import org.eclipse.jetty.jmx.MBeanContainer
 import org.eclipse.jetty.osgi.boot.JettyBootstrapActivator
 

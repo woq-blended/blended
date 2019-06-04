@@ -25,7 +25,7 @@ case class BrokerConfig (
   override val retryInterval : FiniteDuration,
   brokerName : String,
   file : String,
-  withSsl : Boolean,
+  withSsl : Boolean
 ) extends ConnectionConfig {
   override val enabled: Boolean = true
   override val defaultUser: Option[String] = None

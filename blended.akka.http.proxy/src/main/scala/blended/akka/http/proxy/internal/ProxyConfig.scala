@@ -1,8 +1,8 @@
 package blended.akka.http.proxy.internal
 
 import blended.akka.http.proxy.internal.RedirectHeaderPolicy.RedirectHeaderPolicy
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 import scala.util.Try
 

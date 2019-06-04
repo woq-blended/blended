@@ -2,11 +2,11 @@ package blended.updater.remote
 
 import java.io.File
 
-import scala.util.Try
-
 import blended.updater.config.{ConfigWriter, OverlayConfig, OverlayConfigCompanion}
 import blended.util.logging.Logger
 import com.typesafe.config.ConfigFactory
+
+import scala.util.Try
 
 class FileSystemOverlayConfigPersistor(storageDir : File) extends OverlayConfigPersistor {
 

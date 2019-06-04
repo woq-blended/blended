@@ -2,8 +2,7 @@ package blended.security.akka.http
 
 import akka.http.scaladsl.server.Directive0
 import akka.http.scaladsl.server.directives.AuthenticationDirective
-import akka.http.scaladsl.server.directives.BasicDirectives.pass
-import akka.http.scaladsl.server.directives.BasicDirectives.provide
+import akka.http.scaladsl.server.directives.BasicDirectives.{pass, provide}
 import blended.security.BlendedPermission
 import javax.security.auth.Subject
 

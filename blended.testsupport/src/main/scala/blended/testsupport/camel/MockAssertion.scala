@@ -2,14 +2,14 @@ package blended.testsupport.camel
 
 import akka.actor.ActorRef
 import akka.camel.CamelMessage
+import akka.pattern.ask
 import akka.util.Timeout
 import blended.testsupport.camel.protocol.{CheckAssertions, CheckResults}
 import blended.util.logging.Logger
 
-import scala.util.Try
 import scala.collection.JavaConverters._
 import scala.concurrent.Await
-import akka.pattern.ask
+import scala.util.Try
 
 @Deprecated
 object MockAssertion {

@@ -3,13 +3,13 @@ package blended.streams.jms
 import blended.jms.utils.{JmsAckSession, JmsDestination}
 import blended.streams.message.FlowMessage.FlowMessageProps
 import blended.streams.message._
+import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms._
 
 import scala.collection.JavaConverters._
 import scala.concurrent.duration._
 import scala.util.Try
-import blended.streams.transaction.FlowHeaderConfig
 
 case class JmsAcknowledgeHandler(
   id : String,

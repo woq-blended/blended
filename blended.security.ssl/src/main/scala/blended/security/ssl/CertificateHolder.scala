@@ -1,7 +1,7 @@
 package blended.security.ssl
 
-import java.security.{KeyPair, Principal, PrivateKey, PublicKey}
 import java.security.cert.{Certificate, X509Certificate}
+import java.security.{KeyPair, Principal, PrivateKey, PublicKey}
 import java.util.Date
 
 import javax.crypto.Cipher

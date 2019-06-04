@@ -1,8 +1,8 @@
 package blended.launcher.runtime;
 
-import java.util.Properties;
-
 import blended.launcher.BrandingProperties;
+
+import java.util.Properties;
 
 public class Branding {
 

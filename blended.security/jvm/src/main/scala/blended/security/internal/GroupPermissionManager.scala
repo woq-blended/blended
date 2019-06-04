@@ -1,7 +1,7 @@
 package blended.security.internal
 
-import blended.security.{BlendedPermission, BlendedPermissionManager, BlendedPermissions}
 import blended.security.boot.GroupPrincipal
+import blended.security.{BlendedPermission, BlendedPermissionManager, BlendedPermissions}
 import javax.security.auth.Subject
 
 import scala.collection.JavaConverters._

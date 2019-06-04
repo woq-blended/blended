@@ -2,10 +2,6 @@ package blended.akka.http.restjms.internal
 
 import java.util.concurrent.atomic.AtomicLong
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -13,8 +9,12 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import blended.util.logging.Logger
-import org.apache.camel.{CamelContext, Exchange, ExchangePattern}
 import org.apache.camel.impl.{DefaultExchange, DefaultMessage}
+import org.apache.camel.{CamelContext, Exchange, ExchangePattern}
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 trait JMSRequestor {
 

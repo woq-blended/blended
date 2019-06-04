@@ -4,10 +4,10 @@ import java.text.DecimalFormat
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
-import scala.util.Random
-
 import blended.updater.config._
 import blended.util.logging.Logger
+
+import scala.util.Random
 
 object MockObjects {
 

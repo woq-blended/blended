@@ -4,9 +4,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 import akka.actor.ActorSystem
 import akka.testkit.TestKit
-import scala.concurrent.duration._
 
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 object TestActorSys {
   val uniqueId = new AtomicInteger(0)

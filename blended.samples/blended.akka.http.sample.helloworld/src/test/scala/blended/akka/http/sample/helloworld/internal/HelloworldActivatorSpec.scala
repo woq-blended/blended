@@ -1,8 +1,8 @@
 package blended.akka.http.sample.helloworld.internal
 
-import org.scalatest.FreeSpec
-import akka.http.scaladsl.testkit.ScalatestRouteTest
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.testkit.ScalatestRouteTest
+import org.scalatest.FreeSpec
 
 class HelloworldActivatorSpec extends FreeSpec with ScalatestRouteTest {
 

@@ -44,7 +44,7 @@ class JmsSourceStage(
       }
 
       override protected def createSession(
-        connection: Connection,
+        connection: Connection
       ): Try[JmsConsumerSession] = {
 
         try {

@@ -1,10 +1,10 @@
 package blended.container.context.impl.internal
 
-import scala.util.control.NonFatal
-
 import blended.container.context.api.ContainerIdentifierService
 import blended.util.logging.Logger
 import domino.DominoActivator
+
+import scala.util.control.NonFatal
 
 class ContainerContextActivator extends DominoActivator {
 

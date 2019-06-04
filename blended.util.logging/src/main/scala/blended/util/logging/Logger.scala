@@ -2,8 +2,9 @@ package blended.util.logging
 
 import java.util.{logging => jul}
 
-import scala.reflect.ClassTag
 import org.slf4j
+
+import scala.reflect.ClassTag
 
 object LogLevel extends Enumeration {
 

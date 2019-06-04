@@ -1,7 +1,7 @@
 package blended.streams.jms
 
 import blended.jms.utils.JmsDestination
-import blended.streams.message.{BinaryFlowMessage, FlowEnvelope, FlowMessage, TextFlowMessage, UnitMsgProperty}
+import blended.streams.message._
 import blended.streams.transaction.FlowHeaderConfig
 import blended.util.logging.Logger
 import javax.jms.{Destination, JMSException, Message, Session}
@@ -18,7 +18,7 @@ trait JmsDestinationResolver { this : JmsEnvelopeHeader =>
 
   def createJmsMessage(session : Session, env : FlowEnvelope) : Try[Message] = Try {
 
-    import JmsFlowSupport.{hyphen, hyphen_repl, dot, dot_repl}
+    import JmsFlowSupport.{dot, dot_repl, hyphen, hyphen_repl}
 
     val flowMsg = env.flowMessage
 

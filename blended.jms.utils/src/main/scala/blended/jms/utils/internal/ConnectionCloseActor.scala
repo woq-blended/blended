@@ -2,9 +2,9 @@ package blended.jms.utils.internal
 
 import akka.actor._
 
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import scala.concurrent.duration._
 
 object ConnectionCloseActor {
   def props(holder : ConnectionHolder, retryInterval : FiniteDuration = 5.seconds) : Props =

@@ -1,10 +1,9 @@
 package blended.akka.http.sample.helloworld.internal
 
-import domino.DominoActivator
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import blended.akka.http.SimpleHttpContext
-import blended.akka.http.HttpContext
+import blended.akka.http.{HttpContext, SimpleHttpContext}
+import domino.DominoActivator
 
 class HelloworldActivator extends DominoActivator {
 

@@ -1,7 +1,8 @@
 package blended.launcher
 
-import de.tototec.cmdoption.CmdOption
 import java.io.File
+
+import de.tototec.cmdoption.CmdOption
 
 class Cmdline {
 

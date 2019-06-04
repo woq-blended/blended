@@ -1,24 +1,17 @@
 package blended.mgmt.repo.file
 
-import java.io.BufferedInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.nio.file.Files
-import java.nio.file.Path
-import java.security.DigestInputStream
-import java.security.MessageDigest
+import java.io._
+import java.nio.file.{Files, Path}
+import java.security.{DigestInputStream, MessageDigest}
 import java.util.Formatter
+
+import blended.mgmt.repo.{ArtifactRepo, WritableArtifactRepo}
+import blended.updater.config.util.StreamCopy
+import blended.util.logging.Logger
 
 import scala.collection.JavaConverters._
 import scala.util.Try
 import scala.util.control.NonFatal
-
-import blended.mgmt.repo.ArtifactRepo
-import blended.mgmt.repo.WritableArtifactRepo
-import blended.updater.config.util.StreamCopy
-import blended.util.logging.Logger
 
 class FileArtifactRepo(override val repoId : String, baseDir : File)
   extends ArtifactRepo

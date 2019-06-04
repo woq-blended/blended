@@ -1,17 +1,18 @@
 package blended.mgmt.rest.internal
 
-import scala.collection.immutable
+import java.io.File
 
 import akka.event.EventStream
+import blended.mgmt.repo.WritableArtifactRepo
 import blended.prickle.akka.http.PrickleSupport
 import blended.security.BlendedPermissionManager
 import blended.security.akka.http.JAASSecurityDirectives
 import blended.updater.config._
 import blended.updater.remote.RemoteUpdater
 import blended.util.logging.Logger
-import java.io.File
+
+import scala.collection.immutable
 import scala.util.Try
-import blended.mgmt.repo.WritableArtifactRepo
 
 /**
  *

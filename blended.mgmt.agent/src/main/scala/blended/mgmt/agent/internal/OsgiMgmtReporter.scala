@@ -1,11 +1,11 @@
 package blended.mgmt.agent.internal
 
-import scala.util.{Failure, Try}
-
 import akka.actor.Props
 import blended.akka.{OSGIActor, OSGIActorConfig}
 import blended.updater.config.ContainerInfo
 import blended.util.logging.Logger
+
+import scala.util.{Failure, Try}
 
 /**
  * Actor, that collects various container information and send's it to a remote management container.

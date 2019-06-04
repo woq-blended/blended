@@ -5,8 +5,8 @@ import java.util.Date
 import blended.security.ssl.internal.CertificateConfig
 import blended.util.logging.Logger
 import javax.security.auth.x500.X500Principal
-import scala.concurrent.duration._
 
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 case class MemoryKeystore(certificates : Map[String, CertificateHolder]) {

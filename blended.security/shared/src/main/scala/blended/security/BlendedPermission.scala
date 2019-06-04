@@ -1,10 +1,10 @@
 package blended.security
 
-import scala.collection.{immutable => sci}
-import scala.util.Try
-
 import blended.security.json.PrickleProtocol._
 import prickle.Unpickle
+
+import scala.collection.{immutable => sci}
+import scala.util.Try
 
 /**
  *

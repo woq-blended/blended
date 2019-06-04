@@ -1,9 +1,10 @@
 package blended.security
 
 import java.io.File
-import scala.concurrent.duration._
 
 import blended.testsupport.BlendedTestSupport
+
+import scala.concurrent.duration._
 
 class ConfigLoginSpec extends AbstractLoginSpec {
 

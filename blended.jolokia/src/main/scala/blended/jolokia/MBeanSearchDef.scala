@@ -2,7 +2,7 @@ package blended.jolokia
 
 case class MBeanSearchDef(
   jmxDomain : String,
-  searchProperties : Map[String, String] = Map.empty,
+  searchProperties : Map[String, String] = Map.empty
 ) {
   def pattern: String = searchProperties match {
     case m if m.isEmpty => ""

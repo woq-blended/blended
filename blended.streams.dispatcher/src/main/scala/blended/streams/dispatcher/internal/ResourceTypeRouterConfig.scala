@@ -142,7 +142,7 @@ object OutboundRouteConfig {
 
 case class OutboundRouteConfig(
   id : String,
-  outboundHeader: List[OutboundHeaderConfig],
+  outboundHeader: List[OutboundHeaderConfig]
 ) extends WorklistItem {
   override def toString: String =
     s"${getClass().getSimpleName()}(id=$id)"

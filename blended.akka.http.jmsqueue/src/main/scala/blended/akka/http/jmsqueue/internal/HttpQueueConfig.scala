@@ -1,9 +1,9 @@
 package blended.akka.http.jmsqueue.internal
 
+import blended.util.config.Implicits._
 import com.typesafe.config.Config
 
 import scala.collection.JavaConverters._
-import blended.util.config.Implicits._
 
 object HttpQueueConfig {
 

@@ -1,8 +1,8 @@
+import blended.sbt.Dependencies
 import de.wayofquality.sbt.testlogconfig.TestLogConfig.autoImport._
+import phoenix.ProjectFactory
 import sbt.Keys._
 import sbt._
-import blended.sbt.Dependencies
-import phoenix.ProjectFactory
 
 object BlendedStreamsDispatcher extends ProjectFactory {
   object config extends ProjectSettings {

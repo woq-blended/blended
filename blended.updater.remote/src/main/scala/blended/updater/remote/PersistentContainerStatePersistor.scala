@@ -1,9 +1,9 @@
 package blended.updater.remote
 
-import scala.collection.JavaConverters._
-
 import blended.persistence.PersistenceService
 import blended.util.logging.Logger
+
+import scala.collection.JavaConverters._
 
 class PersistentContainerStatePersistor(persistenceService : PersistenceService) extends ContainerStatePersistor {
 

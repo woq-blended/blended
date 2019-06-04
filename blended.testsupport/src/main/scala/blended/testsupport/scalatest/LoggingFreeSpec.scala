@@ -1,12 +1,9 @@
 package blended.testsupport.scalatest
 
-import scala.util.control.NonFatal
-
 import blended.util.logging.Logger
-import org.scalatest.Args
-import org.scalatest.FreeSpec
-import org.scalatest.FreeSpecLike
-import org.scalatest.Status
+import org.scalatest.{Args, FreeSpec, FreeSpecLike, Status}
+
+import scala.util.control.NonFatal
 
 /**
  * Same as [[org.scalatest.FreeSpecLike]] but log the start and the end of each test case to SLF4j in Debug level.

@@ -1,16 +1,16 @@
 package blended.akka.http.jmsqueue.internal
 
-import scala.collection.JavaConverters._
-import scala.concurrent.{ExecutionContext, Future, blocking}
-import scala.util.{Failure, Success, Try}
-import scala.util.control.NonFatal
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import blended.util.logging.Logger
 import javax.jms._
+
+import scala.collection.JavaConverters._
+import scala.concurrent.{ExecutionContext, Future, blocking}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try}
 
 trait HttpQueueService {
 

@@ -3,8 +3,6 @@ package blended.akka.http.proxy.internal
 import java.io.IOException
 import java.net.{InetSocketAddress, Socket}
 
-import scala.concurrent.duration._
-
 import akka.http.scaladsl.model.headers.Location
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import akka.http.scaladsl.server.Directives._
@@ -12,6 +10,8 @@ import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest}
 import blended.util.logging.Logger
 import org.scalatest.FreeSpec
+
+import scala.concurrent.duration._
 
 class ProxyRouteSpec extends FreeSpec with ScalatestRouteTest {
 

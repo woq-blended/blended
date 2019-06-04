@@ -1,16 +1,15 @@
 package blended.streams.transaction
 
 import blended.streams.message.{FlowEnvelope, FlowMessage}
+import blended.streams.transaction
+import blended.streams.transaction.FlowTransaction.{envelope2Transaction, transaction2envelope}
 import blended.streams.worklist.WorklistState
+import blended.streams.worklist.WorklistState.WorklistState
 import blended.testsupport.scalatest.LoggingFreeSpec
 import com.typesafe.config.ConfigFactory
 import org.scalatest.Matchers
 
 import scala.collection.JavaConverters._
-import FlowTransaction.{envelope2Transaction, transaction2envelope}
-import blended.streams.transaction
-import blended.streams.worklist.WorklistState.WorklistState
-
 import scala.util.Try
 
 class FlowTransactionSpec extends LoggingFreeSpec

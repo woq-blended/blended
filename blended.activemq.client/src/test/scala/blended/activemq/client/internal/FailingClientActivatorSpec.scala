@@ -13,8 +13,8 @@ import domino.DominoActivator
 import org.osgi.framework.BundleActivator
 import org.scalatest.Matchers
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 class FailingClientActivatorSpec extends SimplePojoContainerSpec
   with LoggingFreeSpecLike

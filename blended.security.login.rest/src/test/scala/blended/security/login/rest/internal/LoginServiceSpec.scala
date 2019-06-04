@@ -12,9 +12,9 @@ import blended.akka.internal.BlendedAkkaActivator
 import blended.security.internal.SecurityActivator
 import blended.security.login.api.Token
 import blended.security.login.impl.LoginActivator
-import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import blended.testsupport.pojosr.{PojoSrTestHelper, SimplePojoContainerSpec}
 import blended.testsupport.scalatest.LoggingFreeSpecLike
+import blended.testsupport.{BlendedTestSupport, RequiresForkedJVM}
 import com.softwaremill.sttp._
 import com.softwaremill.sttp.akkahttp.AkkaHttpBackend
 import org.osgi.framework.BundleActivator

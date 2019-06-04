@@ -1,8 +1,8 @@
 package blended.security.internal
 
 import blended.container.context.api.ContainerIdentifierService
-import com.typesafe.config.Config
 import blended.util.config.Implicits._
+import com.typesafe.config.Config
 
 object LDAPLoginConfig {
 

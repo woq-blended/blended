@@ -1,9 +1,8 @@
 package blended.mgmt.service.jmx.internal
 
-import javax.management.MBeanServer
-
 import blended.akka.ActorSystemWatching
 import domino.DominoActivator
+import javax.management.MBeanServer
 
 class ServiceJmxActivator extends DominoActivator with ActorSystemWatching {
 
